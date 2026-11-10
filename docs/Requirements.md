@@ -134,7 +134,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
     does its newest, deletes its old loop settings no record refers to any more, then shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
-  TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
+  TOTP secrets and devices' push tokens, and its push credentials deleted; an archived site keeps them, as it
   can be hydrated.
 
 ### A site's identities
@@ -590,9 +590,10 @@ lines on a phone so each input can be seen and tapped. It has every field its ad
 help and limits, filled in with the record's, but its time and those an edit does not change (a reading's type and
 method, a temp target's insulin needs). Emptying its notes or reason clears them; a number left blank stays as
 it was. Its Save (Rename for a profile) is at the modal's foot beside Close, as an add modal's Add is, and Enter in
-an input saves too. Its details are labelled as its add modal's fields are (e.g. Fat (g), Pre-bolus (minutes)), and
-end with the same Record section on every page: its ID, UTC offset, app, device, who created and last updated it and
-when, each left out when it is not set.
+an input saves too. Each field is shown once: one its form edits (e.g. an insulin dose's split, type, notes and
+reason, or a reading's trend) is not listed again in the details below the form, which keep only what it does not
+edit (e.g. a reading's type, a profile switch's DIA), and end with the same Record section on every page: its ID,
+UTC offset, app, device, who created and last updated it and when, each left out when it is not set.
 
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
 opens its details; Enter on its delete button deletes it without opening them. A row's delete icon, here and in
@@ -699,7 +700,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   service account (project ID and its JSON), the apps it pushes to (`loop`, `trio`, `loopfollow`, `t1dcarer`) ticked,
   and, optionally, the only bundle IDs it pushes to, separated by commas. A key that cannot be read, or an unknown
   app, is refused with the modal left open; its secret is kept encrypted and never shown or returned; a site has at
-  most 5; only the site's admins can see or delete them, and a delete asks first.
+  most 5; only the site's admins can see or delete them, and a delete asks first, then deletes it for good, so adding
+  and deleting them again and again cannot grow the control DB.
 
 ### Logs
 

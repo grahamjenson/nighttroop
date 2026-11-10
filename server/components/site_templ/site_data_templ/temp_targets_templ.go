@@ -368,15 +368,7 @@ func TempTargetModal(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Insulin needs", orDash(tempTarget.InsulinNeedsScaleFactor)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Notes", orDash(tempTarget.Notes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Reason", orDash(tempTarget.Reason)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "insulin_needs_scale_factor", "Insulin needs", orDash(tempTarget.InsulinNeedsScaleFactor)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -330,18 +330,17 @@ CREATE TABLE push_credentials (
     provider TEXT NOT NULL CHECK(provider IN ('apns', 'fcm')),
     team_or_project_id TEXT NOT NULL CHECK(length(team_or_project_id) <= 64), -- APNs team ID, or Firebase project ID
     key_id TEXT CHECK(length(key_id) <= 32), -- APNs key ID; FCM has none
-    secret_enc TEXT CHECK(length(secret_enc) <= 8192), -- the .p8 key or service account JSON, encrypted; NULL once deleted
+    secret_enc TEXT CHECK(length(secret_enc) <= 8192), -- the .p8 key or service account JSON, encrypted
 
     apps_json TEXT NOT NULL CHECK(length(apps_json) <= 1024 AND json_valid(apps_json)), -- the apps it pushes to, e.g. ["loop"]
     bundle_ids_json TEXT CHECK(length(bundle_ids_json) <= 2048 AND json_valid(bundle_ids_json)), -- the only bundle IDs or package names it pushes to; NULL is any
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
-    deleted_at INTEGER
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 ) STRICT;
 
-CREATE INDEX push_credentials_site ON push_credentials (site_id, provider) WHERE deleted_at IS NULL;
+CREATE INDEX push_credentials_site ON push_credentials (site_id, provider);
 
 -- An app on a device that an identity has pushes sent to. Its token addresses that app on that device, and changes
 -- when the app is installed again; one is registered to the last of its site's identities that sent it, and another

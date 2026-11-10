@@ -389,43 +389,23 @@ func ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Insulin (%)", percentOr(profileSwitch.Multiplier, "-")).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "dia", "DIA (hours)", orDash(profileSwitch.Dia)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Shift (minutes)", orDash(profileSwitch.Timeshift)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "units", "Profile Units", orDash(profileSwitch.Units)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Minutes", orDash(profileSwitch.DurationMinutes)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "timezone", "Timezone", orDash(profileSwitch.Timezone)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("DIA (hours)", orDash(profileSwitch.Dia)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "carbs_hr", "Carbs per Hour", orDash(profileSwitch.CarbsHr)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Profile Units", orDash(profileSwitch.Units)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Timezone", orDash(profileSwitch.Timezone)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Carbs per Hour", orDash(profileSwitch.CarbsHr)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Delay", orDash(profileSwitch.Delay)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Notes", orDash(profileSwitch.Notes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Reason", orDash(profileSwitch.Reason)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "delay", "Delay", orDash(profileSwitch.Delay)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

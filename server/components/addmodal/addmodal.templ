@@ -134,6 +134,14 @@ templ SubmitButton(p Props) {
 	}
 }
 
+// Detail is a record's field, by its JSON name, in its details modal's list below the edit form p, left out when p
+// has the field, so each is shown once, or when it has no value
+templ Detail(p Props, name string, label string, value string) {
+	if !slices.ContainsFunc(p.Fields, func(f Field) bool { return f.Name == name }) {
+		@modal.DetailIfSet(label, value)
+	}
+}
+
 templ field(p Props, f Field) {
 	{{ id := p.ID + "--" + strings.ReplaceAll(f.Name, "_", "-") }}
 	<div class={ templ.KV("sm:col-span-2", f.Wide) }>

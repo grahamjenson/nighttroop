@@ -1,6 +1,8 @@
 package addmodal
 
 import (
+	"bytes"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -43,4 +45,22 @@ func TestEdit(t *testing.T) {
 	require.Len(t, edit, 5)
 	// The add modal's fields are left as they were
 	require.Equal(t, "", fields[0].Value)
+}
+
+func TestDetail(t *testing.T) {
+	edit := Props{Fields: []Field{{Name: "notes", Label: "Notes"}}}
+	tests := []struct {
+		name, field, label, value, want string
+	}{
+		{"a field the edit form has is left out, as the form shows it", "notes", "Notes", "Lunch", ""},
+		{"a field it does not have is listed", "dia", "DIA", "4", `<dt class="text-gray-500">DIA</dt><dd class="break-all">4</dd>`},
+		{"a field with no value is left out", "dia", "DIA", "-", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			require.NoError(t, Detail(edit, tt.field, tt.label, tt.value).Render(context.Background(), &buf))
+			require.Equal(t, tt.want, buf.String())
+		})
+	}
 }

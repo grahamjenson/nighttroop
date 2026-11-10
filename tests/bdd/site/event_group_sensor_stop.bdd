@@ -25,7 +25,7 @@ ASSERT_VISIBLE #eventGroupsTable >> text="Sensor Stop"
 ASSERT_VISIBLE #eventGroupsTable >> text=Sensor failed
 SCREENSHOT event_group_sensor_stop
 
-// A sensor change has its sensor's code and transmitter, which its row and details show
+// A sensor change has its sensor's code and transmitter, which its row and events show
 CLICK #site--event-group--add
 CLICK #site--event-group--add--sensor-change
 ASSERT_VISIBLE #site--event-group--create--modal
@@ -46,7 +46,7 @@ ASSERT_VISIBLE #eventGroupsTable >> text=sensor code 1234, transmitter 8G1234
 CLICK #eventGroupsTable tbody tr:has(td:text-is("Sensor Change"))
 ASSERT_VISIBLE #site--event-group--details
 ASSERT_VISIBLE #site--event-group--events >> text=sensor code 1234
-ASSERT_VISIBLE #site--event-group--details dd >> text="8G1234"
+ASSERT_VISIBLE #site--event-group--events >> text=transmitter 8G1234
 ASSERT_VISIBLE #site--event-group--edit--no-events
 SCREENSHOT event_group_sensor_change_details
 

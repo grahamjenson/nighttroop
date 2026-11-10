@@ -82,11 +82,6 @@ templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Type", orDash(insulinDose.DoseType))
-			@readingDetail("Given at once (%)", percentOr(insulinDose.SplitNow, "-"))
-			@readingDetail("Extended (%)", percentOr(insulinDose.SplitExt, "-"))
-			@readingDetail("Notes", orDash(insulinDose.Notes))
-			@readingDetail("Reason", orDash(insulinDose.Reason))
 			@RecordDetails(Record{ID: insulinDose.ID, UtcOffset: insulinDose.UtcOffsetMinutes, App: insulinDose.CreatedByAppName, Device: insulinDose.CreatedByDeviceName, CreatedBy: insulinDose.CreatedByIdentityName, Created: insulinDose.CreatedAt, Updated: insulinDose.UpdatedAt, UpdatedBy: insulinDose.UpdatedByIdentityName})
 		</dl>
 	}

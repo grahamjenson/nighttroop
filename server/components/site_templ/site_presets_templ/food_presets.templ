@@ -82,15 +82,6 @@ templ FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) {
 	@modal.Modal(modal.Props{ID: "presets--food--details", Title: orDash(foodPreset.Name), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@presetDetail("Food Type", orDash(foodPreset.FoodType))
-			@presetDetail("Category", orDash(foodPreset.Category))
-			@presetDetail("Subcategory", orDash(foodPreset.Subcategory))
-			@presetDetail("Fat (g)", orDash(foodPreset.Fat))
-			@presetDetail("Protein (g)", orDash(foodPreset.Protein))
-			@presetDetail("Fibre (g)", orDash(foodPreset.Fibre))
-			@presetDetail("Energy", orDash(foodPreset.Energy))
-			@presetDetail("Portions", orDash(foodPreset.Portions))
-			@presetDetail("Pre-bolus (minutes)", orDash(foodPreset.PreBolus))
 			@site_data_templ.RecordDetails(site_data_templ.Record{ID: foodPreset.ID, App: foodPreset.CreatedByAppName, Device: foodPreset.CreatedByDeviceName, CreatedBy: foodPreset.CreatedByIdentityName, Created: foodPreset.CreatedAt, Updated: foodPreset.UpdatedAt, UpdatedBy: foodPreset.UpdatedByIdentityName})
 		</dl>
 	}
