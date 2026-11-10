@@ -16,7 +16,7 @@ func count(n *int64) int64 {
 }
 
 // ConnectorStatus shows how a saved source has synced: when it last worked and failed, how long it took, how often it
-// syncs and why, its last backfill, and its newest events and errors
+// syncs and why, its last backfill and how far back it went, and its newest events and errors
 templ ConnectorStatus(source *sitemodels.Connector, name string) {
 	<div id={ "site--settings--" + name + "-connector--status-live" } data-connectors-live>
 		@connectorStatus(source, name)
@@ -67,6 +67,13 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 						if source.LastBackfillError != nil {
 							<span class="text-red-700">: { *source.LastBackfillError }</span>
 						}
+					}
+				}
+				@connectorStat(name, "backfilled-to", "Backfilled back to") {
+					if source.TotalBackfills == 0 || source.LastBackfillFrom == nil {
+						-
+					} else {
+						{ formatIdentityDate(ctx, source.LastBackfillFrom) }<span class="text-gray-500">{ " (" + display.Ago(source.LastBackfillFrom, time.Now()) + ")" }</span>
 					}
 				}
 			</dl>

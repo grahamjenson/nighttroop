@@ -20,6 +20,8 @@ ASSERT_TEXT_VISIBLE Connector Updated
 // Once saved it can be backfilled and deleted, without a reload
 ASSERT_VISIBLE #site--settings--virtual-connector--backfill
 ASSERT_VISIBLE #site--settings--virtual-connector--delete
+// Not backfilled yet, so it has not been back to any date
+ASSERT_TEXT_EQUALS #site--settings--virtual-connector--status--backfilled-to -
 RUN_BACKGROUND_JOBS
 
 GOTO /data/glucose?limit=100
@@ -54,6 +56,8 @@ ASSERT_VISIBLE #site--settings--virtual-connector--status
 ASSERT_TEXT_EQUALS #site--settings--virtual-connector--status--last-success just now
 ASSERT_TEXT_EQUALS #site--settings--virtual-connector--status--last-failure Never
 ASSERT_TEXT_EQUALS #site--settings--virtual-connector--status--interval 1 min (Default)
+// It shows how far back its backfill went, a day before its first reading
+ASSERT_VISIBLE #site--settings--virtual-connector--status--backfilled-to >> text=/\(2[45] h ago\)$/
 ASSERT_TEXT_VISIBLE records in
 CLICK #site--settings--virtual-connector--history summary
 ASSERT_TEXT_VISIBLE Connector backfilled

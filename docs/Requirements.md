@@ -104,7 +104,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
   creation card wrap, and the table scrolls sideways in its card.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
-  credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.
+  credentials are shown once, and the sites list behind them is read again, so it has the new site without reloading.
+  An admin can create sites past `MAX_SITES` and while public site creation is off.
 - The new site ID field only lets letters a to z in: capitals typed or pasted are lowered and anything else is dropped.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
@@ -385,9 +386,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day.
 - The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the 7 days to yesterday at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
-- The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days
-  (the last 31), weeks, fortnights and months (the last year): each one's days with data, time in range, daily dose
-  and daily carbs, newest first, each opening its AGP report.
+- The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), is of a month, this one unless it is
+  given as `?month=2026-10`, and has a table of each of its kept days, the weeks and fortnights with a day in it, and
+  the months of its year: each one's days with data, time in range, daily dose and daily carbs, newest first, each
+  opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
+  month outside those is refused. A past month's empty table says it has none in that month, or year for months.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
@@ -549,7 +552,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A connector not saved yet has only Save. Once saved, without a reload, it also has Backfill, and Delete as a red
   outline button, apart from Save, so the destructive action is not the boldest on the form.
 - The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
-  and backfills, and in its last sync, its backfill and its recent events.
+  and backfills, and in its last sync, its backfill and its recent events. It shows the date its last backfill fetched
+  back to, and how long ago that is, so how far back its backfills have gone; - until it has been backfilled.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
   leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
 - Connector credentials are encrypted at rest.
