@@ -7,7 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_jobs_templ"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -43,50 +43,28 @@ func stdDevDuration(stats *controlmodels.JobStatsDaily) string {
 
 // JobStatsTable shows one page of daily job totals, newest day first, with buttons to the pages either side
 templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int64) {
-	<div id="job_stats_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Job Stats") {
-			Each day's totals for every queue's jobs, newest day first. Click a row to see its errors.
+	@listpage.Page(listpage.Props{
+		ID:          "job_stats_table",
+		Title:       "Job Stats",
+		Description: "Each day's totals for every queue's jobs, newest day first. Click a row to see its errors.",
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:     "controlJobStatsTable",
+			Static: true,
+			Rows:   len(stats),
+			Empty:  "No job stats here.",
+			Columns: []table.Column{
+				{Label: "Day"}, {Label: "Queue"}, {Label: "Job"}, {Label: "Jobs", Numeric: true},
+				{Label: "Succeeded", Numeric: true}, {Label: "Failed", Numeric: true},
+				{Label: "Mean Duration", Numeric: true},
+			},
+		},
+		Pager: &pager.Props{ID: "control--job-stats", Path: "/job-stats", Count: len(stats), Skip: skip, Limit: limit},
+	}) {
+		for _, s := range stats {
+			@jobStatsRow(s)
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{ID: "controlJobStatsTable", Class: "rounded-lg border border-gray-200"}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Day
-						}
-						@table.Head() {
-							Queue
-						}
-						@table.Head() {
-							Job
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Jobs
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Succeeded
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Failed
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Mean Duration
-						}
-					}
-				}
-				@table.Body() {
-					if len(stats) == 0 {
-						<tr><td colspan="7" class="p-4 text-sm text-gray-500">No job stats here.</td></tr>
-					}
-					for _, s := range stats {
-						@jobStatsRow(s)
-					}
-				}
-			}
-			@pager.Pager(pager.Props{ID: "control--job-stats", Path: "/job-stats", Count: len(stats), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
@@ -101,16 +79,16 @@ templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
 		@table.Cell() {
 			{ job }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(stats.TotalJobs) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(stats.TotalSuccess) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(stats.TotalFailed) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ meanDuration(stats) }
 		}
 	}

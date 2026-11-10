@@ -5,7 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -15,52 +15,28 @@ import (
 
 // ProfileSwitchesTable shows one page of profile switches, newest first, with buttons to the pages either side
 templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip int64, limit int64) {
-	<div id="profile_switches_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Profile Switches", addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", "Add Profile Switch")) {
-			Newest first. Click a profile switch to see all its details.
+	@listpage.Page(listpage.Props{
+		ID:          "profile_switches_table",
+		Title:       "Profile Switches",
+		Description: "Newest first. Click a profile switch to see all its details.",
+		Action:      addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", "Add Profile Switch"),
+		Above:       searchTotals("site--profile-switch", "profile switch", "profile switches"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "profileSwitchesTable",
+			EmptyID: "site--profile-switch--empty",
+			Empty:   "No profile switches here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Name"}, {Label: "Insulin (%)", Numeric: true},
+				{Label: "Shift", Numeric: true}, {Label: "Minutes", Numeric: true}, {Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit},
+	}) {
+		for _, profileSwitch := range profileSwitches {
+			@profileSwitchRow(profileSwitch)
 		}
-		@searchTotals("site--profile-switch", "profile switch", "profile switches")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "profileSwitchesTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Time
-						}
-						@table.Head() {
-							Name
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Insulin (%)
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Shift
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Minutes
-						}
-						@table.Head() {
-							Device
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, profileSwitch := range profileSwitches {
-						@profileSwitchRow(profileSwitch)
-					}
-					@pager.Empty("site--profile-switch--empty", 7, "No profile switches here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // ProfileSwitchNew adds a profile switch with all its fields, putting its row at the top of the table
@@ -90,13 +66,13 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 		@table.Cell() {
 			{ profileSwitch.Name }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ percentOr(profileSwitch.Multiplier, "-") }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(profileSwitch.Timeshift) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(profileSwitch.DurationMinutes) }
 		}
 		@table.Cell() {

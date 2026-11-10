@@ -4,8 +4,7 @@ import (
 	"strconv"
 
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/heading"
-	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -14,49 +13,35 @@ import (
 // PushDevices is the apps on devices that pushes are sent to, with whose they are and buttons to test and delete each:
 // the site's for an admin, and the identity's own for anyone else
 templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
-	<div id="push_devices_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Push Devices") {
-			if admin {
-				The apps on your site's phones that pushes are sent to, for every user and device. Test one to send it a
-				notification and see it arrives, or delete one to stop pushes to it.
-			} else {
-				The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives, or
-				delete one to stop pushes to it.
-			}
+	@listpage.Page(listpage.Props{
+		ID:          "push_devices_table",
+		Title:       "Push Devices",
+		Description: pushDevicesDescription(admin),
+		Table: listpage.TableProps{
+			ID:      "pushDevicesTable",
+			EmptyID: "site--push-device--empty",
+			Empty:   "No apps have registered for pushes yet.",
+			Columns: []table.Column{
+				{Label: "Identity"}, {Label: "App"}, {Label: "Bundle ID"}, {Label: "Registered"}, {Label: "Last Push"},
+				{Actions: true},
+			},
+		},
+	}) {
+		for _, registration := range registrations {
+			@PushDeviceRow(registration)
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{ID: "pushDevicesTable", Class: "rounded-lg border border-gray-200"}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Identity
-						}
-						@table.Head() {
-							App
-						}
-						@table.Head() {
-							Bundle ID
-						}
-						@table.Head() {
-							Registered
-						}
-						@table.Head() {
-							Last Push
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, registration := range registrations {
-						@PushDeviceRow(registration)
-					}
-					@pager.Empty("site--push-device--empty", 6, "No apps have registered for pushes yet.")
-				}
-			}
-		</section>
-	</div>
+	}
+}
+
+// pushDevicesDescription says whose push devices are shown: the site's for an admin, and the identity's own for anyone
+// else
+func pushDevicesDescription(admin bool) string {
+	if admin {
+		return "The apps on your site's phones that pushes are sent to, for every user and device. Test one to send it a " +
+			"notification and see it arrives, or delete one to stop pushes to it."
+	}
+	return "The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives, or " +
+		"delete one to stop pushes to it."
 }
 
 // PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it

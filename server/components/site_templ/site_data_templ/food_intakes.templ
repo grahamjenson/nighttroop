@@ -5,7 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -14,49 +14,28 @@ import (
 
 // FoodIntakesTable shows one page of food intakes, newest first, with buttons to the pages either side
 templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, limit int64) {
-	<div id="food_intakes_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Food Intakes", addmodal.Open("site--food--add", "/data/food/new", "Add Food Intake")) {
-			Newest first. Click a food intake to see all its details.
+	@listpage.Page(listpage.Props{
+		ID:          "food_intakes_table",
+		Title:       "Food Intakes",
+		Description: "Newest first. Click a food intake to see all its details.",
+		Action:      addmodal.Open("site--food--add", "/data/food/new", "Add Food Intake"),
+		Above:       searchTotals("site--food", "food intake", "food intakes"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "foodIntakesTable",
+			EmptyID: "site--food--empty",
+			Empty:   "No food intakes here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Carbs (g)", Numeric: true}, {Label: "Name"}, {Label: "Notes"},
+				{Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--food", Path: "/data/food", Count: len(foodIntakes), Skip: skip, Limit: limit},
+	}) {
+		for _, foodIntake := range foodIntakes {
+			@foodIntakeRow(foodIntake)
 		}
-		@searchTotals("site--food", "food intake", "food intakes")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "foodIntakesTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Time
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Carbs (g)
-						}
-						@table.Head() {
-							Name
-						}
-						@table.Head() {
-							Notes
-						}
-						@table.Head() {
-							Device
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, foodIntake := range foodIntakes {
-						@foodIntakeRow(foodIntake)
-					}
-					@pager.Empty("site--food--empty", 6, "No food intakes here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "site--food", Path: "/data/food", Count: len(foodIntakes), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // FoodIntakeNew adds a food intake with all its fields, putting its row at the top of the table
@@ -90,7 +69,7 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, foodIntake.OccurredAt) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(foodIntake.Carbs) }
 		}
 		@table.Cell() {

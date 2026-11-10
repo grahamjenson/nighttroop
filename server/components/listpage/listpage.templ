@@ -1,0 +1,96 @@
+// Package listpage is the shell every list page shares: its heading, then a card with a table of one page of rows
+package listpage
+
+import (
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// Props are a list page's parts, around the table's rows
+type Props struct {
+	ID          string
+	Title       string
+	Description string
+	// Action, such as an Add button, is at the right of the title
+	Action templ.Component
+	// Above is between the heading and the table's card, such as the search's totals
+	Above templ.Component
+	// SectionID names the table's card, and Toolbar is in it above the table, such as buttons to order the rows
+	SectionID string
+	Toolbar   templ.Component
+	Table     TableProps
+	// Pager is under the table when its rows are paged
+	Pager *pager.Props
+	// Modal adds the #modal-container a row's details open in
+	Modal bool
+}
+
+// TableProps are a list's table: its columns, and what it says, in a row with EmptyID, when it has no rows. That row
+// is always there, shown only while it is the only row, so it goes once a row is added and comes back once the last
+// is deleted; or, for Static rows, never added or deleted in place, it is there only when Rows is 0.
+type TableProps struct {
+	ID      string
+	Columns []table.Column
+	EmptyID string
+	Empty   string
+	Static  bool
+	Rows    int
+}
+
+// Page is a list page, with its rows as its children
+templ Page(p Props) {
+	<div id={ p.ID } class="mx-auto max-w-5xl space-y-6">
+		if p.Action != nil {
+			@heading.PageWith(p.Title, p.Action) {
+				{ p.Description }
+			}
+		} else {
+			@heading.Page(p.Title) {
+				{ p.Description }
+			}
+		}
+		if p.Above != nil {
+			@p.Above
+		}
+		<section
+			if p.SectionID != "" {
+				id={ p.SectionID }
+			}
+			class="rounded-xl border border-gray-200 p-4 shadow-sm"
+		>
+			if p.Toolbar != nil {
+				@p.Toolbar
+			}
+			@Table(p.Table) {
+				{ children... }
+			}
+			if p.Pager != nil {
+				@pager.Pager(*p.Pager)
+			}
+		</section>
+		if p.Modal {
+			<div id="modal-container"></div>
+		}
+	</div>
+}
+
+// Table is a list's table, with its rows as its children, then the row saying it has none
+templ Table(p TableProps) {
+	@table.Table(table.Props{ID: p.ID, Class: "rounded-lg border border-gray-200"}) {
+		@table.Heads(p.Columns)
+		@table.Body() {
+			{ children... }
+			@empty(p)
+		}
+	}
+}
+
+// empty is the row saying the table has no rows: always there, or for Static rows, there only when there are none
+templ empty(p TableProps) {
+	if !p.Static {
+		@pager.Empty(p.EmptyID, len(p.Columns), p.Empty)
+	} else if p.Rows == 0 {
+		@table.Empty(p.EmptyID, len(p.Columns), p.Empty)
+	}
+}
