@@ -281,6 +281,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   gives no medical advice, and its data and alarms may be late, missing or wrong.
 - The create site page, its medical note and footer included, and the site and control login pages fit a laptop's or
   a phone's window, so none of them needs scrolling.
+- The site login, control login and control setup pages each show their white card in the middle of a grey page that
+  fills the window, above the control site's footer.
 - A TOTP code's six boxes fit inside their card on a phone, the last one included: they shrink to fit a card narrower
   than them, as the site and control login cards are on a phone.
 - A staging server (`MODE=staging`) says it is a test site in a large banner at the top of every page, public, site and
@@ -348,6 +350,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month. A period with no data shows "–" for its time in range and daily dose, not 0; one with data and no insulin
   shows 0 U.
+- A time in range reads the same on the summary, the Summaries page, overviews, AGP reports and the readings' glucose
+  days: a whole percent, "<1%" for one above 0 that rounds to 0, and "–" for none.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
@@ -548,6 +552,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   and a correction at its peak, over a 25 hour one, so days differ. It reaches every range, about 2% very low (below
   54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL. It
   also has a finger prick meter reading twice a day, at 07:02 and 19:02 UTC, 6 mg/dL above the CGM then.
+- The virtual connector's first sync writes the last 30 minutes, always 6 CGM readings and no meter reading, whatever
+  time it runs; a backfill writes a meter reading in them.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.

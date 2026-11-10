@@ -1,20 +1,28 @@
 package site_reports_templ
 
 import (
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-func TestPercentText(t *testing.T) {
-	for _, tt := range []struct {
-		value *float64
-		want  string
-	}{{nil, "–"}, {new(0.0), "0%"}, {new(0.4), "<1%"}, {new(0.5), "1%"}, {new(79.6), "80%"}, {new(100.0), "100%"}} {
-		require.Equal(t, tt.want, percentText(tt.value))
+// A report whose glucose has no units, as one built without a site's settings, shows its numbers without them, as
+// mg/dL, rather than failing to render
+func TestReportsWithoutUnits(t *testing.T) {
+	start := time.Date(2026, 11, 2, 0, 0, 0, 0, time.UTC)
+	week := &sitemodels.SiteSummaryPeriod{Period: "week", Date: "2026-11-02", Start: start.UnixMilli(), End: start.AddDate(0, 0, 7).UnixMilli(), Days: 7,
+		Mean: new(120.0), SD: new(30.0), TimeInRange: new(70.0),
+		Glucose: []*float64{new(110.0)}, AGP: [][]float64{{80, 100, 120, 140, 180}}}
+	ctx := viewedFrom("UTC", "UTC")
+	for _, page := range []templ.Component{Report(week, nil, week), Overview(week, nil, week)} {
+		var html strings.Builder
+		require.NotPanics(t, func() { require.NoError(t, page.Render(ctx, &html)) })
+		require.Contains(t, html.String(), ">120<")
 	}
 }
 

@@ -1,0 +1,82 @@
+package authenticator
+
+import (
+	"strconv"
+
+	"nighttroop.t1d.nz/server/components/ui/inputotp"
+)
+
+// Page is a login or setup page's grey, filling what the window has left, with its card in its middle
+templ Page() {
+	<div class="flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50">
+		{ children... }
+	</div>
+}
+
+// Card is a login or setup page's white card, as wide as a login, or wider for setup's. Its class names it for what
+// takes its place.
+templ Card(class string, wide bool) {
+	<div class={ "p-8 rounded-lg shadow-2xl w-full bg-white", class, templ.KV("max-w-96", !wide), templ.KV("max-w-lg", wide) }>
+		{ children... }
+	</div>
+}
+
+// Title is a card's logo and title, at its top
+templ Title(title string) {
+	<div class="text-center mb-6">
+		<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
+		<h2 class="font-bold text-2xl">{ title }</h2>
+	</div>
+}
+
+// CodeInput is a TOTP code's six boxes, id-1 to id-6, which fill the hidden input id named name, the first focused
+// when focus is set
+templ CodeInput(id, form, name string, focus bool) {
+	@inputotp.InputOTP(inputotp.Props{ID: id, Form: form, Name: name}) {
+		@inputotp.Group() {
+			for i := range 6 {
+				if i == 3 {
+					@inputotp.Separator()
+				}
+				@inputotp.Slot(inputotp.SlotProps{Index: i, InputID: id + "-" + strconv.Itoa(i+1), Focus: focus && i == 0})
+			}
+		}
+	}
+}
+
+// AutoSubmit sends the form as soon as the code's last digit is typed or pasted, once the form's other required inputs
+// are in. It waits a tick for the code's boxes to fill its value, and does not send the same code twice, so a wrong
+// code is not sent again on its own.
+templ AutoSubmit(formID, codeID string) {
+	<script type="text/javascript">
+		(function () {
+			const form = document.getElementById({{ formID }});
+			const code = document.getElementById({{ codeID }});
+			let sent = "";
+			const sendWhenFull = () => setTimeout(() => {
+				if (/^\d{6}$/.test(code.value) && code.value !== sent && form.checkValidity()) {
+					sent = code.value;
+					form.requestSubmit();
+				}
+			}, 0);
+			// Only the code's own boxes, so typing the name or password does not send it
+			const boxes = document.getElementById({{ codeID + "-container" }});
+			boxes.addEventListener("input", sendWhenFull);
+			boxes.addEventListener("paste", sendWhenFull);
+		})();
+	</script>
+}
+
+// InvalidAfterError marks the form's inputs aria-invalid after a failed login, until it is sent again, so they are not
+// shown as wrong before anything has been tried
+templ InvalidAfterError(formID string) {
+	<script type="text/javascript">
+		(function () {
+			const form = document.getElementById({{ formID }});
+			const invalid = (failed) => form.querySelectorAll("input:not([type=hidden])").forEach((input) =>
+				failed ? input.setAttribute("aria-invalid", "true") : input.removeAttribute("aria-invalid"));
+			form.addEventListener("htmx:response:error", () => invalid(true));
+			form.addEventListener("htmx:before:request", () => invalid(false));
+		})();
+	</script>
+}

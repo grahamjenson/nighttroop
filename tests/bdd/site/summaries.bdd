@@ -56,7 +56,7 @@ RUN_BACKGROUND_JOBS
 GOTO /reports/summaries?month={{ slice (date -1) 0 7 }}
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(2):text-is("1")
-ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(3) >> text=/^\d+(\.\d)?%$/
+ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(3) >> text=/^(\d+%|<1%)$/
 SCREENSHOT summaries
 // The newest day kept is yesterday
 CLICK #site--summaries--day tbody tr:first-child a

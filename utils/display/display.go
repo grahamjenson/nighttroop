@@ -9,6 +9,14 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+// Layouts a day is named with: in full, as "Monday 2 January 2006", short with its year, as "Mon 2 Jan 2006", and
+// short without it, as "Mon 2 Jan"
+const (
+	LongDayLayout  = "Monday 2 January 2006"
+	DayLayout      = "Mon 2 Jan 2006"
+	ShortDayLayout = "Mon 2 Jan"
+)
+
 // Value is an optional number with its unit, rounded to 2 places, or a dash when it is not set
 func Value(v *float64, unit string) string {
 	if v == nil {
@@ -151,6 +159,14 @@ func Direction(direction *string) string {
 		return arrow
 	}
 	return *direction
+}
+
+// Arrow is a trend direction as an arrow, or "" for none or one with no arrow, for beside a reading
+func Arrow(direction *string) string {
+	if direction == nil {
+		return ""
+	}
+	return directions[*direction]
 }
 
 // Name is a stored snake_case name as words, e.g. "site_created" as "Site created"

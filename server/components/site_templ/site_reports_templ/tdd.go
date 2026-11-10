@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/css"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // ECharts draws the TDD chart with these colours from css/theme.css, as it cannot use the Tailwind classes
@@ -132,7 +133,7 @@ func tddChart(days []*sitemodels.SiteSummaryDaily, first, last time.Time) *chart
 	}
 	dates, basals, boluses := []string{}, []opts.BarData{}, []opts.BarData{}
 	for at := first; !at.After(last); at = at.AddDate(0, 0, 1) {
-		basal, boluss := opts.BarData{Name: at.Format("Mon 2 Jan 2006"), Value: "-"}, opts.BarData{Name: at.Format("Mon 2 Jan 2006"), Value: "-"}
+		basal, boluss := opts.BarData{Name: at.Format(display.DayLayout), Value: "-"}, opts.BarData{Name: at.Format(display.DayLayout), Value: "-"}
 		if day, ok := byDate[at.Format(time.DateOnly)]; ok {
 			basal.Value, boluss.Value = day.TotalDailyBasal, bolus(day.TotalDailyDose, day.TotalDailyBasal)
 		}
