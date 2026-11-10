@@ -71,12 +71,24 @@ func periodID(id string, location *time.Location, now time.Time) (string, time.T
 	return period, at, nil
 }
 
-// SummaryReport is the period the id names, as GetRow reads it, and its days, oldest first: a day's itself, and a
-// week's, fortnight's or month's those kept, and today so far while it is in it
+// SummaryReport is the report the id names and its days, oldest first: a day, as GetRow reads it, and itself; a month,
+// as GetRow reads it, and its days kept and today so far while it is in it; and a week or fortnight, the ReportDays to
+// the id's date, built from its days kept and today so far when it is the last
 func SummaryReport(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, id string, now time.Time) (*sitedb.SummaryPeriod, []*sitedb.SummaryPeriod, error) {
 	period, at, err := periodID(id, siteContext.GetSiteTimezone(), now)
 	if err != nil {
 		return nil, nil, err
+	}
+	if n, ok := sitemodels.ReportDays[period]; ok {
+		first, last := at.AddDate(0, 0, 1-n), at.Format(time.DateOnly)
+		days, err := SummaryDays(ctx, q, first.Format(time.DateOnly), last)
+		if err == nil && last == LocalDate(now, at.Location(), 0) {
+			var today *sitedb.SummaryPeriod
+			today, err = buildSummaryDaily(ctx, q, siteContext, last, now.UnixMilli())
+			days = append(days, today)
+		}
+		row := sitemodels.NewSummaryPeriod(period, first.Format(time.DateOnly), at.Location().String(), first.UnixMilli(), at.AddDate(0, 0, 1).UnixMilli(), days)
+		return row, days, err
 	}
 	row, err := SummaryPeriodAt(ctx, q, siteContext, period, at, now)
 	if err != nil || period == "day" {
