@@ -2,7 +2,8 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // No app has registered for pushes on a new site
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 ASSERT_VISIBLE #site--settings--push-devices-button
 CLICK #site--settings--push-devices-button
 ASSERT_STATUS 200
@@ -12,7 +13,8 @@ SCREENSHOT push_devices_empty
 
 // Loop registers its APNs token once signed in, and the admin sees whose it is, without the token
 POST /settings/push-registrations {"app": "loop", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop", "production": false, "token": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--push-devices-button
 ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #site--push-device--empty

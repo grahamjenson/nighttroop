@@ -2,7 +2,8 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A device is added for the Nightscout client it will be used in
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #identities_table label[for="client-createIdentityFormdevicesTable"]:has-text("Client")

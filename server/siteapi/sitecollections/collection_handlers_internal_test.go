@@ -99,7 +99,7 @@ func TestWriteErrorKeepsTheServersWordsFromToasts(t *testing.T) {
 }
 
 // A page loaded in full, or opened in the main content, is in its hub's tabs, the latter with the header's links out of
-// band to mark its hub; a part of a page, such as a table, a form's answer or a modal, is not
+// band to mark its hub, as are the account menu's; a part of a page, such as a table, a form's answer or a modal, is not
 func TestWriteResponseWrapsPagesInTheirHub(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -130,6 +130,7 @@ func TestWriteResponseWrapsPagesInTheirHub(t *testing.T) {
 			require.Equal(t, test.hub, strings.Contains(body, `id="site--hub--data"`), body)
 			require.Equal(t, test.hub, strings.Contains(body, `id="site--data--insulin-button"`), body)
 			require.Equal(t, test.oob, strings.Contains(body, `hx-swap-oob="true"`), body)
+			require.Equal(t, test.oob, strings.Contains(body, `id="site--nav--menu" hx-swap-oob="true"`), body)
 		})
 	}
 }

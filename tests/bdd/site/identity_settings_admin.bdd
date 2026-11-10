@@ -2,7 +2,8 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // An admin opens another identity's settings from its row, such as a device's
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 CLICK #site--identities--pwd_phone--manage

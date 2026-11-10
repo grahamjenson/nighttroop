@@ -26,7 +26,8 @@ ASSERT_NEW_URL
 ASSERT_PATH /
 
 // Virtual connector is turned on, but has not run yet
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

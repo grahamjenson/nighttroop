@@ -1,14 +1,15 @@
 INCLUDE steps/new_site_admin.steps
 
 // The general settings page has no alarms: they have their own page
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--site--units
 ASSERT_NOT_VISIBLE #site--alarms--site--range_low
 
 // The alarms page has the alarms, in sections, each off by default, with the defaults' glucose in the settings' units
-CLICK #site--nav--settings
-CLICK #site--settings--alarms-button
+CLICK #site--settings-menu
+CLICK #site--nav--menu--alarms
 ASSERT_STATUS 200
 ASSERT_PATH /settings/alarms
 ASSERT_VISIBLE #alarm_settings_page h2:text-is("Lows")

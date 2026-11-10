@@ -51,6 +51,8 @@
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. Performance testing (cost estimate for running full node)
+1. P4: Mark the user menu's button in the header while a page of Settings, Alarms, or Logs & Events is shown, as the
+   header then marks no hub and only the open menu marks it
 1. P4: Leave out of the details modals' lists (`readingDetail` and `presetDetail` rows) the fields their edit forms
    now show, e.g. an insulin dose's split, type, notes and reason, so each is shown once
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each

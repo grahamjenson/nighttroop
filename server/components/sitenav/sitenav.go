@@ -1,5 +1,5 @@
-// Package sitenav is the one list of the site's pages that the header, the hubs' tabs and the search all show, so
-// each page is listed once
+// Package sitenav is the one list of the site's pages that the header, the account menu, the hubs' tabs and the search
+// all show, so each page is listed once
 package sitenav
 
 import (
@@ -12,22 +12,33 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 )
 
-// Hub is an area of the site's pages, each opened from the header and showing its pages as tabs
+// Hub is an area of the site's pages, each opened from the header or the account menu and showing its pages as tabs
 type Hub string
 
 const (
 	Data     Hub = "Data"
 	Reports  Hub = "Reports"
 	Settings Hub = "Settings"
+	Alarms   Hub = "Alarms"
+	Logs     Hub = "Logs & Events"
 )
 
-// Hubs are in the order the header shows them
-var Hubs = []Hub{Data, Reports, Settings}
+// HeaderHubs are the hubs the header links to, in its order
+var HeaderHubs = []Hub{Data, Reports}
+
+// MenuHubs are the hubs the account menu opens, in its order
+var MenuHubs = []Hub{Settings, Alarms, Logs}
+
+// Slug is the hub's first word in lower case, naming it in IDs, e.g. site--nav--menu--logs
+func (h Hub) Slug() string {
+	return strings.ToLower(strings.Fields(string(h))[0])
+}
 
 // Page is one of a hub's pages
 type Page struct {
 	Hub Hub
-	// Group is where the page is in its hub's side tabs, as Data's and Settings' are, "" in Reports' row of tabs
+	// Group is where the page is in its hub's side tabs, as Data's and Settings' are, "" in a row of tabs, as Reports'
+	// and Logs & Events' are
 	Group string
 	Label string
 	Path  string
@@ -65,16 +76,19 @@ var Pages = []Page{
 
 	{Hub: Settings, Group: "This site", Label: "General", Path: "/settings", ID: "site--settings--settings-button", Icon: icon.SlidersHorizontal,
 		Store: "identity_settings", Within: []string{"/settings/site", "/settings/identity"}},
-	{Hub: Settings, Group: "This site", Label: "Alarms", Path: "/settings/alarms", ID: "site--settings--alarms-button", Icon: icon.BellRing, Store: "alarm_settings"},
 	{Hub: Settings, Group: "People & devices", Label: "Users & Devices", Path: "/settings/identities", ID: "site--settings--identities-button", Icon: icon.Users,
 		Store: "identities", Within: []string{"/settings/identities", "/settings/identity-settings"}},
 	{Hub: Settings, Group: "People & devices", Label: "Push Devices", Path: "/settings/push-devices", ID: "site--settings--push-devices-button", Icon: icon.Send,
 		Store: "push_registrations", Within: []string{"/settings/push-devices", "/settings/push-registrations"}},
 	{Hub: Settings, Group: "Connections", Label: "Connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},
 	{Hub: Settings, Group: "Connections", Label: "Push Notifications", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
-	{Hub: Settings, Group: "Troubleshooting", Label: "Events", Path: "/logs/events", ID: "site--logs--events-button", Icon: icon.Activity, Store: "site_events"},
-	{Hub: Settings, Group: "Troubleshooting", Label: "Errors", Path: "/logs/errors", ID: "site--logs--errors-button", Icon: icon.TriangleAlert, Store: "site_errors"},
-	{Hub: Settings, Group: "Troubleshooting", Label: "Logs", Path: "/logs/logs", ID: "site--logs--logs-button", Icon: icon.ScrollText, Store: "site_logs"},
+
+	// Alarms is a hub of its own page, so it has no tabs
+	{Hub: Alarms, Label: "Alarms", Path: "/settings/alarms", ID: "site--settings--alarms-button", Icon: icon.BellRing, Store: "alarm_settings"},
+
+	{Hub: Logs, Label: "Events", Path: "/logs/events", ID: "site--logs--events-button", Icon: icon.Activity, Store: "site_events"},
+	{Hub: Logs, Label: "Errors", Path: "/logs/errors", ID: "site--logs--errors-button", Icon: icon.TriangleAlert, Store: "site_errors"},
+	{Hub: Logs, Label: "Logs", Path: "/logs/logs", ID: "site--logs--logs-button", Icon: icon.ScrollText, Store: "site_logs"},
 }
 
 // keywords are the headings and words on a page, by its path, that the search also finds it by, showing the one found
@@ -135,11 +149,11 @@ func (p Page) SearchID() string {
 	return "site--nav--search--" + strings.TrimSuffix(strings.TrimPrefix(p.ID, "site--"), "-button")
 }
 
-// Visible are the pages the identity may open, of every hub or of one, so no tab or result is refused
+// Visible are the pages the identity may open, of every hub or of those given, so no tab or result is refused
 func Visible(identity *controldb.SiteIdentity, hubs ...Hub) []Page {
 	var pages []Page
 	for _, page := range Pages {
-		if (len(hubs) == 0 || page.Hub == hubs[0]) && siteapiutils.HasPermission(page.Store, siteapiutils.ActionSearch, identity) {
+		if (len(hubs) == 0 || slices.Contains(hubs, page.Hub)) && siteapiutils.HasPermission(page.Store, siteapiutils.ActionSearch, identity) {
 			pages = append(pages, page)
 		}
 	}
