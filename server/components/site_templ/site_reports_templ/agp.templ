@@ -133,12 +133,13 @@ templ rangeGroup(id string, top, bottom band, outerGoal string, total *float64, 
 
 // agpGraph is the period's AGP over a day from midnight: the 5th to 95th and 25th to 75th percentiles shaded, the
 // median as a line, each coloured above the range high and below the range low, with the very low, low, high, very
-// high and top glucose marked, and each percentile named at its end. A day's own glucose is drawn over it.
+// high and top glucose marked, and each percentile named at its end. A day's own glucose is drawn over it. Pointing at
+// or tapping a time, or moving to it with the arrow keys, shows a tooltip of each percentile's glucose then.
 templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 	{{ g := newAGPGraph(p) }}
 	{{ lastSlot, last := lastPercentiles(p.AGP) }}
-	<div class="overflow-x-auto">
-		<svg id="site--reports--agp" class="h-auto w-full min-w-[40rem] text-[11px]" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label="Ambulatory glucose profile">
+	<div class="relative overflow-x-auto">
+		<svg id="site--reports--agp" class="h-auto w-full min-w-[40rem] text-[11px]" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label="Ambulatory glucose profile: the left and right arrow keys move along its times" aria-describedby="site--reports--agp--tooltip" tabindex="0">
 			<defs>
 				for _, r := range regions {
 					<clipPath id={ "site--reports--agp--" + r.Suffix }>
@@ -171,9 +172,64 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 				}
 			}
 			@hourAxis(g, false)
+			<g id="site--reports--agp--cursor" class="hidden" aria-hidden="true">
+				<line class="stroke-brand-night" stroke-width="1.5" y1={ f(g.Top) } y2={ f(g.Bottom) }></line>
+				for range sitemodels.AGPPercentiles {
+					<circle class="fill-white stroke-brand-night" r="4" stroke-width="2"></circle>
+				}
+			</g>
 		</svg>
+		// The tooltip goes beside the time it is of, its percentiles top to bottom as the graph draws them
+		<div id="site--reports--agp--tooltip" class="pointer-events-none absolute top-0 z-10 mt-1 hidden whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-md" aria-live="polite">
+			<div class="flex justify-between gap-3"><span id="site--reports--agp--tooltip--time" class="font-semibold"></span><span class="text-gray-500">{ display.Units(p.Units) }</span></div>
+			for i := len(sitemodels.AGPPercentiles) - 1; i >= 0; i-- {
+				<div class={ "flex justify-between gap-3", templ.KV("font-semibold", i == 2) }>
+					<span>{ fmt.Sprintf("%.0f%%", sitemodels.AGPPercentiles[i]) }</span>
+					<span id={ fmt.Sprintf("site--reports--agp--tooltip--%.0f", sitemodels.AGPPercentiles[i]) } class="tabular-nums" data-percentile={ fmt.Sprint(i) }></span>
+				</div>
+			}
+		</div>
 	</div>
 	@legend(agpLegend(p))
+	<p class="mt-1 text-xs text-gray-500">Point at or tap a time, or move along them with the arrow keys, to see each percentile's glucose then.</p>
+	@templ.JSONScript("site--reports--agp--points", agpPoints(ctx, g, p.AGP))
+	<script>
+		(() => {
+			const svg = document.getElementById("site--reports--agp"), cursor = document.getElementById("site--reports--agp--cursor")
+			const tip = document.getElementById("site--reports--agp--tooltip"), width = svg.viewBox.baseVal.width
+			const points = JSON.parse(document.getElementById("site--reports--agp--points").textContent)
+			let at = -1
+			// show is the cursor and tooltip at the ith 5 minutes with percentiles, the tooltip on its left past half way
+			const show = (i) => {
+				at = Math.max(0, Math.min(points.length - 1, i))
+				const [x, time, ys, values] = points[at], across = x * svg.getBoundingClientRect().width / width
+				for (const end of ["x1", "x2"]) cursor.querySelector("line").setAttribute(end, x)
+				cursor.querySelectorAll("circle").forEach((dot, j) => { dot.setAttribute("cx", x); dot.setAttribute("cy", ys[j]) })
+				document.getElementById("site--reports--agp--tooltip--time").textContent = time
+				tip.querySelectorAll("[data-percentile]").forEach((value) => { value.textContent = values[value.dataset.percentile] })
+				cursor.classList.remove("hidden")
+				tip.classList.remove("hidden")
+				tip.style.left = (x < width / 2 ? across + 12 : across - 12 - tip.offsetWidth) + "px"
+			}
+			const hide = () => { cursor.classList.add("hidden"); tip.classList.add("hidden") }
+			// nearest is the 5 minutes with percentiles nearest the time pointed at
+			const nearest = (event) => {
+				const x = (event.clientX - svg.getBoundingClientRect().left) * width / svg.getBoundingClientRect().width
+				return points.reduce((best, point, i) => Math.abs(point[0] - x) < Math.abs(points[best][0] - x) ? i : best, 0)
+			}
+			for (const name of ["pointermove", "pointerdown"]) svg.addEventListener(name, (event) => show(nearest(event)))
+			// A tap leaves it shown until the graph loses focus, as the pointer leaves on lifting
+			svg.addEventListener("pointerleave", (event) => { if (event.pointerType === "mouse") hide() })
+			svg.addEventListener("focus", () => show(Math.max(at, 0)))
+			svg.addEventListener("focusout", hide)
+			svg.addEventListener("keydown", (event) => {
+				const step = { ArrowLeft: -1, ArrowRight: 1, PageUp: -12, PageDown: 12, Home: -points.length, End: points.length }[event.key]
+				if (step === undefined) return
+				event.preventDefault()
+				show(at + step)
+			})
+		})()
+	</script>
 }
 
 // dailyProfiles are the period's days as a calendar from the site's week start day, each with its glucose from

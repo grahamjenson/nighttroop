@@ -3,6 +3,7 @@ package site_reports_templ
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -112,6 +113,24 @@ func percentile(agp [][]float64, i int) []*float64 {
 		}
 	}
 	return values
+}
+
+// agpPoints are what the AGP's tooltip shows at each 5 minutes with percentiles: how far across the graph it is, its
+// time as the settings show times, how far down each percentile is, and each percentile's glucose in the units
+func agpPoints(ctx context.Context, g graph, agp [][]float64) [][]any {
+	round := func(v float64) float64 { return math.Round(v*10) / 10 }
+	points := [][]any{}
+	for slot, percentiles := range agp {
+		if len(percentiles) != len(sitemodels.AGPPercentiles) {
+			continue
+		}
+		ys, values := []float64{}, []string{}
+		for _, value := range percentiles {
+			ys, values = append(ys, round(g.Y(value))), append(values, display.Glucose(value, g.Units))
+		}
+		points = append(points, []any{round(agpX(g, slot)), timeOfDay(ctx, slot*int(sitemodels.AGPSlotMs/60_000)), ys, values})
+	}
+	return points
 }
 
 // lastPercentiles is the AGP's last 5 minutes with percentiles and their percentiles, where its line labels go, or -1
