@@ -66,7 +66,8 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 							@table.Cell(table.CellProps{Class: "text-right"}) {
 								@button.Button(button.Props{ID: fmt.Sprintf("site--account--remove-passkey-%d", passkey.ID), Variant: button.VariantOutline, Size: button.SizeSm,
 									Attributes: templ.Attributes{"hx-delete": fmt.Sprintf("%s/passkeys/%d", path, passkey.ID), "hx-target": "#site--account",
-										"hx-swap": "outerHTML", "hx-confirm": "Remove this passkey? It will no longer sign you in."}}) {
+										"hx-swap": "outerHTML", "hx-confirm": "Remove this passkey? It will no longer sign you in.",
+										"data-confirm-delete": "Remove"}}) {
 									Remove
 								}
 							}
