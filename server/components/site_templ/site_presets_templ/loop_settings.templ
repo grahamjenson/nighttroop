@@ -9,8 +9,6 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -76,18 +74,9 @@ templ LoopSettingsTable(settings []*sitemodels.SiteLoopSettings, skip int64, lim
 	</div>
 }
 
-// loopSettingsRow opens the settings when clicked. The delete button stops its click reaching the row.
+// loopSettingsRow opens the settings when clicked.
 templ loopSettingsRow(s *sitemodels.SiteLoopSettings) {
-	{{ id := "presets--loop-settings--" + s.ID }}
-	@table.Row(table.RowProps{
-		ID:    id,
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    "/presets/loop-settings/" + s.ID,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.DataRow("presets--loop-settings--"+s.ID, "/presets/loop-settings/"+s.ID, "Delete these settings? The profiles and device statuses sent with them are kept, without them.") {
 		@table.Cell() {
 			{ loopApps[s.App] }
 		}
@@ -102,28 +91,6 @@ templ loopSettingsRow(s *sitemodels.SiteLoopSettings) {
 		}
 		@table.Cell() {
 			{ formatDate(ctx, s.LastSeenAt) }
-		}
-		@table.Cell() {
-			<div class="flex justify-end">
-				@button.Button(button.Props{
-					ID:      id + "--delete",
-					Variant: button.VariantGhost,
-					Size:    button.SizeIcon,
-					Attributes: templ.Attributes{
-						"title":                "Delete",
-						"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-						"hx-delete":            "/presets/loop-settings/" + s.ID,
-						"hx-confirm":           "Delete these settings? The profiles and device statuses sent with them are kept, without them.",
-						"hx-target":            "#toaster",
-						"hx-swap":              "beforeend",
-						"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-						"hx-status:4xx":        "target:#toaster swap:beforeend",
-						"hx-status:5xx":        "target:#toaster swap:beforeend",
-					},
-				}) {
-					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
-				}
-			</div>
 		}
 	}
 }

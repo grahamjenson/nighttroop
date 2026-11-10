@@ -112,14 +112,7 @@ templ ConnectorsTable(sources []*controlmodels.Connector, skip int64, limit int6
 }
 
 templ connectorRow(source *controlmodels.Connector) {
-	@table.Row(table.RowProps{
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    "/connectors/" + source.ID(),
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.ModalRow("", "/connectors/"+source.ID()) {
 		@table.Cell() {
 			{ source.SiteID }
 		}
