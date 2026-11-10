@@ -46,12 +46,13 @@ func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
 	require.NotNil(t, source().BackfillStartedAt)
 	require.Equal(t, int64(1), source().TotalBackfills)
 
-	// Running it writes the day's virtual readings, and records how it went on the source and as an event
+	// Running it writes the day's virtual readings, a CGM's every 5 minutes and 2 from a meter, and records how it went
+	// on the source and as an event
 	require.NoError(t, jobs.workerFunc()(ctx, queued[0]))
 	require.NoError(t, controlDB.Jobs.Queries.CompleteJob(ctx, jobsdb.CompleteJobParams{ID: queued[0].ID}))
 	readings, err := site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 1000})
 	require.NoError(t, err)
-	require.Len(t, readings, 24*12)
+	require.Len(t, readings, 24*12+2)
 	s := source()
 	require.Nil(t, s.BackfillStartedAt)
 	require.Nil(t, s.LastBackfillError)
@@ -102,9 +103,10 @@ func TestBackfillFillsGapsInTheRecentDays(t *testing.T) {
 		require.NoError(t, err)
 		return len(readings)
 	}
-	require.Equal(t, 24*12, count(oldest-day, oldest), "the day before the oldest reading")
+	// A day's virtual readings are a CGM's every 5 minutes and 2 from a meter
+	require.Equal(t, 24*12+2, count(oldest-day, oldest), "the day before the oldest reading")
 	require.Zero(t, count(oldest+1, backfill.RecentFrom), "the days between are left as they are")
-	require.InDelta(t, recentBackfillDays*24*12, count(backfill.RecentFrom, backfill.RecentTo+1), 1, "the recent days")
+	require.InDelta(t, recentBackfillDays*(24*12+2), count(backfill.RecentFrom, backfill.RecentTo+1), 2, "the recent days")
 }
 
 func TestBackfillRangeOfDexcomIsTheLastDay(t *testing.T) {

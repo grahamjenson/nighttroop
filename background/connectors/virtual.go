@@ -40,6 +40,15 @@ const (
 	virtualCorrectionSlot = virtualWaveSlots / 4
 )
 
+// A finger prick meter reading is taken twice a day, at 07:00 and 19:00 UTC, the slot this many into each 12 hours,
+// 2 minutes after that slot's CGM reading and 6 mg/dL above it, so the two are not taken for the same glucose
+const (
+	virtualMeterSlots  = 144
+	virtualMeterSlot   = 84
+	virtualMeterAfter  = 2 * time.Minute
+	virtualMeterHigher = 6
+)
+
 // virtualGlucose is the glucose in mg/dL in the 5 minute slot, counted from 1970, no lower than a CGM reads
 func virtualGlucose(slot int64) float64 {
 	wave := math.Sin(2 * math.Pi * float64(slot%virtualWaveSlots) / virtualWaveSlots)
@@ -106,6 +115,9 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 			}},
 			virtualDoc{nsutils.Devicestatus, map[string]any{"device": VirtualCarerDevice, "date": t.UnixMilli(), "uploaderBattery": 80 - idx%24}},
 		)
+		if slot%virtualMeterSlots == virtualMeterSlot {
+			docs = append(docs, virtualDoc{nsutils.Entries, map[string]any{"type": "mbg", "mbg": sgv + virtualMeterHigher, "date": t.Add(virtualMeterAfter).UnixMilli(), "device": VirtualDevice}})
+		}
 		switch idx {
 		case virtualMealSlot:
 			docs = append(docs, virtualDoc{nsutils.Treatments, map[string]any{"eventType": "Meal Bolus", "carbs": 40, "insulin": 4, "date": t.UnixMilli(), "device": VirtualDevice}})
