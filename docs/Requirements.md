@@ -387,7 +387,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   days of data when it has fewer, and under its time CGM active that its numbers may not be typical when the CGM read
   for under 70% of the time.
 - A week's, fortnight's or month's overview names its best whole day, the one with the most time in range (the later
-  of two the same), with a small graph of its glucose through the day, which opens that day's overview; today is left out, and a day's overview has none.
+  of two the same, and of the days the CGM read for at least 70% of when there are any, so a part day of a few hours
+  is not taken for it), with a small graph of its glucose through the day, which opens that day's overview; today is left out, and a day's overview has none.
 - An overview draws its days averaged into one from midnight: a bar of each 15 minutes from its 25th to its 75th
   percentile, the part above the range high and below the range low in their colours, a dot at each's mean, and the
   range's bounds as lines labelled with their values, with hours in the settings' time format. A day's is of the 7

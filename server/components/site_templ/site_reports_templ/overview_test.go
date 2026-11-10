@@ -29,6 +29,18 @@ func TestBestDay(t *testing.T) {
 	days := []*sitemodels.SiteSummaryDaily{day("first", 1, new(80.0)), day("second", 2, new(90.0)), day("third", 3, new(90.0)),
 		day("fourth", 4, new(50.0)), day("today", now.UnixMilli()+1, new(100.0))}
 	require.Equal(t, "third", bestDay(days, now).Date)
+
+	// A day the CGM read for most of is the best over one of a higher time in range it read for only a few hours of
+	glucose := func(read int) []*float64 {
+		slots := make([]*float64, 288)
+		for i := range read {
+			slots[i] = new(6.0)
+		}
+		return slots
+	}
+	worn, part := day("worn", 1, new(70.0)), day("part", 2, new(95.0))
+	worn.Glucose, part.Glucose = glucose(250), glucose(60)
+	require.Equal(t, "worn", bestDay([]*sitemodels.SiteSummaryDaily{worn, part}, now).Date)
 }
 
 // Each bar is 15 minutes: the 25th and 75th percentiles of the AGP at its middle 5 minutes, and its glucose's mean

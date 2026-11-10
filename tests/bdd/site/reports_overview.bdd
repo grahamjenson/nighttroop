@@ -94,8 +94,9 @@ SCREENSHOT overview_month_graph
 GOTO /reports/overview/week-{{ date -1 }}
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--overview--days 5/7
-// The 7 days before have no data, so there is nothing to compare with
+// The 7 days before have no data, so there is nothing to compare with, not even its time CGM active of 0%
 ASSERT_NOT_VISIBLE #site--overview--mean--change
+ASSERT_NOT_VISIBLE #site--overview--cgm-active--change
 ASSERT_TEXT_VISIBLE These 7 days averaged into one day from midnight.
 ASSERT_DRAWN #site--overview--graph
 SCREENSHOT overview_week
@@ -116,14 +117,6 @@ ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_NOT_VISIBLE #site--overview--best-day
 ASSERT_TEXT_VISIBLE The 7 days to this one, averaged
-// The best day, the last backfilled, has the day before it to compare with: how its average glucose, GMI, coefficient
-// of variation, time CGM active and time in range rose or fell from it
-ASSERT_VISIBLE #site--overview--mean--change >> text=/^(▲ \d+\.\d mmol\/L|▼ \d+\.\d mmol\/L|No change) on the day before$/
-ASSERT_VISIBLE #site--overview--gmi--change >> text=/on the day before$/
-ASSERT_VISIBLE #site--overview--cv--change >> text=/on the day before$/
-ASSERT_VISIBLE #site--overview--cgm-active--change >> text=/on the day before$/
-ASSERT_VISIBLE #site--overview--in-range--change >> text=/(% in range|No change) on the day before$/
-SCREENSHOT overview_day_compared
 ASSERT_TEXT_EQUALS #site--overview--days 1/1
 ASSERT_DRAWN #site--overview--graph
 SCREENSHOT overview_day
@@ -143,6 +136,17 @@ ASSERT_STATUS 200
 ASSERT_PATH /reports/tdd
 ASSERT_TITLE TDD · Nighttroop
 ASSERT_NO_PAGE_ERRORS
+
+// The day before yesterday, a whole backfilled day, has the day before it, another, to compare with: how its average
+// glucose, GMI, coefficient of variation, time CGM active and time in range rose or fell from it
+GOTO /reports/overview/day-{{ date -2 }}
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--overview--mean--change >> text=/^(▲ \d+\.\d mmol\/L|▼ \d+\.\d mmol\/L|No change) on the day before$/
+ASSERT_VISIBLE #site--overview--gmi--change >> text=/on the day before$/
+ASSERT_VISIBLE #site--overview--cv--change >> text=/on the day before$/
+ASSERT_VISIBLE #site--overview--cgm-active--change >> text=/on the day before$/
+ASSERT_VISIBLE #site--overview--in-range--change >> text=/(% in range|No change) on the day before$/
+SCREENSHOT overview_day_compared
 
 // An id that is not a period is not found
 GOTO /reports/overview/year-{{ date -1 }}

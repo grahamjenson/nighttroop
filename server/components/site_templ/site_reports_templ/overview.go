@@ -151,15 +151,33 @@ func perDay(count int64, days int) string {
 }
 
 // bestDay is the whole day with the most time in range, the last of those with the same, or nil when none had
-// readings; today is left out, as it is not over
+// readings; today is left out, as it is not over, and a day the CGM read for under cgmActiveGoal of is only when none
+// read for more
 func bestDay(days []*sitemodels.SiteSummaryDaily, now time.Time) *sitemodels.SiteSummaryDaily {
 	var best *sitemodels.SiteSummaryDaily
-	for _, day := range days {
-		if day.TimeInRange != nil && day.End <= now.UnixMilli() && (best == nil || *day.TimeInRange >= *best.TimeInRange) {
-			best = day
+	for _, worn := range []bool{true, false} {
+		for _, day := range days {
+			if day.TimeInRange != nil && day.End <= now.UnixMilli() && (!worn || cgmWorn(day)) && (best == nil || *day.TimeInRange >= *best.TimeInRange) {
+				best = day
+			}
+		}
+		if best != nil {
+			return best
 		}
 	}
-	return best
+	return nil
+}
+
+// cgmWorn is whether the day has glucose in at least cgmActiveGoal of its 5 minutes, so its time in range is of the
+// whole day rather than a few hours of it, as a backfill's first day can be
+func cgmWorn(day *sitemodels.SiteSummaryDaily) bool {
+	read := 0
+	for _, value := range day.Glucose {
+		if value != nil {
+			read++
+		}
+	}
+	return len(day.Glucose) > 0 && 100*float64(read)/float64(len(day.Glucose)) >= cgmActiveGoal
 }
 
 // overviewBar is 15 minutes of the period's day: the 25th and 75th percentiles of its glucose, and its mean
