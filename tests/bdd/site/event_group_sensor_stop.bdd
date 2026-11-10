@@ -28,7 +28,7 @@ INPUT #site--event-group--create--occurred-at 2026-01-02T08:00
 CLICK #site--event-group--create--reason
 ASSERT_VISIBLE #site--event-group--create--component-event-id
 ASSERT_NOT_VISIBLE #site--event-group--create--insulin-dose-id
-INPUT #site--event-group--create--component-event-id 08:00 Sensor Stop
+INPUT #site--event-group--create--component-event-id 08:00:00 Sensor Stop
 CLICK #site--event-group--create--submit
 ASSERT_STATUS 201
 ASSERT_NOT_VISIBLE #site--event-group--create--modal

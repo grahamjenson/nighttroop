@@ -33,15 +33,16 @@ ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Meal Bolus
 ASSERT_TEXT_VISIBLE Events within an hour of it can be picked.
 INPUT #site--event-group--create--occurred-at 2026-01-02T12:30
 CLICK #site--event-group--create--reason
-ASSERT_TEXT_VISIBLE from 2026-01-02 11:30 to 13:30
+// Its times are in the time format, by default HH:mm:ss
+ASSERT_TEXT_VISIBLE from 2026-01-02 11:30:00 to 13:30:00
 // A meal bolus can have glucose, insulin, food and a site change, but not a temp basal, temp target or activity
 ASSERT_VISIBLE #site--event-group--create--glucose-reading-id
 ASSERT_VISIBLE #site--event-group--create--component-event-id
 ASSERT_NOT_VISIBLE #site--event-group--create--temp-basal-id
 ASSERT_NOT_VISIBLE #site--event-group--create--temp-target-id
 ASSERT_NOT_VISIBLE #site--event-group--create--activity-id
-INPUT #site--event-group--create--food-intake-id 12:30 40 g carbs Sandwich
-INPUT #site--event-group--create--insulin-dose-id 12:35 4 U
+INPUT #site--event-group--create--food-intake-id 12:30:00 40 g carbs Sandwich
+INPUT #site--event-group--create--insulin-dose-id 12:35:00 4 U
 INPUT #site--event-group--create--notes Lunch
 CLICK #site--event-group--create--reason
 SCREENSHOT event_group_add
@@ -77,5 +78,5 @@ CLICK #site--event-group--add--correction-bolus
 ASSERT_NOT_VISIBLE #site--event-group--create--food-intake-id
 INPUT #site--event-group--create--occurred-at 2026-01-02T12:30
 CLICK #site--event-group--create--reason
-ASSERT_TEXT_VISIBLE from 2026-01-02 11:30 to 13:30
-INPUT #site--event-group--create--insulin-dose-id 12:35 4 U
+ASSERT_TEXT_VISIBLE from 2026-01-02 11:30:00 to 13:30:00
+INPUT #site--event-group--create--insulin-dose-id 12:35:00 4 U
