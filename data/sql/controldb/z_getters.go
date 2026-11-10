@@ -2158,6 +2158,16 @@ func (m *CreateControlIdentityParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
+// GetID returns the ID value.
+func (m DeleteControlIdentityParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteControlIdentityParams.
+func (m *DeleteControlIdentityParams) SetID(v int64) {
+	m.ID = v
+}
+
 // GetName returns the Name value.
 func (m GetControlIdentityParams) GetName() string {
 	return m.Name
@@ -2175,6 +2185,126 @@ func (m GetControlIdentityByIDParams) GetID() int64 {
 
 // SetID sets the ID value and returns the updated GetControlIdentityByIDParams.
 func (m *GetControlIdentityByIDParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetPasswordHash returns the PasswordHash value.
+func (m UpdateControlIdentityPasswordParams) GetPasswordHash() string {
+	return m.PasswordHash
+}
+
+// SetPasswordHash sets the PasswordHash value and returns the updated UpdateControlIdentityPasswordParams.
+func (m *UpdateControlIdentityPasswordParams) SetPasswordHash(v string) {
+	m.PasswordHash = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateControlIdentityPasswordParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateControlIdentityPasswordParams.
+func (m *UpdateControlIdentityPasswordParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdateControlIdentityPasswordParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateControlIdentityPasswordParams.
+func (m *UpdateControlIdentityPasswordParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m UpdateControlIdentityPasswordParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateControlIdentityPasswordParams.
+func (m *UpdateControlIdentityPasswordParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetRole returns the Role value.
+func (m UpdateControlIdentityRoleParams) GetRole() consts.ControlRole {
+	return m.Role
+}
+
+// SetRole sets the Role value and returns the updated UpdateControlIdentityRoleParams.
+func (m *UpdateControlIdentityRoleParams) SetRole(v consts.ControlRole) {
+	m.Role = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateControlIdentityRoleParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateControlIdentityRoleParams.
+func (m *UpdateControlIdentityRoleParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdateControlIdentityRoleParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateControlIdentityRoleParams.
+func (m *UpdateControlIdentityRoleParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m UpdateControlIdentityRoleParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateControlIdentityRoleParams.
+func (m *UpdateControlIdentityRoleParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetTotpSecretEnc returns the TotpSecretEnc value.
+func (m UpdateControlIdentityTOTPParams) GetTotpSecretEnc() string {
+	return m.TotpSecretEnc
+}
+
+// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated UpdateControlIdentityTOTPParams.
+func (m *UpdateControlIdentityTOTPParams) SetTotpSecretEnc(v string) {
+	m.TotpSecretEnc = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateControlIdentityTOTPParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateControlIdentityTOTPParams.
+func (m *UpdateControlIdentityTOTPParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdateControlIdentityTOTPParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateControlIdentityTOTPParams.
+func (m *UpdateControlIdentityTOTPParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m UpdateControlIdentityTOTPParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateControlIdentityTOTPParams.
+func (m *UpdateControlIdentityTOTPParams) SetID(v int64) {
 	m.ID = v
 }
 
@@ -2246,6 +2376,16 @@ func (m CreateSiteIdentityPasskeyParams) GetCredentialJson() string {
 // SetCredentialJson sets the CredentialJson value and returns the updated CreateSiteIdentityPasskeyParams.
 func (m *CreateSiteIdentityPasskeyParams) SetCredentialJson(v string) {
 	m.CredentialJson = v
+}
+
+// GetControlIdentityID returns the ControlIdentityID value.
+func (m DeleteControlIdentityPasskeysParams) GetControlIdentityID() int64 {
+	return m.ControlIdentityID
+}
+
+// SetControlIdentityID sets the ControlIdentityID value and returns the updated DeleteControlIdentityPasskeysParams.
+func (m *DeleteControlIdentityPasskeysParams) SetControlIdentityID(v int64) {
+	m.ControlIdentityID = v
 }
 
 // GetControlIdentityID returns the ControlIdentityID value.
@@ -2659,6 +2799,16 @@ func (m *DeleteSitePushCredentialsParams) SetSiteID(v *string) {
 }
 
 // GetID returns the ID value.
+func (m GetAnyPushCredentialParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetAnyPushCredentialParams.
+func (m *GetAnyPushCredentialParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m GetAnySitePushRegistrationParams) GetID() int64 {
 	return m.ID
 }
@@ -2796,6 +2946,26 @@ func (m RecordPushParams) GetTokenHash() string {
 // SetTokenHash sets the TokenHash value and returns the updated RecordPushParams.
 func (m *RecordPushParams) SetTokenHash(v string) {
 	m.TokenHash = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchAllPushCredentialsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchAllPushCredentialsParams.
+func (m *SearchAllPushCredentialsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchAllPushCredentialsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchAllPushCredentialsParams.
+func (m *SearchAllPushCredentialsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetSiteID returns the SiteID value.

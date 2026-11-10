@@ -13,7 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/input"
 )
 
-// RecoverSite is the page a site's ID and backup key get a new admin login on, shown in the form's place
+// RecoverSite is the page a site's ID and backup key get a new admin login on, shown on the site's own address
 func RecoverSite() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

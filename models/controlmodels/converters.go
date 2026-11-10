@@ -17,6 +17,8 @@ type ControlConverter interface {
 	// goverter:enum no
 	// goverter:map TotpSecretEnc HasTotp | HasSecret
 	SiteIdentityFromDB(source *controldb.SiteIdentity) *SiteIdentity
+	// goverter:enum no
+	ControlAdminFromDB(source *controldb.ControlIdentity) *ControlAdmin
 
 	// goverter:useZeroValueOnPointerInconsistency
 	QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams

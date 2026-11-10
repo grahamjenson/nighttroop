@@ -78,3 +78,36 @@ func TestGlucoseHeroGreysAnOldReading(t *testing.T) {
 		})
 	}
 }
+
+// TestSummaryReloadsWhenItsReadingTurnsStale checks the summary's content is reloaded a second after its latest
+// reading turns stale, after 15 minutes without settings, and not when it has no reading or already is; a reading from
+// the future waits only the 15 minutes, not longer than the browser's timer can
+func TestSummaryReloadsWhenItsReadingTurnsStale(t *testing.T) {
+	mmol, now := consts.UnitsMMOLL, time.UnixMilli(time.Now().UnixMilli())
+	tests := []struct {
+		name    string
+		age     time.Duration
+		trigger string
+	}{
+		{"new", 0, ", load delay:901000ms"},
+		{"10 minutes old", 10 * time.Minute, ", load delay:301000ms"},
+		{"just under", 15*time.Minute - 500*time.Millisecond, ", load delay:1500ms"},
+		{"stale", 15 * time.Minute, ""},
+		{"from the future", -100 * 24 * time.Hour, ", load delay:901000ms"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reading := sitemodels.SiteGlucoseReading{Reading: 6.5, Units: &mmol, OccurredAt: now.Add(-tt.age).UnixMilli()}
+			summary := &sitemodels.Summary{Units: &mmol, GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: reading}}}
+			require.Equal(t, tt.trigger, staleTrigger(context.Background(), summary, now))
+		})
+	}
+	require.Empty(t, staleTrigger(context.Background(), &sitemodels.Summary{Units: &mmol}, now))
+
+	// The rendered summary schedules it after its stream's triggers
+	reading := sitemodels.SiteGlucoseReading{Reading: 6.5, Units: &mmol, OccurredAt: now.Add(-10 * time.Minute).UnixMilli()}
+	summary := &sitemodels.Summary{Hours: 6, Units: &mmol, GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: reading}}}
+	var buf bytes.Buffer
+	require.NoError(t, Summary(summary).Render(context.Background(), &buf))
+	require.Regexp(t, `reconnected from:#site--summary--live, load delay:30\d{4}ms"`, buf.String())
+}

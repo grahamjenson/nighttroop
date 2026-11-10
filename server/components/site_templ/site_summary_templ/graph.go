@@ -62,9 +62,10 @@ var legend = []map[string]any{
 	{"name": "Target", "icon": "path://M0,4L12,4L12,6L0,6Z", "itemStyle": map[string]any{"color": blue700}},
 }
 
-// isSMB is whether a dose is a loop's small automatic bolus, which is drawn smaller and fainter than one given by hand
+// isSMB is whether a dose is a loop's small automatic bolus, which is drawn smaller and fainter than one given by hand:
+// Trio's and iAPS's are sent as SMB, and Loop's as a bolus that is automatic
 func isSMB(d *sitemodels.SiteInsulinDose) bool {
-	return d.DoseType != nil && strings.EqualFold(*d.DoseType, "SMB")
+	return (d.DoseType != nil && strings.EqualFold(*d.DoseType, "SMB")) || (d.Automatic != nil && *d.Automatic)
 }
 
 // graph is the summary as a go-echarts chart on one grid, as Carer draws it: the urgent range and the range shaded

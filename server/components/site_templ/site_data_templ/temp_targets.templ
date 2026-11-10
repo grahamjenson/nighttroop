@@ -6,12 +6,10 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -64,45 +62,6 @@ func tempTargetFields(ctx context.Context) []addmodal.Field {
 	}
 }
 
-templ tempTargetInputs(id string, low string, high string, duration string, notes string) {
-	@field.Field(id+"--low", "Low ("+string(*glucoseUnits(ctx))+")", "w-32") {
-		@input.Input(input.Props{
-			ID:          id + "--low",
-			Type:        input.TypeNumber,
-			Name:        "low_target",
-			Placeholder: "Low " + string(*glucoseUnits(ctx)),
-			Value:       low,
-			Required:    true,
-			Attributes:  glucoseInputAttributes(ctx),
-		})
-	}
-	@field.Field(id+"--high", "High ("+string(*glucoseUnits(ctx))+")", "w-32") {
-		@input.Input(input.Props{
-			ID:          id + "--high",
-			Type:        input.TypeNumber,
-			Name:        "high_target",
-			Placeholder: "High " + string(*glucoseUnits(ctx)),
-			Value:       high,
-			Required:    true,
-			Attributes:  glucoseInputAttributes(ctx),
-		})
-	}
-	@field.Field(id+"--duration", "Duration (min)", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--duration",
-			Type:        input.TypeNumber,
-			Name:        "duration_minutes",
-			Placeholder: "Minutes",
-			Value:       duration,
-			Required:    true,
-			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "10080"},
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // tempTargetRow opens the temp target's details when clicked.
 templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 	@table.DataRow("site--temp-target--"+tempTarget.ID, "/data/temp-targets/"+tempTarget.ID, "Delete this temp target?") {
@@ -128,18 +87,10 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 }
 
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
-	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: modal.Submit("site--temp-target--edit", "Save")}) {
-		<form
-			id="site--temp-target--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/temp-targets/" + tempTarget.ID }
-			hx-target={ "#site--temp-target--" + tempTarget.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@tempTargetInputs("site--temp-target--edit", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), fmt.Sprint(tempTarget.DurationMinutes), orEmpty(tempTarget.Notes))
-		</form>
+	{{ edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "high_target": formatGlucose(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor")} }}
+	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Insulin Needs Scale Factor", orDash(tempTarget.InsulinNeedsScaleFactor))
 			@readingDetail("Notes", orDash(tempTarget.Notes))

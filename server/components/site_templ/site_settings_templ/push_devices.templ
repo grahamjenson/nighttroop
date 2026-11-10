@@ -10,8 +10,8 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
-// PushDevices is the apps on devices that pushes are sent to, with whose they are and a button to test each: the
-// site's for an admin, and the identity's own for anyone else
+// PushDevices is the apps on devices that pushes are sent to, with whose they are and buttons to test and delete each:
+// the site's for an admin, and the identity's own for anyone else
 templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
 	@listpage.Page(listpage.Props{
 		ID:          "push_devices_table",
@@ -19,8 +19,6 @@ templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
 		Description: pushDevicesDescription(admin),
 		Table: listpage.TableProps{
 			ID:      "pushDevicesTable",
-			Static:  true,
-			Rows:    len(registrations),
 			EmptyID: "site--push-device--empty",
 			Empty:   "No apps have registered for pushes yet.",
 			Columns: []table.Column{
@@ -30,7 +28,7 @@ templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
 		},
 	}) {
 		for _, registration := range registrations {
-			@pushDeviceRow(registration)
+			@PushDeviceRow(registration)
 		}
 	}
 }
@@ -40,13 +38,14 @@ templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
 func pushDevicesDescription(admin bool) string {
 	if admin {
 		return "The apps on your site's phones that pushes are sent to, for every user and device. Test one to send it a " +
-			"notification and see it arrives."
+			"notification and see it arrives, or delete one to stop pushes to it."
 	}
-	return "The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives."
+	return "The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives, or " +
+		"delete one to stop pushes to it."
 }
 
-// pushDeviceRow is a registration, without its token, and a button to send it a test push
-templ pushDeviceRow(registration *sitemodels.PushRegistration) {
+// PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it
+templ PushDeviceRow(registration *sitemodels.PushRegistration) {
 	{{ id := "site--push-device--" + strconv.FormatInt(registration.ID, 10) }}
 	@table.Row(table.RowProps{ID: id}) {
 		@table.Cell() {
@@ -54,7 +53,7 @@ templ pushDeviceRow(registration *sitemodels.PushRegistration) {
 		}
 		@table.Cell() {
 			{ string(registration.App) }
-			<span class="block text-xs text-gray-500">{ pushProviders[string(registration.Provider)] }</span>
+			<span class="block text-xs text-gray-500">{ PushProviders[string(registration.Provider)] }</span>
 		}
 		@table.Cell() {
 			{ registration.BundleID }
@@ -67,7 +66,7 @@ templ pushDeviceRow(registration *sitemodels.PushRegistration) {
 		}
 		@pushDeviceStatus(registration)
 		@table.Cell() {
-			<div class="flex justify-end">
+			<div class="flex items-center justify-end gap-2">
 				@button.Button(button.Props{
 					ID:      id + "--test",
 					Variant: button.VariantOutline,
@@ -82,6 +81,8 @@ templ pushDeviceRow(registration *sitemodels.PushRegistration) {
 				}) {
 					Test
 				}
+				@table.DeleteButton(id+"--delete", "/settings/push-registrations/"+strconv.FormatInt(registration.ID, 10),
+					"Delete this push device? Pushes to it will stop until its app registers again.")
 			</div>
 		}
 	}
@@ -101,4 +102,8 @@ templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
 templ PushDeviceTested(registration *sitemodels.PushRegistration) {
 	@pushDeviceStatus(registration)
 	@successtoast.OOB("Test push sent to " + string(registration.App))
+}
+
+templ PushDeviceDeleted() {
+	@successtoast.Toast("Push Device Deleted")
 }

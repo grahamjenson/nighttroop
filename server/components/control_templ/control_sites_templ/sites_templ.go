@@ -1311,7 +1311,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = actionCard("control--site--action-truncate", "Truncate", "Does now what every 10 minutes does to its newest reports, to all of them: keeps the loop's status and pump only on each device's newest report, and one report every 10 minutes from before the last hour, then shrinks its DB.",
+			templ_7745c5c3_Err = actionCard("control--site--action-truncate", "Truncate", "Does now what every 10 minutes does to its newest reports, to all of them: keeps the loop's status and pump only on each device's newest report, and one report every 10 minutes from before the last hour. It also deletes old loop settings no record refers to any more, then shrinks its DB.",
 				unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Scissors).Render(templ.WithChildren(ctx, templ_7745c5c3_Var52), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

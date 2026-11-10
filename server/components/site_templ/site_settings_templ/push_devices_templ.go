@@ -17,8 +17,8 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
-// PushDevices is the apps on devices that pushes are sent to, with whose they are and a button to test each: the
-// site's for an admin, and the identity's own for anyone else
+// PushDevices is the apps on devices that pushes are sent to, with whose they are and buttons to test and delete each:
+// the site's for an admin, and the identity's own for anyone else
 func PushDevices(registrations []*sitemodels.PushRegistration, admin bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -49,7 +49,7 @@ func PushDevices(registrations []*sitemodels.PushRegistration, admin bool) templ
 			}
 			ctx = templ.InitializeContext(ctx)
 			for _, registration := range registrations {
-				templ_7745c5c3_Err = pushDeviceRow(registration).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = PushDeviceRow(registration).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -62,8 +62,6 @@ func PushDevices(registrations []*sitemodels.PushRegistration, admin bool) templ
 			Description: pushDevicesDescription(admin),
 			Table: listpage.TableProps{
 				ID:      "pushDevicesTable",
-				Static:  true,
-				Rows:    len(registrations),
 				EmptyID: "site--push-device--empty",
 				Empty:   "No apps have registered for pushes yet.",
 				Columns: []table.Column{
@@ -84,13 +82,14 @@ func PushDevices(registrations []*sitemodels.PushRegistration, admin bool) templ
 func pushDevicesDescription(admin bool) string {
 	if admin {
 		return "The apps on your site's phones that pushes are sent to, for every user and device. Test one to send it a " +
-			"notification and see it arrives."
+			"notification and see it arrives, or delete one to stop pushes to it."
 	}
-	return "The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives."
+	return "The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives, or " +
+		"delete one to stop pushes to it."
 }
 
-// pushDeviceRow is a registration, without its token, and a button to send it a test push
-func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
+// PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it
+func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -135,7 +134,7 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(registration.IdentityName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 53, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 52, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -162,7 +161,7 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(string(registration.App))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 56, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 55, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -173,9 +172,9 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(pushProviders[string(registration.Provider)])
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(PushProviders[string(registration.Provider)])
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 57, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 56, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -206,7 +205,7 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(registration.BundleID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 60, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 59, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -243,7 +242,7 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(formatIdentityDate(ctx, &registration.CreatedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 66, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 65, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -271,7 +270,7 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex justify-end\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex items-center justify-end gap-2\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -305,6 +304,11 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 						"hx-status:5xx": "target:#toaster swap:beforeend",
 					},
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = table.DeleteButton(id+"--delete", "/settings/push-registrations/"+strconv.FormatInt(registration.ID, 10),
+					"Delete this push device? Pushes to it will stop until its app registers again.").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -361,7 +365,7 @@ func pushDeviceStatus(registration *sitemodels.PushRegistration) templ.Component
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(formatIdentityDate(ctx, registration.LastPushedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 93, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 94, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -379,7 +383,7 @@ func pushDeviceStatus(registration *sitemodels.PushRegistration) templ.Component
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(*registration.LastError)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 95, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 96, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -423,6 +427,31 @@ func PushDeviceTested(registration *sitemodels.PushRegistration) templ.Component
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = successtoast.OOB("Test push sent to "+string(registration.App)).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func PushDeviceDeleted() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = successtoast.Toast("Push Device Deleted").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

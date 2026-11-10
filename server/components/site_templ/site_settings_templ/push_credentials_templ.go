@@ -20,8 +20,8 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-// pushProviders are the services a credential sends pushes through, as people know them
-var pushProviders = map[string]string{string(consts.PushProviderAPNs): "Apple (APNs)", string(consts.PushProviderFCM): "Firebase (FCM)"}
+// PushProviders are the services a credential sends pushes through, as people know them
+var PushProviders = map[string]string{string(consts.PushProviderAPNs): "Apple (APNs)", string(consts.PushProviderFCM): "Firebase (FCM)"}
 
 // PushCredentialsTable is the site's push credentials, with a button to add one and each one's to delete it
 func PushCredentialsTable(credentials []*sitemodels.PushCredential) templ.Component {
@@ -156,7 +156,7 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var8 string
-				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(pushProviders[string(credential.Provider)])
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(PushProviders[string(credential.Provider)])
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 52, Col: 47}
 				}
@@ -322,24 +322,24 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 	})
 }
 
-// pushCredentialForm adds a credential: its fields, then the apps it pushes to and its secret
-var pushCredentialForm = addmodal.Props{
+// PushCredentialForm adds a credential: its fields, then the apps it pushes to and its secret
+var PushCredentialForm = addmodal.Props{
 	ID: "site--push-credential--create", Title: "Add Push Credential", Path: "/settings/push-credentials",
 	Target: "#pushCredentialsTable tbody", Submit: "Add Push Credential",
 	Fields: []addmodal.Field{
 		{Name: "name", Label: "Name", Help: "What it is for, e.g. My Loop.", Required: true, Kind: addmodal.Text, Max: "64"},
 		{Name: "provider", Label: "Service", Help: "Apple for iPhone apps, Firebase for Android apps.", Required: true, Kind: addmodal.Select,
 			Options: []string{string(consts.PushProviderAPNs), string(consts.PushProviderFCM)}, Value: string(consts.PushProviderAPNs),
-			OptionLabel: func(p string) string { return pushProviders[p] }},
+			OptionLabel: func(p string) string { return PushProviders[p] }},
 		{Name: "team_or_project_id", Label: "Team or Project ID", Help: "Your Apple developer team ID, or your Firebase project ID.", Required: true, Kind: addmodal.Text, Max: "64"},
 		{Name: "key_id", Label: "Key ID", Help: "The Apple push key's 10 character ID; none for Firebase.", Kind: addmodal.Text, Max: "10"},
 		{Name: "bundle_ids", Label: "Bundle IDs", Help: "The only apps it pushes to, separated by commas; blank for any of yours.", Kind: addmodal.Text, Max: "2048", Wide: true},
 	},
-	Extra: pushCredentialExtra("site--push-credential--create"),
+	Extra: PushCredentialExtra("site--push-credential--create"),
 }
 
-// pushCredentialExtra are a checkbox for each app it can push to, and its secret, pasted in
-func pushCredentialExtra(formID string) templ.Component {
+// PushCredentialExtra are a checkbox for each app it can push to, and its secret, pasted in
+func PushCredentialExtra(formID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -439,7 +439,7 @@ func PushCredentialNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(pushCredentialForm).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(PushCredentialForm).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

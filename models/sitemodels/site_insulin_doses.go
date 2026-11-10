@@ -6,6 +6,7 @@ type SiteInsulinDose struct {
 	DoseType              *string  `json:"dose_type"`
 	SplitNow              *float64 `json:"split_now"` // the fraction of a combo bolus given at once, so 0.7 is 70%
 	SplitExt              *float64 `json:"split_ext"` // the fraction of it given over time
+	Automatic             *bool    `json:"automatic"` // whether a loop gave it, as Loop sends, so it is an SMB
 	Notes                 *string  `json:"notes"`
 	Reason                *string  `json:"reason"`
 	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes"`

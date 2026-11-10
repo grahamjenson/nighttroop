@@ -364,7 +364,7 @@ templ siteActions(site *controlmodels.Site) {
 				@actionCard("control--site--action-disable", "Disable", "Stops serving the site. Its data is kept.", unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
 					@siteActionForm("/sites/"+site.ID, "disabled", "Disable this site? It will stop being served.", "control--site--disable", "Disable")
 				}
-				@actionCard("control--site--action-truncate", "Truncate", "Does now what every 10 minutes does to its newest reports, to all of them: keeps the loop's status and pump only on each device's newest report, and one report every 10 minutes from before the last hour, then shrinks its DB.",
+				@actionCard("control--site--action-truncate", "Truncate", "Does now what every 10 minutes does to its newest reports, to all of them: keeps the loop's status and pump only on each device's newest report, and one report every 10 minutes from before the last hour. It also deletes old loop settings no record refers to any more, then shrinks its DB.",
 					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Scissors) {
 					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses and pumps are cleared, keeping their IOB, COB and pump battery, its older reports thinned, then its DB is shrunk.", "control--site--truncate", "Truncate")
 				}

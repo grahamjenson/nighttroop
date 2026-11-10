@@ -1366,6 +1366,10 @@ func InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose {
 			xfloat642 := *(*source).SplitExt
 			sitemodelsSiteInsulinDose.SplitExt = &xfloat642
 		}
+		if (*source).Automatic != nil {
+			xbool := *(*source).Automatic
+			sitemodelsSiteInsulinDose.Automatic = &xbool
+		}
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitemodelsSiteInsulinDose.Notes = &xstring2

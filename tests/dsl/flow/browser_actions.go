@@ -620,6 +620,48 @@ func (r *RunBackgroundJobs) Execute(t *testing.T, page playwright.Page, ctx map[
 	return page, nil
 }
 
+// WaitVisible waits up to Seconds for Locator to be visible, failing if it is not, for what a timer on the page shows
+// later than an assert waits
+type WaitVisible struct {
+	Seconds int
+	Locator string
+	Asserts []BrowserAssert
+
+	TestPath string
+	TestLine int
+}
+
+func (r *WaitVisible) AddAssert(assert BrowserAssert) {
+	r.Asserts = append(r.Asserts, assert)
+}
+
+func (r *WaitVisible) ToFlatString() string {
+	return fmt.Sprintf("WAIT_VISIBLE %d %s", r.Seconds, r.Locator)
+}
+
+func (r *WaitVisible) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *WaitVisible) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+// Execute waits for the locator, then runs its asserts
+func (r *WaitVisible) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	err := getLocator(r.Locator, page).Locator("visible=true").First().WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateVisible, Timeout: playwright.Float(float64(r.Seconds * 1000))})
+	if err != nil {
+		html, _ := page.Content()
+		t.Fatalf("\n\n%s: %v\n\n%s\n\n", r.ToErrorLine("Not visible in time"), err, PrettifyHTML(html))
+	}
+	for _, assert := range r.Asserts {
+		if err := assert.Execute(t, ctx, page, nil); err != nil {
+			t.Fatalf("\n\n ASSERT FAILED \n %s: %v \n\n", r.ToErrorLine("Error with ASSERT"), err)
+		}
+	}
+	return page, nil
+}
+
 // Hold holds the page's requests to a path, unsent, from HOLD until RELEASE sends them, as a slow server would, so a
 // flow can act while one is on its way, e.g. open what a refresh will swap before it lands
 type Hold struct {

@@ -5,12 +5,10 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -57,23 +55,6 @@ var insulinDoseFields = []addmodal.Field{
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
-templ insulinDoseInputs(id string, dose string, notes string) {
-	@field.Field(id+"--dose", "Dose (U)", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--dose",
-			Type:        input.TypeNumber,
-			Name:        "dose",
-			Placeholder: "Units",
-			Value:       dose,
-			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "-100", "max": "100"},
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // insulinDoseRow opens the insulin dose's details when clicked.
 templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 	@table.DataRow("site--insulin--"+insulinDose.ID, "/data/insulin/"+insulinDose.ID, "Delete this insulin dose?") {
@@ -96,18 +77,10 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 }
 
 templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
-	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt), Actions: modal.Submit("site--insulin--edit", "Save")}) {
-		<form
-			id="site--insulin--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/insulin/" + insulinDose.ID }
-			hx-target={ "#site--insulin--" + insulinDose.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@insulinDoseInputs("site--insulin--edit", fmt.Sprint(insulinDose.Dose), orEmpty(insulinDose.Notes))
-		</form>
+	{{ edit := addmodal.Props{ID: "site--insulin--edit", Path: "/data/insulin/" + insulinDose.ID, Target: "#site--insulin--" + insulinDose.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(insulinDoseFields, insulinDose, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Type", orDash(insulinDose.DoseType))
 			@readingDetail("Given at once (%)", percentOr(insulinDose.SplitNow, "-"))

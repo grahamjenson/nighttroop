@@ -5,12 +5,10 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -65,26 +63,6 @@ var foodIntakeFields = []addmodal.Field{
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
-templ foodIntakeInputs(id string, carbs string, name string, notes string) {
-	@field.Field(id+"--carbs", "Carbs (g)", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--carbs",
-			Type:        input.TypeNumber,
-			Name:        "carbs",
-			Placeholder: "Carbs (g)",
-			Value:       carbs,
-			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "-1000", "max": "1000"},
-		})
-	}
-	@field.Field(id+"--name", "Name", "w-40") {
-		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // foodIntakeRow opens the food intake's details when clicked.
 templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 	@table.DataRow("site--food--"+foodIntake.ID, "/data/food/"+foodIntake.ID, "Delete this food intake?") {
@@ -107,18 +85,10 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 }
 
 templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
-	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt), Actions: modal.Submit("site--food--edit", "Save")}) {
-		<form
-			id="site--food--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/food/" + foodIntake.ID }
-			hx-target={ "#site--food--" + foodIntake.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@foodIntakeInputs("site--food--edit", orDash(foodIntake.Carbs), orEmpty(foodIntake.Name), orEmpty(foodIntake.Notes))
-		</form>
+	{{ edit := addmodal.Props{ID: "site--food--edit", Path: "/data/food/" + foodIntake.ID, Target: "#site--food--" + foodIntake.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(foodIntakeFields, foodIntake, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Name", orDash(foodIntake.Name))
 			@readingDetail("Food Type", orDash(foodIntake.FoodType))
