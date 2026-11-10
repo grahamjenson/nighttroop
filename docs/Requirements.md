@@ -379,6 +379,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the target range below it.
 - An overview's sensor usage is its days with data of its days so far (as 6/9), the percent of its time the CGM read,
   and its meter readings a day.
+- An overview and an AGP report say under their average glucose, GMI, coefficient of variation, time CGM active and
+  time in range how each rose or fell (▲ or ▼, by how much, or No change) on the report before: the previous 7 or 14
+  days, the day before or the previous month. They say nothing when either has none, as when it has no data or is
+  over a year ago.
 - As the international consensus on CGM metrics has it, an overview cautions under its GMI that it is reliable from 14
   days of data when it has fewer, and under its time CGM active that its numbers may not be typical when the CGM read
   for under 70% of the time.
