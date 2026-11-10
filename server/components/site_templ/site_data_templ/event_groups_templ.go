@@ -800,9 +800,9 @@ var eventKinds = []struct{ field, label string }{
 	{"component_event_id", "Site or sensor change"}, {"activity_id", "Activity"}, {"notification_event_id", "Notification"},
 }
 
-// eventChoiceLabel is an event's time and what tells it apart, like "12:30 40 g carbs, sandwich"
+// eventChoiceLabel is an event's time, in the time format, and what tells it apart, like "12:30:00 40 g carbs, sandwich"
 func eventChoiceLabel(ctx context.Context, choice *sitemodels.SiteEventChoice) string {
-	parts := []string{time.UnixMilli(choice.OccurredAt).In(Location(ctx)).Format("15:04")}
+	parts := []string{time.UnixMilli(choice.OccurredAt).In(Location(ctx)).Format(timeLayout(ctx))}
 	if a := choice.Amount; a != nil {
 		switch choice.Kind {
 		case "glucose_reading_id", "temp_target_id":
@@ -865,9 +865,9 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var41 string
-		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " 15:04"))
+		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " " + timeLayout(ctx)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 225, Col: 111}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 225, Col: 124}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -878,9 +878,9 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var42 string
-		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(to).In(Location(ctx)).Format("15:04"))
+		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(to).In(Location(ctx)).Format(timeLayout(ctx)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 225, Col: 171}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 225, Col: 192}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
