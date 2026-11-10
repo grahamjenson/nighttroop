@@ -43,7 +43,8 @@ ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="High"]>span[aria-hid
 ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="High"]>.sr-only High
 
 // In mg/dL the same readings are coloured the same
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 ASSERT_STATUS 200
 INPUT #site--settings--identity--units mg/dL
 CLICK #site--settings--identity--save

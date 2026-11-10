@@ -21,7 +21,8 @@ SCREENSHOT overview_new_site
 
 // The virtual connector fills its last 30 minutes, and each backfill the day before its oldest reading (tests backfill a
 // day), so five fill the five days before today
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

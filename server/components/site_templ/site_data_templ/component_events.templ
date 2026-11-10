@@ -10,9 +10,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
-// componentDetail is the sensor code, else the transmitter, else the pump type
+// componentDetail is the sensor code, else the transmitter
 func componentDetail(event *sitemodels.SiteComponentEvent) string {
-	for _, value := range []*string{event.SensorCode, event.TransmitterID, event.PumpType} {
+	for _, value := range []*string{event.SensorCode, event.TransmitterID} {
 		if value != nil && *value != "" {
 			return *value
 		}
@@ -34,7 +34,7 @@ templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, 
 			EmptyID: "site--component-event--empty",
 			Empty:   "No site or sensor changes here.",
 			Columns: []table.Column{
-				{Label: "Time"}, {Label: "Type"}, {Label: "Sensor/Pump"}, {Label: "Notes"}, {Label: "Device"},
+				{Label: "Time"}, {Label: "Type"}, {Label: "Sensor"}, {Label: "Notes"}, {Label: "Device"},
 				{Actions: true},
 			},
 		},
@@ -58,9 +58,6 @@ var componentEventFields = []addmodal.Field{
 	{Name: "occurred_at", Label: "When", Help: "When it was changed, in your timezone. Blank is now.", Kind: addmodal.When},
 	{Name: "sensor_code", Label: "Sensor code", Help: "The new sensor's calibration code.", Kind: addmodal.Text, Max: "64"},
 	{Name: "transmitter_id", Label: "Transmitter ID", Help: "The sensor's transmitter.", Kind: addmodal.Text, Max: "64"},
-	{Name: "pump_type", Label: "Pump type", Help: "The pump's make or model.", Kind: addmodal.Text, Max: "64"},
-	{Name: "pump_serial", Label: "Pump serial", Help: "The pump's serial number.", Kind: addmodal.Text, Max: "32"},
-	{Name: "pump_id", Label: "Pump ID", Help: "The pump's ID for the change.", Kind: addmodal.Text, Max: "32"},
 	{Name: "reason", Label: "Reason", Help: "Why it was changed, e.g. it fell off.", Kind: addmodal.Text, Max: "64"},
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }

@@ -2,7 +2,8 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // Virtual connector writes its last 30 minutes, then a backfill the day before them (tests backfill a day)
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

@@ -70,10 +70,11 @@ func eachRange(backfill BackfillParams, fetch func(from, to time.Time) (int, err
 // ErrBackfillRunning is a backfill asked for while the source has one queued or running
 var ErrBackfillRunning = errors.New("a backfill is already running")
 
-// BackfillRange is what a backfill of the source would fetch now: the backfillDays before the site's oldest glucose
-// reading, or before now when it has none, and the recentBackfillDays up to now again, to fill gaps, joined into one
-// range when they meet. Dexcom only has the last 24 hours and Libre the last 12, so their backfills fetch those.
-func BackfillRange(ctx context.Context, siteDB *db.SiteDB, connectorType consts.ConnectorType, backfillDays int) (BackfillParams, error) {
+// BackfillRange is what a backfill of the source would fetch now: from midnight, in the site's location, backfillDays
+// before the day of the site's oldest glucose reading, or of now when it has none, up to that reading, so the site's
+// data starts at the start of a day, and the recentBackfillDays up to now again, to fill gaps, joined into one range
+// when they meet. Dexcom only has the last 24 hours and Libre the last 12, so their backfills fetch those.
+func BackfillRange(ctx context.Context, siteDB *db.SiteDB, connectorType consts.ConnectorType, backfillDays int, location *time.Location) (BackfillParams, error) {
 	now := time.Now().UnixMilli()
 	switch connectorType {
 	case consts.ConnectorTypeDexcom:
@@ -88,7 +89,8 @@ func BackfillRange(ctx context.Context, siteDB *db.SiteDB, connectorType consts.
 	if oldest == 0 {
 		oldest = now
 	}
-	backfill := BackfillParams{From: oldest - int64(backfillDays)*24*time.Hour.Milliseconds(), To: oldest}
+	year, month, day := time.UnixMilli(oldest).In(location).Date()
+	backfill := BackfillParams{From: time.Date(year, month, day-backfillDays, 0, 0, 0, 0, location).UnixMilli(), To: oldest}
 	if recent := now - recentBackfillDays*24*time.Hour.Milliseconds(); recent <= oldest {
 		backfill.To = now
 	} else {

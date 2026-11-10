@@ -1,23 +1,34 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The header has the logo, a home icon marking the summary, a link to each hub and the search, and no Summary link
+// The header has the logo, a home icon marking the summary, a link to Data and Reports only and the search, and no
+// Summary or Settings link
 ASSERT_VISIBLE #site--nav--home
 ASSERT_VISIBLE #site--nav--home-icon[aria-label="Home"][aria-current="page"]
 ASSERT_TEXT_EQUALS #site--nav--data Data
 ASSERT_TEXT_EQUALS #site--nav--reports Reports
-ASSERT_TEXT_EQUALS #site--nav--settings Settings
+ASSERT_COUNT #site--nav--links a 3
 ASSERT_NOT_VISIBLE #site--nav--links >> text=Summary
+ASSERT_NOT_VISIBLE #site--nav--links >> text=Settings
 ASSERT_VISIBLE #site--nav--search[aria-label="Search pages"]
 SCREENSHOT navigation_header
 
-// The user menu has only who is signed in, their account, the guide and logout
+// The user menu has who is signed in, their account, the guide, Settings, Alarms, Logs & Events and logout, none
+// marked on the summary
 CLICK #site--settings-menu
 ASSERT_TEXT_VISIBLE Signed in as
 ASSERT_VISIBLE #site--settings--account-button
 ASSERT_VISIBLE #site--settings--getting-started-button
+ASSERT_TEXT_EQUALS #site--nav--menu--settings Settings
+ASSERT_TEXT_EQUALS #site--nav--menu--alarms Alarms
+ASSERT_TEXT_EQUALS #site--nav--menu--logs Logs & Events
+ASSERT_VISIBLE #site--nav--menu--settings
+ASSERT_VISIBLE #site--nav--menu--alarms
+ASSERT_VISIBLE #site--nav--menu--logs
 ASSERT_VISIBLE #site--settings--logout-button
-ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 3
+ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 6
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
+SCREENSHOT navigation_account_menu
 PRESS Escape
 
 // Data opens its first page, with a tab for each of its 13 pages, the page's marked, as is Data in the header
@@ -71,25 +82,77 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
 ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
 
-// Settings has side tabs in their groups, every one for an admin
-CLICK #site--nav--settings
+// Settings, from the user menu, has side tabs in their groups, every one for an admin, and no alarms, events, errors or
+// logs; the menu marks it, and the header marks no hub
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 ASSERT_STATUS 200
 ASSERT_PATH /settings
-ASSERT_VISIBLE #site--nav--settings[aria-current="page"]
+ASSERT_TITLE Settings · Nighttroop
+ASSERT_COUNT #site--nav--links [aria-current="page"] 0
 ASSERT_VISIBLE #site--settings--settings-button[aria-current="page"]
 ASSERT_VISIBLE #site--hub--settings nav >> text="This site"
 ASSERT_VISIBLE #site--hub--settings nav >> text="People & devices"
 ASSERT_VISIBLE #site--hub--settings nav >> text="Connections"
-ASSERT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
+ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Presets"
-ASSERT_COUNT #site--hub--settings nav a 9
+ASSERT_NOT_VISIBLE #site--settings--alarms-button
+ASSERT_NOT_VISIBLE #site--logs--events-button
+ASSERT_NOT_VISIBLE #site--logs--errors-button
+ASSERT_NOT_VISIBLE #site--logs--logs-button
+ASSERT_COUNT #site--hub--settings nav a 5
 SCREENSHOT navigation_settings_hub
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--settings[aria-current="page"]
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
+
+// Logs & Events, from the user menu, has a row of tabs, Events, Errors and Logs, opening on Events, and the menu marks
+// it instead
+CLICK #site--nav--menu--logs
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /logs/events
+ASSERT_VISIBLE #site--logs--events-button[aria-current="page"]
+ASSERT_VISIBLE #site--logs--errors-button
+ASSERT_VISIBLE #site--logs--logs-button
+ASSERT_COUNT #site--hub--logs nav a 3
+ASSERT_NOT_VISIBLE #site--settings--settings-button
+SCREENSHOT navigation_logs_hub
 CLICK #site--logs--errors-button
 ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /logs/errors
 ASSERT_VISIBLE #site--logs--errors-button[aria-current="page"]
-ASSERT_NOT_VISIBLE #site--settings--settings-button[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--logs--events-button[aria-current="page"]
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--logs[aria-current="page"]
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
+
+// Alarms, from the user menu, is a page of its own, with no tabs, the menu marking it
+CLICK #site--nav--menu--alarms
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/alarms
+ASSERT_TITLE Alarms · Nighttroop
+ASSERT_VISIBLE #alarm_settings_page h1:text-is("Alarms")
+ASSERT_NOT_VISIBLE #site--hub--alarms
+ASSERT_NOT_VISIBLE #site--settings--settings-button
+ASSERT_NOT_VISIBLE #site--logs--events-button
+SCREENSHOT navigation_alarms
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--alarms[aria-current="page"]
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
+PRESS Escape
+
+// Loaded in full, the menu marks the page's hub too
+GOTO /logs/logs
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--logs--logs-button[aria-current="page"]
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--logs[aria-current="page"]
+PRESS Escape
+GOTO /settings/connectors
+ASSERT_STATUS 200
 
 // Another identity's settings count as Users & Devices
 CLICK #site--settings--identities-button
@@ -105,15 +168,21 @@ CLICK #site--nav--home-icon
 ASSERT_NEW_URL
 ASSERT_PATH /
 ASSERT_VISIBLE #site--nav--home-icon[aria-current="page"]
-ASSERT_NOT_VISIBLE #site--nav--settings[aria-current="page"]
-GOTO /settings/alarms
+CLICK #site--settings-menu
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
+CLICK #site--nav--menu--alarms
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--settings--alarms-button[aria-current="page"]
+ASSERT_PATH /settings/alarms
 CLICK #site--nav--home
 ASSERT_NEW_URL
 ASSERT_PATH /
 
 // Search lists the pages whose name, group or hub has what is typed, under their hub, with no hint by their name
+TYPE #site--nav--search errors
+ASSERT_VISIBLE #site--nav--search-results >> text="Logs & Events"
+ASSERT_VISIBLE #site--nav--search--logs--errors[aria-selected="true"]
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
 TYPE #site--nav--search push
 ASSERT_VISIBLE #site--nav--search-results >> text="Settings"
 ASSERT_VISIBLE #site--nav--search--settings--push-devices[aria-selected="true"]
@@ -151,6 +220,7 @@ PRESS Control+k
 TYPE #site--nav--search low
 ASSERT_VISIBLE #site--nav--search--settings--alarms[aria-selected="true"]
 ASSERT_TEXT_EQUALS #site--nav--search--settings--alarms>[data-hint] Low Alarm
+ASSERT_VISIBLE #site--nav--search-results [role=group][aria-label="Alarms"] #site--nav--search--settings--alarms
 ASSERT_COUNT #site--nav--search-results [role=option] 1
 SCREENSHOT navigation_search_keyword
 
@@ -195,11 +265,20 @@ ASSERT_NOT_VISIBLE #site--nav--search-results
 WINDOW 390x2000
 GOTO /
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--nav--settings
+ASSERT_VISIBLE #site--nav--reports
 ASSERT_VISIBLE #site--settings-menu button >> nth=0
 ASSERT_NOT_VISIBLE #site--nav--search
 ASSERT_FITS
 SCREENSHOT navigation_phone_header
+
+// The user menu there is the same, opening Settings, Alarms, and Logs & Events
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--settings
+ASSERT_VISIBLE #site--nav--menu--alarms
+ASSERT_VISIBLE #site--nav--menu--logs
+ASSERT_FITS
+SCREENSHOT navigation_phone_account_menu
+PRESS Escape
 
 // Search there is an icon opening a box across the page
 CLICK #site--nav--search-open
@@ -227,11 +306,16 @@ SCREENSHOT navigation_phone_reports
 GOTO /settings/push-devices
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--push-devices-button[aria-current="page"]
-ASSERT_VISIBLE #site--logs--logs-button
+ASSERT_VISIBLE #site--settings--push-button
 ASSERT_FITS
 SCREENSHOT navigation_phone_settings
 
-// A user who is not an admin has no tab or search result for an admin's pages
+GOTO /logs/errors
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--logs--errors-button[aria-current="page"]
+ASSERT_FITS
+
+// A user who is not an admin has no tab, menu item or search result for an admin's pages
 WINDOW 1280x720
 GOTO /settings/identities
 ASSERT_STATUS 200
@@ -252,18 +336,23 @@ INPUT #site--login--password {{ .carer_password }}
 CLICK #site--login-button
 ASSERT_NEW_URL
 ASSERT_PATH /
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--settings
+ASSERT_VISIBLE #site--nav--menu--alarms
+ASSERT_NOT_VISIBLE #site--nav--menu--logs
+ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 5
+CLICK #site--nav--menu--settings
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--settings-button[aria-current="page"]
-ASSERT_VISIBLE #site--settings--alarms-button
 ASSERT_VISIBLE #site--settings--push-devices-button
 ASSERT_NOT_VISIBLE #site--settings--identities-button
 ASSERT_NOT_VISIBLE #site--settings--connectors-button
 ASSERT_NOT_VISIBLE #site--settings--push-button
+ASSERT_NOT_VISIBLE #site--settings--alarms-button
 ASSERT_NOT_VISIBLE #site--logs--events-button
 ASSERT_NOT_VISIBLE #site--logs--errors-button
 ASSERT_NOT_VISIBLE #site--logs--logs-button
-ASSERT_COUNT #site--hub--settings nav a 3
+ASSERT_COUNT #site--hub--settings nav a 2
 SCREENSHOT navigation_settings_user
 TYPE #site--nav--search push
 ASSERT_VISIBLE #site--nav--search--settings--push-devices

@@ -3,6 +3,7 @@ package summary_daily
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -148,4 +150,68 @@ func TestRebuildOnRequestRegeneratesTheLastYear(t *testing.T) {
 	weeks, err := r.site.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "week", Limit: 60})
 	require.NoError(t, err)
 	require.Len(t, weeks, 1)
+}
+
+// reading writes a glucose reading at at and marks it as written at marked, as its model change does
+func (r *rig) reading(id string, at, marked time.Time) {
+	reading, err := r.site.CreateGlucoseReading(r.t.Context(), sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: 120, ReadingType: "sgv", OccurredAt: at.UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(r.t, err)
+	r.builder.markStale(events.ModelChange(r.siteID, events.Created, reading), marked)
+}
+
+// Data written to old days builds only those days again, and their weeks, fortnights and months, once the site's data
+// has been quiet for a while, so a backfill's many records are built once, from all of them
+func TestRebuildStaleBuildsTheWrittenDaysOnceQuiet(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	week := sitedata.PeriodStart("week", now.AddDate(0, 0, -14), time.UTC, "monday")
+	monday, tuesday := week.Add(12*time.Hour), week.AddDate(0, 0, 1).Add(12*time.Hour)
+
+	// The week was built before the backfill wrote its Tuesday
+	r.reading("monday", monday, now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.True(t, r.built(monday.Format(time.DateOnly)))
+	r.opened = 0
+
+	r.reading("tuesday", tuesday, now)
+	r.reading("tuesday-later", tuesday.Add(time.Hour), now.Add(30*time.Second))
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.False(t, r.built(tuesday.Format(time.DateOnly)), "not until its data has gone quiet")
+	require.Zero(t, r.opened)
+
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(30*time.Second+staleQuiet)))
+	require.True(t, r.built(tuesday.Format(time.DateOnly)))
+	require.False(t, r.built(week.AddDate(0, 0, 2).Format(time.DateOnly)), "a day with nothing written is not built")
+	require.Equal(t, 1, r.opened)
+	built, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "week", Date: week.Format(time.DateOnly)})
+	require.NoError(t, err)
+	require.Equal(t, int64(2), built.Days, "the kept week is built again with its new day")
+
+	// Once built, nothing is left to build
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(time.Hour)))
+	require.Equal(t, 1, r.opened)
+}
+
+// A site written to without a pause, as by a long backfill, has its days built once its data has waited staleWait
+func TestRebuildStaleBuildsAfterTheLongestWait(t *testing.T) {
+	r := newRig(t)
+	now := time.Now().UTC()
+	day := now.AddDate(0, 0, -3)
+	for minute := time.Duration(0); minute < staleWait; minute += time.Minute {
+		r.reading(fmt.Sprint("reading", minute), day.Add(minute), now.Add(minute))
+	}
+	require.NoError(t, r.builder.RebuildStale(t.Context(), now.Add(staleWait)))
+	require.True(t, r.built(day.Format(time.DateOnly)))
+}
+
+// Only today's data, which is built as it is read, and data not of a day's summary, open no site
+func TestRebuildStaleLeavesToday(t *testing.T) {
+	r := newRig(t)
+	now := time.Now().UTC()
+	r.reading("now", now, now)
+	activity, err := r.site.CreateActivity(t.Context(), sitedb.CreateActivityParams{ID: "walk", ActivityType: "walk", OccurredAt: now.AddDate(0, 0, -3).UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	r.builder.markStale(events.ModelChange(r.siteID, events.Created, activity), now)
+	require.NoError(t, r.builder.RebuildStale(t.Context(), now.Add(staleQuiet)))
+	require.Zero(t, r.opened)
 }

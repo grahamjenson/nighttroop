@@ -195,6 +195,50 @@ func RebuildSummaryYear(ctx context.Context, q *sitedb.Queries, siteContext *htt
 	return nil
 }
 
+// RebuildSummaryDays builds again each of the site's days with one of the times in it, before today and within a
+// year, and then each whole week, fortnight and month with one of those days in it, so data a backfill or sync adds to
+// old days is in their summaries without building all of them again
+func RebuildSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, times []time.Time, now time.Time) error {
+	location, weekStart := siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()
+	today := PeriodStart("day", now, location, weekStart)
+	days, periods := map[time.Time]bool{}, map[string]map[time.Time]bool{}
+	for _, at := range times {
+		if day := PeriodStart("day", at, location, weekStart); day.Before(today) && !day.Before(today.AddDate(0, 0, -summaryDailyMaxDays)) {
+			days[day] = true
+		}
+	}
+	for day := range days {
+		if _, err := RebuildSummaryDaily(ctx, q, siteContext, day.Format(time.DateOnly), now); err != nil {
+			return err
+		}
+		for _, period := range SummaryPeriods {
+			if start := PeriodStart(period, day, location, weekStart); !PeriodEnd(period, start).After(today) {
+				if periods[period] == nil {
+					periods[period] = map[time.Time]bool{}
+				}
+				periods[period][start] = true
+			}
+		}
+	}
+	for period, starts := range periods {
+		for start := range starts {
+			// The kept one is deleted, so it is built from its days again rather than read
+			_, err := q.HardDeleteSummaryPeriod(ctx, sitedb.HardDeleteSummaryPeriodParams{Period: period, Date: start.Format(time.DateOnly)})
+			if err != nil {
+				return err
+			}
+			row, _, err := summaryPeriodFrom(ctx, q, period, start, now)
+			if err == nil && row.Days > 0 {
+				_, err = upsertSummaryPeriod(ctx, q, row)
+			}
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // RebuildSummaryWeeks deletes all the site's weeks and fortnights, as from a week start day they no longer follow,
 // and builds the last ones again
 func RebuildSummaryWeeks(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {

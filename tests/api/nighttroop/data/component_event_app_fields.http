@@ -1,11 +1,12 @@
 INCLUDE steps/new_site.steps
 
-// What only some apps send of a sensor or pump change, its sensor's code and transmitter and its pump's ID, serial and
-// type, is kept in its own columns and given back
+// What only some apps send of a sensor or pump change, its sensor's code and transmitter, is kept in its own columns
+// and given back; the pump's ID, serial and type it names are kept on its event group
 NAME create_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B {"eventType": "Sensor Change", "created_at": "{{ time 5 }}", "sensorCode": "ABC123", "transmitterId": "XYZ789", "pumpId": "PUMP123", "pumpSerial": "SERIAL123", "pumpType": "Omnipod"}
 ASSERT_STATUS 200
+SET treatment_id {{ dig "create_treatment.0._id" }}
 
 NAME read_treatment
 GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
@@ -24,37 +25,42 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result.items"
 ASSERT_EQUALS "ABC123" "@result.items.0.sensor_code"
 ASSERT_EQUALS "XYZ789" "@result.items.0.transmitter_id"
-ASSERT_EQUALS "PUMP123" "@result.items.0.pump_id"
-ASSERT_EQUALS "SERIAL123" "@result.items.0.pump_serial"
-ASSERT_EQUALS "Omnipod" "@result.items.0.pump_type"
 SET event_id {{ dig "read_site_events.result.items.0.id" }}
 
+NAME read_site_group
+GET http://{{ site }}/data/event-groups/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS ".event_id" "@result.component_event_id"
+ASSERT_EQUALS "PUMP123" "@result.pump_id"
+ASSERT_EQUALS "SERIAL123" "@result.pump_serial"
+ASSERT_EQUALS "Omnipod" "@result.pump_type"
+
 // Updating one of them leaves the others as they were
-NAME update_pump_serial
+NAME update_transmitter
 POST http://{{ site }}/data/component-events/{{ .event_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"pump_serial": "SERIAL456"}
+B {"transmitter_id": "XYZ456"}
 ASSERT_STATUS 200
-ASSERT_EQUALS "SERIAL456" "@result.pump_serial"
+ASSERT_EQUALS "XYZ456" "@result.transmitter_id"
 ASSERT_EQUALS "ABC123" "@result.sensor_code"
-ASSERT_EQUALS "XYZ789" "@result.transmitter_id"
-ASSERT_EQUALS "PUMP123" "@result.pump_id"
-ASSERT_EQUALS "Omnipod" "@result.pump_type"
 
 NAME read_updated
 GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "SERIAL456" "@0.pumpSerial"
+ASSERT_EQUALS "XYZ456" "@0.transmitterId"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Omnipod" "@0.pumpType"
 
 // Each is still refused past its length, as a column of its own was
-NAME pump_serial_too_long
+NAME transmitter_too_long
 POST http://{{ site }}/data/component-events/{{ .event_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"pump_serial": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+B {"transmitter_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
 ASSERT_STATUS 400
 
 NAME pump_id_too_long

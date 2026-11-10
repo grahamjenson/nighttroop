@@ -85,13 +85,10 @@ CREATE TABLE component_events (
 
     event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
-    -- What only some apps send, NULL for most events: a sensor's code and transmitter (sensor_code, transmitter_id),
-    -- and the pump's ID, serial and type (pump_id, pump_serial, pump_type), as AAPS sends with every treatment
+    -- What only some apps send, NULL for most events: a sensor's code and transmitter (sensor_code, transmitter_id).
+    -- The pump a change names is its event group's.
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
-    pump_id TEXT CHECK(length(pump_id) <= 32),
-    pump_serial TEXT CHECK(length(pump_serial) <= 32),
-    pump_type TEXT CHECK(length(pump_type) <= 64),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -193,7 +190,8 @@ CREATE TABLE event_groups (
     -- uuid, and AAPS's running mode (an OpenAPS Offline), e.g. DISCONNECTED_PUMP, whether the loop forced it
     -- (auto_forced) and why (reasons), how long it was to last in milliseconds, at most a year (original_duration_ms),
     -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
-    -- tell one sent again with changes from one sent the same (sent_hash)
+    -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
+    -- pump_serial, pump_type), as AAPS sends with every treatment
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -201,6 +199,9 @@ CREATE TABLE event_groups (
     original_duration_ms INTEGER CHECK(original_duration_ms BETWEEN 0 AND 31536000000),
     duration_type TEXT CHECK(length(duration_type) <= 16),
     sent_hash TEXT CHECK(length(sent_hash) <= 32),
+    pump_id TEXT CHECK(length(pump_id) <= 32),
+    pump_serial TEXT CHECK(length(pump_serial) <= 32),
+    pump_type TEXT CHECK(length(pump_type) <= 64),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

@@ -17,9 +17,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
-// componentDetail is the sensor code, else the transmitter, else the pump type
+// componentDetail is the sensor code, else the transmitter
 func componentDetail(event *sitemodels.SiteComponentEvent) string {
-	for _, value := range []*string{event.SensorCode, event.TransmitterID, event.PumpType} {
+	for _, value := range []*string{event.SensorCode, event.TransmitterID} {
 		if value != nil && *value != "" {
 			return *value
 		}
@@ -77,7 +77,7 @@ func ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, l
 				EmptyID: "site--component-event--empty",
 				Empty:   "No site or sensor changes here.",
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "Type"}, {Label: "Sensor/Pump"}, {Label: "Notes"}, {Label: "Device"},
+					{Label: "Time"}, {Label: "Type"}, {Label: "Sensor"}, {Label: "Notes"}, {Label: "Device"},
 					{Actions: true},
 				},
 			},
@@ -123,9 +123,6 @@ var componentEventFields = []addmodal.Field{
 	{Name: "occurred_at", Label: "When", Help: "When it was changed, in your timezone. Blank is now.", Kind: addmodal.When},
 	{Name: "sensor_code", Label: "Sensor code", Help: "The new sensor's calibration code.", Kind: addmodal.Text, Max: "64"},
 	{Name: "transmitter_id", Label: "Transmitter ID", Help: "The sensor's transmitter.", Kind: addmodal.Text, Max: "64"},
-	{Name: "pump_type", Label: "Pump type", Help: "The pump's make or model.", Kind: addmodal.Text, Max: "64"},
-	{Name: "pump_serial", Label: "Pump serial", Help: "The pump's serial number.", Kind: addmodal.Text, Max: "32"},
-	{Name: "pump_id", Label: "Pump ID", Help: "The pump's ID for the change.", Kind: addmodal.Text, Max: "32"},
 	{Name: "reason", Label: "Reason", Help: "Why it was changed, e.g. it fell off.", Kind: addmodal.Text, Max: "64"},
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
@@ -175,7 +172,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, event.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 72, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 69, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -202,7 +199,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventType)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 75, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 72, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -229,7 +226,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(componentDetail(event))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 78, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 75, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -256,7 +253,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(event.Notes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 81, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 78, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -283,7 +280,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(event.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 84, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 81, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {

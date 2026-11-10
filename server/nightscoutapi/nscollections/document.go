@@ -1,9 +1,13 @@
 package nscollections
 
 import (
+	"bytes"
+	"encoding/json"
+	"encoding/json/jsontext"
+	"slices"
+	"strconv"
 	"time"
 
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -40,30 +44,77 @@ func row(dbModel SharedDBFields) meta {
 	return m
 }
 
+// Fields is it as JSON fields, each value as JSON reads it
 func (s stored[NS]) Fields(v3 bool) map[string]any {
-	out, _ := utils.ToMap(&s.model)
-	if units, ok := out["units"].(string); ok && s.unitsLabels[units] != "" {
-		out["units"] = s.unitsLabels[units]
-	}
-	if out == nil {
-		out = map[string]any{}
-	}
+	out := map[string]any{}
+	_ = json.Unmarshal(s.JSON(v3, nil), &out)
+	return out
+}
 
-	out["created_at"] = time.UnixMilli(s.occurredAt).UTC().Format(time.RFC3339Nano)
-	out["utcOffset"] = s.utcOffset
-	if v3 {
-		out["identifier"] = s.id
-		out["date"] = s.occurredAt
-		out["srvCreated"] = s.srvCreated
-		out["srvModified"] = s.srvModified
-		out["subject"] = s.subject
-		out["isValid"] = s.deletedAt == nil
-		out["isReadOnly"] = false
-		delete(out, "_id")
-	} else {
-		out["_id"] = s.id
-		delete(out, "identifier")
+// field is a JSON object's field, with its value as JSON
+type field struct {
+	name  string
+	value []byte
+}
+
+// JSON is it as a JSON object of its fields, or of only the given fields less _id when there are any. As a search
+// writes many, the model's fields are copied from its JSON rather than read back into values, and the object is then
+// written as its fields read back would be: names in order, numbers as JSON reads them, strings as the API escapes them.
+func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
+	raw, _ := json.Marshal(&s.model)
+	server, without := s.server(v3)
+	out := append(make([]byte, 0, len(raw)+256), '{')
+	add := func(name string, value []byte) {
+		if name == without || (len(only) > 0 && (name == "_id" || !slices.Contains(only, name))) {
+			return
+		}
+		if len(out) > 1 {
+			out = append(out, ',')
+		}
+		out, _ = jsontext.AppendQuote(out, name)
+		out = append(append(out, ':'), value...)
 	}
+	decoder := jsontext.NewDecoder(bytes.NewBuffer(raw), jsontext.AllowDuplicateNames(true))
+	if token, err := decoder.ReadToken(); err == nil && token.Kind() == '{' {
+		for decoder.PeekKind() == '"' {
+			token, _ := decoder.ReadToken()
+			name := token.String()
+			// The value as it is in the model's JSON, which the decoder's own is only until it reads on
+			decoded, _ := decoder.ReadValue()
+			value := raw[int(decoder.InputOffset())-len(decoded) : decoder.InputOffset()]
+			var units string
+			if name == "units" && json.Unmarshal(value, &units) == nil && s.unitsLabels[units] != "" {
+				value = quote(s.unitsLabels[units])
+			}
+			if !slices.ContainsFunc(server, func(f field) bool { return f.name == name }) {
+				add(name, value)
+			}
+		}
+	}
+	for _, f := range server {
+		add(f.name, f.value)
+	}
+	written := jsontext.Value(append(out, '}'))
+	_ = written.Canonicalize(jsontext.EscapeForJS(true))
+	return json.RawMessage(written)
+}
+
+// server are the server's fields, over the model's, and the one of _id and identifier the API version does not have
+func (s stored[NS]) server(v3 bool) ([]field, string) {
+	fields := []field{{"created_at", quote(time.UnixMilli(s.occurredAt).UTC().Format(time.RFC3339Nano))},
+		{"utcOffset", strconv.AppendInt(nil, s.utcOffset, 10)}}
+	if !v3 {
+		return append(fields, field{"_id", quote(s.id)}), "identifier"
+	}
+	return append(fields, field{"identifier", quote(s.id)}, field{"date", strconv.AppendInt(nil, s.occurredAt, 10)},
+		field{"srvCreated", strconv.AppendInt(nil, s.srvCreated, 10)}, field{"srvModified", strconv.AppendInt(nil, s.srvModified, 10)},
+		field{"subject", quote(s.subject)}, field{"isValid", strconv.AppendBool(nil, s.deletedAt == nil)},
+		field{"isReadOnly", []byte("false")}), "_id"
+}
+
+// quote is a string as JSON
+func quote(s string) []byte {
+	out, _ := jsontext.AppendQuote(nil, s)
 	return out
 }
 

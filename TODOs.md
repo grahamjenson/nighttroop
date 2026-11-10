@@ -13,6 +13,9 @@
 1. Reports/Derived Values:
     1. Time below and above range, as well as time in range
     1. Small multiples Daily
+    1. P3: Keep the days waiting to be built again (`summary_daily.Builder.stale`) in the site's DB, as they are held in
+       memory and lost when the server stops or deploys before it builds them; and mark the day a changed record moved
+       from, as only the day it moved to is marked
 
 1. Alarms:
     1. Push notifications to phones, as alarms now only reach an open site page or a Nightscout socket client
@@ -48,9 +51,11 @@
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. Performance testing (cost estimate for running full node)
-1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
-   record's model and reads it back as a map (`utils.ToMap`) before the response is marshalled again, about 40% of
-   the CPU of a 288 entry `/api/v1/entries` search
+1. P4: Mark the user menu's button in the header while a page of Settings, Alarms, or Logs & Events is shown, as the
+   header then marks no hub and only the open menu marks it
+1. P4: Marshal an entry without `Entry.MarshalJSON` (`models/nightscoutmodels/entries.go`) marshalling it again as
+   an alias and making a `time.FixedZone` for its `dateString`, about a quarter of the CPU of a 288 entry
+   `/api/v1/entries` search now its fields are not read back as a map (`BenchmarkWriteRecordsV1Entries`)
 1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a

@@ -2,6 +2,7 @@ package site_reports_templ
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"time"
 
@@ -77,4 +78,17 @@ func TestSummariesReportOfAPastMonth(t *testing.T) {
 	require.Contains(t, html, "No months kept in "+first.Format("2006")+".")
 	require.Contains(t, html, "Months of "+first.Format("2006"))
 	require.NotContains(t, html, "kept yet")
+}
+
+// The longest periods come first: months, then fortnights, weeks and days
+func TestSummariesReportListsMonthsFirst(t *testing.T) {
+	first := time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.UTC)
+	var buf bytes.Buffer
+	require.NoError(t, SummariesReport(first, map[string][]*sitemodels.SiteSummaryPeriod{}, false).Render(t.Context(), &buf))
+	html, at := buf.String(), -1
+	for _, period := range []string{"month", "fortnight", "week", "day"} {
+		next := strings.Index(html, `id="site--summaries--`+period+`"`)
+		require.Greater(t, next, at, period)
+		at = next
+	}
 }
