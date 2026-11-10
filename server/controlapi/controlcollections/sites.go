@@ -19,7 +19,6 @@ import (
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -130,10 +129,6 @@ func (s *SitesCollection) UpdateHTMXResponse(model *controlmodels.Site) templ.Co
 // and turning off public site creation do not stop them.
 func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	model, herr := apiutils.ExtractModelFromRequest[controlmodels.Site](httputils.GetContentType(r), r)
 	controlDB := controlContext.ControlDB
 	if herr == nil && !utils.SyntacticallyValidateSiteID(model.ID) {
@@ -166,10 +161,6 @@ func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) 
 // SettingsHandler changes the server's settings: whether the public can create sites. Only admins can.
 func (s *SitesCollection) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	model, herr := apiutils.ExtractModelFromRequest[controlmodels.ServerSettings](httputils.GetContentType(r), r)
 	if herr != nil {
 		herr.Write(acceptType, w)
@@ -191,10 +182,6 @@ func (s *SitesCollection) SettingsHandler(w http.ResponseWriter, r *http.Request
 // DB is not here, as one archived, has none to download.
 func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	siteID := chi.URLParam(r, "id")
 	siteDB, _, err := controlContext.ControlDB.GetSite(r.Context(), siteID)
 	if err != nil {
@@ -223,10 +210,6 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 // its DB, while its DB is here. Only admins can.
 func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
 	if herr == nil && site == nil {
 		herr = apiutils.ErrNotFound

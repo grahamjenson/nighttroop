@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -30,7 +31,7 @@ func TestLogsDBDownload(t *testing.T) {
 		ctx := httputils.CreateControlContext(context.Background(), controlDB, "", httputils.HTTPActionRead)
 		ctx = httputils.SetAdminControlContext(ctx, &controldb.ControlIdentity{Name: "someone", Role: role}, config.ServerStatus{})
 		w := httptest.NewRecorder()
-		LogsDBHandler(w, httptest.NewRequest(http.MethodGet, "/logs-db", nil).WithContext(ctx))
+		controlcollections.AdminOnly(http.HandlerFunc(LogsDBHandler)).ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/logs-db", nil).WithContext(ctx))
 		return w
 	}
 
