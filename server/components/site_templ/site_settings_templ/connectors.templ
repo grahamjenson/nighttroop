@@ -75,7 +75,8 @@ templ connectorsLiveBadge() {
 
 // connectorsLive keeps each source's errors and status up to date: the connector settings' stream sends an event as a sync or
 // backfill finishes, and the page is read again, swapping in only the parts marked data-connectors-live, so a form being
-// edited is left as it is. A history the user opened stays open, and the page is read again when the stream
+// edited is left as it is. A history the user opened stays open, even one opened while the page was being read: which
+// are open is taken as the response is swapped in, not as it is asked for. The page is read again when the stream
 // reconnects, as changes may have been missed while it was not.
 templ connectorsLive() {
 	<div
@@ -84,8 +85,8 @@ templ connectorsLive() {
 		hx-trigger="created from:#site--settings--connectors--live delay:1s, updated from:#site--settings--connectors--live delay:1s, deleted from:#site--settings--connectors--live delay:1s, reconnected from:#site--settings--connectors--live"
 		hx-select-oob="[data-connectors-live]"
 		hx-swap="none"
-		hx-on::before:request="this.opened = [...document.querySelectorAll('[data-connectors-live] details[open]')].map(d => d.id)"
-		hx-on::finally:request="(this.opened || []).forEach(id => document.getElementById(id)?.setAttribute('open', ''))"
+		hx-on::before:swap="this.opened = [...document.querySelectorAll('[data-connectors-live] details[open]')].map(d => d.id)"
+		hx-on::after:swap="this.opened.forEach(id => document.getElementById(id)?.setAttribute('open', ''))"
 	></div>
 }
 

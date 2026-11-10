@@ -590,6 +590,33 @@ func (r *AssertTitle) ToErrorLine() string {
 // ASSERT NO PAGE ERRORS
 // //
 
+// AssertHeld waits for the page to have sent a request to the path HOLD holds, for ASSERT_HELD, so the steps after it
+// act while it is on its way
+type AssertHeld struct {
+	Path string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *AssertHeld) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	h, ok := ctx[heldKey(r.Path)].(*held)
+	if !ok {
+		return fmt.Errorf("%s:%d: ASSERT_HELD %s needs HOLD %s before it", r.TestPath, r.TestLine, r.Path, r.Path)
+	}
+	for deadline := time.Now().Add(visibleWait * time.Millisecond); ; time.Sleep(20 * time.Millisecond) {
+		h.Lock()
+		waiting := len(h.routes)
+		h.Unlock()
+		if waiting > 0 {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("%s:%d: the page sent no request to %s to hold", r.TestPath, r.TestLine, r.Path)
+		}
+	}
+}
+
 // AssertNoPageErrors checks the page has thrown no uncaught error since the flow went to it, such as a promise
 // rejected with nothing to catch it, which a person only sees in the browser's console
 type AssertNoPageErrors struct {
