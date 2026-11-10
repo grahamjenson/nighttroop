@@ -87,7 +87,7 @@ func SummaryReport(ctx context.Context, q *sitedb.Queries, siteContext *httputil
 			today, err = buildSummaryDaily(ctx, q, siteContext, last, now.UnixMilli())
 			days = append(days, today)
 		}
-		row := sitemodels.NewSummaryPeriod(period, first.Format(time.DateOnly), at.Location().String(), first.UnixMilli(), at.AddDate(0, 0, 1).UnixMilli(), days)
+		row := sitemodels.NewSummaryPeriod(period, first.Format(time.DateOnly), at.Location().String(), first.UnixMilli(), at.AddDate(0, 0, 1).UnixMilli(), now.UnixMilli(), days)
 		return row, days, err
 	}
 	row, err := SummaryPeriodAt(ctx, q, siteContext, period, at, now)
@@ -118,7 +118,7 @@ func SummaryPeriodAt(ctx context.Context, q *sitedb.Queries, siteContext *httput
 			}
 			today = append(today, day)
 		}
-		row, _, err := summaryPeriodFrom(ctx, q, period, start, today...)
+		row, _, err := summaryPeriodFrom(ctx, q, period, start, now, today...)
 		return row, err
 	}
 	date := start.Format(time.DateOnly)
@@ -135,7 +135,7 @@ func SummaryPeriodAt(ctx context.Context, q *sitedb.Queries, siteContext *httput
 		return nil, err
 	}
 	days = append(slices.DeleteFunc(days, func(d *sitedb.SummaryPeriod) bool { return d.Date == date }), day)
-	day.AgpMgdlJson = sitemodels.NewSummaryPeriod("week", weekStart, day.Timezone, 0, 0, days).AgpMgdlJson
+	day.AgpMgdlJson = sitemodels.NewSummaryPeriod("week", weekStart, day.Timezone, 0, 0, now.UnixMilli(), days).AgpMgdlJson
 	return day, nil
 }
 

@@ -805,7 +805,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   deviation as a percent of the mean) and GMI (`gmi`, 3.31 + 0.02392 × the mean in mg/dL), and the percent of them very
   low (`time_very_low`, below 54 mg/dL), low (`time_low`), in range, high (`time_high`) and very high
   (`time_very_high`, above 250 mg/dL), which add up to 100. A week's, fortnight's or month's readings are all its days',
-  and its times the means of its days'. `cgm_active` is the percent of its 5 minutes, up to now, with a CGM reading.
+  and its times are of all of them, so a day of few readings, such as today so far, counts for little. Its daily dose
+  and carbs are the means of its days that are over, as today has had only some of its insulin and food, or of all its
+  days with data when none is over. `cgm_active` is the percent of its 5 minutes, up to now, with a CGM reading.
 - A summary period also has the loop's IOB (`loop_iob`, `loop_iob_basal`, `loop_iob_treatment`) and COB (`loop_cob`)
   every 5 minutes from midnight: a day's newest loop device report in each 5 minutes, or else in the 5 minutes before,
   as one is kept only every 10 minutes once an hour old, null when there was none, and a
