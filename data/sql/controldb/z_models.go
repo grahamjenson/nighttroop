@@ -50,7 +50,6 @@ type PushCredential struct {
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
-	DeletedAt             *int64
 }
 
 type PushRegistration struct {
