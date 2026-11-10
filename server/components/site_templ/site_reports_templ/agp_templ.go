@@ -235,9 +235,9 @@ func Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDail
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(periodDays(p, time.Now(), site_data_templ.Location(ctx))))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(periodDays(p, time.Now(), reportLocation(ctx))))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 55, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 55, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -1452,7 +1452,7 @@ func dailyProfiles(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSumm
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		weeks := profileWeeks(ctx, p, daily, site_data_templ.Location(ctx))
+		weeks := profileWeeks(ctx, p, daily, reportLocation(ctx))
 		g := graph{Width: 288, Height: 60, Left: 0, Right: 288, Top: 2, Bottom: 58, Min: p.Units.FromMGDL(40), Max: p.Units.FromMGDL(300), Units: p.Units}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<div class=\"grid grid-cols-7 border-l border-t border-gray-200 text-xs\">")
 		if templ_7745c5c3_Err != nil {

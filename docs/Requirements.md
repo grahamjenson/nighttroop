@@ -333,7 +333,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - Readings as dots, coloured low, in range or high, joined by a thin line broken where readings are over 15
     minutes apart.
   - The basal in force along the bottom, its highest rate reaching 3 mmol/L up the glucose axis and labelled on the
-    right.
+    right. A profile sent without its own timezone has its schedules read in the site's timezone, whoever views it.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
     labels overlap; a loop's SMBs are smaller, fainter and not labelled.
   - A legend of insulin and SMB (triangles pointing down), carbs (pointing up), basal (an outlined area) and target
@@ -364,6 +364,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
+- Every report's days, weeks and months are the site's: from midnight in the site's timezone, and dated, listed and
+  linked in it, whatever the timezone of whoever views them.
 - A report's week and fortnight, on the Overview and AGP pages, are the 7 and 14 days to its date, as Dexcom Clarity's
   are, not the calendar week or fortnight a summary period is, which may have only just begun; a day is the day and a
   month the month with the date in it. A week or fortnight to today has today so far in it.

@@ -37,7 +37,7 @@ func Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		now, location := time.Now(), site_data_templ.Location(ctx)
+		now, location := time.Now(), reportLocation(ctx)
 		low, high := site_data_templ.RangeBounds(ctx)
 		templ_7745c5c3_Err = heading.Title("Overview").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

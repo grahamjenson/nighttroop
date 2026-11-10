@@ -52,7 +52,7 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 				if p.Period == "day" {
 					the 7 days to this one, as if they were one day, with this day's own glucose over them.
 				} else {
-					these { fmt.Sprint(periodDays(p, time.Now(), site_data_templ.Location(ctx))) } days' glucose, as if they were one day.
+					these { fmt.Sprint(periodDays(p, time.Now(), reportLocation(ctx))) } days' glucose, as if they were one day.
 				}
 			</p>
 			if hasGlucose(p) {
@@ -192,7 +192,7 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 // dailyProfiles are the period's days as a calendar from the site's week start day, each with its glucose from
 // midnight over the range shaded, coloured above and below it, opening its report
 templ dailyProfiles(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, low, high float64) {
-	{{ weeks := profileWeeks(ctx, p, daily, site_data_templ.Location(ctx)) }}
+	{{ weeks := profileWeeks(ctx, p, daily, reportLocation(ctx)) }}
 	{{ g := graph{Width: 288, Height: 60, Left: 0, Right: 288, Top: 2, Bottom: 58, Min: p.Units.FromMGDL(40), Max: p.Units.FromMGDL(300), Units: p.Units} }}
 	<div class="grid grid-cols-7 border-l border-t border-gray-200 text-xs">
 		if p.Period != "day" {
