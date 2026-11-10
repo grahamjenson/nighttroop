@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -70,12 +71,7 @@ templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 					@button.Button(button.Props{
 						ID:      fmt.Sprintf("site--device-status--show-all-%d", i),
 						Variant: button.VariantOutline,
-						Attributes: templ.Attributes{
-							"hx-get":      deviceHistoryURL(group.Device, 0, deviceHistoryPage),
-							"hx-target":   "#main-content",
-							"hx-push-url": "true",
-							"hx-swap":     "innerHTML",
-						},
+						Attributes: nav.Attributes(deviceHistoryURL(group.Device, 0, deviceHistoryPage)),
 					}) {
 						Show all
 					}
@@ -97,12 +93,7 @@ templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus
 			@button.Button(button.Props{
 				ID:      "site--device-status--all-devices",
 				Variant: button.VariantOutline,
-				Attributes: templ.Attributes{
-					"hx-get":      "/data/device-status",
-					"hx-target":   "#main-content",
-					"hx-push-url": "true",
-					"hx-swap":     "innerHTML",
-				},
+				Attributes: nav.Attributes("/data/device-status"),
 			}) {
 				All devices
 			}

@@ -14,8 +14,8 @@ func TestPageURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := pageURL(tt.path, 50, 25); got != tt.want {
-				t.Errorf("pageURL(%q, 50, 25) = %q, want %q", tt.path, got, tt.want)
+			if got := PageURL(tt.path, 50, 25); got != tt.want {
+				t.Errorf("PageURL(%q, 50, 25) = %q, want %q", tt.path, got, tt.want)
 			}
 		})
 	}

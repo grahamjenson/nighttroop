@@ -321,6 +321,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Reports'
   tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page gets wider.
 - The user menu has only who is signed in, My Account, Getting Started and Logout.
+- Every link and button opening a page in place of this one, as the tabs, pagers and filters do, keeps its URL, so back
+  returns, and clicking several quickly shows the last one clicked.
 
 ### Summary
 
@@ -433,7 +435,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after (a
   week's or fortnight's the 7 or 14 days before and after, or to today when fewer are over), disabled past today or a
   year ago. Back and forward move between reports.
-- Clicking around the reports quickly shows the last one clicked, logging no error for the pages it replaced.
+- Clicking around the reports quickly, their tabs, periods and arrows, shows the last one clicked, logging no error for
+  the pages it replaced.
 - The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
   as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and
   ›) to the 30 days before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest

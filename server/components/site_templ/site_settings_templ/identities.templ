@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/components/authenticator"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -294,12 +295,7 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 				}
 			}
 			@dropdown.Content(dropdown.ContentProps{Placement: dropdown.PlacementBottomEnd, Class: "w-48"}) {
-				@dropdown.Item(dropdown.ItemProps{ID: id + "--settings", Attributes: templ.Attributes{
-					"hx-get":      "/settings/identity-settings/" + strconv.FormatInt(identity.ID, 10),
-					"hx-target":   "#main-content",
-					"hx-push-url": "true",
-					"hx-swap":     "innerHTML",
-				}}) {
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--settings", Attributes: nav.Attributes("/settings/identity-settings/" + strconv.FormatInt(identity.ID, 10))}) {
 					@menuLabel(icon.UserCog, "Settings")
 				}
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Disabled: identity.CurrentIdentity,

@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -44,10 +45,7 @@ func (p Props) set() bool {
 templ Filter(p Props) {
 	<form
 		id={ p.ID }
-		hx-get={ p.Path }
-		hx-target="#main-content"
-		hx-push-url="true"
-		hx-swap="innerHTML"
+		{ nav.Attributes(p.Path)... }
 		class="mb-4 flex flex-wrap justify-end gap-2"
 	>
 		for _, id := range p.IDs {
@@ -93,12 +91,7 @@ templ Filter(p Props) {
 				ID:      p.ID + "--clear",
 				Href:    p.Path,
 				Variant: button.VariantGhost,
-				Attributes: templ.Attributes{
-					"hx-get":      p.Path,
-					"hx-target":   "#main-content",
-					"hx-push-url": "true",
-					"hx-swap":     "innerHTML",
-				},
+				Attributes: nav.Attributes(p.Path),
 			}) {
 				Clear
 			}

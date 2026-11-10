@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -96,7 +97,7 @@ templ idDetail(id string, label string, path string, name string, value *string)
 		{{ link := filter.PagePath(path, nil, nil, filter.ID{Name: name, Value: value}) }}
 		<dt class="text-gray-500">{ label }</dt>
 		<dd class="break-all">
-			<a id={ id } href={ templ.SafeURL(link) } hx-get={ link } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML" class="text-primary underline">{ *value }</a>
+			<a id={ id } href={ templ.SafeURL(link) } { nav.Attributes(link)... } class="text-primary underline">{ *value }</a>
 		</dd>
 	}
 }
