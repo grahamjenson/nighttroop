@@ -228,7 +228,7 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 			// A tap leaves it shown until the graph loses focus, as the pointer leaves on lifting
 			svg.addEventListener("pointerleave", (event) => { if (event.pointerType === "mouse") hide() })
 			svg.addEventListener("focus", () => show(Math.max(at, 0)))
-			svg.addEventListener("blur", hide)
+			svg.addEventListener("focusout", hide)
 			svg.addEventListener("keydown", (event) => {
 				const step = { ArrowLeft: -1, ArrowRight: 1, PageUp: -12, PageDown: 12, Home: -points.length, End: points.length }[event.key]
 				if (step === undefined) return
