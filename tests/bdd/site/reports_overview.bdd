@@ -1,0 +1,108 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// The Reports hub's Overview tab opens the overview of the week with yesterday in it, at its own address, which a new
+// site has no glucose for, so each number is a dash and it says when readings will show
+CLICK #site--nav--reports
+CLICK #site--reports--overview-button
+ASSERT_STATUS 200
+ASSERT_PATH /reports/overview
+ASSERT_TITLE Overview · Nighttroop
+ASSERT_VISIBLE #site--reports--overview-button[aria-current="page"]
+ASSERT_TEXT_EQUALS #site--overview--mean –
+ASSERT_TEXT_EQUALS #site--overview--gmi –
+ASSERT_TEXT_EQUALS #site--overview--daily-dose –
+ASSERT_TEXT_EQUALS #site--reports--range-in-range – In range
+ASSERT_VISIBLE #site--overview--no-glucose >> text=show here the day after
+ASSERT_NOT_VISIBLE #site--overview--best-day
+SCREENSHOT overview_new_site
+
+// The virtual connector fills its last 30 minutes, and each backfill the day before its oldest reading (tests backfill a
+// day), so five fill the five days before today
+CLICK #site--nav--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+RUN_BACKGROUND_JOBS
+// Regenerating the summaries keeps each of those days
+GOTO /reports
+CLICK #site--summaries--regenerate
+ASSERT_TEXT_VISIBLE Regenerating summaries
+RUN_BACKGROUND_JOBS
+
+// The month to yesterday has the days' glucose: its average, GMI, standard deviation and coefficient of variation in
+// large type, the settings' units beside the average
+GOTO /reports/overview/month-{{ date -1 }}
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--overview--mean >> text=/^\d+\.\d$/
+ASSERT_VISIBLE #site--overview--glucose >> text=mmol/L >> nth=0
+ASSERT_VISIBLE #site--overview--sd >> text=/^\d+\.\d$/
+ASSERT_VISIBLE #site--overview--gmi >> text=/^\d+\.\d$/
+ASSERT_VISIBLE #site--overview--cv >> text=/^\d+\.\d$/
+// Its time in each range, very high at the top, as a stacked bar and a percent of each, with the target range
+ASSERT_COUNT #site--reports--ranges li 5
+ASSERT_VISIBLE #site--reports--range-very-high >> text=Very high
+ASSERT_VISIBLE #site--reports--range-in-range >> text=/^(\d+%|<1%) In range$/
+ASSERT_VISIBLE #site--reports--range-very-low >> text=Very low
+ASSERT_VISIBLE #site--overview--target >> text=/^Target range \d+\.\d–\d+\.\d mmol\/L$/
+// How much of it the CGM read: days with data of its days so far, the time it was active and meter readings a day
+ASSERT_VISIBLE #site--overview--days >> text=/^\d+\/\d+$/
+ASSERT_VISIBLE #site--overview--cgm-active >> text=/^\d+%$/
+ASSERT_VISIBLE #site--overview--meter >> text=/^\d+\.\d$/
+// Its best whole day by time in range
+ASSERT_VISIBLE #site--overview--best-day >> text=/Glucose was in range about (\d+%|<1%) of the day/
+// Its days averaged into one from midnight: a bar of each 15 minutes from its 25th to 75th percentile, a dot at each's
+// mean, and the range's bounds marked
+ASSERT_DRAWN #site--overview--graph
+ASSERT_DRAWN .site--overview--mean >> nth=0
+// Its hours are in the settings' time format, 24 hour by default
+ASSERT_VISIBLE #site--overview--graph >> text=00:00 >> nth=0
+ASSERT_VISIBLE #site--overview--graph >> text=12:00
+// And its daily dose and carbs
+ASSERT_VISIBLE #site--overview--daily-dose >> text=/^\d+(\.\d+)?$/
+ASSERT_VISIBLE #site--overview--daily-carbs >> text=/^\d+(\.\d+)?$/
+SCREENSHOT overview_month
+SCROLL 450
+SCREENSHOT overview_month_graph
+
+// The best day opens that day's overview, which has no best day of its own, and averages the 7 days to it
+CLICK #site--overview--best-day a
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_NOT_VISIBLE #site--overview--best-day
+ASSERT_TEXT_VISIBLE The 7 days to this one, averaged
+ASSERT_TEXT_EQUALS #site--overview--days 1/1
+ASSERT_DRAWN #site--overview--graph
+SCREENSHOT overview_day
+
+// The period buttons open the overview of that kind ending on the same day, and back returns
+CLICK #site--reports--period-week
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_TEXT_VISIBLE This week's days averaged
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE The 7 days to this one, averaged
+
+// Each day's dose opens the TDD report
+CLICK #site--overview--tdd
+ASSERT_STATUS 200
+ASSERT_PATH /reports/tdd
+ASSERT_TITLE TDD · Nighttroop
+ASSERT_NO_PAGE_ERRORS
+
+// An id that is not a period is not found
+GOTO /reports/overview/year-{{ date -1 }}
+ASSERT_STATUS 404

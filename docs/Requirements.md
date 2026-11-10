@@ -297,7 +297,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
   Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
   Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
-- Reports has a tab for each report: Summaries, AGP and TDD, and opens on Summaries.
+- Reports has a tab for each report: Summaries, Overview, AGP and TDD, and opens on Summaries.
 - Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
   Connections (Connectors, Push Notifications) and Troubleshooting (Events, Errors, Logs). Another identity's settings
   count as Users & Devices.
@@ -363,6 +363,23 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
+- The Reports hub has Overview, at `/reports/overview`, which shows the week with yesterday in it at first, and the
+  overview of any day, week, fortnight or month from today back a year is at `/reports/overview/{period}-{date}`, with
+  the same buttons to other periods as the AGP report. Any other id is not found.
+- An overview shows its glucose's average and standard deviation, in the settings' units, and its GMI and coefficient
+  of variation, each "–" with no readings.
+- An overview's time in range is a bar of its very high (above 250 mg/dL), high, in range, low and very low (below
+  54 mg/dL) readings stacked, very high at the top, each beside it with its percent ("<1%" for one under a half), and
+  the target range below it.
+- An overview's sensor usage is its days with data of its days so far (as 6/9), the percent of its time the CGM read,
+  and its meter readings a day.
+- A week's, fortnight's or month's overview names its best whole day, the one with the most time in range (the later
+  of two the same), which opens that day's overview; today is left out, and a day's overview has none.
+- An overview draws its days averaged into one from midnight: a bar of each 15 minutes from its 25th to its 75th
+  percentile, the part above the range high and below the range low in their colours, a dot at each's mean, and the
+  range's bounds as lines labelled with their values, with hours in the settings' time format. A day's is of the 7
+  days to it. One with no glucose says so, and that a day's readings show the day after.
+- An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day.
 - The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the week with yesterday in it at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days

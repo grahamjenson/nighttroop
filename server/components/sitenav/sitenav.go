@@ -59,6 +59,7 @@ var Pages = []Page{
 	// Summaries are first, so the Reports hub opens them
 	{Hub: Reports, Label: "Summaries", Path: "/reports", ID: "site--reports--summaries-button", Icon: icon.Table, Store: "summary_periods",
 		Within: []string{"/reports", "/reports/summaries"}},
+	{Hub: Reports, Label: "Overview", Path: "/reports/overview", ID: "site--reports--overview-button", Icon: icon.Gauge, Store: "summary_periods"},
 	{Hub: Reports, Label: "AGP", Path: "/reports/agp", ID: "site--reports--agp-button", Icon: icon.ChartLine, Store: "summary_periods"},
 	{Hub: Reports, Label: "TDD", Path: "/reports/tdd", ID: "site--reports--tdd-menu-button", Icon: icon.ChartColumn, Store: "summary_daily"},
 
@@ -89,6 +90,7 @@ var keywords = map[string][]string{
 	"/data/notifications":        {"Announcements", "Severity"},
 	"/data/device-status":        {"Battery", "Reservoir", "IOB", "COB", "Loop", "Uploader"},
 	"/reports":                   {"Daily Carbs", "Daily Dose"},
+	"/reports/overview":          {"Average Glucose", "GMI", "Standard Deviation", "Coefficient of Variation", "Sensor Usage", "Best Day"},
 	"/reports/agp":               {"Ambulatory Glucose Profile", "Time in Range"},
 	"/reports/tdd":               {"Total Daily Dose"},
 	"/settings":                  {"Units", "mmol/L", "mg/dL", "Timezone", "Language", "Date Format", "Time Format", "Week Starts On", "Password & TOTP", "Download Data", "Delete Site"},

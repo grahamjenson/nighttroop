@@ -438,6 +438,34 @@ func ReportsHandler(get http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// PeriodReportHandler is the report page of the day, week, fortnight or month its id names, as week-2026-01-31, or of
+// the week with yesterday in it without one, made from the period and its days; a page for people, so it has no JSON
+func PeriodReportHandler(page func(*sitemodels.SiteSummaryPeriod, []*sitemodels.SiteSummaryDaily) templ.Component) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionGet)
+		if siteContext == nil {
+			return
+		}
+		if siteContext.AcceptType != httputils.AcceptTypeHTMX && siteContext.AcceptType != httputils.AcceptTypeHTML {
+			writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
+			return
+		}
+		now := time.Now()
+		id := cmp.Or(chi.URLParam(r, "id"), "week-"+sitedata.LocalDate(now, siteContext.GetSiteTimezone(), -1))
+		row, rows, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, id, now)
+		if notFound := (*apiutils.HTTPError)(nil); errors.As(err, &notFound) {
+			writeError(w, r, siteContext.AcceptType, notFound)
+			return
+		}
+		days, herr := apiutils.Searched(rows, err, "summary_periods", apiutils.WithContext(sitemodels.SummaryDailyFromDB, siteContext))
+		if herr != nil {
+			writeError(w, r, siteContext.AcceptType, herr)
+			return
+		}
+		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(sitemodels.SummaryPeriodFromDB(row, siteContext), days), true)
+	}
+}
+
 // TDDReportHandler is the TDD report of the month ending on the day its end query names, yesterday without one; a page
 // for people, so it has no JSON
 func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
