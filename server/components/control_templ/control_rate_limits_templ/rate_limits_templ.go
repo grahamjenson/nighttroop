@@ -45,7 +45,7 @@ var pers = map[string]string{"server": "Server", "ip": "IP", "site": "Site", "id
 // cells are a kind of rate limiter's row: what it limits, per what, its rate and burst, how many are kept, how full the
 // most used is and how many would refuse
 func cells(s config.RateLimiterStats) []string {
-	return []string{labels[s.Name], pers[s.Per], strconv.FormatFloat(s.PerMinute, 'f', -1, 64), fmt.Sprint(s.Burst),
+	return []string{labels[s.Name], pers[s.Per], number(s.PerMinute), fmt.Sprint(s.Burst),
 		fmt.Sprint(s.Tracked), fmt.Sprintf("%.0f%%", s.FullestPercent), fmt.Sprint(s.Limited)}
 }
 

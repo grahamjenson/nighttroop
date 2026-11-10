@@ -38,20 +38,6 @@ func inactive(ctx context.Context, site *controlmodels.Site) bool {
 	return site.Inactive(controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays, time.Now())
 }
 
-// isAdmin is whether the control identity is an admin, who can create sites
-func isAdmin(ctx context.Context) bool {
-	controlContext := httputils.GetControlContext(ctx)
-	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
-}
-
-// formatDate shows an optional time in ms, or a dash when it is not set
-func formatDate(ms *int64) string {
-	if ms == nil {
-		return "-"
-	}
-	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
-}
-
 // siteOrders are the ways the sites can be ordered, by their order query value
 var siteOrders = []struct{ order, label string }{
 	{"", "Newest"},
@@ -66,7 +52,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 		@heading.Page("Sites") {
 			Every site. Click a site to open its page.
 		}
-		if isAdmin(ctx) {
+		if httputils.IsControlAdmin(ctx) {
 			<div class="grid gap-4 md:grid-cols-2">
 				@createSiteForm()
 				@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
@@ -257,13 +243,13 @@ templ siteRow(site *controlmodels.Site) {
 			}
 		}
 		@table.Cell() {
-			{ formatDate(&site.CreatedAt) }
+			{ display.DateTime(&site.CreatedAt) }
 		}
 		@table.Cell() {
-			<span title={ formatDate(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
+			<span title={ display.DateTime(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell() {
-			<span title={ formatDate(site.LastWriteAt) }>{ display.Ago(site.LastWriteAt, time.Now()) }</span>
+			<span title={ display.DateTime(site.LastWriteAt) }>{ display.Ago(site.LastWriteAt, time.Now()) }</span>
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ sizeMB(site.EstimatedDbSizeKb) }
@@ -286,21 +272,16 @@ func stateClass(state string) string {
 
 // lifecycle is when the site was made, its batch, and when it was disabled, archived or deleted, if it was
 func lifecycle(site *controlmodels.Site) string {
-	text := "Created " + formatDate(&site.CreatedAt) + " · Batch " + site.Batch
+	text := "Created " + display.DateTime(&site.CreatedAt) + " · Batch " + site.Batch
 	for _, at := range []struct {
 		what string
 		ms   *int64
 	}{{"Disabled", site.DisabledAt}, {"Archived", site.ArchivedAt}, {"Deleted", site.DeletedAt}} {
 		if at.ms != nil {
-			text += " · " + at.what + " " + formatDate(at.ms)
+			text += " · " + at.what + " " + display.DateTime(at.ms)
 		}
 	}
 	return text
-}
-
-// ago is how long ago a time in ms was, or Never
-func ago(ms *int64) string {
-	return display.Ago(ms, time.Now())
 }
 
 // identityTypes are how many of the identities are people (admins and users) and how many devices
@@ -326,7 +307,7 @@ func lastError(errors []*controlmodels.Error) string {
 	if len(errors) == 0 {
 		return "None"
 	}
-	return ago(&errors[0].CreatedAt)
+	return display.Ago(&errors[0].CreatedAt, time.Now())
 }
 
 // siteURL is the site's own address, to open it
@@ -361,8 +342,8 @@ templ SitePage(page *controlmodels.SitePage) {
 		@siteActions(site)
 		@dbSize(site, page.Tables)
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@stat.Tile("control--site--last-seen", "Last seen", ago(site.LastSeenAt), icon.Eye)
-			@stat.Tile("control--site--last-write", "Last write", ago(site.LastWriteAt), icon.PenLine)
+			@stat.Tile("control--site--last-seen", "Last seen", display.Ago(site.LastSeenAt, time.Now()), icon.Eye)
+			@stat.Tile("control--site--last-write", "Last write", display.Ago(site.LastWriteAt, time.Now()), icon.PenLine)
 			@stat.Tile("control--site--identity-count", "Identities", fmt.Sprint(len(page.Identities)), icon.Users) {
 				<div id="control--site--identity-types" class="text-xs text-gray-500">{ identityTypes(page.Identities) }</div>
 			}
@@ -402,7 +383,7 @@ templ siteActions(site *controlmodels.Site) {
 					@icon.ExternalLink(icon.Props{Class: "size-4"})
 				}
 			}
-			if isAdmin(ctx) {
+			if httputils.IsControlAdmin(ctx) {
 				@actionCard("control--site--action-download-db", "Download DB", "Downloads the zip of its DB its admins get from Download Data. Its admins see that you did, in its events.",
 					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Download) {
 					@button.Button(button.Props{
@@ -495,8 +476,6 @@ templ siteActionForm(path, state, confirm, id, label string) {
 		}
 	</form>
 }
-
-var siteDetail = modal.Detail
 
 // sizeMB is a size kept in KB as MB, to two places so a small site's is not 0, or - if it is not known
 func sizeMB(kb *int64) string {

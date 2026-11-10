@@ -59,10 +59,10 @@ templ archivedSiteRow(site *controlmodels.Site) {
 			{ site.ID }
 		}
 		@table.Cell() {
-			{ formatDate(site.ArchivedAt) }
+			{ display.DateTime(site.ArchivedAt) }
 		}
 		@table.Cell() {
-			<span title={ formatDate(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
+			<span title={ display.DateTime(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ sizeMB(site.EstimatedDbSizeKb) }

@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const controlContextKey = "control_context"
@@ -34,6 +35,12 @@ func GetControlContext(ctx context.Context) *ControlContext {
 		return controlCtx
 	}
 	return nil
+}
+
+// IsControlAdmin is whether the control identity signed in is an admin, who can change what others can only see
+func IsControlAdmin(ctx context.Context) bool {
+	controlContext := GetControlContext(ctx)
+	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
 }
 
 func CreateControlContext(ctx context.Context, controlDB *db.ControlDB, ipAddress string, httpAction HTTPAction) context.Context {

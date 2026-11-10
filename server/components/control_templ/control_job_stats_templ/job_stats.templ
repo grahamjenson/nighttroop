@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_jobs_templ"
@@ -12,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // dayQueueJob splits the stats' YYYY-MM-DD::queue::job key into its parts
@@ -23,26 +23,22 @@ func dayQueueJob(stats *controlmodels.JobStatsDaily) (string, string, string) {
 	return parts[0], parts[1], parts[2]
 }
 
-// meanDuration is the jobs' mean time from being fetched to finishing, in ms
+// meanDuration is the jobs' mean time from being fetched to finishing
 func meanDuration(stats *controlmodels.JobStatsDaily) string {
 	if stats.TotalJobs == 0 {
 		return "-"
 	}
-	return fmt.Sprintf("%.0f ms", stats.DurationSum/float64(stats.TotalJobs))
+	return display.Duration(int64(math.Round(stats.DurationSum / float64(stats.TotalJobs))))
 }
 
-// stdDevDuration is how much the jobs' durations spread around their mean, in ms
+// stdDevDuration is how much the jobs' durations spread around their mean
 func stdDevDuration(stats *controlmodels.JobStatsDaily) string {
 	if stats.TotalJobs == 0 {
 		return "-"
 	}
 	n := float64(stats.TotalJobs)
 	mean := stats.DurationSum / n
-	return fmt.Sprintf("%.0f ms", math.Sqrt(max(stats.DurationSquaredSum/n-mean*mean, 0)))
-}
-
-func formatDate(ms int64) string {
-	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
+	return display.Duration(int64(math.Round(math.Sqrt(max(stats.DurationSquaredSum/n-mean*mean, 0)))))
 }
 
 // JobStatsTable shows one page of daily job totals, newest day first, with buttons to the pages either side
@@ -133,13 +129,13 @@ templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 	{{ day, queue, job := dayQueueJob(stats) }}
 	@modal.Modal(modal.Props{ID: "control--job-stats--details", Title: queue + " / " + job}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@jobStatsDetail("Day", day)
-			@jobStatsDetail("Jobs", fmt.Sprint(stats.TotalJobs))
-			@jobStatsDetail("Succeeded", fmt.Sprint(stats.TotalSuccess))
-			@jobStatsDetail("Failed", fmt.Sprint(stats.TotalFailed))
-			@jobStatsDetail("Mean Duration", meanDuration(stats))
-			@jobStatsDetail("Std Dev Duration", stdDevDuration(stats))
-			@jobStatsDetail("Updated", formatDate(stats.UpdatedAt))
+			@modal.Detail("Day", day)
+			@modal.Detail("Jobs", fmt.Sprint(stats.TotalJobs))
+			@modal.Detail("Succeeded", fmt.Sprint(stats.TotalSuccess))
+			@modal.Detail("Failed", fmt.Sprint(stats.TotalFailed))
+			@modal.Detail("Mean Duration", meanDuration(stats))
+			@modal.Detail("Std Dev Duration", stdDevDuration(stats))
+			@modal.Detail("Updated", display.DateTime(&stats.UpdatedAt))
 		</dl>
 		<h3 class="mt-4 text-sm font-semibold">Errors</h3>
 		if len(stats.Errors) == 0 {
@@ -164,5 +160,3 @@ templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 		}
 	}
 }
-
-var jobStatsDetail = modal.Detail

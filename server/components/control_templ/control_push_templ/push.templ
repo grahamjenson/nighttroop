@@ -2,7 +2,6 @@ package control_push_templ
 
 import (
 	"strconv"
-	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -10,14 +9,15 @@ import (
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
 )
 
-// formatDate shows an optional time in ms, or Never when it is not set
-func formatDate(ms *int64) string {
-	if ms == nil || *ms == 0 {
-		return "Never"
+// columns is how many columns the table has, with one for the test buttons for an admin
+func columns(admin bool) string {
+	if admin {
+		return "7"
 	}
-	return time.UnixMilli(*ms).UTC().Format("2006-01-02 15:04:05")
+	return "6"
 }
 
 // PushDevices is every site's apps registered for pushes, newest first, with whose they are, and for an admin a button
@@ -57,7 +57,7 @@ templ PushDevices(devices []*controlmodels.PushRegistration, admin bool) {
 			}
 			@table.Body() {
 				if len(devices) == 0 {
-					<tr id="control--push-devices--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No apps have registered for pushes yet.</td></tr>
+					<tr id="control--push-devices--empty"><td colspan={ columns(admin) } class="p-4 text-sm text-gray-500">No apps have registered for pushes yet.</td></tr>
 				}
 				for _, device := range devices {
 					@pushDeviceRow(device, admin)
@@ -87,7 +87,7 @@ templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
 			}
 		}
 		@table.Cell() {
-			{ formatDate(&device.CreatedAt) }
+			{ display.DateTime(&device.CreatedAt) }
 		}
 		@pushDeviceStatus(device.PushRegistration)
 		if admin {
@@ -116,7 +116,11 @@ templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
 // pushDeviceStatus is when the registration was last pushed to, and the push's error, if it had one
 templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
 	@table.Cell(table.CellProps{ID: "control--push-device--" + strconv.FormatInt(registration.ID, 10) + "--status"}) {
-		{ formatDate(registration.LastPushedAt) }
+		if registration.LastPushedAt == nil {
+			Never
+		} else {
+			{ display.DateTime(registration.LastPushedAt) }
+		}
 		if registration.LastError != nil {
 			<span class="block text-xs text-red-600">{ *registration.LastError }</span>
 		}
