@@ -75,14 +75,14 @@
        fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,
        forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
-    1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
     1. P3: A delete button on Push Devices (`/settings/push-devices`), for an identity's own registrations and an
        admin's for the site's; the push registrations collection's HTMX responses are empty until then
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
-    1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
     1. P2: Before any server credential (one with no site) is added: use it only for tokens its app registered itself,
-       require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token
+       require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token. Then
+       let the control site's Push Credentials (`POST /push-credentials`) add one with no `site_id`, which it refuses
+       until then
     1. P2: Decide whether Loop's and Trio's device tokens stay in plaintext in their profiles, which every reader of
        the site gets from the Nightscout profile API, as LoopFollow needs them
     1. P3: Cap a site's deleted push credentials too, or delete them for good, as only live ones are counted

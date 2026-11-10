@@ -158,6 +158,20 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site's push limit, seeing its new last push or why it failed; a read only control identity sees no Test buttons and
   is refused (403).
 
+### Push credentials
+
+- Push Credentials (`/push-credentials`, in the menu under Users) lists every site's push credentials and those for
+  every site ("Every site"), newest first: its site, name, service, team or project and key ID, apps, bundle IDs and
+  who added it, never its secret, in the page or the JSON API (`/push-credentials`, `/push-credentials/{id}`).
+- A control admin can add one to a live site with Add Push Credential (`POST /push-credentials`, with `site_id`),
+  checked and kept encrypted as the site's admin's is, within the site's 5, added by the control admin's name; the
+  site's admin sees it on their Push Notifications page. A site that is not live, or a key that cannot be read, is
+  refused with the modal left open.
+- One for every site, with no `site_id`, is refused (400) until the server uses it only for tokens its app registered
+  itself, requires its bundle IDs and limits pushes across the server.
+- A control admin can delete any of them, a site's or one for every site, after a confirmation, removing its secret
+  so pushes stop using it; a read only control identity is refused (403) adding or deleting one.
+
 ### Logs
 
 - Every site's and the server's events, newest first, with readable names, when each started and how long it took.
