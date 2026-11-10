@@ -1,6 +1,7 @@
 package apiutils
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log/slog"
@@ -89,6 +90,9 @@ var (
 		return &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed: " + err.Error(), Internal: true}
 	}
 	ErrUniqueConstraintViolation = &HTTPError{Status: http.StatusConflict, Message: "Unique constraint violation"}
+	// ErrClientClosedRequest is a request its client stopped waiting for, as htmx does a request a newer one replaces,
+	// with nginx's status for it: no one reads it, and it is not the server's error
+	ErrClientClosedRequest = &HTTPError{Status: 499, Message: "Client Closed Request"}
 )
 
 var (
@@ -112,6 +116,9 @@ func ErrorFor(err error, what string) *HTTPError {
 		return ErrUniqueConstraintViolation
 	case utilerrors.IsSQLConstraintCheck(err):
 		return ErrDatabaseRefused(err)
+	case errors.Is(err, context.Canceled):
+		slog.Info("Request cancelled reading or writing "+what, "error", err)
+		return ErrClientClosedRequest
 	}
 	slog.Error("Error writing "+what, "error", err)
 	return ErrInternalServerError
