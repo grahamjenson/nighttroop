@@ -44,6 +44,15 @@ func Ago(ms *int64, now time.Time) string {
 	return fmt.Sprintf("%d days ago", int(since.Hours()/24))
 }
 
+// DateTime is the time in ms as its date and time in UTC, as "2026-10-26 12:00:00", or "-" when there is no time,
+// as with the 0 a job has before it is fetched or finished
+func DateTime(ms *int64) string {
+	if ms == nil || *ms == 0 {
+		return "-"
+	}
+	return time.UnixMilli(*ms).UTC().Format(time.DateTime)
+}
+
 // TimeAgo is how long before now the time in ms was, in whole minutes, then hours and minutes, then days, hours and
 // minutes: "5m ago", "1h5m ago" or "2d1h5m ago". A time after now, as from a phone's clock running fast, is "0m ago".
 func TimeAgo(ms int64, now time.Time) string {
