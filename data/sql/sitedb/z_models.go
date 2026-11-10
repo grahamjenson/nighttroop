@@ -54,46 +54,6 @@ type Activity struct {
 	CreatedByIdentityName string
 }
 
-type ComponentEvent struct {
-	ID                    string
-	EventType             string
-	SensorCode            *string
-	TransmitterID         *string
-	Notes                 *string
-	Reason                *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	CreatedByIdentityID   *int64
-	CreatedByIdentityName string
-}
-
-type ComponentEventsVw struct {
-	ID                    *string
-	EventType             *string
-	SensorCode            *string
-	TransmitterID         *string
-	Notes                 *string
-	Reason                *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            *int64
-	CreatedAt             *int64
-	UpdatedAt             *int64
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	CreatedByIdentityID   *int64
-	CreatedByIdentityName *string
-}
-
 type DeviceReport struct {
 	ID                    string
 	DeviceBatteryPercent  *float64
@@ -137,7 +97,6 @@ type EventGroup struct {
 	TempBasalID           *string
 	TempTargetID          *string
 	ProfileSwitchID       *string
-	ComponentEventID      *string
 	ActivityID            *string
 	NotificationEventID   *string
 	EnteredBy             *string
@@ -151,6 +110,8 @@ type EventGroup struct {
 	PumpID                *string
 	PumpSerial            *string
 	PumpType              *string
+	SensorCode            *string
+	TransmitterID         *string
 	Notes                 *string
 	Reason                *string
 	DurationMinutes       *int64

@@ -31,9 +31,6 @@ type ToCreateParams interface {
 	TempTargetToCreate(source TempTarget) CreateTempTargetParams
 	TempTargetToUpdate(source TempTarget) UpdateTempTargetParams
 
-	ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams
-	ComponentEventToUpdate(source ComponentEvent) UpdateComponentEventParams
-
 	DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams
 	DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams
 
@@ -52,7 +49,7 @@ type ToCreateParams interface {
 	AllEventGroupToGetEventGroup(source AllEventGroupsRow) GetEventGroupRow
 
 	//goverter:map . EventGroup
-	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch ComponentEvent Activity NotificationEvent
+	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch Activity NotificationEvent
 	EventGroupToEventGroupsBundle(source EventGroup) EventGroupsBundle
 
 	// EVENT GROUP EVENTS: each event its row joins, through the event's view, whose every column can be NULL, as the
@@ -69,8 +66,6 @@ type ToCreateParams interface {
 	TempTargetFromView(source TempTargetsVw) TempTarget
 	// goverter:useZeroValueOnPointerInconsistency
 	ProfileSwitchFromView(source ProfileSwitchesVw) ProfileSwitch
-	// goverter:useZeroValueOnPointerInconsistency
-	ComponentEventFromView(source ComponentEventsVw) ComponentEvent
 	// goverter:useZeroValueOnPointerInconsistency
 	ActivityFromView(source ActivitiesVw) Activity
 	// goverter:useZeroValueOnPointerInconsistency

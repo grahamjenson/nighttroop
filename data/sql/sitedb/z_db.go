@@ -39,9 +39,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allActivitiesStmt, err = db.PrepareContext(ctx, allActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllActivities: %w", err)
 	}
-	if q.allComponentEventsStmt, err = db.PrepareContext(ctx, allComponentEvents); err != nil {
-		return nil, fmt.Errorf("error preparing query AllComponentEvents: %w", err)
-	}
 	if q.allDeviceReportsStmt, err = db.PrepareContext(ctx, allDeviceReports); err != nil {
 		return nil, fmt.Errorf("error preparing query AllDeviceReports: %w", err)
 	}
@@ -84,14 +81,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearOldPumpsStmt, err = db.PrepareContext(ctx, clearOldPumps); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldPumps: %w", err)
 	}
-	if q.componentEventTotalsStmt, err = db.PrepareContext(ctx, componentEventTotals); err != nil {
-		return nil, fmt.Errorf("error preparing query ComponentEventTotals: %w", err)
-	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
-	}
-	if q.createComponentEventStmt, err = db.PrepareContext(ctx, createComponentEvent); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateComponentEvent: %w", err)
 	}
 	if q.createDeviceReportStmt, err = db.PrepareContext(ctx, createDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateDeviceReport: %w", err)
@@ -177,12 +168,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
-	if q.getComponentEventStmt, err = db.PrepareContext(ctx, getComponentEvent); err != nil {
-		return nil, fmt.Errorf("error preparing query GetComponentEvent: %w", err)
-	}
-	if q.getComponentEventByTypeStmt, err = db.PrepareContext(ctx, getComponentEventByType); err != nil {
-		return nil, fmt.Errorf("error preparing query GetComponentEventByType: %w", err)
-	}
 	if q.getDeviceReportStmt, err = db.PrepareContext(ctx, getDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDeviceReport: %w", err)
 	}
@@ -254,9 +239,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.hardDeleteActivityStmt, err = db.PrepareContext(ctx, hardDeleteActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteActivity: %w", err)
-	}
-	if q.hardDeleteComponentEventStmt, err = db.PrepareContext(ctx, hardDeleteComponentEvent); err != nil {
-		return nil, fmt.Errorf("error preparing query HardDeleteComponentEvent: %w", err)
 	}
 	if q.hardDeleteDeviceReportStmt, err = db.PrepareContext(ctx, hardDeleteDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteDeviceReport: %w", err)
@@ -339,9 +321,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
 	}
-	if q.searchComponentEventsStmt, err = db.PrepareContext(ctx, searchComponentEvents); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchComponentEvents: %w", err)
-	}
 	if q.searchDeviceReportsStmt, err = db.PrepareContext(ctx, searchDeviceReports); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchDeviceReports: %w", err)
 	}
@@ -393,9 +372,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.softDeleteActivityStmt, err = db.PrepareContext(ctx, softDeleteActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteActivity: %w", err)
 	}
-	if q.softDeleteComponentEventStmt, err = db.PrepareContext(ctx, softDeleteComponentEvent); err != nil {
-		return nil, fmt.Errorf("error preparing query SoftDeleteComponentEvent: %w", err)
-	}
 	if q.softDeleteDeviceReportStmt, err = db.PrepareContext(ctx, softDeleteDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteDeviceReport: %w", err)
 	}
@@ -443,9 +419,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
-	}
-	if q.updateComponentEventStmt, err = db.PrepareContext(ctx, updateComponentEvent); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateComponentEvent: %w", err)
 	}
 	if q.updateDeviceReportStmt, err = db.PrepareContext(ctx, updateDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDeviceReport: %w", err)
@@ -514,11 +487,6 @@ func (q *Queries) Close() error {
 	if q.allActivitiesStmt != nil {
 		if cerr := q.allActivitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allActivitiesStmt: %w", cerr)
-		}
-	}
-	if q.allComponentEventsStmt != nil {
-		if cerr := q.allComponentEventsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allComponentEventsStmt: %w", cerr)
 		}
 	}
 	if q.allDeviceReportsStmt != nil {
@@ -591,19 +559,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing clearOldPumpsStmt: %w", cerr)
 		}
 	}
-	if q.componentEventTotalsStmt != nil {
-		if cerr := q.componentEventTotalsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing componentEventTotalsStmt: %w", cerr)
-		}
-	}
 	if q.createActivityStmt != nil {
 		if cerr := q.createActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createActivityStmt: %w", cerr)
-		}
-	}
-	if q.createComponentEventStmt != nil {
-		if cerr := q.createComponentEventStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createComponentEventStmt: %w", cerr)
 		}
 	}
 	if q.createDeviceReportStmt != nil {
@@ -746,16 +704,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
 		}
 	}
-	if q.getComponentEventStmt != nil {
-		if cerr := q.getComponentEventStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getComponentEventStmt: %w", cerr)
-		}
-	}
-	if q.getComponentEventByTypeStmt != nil {
-		if cerr := q.getComponentEventByTypeStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getComponentEventByTypeStmt: %w", cerr)
-		}
-	}
 	if q.getDeviceReportStmt != nil {
 		if cerr := q.getDeviceReportStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getDeviceReportStmt: %w", cerr)
@@ -874,11 +822,6 @@ func (q *Queries) Close() error {
 	if q.hardDeleteActivityStmt != nil {
 		if cerr := q.hardDeleteActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteActivityStmt: %w", cerr)
-		}
-	}
-	if q.hardDeleteComponentEventStmt != nil {
-		if cerr := q.hardDeleteComponentEventStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing hardDeleteComponentEventStmt: %w", cerr)
 		}
 	}
 	if q.hardDeleteDeviceReportStmt != nil {
@@ -1016,11 +959,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchActivitiesStmt: %w", cerr)
 		}
 	}
-	if q.searchComponentEventsStmt != nil {
-		if cerr := q.searchComponentEventsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchComponentEventsStmt: %w", cerr)
-		}
-	}
 	if q.searchDeviceReportsStmt != nil {
 		if cerr := q.searchDeviceReportsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchDeviceReportsStmt: %w", cerr)
@@ -1106,11 +1044,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing softDeleteActivityStmt: %w", cerr)
 		}
 	}
-	if q.softDeleteComponentEventStmt != nil {
-		if cerr := q.softDeleteComponentEventStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing softDeleteComponentEventStmt: %w", cerr)
-		}
-	}
 	if q.softDeleteDeviceReportStmt != nil {
 		if cerr := q.softDeleteDeviceReportStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing softDeleteDeviceReportStmt: %w", cerr)
@@ -1189,11 +1122,6 @@ func (q *Queries) Close() error {
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
-		}
-	}
-	if q.updateComponentEventStmt != nil {
-		if cerr := q.updateComponentEventStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateComponentEventStmt: %w", cerr)
 		}
 	}
 	if q.updateDeviceReportStmt != nil {
@@ -1305,7 +1233,6 @@ type Queries struct {
 	activityTotalsStmt                          *sql.Stmt
 	alarmGlucoseReadingsStmt                    *sql.Stmt
 	allActivitiesStmt                           *sql.Stmt
-	allComponentEventsStmt                      *sql.Stmt
 	allDeviceReportsStmt                        *sql.Stmt
 	allEventGroupsStmt                          *sql.Stmt
 	allFoodIntakesStmt                          *sql.Stmt
@@ -1320,9 +1247,7 @@ type Queries struct {
 	clearDeviceReportStatusesStmt               *sql.Stmt
 	clearOldLoopStatusesStmt                    *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
-	componentEventTotalsStmt                    *sql.Stmt
 	createActivityStmt                          *sql.Stmt
-	createComponentEventStmt                    *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
 	createEventGroupStmt                        *sql.Stmt
 	createFoodIntakeStmt                        *sql.Stmt
@@ -1351,8 +1276,6 @@ type Queries struct {
 	foodPresetAscendingIDsStmt                  *sql.Stmt
 	foodPresetHistoryIDsStmt                    *sql.Stmt
 	getActivityStmt                             *sql.Stmt
-	getComponentEventStmt                       *sql.Stmt
-	getComponentEventByTypeStmt                 *sql.Stmt
 	getDeviceReportStmt                         *sql.Stmt
 	getEventGroupStmt                           *sql.Stmt
 	getEventGroupOfTypeWithoutJoinsStmt         *sql.Stmt
@@ -1377,7 +1300,6 @@ type Queries struct {
 	glucoseReadingTotalsStmt                    *sql.Stmt
 	hardDeleteActivitiesByTypeStmt              *sql.Stmt
 	hardDeleteActivityStmt                      *sql.Stmt
-	hardDeleteComponentEventStmt                *sql.Stmt
 	hardDeleteDeviceReportStmt                  *sql.Stmt
 	hardDeleteEventGroupStmt                    *sql.Stmt
 	hardDeleteEventGroupsByTypeStmt             *sql.Stmt
@@ -1405,7 +1327,6 @@ type Queries struct {
 	recentDeviceNamesStmt                       *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
-	searchComponentEventsStmt                   *sql.Stmt
 	searchDeviceReportsStmt                     *sql.Stmt
 	searchEventGroupsStmt                       *sql.Stmt
 	searchFoodIntakesStmt                       *sql.Stmt
@@ -1423,7 +1344,6 @@ type Queries struct {
 	searchTempTargetsStmt                       *sql.Stmt
 	softDeleteActivitiesByTypeStmt              *sql.Stmt
 	softDeleteActivityStmt                      *sql.Stmt
-	softDeleteComponentEventStmt                *sql.Stmt
 	softDeleteDeviceReportStmt                  *sql.Stmt
 	softDeleteEventGroupStmt                    *sql.Stmt
 	softDeleteEventGroupsByTypeStmt             *sql.Stmt
@@ -1440,7 +1360,6 @@ type Queries struct {
 	tempTargetTotalsStmt                        *sql.Stmt
 	thinOldDeviceReportsStmt                    *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
-	updateComponentEventStmt                    *sql.Stmt
 	updateDeviceReportStmt                      *sql.Stmt
 	updateEventGroupStmt                        *sql.Stmt
 	updateFoodIntakeStmt                        *sql.Stmt
@@ -1465,7 +1384,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		activityTotalsStmt:                          q.activityTotalsStmt,
 		alarmGlucoseReadingsStmt:                    q.alarmGlucoseReadingsStmt,
 		allActivitiesStmt:                           q.allActivitiesStmt,
-		allComponentEventsStmt:                      q.allComponentEventsStmt,
 		allDeviceReportsStmt:                        q.allDeviceReportsStmt,
 		allEventGroupsStmt:                          q.allEventGroupsStmt,
 		allFoodIntakesStmt:                          q.allFoodIntakesStmt,
@@ -1480,9 +1398,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
 		clearOldLoopStatusesStmt:                    q.clearOldLoopStatusesStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
-		componentEventTotalsStmt:                    q.componentEventTotalsStmt,
 		createActivityStmt:                          q.createActivityStmt,
-		createComponentEventStmt:                    q.createComponentEventStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,
 		createEventGroupStmt:                        q.createEventGroupStmt,
 		createFoodIntakeStmt:                        q.createFoodIntakeStmt,
@@ -1511,8 +1427,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		foodPresetAscendingIDsStmt:                  q.foodPresetAscendingIDsStmt,
 		foodPresetHistoryIDsStmt:                    q.foodPresetHistoryIDsStmt,
 		getActivityStmt:                             q.getActivityStmt,
-		getComponentEventStmt:                       q.getComponentEventStmt,
-		getComponentEventByTypeStmt:                 q.getComponentEventByTypeStmt,
 		getDeviceReportStmt:                         q.getDeviceReportStmt,
 		getEventGroupStmt:                           q.getEventGroupStmt,
 		getEventGroupOfTypeWithoutJoinsStmt:         q.getEventGroupOfTypeWithoutJoinsStmt,
@@ -1537,7 +1451,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		glucoseReadingTotalsStmt:                    q.glucoseReadingTotalsStmt,
 		hardDeleteActivitiesByTypeStmt:              q.hardDeleteActivitiesByTypeStmt,
 		hardDeleteActivityStmt:                      q.hardDeleteActivityStmt,
-		hardDeleteComponentEventStmt:                q.hardDeleteComponentEventStmt,
 		hardDeleteDeviceReportStmt:                  q.hardDeleteDeviceReportStmt,
 		hardDeleteEventGroupStmt:                    q.hardDeleteEventGroupStmt,
 		hardDeleteEventGroupsByTypeStmt:             q.hardDeleteEventGroupsByTypeStmt,
@@ -1565,7 +1478,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
-		searchComponentEventsStmt:                   q.searchComponentEventsStmt,
 		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,
 		searchEventGroupsStmt:                       q.searchEventGroupsStmt,
 		searchFoodIntakesStmt:                       q.searchFoodIntakesStmt,
@@ -1583,7 +1495,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchTempTargetsStmt:                       q.searchTempTargetsStmt,
 		softDeleteActivitiesByTypeStmt:              q.softDeleteActivitiesByTypeStmt,
 		softDeleteActivityStmt:                      q.softDeleteActivityStmt,
-		softDeleteComponentEventStmt:                q.softDeleteComponentEventStmt,
 		softDeleteDeviceReportStmt:                  q.softDeleteDeviceReportStmt,
 		softDeleteEventGroupStmt:                    q.softDeleteEventGroupStmt,
 		softDeleteEventGroupsByTypeStmt:             q.softDeleteEventGroupsByTypeStmt,
@@ -1600,7 +1511,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tempTargetTotalsStmt:                        q.tempTargetTotalsStmt,
 		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
-		updateComponentEventStmt:                    q.updateComponentEventStmt,
 		updateDeviceReportStmt:                      q.updateDeviceReportStmt,
 		updateEventGroupStmt:                        q.updateEventGroupStmt,
 		updateFoodIntakeStmt:                        q.updateFoodIntakeStmt,

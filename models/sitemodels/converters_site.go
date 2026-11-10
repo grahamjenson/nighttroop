@@ -182,25 +182,6 @@ type SiteConverter interface {
 	ActivityToUpdate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.UpdateActivityParams
 
 	///////
-	// COMPONENT EVENTS
-	///////
-
-	ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent
-
-	// goverter:context siteContext
-	// goverter:map ID | NewSiteDataID
-	// goverter:map OccurredAt | OccurredAtOrNow
-	// goverter:map CreatedByIdentityID | ContextIdentityID
-	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	ComponentEventToCreate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.CreateComponentEventParams
-
-	// goverter:context siteContext
-	// goverter:map EventType | StringOrNil
-	// goverter:map UpdatedByIdentityID | ContextIdentityID
-	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	ComponentEventToUpdate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.UpdateComponentEventParams
-
-	///////
 	// NOTIFICATION EVENTS
 	///////
 
@@ -251,7 +232,6 @@ type SiteConverter interface {
 	// goverter:context siteContext
 	// goverter:autoMap EventGroup
 	// goverter:map EventGroup.ProfileSwitchID ProfileSwitchID
-	// goverter:map EventGroup.ComponentEventID ComponentEventID
 	// goverter:map EventGroup.ActivityID ActivityID
 	// goverter:map EventGroup.NotificationEventID NotificationEventID
 	// goverter:map EventGroup.GlucoseReadingID GlucoseReadingID

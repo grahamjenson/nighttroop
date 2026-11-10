@@ -16,13 +16,12 @@ func Summary(store nsutils.Store) func(http.ResponseWriter, *http.Request, *nsut
 
 		dr := LastDeviceStatusFromPWD(siteContext.SiteDB.Queries(), r.Context())
 
-		_, lastSensorChange, lastCannulaChange := GetLastSensorChangeCannulaChange(siteContext.SiteDB.Queries(), r.Context())
-
+		q := siteContext.SiteDB.Queries()
 		summary := SummaryStr{
 			IOB:           GetIOBFloat(dr),
 			COB:           GetCOBFloat(dr),
-			CannulaChange: GetComponentEventOccuredAt(lastCannulaChange),
-			SensorChange:  GetComponentEventOccuredAt(lastSensorChange),
+			CannulaChange: occurredAt(LastOfType(q, r.Context(), "Insulin Change")),
+			SensorChange:  occurredAt(LastOfType(q, r.Context(), "Sensor Change")),
 		}
 
 		apiutils.WriteJSON(w, http.StatusOK, summary)
@@ -118,9 +117,10 @@ func GetCOBFloat(dr *sitedb.DeviceReport) *float64 {
 	return dr.LoopCob
 }
 
-func GetComponentEventOccuredAt(lastSensorChange *sitedb.ComponentEvent) *int64 {
-	if lastSensorChange == nil || lastSensorChange.OccurredAt == 0 {
+// occurredAt is when the change was, nil without one
+func occurredAt(change *sitedb.EventGroup) *int64 {
+	if change == nil || change.OccurredAt == 0 {
 		return nil
 	}
-	return &lastSensorChange.OccurredAt
+	return &change.OccurredAt
 }

@@ -34,10 +34,6 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		egb.ProfileSwitch = new(ProfileSwitchFromView(source.ProfileSwitchesVw))
 	}
 
-	if source.ComponentEventsVw.ID != nil {
-		egb.ComponentEvent = new(ComponentEventFromView(source.ComponentEventsVw))
-	}
-
 	if source.ActivitiesVw.ID != nil {
 		egb.Activity = new(ActivityFromView(source.ActivitiesVw))
 	}

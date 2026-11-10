@@ -44,7 +44,6 @@ func NewSiteStore() *SiteStore {
 	siteStore.registerCollection("data", &sitedata.TempTargetsCollection{})
 	siteStore.registerCollection("data", &sitedata.TempBasalsCollection{})
 	siteStore.registerCollection("data", &sitedata.ActivitiesCollection{})
-	siteStore.registerCollection("data", &sitedata.ComponentEventsCollection{})
 	siteStore.registerCollection("data", &sitedata.NotificationEventsCollection{})
 	siteStore.registerCollection("data", &sitedata.ProfileSwitchesCollection{})
 	siteStore.registerCollection("data", &sitedata.EventGroupsCollection{})

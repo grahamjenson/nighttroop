@@ -49,7 +49,6 @@ func fullRow() sitedb.GetEventGroupRow {
 	fill(&row.TempBasalsVw)
 	fill(&row.TempTargetsVw)
 	fill(&row.ProfileSwitchesVw)
-	fill(&row.ComponentEventsVw)
 	fill(&row.ActivitiesVw)
 	fill(&row.NotificationEventsVw)
 	return row
@@ -70,7 +69,6 @@ func TestGetEventGroupToEventGroupsBundle(t *testing.T) {
 		{row.TempBasalsVw, bundle.TempBasal},
 		{row.TempTargetsVw, bundle.TempTarget},
 		{row.ProfileSwitchesVw, bundle.ProfileSwitch},
-		{row.ComponentEventsVw, bundle.ComponentEvent},
 		{row.ActivitiesVw, bundle.Activity},
 		{row.NotificationEventsVw, bundle.NotificationEvent},
 	}

@@ -48,7 +48,6 @@ type EventGroupsBundle struct {
 	TempBasal         *TempBasal
 	TempTarget        *TempTarget
 	ProfileSwitch     *ProfileSwitch
-	ComponentEvent    *ComponentEvent
 	Activity          *Activity
 	NotificationEvent *NotificationEvent
 }
@@ -98,9 +97,6 @@ func (model *EventGroupsBundle) GetAllSubEvents() []SubEventInterface {
 	}
 	if model.ProfileSwitch != nil {
 		subEvents = append(subEvents, model.ProfileSwitch)
-	}
-	if model.ComponentEvent != nil {
-		subEvents = append(subEvents, model.ComponentEvent)
 	}
 	if model.Activity != nil {
 		subEvents = append(subEvents, model.Activity)

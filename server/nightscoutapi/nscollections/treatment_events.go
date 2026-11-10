@@ -348,22 +348,6 @@ var (
 		toUpdate: nightscoutmodels.ProfileSwitchUpdate, update: (*sitedb.Queries).UpdateProfileSwitch,
 		delete: (*sitedb.Queries).HardDeleteProfileSwitch,
 	}
-	componentEvents = eventKind[sitedb.ComponentEvent, sitedb.CreateComponentEventParams, sitedb.UpdateComponentEventParams, sitedb.HardDeleteComponentEventParams]{
-		name: "component event",
-		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.ComponentEvent) {
-			return &b.EventGroup.ComponentEventID, &b.ComponentEvent
-		},
-		// A change of a sensor, site or pump part always has one, and no other treatment does: the pump AAPS names on
-		// every treatment is kept on its event group
-		has: func(source nightscoutmodels.Treatment) bool {
-			return slices.Contains(sitemodels.ComponentEventTypes, source.EventType.String())
-		},
-		partial:     nightscoutmodels.PartialTreatmentToComponentEvent,
-		toTreatment: withoutSite(nightscoutmodels.UpdateComponentEventToTreatment), mergeInto: nightscoutmodels.UpdateToComponentEvent,
-		toCreate: nightscoutmodels.ComponentEventCreate, create: (*sitedb.Queries).CreateComponentEvent,
-		toUpdate: nightscoutmodels.ComponentEventUpdate, update: (*sitedb.Queries).UpdateComponentEvent,
-		delete: (*sitedb.Queries).HardDeleteComponentEvent,
-	}
 	activities = eventKind[sitedb.Activity, sitedb.CreateActivityParams, sitedb.UpdateActivityParams, sitedb.HardDeleteActivityParams]{
 		name: "activity",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.Activity) {
@@ -413,8 +397,7 @@ var (
 
 // treatmentEvents are every kind of event a group can have, in the order they are written
 var treatmentEvents = []treatmentEvent{
-	glucoseReadings, insulinDoses, foodIntakes, tempBasals, tempTargets, profileSwitches, componentEvents, activities,
-	notificationEvents,
+	glucoseReadings, insulinDoses, foodIntakes, tempBasals, tempTargets, profileSwitches, activities, notificationEvents,
 }
 
 // treatmentTypeEvents are the kinds of event each type of treatment keeps, see sitemodels.EventGroupTypeKinds; its other
@@ -422,8 +405,7 @@ var treatmentEvents = []treatmentEvent{
 var treatmentTypeEvents = func() map[nightscoutmodels.TreatmentEventType][]treatmentEvent {
 	byField := map[string]treatmentEvent{"glucose_reading_id": glucoseReadings, "insulin_dose_id": insulinDoses,
 		"food_intake_id": foodIntakes, "temp_basal_id": tempBasals, "temp_target_id": tempTargets,
-		"profile_switch_id": profileSwitches, "component_event_id": componentEvents, "activity_id": activities,
-		"notification_event_id": notificationEvents}
+		"profile_switch_id": profileSwitches, "activity_id": activities, "notification_event_id": notificationEvents}
 	types := map[nightscoutmodels.TreatmentEventType][]treatmentEvent{}
 	for t, fields := range sitemodels.EventGroupTypeKinds {
 		for _, field := range fields {

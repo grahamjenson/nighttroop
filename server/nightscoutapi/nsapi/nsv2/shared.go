@@ -15,25 +15,11 @@ func LastDeviceStatusFromPWD(q *sitedb.Queries, ctx context.Context) *sitedb.Dev
 	return ret
 }
 
-func GetLastSensorChangeCannulaChange(q *sitedb.Queries, ctx context.Context) (*sitedb.ComponentEvent, *sitedb.ComponentEvent, *sitedb.ComponentEvent) {
-	lastSensorChange, err := q.GetComponentEventByType(ctx, sitedb.GetComponentEventByTypeParams{
-		EventType: "Sensor Change",
-	})
-	if err != nil {
-		lastSensorChange = nil
+// LastOfType is the newest treatment of a type not deleted, like a Sensor Change, nil when there is none
+func LastOfType(q *sitedb.Queries, ctx context.Context, groupType string) *sitedb.EventGroup {
+	groups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: groupType, Limit: 1})
+	if err != nil || len(groups) == 0 {
+		return nil
 	}
-	lastSensorStart, err := q.GetComponentEventByType(ctx, sitedb.GetComponentEventByTypeParams{
-		EventType: "Sensor Start",
-	})
-	if err != nil {
-		lastSensorStart = nil
-	}
-
-	lastCannulaChange, err := q.GetComponentEventByType(ctx, sitedb.GetComponentEventByTypeParams{
-		EventType: "Insulin Change",
-	})
-	if err != nil {
-		lastCannulaChange = nil
-	}
-	return lastSensorStart, lastSensorChange, lastCannulaChange
+	return groups[0]
 }
