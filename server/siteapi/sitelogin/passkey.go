@@ -79,7 +79,8 @@ func accountUser(r *http.Request, controlDB *db.ControlDB, adding bool) (passkey
 	return user, err
 }
 
-// GETAccount is the signed in identity's My Account page: who it is signed in as, and its passkeys to add and remove
+// GETAccount is the signed in identity's My Account page: who it is signed in as, and its passkeys to add and remove,
+// and for an admin its site's storage
 func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := httputils.GetSiteContext(r.Context())
@@ -93,7 +94,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 			http.Error(w, "Only a user who signs in to the website has an account page", http.StatusForbidden)
 			return
 		}
-		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, MaxPasskeys, "/settings/account", true), true)
+		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, MaxPasskeys, "/settings/account", true, sitecollections.AccountStorage(r)), true)
 	}
 }
 
