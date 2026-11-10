@@ -87,15 +87,7 @@ templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 			@readingDetail("Basal (%)", percentOr(tempBasal.Multiplier, "-"))
 			@readingDetail("Notes", orDash(tempBasal.Notes))
 			@readingDetail("Reason", orDash(tempBasal.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", tempBasal.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(tempBasal.UtcOffsetMinutes))
-			@readingDetail("App", orDash(tempBasal.CreatedByAppName))
-			@readingDetail("Device", orDash(tempBasal.CreatedByDeviceName))
-			@readingDetail("Created By", tempBasal.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, tempBasal.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, tempBasal.UpdatedAt))
-			@readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: tempBasal.ID, UtcOffset: tempBasal.UtcOffsetMinutes, App: tempBasal.CreatedByAppName, Device: tempBasal.CreatedByDeviceName, CreatedBy: tempBasal.CreatedByIdentityName, Created: tempBasal.CreatedAt, Updated: tempBasal.UpdatedAt, UpdatedBy: tempBasal.UpdatedByIdentityName})
 		</dl>
 	}
 }

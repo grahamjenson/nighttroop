@@ -92,18 +92,10 @@ templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Insulin Needs Scale Factor", orDash(tempTarget.InsulinNeedsScaleFactor))
+			@readingDetail("Insulin needs", orDash(tempTarget.InsulinNeedsScaleFactor))
 			@readingDetail("Notes", orDash(tempTarget.Notes))
 			@readingDetail("Reason", orDash(tempTarget.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", tempTarget.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(tempTarget.UtcOffsetMinutes))
-			@readingDetail("App", orDash(tempTarget.CreatedByAppName))
-			@readingDetail("Device", orDash(tempTarget.CreatedByDeviceName))
-			@readingDetail("Created By", tempTarget.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, tempTarget.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, tempTarget.UpdatedAt))
-			@readingDetail("Updated By", orDash(tempTarget.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: tempTarget.ID, UtcOffset: tempTarget.UtcOffsetMinutes, App: tempTarget.CreatedByAppName, Device: tempTarget.CreatedByDeviceName, CreatedBy: tempTarget.CreatedByIdentityName, Created: tempTarget.CreatedAt, Updated: tempTarget.UpdatedAt, UpdatedBy: tempTarget.UpdatedByIdentityName})
 		</dl>
 	}
 }

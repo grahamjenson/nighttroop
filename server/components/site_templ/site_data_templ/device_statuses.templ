@@ -163,13 +163,7 @@ templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
 			@readingDetail("Basal IOB", withUnit(status.LoopIobBasal, " U"))
 			@readingDetail("Bolus IOB", withUnit(status.LoopIobTreatment, " U"))
 			@readingDetail("COB", withUnit(status.LoopCob, " g"))
-			@modal.Section("Record")
-			@readingDetail("ID", status.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(status.UtcOffsetMinutes))
-			@readingDetail("App", orDash(status.CreatedByAppName))
-			@readingDetail("Created By", status.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, status.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, status.UpdatedAt))
+			@RecordDetails(Record{ID: status.ID, UtcOffset: status.UtcOffsetMinutes, App: status.CreatedByAppName, CreatedBy: status.CreatedByIdentityName, Created: status.CreatedAt, Updated: status.UpdatedAt})
 		</dl>
 	}
 }

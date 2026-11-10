@@ -608,39 +608,7 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Section("Record").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("ID", reading.ID).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("UTC Offset (minutes)", orDash(reading.UtcOffsetMinutes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("App", orDash(reading.CreatedByAppName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Device", orDash(reading.CreatedByDeviceName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created By", reading.CreatedByIdentityName).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(ctx, reading.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(ctx, reading.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated By", orDash(reading.UpdatedByIdentityName)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RecordDetails(Record{ID: reading.ID, UtcOffset: reading.UtcOffsetMinutes, App: reading.CreatedByAppName, Device: reading.CreatedByDeviceName, CreatedBy: reading.CreatedByIdentityName, Created: reading.CreatedAt, Updated: reading.UpdatedAt, UpdatedBy: reading.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

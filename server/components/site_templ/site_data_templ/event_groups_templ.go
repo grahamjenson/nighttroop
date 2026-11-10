@@ -953,39 +953,7 @@ func EventGroupModal(eventGroup *sitemodels.SiteEventGroup) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Section("Record").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("ID", eventGroup.ID).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("UTC Offset (minutes)", orDash(eventGroup.UtcOffsetMinutes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("App", orDash(eventGroup.CreatedByAppName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Device", orDash(eventGroup.CreatedByDeviceName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created By", eventGroup.CreatedByIdentityName).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(ctx, eventGroup.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(ctx, eventGroup.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated By", orDash(eventGroup.UpdatedByIdentityName)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RecordDetails(Record{ID: eventGroup.ID, UtcOffset: eventGroup.UtcOffsetMinutes, App: eventGroup.CreatedByAppName, Device: eventGroup.CreatedByDeviceName, CreatedBy: eventGroup.CreatedByIdentityName, Created: eventGroup.CreatedAt, Updated: eventGroup.UpdatedAt, UpdatedBy: eventGroup.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

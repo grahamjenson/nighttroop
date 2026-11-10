@@ -382,31 +382,7 @@ func ProfilePresetModal(profile *sitemodels.SiteProfilePreset) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Section("Record").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("ID", profile.ID).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("App", orDash(profile.CreatedByAppName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Device", orDash(profile.CreatedByDeviceName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Created By", profile.CreatedByIdentityName).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Updated", formatDate(ctx, profile.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Updated By", orDash(profile.UpdatedByIdentityName)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = site_data_templ.RecordDetails(site_data_templ.Record{ID: profile.ID, UtcOffset: profile.UtcOffsetMinutes, App: profile.CreatedByAppName, Device: profile.CreatedByDeviceName, CreatedBy: profile.CreatedByIdentityName, Created: profile.CreatedAt, Updated: profile.UpdatedAt, UpdatedBy: profile.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

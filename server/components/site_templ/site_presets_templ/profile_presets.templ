@@ -88,13 +88,7 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 			@presetDetail("Carbs per Hour", orDash(profile.CarbsHr))
 			@presetDetail("Delay", orDash(profile.Delay))
 			@presetDetail("Timezone", orDash(profile.Timezone))
-			@modal.Section("Record")
-			@presetDetail("ID", profile.ID)
-			@presetDetail("App", orDash(profile.CreatedByAppName))
-			@presetDetail("Device", orDash(profile.CreatedByDeviceName))
-			@presetDetail("Created By", profile.CreatedByIdentityName)
-			@presetDetail("Updated", formatDate(ctx, profile.UpdatedAt))
-			@presetDetail("Updated By", orDash(profile.UpdatedByIdentityName))
+			@site_data_templ.RecordDetails(site_data_templ.Record{ID: profile.ID, UtcOffset: profile.UtcOffsetMinutes, App: profile.CreatedByAppName, Device: profile.CreatedByDeviceName, CreatedBy: profile.CreatedByIdentityName, Created: profile.CreatedAt, Updated: profile.UpdatedAt, UpdatedBy: profile.UpdatedByIdentityName})
 		</dl>
 	}
 }

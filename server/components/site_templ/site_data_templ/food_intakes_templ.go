@@ -358,15 +358,15 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Fat g", orDash(foodIntake.Fat)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Fat (g)", orDash(foodIntake.Fat)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Protein g", orDash(foodIntake.Protein)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Protein (g)", orDash(foodIntake.Protein)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Fibre g", orDash(foodIntake.Fibre)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Fibre (g)", orDash(foodIntake.Fibre)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -378,11 +378,11 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Absorption Time (minutes)", orDash(foodIntake.AbsorptionTimeMinutes)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Absorption time (minutes)", orDash(foodIntake.AbsorptionTimeMinutes)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Pre Bolus (minutes)", orDash(foodIntake.PreBolus)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Pre-bolus (minutes)", orDash(foodIntake.PreBolus)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -394,39 +394,7 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Section("Record").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("ID", foodIntake.ID).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("UTC Offset (minutes)", orDash(foodIntake.UtcOffsetMinutes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("App", orDash(foodIntake.CreatedByAppName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Device", orDash(foodIntake.CreatedByDeviceName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created By", foodIntake.CreatedByIdentityName).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(ctx, foodIntake.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(ctx, foodIntake.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated By", orDash(foodIntake.UpdatedByIdentityName)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RecordDetails(Record{ID: foodIntake.ID, UtcOffset: foodIntake.UtcOffsetMinutes, App: foodIntake.CreatedByAppName, Device: foodIntake.CreatedByDeviceName, CreatedBy: foodIntake.CreatedByIdentityName, Created: foodIntake.CreatedAt, Updated: foodIntake.UpdatedAt, UpdatedBy: foodIntake.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

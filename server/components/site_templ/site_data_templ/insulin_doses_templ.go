@@ -354,39 +354,7 @@ func InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Section("Record").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("ID", insulinDose.ID).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("UTC Offset (minutes)", orDash(insulinDose.UtcOffsetMinutes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("App", orDash(insulinDose.CreatedByAppName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Device", orDash(insulinDose.CreatedByDeviceName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created By", insulinDose.CreatedByIdentityName).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(ctx, insulinDose.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(ctx, insulinDose.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated By", orDash(insulinDose.UpdatedByIdentityName)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RecordDetails(Record{ID: insulinDose.ID, UtcOffset: insulinDose.UtcOffsetMinutes, App: insulinDose.CreatedByAppName, Device: insulinDose.CreatedByDeviceName, CreatedBy: insulinDose.CreatedByIdentityName, Created: insulinDose.CreatedAt, Updated: insulinDose.UpdatedAt, UpdatedBy: insulinDose.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

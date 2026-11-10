@@ -87,15 +87,7 @@ templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 			@readingDetail("Extended (%)", percentOr(insulinDose.SplitExt, "-"))
 			@readingDetail("Notes", orDash(insulinDose.Notes))
 			@readingDetail("Reason", orDash(insulinDose.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", insulinDose.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(insulinDose.UtcOffsetMinutes))
-			@readingDetail("App", orDash(insulinDose.CreatedByAppName))
-			@readingDetail("Device", orDash(insulinDose.CreatedByDeviceName))
-			@readingDetail("Created By", insulinDose.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, insulinDose.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, insulinDose.UpdatedAt))
-			@readingDetail("Updated By", orDash(insulinDose.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: insulinDose.ID, UtcOffset: insulinDose.UtcOffsetMinutes, App: insulinDose.CreatedByAppName, Device: insulinDose.CreatedByDeviceName, CreatedBy: insulinDose.CreatedByIdentityName, Created: insulinDose.CreatedAt, Updated: insulinDose.UpdatedAt, UpdatedBy: insulinDose.UpdatedByIdentityName})
 		</dl>
 	}
 }

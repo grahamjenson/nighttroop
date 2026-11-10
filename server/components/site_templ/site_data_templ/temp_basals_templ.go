@@ -372,39 +372,7 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Section("Record").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("ID", tempBasal.ID).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("UTC Offset (minutes)", orDash(tempBasal.UtcOffsetMinutes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("App", orDash(tempBasal.CreatedByAppName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Device", orDash(tempBasal.CreatedByDeviceName)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created By", tempBasal.CreatedByIdentityName).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(ctx, tempBasal.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(ctx, tempBasal.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RecordDetails(Record{ID: tempBasal.ID, UtcOffset: tempBasal.UtcOffsetMinutes, App: tempBasal.CreatedByAppName, Device: tempBasal.CreatedByDeviceName, CreatedBy: tempBasal.CreatedByIdentityName, Created: tempBasal.CreatedAt, Updated: tempBasal.UpdatedAt, UpdatedBy: tempBasal.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

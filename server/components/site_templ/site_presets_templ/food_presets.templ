@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -84,20 +85,13 @@ templ FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) {
 			@presetDetail("Food Type", orDash(foodPreset.FoodType))
 			@presetDetail("Category", orDash(foodPreset.Category))
 			@presetDetail("Subcategory", orDash(foodPreset.Subcategory))
-			@presetDetail("Fat g", orDash(foodPreset.Fat))
-			@presetDetail("Protein g", orDash(foodPreset.Protein))
-			@presetDetail("Fibre g", orDash(foodPreset.Fibre))
+			@presetDetail("Fat (g)", orDash(foodPreset.Fat))
+			@presetDetail("Protein (g)", orDash(foodPreset.Protein))
+			@presetDetail("Fibre (g)", orDash(foodPreset.Fibre))
 			@presetDetail("Energy", orDash(foodPreset.Energy))
 			@presetDetail("Portions", orDash(foodPreset.Portions))
-			@presetDetail("Pre Bolus (minutes)", orDash(foodPreset.PreBolus))
-			@modal.Section("Record")
-			@presetDetail("ID", foodPreset.ID)
-			@presetDetail("App", orDash(foodPreset.CreatedByAppName))
-			@presetDetail("Device", orDash(foodPreset.CreatedByDeviceName))
-			@presetDetail("Created By", foodPreset.CreatedByIdentityName)
-			@presetDetail("Created", formatDate(ctx, foodPreset.CreatedAt))
-			@presetDetail("Updated", formatDate(ctx, foodPreset.UpdatedAt))
-			@presetDetail("Updated By", orDash(foodPreset.UpdatedByIdentityName))
+			@presetDetail("Pre-bolus (minutes)", orDash(foodPreset.PreBolus))
+			@site_data_templ.RecordDetails(site_data_templ.Record{ID: foodPreset.ID, App: foodPreset.CreatedByAppName, Device: foodPreset.CreatedByDeviceName, CreatedBy: foodPreset.CreatedByIdentityName, Created: foodPreset.CreatedAt, Updated: foodPreset.UpdatedAt, UpdatedBy: foodPreset.UpdatedByIdentityName})
 		</dl>
 	}
 }
