@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -49,59 +50,50 @@ var siteOrders = []struct{ order, label string }{
 // SitesTable shows one page of sites in order, newest first by default, with buttons to reorder them and to the
 // pages either side
 templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order string) {
-	<div id="sites_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Sites") {
-			Every site. Click a site to open its page.
+	@listpage.Page(listpage.Props{
+		ID:          "sites_table",
+		Title:       "Sites",
+		Description: "Every site. Click a site to open its page.",
+		Above:       siteForms(),
+		SectionID:   "control--sites--list",
+		Toolbar:     siteOrderToggles(order, limit),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:     "controlSitesTable",
+			Static: true,
+			Rows:   len(sites),
+			Empty:  "No sites here.",
+			Columns: []table.Column{
+				{Label: "Site"}, {Label: "State"}, {Label: "Created"}, {Label: "Last Seen"}, {Label: "Last Write"},
+				{Label: "DB Size (MB)", Numeric: true},
+			},
+		},
+		Pager: &pager.Props{ID: "control--sites", Path: "/sites?order=" + order, Count: len(sites), Skip: skip, Limit: limit},
+	}) {
+		for _, site := range sites {
+			@siteRow(site)
 		}
-		if httputils.IsControlAdmin(ctx) {
-			<div class="grid gap-4 md:grid-cols-2">
-				@createSiteForm()
-				@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
-			</div>
-		}
-		<section id="control--sites--list" class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
-				for _, siteOrder := range siteOrders {
-					@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL("/sites?order="+siteOrder.order, 0, limit), button.SizeDefault, siteOrder.order == order) {
-						{ siteOrder.label }
-					}
-				}
-			</div>
-			@table.Table(table.Props{ID: "controlSitesTable", Class: "rounded-lg border border-gray-200"}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Site
-						}
-						@table.Head() {
-							State
-						}
-						@table.Head() {
-							Created
-						}
-						@table.Head() {
-							Last Seen
-						}
-						@table.Head() {
-							Last Write
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							DB Size (MB)
-						}
-					}
-				}
-				@table.Body() {
-					if len(sites) == 0 {
-						<tr><td colspan="6" class="p-4 text-sm text-gray-500">No sites here.</td></tr>
-					}
-					for _, site := range sites {
-						@siteRow(site)
-					}
-				}
+	}
+}
+
+// siteForms are, for an admin, the forms to create a site and to turn public site creation on or off
+templ siteForms() {
+	if httputils.IsControlAdmin(ctx) {
+		<div class="grid gap-4 md:grid-cols-2">
+			@createSiteForm()
+			@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
+		</div>
+	}
+}
+
+// siteOrderToggles reorder the sites, from their first page
+templ siteOrderToggles(order string, limit int64) {
+	<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
+		for _, siteOrder := range siteOrders {
+			@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL("/sites?order="+siteOrder.order, 0, limit), button.SizeDefault, siteOrder.order == order) {
+				{ siteOrder.label }
 			}
-			@pager.Pager(pager.Props{ID: "control--sites", Path: "/sites?order=" + order, Count: len(sites), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
+		}
 	</div>
 }
 
@@ -224,7 +216,7 @@ templ siteRow(site *controlmodels.Site) {
 		@table.Cell() {
 			<span title={ display.DateTime(site.LastWriteAt) }>{ display.Ago(site.LastWriteAt, time.Now()) }</span>
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ sizeMB(site.EstimatedDbSizeKb) }
 			if site.Oversized() {
 				<span class="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">over limit</span>
