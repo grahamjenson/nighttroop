@@ -247,14 +247,27 @@ func f(v float64) string {
 
 // hourLabel is an hour of the day as the settings show times: 12am, 3am and 12pm for a 12 hour clock, else 00:00
 func hourLabel(ctx context.Context, hour int) string {
+	if !twelveHour(ctx) {
+		return fmt.Sprintf("%02d:00", hour%24)
+	}
+	return strings.ToLower(time.Date(2000, 1, 1, hour%24, 0, 0, 0, time.UTC).Format("3PM"))
+}
+
+// timeOfDay is minutes from midnight as the settings show times: 2:05pm for a 12 hour clock, else 14:05
+func timeOfDay(ctx context.Context, minutes int) string {
+	if !twelveHour(ctx) {
+		return fmt.Sprintf("%02d:%02d", minutes/60%24, minutes%60)
+	}
+	return strings.ToLower(time.Date(2000, 1, 1, 0, minutes, 0, 0, time.UTC).Format("3:04PM"))
+}
+
+// twelveHour is whether the settings show times on a 12 hour clock
+func twelveHour(ctx context.Context) bool {
 	layout := time.TimeOnly
 	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
 		layout = siteContext.GetSettings().TimeLayout()
 	}
-	if !strings.Contains(layout, "PM") {
-		return fmt.Sprintf("%02d:00", hour%24)
-	}
-	return strings.ToLower(time.Date(2000, 1, 1, hour%24, 0, 0, 0, time.UTC).Format("3PM"))
+	return strings.Contains(layout, "PM")
 }
 
 // overviewLegend is the overview graph's key: its bars above and below the range and between its 25th and 75th
