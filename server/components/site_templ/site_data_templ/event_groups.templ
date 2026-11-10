@@ -189,9 +189,9 @@ var eventKinds = []struct{ field, label string }{
 	{"component_event_id", "Site or sensor change"}, {"activity_id", "Activity"}, {"notification_event_id", "Notification"},
 }
 
-// eventChoiceLabel is an event's time and what tells it apart, like "12:30 40 g carbs, sandwich"
+// eventChoiceLabel is an event's time, in the time format, and what tells it apart, like "12:30:00 40 g carbs, sandwich"
 func eventChoiceLabel(ctx context.Context, choice *sitemodels.SiteEventChoice) string {
-	parts := []string{time.UnixMilli(choice.OccurredAt).In(Location(ctx)).Format("15:04")}
+	parts := []string{time.UnixMilli(choice.OccurredAt).In(Location(ctx)).Format(timeLayout(ctx))}
 	if a := choice.Amount; a != nil {
 		switch choice.Kind {
 		case "glucose_reading_id", "temp_target_id":
@@ -222,7 +222,7 @@ templ EventGroupChoices(editing bool, kinds []string, from int64, to int64, choi
 	}
 	<p class="mb-2 text-sm font-medium text-gray-700">Events</p>
 	<p id={ formID + "--events-window" } class="mb-3 text-xs text-gray-500">
-		Pick up to one of each kind, from { time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " 15:04") } to { time.UnixMilli(to).In(Location(ctx)).Format("15:04") }.
+		Pick up to one of each kind, from { time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " " + timeLayout(ctx)) } to { time.UnixMilli(to).In(Location(ctx)).Format(timeLayout(ctx)) }.
 		Events already in another group are not shown.
 	</p>
 	<div class="grid gap-x-4 gap-y-3 sm:grid-cols-2">

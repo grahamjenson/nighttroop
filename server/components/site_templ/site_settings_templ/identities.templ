@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -491,35 +492,45 @@ templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut boo
 	@credentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut)
 }
 
+// credentialsModal is a dialog of an identity's new credentials. Escape or pressing beside it shows the warning that they
+// are never shown again, as I Have Saved These does, so they are not lost by a slip; once signed out it goes to Sign In
+// Again instead.
 templ credentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) {
-	// Over the sticky header, which is z-40, with room around it on a phone
-	<div id="site--identities--credentials" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-		// As tall as the window allows, scrolling when a device's set up steps make it taller
-		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-full overflow-y-auto flex flex-col items-center">
+	{{ dismiss := "document.getElementById('site--identities--saved-these').click()" }}
+	if signedOut {
+		{{ dismiss = "document.getElementById('site--identities--sign-in-again').focus()" }}
+	}
+	@modal.Modal(modal.Props{ID: "site--identities--credentials", Title: "Credentials for " + name, Actions: credentialsActions(signedOut), Dismiss: dismiss}) {
+		<div class="mt-4 flex flex-col items-center">
 			if signedOut {
 				<p id="site--identities--signed-out" class="mb-4 text-sm font-medium text-amber-800">You have been signed out. Save these, then sign in again with them.</p>
 			}
 			@createdUserInfo(url, name, password, totpSecret, nsToken)
 			{ children... }
-			if signedOut {
-				@button.Button(button.Props{ID: "site--identities--sign-in-again", Class: "mt-4", Href: "/login"}) {
-					Sign In Again
-				}
-			} else {
-				@savedThese()
-			}
 		</div>
-	</div>
+	}
 }
 
-// savedThese closes the credentials, after warning that they are not shown again
+// credentialsActions are Sign In Again once signed out, or else I Have Saved These
+templ credentialsActions(signedOut bool) {
+	if signedOut {
+		@button.Button(button.Props{ID: "site--identities--sign-in-again", Href: "/login"}) {
+			Sign In Again
+		}
+	} else {
+		@savedThese()
+	}
+}
+
+// savedThese closes the credentials, after warning that they are not shown again. Each of its buttons gives the focus to
+// the one that takes its place, so it stays in the dialog, where Escape is heard
 templ savedThese() {
-	<div id="site--identities--saved" class="mt-4 w-full">
-		<div class="flex justify-center">
+	<div id="site--identities--saved" class="w-full">
+		<div class="flex justify-end">
 			@button.Button(button.Props{
 				ID: "site--identities--saved-these",
 				Attributes: templ.Attributes{
-					"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.hidden = true; this.parentElement.nextElementSibling.hidden = false"),
+					"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.hidden = true; this.parentElement.nextElementSibling.hidden = false; document.getElementById('site--identities--saved-back').focus()"),
 				},
 			}) {
 				I Have Saved These
@@ -534,7 +545,7 @@ templ savedThese() {
 					ID:      "site--identities--saved-back",
 					Variant: button.VariantOutline,
 					Attributes: templ.Attributes{
-						"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.parentElement.hidden = true; this.closest('#site--identities--saved').firstElementChild.hidden = false"),
+						"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.parentElement.hidden = true; this.closest('#site--identities--saved').firstElementChild.hidden = false; document.getElementById('site--identities--saved-these').focus()"),
 					},
 				}) {
 					Go Back
