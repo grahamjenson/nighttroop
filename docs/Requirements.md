@@ -359,6 +359,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
   long there has been no reading, as "No reading for 45 min".
+- An open summary greys its latest glucose and shows that badge when it turns old, without a change or a reload of
+  the page, reading the summary again once then rather than every few seconds.
 - The summary says how long ago things were in words, to the nearest hour once over an hour, as "45 minutes ago" or
   "2 days 1 hour ago", and its tiles and devices show units smaller and grey beside their numbers.
 - The summary's latest glucose links to the page of every reading, and each other treatment's kind (e.g. Temp Basal)
