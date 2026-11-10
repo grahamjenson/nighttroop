@@ -138,12 +138,10 @@ templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
 			}
 		}
 		@table.Body() {
-			if len(statuses) == 0 {
-				<tr><td colspan="7" class="p-4 text-sm text-gray-500">No statuses here.</td></tr>
-			}
 			for _, status := range statuses {
 				@deviceStatusRow(status)
 			}
+			@pager.Empty(id+"--empty", 7, "No statuses here.")
 		}
 	}
 }

@@ -57,6 +57,7 @@ templ AlarmRow(alarm *sitemodels.SiteAlarm) {
 					"hx-target":     "#site--alarms--alarm-" + alarm.ID,
 					"hx-swap":       "outerHTML",
 					"hx-status:4xx": "target:#toaster swap:beforeend",
+					"hx-status:5xx": "target:#toaster swap:beforeend",
 				},
 			}) {
 				Snooze 30 min

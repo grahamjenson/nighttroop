@@ -34,6 +34,11 @@ CLICK #site--settings-menu
 CLICK #site--settings--account-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--account--passkeys >> text=/Last used/
-CLICK #site--account--passkeys button >> text=Remove
+// It asks first, with a red Remove as its button says, not Delete
+CLICK_ASKS #site--account--passkeys button >> text=Remove
+ASSERT_TEXT_EQUALS #confirm--ok Remove
+ASSERT_VISIBLE #confirm--ok[data-delete]
+SCREENSHOT remove_passkey_confirm
+CLICK #confirm--ok
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.
