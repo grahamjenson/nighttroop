@@ -80,3 +80,18 @@ func TestVirtualGlucoseRanges(t *testing.T) {
 	require.Greater(t, counts["in range"], 4*day/2, "most readings are in range")
 	require.False(t, same, "each day differs from the one before")
 }
+
+// A day has two finger prick meter readings, at 07:02 and 19:02 UTC, a little above the CGM then
+func TestVirtualDocumentsMeterReadings(t *testing.T) {
+	day := time.Date(2026, 11, 9, 0, 0, 0, 0, time.UTC)
+	var meters []time.Time
+	for _, doc := range VirtualDocuments(day.Add(24*time.Hour-virtualSlot), 24*time.Hour) {
+		if doc.data["type"] == "mbg" {
+			at := time.UnixMilli(doc.data["date"].(int64)).UTC()
+			meters = append(meters, at)
+			slot := at.Add(-virtualMeterAfter).Unix() / int64(virtualSlot.Seconds())
+			require.Equal(t, virtualGlucose(slot)+virtualMeterHigher, doc.data["mbg"])
+		}
+	}
+	require.Equal(t, []time.Time{day.Add(7*time.Hour + 2*time.Minute), day.Add(19*time.Hour + 2*time.Minute)}, meters)
+}

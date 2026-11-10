@@ -25,6 +25,9 @@ type Connector struct {
 	TotalFailedSyncs          *int64  `json:"total_failed_syncs"`
 	ConsecutiveFailedSyncs    *int64  `json:"consecutive_failed_syncs"`
 	LastBackfillFinishedAt    *int64  `json:"last_backfill_finished_at"`
+	// LastBackfillFrom is the oldest time its last backfill fetched from, how far back its backfills have gone, as
+	// each fetches from before the site's oldest reading
+	LastBackfillFrom *int64 `json:"last_backfill_from"`
 	LastBackfillDuration      *int64  `json:"last_backfill_duration"`
 	LastBackfillRecords       *int64  `json:"last_backfill_records"`
 	LastBackfillError         *string `json:"last_backfill_error"`

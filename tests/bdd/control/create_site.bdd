@@ -22,16 +22,19 @@ ASSERT_NOT_VISIBLE #control--site--created
 // (filling in "1" clears the field, as the 1 is dropped, so the keys typed next start from nothing)
 INPUT #control--sites--create--id 1
 TYPE #control--sites--create--id VanIty B-D!
+// (its status is not checked here, as the list is read again with it; the API tests check it is 201)
 CLICK #control--sites--create--submit
-ASSERT_STATUS 201
 ASSERT_VISIBLE #control--site--created
 ASSERT_TEXT_VISIBLE Save your credentials somewhere safe
 ASSERT_TEXT_VISIBLE vanitybd.localhost
 SCREENSHOT create_site_created
 
-// The same ID again is refused, as it is taken
+// The list behind it was read again, so once it is closed the new site is in it, without reloading the page
 CLICK #control--site--created--close
 ASSERT_NOT_VISIBLE #control--site--created
+ASSERT_VISIBLE #controlSitesTable td >> text=vanitybd
+
+// The same ID again is refused, as it is taken
 CLICK #control--sites--create--submit
 ASSERT_STATUS 409
 ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("that site ID is taken")

@@ -104,7 +104,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
   creation card wrap, and the table scrolls sideways in its card.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
-  credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.
+  credentials are shown once, and the sites list behind them is read again, so it has the new site without reloading.
+  An admin can create sites past `MAX_SITES` and while public site creation is off.
 - The new site ID field only lets letters a to z in: capitals typed or pasted are lowered and anything else is dropped.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
@@ -365,7 +366,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Every report's days, weeks and months are the site's: from midnight in the site's timezone, and dated, listed and
   linked in it, whatever the timezone of whoever views them.
-- The Reports hub has Overview, at `/reports/overview`, which shows the week with yesterday in it at first, and the
+- A report's week and fortnight, on the Overview and AGP pages, are the 7 and 14 days to its date, as Dexcom Clarity's
+  are, not the calendar week or fortnight a summary period is, which may have only just begun; a day is the day and a
+  month the month with the date in it. A week or fortnight to today has today so far in it.
+- The Reports hub has Overview, at `/reports/overview`, which shows the 7 days to yesterday at first, and the
   overview of any day, week, fortnight or month from today back a year is at `/reports/overview/{period}-{date}`, with
   the same buttons to other periods as the AGP report. Any other id is not found.
 - An overview shows its glucose's average and standard deviation, in the settings' units, and its GMI and coefficient
@@ -382,11 +386,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   range's bounds as lines labelled with their values, with hours in the settings' time format. A day's is of the 7
   days to it. One with no glucose says so, and that a day's readings show the day after.
 - An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day.
-- The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the week with yesterday in it at first, and a
+- The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the 7 days to yesterday at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
-- The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days
-  (the last 31), weeks, fortnights and months (the last year): each one's days with data, time in range, daily dose
-  and daily carbs, newest first, each opening its AGP report.
+- The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), is of a month, this one unless it is
+  given as `?month=2026-10`, and has a table of each of its kept days, the weeks and fortnights with a day in it, and
+  the months of its year: each one's days with data, time in range, daily dose and daily carbs, newest first, each
+  opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
+  month outside those is refused. A past month's empty table says it has none in that month, or year for months.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
@@ -403,12 +409,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   apart when close), and hours in the settings' time format. A day's report draws the day's glucose over the AGP of the
   7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's
   readings show the day after; the summaries' empty tables say the same.
-- An AGP report's daily glucose profiles are its days as a calendar under their weekdays from the site's week start
-  day, each with its glucose from midnight over the range shaded, coloured above and below it, opening that day's AGP
+- An AGP report's daily glucose profiles are its days as a calendar under their weekdays, a month's from the site's
+  week start day and a week's or fortnight's from its first day, each with its glucose from midnight over the range shaded, coloured above and below it, opening that day's AGP
   report; a day's report has only its own.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; arrow buttons
-  either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after, disabled
-  past today or a year ago. Back and forward move between reports.
+  either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after (a
+  week's or fortnight's the 7 or 14 days before and after, or to today when fewer are over), disabled past today or a
+  year ago. Back and forward move between reports.
 - Clicking around the reports quickly shows the last one clicked, logging no error for the pages it replaced.
 - The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
   as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and
@@ -524,7 +531,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   **Nightscout** site, or from the **virtual connector**, which makes realistic test data.
 - The virtual connector's glucose is the same for the same time on every site: a 6 hour wave, with a meal as it rises
   and a correction at its peak, over a 25 hour one, so days differ. It reaches every range, about 2% very low (below
-  54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL.
+  54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL. It
+  also has a finger prick meter reading twice a day, at 07:02 and 19:02 UTC, 6 mg/dL above the CGM then.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
@@ -547,7 +555,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A connector not saved yet has only Save. Once saved, without a reload, it also has Backfill, and Delete as a red
   outline button, apart from Save, so the destructive action is not the boldest on the form.
 - The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
-  and backfills, and in its last sync, its backfill and its recent events.
+  and backfills, and in its last sync, its backfill and its recent events. It shows the date its last backfill fetched
+  back to, and how long ago that is, so how far back its backfills have gone; - until it has been backfilled.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
   leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
 - Connector credentials are encrypted at rest.

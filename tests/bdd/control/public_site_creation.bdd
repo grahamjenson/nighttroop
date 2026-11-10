@@ -25,7 +25,6 @@ SCREENSHOT home_creation_off
 GOTO {{ .control_url }}/
 INPUT #control--sites--create--id nopublic
 CLICK #control--sites--create--submit
-ASSERT_STATUS 201
 ASSERT_VISIBLE #control--site--created
 CLICK #control--site--created--close
 

@@ -66,7 +66,7 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				if p.Period == "day" {
 					The 7 days to this one, averaged into one day from midnight.
 				} else {
-					This { p.Period }'s days averaged into one day from midnight.
+					These { fmt.Sprint(periodDays(p, now, location)) } days averaged into one day from midnight.
 				}
 			</p>
 			if hasGlucose(p) {

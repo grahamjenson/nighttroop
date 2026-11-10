@@ -11,6 +11,23 @@ ASSERT_VISIBLE #site--summaries--day >> text=No days kept yet.
 ASSERT_VISIBLE #site--summaries--month >> text=No months kept yet.
 // Each says when its first will show, as a new site has nothing to show yet
 ASSERT_VISIBLE #site--summaries--day >> text=the first shows the day after readings arrive
+// It shows this month, whose next has not come, and goes back a month at a time to a past month, saying what it has
+// none of
+ASSERT_DRAWN #site--summaries--next[disabled]
+CLICK #site--summaries--previous
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_VISIBLE #site--summaries--day >> text=/^No days kept in \w+ \d{4}\.$/
+CLICK #site--summaries--next
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /reports/summaries
+ASSERT_VISIBLE #site--summaries--day >> text=No days kept yet.
+// A month after this one, or more than a year ago, is refused
+GOTO /reports/summaries?month=2000-01
+ASSERT_STATUS 400
+GOTO /reports
+ASSERT_STATUS 200
 
 // The virtual connector fills its last 30 minutes, and a backfill the day before it (tests backfill a day)
 CLICK #site--nav--settings
@@ -35,7 +52,8 @@ SCREENSHOT summaries_regenerate
 CLICK #site--summaries--regenerate
 ASSERT_TEXT_VISIBLE Regenerating summaries
 RUN_BACKGROUND_JOBS
-GOTO /reports
+// Yesterday's month, which on the 1st is the month before
+GOTO /reports/summaries?month={{ slice (date -1) 0 7 }}
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(2):text-is("1")
 ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(3) >> text=/^\d+(\.\d)?%$/
