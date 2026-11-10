@@ -155,7 +155,8 @@ func TestGraphLabelsTheLatestTreatment(t *testing.T) {
 	// Searches give the newest first
 	summary := &sitemodels.Summary{
 		Since: now - 48*time.Hour.Milliseconds(), Units: &mgdl,
-		InsulinDoses: []*sitemodels.SiteInsulinDose{{Dose: 2.5, OccurredAt: now}, {Dose: 0.2, DoseType: new("smb"), OccurredAt: now - time.Minute.Milliseconds()}, {Dose: 1, OccurredAt: now - time.Minute.Milliseconds()}},
+		// Trio sends an SMB as one, Loop as a bolus that is automatic, and a bolus given by hand as not automatic
+		InsulinDoses: []*sitemodels.SiteInsulinDose{{Dose: 2.5, OccurredAt: now}, {Dose: 0.2, DoseType: new("smb"), OccurredAt: now - time.Minute.Milliseconds()}, {Dose: 0.3, DoseType: new("normal"), Automatic: new(true), OccurredAt: now - time.Minute.Milliseconds()}, {Dose: 1, Automatic: new(false), OccurredAt: now - time.Minute.Milliseconds()}},
 		FoodIntakes:  []*sitemodels.SiteFoodIntake{{Carbs: &newer, OccurredAt: now}, {Carbs: &older, OccurredAt: now - time.Minute.Milliseconds()}},
 	}
 	option := option(t, summary, now)
@@ -172,7 +173,7 @@ func TestGraphLabelsTheLatestTreatment(t *testing.T) {
 
 	// A loop's SMB is drawn smaller and fainter than insulin given by hand, and not labelled, as they come every few
 	// minutes; carbs are drawn above insulin
-	require.Equal(t, []any{"0.2U"}, names("SMB"))
+	require.Equal(t, []any{"0.2U", "0.3U"}, names("SMB"))
 	require.Equal(t, false, series(option, "SMB")["label"].(map[string]any)["show"])
 	require.Equal(t, true, series(option, "Insulin")["label"].(map[string]any)["show"])
 	require.Less(t, series(option, "SMB")["symbolSize"].(float64), series(option, "Insulin")["symbolSize"].(float64))

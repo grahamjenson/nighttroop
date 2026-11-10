@@ -132,6 +132,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAllSitesStmt, err = db.PrepareContext(ctx, getAllSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllSites: %w", err)
 	}
+	if q.getAnyPushCredentialStmt, err = db.PrepareContext(ctx, getAnyPushCredential); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAnyPushCredential: %w", err)
+	}
 	if q.getAnySitePushRegistrationStmt, err = db.PrepareContext(ctx, getAnySitePushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAnySitePushRegistration: %w", err)
 	}
@@ -215,6 +218,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.rotateSiteBackupKeyStmt, err = db.PrepareContext(ctx, rotateSiteBackupKey); err != nil {
 		return nil, fmt.Errorf("error preparing query RotateSiteBackupKey: %w", err)
+	}
+	if q.searchAllPushCredentialsStmt, err = db.PrepareContext(ctx, searchAllPushCredentials); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchAllPushCredentials: %w", err)
 	}
 	if q.searchAllPushRegistrationsStmt, err = db.PrepareContext(ctx, searchAllPushRegistrations); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchAllPushRegistrations: %w", err)
@@ -494,6 +500,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAllSitesStmt: %w", cerr)
 		}
 	}
+	if q.getAnyPushCredentialStmt != nil {
+		if cerr := q.getAnyPushCredentialStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAnyPushCredentialStmt: %w", cerr)
+		}
+	}
 	if q.getAnySitePushRegistrationStmt != nil {
 		if cerr := q.getAnySitePushRegistrationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAnySitePushRegistrationStmt: %w", cerr)
@@ -632,6 +643,11 @@ func (q *Queries) Close() error {
 	if q.rotateSiteBackupKeyStmt != nil {
 		if cerr := q.rotateSiteBackupKeyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing rotateSiteBackupKeyStmt: %w", cerr)
+		}
+	}
+	if q.searchAllPushCredentialsStmt != nil {
+		if cerr := q.searchAllPushCredentialsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchAllPushCredentialsStmt: %w", cerr)
 		}
 	}
 	if q.searchAllPushRegistrationsStmt != nil {
@@ -864,6 +880,7 @@ type Queries struct {
 	finishConnectorBackfillStmt             *sql.Stmt
 	getAllConnectorsForSiteStmt             *sql.Stmt
 	getAllSitesStmt                         *sql.Stmt
+	getAnyPushCredentialStmt                *sql.Stmt
 	getAnySitePushRegistrationStmt          *sql.Stmt
 	getBatchSitesToBackUpStmt               *sql.Stmt
 	getConnectorStmt                        *sql.Stmt
@@ -892,6 +909,7 @@ type Queries struct {
 	recordPushStmt                          *sql.Stmt
 	resetSiteAdminCredentialsStmt           *sql.Stmt
 	rotateSiteBackupKeyStmt                 *sql.Stmt
+	searchAllPushCredentialsStmt            *sql.Stmt
 	searchAllPushRegistrationsStmt          *sql.Stmt
 	searchArchivedSitesStmt                 *sql.Stmt
 	searchConnectorsStmt                    *sql.Stmt
@@ -965,6 +983,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		finishConnectorBackfillStmt:             q.finishConnectorBackfillStmt,
 		getAllConnectorsForSiteStmt:             q.getAllConnectorsForSiteStmt,
 		getAllSitesStmt:                         q.getAllSitesStmt,
+		getAnyPushCredentialStmt:                q.getAnyPushCredentialStmt,
 		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
 		getBatchSitesToBackUpStmt:               q.getBatchSitesToBackUpStmt,
 		getConnectorStmt:                        q.getConnectorStmt,
@@ -993,6 +1012,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		recordPushStmt:                          q.recordPushStmt,
 		resetSiteAdminCredentialsStmt:           q.resetSiteAdminCredentialsStmt,
 		rotateSiteBackupKeyStmt:                 q.rotateSiteBackupKeyStmt,
+		searchAllPushCredentialsStmt:            q.searchAllPushCredentialsStmt,
 		searchAllPushRegistrationsStmt:          q.searchAllPushRegistrationsStmt,
 		searchArchivedSitesStmt:                 q.searchArchivedSitesStmt,
 		searchConnectorsStmt:                    q.searchConnectorsStmt,

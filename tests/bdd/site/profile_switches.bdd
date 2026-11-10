@@ -64,7 +64,7 @@ SCREENSHOT profile_switch_details
 ASSERT_VISIBLE #site--profile-switch--edit--multiplier[value="100"]
 INPUT #site--profile-switch--edit--multiplier 80
 INPUT #site--profile-switch--edit--timeshift 60
-INPUT #site--profile-switch--edit--duration 120
+INPUT #site--profile-switch--edit--duration-minutes 120
 INPUT #site--profile-switch--edit--notes Exercise
 CLICK #site--profile-switch--edit--submit
 ASSERT_STATUS 200

@@ -260,11 +260,11 @@ changes, and announcements.
 
 Each distinct loop configuration, once, by hash.
 
-**Today:** kept forever. A P3 in `TODOs.md` says to clear the sets no record refers to when a site is
-truncated.
+**Today:** truncating a site (My Account's or control's Truncate) deletes the sets no device report or profile preset
+refers to any more, but each app's last seen, which is kept forever (`docs/loop_settings.md`). The 10-minute job
+leaves them.
 
-**Proposal:** after device reports and profile presets referring to a settings row are deleted, delete the row,
-unless it is the newest for its app. Keep the newest for each app forever.
+**Proposal:** the nightly compaction deletes them too, as truncating a site does.
 
 **Lost:** old loop configurations nothing refers to.
 

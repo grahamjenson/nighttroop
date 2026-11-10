@@ -30,9 +30,6 @@ const MultiplierHelp = "A percent above 0: 100% is as it is, 120% is 1.2 times."
 const percentsToFractions = "for (const input of this.querySelectorAll('[data-percent]')) { const value = ctx.request.body.get(input.name); " +
 	"if (value) ctx.request.body.set(input.name, Math.round(value * 100) / 10000) } "
 
-// PercentsToFractions is for a form of its own with Percent inputs, such as a details modal's edit form
-var PercentsToFractions = templ.Attributes{"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions)}
-
 // Field is one of a model's fields in its add modal
 type Field struct {
 	// Name is the model's JSON field, which the input is sent as
@@ -84,7 +81,8 @@ templ Modal(p Props) {
 	}
 }
 
-// Form is the modal's form on its own, to edit a record in its details modal beside a SubmitButton
+// Form is the modal's form on its own, to edit a record in its details modal, with its Edit fields, beside a
+// SubmitButton
 templ Form(p Props) {
 	<form
 		id={ p.ID }
@@ -94,7 +92,7 @@ templ Form(p Props) {
 		hx-swap={ swap(p) }
 		hx-status:4xx="target:#toaster swap:beforeend"
 		hx-status:5xx="target:#toaster swap:beforeend"
-		{ formHandlers... }
+		{ formHandlers(p)... }
 	>
 		for _, f := range p.Fields {
 			@field(p, f)
@@ -114,12 +112,19 @@ func swap(p Props) string {
 	return p.Swap
 }
 
-// formHandlers leave out the fields left blank, so they are not set rather than empty, then once a record is added,
-// empty the modal container. Only the form's own request closes it, not one of an input's within it, like loading what
-// can be picked. A table's pager.Empty row hides itself once a row is added.
-var formHandlers = templ.Attributes{
-	"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions + "for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
-	"hx-on::after:request":  templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }"),
+// formHandlers leave out the fields left blank, so they are not set rather than empty, but for a text that started
+// with a value, so emptying it in an edit form clears it. Then once a record is added, empty the modal container; an
+// edit's answer closes its details itself, giving the focus back to its row. Only the form's own request closes it,
+// not one of an input's within it, like loading what can be picked. A table's pager.Empty row hides itself once a row
+// is added.
+func formHandlers(p Props) templ.Attributes {
+	handlers := templ.Attributes{
+		"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions + "for (const [name, value] of [...ctx.request.body]) { if (value === '' && !this.elements[name]?.defaultValue) ctx.request.body.delete(name) }"),
+	}
+	if p.Swap == "" {
+		handlers["hx-on::after:request"] = templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }")
+	}
+	return handlers
 }
 
 // SubmitButton submits the form, from outside it, as in a modal's actions

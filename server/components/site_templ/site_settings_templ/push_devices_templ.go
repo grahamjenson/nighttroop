@@ -381,7 +381,7 @@ func pushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var19 string
-				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(pushProviders[string(registration.Provider)])
+				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(PushProviders[string(registration.Provider)])
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 71, Col: 91}
 				}

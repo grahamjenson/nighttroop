@@ -68,7 +68,7 @@ templ pushDeviceRow(registration *sitemodels.PushRegistration) {
 		}
 		@table.Cell() {
 			{ string(registration.App) }
-			<span class="block text-xs text-gray-500">{ pushProviders[string(registration.Provider)] }</span>
+			<span class="block text-xs text-gray-500">{ PushProviders[string(registration.Provider)] }</span>
 		}
 		@table.Cell() {
 			{ registration.BundleID }

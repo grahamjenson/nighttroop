@@ -53,6 +53,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/push-devices", controlapi.PushDevicesHandler)
 		r.Get(httputils.ControlLogsDBPath, controlapi.LogsDBHandler)
 		r.Post("/push-devices/{id}/test", controlapi.PushTestHandler)
+		r.Get("/push-credentials/new", (&controlcollections.PushCredentialsCollection{}).NewHandler)
+		r.Post("/push-credentials", (&controlcollections.PushCredentialsCollection{}).CreateHandler)
+		r.Delete("/push-credentials/{id}", (&controlcollections.PushCredentialsCollection{}).DeleteHandler)
 		// Control's admins, which an admin manages, never itself
 		r.Get("/admins", controlapi.ControlAdminsHandler)
 		r.Post("/admins", controlapi.CreateControlAdminHandler)

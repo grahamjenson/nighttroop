@@ -5,23 +5,13 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// numberOr is an optional number for an input, or what not setting it means
-func numberOr[T any](value *T, unset string) string {
-	if value == nil {
-		return unset
-	}
-	return fmt.Sprint(*value)
-}
 
 // ProfileSwitchesTable shows one page of profile switches, newest first, with buttons to the pages either side
 templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip int64, limit int64) {
@@ -91,48 +81,6 @@ var profileSwitchFields = []addmodal.Field{
 }
 
 // profileSwitchInputs always send a multiplier, shift and minutes, as an empty number is not one
-templ profileSwitchInputs(id string, name string, multiplier string, timeshift string, duration string, notes string) {
-	@field.Field(id+"--name", "Profile", "w-40") {
-		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name, Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-	}
-	@field.Field(id+"--multiplier", "Insulin (%)", "w-24") {
-		@input.Input(input.Props{
-			ID:          id + "--multiplier",
-			Type:        input.TypeNumber,
-			Name:        "multiplier",
-			Placeholder: "Percent",
-			Value:       multiplier,
-			Required:    true,
-			Attributes:  templ.Attributes{"title": addmodal.MultiplierHelp, "step": "any", "min": "10", "max": "500", "data-percent": true},
-		})
-	}
-	@field.Field(id+"--timeshift", "Shift (min)", "w-24") {
-		@input.Input(input.Props{
-			ID:          id + "--timeshift",
-			Type:        input.TypeNumber,
-			Name:        "timeshift",
-			Placeholder: "Shift",
-			Value:       timeshift,
-			Required:    true,
-			Attributes:  templ.Attributes{"title": "Shift (minutes)", "step": "1", "min": "-1440", "max": "1440"},
-		})
-	}
-	@field.Field(id+"--duration", "Duration (min)", "w-24") {
-		@input.Input(input.Props{
-			ID:          id + "--duration",
-			Type:        input.TypeNumber,
-			Name:        "duration_minutes",
-			Placeholder: "Minutes",
-			Value:       duration,
-			Required:    true,
-			Attributes:  templ.Attributes{"title": "Minutes, 0 is until the next switch", "step": "1", "min": "0", "max": "10080"},
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-40") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // profileSwitchRow opens the profile switch's details when clicked.
 templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 	@table.DataRow("site--profile-switch--"+profileSwitch.ID, "/data/profile-switches/"+profileSwitch.ID, "Delete this profile switch?") {
@@ -160,19 +108,10 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 	{{ siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx) }}
 	{{ unitsLabel := orEmpty(units.Stringp()) }}
-	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "-")), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: modal.Submit("site--profile-switch--edit", "Save")}) {
-		<form
-			id="site--profile-switch--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/profile-switches/" + profileSwitch.ID }
-			hx-target={ "#site--profile-switch--" + profileSwitch.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-			{ addmodal.PercentsToFractions... }
-		>
-			@profileSwitchInputs("site--profile-switch--edit", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "100"), numberOr(profileSwitch.Timeshift, "0"), numberOr(profileSwitch.DurationMinutes, "0"), orEmpty(profileSwitch.Notes))
-		</form>
+	{{ edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(profileSwitchFields, profileSwitch, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "-")), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<div id="site--profile-switch--details--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
 			@ProfileSchedule("site--profile-switch--details--basal-rates", "Basal (U/h)", sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue)
 			@ProfileSchedule("site--profile-switch--details--carb-ratios", "Carb Ratio (g/U)", sitemodels.ScheduleFromJSON(profileSwitch.CarbRatiosJson), ScheduleValue)
