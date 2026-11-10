@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -69,8 +70,8 @@ templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 						{ group.Device }
 					</h2>
 					@button.Button(button.Props{
-						ID:      fmt.Sprintf("site--device-status--show-all-%d", i),
-						Variant: button.VariantOutline,
+						ID:         fmt.Sprintf("site--device-status--show-all-%d", i),
+						Variant:    button.VariantOutline,
 						Attributes: nav.Attributes(deviceHistoryURL(group.Device, 0, deviceHistoryPage)),
 					}) {
 						Show all
@@ -91,8 +92,8 @@ templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus
 				Every status from <span class="font-semibold">{ device }</span>, newest first.
 			}
 			@button.Button(button.Props{
-				ID:      "site--device-status--all-devices",
-				Variant: button.VariantOutline,
+				ID:         "site--device-status--all-devices",
+				Variant:    button.VariantOutline,
 				Attributes: nav.Attributes("/data/device-status"),
 			}) {
 				All devices
@@ -108,40 +109,18 @@ templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus
 }
 
 templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
-	@table.Table(table.Props{
-		ID:    id,
-		Class: "rounded-lg border border-gray-200",
+	@listpage.Table(listpage.TableProps{
+		ID:      id,
+		EmptyID: id + "--empty",
+		Empty:   "No statuses here.",
+		Columns: []table.Column{
+			{Label: "Time"}, {Label: "Phone battery (%)", Numeric: true}, {Label: "Reservoir (U)", Numeric: true},
+			{Label: "Pump battery (%)", Numeric: true}, {Label: "IOB (U)", Numeric: true},
+			{Label: "COB (g)", Numeric: true}, {Actions: true},
+		},
 	}) {
-		@table.Header() {
-			@table.Row() {
-				@table.Head() {
-					Time
-				}
-				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					Phone battery (%)
-				}
-				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					Reservoir (U)
-				}
-				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					Pump battery (%)
-				}
-				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					IOB (U)
-				}
-				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					COB (g)
-				}
-				@table.Head() {
-					<span class="sr-only">Actions</span>
-				}
-			}
-		}
-		@table.Body() {
-			for _, status := range statuses {
-				@deviceStatusRow(status)
-			}
-			@pager.Empty(id+"--empty", 7, "No statuses here.")
+		for _, status := range statuses {
+			@deviceStatusRow(status)
 		}
 	}
 }
@@ -152,19 +131,19 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, status.OccurredAt) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ withUnit(status.DeviceBatteryPercent, "") }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ withUnit(status.PumpReservoir, "") }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ withUnit(status.PumpBatteryPercent, "") }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ withUnit(status.LoopIob, "") }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ withUnit(status.LoopCob, "") }
 		}
 	}

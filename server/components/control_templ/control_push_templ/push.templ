@@ -5,66 +5,42 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 )
 
-// columns is how many columns the table has, with one for the test buttons for an admin
-func columns(admin bool) string {
+// columns are the table's columns, with one for the test buttons for an admin
+func columns(admin bool) []table.Column {
+	columns := []table.Column{{Label: "Site"}, {Label: "Identity"}, {Label: "App"}, {Label: "Bundle ID"}, {Label: "Registered"}, {Label: "Last Push"}}
 	if admin {
-		return "7"
+		columns = append(columns, table.Column{Actions: true})
 	}
-	return "6"
+	return columns
 }
 
 // PushDevices is every site's apps registered for pushes, newest first, with whose they are, and for an admin a button
 // to test each
 templ PushDevices(devices []*controlmodels.PushRegistration, admin bool) {
-	<div id="control--push-devices" class="mx-auto max-w-6xl space-y-6">
-		@heading.Page("Push Devices") {
-			The apps on every site's phones that pushes are sent to, newest first, never with their tokens. Times are UTC.
+	@listpage.Page(listpage.Props{
+		ID:          "control--push-devices",
+		Title:       "Push Devices",
+		Description: "The apps on every site's phones that pushes are sent to, newest first, never with their tokens. Times are UTC.",
+		Table: listpage.TableProps{
+			ID:      "control--push-devices--table",
+			Static:  true,
+			Rows:    len(devices),
+			EmptyID: "control--push-devices--empty",
+			Empty:   "No apps have registered for pushes yet.",
+			Columns: columns(admin),
+		},
+	}) {
+		for _, device := range devices {
+			@pushDeviceRow(device, admin)
 		}
-		@table.Table(table.Props{ID: "control--push-devices--table", Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					@table.Head() {
-						Site
-					}
-					@table.Head() {
-						Identity
-					}
-					@table.Head() {
-						App
-					}
-					@table.Head() {
-						Bundle ID
-					}
-					@table.Head() {
-						Registered
-					}
-					@table.Head() {
-						Last Push
-					}
-					if admin {
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-			}
-			@table.Body() {
-				if len(devices) == 0 {
-					<tr id="control--push-devices--empty"><td colspan={ columns(admin) } class="p-4 text-sm text-gray-500">No apps have registered for pushes yet.</td></tr>
-				}
-				for _, device := range devices {
-					@pushDeviceRow(device, admin)
-				}
-			}
-		}
-	</div>
+	}
 }
 
 templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {

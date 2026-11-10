@@ -6,7 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -15,52 +15,30 @@ import (
 
 // TempTargetsTable shows one page of temp targets, newest first, with buttons to the pages either side
 templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64) {
-	<div id="temp_targets_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Temp Targets", addmodal.Open("site--temp-target--add", "/data/temp-targets/new", "Add Temp Target")) {
-			Newest first. Click a temp target to see all its details.
+	{{ units := string(*glucoseUnits(ctx)) }}
+	@listpage.Page(listpage.Props{
+		ID:          "temp_targets_table",
+		Title:       "Temp Targets",
+		Description: "Newest first. Click a temp target to see all its details.",
+		Action:      addmodal.Open("site--temp-target--add", "/data/temp-targets/new", "Add Temp Target"),
+		Above:       searchTotals("site--temp-target", "temp target", "temp targets"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "tempTargetsTable",
+			EmptyID: "site--temp-target--empty",
+			Empty:   "No temp targets here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Low (" + units + ")", Numeric: true},
+				{Label: "High (" + units + ")", Numeric: true}, {Label: "Duration (min)", Numeric: true},
+				{Label: "Reason"}, {Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit},
+	}) {
+		for _, tempTarget := range tempTargets {
+			@tempTargetRow(tempTarget)
 		}
-		@searchTotals("site--temp-target", "temp target", "temp targets")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "tempTargetsTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Time
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Low ({ string(*glucoseUnits(ctx)) })
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							High ({ string(*glucoseUnits(ctx)) })
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Duration (min)
-						}
-						@table.Head() {
-							Reason
-						}
-						@table.Head() {
-							Device
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, tempTarget := range tempTargets {
-						@tempTargetRow(tempTarget)
-					}
-					@pager.Empty("site--temp-target--empty", 7, "No temp targets here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // TempTargetNew adds a temp target with all its fields, putting its row at the top of the table
@@ -90,13 +68,13 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, tempTarget.OccurredAt) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ formatGlucose(tempTarget.LowTarget, tempTarget.Units) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ formatGlucose(tempTarget.HighTarget, tempTarget.Units) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(tempTarget.DurationMinutes) }
 		}
 		@table.Cell(notesCell) {
