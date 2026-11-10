@@ -37,8 +37,10 @@ ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE I Have Saved These
 SCREENSHOT identities_device_created
 
-// The credentials are over the page and its header
+// The credentials are a dialog over the page and its header, named for the new identity
 ASSERT_VISIBLE #site--identities--credentials.z-50
+ASSERT_VISIBLE #site--identities--credentials [role=dialog][aria-labelledby="site--identities--credentials--title"]
+ASSERT_TEXT_EQUALS #site--identities--credentials--title Credentials for kitchen
 // Saying they are saved is a confirmation, not something to be wary of, so it is the primary button, not red
 ASSERT_VISIBLE #site--identities--saved-these.bg-primary
 
@@ -54,7 +56,15 @@ ASSERT_VISIBLE #site--identities--close.bg-primary
 SCREENSHOT identities_saved_warning
 CLICK #site--identities--saved-back
 ASSERT_NOT_VISIBLE #site--identities--saved-warning
-CLICK "I Have Saved These"
+
+// Escape, or pressing beside them, does not close them but warns the same way, so they are not lost by a slip
+PRESS Escape
+ASSERT_VISIBLE #site--identities--saved-warning
+ASSERT_VISIBLE #site--identities--created--password
+CLICK #site--identities--saved-back
+CLICK_CORNER #site--identities--credentials
+ASSERT_VISIBLE #site--identities--saved-warning
+ASSERT_VISIBLE #site--identities--created--password
 CLICK #site--identities--close
 ASSERT_NOT_VISIBLE #site--identities--created--password
 ASSERT_TEXT_VISIBLE kitchen
