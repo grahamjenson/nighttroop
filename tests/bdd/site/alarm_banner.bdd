@@ -1,14 +1,5 @@
 INCLUDE steps/new_site_admin.steps
 
-// Virtual connector writes readings between 5.8 and 8.3 mmol/L
-CLICK #site--nav--settings
-CLICK #site--settings--connectors-button
-ASSERT_STATUS 200
-CLICK #site--settings--virtual-connector--enable
-CLICK #site--settings--virtual-connector--submit
-ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Connector Updated
-
 // The admin turns on an urgent high over 5.6 mmol/L for themselves, with their high under it
 GOTO /settings/alarms
 ASSERT_STATUS 200
@@ -25,9 +16,10 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--summary--live
 ASSERT_NOT_VISIBLE #site--alarms--alarm-urgent_high
 
-// Once the sync writes readings over it, the open page shows the urgent high, without being reloaded. The jobs run
-// the alarm checks before the queued sync, so the second run checks the readings the first wrote.
-RUN_BACKGROUND_JOBS
+// Once a reading over it comes in, of 15 mmol/L, the open page shows the urgent high, without being reloaded. It is
+// sent rather than synced from the virtual connector, whose glucose changes through the day, so is over the urgent
+// high only at some times of it.
+POST /data/glucose {"reading": 15, "reading_type": "sgv"}
 RUN_BACKGROUND_JOBS
 ASSERT_VISIBLE #site--alarms--snooze-urgent_high
 ASSERT_TEXT_VISIBLE Alarm: Urgent high
