@@ -63,7 +63,8 @@ func SummaryPeriodFromDB(row *sitedb.SummaryPeriod, siteContext *httputils.SiteC
 		model.Mean, model.SD = new(consts.Round(day.Units.FromMGDL(*mean), 1)), new(consts.Round(day.Units.FromMGDL(*sd), 1))
 		model.CV, model.GMI = new(consts.Round(100**sd / *mean, 1)), new(consts.Round(3.31+0.02392**mean, 1))
 	}
-	if slots := (min(row.EndAt, time.Now().UnixMilli()) - row.StartAt) / SummaryDailySlotMs; slots > 0 {
+	// The 5 minutes now is in counts, so a CGM reading just after midnight is not more than all of them
+	if slots := (min(row.EndAt, time.Now().UnixMilli()) - row.StartAt + SummaryDailySlotMs - 1) / SummaryDailySlotMs; slots > 0 {
 		model.CGMActive = new(consts.Round(min(100*float64(row.CgmSlots)/float64(slots), 100), 1))
 	}
 	var agp [][]int64

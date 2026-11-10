@@ -1,22 +1,14 @@
 package site_reports_templ
 
 import (
-	"math"
+	"context"
+	"fmt"
+	"strings"
+	"time"
 
-	"github.com/go-echarts/go-echarts/v2/charts"
-	"github.com/go-echarts/go-echarts/v2/opts"
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/css"
-)
-
-// ECharts draws with these colours from css/theme.css, as it cannot use the Tailwind classes
-var (
-	brandNight  = css.Colour("brand-night")
-	blue500     = css.Colour("blue-500")
-	glucoseLow  = css.Colour("glucose-low")
-	glucoseHigh = css.Colour("glucose-high")
-	brandGold   = css.Colour("brand-gold")
-	gray200     = css.Colour("gray-200")
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // hasGlucose is whether the period has any glucose to draw an AGP of
@@ -29,91 +21,22 @@ func hasGlucose(p *sitemodels.SiteSummaryPeriod) bool {
 	return false
 }
 
-// agp is the period's AGP over a day from midnight: the 5th to 95th percentiles shaded, the 25th to 75th shaded
-// darker, the median as a line, and the range from low to high behind them, with its bounds dashed. A day's own
-// glucose is drawn over its AGP. Each band is stacked on the percentile below it, so its area is between them, and a
-// time with no glucose breaks it.
-//
-// The times are milliseconds from midnight, drawn in UTC, so the axis shows them as the time of day.
-func agp(p *sitemodels.SiteSummaryPeriod, low, high float64) *charts.Line {
-	chart := charts.NewLine()
-	chart.SetGlobalOptions(
-		charts.WithInitializationOpts(opts.Initialization{Renderer: "svg"}),
-		charts.WithAnimation(false),
-		charts.WithLegendOpts(opts.Legend{Show: opts.Bool(true), Bottom: "0", Data: []string{"5–95%", "25–75%", "Median", "Glucose"}}),
-		charts.WithGridOpts(opts.Grid{Left: "50", Right: "20", Top: "10", Bottom: "56"}),
-		charts.WithXAxisOpts(opts.XAxis{
-			Type: "time", Min: 0, Max: 86_400_000,
-			AxisLabel: &opts.AxisLabel{Formatter: "{HH}:{mm}"},
-			SplitLine: &opts.SplitLine{Show: opts.Bool(true), LineStyle: &opts.LineStyle{Type: "dashed", Color: gray200}},
-		}),
-		charts.WithYAxisOpts(opts.YAxis{Type: "value", Min: math.Floor(p.Units.FromMGDL(40)), Max: math.Ceil(max(p.Units.FromMGDL(270), percentileMax(p))), SplitLine: &opts.SplitLine{Show: opts.Bool(false)}, AxisLabel: &opts.AxisLabel{ShowMinLabel: opts.Bool(false)}}),
-	)
-	chart.AddJSFuncStrs("%MY_ECHARTS%.setOption({useUTC: true});")
-
-	// percentile is the AGP's ith percentile less the one under it, so stacked on that one it reaches the ith
-	percentile := func(i, under int) []opts.LineData {
-		data := []opts.LineData{}
-		for slot, percentiles := range p.AGP {
-			value := any("-")
-			if len(percentiles) == len(sitemodels.AGPPercentiles) {
-				value = percentiles[i]
-				if under >= 0 {
-					value = percentiles[i] - percentiles[under]
-				}
-			}
-			data = append(data, opts.LineData{Value: []any{int64(slot) * sitemodels.AGPSlotMs, value}})
-		}
-		return data
+// sum is two percents added, or nil when neither is set
+func sum(a, b *float64) *float64 {
+	if a == nil && b == nil {
+		return nil
 	}
-	hidden := []charts.SeriesOpts{charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false)}), charts.WithLineStyleOpts(opts.LineStyle{Opacity: opts.Float(0)})}
-	band := func(stack string, opacity float32) []charts.SeriesOpts {
-		return []charts.SeriesOpts{
-			charts.WithLineChartOpts(opts.LineChart{Stack: stack, ShowSymbol: opts.Bool(false)}),
-			charts.WithLineStyleOpts(opts.LineStyle{Opacity: opts.Float(0)}),
-			charts.WithItemStyleOpts(opts.ItemStyle{Color: blue500, Opacity: opts.Float(opacity)}),
-			charts.WithAreaStyleOpts(opts.AreaStyle{Color: blue500, Opacity: opts.Float(opacity)}),
+	total := 0.0
+	for _, v := range []*float64{a, b} {
+		if v != nil {
+			total += *v
 		}
 	}
-	chart.AddSeries("5th", percentile(0, -1), append(hidden, charts.WithLineChartOpts(opts.LineChart{Stack: "outer", ShowSymbol: opts.Bool(false)}))...)
-	chart.AddSeries("5–95%", percentile(4, 0), band("outer", 0.15)...)
-	chart.AddSeries("25th", percentile(1, -1), append(hidden, charts.WithLineChartOpts(opts.LineChart{Stack: "inner", ShowSymbol: opts.Bool(false)}))...)
-	chart.AddSeries("25–75%", percentile(3, 1), band("inner", 0.3)...)
-
-	dashed := func(colour string, at float64) []charts.SeriesOpts {
-		return []charts.SeriesOpts{
-			charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Type: "dashed", Color: colour, Width: 1}}),
-			charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{YAxis: at}),
-		}
-	}
-	median := []charts.SeriesOpts{
-		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false)}),
-		charts.WithLineStyleOpts(opts.LineStyle{Color: brandNight, Width: 2}),
-		charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}),
-		charts.WithMarkAreaStyleOpts(opts.MarkAreaStyle{Label: &opts.Label{Show: opts.Bool(false)}}),
-		charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Coordinate0: []any{0, high}, Coordinate1: []any{86_400_000, low}, ItemStyle: &opts.ItemStyle{Color: brandNight, Opacity: opts.Float(0.04)}}),
-	}
-	chart.AddSeries("Median", percentile(2, -1), append(median, dashed(glucoseLow, low)...)...)
-	chart.AddSeries("High", nil, dashed(glucoseHigh, high)...)
-
-	if p.Period == "day" {
-		var glucose []opts.LineData
-		for slot, value := range p.Glucose {
-			point := opts.LineData{Value: "-"}
-			if value != nil {
-				point = opts.LineData{Value: []any{int64(slot) * sitemodels.SummaryDailySlotMs, *value}}
-			}
-			glucose = append(glucose, point)
-		}
-		chart.AddSeries("Glucose", glucose, charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false)}),
-			charts.WithLineStyleOpts(opts.LineStyle{Color: brandGold, Width: 2}), charts.WithItemStyleOpts(opts.ItemStyle{Color: brandGold}))
-	}
-	chart.AddJSFuncs("window.addEventListener('resize', function() { %MY_ECHARTS%.resize(); });")
-	return chart
+	return &total
 }
 
-// percentileMax is the period's highest 95th percentile, or a day's highest glucose, so the axis shows all of them
-func percentileMax(p *sitemodels.SiteSummaryPeriod) float64 {
+// newAGPGraph is the graph the AGP is drawn on: up to 350 mg/dL, or the highest 95th percentile or glucose above it
+func newAGPGraph(p *sitemodels.SiteSummaryPeriod) graph {
 	top := 0.0
 	for _, percentiles := range p.AGP {
 		if len(percentiles) > 0 {
@@ -125,5 +48,155 @@ func percentileMax(p *sitemodels.SiteSummaryPeriod) float64 {
 			top = max(top, *value)
 		}
 	}
-	return top
+	g := newGraph(960, 380, p.Units, top)
+	g.Max = max(g.Max, p.Units.FromMGDL(350))
+	return g
+}
+
+// agpX is how far across the graph an AGP or glucose slot, every 5 minutes from midnight, is drawn
+func agpX(g graph, slot int) float64 {
+	return g.X(float64(int64(slot) * sitemodels.AGPSlotMs))
+}
+
+// runs are the runs of slots in a row each of which has a value, as [first, last] pairs
+func runs(n int, has func(int) bool) [][2]int {
+	var all [][2]int
+	for slot := 0; slot < n; slot++ {
+		if !has(slot) {
+			continue
+		}
+		start := slot
+		for slot+1 < n && has(slot+1) {
+			slot++
+		}
+		all = append(all, [2]int{start, slot})
+	}
+	return all
+}
+
+// bandPath is the SVG path of the area between the AGP's lower and upper percentiles, as their indexes, broken where it
+// has none
+func bandPath(g graph, agp [][]float64, lower, upper int) string {
+	var path strings.Builder
+	for _, run := range runs(len(agp), func(slot int) bool { return len(agp[slot]) == len(sitemodels.AGPPercentiles) }) {
+		for slot := run[0]; slot <= run[1]; slot++ {
+			fmt.Fprintf(&path, "%s%s,%s ", map[bool]string{true: "M", false: "L"}[slot == run[0]], f(agpX(g, slot)), f(g.Y(agp[slot][upper])))
+		}
+		for slot := run[1]; slot >= run[0]; slot-- {
+			fmt.Fprintf(&path, "L%s,%s ", f(agpX(g, slot)), f(g.Y(agp[slot][lower])))
+		}
+		path.WriteString("Z ")
+	}
+	return strings.TrimSpace(path.String())
+}
+
+// linePath is the SVG path of a line through values, one each 5 minutes from midnight, broken where it has none
+func linePath(g graph, values []*float64) string {
+	var path strings.Builder
+	for _, run := range runs(len(values), func(slot int) bool { return values[slot] != nil }) {
+		for slot := run[0]; slot <= run[1]; slot++ {
+			fmt.Fprintf(&path, "%s%s,%s ", map[bool]string{true: "M", false: "L"}[slot == run[0]], f(agpX(g, slot)), f(g.Y(*values[slot])))
+		}
+	}
+	return strings.TrimSpace(path.String())
+}
+
+// percentile is the AGP's ith percentile each 5 minutes, nil where it has none
+func percentile(agp [][]float64, i int) []*float64 {
+	values := make([]*float64, len(agp))
+	for slot, percentiles := range agp {
+		if len(percentiles) == len(sitemodels.AGPPercentiles) {
+			values[slot] = &percentiles[i]
+		}
+	}
+	return values
+}
+
+// lastPercentiles is the AGP's last 5 minutes with percentiles and their percentiles, where its line labels go, or -1
+func lastPercentiles(agp [][]float64) (int, []float64) {
+	for slot := len(agp) - 1; slot >= 0; slot-- {
+		if len(agp[slot]) == len(sitemodels.AGPPercentiles) {
+			return slot, agp[slot]
+		}
+	}
+	return -1, nil
+}
+
+// labelGap is how far apart, in SVG units, the AGP's percentile labels are kept, so close percentiles stay readable
+const labelGap = 12.0
+
+// percentileLabelYs are how far down the graph each of the percentiles' labels goes, beside its line's end, each
+// moved up from the one under it to keep them labelGap apart
+func percentileLabelYs(g graph, percentiles []float64) []float64 {
+	ys := make([]float64, len(percentiles))
+	for i, value := range percentiles {
+		ys[i] = g.Y(value) + 4
+		if i > 0 {
+			ys[i] = min(ys[i], ys[i-1]-labelGap)
+		}
+	}
+	return ys
+}
+
+// agpMarks are the glucose the AGP graph marks with a line and its value: very low, the range's low and high, very high,
+// and its top
+func agpMarks(g graph, low, high float64) []float64 {
+	return []float64{g.Units.FromMGDL(sitemodels.VeryLowMgdl), low, high, g.Units.FromMGDL(sitemodels.VeryHighMgdl), g.Max}
+}
+
+// regions are the parts of a graph above the range high, in it, and below the range low, which the AGP's bands and a
+// day's glucose are clipped to, to colour each, by the ID's suffix and the classes each is filled or stroked with
+type region struct {
+	Suffix, Fill, Stroke string
+	Top, Bottom          func(g graph, low, high float64) float64
+}
+
+var regions = []region{
+	{"above", "fill-glucose-high", "stroke-glucose-high", func(g graph, _, _ float64) float64 { return 0 }, func(g graph, _, high float64) float64 { return g.Y(high) }},
+	{"within", "fill-glucose-in-range", "stroke-glucose-in-range", func(g graph, _, high float64) float64 { return g.Y(high) }, func(g graph, low, _ float64) float64 { return g.Y(low) }},
+	{"below", "fill-glucose-low", "stroke-glucose-low", func(g graph, low, _ float64) float64 { return g.Y(low) }, func(g graph, _, _ float64) float64 { return g.Height }},
+}
+
+// profileDay is a day of a period's daily glucose profiles: its date, the day's summary if it has one, and whether it is
+// in the period, as the days before a month's first in its first week are not
+type profileDay struct {
+	Date     time.Time
+	Day      *sitemodels.SiteSummaryDaily
+	InPeriod bool
+}
+
+// profileWeeks are the period's days as weeks from the site's week start day, each day with its summary if it has
+// one, the days of the first week before the period's first left blank and those of the last after its last too
+func profileWeeks(ctx context.Context, p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, location *time.Location) [][]profileDay {
+	byDate := map[string]*sitemodels.SiteSummaryDaily{}
+	for _, day := range daily {
+		byDate[day.Date] = day
+	}
+	first, end := time.UnixMilli(p.Start).In(location), time.UnixMilli(p.End).In(location)
+	before := 0
+	if p.Period != "day" {
+		before = (int(first.Weekday()) - weekStartDay(ctx) + 7) % 7
+	}
+	var weeks [][]profileDay
+	for date := first.AddDate(0, 0, -before); date.Before(end); date = date.AddDate(0, 0, 1) {
+		if len(weeks) == 0 || len(weeks[len(weeks)-1]) == 7 {
+			weeks = append(weeks, []profileDay{})
+		}
+		inPeriod := !date.Before(first)
+		weeks[len(weeks)-1] = append(weeks[len(weeks)-1], profileDay{Date: date, Day: byDate[date.Format(time.DateOnly)], InPeriod: inPeriod})
+	}
+	return weeks
+}
+
+// weekStartDay is the site's week start day, as a time.Weekday
+func weekStartDay(ctx context.Context) int {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && siteContext.SiteModel != nil && siteContext.GetSiteWeekStartDay() == "sunday" {
+		return int(time.Sunday)
+	}
+	return int(time.Monday)
+}
+
+// goalGlucose is the AGP's goal for the average glucose, below 154 mg/dL, in the units
+func goalGlucose(units *consts.Units) string {
+	return "<" + glucoseText(new(units.FromMGDL(154)), units) + " " + string(*units)
 }

@@ -63,8 +63,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/reports/summaries", sitecollections.SummariesReportHandler)
 		r.Post("/reports/summaries/regenerate", sitecollections.RegenerateSummariesHandler)
 		// The AGP report is of a day, week, fortnight or month, the week with yesterday in it at first
-		r.Get("/reports/agp", sitecollections.ReportsHandler(store.Collection("data", "summary-periods").Get))
-		r.Get("/reports/agp/{id}", store.Collection("data", "summary-periods").Get)
+		r.Get("/reports/agp", sitecollections.PeriodReportHandler(site_reports_templ.Report))
+		r.Get("/reports/agp/{id}", sitecollections.PeriodReportHandler(site_reports_templ.Report))
 		// The overview report is of a day, week, fortnight or month too, with its days
 		r.Get("/reports/overview", sitecollections.PeriodReportHandler(site_reports_templ.Overview))
 		r.Get("/reports/overview/{id}", sitecollections.PeriodReportHandler(site_reports_templ.Overview))
