@@ -26,3 +26,13 @@ SCREENSHOT push_devices
 CLICK #pushDevicesTable tbody tr >> text="Test"
 ASSERT_TEXT_VISIBLE no push credential for the app loop: add one in Push Notifications
 SCREENSHOT push_device_test_without_credential
+
+// Deleting it asks first (the test accepts), then removes it, so the page says none are registered, as after a reload
+CLICK #pushDevicesTable tbody tr:has(td:text-is("admin")) >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Push Device Deleted
+ASSERT_NOT_VISIBLE #pushDevicesTable >> text="com.TEAM123456.loopkit.Loop"
+ASSERT_VISIBLE #site--push-device--empty
+SCREENSHOT push_device_deleted
+GOTO /settings/push-devices
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--push-device--empty

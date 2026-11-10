@@ -51,7 +51,7 @@ func title(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	last := time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)
 	switch p.Period {
 	case "day":
-		return first.Format("Mon 2 Jan 2006")
+		return first.Format(display.DayLayout)
 	case "month":
 		return first.Format("January 2006")
 	}
@@ -311,7 +311,7 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = periodNav("TDD", "site--reports--tdd", "site--reports--title", first.Format("Mon 2 Jan")+" to "+last.Format("Mon 2 Jan 2006"), previous, next, "month").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = periodNav("TDD", "site--reports--tdd", "site--reports--title", first.Format(display.ShortDayLayout)+" to "+last.Format(display.DayLayout), previous, next, "month").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

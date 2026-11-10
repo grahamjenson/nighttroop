@@ -231,11 +231,11 @@ templ glucoseHero(summary *sitemodels.Summary) {
 				</div>
 				<div class="flex items-baseline gap-2">
 					// An old reading is grey, as it may no longer be the glucose
-					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseText[outOfRange], stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(latest.Reading, latest.Units) }</span>
+					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseColours[outOfRange].Text, stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(latest.Reading, latest.Units) }</span>
 					<span class="text-lg text-gray-500">{ display.Units(latest.Units) }</span>
 					<span class="ml-2 text-4xl text-gray-700">{ display.Arrow(latest.Direction) }</span>
 					if outOfRange != "" {
-						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseText[outOfRange] }>{ outOfRange }</span>
+						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseColours[outOfRange].Text }>{ outOfRange }</span>
 					}
 				</div>
 				<div class="mt-1 flex gap-3 text-sm">

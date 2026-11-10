@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -165,16 +166,17 @@ func agpMarks(g graph, low, high float64) []float64 {
 }
 
 // regions are the parts of a graph above the range high, in it, and below the range low, which the AGP's bands and a
-// day's glucose are clipped to, to colour each, by the ID's suffix and the classes each is filled or stroked with
+// day's glucose are clipped to, to colour each, by the ID's suffix and the glucose colour each is filled or stroked with
 type region struct {
-	Suffix, Fill, Stroke string
-	Top, Bottom          func(g graph, low, high float64) float64
+	Suffix      string
+	Colour      site_data_templ.GlucoseColour
+	Top, Bottom func(g graph, low, high float64) float64
 }
 
 var regions = []region{
-	{"above", "fill-glucose-high", "stroke-glucose-high", func(g graph, _, _ float64) float64 { return 0 }, func(g graph, _, high float64) float64 { return g.Y(high) }},
-	{"within", "fill-glucose-in-range", "stroke-glucose-in-range", func(g graph, _, high float64) float64 { return g.Y(high) }, func(g graph, low, _ float64) float64 { return g.Y(low) }},
-	{"below", "fill-glucose-low", "stroke-glucose-low", func(g graph, low, _ float64) float64 { return g.Y(low) }, func(g graph, _, _ float64) float64 { return g.Height }},
+	{"above", site_data_templ.GlucoseColours["High"], func(g graph, _, _ float64) float64 { return 0 }, func(g graph, _, high float64) float64 { return g.Y(high) }},
+	{"within", site_data_templ.GlucoseColours[""], func(g graph, _, high float64) float64 { return g.Y(high) }, func(g graph, low, _ float64) float64 { return g.Y(low) }},
+	{"below", site_data_templ.GlucoseColours["Low"], func(g graph, low, _ float64) float64 { return g.Y(low) }, func(g graph, _, _ float64) float64 { return g.Height }},
 }
 
 // profileDay is a day of a period's daily glucose profiles: its date, the day's summary if it has one, and whether it is

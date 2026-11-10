@@ -154,8 +154,8 @@ func POSTAccountPasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig)
 	}
 }
 
-// welcomeAdmin is the new site's admin, with its passkeys, when this browser was shown the site's credentials on its
-// welcome page in the last 15 minutes
+// welcomeAdmin is the new or recovered site's admin, with its passkeys, when this browser was shown the site's
+// credentials on its welcome page in the last 15 minutes
 func welcomeAdmin(r *http.Request, controlDB *db.ControlDB, cfg *config.ServerConfig) (passkeyUser, error) {
 	siteID := httputils.GetSiteContext(r.Context()).SiteID
 	welcomed, err := cfg.Security.WelcomePasskeySite(r)

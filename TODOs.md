@@ -32,7 +32,6 @@
 1. Accounts
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
-    1. P4: Show a recovered site's new credentials on its own address, as a new site's are, not on the recover page
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
@@ -48,9 +47,6 @@
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. Performance testing (cost estimate for running full node)
-1. P5: Name the reports header's and TDD title's days with `display.DayLayout` and `display.ShortDayLayout`
-   (`reports.templ`'s `title` and `TDDReport`), and draw the AGP's regions and the overview's bands from one map of
-   the glucose colours, as the summary, readings and glucose days are
 1. P4: Leave out of the details modals' lists (`readingDetail` and `presetDetail` rows) the fields their edit forms
    now show, e.g. an insulin dose's split, type, notes and reason, so each is shown once
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
@@ -70,8 +66,6 @@
        forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
-    1. P3: A delete button on Push Devices (`/settings/push-devices`), for an identity's own registrations and an
-       admin's for the site's; the push registrations collection's HTMX responses are empty until then
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
     1. P2: Before any server credential (one with no site) is added: use it only for tokens its app registered itself,
        require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token. Then

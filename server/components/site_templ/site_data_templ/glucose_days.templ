@@ -71,7 +71,7 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 						<rect class="fill-glucose-in-range/10" x="0" width="100%" y={ glucoseDaysY(high, bottom, top) } height={ fmt.Sprintf("%.1f", glucoseDaysHeight*(high-low)/(top-bottom)) }></rect>
 						for slot, value := range day.Glucose {
 							if value != nil {
-								<rect class={ GlucoseFill[glucoseRange(ctx, *value)] } x={ fmt.Sprint(slot) } y={ glucoseDaysMarkY(*value, bottom, top) } width="1.5" height={ fmt.Sprint(glucoseDaysMark) }></rect>
+								<rect class={ GlucoseColours[glucoseRange(ctx, *value)].Fill } x={ fmt.Sprint(slot) } y={ glucoseDaysMarkY(*value, bottom, top) } width="1.5" height={ fmt.Sprint(glucoseDaysMark) }></rect>
 							}
 						}
 					</svg>

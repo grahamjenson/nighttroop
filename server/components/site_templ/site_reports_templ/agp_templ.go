@@ -910,7 +910,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var47 = []any{templ.KV("stroke-gray-300", i != 1 && i != 2), templ.KV("stroke-glucose-low", i == 1), templ.KV("stroke-glucose-high", i == 2)}
+				var templ_7745c5c3_Var47 = []any{templ.KV("stroke-gray-300", i != 1 && i != 2), templ.KV(site_data_templ.GlucoseColours["Low"].Stroke, i == 1), templ.KV(site_data_templ.GlucoseColours["High"].Stroke, i == 2)}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var47...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -931,7 +931,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var49 string
 				templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression(map[bool]string{true: "2", false: "1"}[i == 1 || i == 2]).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 218}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 266}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 				if templ_7745c5c3_Err != nil {
@@ -944,7 +944,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var50 string
 				templ_7745c5c3_Var50, templ_7745c5c3_Err = templruntime.NewAttributeExpression(f(g.Left)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 235}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 283}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 				if templ_7745c5c3_Err != nil {
@@ -957,7 +957,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var51 string
 				templ_7745c5c3_Var51, templ_7745c5c3_Err = templruntime.NewAttributeExpression(f(g.Right)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 253}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 301}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 				if templ_7745c5c3_Err != nil {
@@ -970,7 +970,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var52 string
 				templ_7745c5c3_Var52, templ_7745c5c3_Err = templruntime.NewAttributeExpression(f(g.Y(mark))).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 273}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 321}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 				if templ_7745c5c3_Err != nil {
@@ -983,7 +983,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var53 string
 				templ_7745c5c3_Var53, templ_7745c5c3_Err = templruntime.NewAttributeExpression(f(g.Y(mark))).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 293}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 161, Col: 341}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 				if templ_7745c5c3_Err != nil {
@@ -1103,7 +1103,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var60 = []any{"site--reports--agp--outer " + r.Fill}
+				var templ_7745c5c3_Var60 = []any{"site--reports--agp--outer " + r.Colour.Fill}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var60...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1124,7 +1124,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var62 string
 				templ_7745c5c3_Var62, templ_7745c5c3_Err = templruntime.NewAttributeExpression(bandPath(g, p.AGP, 0, 4)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 167, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 167, Col: 114}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 				if templ_7745c5c3_Err != nil {
@@ -1156,7 +1156,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var63 = []any{"site--reports--agp--inner " + r.Fill}
+				var templ_7745c5c3_Var63 = []any{"site--reports--agp--inner " + r.Colour.Fill}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var63...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1177,7 +1177,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var65 string
 				templ_7745c5c3_Var65, templ_7745c5c3_Err = templruntime.NewAttributeExpression(bandPath(g, p.AGP, 1, 3)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 168, Col: 106}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 168, Col: 113}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 				if templ_7745c5c3_Err != nil {
@@ -1209,7 +1209,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var66 = []any{"site--reports--agp--median " + r.Stroke}
+				var templ_7745c5c3_Var66 = []any{"site--reports--agp--median " + r.Colour.Stroke}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var66...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1230,7 +1230,7 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				var templ_7745c5c3_Var68 string
 				templ_7745c5c3_Var68, templ_7745c5c3_Err = templruntime.NewAttributeExpression(linePath(g, percentile(p.AGP, 2))).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 169, Col: 152}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 169, Col: 159}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 				if templ_7745c5c3_Err != nil {
@@ -1871,7 +1871,7 @@ func dayGlucose(id, class string, glucose []*float64, units *consts.Units, low, 
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var101 = []any{"site--agp--glucose " + r.Stroke}
+					var templ_7745c5c3_Var101 = []any{"site--agp--glucose " + r.Colour.Stroke}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var101...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1892,7 +1892,7 @@ func dayGlucose(id, class string, glucose []*float64, units *consts.Units, low, 
 					var templ_7745c5c3_Var103 string
 					templ_7745c5c3_Var103, templ_7745c5c3_Err = templruntime.NewAttributeExpression("url(#" + id + r.Suffix + ")").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 287, Col: 94}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 287, Col: 101}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var103)
 					if templ_7745c5c3_Err != nil {
@@ -1905,7 +1905,7 @@ func dayGlucose(id, class string, glucose []*float64, units *consts.Units, low, 
 					var templ_7745c5c3_Var104 string
 					templ_7745c5c3_Var104, templ_7745c5c3_Err = templruntime.NewAttributeExpression(linePath(g, glucose)).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 287, Col: 187}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 287, Col: 194}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var104)
 					if templ_7745c5c3_Err != nil {
