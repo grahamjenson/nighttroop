@@ -429,8 +429,9 @@ func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, ro
 
 // GettingStartedHandler is the guide to setting up the site, a page for people, so it has no JSON
 // PeriodReportHandler is the report page of the day, week, fortnight or month its id names, as week-2026-01-31, or of
-// the week with yesterday in it without one, made from the period and its days; a page for people, so it has no JSON
-func PeriodReportHandler(page func(*sitemodels.SiteSummaryPeriod, []*sitemodels.SiteSummaryDaily) templ.Component) http.HandlerFunc {
+// the 7 days to yesterday without one, made from the period, its days and the period before it, to compare with, nil
+// when it is out of range; a page for people, so it has no JSON
+func PeriodReportHandler(page func(p *sitemodels.SiteSummaryPeriod, days []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod) templ.Component) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionGet)
 		if siteContext == nil {
@@ -452,7 +453,12 @@ func PeriodReportHandler(page func(*sitemodels.SiteSummaryPeriod, []*sitemodels.
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
-		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(sitemodels.SummaryPeriodFromDB(row, siteContext), days), true)
+		var previous *sitemodels.SiteSummaryPeriod
+		before := row.Period + "-" + time.UnixMilli(row.StartAt).In(siteContext.GetSiteTimezone()).AddDate(0, 0, -1).Format(time.DateOnly)
+		if previousRow, _, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, before, now); err == nil {
+			previous = sitemodels.SummaryPeriodFromDB(previousRow, siteContext)
+		}
+		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(sitemodels.SummaryPeriodFromDB(row, siteContext), days, previous), true)
 	}
 }
 

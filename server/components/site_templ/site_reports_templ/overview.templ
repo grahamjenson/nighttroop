@@ -13,7 +13,7 @@ import (
 // Overview is the overview of a day, week, fortnight or month: its glucose's mean, GMI, standard deviation and
 // coefficient of variation, its time in each range, how much of it the CGM read, its best day, a graph of its day from
 // midnight averaged over its days, and its daily dose and carbs
-templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily) {
+templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod) {
 	{{ now, location := time.Now(), reportLocation(ctx) }}
 	{{ low, high := site_data_templ.RangeBounds(ctx) }}
 	@heading.Title("Overview")
@@ -23,16 +23,23 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			<h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</h2>
 			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 				<dl class="space-y-6">
-					@bigStat("site--overview--mean", "Average glucose", glucoseText(p.Mean, p.Units), string(*p.Units), "")
+					@bigStat("site--overview--mean", "Average glucose", glucoseText(p.Mean, p.Units), string(*p.Units), "") {
+						@statChange("site--overview--mean", p, glucoseChange(p, previous))
+					}
 					@bigStat("site--overview--sd", "Standard deviation", glucoseText(p.SD, p.Units), string(*p.Units), "")
 				</dl>
 				<dl class="space-y-6">
-					@bigStat("site--overview--gmi", "GMI", oneDecimal(p.GMI), "%", gmiNote(p))
-					@bigStat("site--overview--cv", "Coefficient of variation", oneDecimal(p.CV), "%", "")
+					@bigStat("site--overview--gmi", "GMI", oneDecimal(p.GMI), "%", gmiNote(p)) {
+						@statChange("site--overview--gmi", p, change(p.GMI, previousOf(previous).GMI, 1, "%"))
+					}
+					@bigStat("site--overview--cv", "Coefficient of variation", oneDecimal(p.CV), "%", "") {
+						@statChange("site--overview--cv", p, change(p.CV, previousOf(previous).CV, 1, "%"))
+					}
 				</dl>
 				<div>
 					<h3 class="text-sm font-medium text-gray-700">Time in range</h3>
 					@timeInRanges(p)
+					@statChange("site--overview--in-range", p, change(p.TimeInRange, previousOf(previous).TimeInRange, 0, "% in range"))
 					<p id="site--overview--target" class="mt-2 text-xs text-gray-500">
 						Target range { site_data_templ.FormatGlucose(low, p.Units) }–{ site_data_templ.FormatGlucose(high, p.Units) } { string(*p.Units) }
 					</p>
@@ -41,7 +48,9 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 					<h3 class="text-sm font-medium text-gray-700">Sensor usage</h3>
 					<dl class="mt-2 space-y-3">
 						@smallStat("site--overview--days", "Days with data", fmt.Sprintf("%d/%d", p.Days, periodDays(p, now, location)), "days", "")
-						@smallStat("site--overview--cgm-active", "Time CGM active", percentText(p.CGMActive), "", cgmActiveNote(p))
+						@smallStat("site--overview--cgm-active", "Time CGM active", percentText(p.CGMActive), "", cgmActiveNote(p)) {
+							@statChange("site--overview--cgm-active", p, change(p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
+						}
 						@smallStat("site--overview--meter", "Meter readings a day", perDay(p.MeterReadings, periodDays(p, now, location)), "", "")
 					</dl>
 				</div>
@@ -124,6 +133,7 @@ templ bigStat(id, label, value, units, note string) {
 			}
 		</dd>
 		@statNote(id, note)
+		{ children... }
 	</div>
 }
 
@@ -138,7 +148,16 @@ templ smallStat(id, label, value, units, note string) {
 			}
 		</dd>
 		@statNote(id, note)
+		{ children... }
 	</div>
+}
+
+// statChange is how a number of the report rose or fell from the report before it, as ▲ 0.3 mmol/L on the previous
+// 7 days, when both have it
+templ statChange(id string, p *sitemodels.SiteSummaryPeriod, text string) {
+	if text != "" {
+		<p id={ id + "--change" } class="mt-0.5 text-xs text-gray-500">{ text } on { previousName(p) }</p>
+	}
 }
 
 // statNote is a caution under a number of the report, such as that it needs more data to be reliable

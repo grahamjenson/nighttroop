@@ -80,3 +80,19 @@ func TestNext(t *testing.T) {
 	require.Equal(t, "/reports/agp/day-"+date(-1), next("agp", &sitemodels.SiteSummaryPeriod{Period: "day"}, today.AddDate(0, 0, -2)))
 	require.Equal(t, "", next("agp", &sitemodels.SiteSummaryPeriod{Period: "day"}, today))
 }
+
+// A number's change from the report before is up or down by how much, to its decimal places, or none when the same
+// or when either is missing; the report before is named by its kind
+func TestChange(t *testing.T) {
+	require.Equal(t, "▲ 0.3 mmol/L", change(new(8.4), new(8.1), 1, " mmol/L"))
+	require.Equal(t, "▼ 4%", change(new(60.0), new(63.6), 0, "%"))
+	require.Equal(t, "No change", change(new(6.9), new(6.94), 1, "%"))
+	require.Equal(t, "", change(new(6.9), nil, 1, "%"))
+	require.Equal(t, "", change(nil, new(6.9), 1, "%"))
+	require.Equal(t, "the previous 14 days", previousName(&sitemodels.SiteSummaryPeriod{Period: "fortnight"}))
+	require.Equal(t, "the previous month", previousName(&sitemodels.SiteSummaryPeriod{Period: "month"}))
+	require.Equal(t, "the day before", previousName(&sitemodels.SiteSummaryPeriod{Period: "day"}))
+	mmol := consts.UnitsMMOLL
+	require.Equal(t, "▲ 0.5 mmol/L", glucoseChange(&sitemodels.SiteSummaryPeriod{Units: &mmol, Mean: new(7.5)}, &sitemodels.SiteSummaryPeriod{Mean: new(7.0)}))
+	require.Equal(t, "", glucoseChange(&sitemodels.SiteSummaryPeriod{Units: &mmol, Mean: new(7.5)}, nil))
+}
