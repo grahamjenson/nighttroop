@@ -122,6 +122,7 @@ templ RateSettings(settings []config.RateSetting, admin bool) {
 		hx-target="this"
 		hx-swap="outerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
 	>
 		@table.Table(table.Props{Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
