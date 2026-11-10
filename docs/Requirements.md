@@ -549,6 +549,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
   leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
 - Connector credentials are encrypted at rest.
+- A connector's password, API secret or token, and its username, email or URL, are not offered to the browser or a
+  password manager to save or fill, as they are not this site's sign in: the password is a masked text box, not a
+  password box, which Chrome offers to save whatever its autocomplete, and its eye still shows it.
 - A Nightscout connector copies the newest readings, treatments and device statuses, and the current profile store
   whenever the Nightscout's profiles change, however long ago it started; an edit to it in Nightscout's profile
   editor replaces the copy, whoever saved it there or whatever identifier its uploader, such as AAPS, gave it, and a
