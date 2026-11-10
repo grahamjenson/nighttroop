@@ -69,6 +69,15 @@ func (r *Runner) watch(page playwright.Page, ctx map[string]any) {
 	})
 }
 
+// requestsAnswered waits for the page's htmx requests to be answered and swapped in, but its event streams, which stay
+// open, so the jobs a click just asked for, such as a backfill, are queued before RUN_BACKGROUND_JOBS runs them. A click
+// only waits a moment for its request, and the request can reach a busy server after the jobs have run.
+func requestsAnswered(page playwright.Page) error {
+	_, err := page.WaitForFunction(`() => !document.querySelector(".htmx-request:not([hx-sse\\:connect])")`, nil,
+		playwright.PageWaitForFunctionOptions{Timeout: playwright.Float(visibleWait)})
+	return err
+}
+
 // Run runs the flow, failing the test at the first step that cannot finish. A socket stays connected through the
 // browser steps between its API steps.
 func (r *Runner) Run(t *testing.T, flow *Flow, ctx map[string]any) {
@@ -99,6 +108,9 @@ func (r *Runner) browse(t *testing.T, path string, i int, action Action, ctx map
 	action.PrintAction()
 	fmt.Println("\n- - - - - - - - - - - - - - - - ")
 	if _, ok := action.(*RunBackgroundJobs); ok {
+		if err := requestsAnswered(r.Page); err != nil {
+			t.Fatalf("%s", action.ToErrorLine("the page's requests were not answered: "+err.Error()))
+		}
 		r.RunBackgroundJobs()
 	}
 	// A failing action answers no page, so Page keeps the one it failed on, for a failure screenshot
