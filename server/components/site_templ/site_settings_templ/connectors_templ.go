@@ -422,7 +422,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 				Required: true,
 				Value:    dexcomConnectorSettings.GetUsername(),
 				Attributes: templ.Attributes{
-					"autocomplete":   "new-password",
+					"autocomplete":   "off",
 					"autocapitalize": "none",
 					"spellcheck":     "false",
 				},
@@ -481,11 +481,12 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 				Type:     "password",
 				Name:     "password",
 				Required: true,
+				// Not the password of this site, so not offered to the browser to save
+				NotSaved: true,
 				Value:    dexcomConnectorSettings.GetPasswordGarbage(),
 				Attributes: templ.Attributes{
 					"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 					"data-placeholder-password": "true",
-					"autocomplete":              "new-password",
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -743,7 +744,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				Required: true,
 				Value:    libreConnectorSettings.GetUsername(),
 				Attributes: templ.Attributes{
-					"autocomplete":   "new-password",
+					"autocomplete":   "off",
 					"autocapitalize": "none",
 					"spellcheck":     "false",
 				},
@@ -802,11 +803,12 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				Type:     "password",
 				Name:     "password",
 				Required: true,
+				// Not the password of this site, so not offered to the browser to save
+				NotSaved: true,
 				Value:    libreConnectorSettings.GetPasswordGarbage(),
 				Attributes: templ.Attributes{
 					"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 					"data-placeholder-password": "true",
-					"autocomplete":              "new-password",
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -870,7 +872,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templruntime.NewAttributeExpression(region.Code).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 306, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 308, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 				if templ_7745c5c3_Err != nil {
@@ -893,7 +895,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(region.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 306, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 308, Col: 121}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -1097,7 +1099,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 				Value:    nightscoutConnectorSettings.GetURL(),
 				// The browser reads the pattern with the v flag, which needs the / in its class escaped, or drops it
 				Attributes: templ.Attributes{
-					"autocomplete":   "new-password",
+					"autocomplete":   "off",
 					"autocapitalize": "none",
 					"spellcheck":     "false",
 					"pattern":        "https?://[^\\/]+",
@@ -1181,11 +1183,12 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 				Type:     "password",
 				Name:     "password",
 				Required: true,
+				// Not the password of this site, so not offered to the browser to save
+				NotSaved: true,
 				Value:    nightscoutConnectorSettings.GetPasswordGarbage(),
 				Attributes: templ.Attributes{
 					"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 					"data-placeholder-password": "true",
-					"autocomplete":              "new-password",
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -1394,7 +1397,7 @@ func connectorActions(source *sitemodels.Connector, connectorType consts.Connect
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--settings--" + name + "-connector--actions").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 493, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 496, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 			if templ_7745c5c3_Err != nil {

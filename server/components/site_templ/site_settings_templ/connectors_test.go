@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -24,5 +25,28 @@ func TestBackfillQueuedSaysWhatItFetches(t *testing.T) {
 		var buf bytes.Buffer
 		require.NoError(t, BackfillQueued(consts.ConnectorTypeNightscout, from, to, test.recentFrom).Render(t.Context(), &buf))
 		require.Contains(t, buf.String(), test.want, test.name)
+	}
+}
+
+// A connector's password is not this site's, so it is no password box, which Chrome offers to save whatever its
+// autocomplete, but a text box masked as one that password managers are told to leave alone
+func TestConnectorPasswordsAreNotOfferedToBeSaved(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		form templ.Component
+		id   string
+	}{
+		{"dexcom", DexcomConnectorForm(nil), "site--settings--dexcom-connector--password"},
+		{"libre", LibreConnectorForm(nil), "site--settings--libre-connector--password"},
+		{"nightscout", NightscoutConnectorForm(nil), "site--settings--nightscout-connector--password"},
+	} {
+		var buf bytes.Buffer
+		require.NoError(t, test.form.Render(t.Context(), &buf), test.name)
+		html := buf.String()
+		require.NotContains(t, html, `type="password"`, test.name)
+		require.Contains(t, html, `id="`+test.id+`" type="text" data-tui-input-masked style="-webkit-text-security: disc" `+
+			`autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" name="password"`, test.name)
+		// It can still be shown, as a password box can
+		require.Contains(t, html, `data-tui-input-toggle-password="`+test.id+`"`, test.name)
 	}
 }

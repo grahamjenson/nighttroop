@@ -159,7 +159,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 								Required: true,
 								Value:    dexcomConnectorSettings.GetUsername(),
 								Attributes: templ.Attributes{
-									"autocomplete":   "new-password",
+									"autocomplete":   "off",
 									"autocapitalize": "none",
 									"spellcheck":     "false",
 								},
@@ -179,11 +179,12 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 								Type:     "password",
 								Name:     "password",
 								Required: true,
+								// Not the password of this site, so not offered to the browser to save
+								NotSaved: true,
 								Value:    dexcomConnectorSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
 									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 									"data-placeholder-password": "true",
-									"autocomplete":              "new-password",
 								},
 							})
 						}
@@ -266,7 +267,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 								Required: true,
 								Value:    libreConnectorSettings.GetUsername(),
 								Attributes: templ.Attributes{
-									"autocomplete":   "new-password",
+									"autocomplete":   "off",
 									"autocapitalize": "none",
 									"spellcheck":     "false",
 								},
@@ -285,11 +286,12 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 								Type:     "password",
 								Name:     "password",
 								Required: true,
+								// Not the password of this site, so not offered to the browser to save
+								NotSaved: true,
 								Value:    libreConnectorSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
 									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 									"data-placeholder-password": "true",
-									"autocomplete":              "new-password",
 								},
 							})
 						}
@@ -377,7 +379,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 								Value:    nightscoutConnectorSettings.GetURL(),
 								// The browser reads the pattern with the v flag, which needs the / in its class escaped, or drops it
 								Attributes: templ.Attributes{
-									"autocomplete":   "new-password",
+									"autocomplete":   "off",
 									"autocapitalize": "none",
 									"spellcheck":     "false",
 									"pattern":        "https?://[^\\/]+",
@@ -403,11 +405,12 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 								Type:     "password",
 								Name:     "password",
 								Required: true,
+								// Not the password of this site, so not offered to the browser to save
+								NotSaved: true,
 								Value:    nightscoutConnectorSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
 									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 									"data-placeholder-password": "true",
-									"autocomplete":              "new-password",
 								},
 							})
 						}

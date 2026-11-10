@@ -521,6 +521,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 - A site can pull data from **Dexcom** (with its region), **LibreLinkUp** (with its region) or another
   **Nightscout** site, or from the **virtual connector**, which makes realistic test data.
+- The virtual connector's glucose is the same for the same time on every site: a 6 hour wave, with a meal as it rises
+  and a correction at its peak, over a 25 hour one, so days differ. It reaches every range, about 2% very low (below
+  54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
@@ -547,6 +550,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
   leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
 - Connector credentials are encrypted at rest.
+- A connector's password, API secret or token, and its username, email or URL, are not offered to the browser or a
+  password manager to save or fill, as they are not this site's sign in: the password is a masked text box, not a
+  password box, which Chrome offers to save whatever its autocomplete, and its eye still shows it.
 - A Nightscout connector copies the newest readings, treatments and device statuses, and the current profile store
   whenever the Nightscout's profiles change, however long ago it started; an edit to it in Nightscout's profile
   editor replaces the copy, whoever saved it there or whatever identifier its uploader, such as AAPS, gave it, and a
@@ -955,6 +961,13 @@ Connectors are a site's third party integrations, each syncing from one service.
   the identity (e.g. admin), so no name, email or device of the person is asked for or kept. A passkey the browser
   already has for the identity is not added again, and an identity has at most 10.
 - "Remove" (after asking) removes one of the identity's own passkeys, as for a lost device, so it signs in no more.
+- An admin's My Account also shows the site's DB size, measured as it opens, against its limit, and where its data
+  builds up: a bar and a key of its largest tables, each with its records, size and share, the rest as Other, as the
+  control site's page of the site does. Others' My Account, and control's, do not.
+- Its Truncate, after asking, truncates the site as control's Truncate does: the loop's status and pump as sent are
+  cleared from all but each device's newest report, device reports are thinned and those over 30 days old deleted,
+  and the DB is shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
+  the DB's new size, and records a "Site truncated" event with the admin. It shares the site's few downloads a minute.
 
 ### Own settings and alarms
 
