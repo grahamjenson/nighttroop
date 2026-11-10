@@ -105,12 +105,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	// goverter:map ID                     | AssignID
-	ComponentEventCreate(source sitedb.ComponentEvent, ctx ConverterContext) sitedb.CreateComponentEventParams
-
-	// goverter:context ctx
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	// goverter:map CreatedByIdentityID | AssignCreatedByID
-	// goverter:map ID                     | AssignID
 	ActivityCreate(source sitedb.Activity, ctx ConverterContext) sitedb.CreateActivityParams
 
 	///////
@@ -193,11 +187,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	TempTargetUpdate(source sitedb.TempTarget, ctx ConverterContext) sitedb.UpdateTempTargetParams
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	ComponentEventUpdate(source sitedb.ComponentEvent, ctx ConverterContext) sitedb.UpdateComponentEventParams
 
 	// goverter:context ctx
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
@@ -290,12 +279,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
-	UpdateComponentEventToTreatment(source *sitedb.ComponentEvent, target *Treatment)
-
-	// goverter:update target
-	// goverter:ignore CreatedAt
-	// goverter:ignoreMissing
-	//
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
 	UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment)
 
@@ -334,10 +317,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:update target
 	// goverter:ignore ID
 	UpdateToTempTarget(source *sitedb.TempTarget, target *sitedb.TempTarget)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToComponentEvent(source *sitedb.ComponentEvent, target *sitedb.ComponentEvent)
 
 	// goverter:update target
 	// goverter:ignore ID
@@ -410,12 +389,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	PartialTreatmentToComponentEvent(source Treatment) sitedb.ComponentEvent
-
-	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
 	PartialTreatmentToActivity(source Treatment) sitedb.Activity
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -423,7 +396,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	//
-	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NotificationEventID
+	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ActivityID NotificationEventID
 	// goverter:map EventType GroupType
 	// goverter:map UUID Uuid
 	// goverter:map SentJSON SentHash | SentHash

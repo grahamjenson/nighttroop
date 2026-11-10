@@ -45,13 +45,13 @@ B [{"created_at": "{{ time 1 }}", "enteredBy": "loop://iPhone", "eventType": "Co
 ASSERT_STATUS 200
 BROWSE
 
-// A sensor started now
+// A sensor started now, added as an event group
 CLICK #site--nav--data
-CLICK #site--data--component-events-button
+CLICK #site--data--event-groups-button
 ASSERT_STATUS 200
-CLICK #site--component-event--add
-INPUT #site--component-event--create--event-type Sensor Start
-CLICK #site--component-event--create--submit
+CLICK #site--event-group--add
+CLICK #site--event-group--add--sensor-start
+CLICK #site--event-group--create--submit
 ASSERT_STATUS 201
 
 // The summary shows the latest glucose, the loop's IOB and COB, the insulin and carbs, the other treatments and each

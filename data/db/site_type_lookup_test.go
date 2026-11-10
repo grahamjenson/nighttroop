@@ -9,9 +9,9 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// BenchmarkTypeLookups finds a type's newest device events and treatments among a year of them: a Nightscout
-// properties request looks up the newest of five device event types, some of which a site may never have, and a delete
-// by type takes the newest 1000 of a type.
+// BenchmarkTypeLookups finds a type's newest treatments among a year of them: a Nightscout properties request looks up
+// the newest of five change types, some of which a site may never have, and a delete by type takes the newest 1000 of a
+// type.
 // Run with go test -run XXX -bench TypeLookups ./data/db
 func BenchmarkTypeLookups(b *testing.B) {
 	_, _, site := testutils.NewControlDBWithSite(b)
@@ -21,10 +21,10 @@ func BenchmarkTypeLookups(b *testing.B) {
 	require.NoError(b, err)
 	insert := site.SiteDB.QueriesWithTx(tx)
 	// Mostly calibrations, with a site change every few days, as an xDrip+ and pump user has
-	componentTypes := []string{"Calibration", "Calibration", "Calibration", "Calibration", "Site Change", "Sensor Change"}
+	changeTypes := []string{"Calibration", "Calibration", "Calibration", "Calibration", "Site Change", "Sensor Change"}
 	for i := range int64(2000) {
-		_, err := insert.CreateComponentEvent(ctx, sitedb.CreateComponentEventParams{ID: fmt.Sprint("c", i),
-			EventType: componentTypes[i%int64(len(componentTypes))], OccurredAt: i * 4 * hour, CreatedByIdentityName: "test"})
+		_, err := insert.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: fmt.Sprint("c", i),
+			GroupType: changeTypes[i%int64(len(changeTypes))], OccurredAt: i * 4 * hour, CreatedByIdentityName: "test"})
 		require.NoError(b, err)
 	}
 	// A temp basal every five minutes, with a bolus among every ten treatments
@@ -37,12 +37,13 @@ func BenchmarkTypeLookups(b *testing.B) {
 	require.NoError(b, tx.Commit())
 	q := site.SiteDB.Queries()
 
-	for _, eventType := range []string{"Site Change", "Pump Battery Change"} {
-		b.Run("newest "+eventType, func(b *testing.B) {
+	for _, groupType := range []string{"Site Change", "Pump Battery Change"} {
+		b.Run("newest "+groupType, func(b *testing.B) {
 			for b.Loop() {
-				_, err := q.GetComponentEventByType(b.Context(), sitedb.GetComponentEventByTypeParams{EventType: eventType})
-				if eventType == "Site Change" {
-					require.NoError(b, err)
+				groups, err := q.GetEventGroupOfTypeWithoutJoins(b.Context(), sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: groupType, Limit: 1})
+				require.NoError(b, err)
+				if groupType == "Site Change" {
+					require.Len(b, groups, 1)
 				}
 			}
 		})

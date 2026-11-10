@@ -142,17 +142,17 @@ ASSERT_STATUS 201
 
 // A sensor start and a site change are when the sensor was started and the site last changed
 NAME sensor_start_for_summary
-POST http://{{ site }}/data/component-events
+POST http://{{ site }}/data/event-groups
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"event_type": "Sensor Start", "notes": "Left arm"}
+B {"group_type": "Sensor Start", "notes": "Left arm"}
 ASSERT_STATUS 201
 
 NAME site_change_for_summary
-POST http://{{ site }}/data/component-events
+POST http://{{ site }}/data/event-groups
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"event_type": "Site Change", "notes": "Right thigh"}
+B {"group_type": "Site Change", "notes": "Right thigh"}
 ASSERT_STATUS 201
 
 NAME summary_today_out_of_range

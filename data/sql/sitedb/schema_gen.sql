@@ -2,10 +2,6 @@ CREATE INDEX activities_occurred_at_idx ON activities(occurred_at);
 
 CREATE INDEX activities_updated_at_idx ON activities(updated_at);
 
-CREATE INDEX component_events_event_type_occurred_at_idx ON component_events(event_type, occurred_at);
-
-CREATE INDEX component_events_occurred_at_idx ON component_events(occurred_at);
-
 CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
 
 CREATE INDEX device_reports_occurred_at_idx ON device_reports(occurred_at);
@@ -80,35 +76,6 @@ CREATE TABLE activities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
-CREATE TABLE component_events (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-
-    event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
-
-    -- What only some apps send, NULL for most events: a sensor's code and transmitter (sensor_code, transmitter_id).
-    -- The pump a change names is its event group's.
-    sensor_code TEXT CHECK(length(sensor_code) <= 64),
-    transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
-
-    -- Default Stuff
-    notes TEXT CHECK(length(notes) <= 1024),
-    reason TEXT CHECK(length(reason) <= 64),
-
-    deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-
-    updated_by_identity_id INTEGER,
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
-    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
-    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
-    created_by_identity_id INTEGER,
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-) STRICT;
-
 CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     
@@ -179,8 +146,6 @@ CREATE TABLE event_groups (
     temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
     profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
 
-    component_event_id TEXT UNIQUE REFERENCES component_events(id) ON DELETE RESTRICT,
-
     activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
     notification_event_id TEXT UNIQUE REFERENCES notification_events(id) ON DELETE RESTRICT,
 
@@ -191,7 +156,8 @@ CREATE TABLE event_groups (
     -- (auto_forced) and why (reasons), how long it was to last in milliseconds, at most a year (original_duration_ms),
     -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
-    -- pump_serial, pump_type), as AAPS sends with every treatment
+    -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
+    -- (sensor_code, transmitter_id)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -202,6 +168,8 @@ CREATE TABLE event_groups (
     pump_id TEXT CHECK(length(pump_id) <= 32),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
     pump_type TEXT CHECK(length(pump_type) <= 64),
+    sensor_code TEXT CHECK(length(sensor_code) <= 64),
+    transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -592,8 +560,6 @@ CREATE TABLE temp_targets (
 ) STRICT;
 
 CREATE VIEW activities_vw AS SELECT activities.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN activities ON TRUE;
-
-CREATE VIEW component_events_vw AS SELECT component_events.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN component_events ON TRUE;
 
 CREATE VIEW food_intakes_vw AS SELECT food_intakes.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN food_intakes ON TRUE;
 

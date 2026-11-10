@@ -51,7 +51,7 @@ const maxSwitchMinutes = 7 * 24 * 60
 func (s *SummaryCollection) Watches(event events.Event, _ *httputils.SiteContext) bool {
 	switch event.Model.(type) {
 	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempTarget, *sitedb.TempBasal,
-		*sitedb.DeviceReport, *sitedb.ProfileSwitch, *sitedb.ProfilePreset, *sitedb.ComponentEvent,
+		*sitedb.DeviceReport, *sitedb.ProfileSwitch, *sitedb.ProfilePreset,
 		*sitedb.EventGroupsBundle, *sitedb.ProfilePresetBundle, *livedb.Alarm:
 		return true
 	}
@@ -242,24 +242,27 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 	return nil
 }
 
-// addChanges finds when the latest CGM sensor was started or changed, and when the pump site was last changed
+// addChanges finds when the latest CGM sensor was started or changed, and when the pump site was last changed, each an
+// event group of that type
 func addChanges(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary) *apiutils.HTTPError {
-	excludeDeleted := false
-	latest := func(types string) (*int64, *apiutils.HTTPError) {
-		events, err := q.SearchComponentEvents(ctx, sitedb.SearchComponentEventsParams{TypeIn: &types, IncludeDeleted: &excludeDeleted, Limit: 1})
-		if err != nil {
-			slog.ErrorContext(ctx, "Error searching summary component events", "error", err)
-			return nil, apiutils.ErrInternalServerError
+	latest := func(groupTypes ...string) (*int64, *apiutils.HTTPError) {
+		var at *int64
+		for _, groupType := range groupTypes {
+			groups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: groupType, Limit: 1})
+			if err != nil {
+				slog.ErrorContext(ctx, "Error finding the summary's latest "+groupType, "error", err)
+				return nil, apiutils.ErrInternalServerError
+			}
+			if len(groups) > 0 && (at == nil || groups[0].OccurredAt > *at) {
+				at = &groups[0].OccurredAt
+			}
 		}
-		if len(events) == 0 {
-			return nil, nil
-		}
-		return &events[0].OccurredAt, nil
+		return at, nil
 	}
 	var herr *apiutils.HTTPError
-	if summary.SensorStartedAt, herr = latest(`["Sensor Start","Sensor Change"]`); herr != nil {
+	if summary.SensorStartedAt, herr = latest("Sensor Start", "Sensor Change"); herr != nil {
 		return herr
 	}
-	summary.SiteChangedAt, herr = latest(`["Site Change"]`)
+	summary.SiteChangedAt, herr = latest("Site Change")
 	return herr
 }

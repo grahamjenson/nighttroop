@@ -37,9 +37,6 @@ func SoftDeleteEventGroupAndEvents(ctx context.Context, q *Queries, id string, u
 		{eventGroup.ProfileSwitchID, func(id string) (sql.Result, error) {
 			return q.SoftDeleteProfileSwitch(ctx, SoftDeleteProfileSwitchParams{ID: id, UpdatedByIdentityName: updatedBy})
 		}},
-		{eventGroup.ComponentEventID, func(id string) (sql.Result, error) {
-			return q.SoftDeleteComponentEvent(ctx, SoftDeleteComponentEventParams{ID: id, UpdatedByIdentityName: updatedBy})
-		}},
 		{eventGroup.ActivityID, func(id string) (sql.Result, error) {
 			return q.SoftDeleteActivity(ctx, SoftDeleteActivityParams{ID: id, UpdatedByIdentityName: updatedBy})
 		}},

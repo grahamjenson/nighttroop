@@ -167,7 +167,8 @@ func (s *EventGroupsCollection) DeleteHTMXResponse(model *sitemodels.SiteEventGr
 // UTIL METHODS
 ////////
 
-// checkEventsPicked makes sure a group has an event, and only of the kinds its type can have
+// checkEventsPicked makes sure a group has an event, unless it is a change, which has none, and only of the kinds its
+// type can have
 func checkEventsPicked(groupType string, model *sitemodels.SiteEventGroup) *apiutils.HTTPError {
 	kinds, ok := sitemodels.EventGroupTypeKinds[nightscoutmodels.TreatmentEventType(groupType)]
 	if !ok {
@@ -180,7 +181,7 @@ func checkEventsPicked(groupType string, model *sitemodels.SiteEventGroup) *apiu
 		}
 		picked = picked || id != nil
 	}
-	if !picked {
+	if !picked && !slices.Contains(sitemodels.ChangeTypes, groupType) {
 		return &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "Pick at least one event to group"}
 	}
 	return nil

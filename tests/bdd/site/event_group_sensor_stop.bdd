@@ -1,18 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// A sensor stopped, as xDrip+ uploads it, is a change of a sensor
-CLICK #site--nav--data
-CLICK #site--data--component-events-button
-CLICK #site--component-event--add
-INPUT #site--component-event--create--event-type Sensor Stop
-INPUT #site--component-event--create--occurred-at 2026-01-02T08:00
-INPUT #site--component-event--create--notes Sensor failed
-CLICK #site--component-event--create--submit
-ASSERT_STATUS 201
-ASSERT_VISIBLE #componentEventsTable >> text="Sensor Stop"
-
-// The Add Event Group menu offers a Sensor Stop, which can have that change
+// A sensor stopped, as xDrip+ uploads it, is an event group with no events: the Add Event Group menu offers it
 CLICK #site--nav--data
 CLICK #site--data--event-groups-button
 CLICK #site--event-group--add
@@ -24,14 +13,73 @@ SCREENSHOT event_group_sensor_stop_type
 CLICK #site--event-group--add--sensor-stop
 ASSERT_VISIBLE #site--event-group--create--modal
 ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Sensor Stop
+// It has no events to pick, just its time, notes, and its sensor's code and transmitter
+ASSERT_VISIBLE #site--event-group--create--no-events
+ASSERT_NOT_VISIBLE #site--event-group--create--insulin-dose-id
+// A new time finds its events again, which lands before it is added
+HOLD /data/event-groups/choices
 INPUT #site--event-group--create--occurred-at 2026-01-02T08:00
 CLICK #site--event-group--create--reason
-ASSERT_VISIBLE #site--event-group--create--component-event-id
-ASSERT_NOT_VISIBLE #site--event-group--create--insulin-dose-id
-INPUT #site--event-group--create--component-event-id 08:00:00 Sensor Stop
+ASSERT_HELD /data/event-groups/choices
+RELEASE /data/event-groups/choices
+ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--no-events
+INPUT #site--event-group--create--notes Sensor failed
 CLICK #site--event-group--create--submit
 ASSERT_STATUS 201
 ASSERT_NOT_VISIBLE #site--event-group--create--modal
 ASSERT_VISIBLE #eventGroupsTable >> text="Sensor Stop"
-ASSERT_VISIBLE #eventGroupsTable >> text=site or sensor change
+ASSERT_VISIBLE #eventGroupsTable >> text=Sensor failed
 SCREENSHOT event_group_sensor_stop
+
+// A sensor change has its sensor's code and transmitter, which its row and events show
+CLICK #site--event-group--add
+CLICK #site--event-group--add--sensor-change
+ASSERT_VISIBLE #site--event-group--create--modal
+ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Sensor Change
+ASSERT_VISIBLE #site--event-group--create--no-events
+ASSERT_VISIBLE #site--event-group--create--sensor-code
+ASSERT_VISIBLE #site--event-group--create--transmitter-id
+// A new time finds its events again, which lands before it is added
+HOLD /data/event-groups/choices
+INPUT #site--event-group--create--occurred-at 2026-01-02T09:00
+CLICK #site--event-group--create--reason
+ASSERT_HELD /data/event-groups/choices
+RELEASE /data/event-groups/choices
+ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--no-events
+INPUT #site--event-group--create--sensor-code 1234
+INPUT #site--event-group--create--transmitter-id 8G1234
+INPUT #site--event-group--create--notes Left arm
+CLICK #site--event-group--create--reason
+SCREENSHOT event_group_sensor_change_add
+CLICK #site--event-group--create--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #eventGroupsTable >> text="Sensor Change"
+ASSERT_VISIBLE #eventGroupsTable >> text=sensor code 1234, transmitter 8G1234
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Sensor Change"))
+ASSERT_VISIBLE #site--event-group--details
+ASSERT_VISIBLE #site--event-group--events >> text=sensor code 1234
+ASSERT_VISIBLE #site--event-group--events >> text=transmitter 8G1234
+ASSERT_VISIBLE #site--event-group--edit--no-events
+SCREENSHOT event_group_sensor_change_details
+
+// Editing it changes its transmitter and notes, keeping its sensor code
+INPUT #site--event-group--edit--transmitter-id 8G5678
+INPUT #site--event-group--edit--notes Right arm
+CLICK #site--event-group--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Event Group Updated
+ASSERT_NOT_VISIBLE #site--event-group--details
+ASSERT_VISIBLE #eventGroupsTable >> text=sensor code 1234, transmitter 8G5678
+ASSERT_VISIBLE #eventGroupsTable >> text=Right arm
+SCREENSHOT event_group_sensor_change_updated
+
+// A site change has no sensor, so no sensor code
+CLICK #site--event-group--add
+CLICK #site--event-group--add--site-change
+ASSERT_VISIBLE #site--event-group--create--no-events
+ASSERT_NOT_VISIBLE #site--event-group--create--sensor-code
+INPUT #site--event-group--create--notes New pod
+CLICK #site--event-group--create--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #eventGroupsTable >> text="Site Change"
+ASSERT_VISIBLE #eventGroupsTable >> text=New pod

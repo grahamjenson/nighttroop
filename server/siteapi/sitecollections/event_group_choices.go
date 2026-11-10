@@ -43,6 +43,10 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrBadRequest)
 		return
 	}
+	if len(kinds) == 0 {
+		WriteResponse(w, r, siteContext, http.StatusOK, []*sitemodels.SiteEventChoice{}, site_data_templ.EventGroupNoChoices(params.GroupID != ""), false)
+		return
+	}
 	at := time.Now()
 	if params.OccurredAt != 0 {
 		at = time.UnixMilli(params.OccurredAt)
@@ -58,8 +62,8 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		picked = map[string]*string{"glucose_reading_id": group.GlucoseReadingID, "insulin_dose_id": group.InsulinDoseID,
 			"food_intake_id": group.FoodIntakeID, "temp_basal_id": group.TempBasalID, "temp_target_id": group.TempTargetID,
-			"profile_switch_id": group.ProfileSwitchID, "component_event_id": group.ComponentEventID,
-			"activity_id": group.ActivityID, "notification_event_id": group.NotificationEventID}
+			"profile_switch_id": group.ProfileSwitchID, "activity_id": group.ActivityID,
+			"notification_event_id": group.NotificationEventID}
 	}
 	from, to := at.Add(-eventChoicesWindow).UnixMilli(), at.Add(eventChoicesWindow).UnixMilli()
 	rows, err := q.EventsToGroup(r.Context(), sitedb.EventsToGroupParams{GroupID: params.GroupID, From: from, To: to})

@@ -31,7 +31,7 @@ ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
 SCREENSHOT navigation_account_menu
 PRESS Escape
 
-// Data opens its first page, with a tab for each of its 13 pages, the page's marked, as is Data in the header
+// Data opens its first page, with a tab for each of its 12 pages, the page's marked, as is Data in the header
 CLICK #site--nav--data
 ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
@@ -39,10 +39,13 @@ ASSERT_TITLE Glucose Readings · Nighttroop
 ASSERT_VISIBLE #site--nav--data[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--home-icon[aria-current="page"]
 ASSERT_VISIBLE #site--data--glucose-button[aria-current="page"]
-ASSERT_COUNT #site--hub--data nav a 14
+ASSERT_COUNT #site--hub--data nav a 13
 // Data's tabs are on the left, in groups, like Settings'
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Readings & treatments"] #site--data--glucose-button
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Events"] #site--data--activities-button
+// Sensor and site changes are event groups, so have no page of their own
+ASSERT_COUNT #site--hub--data ul[aria-label="Events"] a 3
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Events"] #site--data--event-groups-button
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Devices"] #site--data--device-status-button
 // Food presets and profiles are with the data they are used to enter
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Presets"] #site--presets--food-button
@@ -228,6 +231,11 @@ SCREENSHOT navigation_search_keyword
 PRESS Control+k
 TYPE #site--nav--search BGL
 ASSERT_VISIBLE #site--nav--search--data--glucose[aria-selected="true"]
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+TYPE #site--nav--search cannula
+ASSERT_VISIBLE #site--nav--search--data--event-groups[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--data--event-groups>[data-hint] Cannula
 ASSERT_COUNT #site--nav--search-results [role=option] 1
 PRESS Control+k
 TYPE #site--nav--search bolus

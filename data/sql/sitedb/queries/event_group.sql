@@ -11,7 +11,6 @@ INSERT INTO event_groups (
     temp_basal_id,
     temp_target_id,
     profile_switch_id,
-    component_event_id,
     activity_id,
     notification_event_id,
 
@@ -29,6 +28,8 @@ INSERT INTO event_groups (
     pump_id,
     pump_serial,
     pump_type,
+    sensor_code,
+    transmitter_id,
 
     occurred_at,
     utc_offset_minutes,
@@ -46,7 +47,6 @@ VALUES (
     sqlc.arg('TempBasalID'),
     sqlc.arg('TempTargetID'),
     sqlc.arg('ProfileSwitchID'),
-    sqlc.arg('ComponentEventID'),
     sqlc.arg('ActivityID'),
     sqlc.arg('NotificationEventID'),
     sqlc.arg('Notes'),
@@ -63,6 +63,8 @@ VALUES (
     NULLIF(CAST(sqlc.narg('PumpID') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('PumpSerial') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     sqlc.arg('OccurredAt'),
     sqlc.arg('UtcOffsetMinutes'),
     sqlc.arg('CreatedByAppName'),
@@ -98,7 +100,6 @@ SELECT
     sqlc.embed(tb),
     sqlc.embed(tt),
     sqlc.embed(ps),
-    sqlc.embed(ce),
     sqlc.embed(a),
     sqlc.embed(n)
 
@@ -109,7 +110,6 @@ LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
 LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
@@ -137,7 +137,6 @@ SELECT
     sqlc.embed(tb),
     sqlc.embed(tt),
     sqlc.embed(ps),
-    sqlc.embed(ce),
     sqlc.embed(a),
     sqlc.embed(n)
 
@@ -148,7 +147,6 @@ LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
 LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
@@ -182,7 +180,6 @@ SELECT
     sqlc.embed(tb),
     sqlc.embed(tt),
     sqlc.embed(ps),
-    sqlc.embed(ce),
     sqlc.embed(a),
     sqlc.embed(n)
 
@@ -193,7 +190,6 @@ LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
 LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
@@ -284,7 +280,6 @@ UPDATE event_groups SET
     temp_basal_id = sqlc.narg('TempBasalID'),
     temp_target_id = sqlc.narg('TempTargetID'),
     profile_switch_id = sqlc.narg('ProfileSwitchID'),
-    component_event_id = sqlc.narg('ComponentEventID'),
     activity_id = sqlc.narg('ActivityID'),
     notification_event_id = sqlc.narg('NotificationEventID'),
 
@@ -301,6 +296,8 @@ UPDATE event_groups SET
     pump_id = COALESCE(NULLIF(CAST(sqlc.narg('PumpID') AS TEXT), ''), pump_id),
     pump_serial = COALESCE(NULLIF(CAST(sqlc.narg('PumpSerial') AS TEXT), ''), pump_serial),
     pump_type = COALESCE(NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''), pump_type),
+    sensor_code = COALESCE(NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''), sensor_code),
+    transmitter_id = COALESCE(NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''), transmitter_id),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
@@ -346,10 +343,6 @@ SELECT 'profile_switch_id', e.id, e.occurred_at, NULL, duration_minutes, name FR
 WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.profile_switch_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT profile_switch_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
-SELECT 'component_event_id', e.id, e.occurred_at, NULL, NULL, event_type FROM component_events e, params p
-WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.component_event_id = e.id AND g.id != p.group_id)
-    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT component_event_id FROM event_groups WHERE id = p.group_id))
-UNION ALL
 SELECT 'activity_id', e.id, e.occurred_at, NULL, duration_minutes, COALESCE(name, activity_type) FROM activities e, params p
 WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.activity_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT activity_id FROM event_groups WHERE id = p.group_id))
@@ -360,7 +353,7 @@ WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.
 LIMIT 1000;
 
 -- RegroupEventGroup sets the group's events to exactly those given, as the site's edit page picks them, keeping its
--- type, time, notes and reason when not given
+-- type, time, notes, reason, sensor code and transmitter when not given
 -- name: RegroupEventGroup :one
 UPDATE event_groups SET
     group_type = COALESCE(sqlc.narg('GroupType'), group_type),
@@ -371,11 +364,12 @@ UPDATE event_groups SET
     temp_basal_id = sqlc.narg('TempBasalID'),
     temp_target_id = sqlc.narg('TempTargetID'),
     profile_switch_id = sqlc.narg('ProfileSwitchID'),
-    component_event_id = sqlc.narg('ComponentEventID'),
     activity_id = sqlc.narg('ActivityID'),
     notification_event_id = sqlc.narg('NotificationEventID'),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
+    sensor_code = COALESCE(NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''), sensor_code),
+    transmitter_id = COALESCE(NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''), transmitter_id),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')

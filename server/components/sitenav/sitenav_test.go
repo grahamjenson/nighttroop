@@ -58,7 +58,7 @@ func TestVisible(t *testing.T) {
 	}
 	admin := &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}
 	require.Len(t, Visible(admin), len(Pages))
-	require.Len(t, Visible(admin, Data), 14)
+	require.Len(t, Visible(admin, Data), 13)
 	require.Len(t, Visible(admin, Reports), 4)
 	require.Len(t, Visible(admin, Settings), 5)
 	require.Equal(t, []string{"site--settings--alarms-button"}, ids(Visible(admin, Alarms)))
@@ -69,7 +69,7 @@ func TestVisible(t *testing.T) {
 		require.Equal(t, []string{"site--settings--settings-button", "site--settings--push-devices-button"}, settings, role)
 		require.Equal(t, []string{"site--settings--alarms-button"}, ids(Visible(&controldb.SiteIdentity{Role: role}, Alarms)), role)
 		require.Empty(t, Visible(&controldb.SiteIdentity{Role: role}, Logs), role)
-		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 14, role)
+		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 13, role)
 	}
 	require.Empty(t, Visible(nil))
 }
@@ -158,5 +158,5 @@ func TestSearchText(t *testing.T) {
 // A page's hints are its keywords, and a page with none has none
 func TestHints(t *testing.T) {
 	require.Equal(t, "Nightscout|Dexcom|Libre|LibreLinkUp|Virtual|Backfilling", Page{Path: "/settings/connectors"}.Hints())
-	require.Empty(t, Page{Path: "/data/event-groups"}.Hints())
+	require.Empty(t, Page{Path: "/logs/errors"}.Hints())
 }

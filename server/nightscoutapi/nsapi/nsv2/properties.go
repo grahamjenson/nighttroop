@@ -37,13 +37,7 @@ func PropertiesList(store nsutils.Store) func(http.ResponseWriter, *http.Request
 // Properties are the Nightscout plugin properties Nighttroop has the data for, in the plugins' shapes
 func Properties(ctx context.Context, q *sitedb.Queries, now time.Time) map[string]any {
 	dr := LastDeviceStatusFromPWD(q, ctx)
-	last := func(eventType string) *sitedb.ComponentEvent {
-		event, err := q.GetComponentEventByType(ctx, sitedb.GetComponentEventByTypeParams{EventType: eventType})
-		if err != nil {
-			return nil
-		}
-		return event
-	}
+	last := func(groupType string) *sitedb.EventGroup { return LastOfType(q, ctx, groupType) }
 	properties := map[string]any{
 		"upbat": GetUptimeBattery(dr),
 		"iob":   GetIOB(dr),
@@ -201,7 +195,7 @@ func GetCOB(dr *sitedb.DeviceReport) COB {
 }
 
 // GetAge is shown in hours up to a day, then in days and hours, as Nightscout's age plugins do
-func GetAge(event *sitedb.ComponentEvent, now time.Time) any {
+func GetAge(event *sitedb.EventGroup, now time.Time) any {
 	if event == nil {
 		return NotFound{}
 	}
@@ -214,7 +208,7 @@ func GetAge(event *sitedb.ComponentEvent, now time.Time) any {
 }
 
 // GetSensorAge has the ages of the last sensor start and change, and min names the latest, as the sensor's age
-func GetSensorAge(lastSensorStart, lastSensorChange *sitedb.ComponentEvent, now time.Time) SensorAge {
+func GetSensorAge(lastSensorStart, lastSensorChange *sitedb.EventGroup, now time.Time) SensorAge {
 	sensorAge := SensorAge{SensorStart: GetAge(lastSensorStart, now), SensorChange: GetAge(lastSensorChange, now), Min: "Sensor Start"}
 	if lastSensorChange != nil && (lastSensorStart == nil || lastSensorChange.OccurredAt > lastSensorStart.OccurredAt) {
 		sensorAge.Min = "Sensor Change"

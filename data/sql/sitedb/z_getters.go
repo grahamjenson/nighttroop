@@ -407,346 +407,6 @@ func (m *Activity) SetCreatedByIdentityName(v string) {
 }
 
 // GetID returns the ID value.
-func (m ComponentEvent) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetID(v string) {
-	m.ID = v
-}
-
-// GetEventType returns the EventType value.
-func (m ComponentEvent) GetEventType() string {
-	return m.EventType
-}
-
-// SetEventType sets the EventType value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetEventType(v string) {
-	m.EventType = v
-}
-
-// GetSensorCode returns the SensorCode value.
-func (m ComponentEvent) GetSensorCode() *string {
-	return m.SensorCode
-}
-
-// SetSensorCode sets the SensorCode value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m ComponentEvent) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetNotes returns the Notes value.
-func (m ComponentEvent) GetNotes() *string {
-	return m.Notes
-}
-
-// SetNotes sets the Notes value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetNotes(v *string) {
-	m.Notes = v
-}
-
-// GetReason returns the Reason value.
-func (m ComponentEvent) GetReason() *string {
-	return m.Reason
-}
-
-// SetReason sets the Reason value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetReason(v *string) {
-	m.Reason = v
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m ComponentEvent) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// SetDeletedAt sets the DeletedAt value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetDeletedAt(v *int64) {
-	m.DeletedAt = v
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m ComponentEvent) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetUtcOffsetMinutes(v *int64) {
-	m.UtcOffsetMinutes = v
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m ComponentEvent) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetOccurredAt(v int64) {
-	m.OccurredAt = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m ComponentEvent) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m ComponentEvent) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// SetUpdatedAt sets the UpdatedAt value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetUpdatedAt(v int64) {
-	m.UpdatedAt = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m ComponentEvent) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m ComponentEvent) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m ComponentEvent) GetCreatedByAppName() *string {
-	return m.CreatedByAppName
-}
-
-// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetCreatedByAppName(v *string) {
-	m.CreatedByAppName = v
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m ComponentEvent) GetCreatedByDeviceName() *string {
-	return m.CreatedByDeviceName
-}
-
-// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetCreatedByDeviceName(v *string) {
-	m.CreatedByDeviceName = v
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m ComponentEvent) GetCreatedByIdentityID() *int64 {
-	return m.CreatedByIdentityID
-}
-
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetCreatedByIdentityID(v *int64) {
-	m.CreatedByIdentityID = v
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m ComponentEvent) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetCreatedByIdentityName(v string) {
-	m.CreatedByIdentityName = v
-}
-
-// GetID returns the ID value.
-func (m ComponentEventsVw) GetID() *string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetID(v *string) {
-	m.ID = v
-}
-
-// GetEventType returns the EventType value.
-func (m ComponentEventsVw) GetEventType() *string {
-	return m.EventType
-}
-
-// SetEventType sets the EventType value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetEventType(v *string) {
-	m.EventType = v
-}
-
-// GetSensorCode returns the SensorCode value.
-func (m ComponentEventsVw) GetSensorCode() *string {
-	return m.SensorCode
-}
-
-// SetSensorCode sets the SensorCode value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m ComponentEventsVw) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetNotes returns the Notes value.
-func (m ComponentEventsVw) GetNotes() *string {
-	return m.Notes
-}
-
-// SetNotes sets the Notes value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetNotes(v *string) {
-	m.Notes = v
-}
-
-// GetReason returns the Reason value.
-func (m ComponentEventsVw) GetReason() *string {
-	return m.Reason
-}
-
-// SetReason sets the Reason value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetReason(v *string) {
-	m.Reason = v
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m ComponentEventsVw) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// SetDeletedAt sets the DeletedAt value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetDeletedAt(v *int64) {
-	m.DeletedAt = v
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m ComponentEventsVw) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetUtcOffsetMinutes(v *int64) {
-	m.UtcOffsetMinutes = v
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m ComponentEventsVw) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetOccurredAt(v *int64) {
-	m.OccurredAt = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m ComponentEventsVw) GetCreatedAt() *int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetCreatedAt(v *int64) {
-	m.CreatedAt = v
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m ComponentEventsVw) GetUpdatedAt() *int64 {
-	return m.UpdatedAt
-}
-
-// SetUpdatedAt sets the UpdatedAt value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetUpdatedAt(v *int64) {
-	m.UpdatedAt = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m ComponentEventsVw) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m ComponentEventsVw) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m ComponentEventsVw) GetCreatedByAppName() *string {
-	return m.CreatedByAppName
-}
-
-// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetCreatedByAppName(v *string) {
-	m.CreatedByAppName = v
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m ComponentEventsVw) GetCreatedByDeviceName() *string {
-	return m.CreatedByDeviceName
-}
-
-// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetCreatedByDeviceName(v *string) {
-	m.CreatedByDeviceName = v
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m ComponentEventsVw) GetCreatedByIdentityID() *int64 {
-	return m.CreatedByIdentityID
-}
-
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetCreatedByIdentityID(v *int64) {
-	m.CreatedByIdentityID = v
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m ComponentEventsVw) GetCreatedByIdentityName() *string {
-	return m.CreatedByIdentityName
-}
-
-// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetCreatedByIdentityName(v *string) {
-	m.CreatedByIdentityName = v
-}
-
-// GetID returns the ID value.
 func (m DeviceReport) GetID() string {
 	return m.ID
 }
@@ -1136,16 +796,6 @@ func (m *EventGroup) SetProfileSwitchID(v *string) {
 	m.ProfileSwitchID = v
 }
 
-// GetComponentEventID returns the ComponentEventID value.
-func (m EventGroup) GetComponentEventID() *string {
-	return m.ComponentEventID
-}
-
-// SetComponentEventID sets the ComponentEventID value and returns the updated EventGroup.
-func (m *EventGroup) SetComponentEventID(v *string) {
-	m.ComponentEventID = v
-}
-
 // GetActivityID returns the ActivityID value.
 func (m EventGroup) GetActivityID() *string {
 	return m.ActivityID
@@ -1274,6 +924,26 @@ func (m EventGroup) GetPumpType() *string {
 // SetPumpType sets the PumpType value and returns the updated EventGroup.
 func (m *EventGroup) SetPumpType(v *string) {
 	m.PumpType = v
+}
+
+// GetSensorCode returns the SensorCode value.
+func (m EventGroup) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated EventGroup.
+func (m *EventGroup) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m EventGroup) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated EventGroup.
+func (m *EventGroup) SetTransmitterID(v *string) {
+	m.TransmitterID = v
 }
 
 // GetNotes returns the Notes value.
@@ -6977,536 +6647,6 @@ func (m *UpdateActivityParams) SetID(v string) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllComponentEventsParams) GetIncludeDeleted() bool {
-	return m.IncludeDeleted
-}
-
-// SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllComponentEventsParams.
-func (m *AllComponentEventsParams) SetIncludeDeleted(v bool) {
-	m.IncludeDeleted = v
-}
-
-// GetSkip returns the Skip value.
-func (m AllComponentEventsParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated AllComponentEventsParams.
-func (m *AllComponentEventsParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m AllComponentEventsParams) GetLimit() int64 {
-	return m.Limit
-}
-
-// SetLimit sets the Limit value and returns the updated AllComponentEventsParams.
-func (m *AllComponentEventsParams) SetLimit(v int64) {
-	m.Limit = v
-}
-
-// GetID returns the ID value.
-func (m CreateComponentEventParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetID(v string) {
-	m.ID = v
-}
-
-// GetEventType returns the EventType value.
-func (m CreateComponentEventParams) GetEventType() string {
-	return m.EventType
-}
-
-// SetEventType sets the EventType value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetEventType(v string) {
-	m.EventType = v
-}
-
-// GetSensorCode returns the SensorCode value.
-func (m CreateComponentEventParams) GetSensorCode() *string {
-	return m.SensorCode
-}
-
-// SetSensorCode sets the SensorCode value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m CreateComponentEventParams) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetNotes returns the Notes value.
-func (m CreateComponentEventParams) GetNotes() *string {
-	return m.Notes
-}
-
-// SetNotes sets the Notes value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetNotes(v *string) {
-	m.Notes = v
-}
-
-// GetReason returns the Reason value.
-func (m CreateComponentEventParams) GetReason() *string {
-	return m.Reason
-}
-
-// SetReason sets the Reason value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetReason(v *string) {
-	m.Reason = v
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m CreateComponentEventParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetUtcOffsetMinutes(v *int64) {
-	m.UtcOffsetMinutes = v
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m CreateComponentEventParams) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetOccurredAt(v int64) {
-	m.OccurredAt = v
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m CreateComponentEventParams) GetCreatedByAppName() *string {
-	return m.CreatedByAppName
-}
-
-// SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetCreatedByAppName(v *string) {
-	m.CreatedByAppName = v
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m CreateComponentEventParams) GetCreatedByDeviceName() *string {
-	return m.CreatedByDeviceName
-}
-
-// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetCreatedByDeviceName(v *string) {
-	m.CreatedByDeviceName = v
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m CreateComponentEventParams) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetCreatedByIdentityName(v string) {
-	m.CreatedByIdentityName = v
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m CreateComponentEventParams) GetCreatedByIdentityID() *int64 {
-	return m.CreatedByIdentityID
-}
-
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetCreatedByIdentityID(v *int64) {
-	m.CreatedByIdentityID = v
-}
-
-// GetID returns the ID value.
-func (m GetComponentEventParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetComponentEventParams.
-func (m *GetComponentEventParams) SetID(v string) {
-	m.ID = v
-}
-
-// GetIncludeDeleted returns the IncludeDeleted value.
-func (m GetComponentEventParams) GetIncludeDeleted() bool {
-	return m.IncludeDeleted
-}
-
-// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetComponentEventParams.
-func (m *GetComponentEventParams) SetIncludeDeleted(v bool) {
-	m.IncludeDeleted = v
-}
-
-// GetEventType returns the EventType value.
-func (m GetComponentEventByTypeParams) GetEventType() string {
-	return m.EventType
-}
-
-// SetEventType sets the EventType value and returns the updated GetComponentEventByTypeParams.
-func (m *GetComponentEventByTypeParams) SetEventType(v string) {
-	m.EventType = v
-}
-
-// GetID returns the ID value.
-func (m HardDeleteComponentEventParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated HardDeleteComponentEventParams.
-func (m *HardDeleteComponentEventParams) SetID(v string) {
-	m.ID = v
-}
-
-// GetDateGTE returns the DateGTE value.
-func (m SearchComponentEventsParams) GetDateGTE() *int64 {
-	return m.DateGTE
-}
-
-// SetDateGTE sets the DateGTE value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetDateGTE(v *int64) {
-	m.DateGTE = v
-}
-
-// GetDateGT returns the DateGT value.
-func (m SearchComponentEventsParams) GetDateGT() *int64 {
-	return m.DateGT
-}
-
-// SetDateGT sets the DateGT value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetDateGT(v *int64) {
-	m.DateGT = v
-}
-
-// GetDateEQ returns the DateEQ value.
-func (m SearchComponentEventsParams) GetDateEQ() *int64 {
-	return m.DateEQ
-}
-
-// SetDateEQ sets the DateEQ value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetDateEQ(v *int64) {
-	m.DateEQ = v
-}
-
-// GetDateLTE returns the DateLTE value.
-func (m SearchComponentEventsParams) GetDateLTE() *int64 {
-	return m.DateLTE
-}
-
-// SetDateLTE sets the DateLTE value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetDateLTE(v *int64) {
-	m.DateLTE = v
-}
-
-// GetDateLT returns the DateLT value.
-func (m SearchComponentEventsParams) GetDateLT() *int64 {
-	return m.DateLT
-}
-
-// SetDateLT sets the DateLT value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetDateLT(v *int64) {
-	m.DateLT = v
-}
-
-// GetCreatedAtGTE returns the CreatedAtGTE value.
-func (m SearchComponentEventsParams) GetCreatedAtGTE() *int64 {
-	return m.CreatedAtGTE
-}
-
-// SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetCreatedAtGTE(v *int64) {
-	m.CreatedAtGTE = v
-}
-
-// GetCreatedAtLTE returns the CreatedAtLTE value.
-func (m SearchComponentEventsParams) GetCreatedAtLTE() *int64 {
-	return m.CreatedAtLTE
-}
-
-// SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetCreatedAtLTE(v *int64) {
-	m.CreatedAtLTE = v
-}
-
-// GetCreatedAtGT returns the CreatedAtGT value.
-func (m SearchComponentEventsParams) GetCreatedAtGT() *int64 {
-	return m.CreatedAtGT
-}
-
-// SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetCreatedAtGT(v *int64) {
-	m.CreatedAtGT = v
-}
-
-// GetCreatedAtLT returns the CreatedAtLT value.
-func (m SearchComponentEventsParams) GetCreatedAtLT() *int64 {
-	return m.CreatedAtLT
-}
-
-// SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetCreatedAtLT(v *int64) {
-	m.CreatedAtLT = v
-}
-
-// GetUpdatedGTE returns the UpdatedGTE value.
-func (m SearchComponentEventsParams) GetUpdatedGTE() *int64 {
-	return m.UpdatedGTE
-}
-
-// SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetUpdatedGTE(v *int64) {
-	m.UpdatedGTE = v
-}
-
-// GetUpdatedLTE returns the UpdatedLTE value.
-func (m SearchComponentEventsParams) GetUpdatedLTE() *int64 {
-	return m.UpdatedLTE
-}
-
-// SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetUpdatedLTE(v *int64) {
-	m.UpdatedLTE = v
-}
-
-// GetUpdatedGT returns the UpdatedGT value.
-func (m SearchComponentEventsParams) GetUpdatedGT() *int64 {
-	return m.UpdatedGT
-}
-
-// SetUpdatedGT sets the UpdatedGT value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetUpdatedGT(v *int64) {
-	m.UpdatedGT = v
-}
-
-// GetUpdatedLT returns the UpdatedLT value.
-func (m SearchComponentEventsParams) GetUpdatedLT() *int64 {
-	return m.UpdatedLT
-}
-
-// SetUpdatedLT sets the UpdatedLT value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetUpdatedLT(v *int64) {
-	m.UpdatedLT = v
-}
-
-// GetIDEq returns the IDEq value.
-func (m SearchComponentEventsParams) GetIDEq() *string {
-	return m.IDEq
-}
-
-// SetIDEq sets the IDEq value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetIDEq(v *string) {
-	m.IDEq = v
-}
-
-// GetIDIn returns the IDIn value.
-func (m SearchComponentEventsParams) GetIDIn() *string {
-	return m.IDIn
-}
-
-// SetIDIn sets the IDIn value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetIDIn(v *string) {
-	m.IDIn = v
-}
-
-// GetComponentEq returns the ComponentEq value.
-func (m SearchComponentEventsParams) GetComponentEq() *string {
-	return m.ComponentEq
-}
-
-// SetComponentEq sets the ComponentEq value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetComponentEq(v *string) {
-	m.ComponentEq = v
-}
-
-// GetAppEq returns the AppEq value.
-func (m SearchComponentEventsParams) GetAppEq() *string {
-	return m.AppEq
-}
-
-// SetAppEq sets the AppEq value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetAppEq(v *string) {
-	m.AppEq = v
-}
-
-// GetTypeEq returns the TypeEq value.
-func (m SearchComponentEventsParams) GetTypeEq() *string {
-	return m.TypeEq
-}
-
-// SetTypeEq sets the TypeEq value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetTypeEq(v *string) {
-	m.TypeEq = v
-}
-
-// GetTypeNeq returns the TypeNeq value.
-func (m SearchComponentEventsParams) GetTypeNeq() *string {
-	return m.TypeNeq
-}
-
-// SetTypeNeq sets the TypeNeq value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetTypeNeq(v *string) {
-	m.TypeNeq = v
-}
-
-// GetTypeIn returns the TypeIn value.
-func (m SearchComponentEventsParams) GetTypeIn() *string {
-	return m.TypeIn
-}
-
-// SetTypeIn sets the TypeIn value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetTypeIn(v *string) {
-	m.TypeIn = v
-}
-
-// GetTypeNin returns the TypeNin value.
-func (m SearchComponentEventsParams) GetTypeNin() *string {
-	return m.TypeNin
-}
-
-// SetTypeNin sets the TypeNin value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetTypeNin(v *string) {
-	m.TypeNin = v
-}
-
-// GetIncludeDeleted returns the IncludeDeleted value.
-func (m SearchComponentEventsParams) GetIncludeDeleted() *bool {
-	return m.IncludeDeleted
-}
-
-// SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetIncludeDeleted(v *bool) {
-	m.IncludeDeleted = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchComponentEventsParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchComponentEventsParams) GetLimit() int64 {
-	return m.Limit
-}
-
-// SetLimit sets the Limit value and returns the updated SearchComponentEventsParams.
-func (m *SearchComponentEventsParams) SetLimit(v int64) {
-	m.Limit = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m SoftDeleteComponentEventParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteComponentEventParams.
-func (m *SoftDeleteComponentEventParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetID returns the ID value.
-func (m SoftDeleteComponentEventParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated SoftDeleteComponentEventParams.
-func (m *SoftDeleteComponentEventParams) SetID(v string) {
-	m.ID = v
-}
-
-// GetEventType returns the EventType value.
-func (m UpdateComponentEventParams) GetEventType() *string {
-	return m.EventType
-}
-
-// SetEventType sets the EventType value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetEventType(v *string) {
-	m.EventType = v
-}
-
-// GetSensorCode returns the SensorCode value.
-func (m UpdateComponentEventParams) GetSensorCode() *string {
-	return m.SensorCode
-}
-
-// SetSensorCode sets the SensorCode value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m UpdateComponentEventParams) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetNotes returns the Notes value.
-func (m UpdateComponentEventParams) GetNotes() *string {
-	return m.Notes
-}
-
-// SetNotes sets the Notes value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetNotes(v *string) {
-	m.Notes = v
-}
-
-// GetReason returns the Reason value.
-func (m UpdateComponentEventParams) GetReason() *string {
-	return m.Reason
-}
-
-// SetReason sets the Reason value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetReason(v *string) {
-	m.Reason = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m UpdateComponentEventParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateComponentEventParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetID returns the ID value.
-func (m UpdateComponentEventParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetID(v string) {
-	m.ID = v
-}
-
-// GetIncludeDeleted returns the IncludeDeleted value.
 func (m AllFoodIntakesParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
@@ -9286,16 +8426,6 @@ func (m *CreateEventGroupParams) SetProfileSwitchID(v *string) {
 	m.ProfileSwitchID = v
 }
 
-// GetComponentEventID returns the ComponentEventID value.
-func (m CreateEventGroupParams) GetComponentEventID() *string {
-	return m.ComponentEventID
-}
-
-// SetComponentEventID sets the ComponentEventID value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetComponentEventID(v *string) {
-	m.ComponentEventID = v
-}
-
 // GetActivityID returns the ActivityID value.
 func (m CreateEventGroupParams) GetActivityID() *string {
 	return m.ActivityID
@@ -9454,6 +8584,26 @@ func (m CreateEventGroupParams) GetPumpType() *string {
 // SetPumpType sets the PumpType value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetPumpType(v *string) {
 	m.PumpType = v
+}
+
+// GetSensorCode returns the SensorCode value.
+func (m CreateEventGroupParams) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m CreateEventGroupParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetTransmitterID(v *string) {
+	m.TransmitterID = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -9816,16 +8966,6 @@ func (m *RegroupEventGroupParams) SetProfileSwitchID(v *string) {
 	m.ProfileSwitchID = v
 }
 
-// GetComponentEventID returns the ComponentEventID value.
-func (m RegroupEventGroupParams) GetComponentEventID() *string {
-	return m.ComponentEventID
-}
-
-// SetComponentEventID sets the ComponentEventID value and returns the updated RegroupEventGroupParams.
-func (m *RegroupEventGroupParams) SetComponentEventID(v *string) {
-	m.ComponentEventID = v
-}
-
 // GetActivityID returns the ActivityID value.
 func (m RegroupEventGroupParams) GetActivityID() *string {
 	return m.ActivityID
@@ -9864,6 +9004,26 @@ func (m RegroupEventGroupParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated RegroupEventGroupParams.
 func (m *RegroupEventGroupParams) SetReason(v *string) {
 	m.Reason = v
+}
+
+// GetSensorCode returns the SensorCode value.
+func (m RegroupEventGroupParams) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m RegroupEventGroupParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetTransmitterID(v *string) {
+	m.TransmitterID = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -10486,16 +9646,6 @@ func (m *UpdateEventGroupParams) SetProfileSwitchID(v *string) {
 	m.ProfileSwitchID = v
 }
 
-// GetComponentEventID returns the ComponentEventID value.
-func (m UpdateEventGroupParams) GetComponentEventID() *string {
-	return m.ComponentEventID
-}
-
-// SetComponentEventID sets the ComponentEventID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetComponentEventID(v *string) {
-	m.ComponentEventID = v
-}
-
 // GetActivityID returns the ActivityID value.
 func (m UpdateEventGroupParams) GetActivityID() *string {
 	return m.ActivityID
@@ -10644,6 +9794,26 @@ func (m UpdateEventGroupParams) GetPumpType() *string {
 // SetPumpType sets the PumpType value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetPumpType(v *string) {
 	m.PumpType = v
+}
+
+// GetSensorCode returns the SensorCode value.
+func (m UpdateEventGroupParams) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m UpdateEventGroupParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
+	m.TransmitterID = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
