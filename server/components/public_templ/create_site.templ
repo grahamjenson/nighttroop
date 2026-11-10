@@ -41,8 +41,9 @@ templ CreateSite(open bool) {
 	}
 }
 
-// SiteWelcome is the page on a new site's own address that shows its credentials once. It asks for them with the ID
-// after its #, which only the browser that created the site has, then drops the ID from the address and its history.
+// SiteWelcome is the page on a new or recovered site's own address that shows its credentials once. It asks for them
+// with the ID after its #, which only the browser that created or recovered the site has, then drops the ID from the
+// address and its history.
 templ SiteWelcome() {
 	@createPage() {
 		<form id="public--welcome" class="public--compact" hx-post="/welcome" hx-trigger="load" hx-target="#panel-content" hx-swap="innerHTML">
@@ -55,7 +56,7 @@ templ SiteWelcome() {
 	}
 }
 
-// WelcomeGone is a new site's welcome page whose credentials were already shown, or waited too long to be
+// WelcomeGone is a new or recovered site's welcome page whose credentials were already shown, or waited too long to be
 templ WelcomeGone(recoverURL string) {
 	<p id="public--welcome-gone" class="public--compact max-w-xl rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
 		These credentials have already been shown, or were not opened in time. The backup key gets a new admin login on the

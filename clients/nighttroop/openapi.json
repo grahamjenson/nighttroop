@@ -46,7 +46,7 @@
     "/welcome/passkey/begin": {
       "post": {
         "operationId": "WelcomePasskeyBegin", "tags": ["Site"],
-        "summary": "Begins adding a new site's admin a passkey from its welcome page, only by the browser its credentials were shown to in the last 15 minutes: the WebAuthn options for navigator.credentials.create",
+        "summary": "Begins adding a new or recovered site's admin a passkey from its welcome page, only by the browser its credentials were shown to in the last 15 minutes: the WebAuthn options for navigator.credentials.create",
         "security": [],
         "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
       }
@@ -54,7 +54,7 @@
     "/welcome/passkey/finish": {
       "post": {
         "operationId": "WelcomePasskeyFinish", "tags": ["Site"],
-        "summary": "Keeps the new site's admin's passkey, without the authenticator's model or attestation, and signs the admin in with it, setting the login cookie",
+        "summary": "Keeps the new or recovered site's admin's passkey, without the authenticator's model or attestation, and signs the admin in with it, setting the login cookie",
         "security": [],
         "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
         "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
@@ -643,7 +643,8 @@
               "dose": { "type": "number", "format": "double", "description": "Units of insulin" },
               "dose_type": { "type": "string" },
               "split_now": { "type": "number", "format": "double" },
-              "split_ext": { "type": "number", "format": "double" }
+              "split_ext": { "type": "number", "format": "double" },
+              "automatic": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site" }
             }
           }
         ]
@@ -660,7 +661,20 @@
           "first_seen_at": { "type": "integer", "format": "int64" },
           "last_seen_at": { "type": "integer", "format": "int64" },
           "created_by_device_name": { "type": "string", "nullable": true },
-          "created_at": { "type": "integer", "format": "int64" }
+          "created_at": { "type": "integer", "format": "int64" },
+          "previous_id": { "type": "string", "nullable": true, "description": "The set of the same app last seen before this one; only on a set read alone, null for an app's first" },
+          "changes": { "type": "array", "nullable": true, "description": "The settings that differ from the previous set, glucose in units; only on a set read alone", "items": { "$ref": "#/components/schemas/LoopSettingsChange" } },
+          "units": { "$ref": "#/components/schemas/Units" }
+        }
+      },
+      "LoopSettingsChange": {
+        "type": "object",
+        "description": "A setting that differs from the set before, by its names joined by dots, a preset's by its name",
+        "required": ["field"],
+        "properties": {
+          "field": { "type": "string" },
+          "old": { "type": "string", "nullable": true, "description": "As it reads, null when it was not sent" },
+          "new": { "type": "string", "nullable": true, "description": "As it reads, null when it is not sent" }
         }
       },
       "FoodIntake": {

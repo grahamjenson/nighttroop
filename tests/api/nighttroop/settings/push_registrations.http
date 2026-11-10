@@ -64,7 +64,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "loop" "@result.app"
 
-// Another identity, even the admin, cannot see or delete it
+// Another identity's registrations, even the admin's, are only its own, but the admin can get any of the site's
 NAME admin_registrations
 GET http://{{ site }}/settings/push-registrations
 H Authorization: Bearer {{ jwt }}
@@ -72,17 +72,31 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result.items"
 
-NAME admin_cannot_get
+NAME admin_gets
 GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-ASSERT_STATUS 404
+ASSERT_STATUS 200
+ASSERT_EQUALS "loop" "@result.app"
 
-NAME admin_cannot_delete
-DELETE http://{{ site }}/settings/push-registrations/{{ .registration_id }}
-H Authorization: Bearer {{ jwt }}
+// Anyone else cannot see or delete it
+NAME viewer_cannot_get
+GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ .viewer_jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+NAME viewer_cannot_delete
+DELETE http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME still_registered
+GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
 
 // A test push needs a credential for the app, which the site has none of yet
 NAME test_push_without_credential
@@ -196,5 +210,26 @@ ASSERT_STATUS 200
 NAME deleted_registration
 GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
 H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// An admin can delete any of the site's, as from Push Devices
+NAME register_trio
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+B {"app": "trio", "provider": "apns", "bundle_id": "com.TEAM123456.Trio", "production": true, "token": "b1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 201
+SET trio_id {{ .register_trio.result.id }}
+
+NAME admin_deletes
+DELETE http://{{ site }}/settings/push-registrations/{{ .trio_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME admin_deleted_it
+GET http://{{ site }}/settings/push-registrations/{{ .trio_id }}
+H Authorization: Bearer {{ .phone_jwt }}
 H Accept: application/json
 ASSERT_STATUS 404

@@ -450,7 +450,7 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
 	@IdentityRow(identity)
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
-		@credentialsModal(url, identity.Name, password, totpSecret, nsToken, false) {
+		@CredentialsModal(url, identity.Name, password, totpSecret, nsToken, false) {
 			@clientGuide(identity)
 		}
 	</div>
@@ -494,13 +494,13 @@ templ copyValue(id string, value string) {
 
 // IdentityReset shows an identity's new credentials once. Resetting your own signed you out, to sign in again with them.
 templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut bool) {
-	@credentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut)
+	@CredentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut)
 }
 
-// credentialsModal is a dialog of an identity's new credentials. Escape or pressing beside it shows the warning that they
-// are never shown again, as I Have Saved These does, so they are not lost by a slip; once signed out it goes to Sign In
-// Again instead.
-templ credentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) {
+// CredentialsModal is a dialog of an identity's, or a control admin's, new credentials. Escape or pressing beside it
+// shows the warning that they are never shown again, as I Have Saved These does, so they are not lost by a slip; once
+// signed out it goes to Sign In Again instead.
+templ CredentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) {
 	{{ dismiss := "document.getElementById('site--identities--saved-these').click()" }}
 	if signedOut {
 		{{ dismiss = "document.getElementById('site--identities--sign-in-again').focus()" }}

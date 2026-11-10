@@ -105,8 +105,9 @@ func CreateSite(open bool) templ.Component {
 	})
 }
 
-// SiteWelcome is the page on a new site's own address that shows its credentials once. It asks for them with the ID
-// after its #, which only the browser that created the site has, then drops the ID from the address and its history.
+// SiteWelcome is the page on a new or recovered site's own address that shows its credentials once. It asks for them
+// with the ID after its #, which only the browser that created or recovered the site has, then drops the ID from the
+// address and its history.
 func SiteWelcome() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -150,7 +151,7 @@ func SiteWelcome() templ.Component {
 	})
 }
 
-// WelcomeGone is a new site's welcome page whose credentials were already shown, or waited too long to be
+// WelcomeGone is a new or recovered site's welcome page whose credentials were already shown, or waited too long to be
 func WelcomeGone(recoverURL string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -175,7 +176,7 @@ func WelcomeGone(recoverURL string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(recoverURL)).ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 62, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 63, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -291,7 +292,7 @@ func createPage() templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(" ")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 97, Col: 11}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 98, Col: 11}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -370,7 +371,7 @@ func feature(ic func(...icon.Props) templ.Component, title, body string) templ.C
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 113, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 114, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -383,7 +384,7 @@ func feature(ic func(...icon.Props) templ.Component, title, body string) templ.C
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(body)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 115, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 116, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -433,7 +434,7 @@ func CreateSiteRateLimited(seconds int) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(seconds)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 126, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 127, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -497,7 +498,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(newsite.AllInfo())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 151, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 152, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -518,7 +519,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(newsite.RecoverURL)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 158, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 159, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 			if templ_7745c5c3_Err != nil {
@@ -572,7 +573,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(newsite.PwdNSToken)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 178, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 179, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -640,7 +641,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(newsite.SiteID()).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 201, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 202, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 			if templ_7745c5c3_Err != nil {
@@ -653,7 +654,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(newsite.AdminTotpSecret).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 202, Col: 107}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 203, Col: 107}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 			if templ_7745c5c3_Err != nil {
@@ -756,7 +757,7 @@ func copyButton(id, targetID, label, class string) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(targetID).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 245, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 246, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -801,7 +802,7 @@ func copyButton(id, targetID, label, class string) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 253, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 254, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -1071,7 +1072,7 @@ func step(n, title, hint string) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(n)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 319, Col: 126}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 320, Col: 126}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -1084,7 +1085,7 @@ func step(n, title, hint string) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 321, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 322, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -1097,7 +1098,7 @@ func step(n, title, hint string) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(hint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 322, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 323, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -1143,7 +1144,7 @@ func group(title string) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 330, Col: 141}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 331, Col: 141}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -1218,7 +1219,7 @@ func row(id, label, value string, wide bool) templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 336, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 337, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1231,7 +1232,7 @@ func row(id, label, value string, wide bool) templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression("public--site-info--" + id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 337, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 338, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 		if templ_7745c5c3_Err != nil {
@@ -1244,7 +1245,7 @@ func row(id, label, value string, wide bool) templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 337, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 338, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {

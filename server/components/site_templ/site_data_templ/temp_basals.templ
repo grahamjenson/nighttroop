@@ -5,12 +5,10 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -80,34 +78,6 @@ var tempBasalFields = []addmodal.Field{
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
-templ tempBasalInputs(id string, rate string, duration string, notes string) {
-	@field.Field(id+"--rate", "Rate (U/hr)", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--rate",
-			Type:        input.TypeNumber,
-			Name:        "rate",
-			Placeholder: "U/hr",
-			Value:       rate,
-			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "50"},
-		})
-	}
-	@field.Field(id+"--duration", "Duration (min)", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--duration",
-			Type:        input.TypeNumber,
-			Name:        "duration_minutes",
-			Placeholder: "Minutes",
-			Value:       duration,
-			Required:    true,
-			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "1440"},
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // tempBasalRow opens the temp basal's details when clicked.
 templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 	@table.DataRow("site--temp-basal--"+tempBasal.ID, "/data/temp-basals/"+tempBasal.ID, "Delete this temp basal?") {
@@ -133,18 +103,10 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 }
 
 templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
-	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: modal.Submit("site--temp-basal--edit", "Save")}) {
-		<form
-			id="site--temp-basal--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/temp-basals/" + tempBasal.ID }
-			hx-target={ "#site--temp-basal--" + tempBasal.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Rate), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes))
-		</form>
+	{{ edit := addmodal.Props{ID: "site--temp-basal--edit", Path: "/data/temp-basals/" + tempBasal.ID, Target: "#site--temp-basal--" + tempBasal.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(tempBasalFields, tempBasal, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Basal (%)", percentOr(tempBasal.Multiplier, "-"))
 			@readingDetail("Notes", orDash(tempBasal.Notes))

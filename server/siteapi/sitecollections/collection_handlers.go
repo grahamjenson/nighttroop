@@ -464,8 +464,8 @@ func PeriodReportHandler(page func(p *sitemodels.SiteSummaryPeriod, days []*site
 	}
 }
 
-// TDDReportHandler is the TDD report of the month ending on the day its end query names, yesterday without one; a page
-// for people, so it has no JSON
+// TDDReportHandler is the TDD report of the month ending on the day its end query names, today so far without one; a
+// page for people, so it has no JSON
 func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitedata.SummaryDailyCollection{}).GetName(), siteapiutils.ActionSearch)
 	if siteContext == nil {
@@ -475,13 +475,14 @@ func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
 		return
 	}
-	last, ok := site_reports_templ.TDDEnd(r.URL.Query().Get("end"), time.Now(), siteContext.GetSiteTimezone())
+	now := time.Now()
+	last, ok := site_reports_templ.TDDEnd(r.URL.Query().Get("end"), now, siteContext.GetSiteTimezone())
 	if !ok {
-		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "end is a day of the past year before today, as 2026-01-31"})
+		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "end is a day of the past year, up to today, as 2026-01-31"})
 		return
 	}
 	first := last.AddDate(0, 0, 1-site_reports_templ.TDDDays)
-	rows, err := sitedata.SummaryDays(r.Context(), siteContext.SiteDB.Queries(), first.Format(time.DateOnly), last.Format(time.DateOnly))
+	rows, err := sitedata.SummaryDaysSoFar(r.Context(), siteContext.SiteDB.Queries(), siteContext, first.Format(time.DateOnly), last.Format(time.DateOnly), now)
 	days, herr := apiutils.Searched(rows, err, "summary_daily", apiutils.WithContext(sitemodels.SummaryDailyFromDB, siteContext))
 	if herr != nil {
 		writeError(w, r, siteContext.AcceptType, herr)

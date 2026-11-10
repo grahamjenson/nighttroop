@@ -54,7 +54,9 @@ ASSERT_VISIBLE #site--component-event--details
 ASSERT_VISIBLE #site--component-event--edit label[for=site--component-event--edit--sensor-code] >> text=Sensor code
 ASSERT_VISIBLE #site--component-event--edit label[for=site--component-event--edit--transmitter-id] >> text=Transmitter ID
 ASSERT_VISIBLE #site--component-event--edit label[for=site--component-event--edit--notes] >> text=Notes
-// Notes wraps onto a line below the sensor code, rather than all of them squashing into one row
+// Notes wraps onto a line below the sensor code, rather than all of them squashing into one row, scrolled to at the
+// foot of the form
+CLICK #site--component-event--edit--notes
 ASSERT_VISIBLE #site--component-event--edit--notes:below(#site--component-event--edit--sensor-code)
 ASSERT_VISIBLE #site--component-event--edit--submit
 SCREENSHOT component_event_details_phone

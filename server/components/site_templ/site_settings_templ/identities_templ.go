@@ -1933,7 +1933,7 @@ func CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, passw
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = credentialsModal(url, identity.Name, password, totpSecret, nsToken, false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var86), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CredentialsModal(url, identity.Name, password, totpSecret, nsToken, false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var86), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2138,7 +2138,7 @@ func IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut bool
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = credentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CredentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2146,10 +2146,10 @@ func IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut bool
 	})
 }
 
-// credentialsModal is a dialog of an identity's new credentials. Escape or pressing beside it shows the warning that they
-// are never shown again, as I Have Saved These does, so they are not lost by a slip; once signed out it goes to Sign In
-// Again instead.
-func credentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) templ.Component {
+// CredentialsModal is a dialog of an identity's, or a control admin's, new credentials. Escape or pressing beside it
+// shows the warning that they are never shown again, as I Have Saved These does, so they are not lost by a slip; once
+// signed out it goes to Sign In Again instead.
+func CredentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

@@ -431,8 +431,9 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 }
 
 // TruncateSite truncates a site as the job every 10 minutes does, but looking at all its device reports, so it clears
-// those the job no longer looks at, such as the newest of a device that then went a day without reporting. It then
-// shrinks its DB, without its free pages, and records its new size, which it returns.
+// those the job no longer looks at, such as the newest of a device that then went a day without reporting. It deletes
+// the loop settings no record refers to any more, then shrinks its DB, without its free pages, and records its new
+// size, which it returns.
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	site := db.sites.get(subdomain)
 	if site == nil {
@@ -440,6 +441,9 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	}
 	if err := truncateSite(ctx, site, 0); err != nil {
 		return nil, err
+	}
+	if err := site.Queries().DeleteUnreferencedLoopSettings(ctx); err != nil {
+		return nil, fmt.Errorf("cannot delete the unreferenced loop settings of site %s: %w", subdomain, err)
 	}
 	if err := site.Vacuum(ctx); err != nil {
 		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
@@ -822,41 +826,101 @@ func (db *ControlDB) deletePasskeys(ctx context.Context, identity *controldb.Sit
 	return db.Queries.DeleteSiteIdentityPasskeys(ctx, controldb.DeleteSiteIdentityPasskeysParams{SiteID: identity.SiteID, IdentityID: identity.ID})
 }
 
-func (db *ControlDB) CreateControlIdentity(ctx context.Context, name string, role consts.ControlRole) (*IdentityValues, error) {
-	security := db.ServerConfig.Security
-	hostname := db.ServerConfig.HostName
-	password, hashedPassword, err := security.GeneratePassword()
-
+// CreateControlIdentity makes a control admin, with a new password and TOTP secret shown this once, recorded as made by
+// the admin by, or by no one for the first
+func (db *ControlDB) CreateControlIdentity(ctx context.Context, name string, role consts.ControlRole, by *controldb.ControlIdentity) (*IdentityValues, error) {
+	password, hashedPassword, err := db.ServerConfig.Security.GeneratePassword()
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate control password: %w", err)
 	}
-
-	var totpSecretPtr *string
-	encTOTPSecret := ""
-
-	totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN, hostname))
+	totpSecret, encTOTPSecret, err := db.controlTOTP(name)
 	if err != nil {
-		return nil, fmt.Errorf("cannot generate control TOTP: %w", err)
+		return nil, err
 	}
-
-	totpSecretPtr = &totpSecret
-	encTOTPSecret = encTOTPSecretRet
-
-	err = db.Queries.CreateControlIdentity(ctx, controldb.CreateControlIdentityParams{
-		Name:          name,
-		PasswordHash:  hashedPassword,
-		TotpSecretEnc: encTOTPSecret,
-		Role:          role,
-	})
-
-	if err != nil {
+	params := controldb.CreateControlIdentityParams{Name: name, PasswordHash: hashedPassword, TotpSecretEnc: encTOTPSecret, Role: role}
+	if by != nil {
+		params.CreatedByIdentityID, params.CreatedByIdentityName = by.ID, by.Name
+	}
+	if err := db.Queries.CreateControlIdentity(ctx, params); err != nil {
 		return nil, fmt.Errorf("cannot create control identity: %w", err)
 	}
+	return &IdentityValues{Password: password, TotpSecret: &totpSecret}, nil
+}
 
-	return &IdentityValues{
-		Password:   password,
-		TotpSecret: totpSecretPtr,
-	}, nil
+// controlTOTP is a new TOTP secret for a control admin's authenticator app, and the secret encrypted to keep
+func (db *ControlDB) controlTOTP(name string) (string, string, error) {
+	totpSecret, encTOTPSecret, err := db.ServerConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN, db.ServerConfig.HostName))
+	if err != nil {
+		return "", "", fmt.Errorf("cannot generate control TOTP: %w", err)
+	}
+	return totpSecret, encTOTPSecret, nil
+}
+
+// ResetControlIdentityPassword gives another control admin a new random password, recorded as changed by the admin by.
+// Its passkeys are removed first, as for a lost device, so it signs in only with the new password.
+func (db *ControlDB) ResetControlIdentityPassword(ctx context.Context, identity, by *controldb.ControlIdentity) (*IdentityValues, error) {
+	password, hashedPassword, err := db.ServerConfig.Security.GeneratePassword()
+	if err == nil {
+		err = db.Queries.DeleteControlIdentityPasskeys(ctx, controldb.DeleteControlIdentityPasskeysParams{ControlIdentityID: identity.ID})
+	}
+	if err == nil {
+		err = db.Queries.UpdateControlIdentityPassword(ctx, controldb.UpdateControlIdentityPasswordParams{PasswordHash: hashedPassword,
+			UpdatedByIdentityID: &by.ID, UpdatedByIdentityName: &by.Name, ID: identity.ID})
+	}
+	if err != nil {
+		return nil, fmt.Errorf("cannot reset the control admin's password: %w", err)
+	}
+	db.Logs.IdentityCredentialsChangedEvent(ctx, "", identity.Name, "password", by.Name)
+	return &IdentityValues{Password: password}, nil
+}
+
+// ResetControlIdentityTOTP gives another control admin a new TOTP secret, recorded as changed by the admin by. Its
+// passkeys are removed first, as for a lost device, so it signs in only with the new secret.
+func (db *ControlDB) ResetControlIdentityTOTP(ctx context.Context, identity, by *controldb.ControlIdentity) (*IdentityValues, error) {
+	totpSecret, encTOTPSecret, err := db.controlTOTP(identity.Name)
+	if err == nil {
+		err = db.Queries.DeleteControlIdentityPasskeys(ctx, controldb.DeleteControlIdentityPasskeysParams{ControlIdentityID: identity.ID})
+	}
+	if err == nil {
+		err = db.Queries.UpdateControlIdentityTOTP(ctx, controldb.UpdateControlIdentityTOTPParams{TotpSecretEnc: encTOTPSecret,
+			UpdatedByIdentityID: &by.ID, UpdatedByIdentityName: &by.Name, ID: identity.ID})
+	}
+	if err != nil {
+		return nil, fmt.Errorf("cannot reset the control admin's TOTP: %w", err)
+	}
+	db.Logs.IdentityCredentialsChangedEvent(ctx, "", identity.Name, "totp", by.Name)
+	return &IdentityValues{TotpSecret: &totpSecret}, nil
+}
+
+// ErrLastControlAdmin refuses to delete control's last admin, or make it read only, as then none could manage control
+var ErrLastControlAdmin = errors.New("the last admin cannot be deleted or made read only")
+
+// SetControlIdentityRole gives a control admin a role, recorded as changed by the admin by, unless it is the last admin
+func (db *ControlDB) SetControlIdentityRole(ctx context.Context, identity *controldb.ControlIdentity, role consts.ControlRole, by *controldb.ControlIdentity) error {
+	return lastAdminKept(db.Queries.UpdateControlIdentityRole(ctx, controldb.UpdateControlIdentityRoleParams{Role: role,
+		UpdatedByIdentityID: &by.ID, UpdatedByIdentityName: &by.Name, ID: identity.ID}))
+}
+
+// DeleteControlIdentity deletes a control admin and its passkeys, unless it is the last admin
+func (db *ControlDB) DeleteControlIdentity(ctx context.Context, identity *controldb.ControlIdentity) error {
+	err := lastAdminKept(db.Queries.DeleteControlIdentity(ctx, controldb.DeleteControlIdentityParams{ID: identity.ID}))
+	if err == nil {
+		err = db.Queries.DeleteControlIdentityPasskeys(ctx, controldb.DeleteControlIdentityPasskeysParams{ControlIdentityID: identity.ID})
+	}
+	return err
+}
+
+// lastAdminKept is a write to a control admin that changed it, or else ErrLastControlAdmin, as its query keeps the last
+// admin as it is
+func lastAdminKept(result sql.Result, err error) error {
+	if err != nil {
+		return err
+	}
+	changed, err := result.RowsAffected()
+	if err == nil && changed == 0 {
+		err = ErrLastControlAdmin
+	}
+	return err
 }
 
 ////

@@ -178,6 +178,36 @@ func (q *Queries) DeleteSitePushCredentials(ctx context.Context, arg DeleteSiteP
 	return err
 }
 
+const getAnyPushCredential = `-- name: GetAnyPushCredential :one
+SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials WHERE id = ?1 AND deleted_at IS NULL
+`
+
+type GetAnyPushCredentialParams struct {
+	ID int64
+}
+
+// Any site's credential, or one for every site, for the control site
+func (q *Queries) GetAnyPushCredential(ctx context.Context, arg GetAnyPushCredentialParams) (*PushCredential, error) {
+	row := q.queryRow(ctx, q.getAnyPushCredentialStmt, getAnyPushCredential, arg.ID)
+	var i PushCredential
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Name,
+		&i.Provider,
+		&i.TeamOrProjectID,
+		&i.KeyID,
+		&i.SecretEnc,
+		&i.AppsJson,
+		&i.BundleIdsJson,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.DeletedAt,
+	)
+	return &i, err
+}
+
 const getAnySitePushRegistration = `-- name: GetAnySitePushRegistration :one
 SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations WHERE id = ?1
 `
@@ -341,6 +371,56 @@ func (q *Queries) RecordPush(ctx context.Context, arg RecordPushParams) error {
 		arg.TokenHash,
 	)
 	return err
+}
+
+const searchAllPushCredentials = `-- name: SearchAllPushCredentials :many
+SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
+WHERE deleted_at IS NULL
+ORDER BY id DESC
+LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
+`
+
+type SearchAllPushCredentialsParams struct {
+	Skip  int64
+	Limit int64
+}
+
+// Every site's credentials and those for every site, newest first, for the control site
+func (q *Queries) SearchAllPushCredentials(ctx context.Context, arg SearchAllPushCredentialsParams) ([]*PushCredential, error) {
+	rows, err := q.query(ctx, q.searchAllPushCredentialsStmt, searchAllPushCredentials, arg.Skip, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*PushCredential
+	for rows.Next() {
+		var i PushCredential
+		if err := rows.Scan(
+			&i.ID,
+			&i.SiteID,
+			&i.Name,
+			&i.Provider,
+			&i.TeamOrProjectID,
+			&i.KeyID,
+			&i.SecretEnc,
+			&i.AppsJson,
+			&i.BundleIdsJson,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const searchAllPushRegistrations = `-- name: SearchAllPushRegistrations :many

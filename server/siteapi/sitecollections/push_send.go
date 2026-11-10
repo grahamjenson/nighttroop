@@ -22,15 +22,6 @@ import (
 // maxPushDevices is the most push registrations a page lists, far more than a site's identities register
 const maxPushDevices = 500
 
-// pushIdentity is whose push registrations the signed in identity may see and test: an admin's site's, and anyone
-// else's own
-func pushIdentity(siteContext *httputils.SiteContext) *int64 {
-	if siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
-		return nil
-	}
-	return &siteContext.IdentityModel.ID
-}
-
 // PushDevicesHandler lists the apps on devices that pushes are sent to, with whose they are, and a button to test each:
 // an admin sees every identity's on the site, and anyone else their own
 func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +30,7 @@ func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rows, err := siteContext.ControlDB.Queries.SearchPushRegistrationsWithIdentity(r.Context(), controldb.SearchPushRegistrationsWithIdentityParams{
-		SiteID: siteContext.SiteID, IdentityID: pushIdentity(siteContext), Limit: maxPushDevices})
+		SiteID: siteContext.SiteID, IdentityID: sitesettings.PushIdentity(siteContext), Limit: maxPushDevices})
 	if err != nil {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
 		return
@@ -54,7 +45,7 @@ func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
 	WriteResponse(w, r, siteContext, http.StatusOK, registrations, site_settings_templ.PushDevices(registrations, admin), true)
 }
 
-// PushTestHandler sends a test notification to a push registration the signed in identity may see, see pushIdentity,
+// PushTestHandler sends a test notification to a push registration the signed in identity may see, see sitesettings.PushIdentity,
 // so they can see pushes reach it, answering with the registration as it is after
 func PushTestHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitesettings.PushRegistrationsCollection{}).GetName(), siteapiutils.ActionUpdate)
@@ -67,7 +58,7 @@ func PushTestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := siteContext.ControlDB.Queries
-	get := controldb.GetPushRegistrationParams{ID: id, SiteID: siteContext.SiteID, IdentityID: pushIdentity(siteContext)}
+	get := controldb.GetPushRegistrationParams{ID: id, SiteID: siteContext.SiteID, IdentityID: sitesettings.PushIdentity(siteContext)}
 	registration, err := q.GetPushRegistration(r.Context(), get)
 	if errors.Is(err, sql.ErrNoRows) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
