@@ -7,7 +7,14 @@ import (
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/css"
 	"nighttroop.t1d.nz/utils/consts"
+)
+
+// ECharts draws the TDD chart with these colours from css/theme.css, as it cannot use the Tailwind classes
+var (
+	brandNight = css.Colour("brand-night")
+	gray200    = css.Colour("gray-200")
 )
 
 // TDDDays is how many days the TDD report covers, a month, as a week or fortnight is too few to see a pattern in

@@ -106,3 +106,15 @@ ASSERT_NO_PAGE_ERRORS
 // An id that is not a period is not found
 GOTO /reports/overview/year-{{ date -1 }}
 ASSERT_STATUS 404
+
+// The AGP report of the same month has the backfilled days: their AGP, and each day's glucose in the daily profiles,
+// the days with data drawn and the rest empty
+GOTO /reports/agp/month-{{ date -1 }}
+ASSERT_STATUS 200
+ASSERT_DRAWN #site--reports--agp
+ASSERT_DRAWN #site--agp--day-{{ date -1 }} .site--agp--glucose >> nth=1
+SCREENSHOT agp_month_data
+SCROLL 560
+SCREENSHOT agp_month_data_graph
+SCROLL 1400
+SCREENSHOT agp_month_data_daily

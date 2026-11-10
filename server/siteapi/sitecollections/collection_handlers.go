@@ -428,16 +428,6 @@ func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, ro
 }
 
 // GettingStartedHandler is the guide to setting up the site, a page for people, so it has no JSON
-// ReportsHandler is get's reports page of the week with yesterday in it, in the site's timezone
-func ReportsHandler(get http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if siteContext := httputils.GetSiteContext(r.Context()); siteContext != nil {
-			chi.RouteContext(r.Context()).URLParams.Add("id", "week-"+sitedata.LocalDate(time.Now(), siteContext.GetSiteTimezone(), -1))
-		}
-		get(w, r)
-	}
-}
-
 // PeriodReportHandler is the report page of the day, week, fortnight or month its id names, as week-2026-01-31, or of
 // the week with yesterday in it without one, made from the period and its days; a page for people, so it has no JSON
 func PeriodReportHandler(page func(*sitemodels.SiteSummaryPeriod, []*sitemodels.SiteSummaryDaily) templ.Component) http.HandlerFunc {

@@ -388,11 +388,22 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
-- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs,
-  each "–" when it has no days with data.
+- An AGP report says which days it covers, and has its time in ranges against the goals for type 1 and type 2
+  diabetes: a bar of very high, high, in range, low and very low stacked, each with its percent, very high (goal <5%)
+  and high bracketed with their total (goal <25%), in range on its own (goal >70%), and low and very low (goal <1%)
+  bracketed with theirs (goal <4%), with the target range and the very high and very low bounds in the settings' units.
+- An AGP report's glucose metrics are its average glucose (goal under 154 mg/dL), GMI (goal <7%), coefficient of
+  variation (goal ≤36%) and time CGM active (goal >70%), each against its goal, and its days with data, daily dose and
+  daily carbs, each "–" when it has no days with data.
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
-  with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
-  glucose over the AGP of the 7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's readings show the day after; the summaries' empty tables say the same.
+  with the median as a line, each in the high colour above the range and the low colour below it, with very low, the
+  range's low and high, very high and its top marked with their values, each percentile named at its line's end (kept
+  apart when close), and hours in the settings' time format. A day's report draws the day's glucose over the AGP of the
+  7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's
+  readings show the day after; the summaries' empty tables say the same.
+- An AGP report's daily glucose profiles are its days as a calendar under their weekdays from the site's week start
+  day, each with its glucose from midnight over the range shaded, coloured above and below it, opening that day's AGP
+  report; a day's report has only its own.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; arrow buttons
   either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after, disabled
   past today or a year ago. Back and forward move between reports.

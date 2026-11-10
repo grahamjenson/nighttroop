@@ -51,38 +51,6 @@ func link(report, period string, date time.Time) string {
 	return ""
 }
 
-// Report is the AGP report of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
-// with buttons to the period before and after either side of its dates, and to the report of another kind of period
-// ending on the same day
-templ Report(p *sitemodels.SiteSummaryPeriod) {
-	@heading.Title("AGP")
-	<div id="site--reports" class="w-full space-y-4 py-4">
-		@periodHeader("agp", "AGP", p)
-		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@stat("site--reports--days", "Days with data", fmt.Sprint(p.Days))
-			@stat("site--reports--time-in-range", "Time in range", display.Value(p.TimeInRange, "%"))
-			@stat("site--reports--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, " U"))
-			@stat("site--reports--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, " g"))
-		</dl>
-		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Ambulatory glucose profile</h2>
-			if hasGlucose(p) {
-				{{ low, high := site_data_templ.RangeBounds(ctx) }}
-				{{ chart := agp(p, low, high) }}
-				<div id="site--reports--agp" class="h-90 w-full text-xs">
-					<div id={ chart.ChartID } class="h-full w-full"></div>
-					@templ.Raw(chart.RenderSnippet().Script)
-				</div>
-			} else {
-				<p id="site--reports--no-glucose" class="text-sm text-gray-500">
-					No glucose in this { p.Period }. Reports are made from whole days, so a day's readings show here the
-					day after.
-				</p>
-			}
-		</section>
-	</div>
-}
-
 // periodHeader is the report's name, as AGP, over its dates, with arrow buttons either side to the period before and
 // after, and buttons to the report of each kind of period ending on its last day
 templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
