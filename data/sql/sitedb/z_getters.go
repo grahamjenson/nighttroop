@@ -4536,6 +4536,16 @@ func (m *SummaryPeriod) SetTotalDailyDose(v float64) {
 	m.TotalDailyDose = v
 }
 
+// GetTotalDailyBasal returns the TotalDailyBasal value.
+func (m SummaryPeriod) GetTotalDailyBasal() float64 {
+	return m.TotalDailyBasal
+}
+
+// SetTotalDailyBasal sets the TotalDailyBasal value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTotalDailyBasal(v float64) {
+	m.TotalDailyBasal = v
+}
+
 // GetTotalDailyCarbs returns the TotalDailyCarbs value.
 func (m SummaryPeriod) GetTotalDailyCarbs() float64 {
 	return m.TotalDailyCarbs
@@ -15564,6 +15574,16 @@ func (m UpsertSummaryPeriodParams) GetTimeVeryHigh() *float64 {
 // SetTimeVeryHigh sets the TimeVeryHigh value and returns the updated UpsertSummaryPeriodParams.
 func (m *UpsertSummaryPeriodParams) SetTimeVeryHigh(v *float64) {
 	m.TimeVeryHigh = v
+}
+
+// GetTotalDailyBasal returns the TotalDailyBasal value.
+func (m UpsertSummaryPeriodParams) GetTotalDailyBasal() float64 {
+	return m.TotalDailyBasal
+}
+
+// SetTotalDailyBasal sets the TotalDailyBasal value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTotalDailyBasal(v float64) {
+	m.TotalDailyBasal = v
 }
 
 // GetSince returns the Since value.

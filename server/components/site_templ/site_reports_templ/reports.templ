@@ -148,8 +148,10 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 						@table.Head() {
 							Day
 						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Total daily dose
+						for _, column := range []string{"Basal", "Bolus", "Total daily dose"} {
+							@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+								{ column }
+							}
 						}
 					}
 				}
@@ -160,8 +162,10 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 							@table.Cell() {
 								{ date.Format("Mon 2 Jan 2006") }
 							}
-							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-								{ display.Value(row.Dose, " U") }
+							for _, value := range []*float64{row.Basal, row.Bolus, row.Dose} {
+								@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+									{ display.Value(value, " U") }
+								}
 							}
 						}
 					}

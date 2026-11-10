@@ -519,6 +519,7 @@ type SummaryPeriod struct {
 	Days                 int64
 	TimeInRange          *float64
 	TotalDailyDose       float64
+	TotalDailyBasal      float64
 	TotalDailyCarbs      float64
 	GlucoseMgdlJson      string
 	AgpMgdlJson          *string

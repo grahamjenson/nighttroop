@@ -455,7 +455,9 @@ func PeriodReportHandler(page func(p *sitemodels.SiteSummaryPeriod, days []*site
 		}
 		var previous *sitemodels.SiteSummaryPeriod
 		before := row.Period + "-" + time.UnixMilli(row.StartAt).In(siteContext.GetSiteTimezone()).AddDate(0, 0, -1).Format(time.DateOnly)
-		if previousRow, _, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, before, now); err == nil {
+		// A period before with no data has nothing to compare with, though some of its numbers, as its time CGM active,
+		// are 0 rather than missing
+		if previousRow, _, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, before, now); err == nil && previousRow.Days > 0 {
 			previous = sitemodels.SummaryPeriodFromDB(previousRow, siteContext)
 		}
 		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(sitemodels.SummaryPeriodFromDB(row, siteContext), days, previous), true)

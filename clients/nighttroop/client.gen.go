@@ -391,8 +391,11 @@ type SummaryPeriod struct {
 	TimeVeryHigh *float64 `json:"time_very_high"`
 
 	// TimeVeryLow The percent of its readings below 54 mg/dL
-	TimeVeryLow     *float64 `json:"time_very_low"`
-	Timezone        *string  `json:"timezone,omitempty"`
+	TimeVeryLow *float64 `json:"time_very_low"`
+	Timezone    *string  `json:"timezone,omitempty"`
+
+	// TotalDailyBasal The basal of its daily dose, in U; the rest is boluses
+	TotalDailyBasal *float64 `json:"total_daily_basal,omitempty"`
 	TotalDailyCarbs *float64 `json:"total_daily_carbs,omitempty"`
 	TotalDailyDose  *float64 `json:"total_daily_dose,omitempty"`
 	Units           *Units   `json:"units,omitempty"`

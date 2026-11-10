@@ -133,7 +133,7 @@ func upsertSummaryPeriod(ctx context.Context, q *sitedb.Queries, row *sitedb.Sum
 		TotalDailyCarbs: row.TotalDailyCarbs, GlucoseMgdlJson: row.GlucoseMgdlJson, AgpMgdlJson: row.AgpMgdlJson, LoopIobJson: row.LoopIobJson,
 		LoopIobBasalJson: row.LoopIobBasalJson, LoopIobTreatmentJson: row.LoopIobTreatmentJson, LoopCobJson: row.LoopCobJson,
 		GlucoseReadings: row.GlucoseReadings, MeterReadings: row.MeterReadings, CgmSlots: row.CgmSlots, GlucoseMeanMgdl: row.GlucoseMeanMgdl,
-		GlucoseSdMgdl: row.GlucoseSdMgdl, TimeVeryLow: row.TimeVeryLow, TimeLow: row.TimeLow, TimeHigh: row.TimeHigh, TimeVeryHigh: row.TimeVeryHigh})
+		GlucoseSdMgdl: row.GlucoseSdMgdl, TimeVeryLow: row.TimeVeryLow, TimeLow: row.TimeLow, TimeHigh: row.TimeHigh, TimeVeryHigh: row.TimeVeryHigh, TotalDailyBasal: row.TotalDailyBasal})
 }
 
 // RebuildSummaryDailyWeek deletes all the site's days and periods, as from a timezone they no longer follow, and

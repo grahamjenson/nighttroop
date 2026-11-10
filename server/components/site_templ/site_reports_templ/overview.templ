@@ -99,8 +99,27 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				@bigStat("site--overview--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "")
 				@bigStat("site--overview--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g", "")
 			</dl>
+			@insulinSplit(p)
 		</section>
 	</div>
+}
+
+// insulinSplit is how much of the daily dose is basal and how much boluses, as a bar of the two and each's units and
+// percent, when it has a dose
+templ insulinSplit(p *sitemodels.SiteSummaryPeriod) {
+	if p.Days > 0 && p.TotalDailyDose > 0 {
+		{{ basal := 100 * p.TotalDailyBasal / p.TotalDailyDose }}
+		<div id="site--overview--insulin-split" class="mt-4 max-w-md">
+			<div class="flex h-2 overflow-hidden rounded-full bg-gray-100" aria-hidden="true">
+				<div class="bg-brand-gold" style={ fmt.Sprintf("width: %.1f%%", basal) }></div>
+				<div class="flex-1 bg-brand-night"></div>
+			</div>
+			<div class="mt-1 flex justify-between gap-3 text-xs text-gray-600">
+				<span id="site--overview--basal"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-gold"></span>Basal { display.Value(&p.TotalDailyBasal, " U") } · { fmt.Sprintf("%.0f%%", basal) }</span>
+				<span id="site--overview--bolus"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-night"></span>Bolus { display.Value(new(bolus(p.TotalDailyDose, p.TotalDailyBasal)), " U") } · { fmt.Sprintf("%.0f%%", 100-basal) }</span>
+			</div>
+		</div>
+	}
 }
 
 // bigStat is a number of the report in large type, with its units beside it, and a note under it if there is one
