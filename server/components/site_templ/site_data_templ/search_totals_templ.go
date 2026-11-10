@@ -329,7 +329,7 @@ func totalsDate(ctx context.Context, ms int64, now time.Time) string {
 	case day.Format(time.DateOnly) == today.AddDate(0, 0, -1).Format(time.DateOnly):
 		return "Yesterday"
 	case day.Year() == today.Year():
-		return day.Format("Mon 2 Jan")
+		return day.Format(display.ShortDayLayout)
 	}
 	return day.Format("2 Jan 2006")
 }

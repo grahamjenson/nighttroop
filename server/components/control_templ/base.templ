@@ -47,13 +47,16 @@ templ ControlBase() {
 			<div id="toaster" class="mb-3"></div>
 			@confirm.Dialog()
 			// The header's menu and the status are for a signed in admin, so the login and setup pages have neither
-			if controlContext := httputils.GetControlContext(ctx); controlContext != nil && controlContext.IdentityModel != nil {
+			{{ controlContext := httputils.GetControlContext(ctx) }}
+			{{ signedIn := controlContext != nil && controlContext.IdentityModel != nil }}
+			if signedIn {
 				@Header()
 				@StatusBanner(controlContext.ServerStatus)
 			}
+			// Signed out, the login and setup pages fill it, edge to edge
 			<div
 				id="main-content"
-				class="flex-1 container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+				class={ "flex-1", templ.KV("container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8", signedIn), templ.KV("flex flex-col", !signedIn) }
 			>
 				{ children... }
 			</div>

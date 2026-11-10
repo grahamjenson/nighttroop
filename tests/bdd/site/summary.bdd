@@ -59,7 +59,7 @@ ASSERT_NOT_VISIBLE #site--summary--iob >> text="–"
 ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
 // Today's readings have a time in range, its insulin a total daily dose with the dose given, and the sensor was
 // started minutes ago, but the site has not been changed
-ASSERT_VISIBLE #site--summary--time-in-range >> text=/^\d+(\.\d)?%$/
+ASSERT_VISIBLE #site--summary--time-in-range >> text=/^(\d+%|<1%)$/
 ASSERT_VISIBLE #site--summary--total-daily-dose >> text=/^\d+(\.\d+)? U$/
 ASSERT_NOT_VISIBLE #site--summary--total-daily-dose >> text="0 U"
 // The weeks and months before a new site's have no data, so their daily dose is a dash, as their time in range is,

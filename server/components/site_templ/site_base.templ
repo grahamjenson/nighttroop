@@ -4,6 +4,7 @@ import (
 	"nighttroop.t1d.nz/server/components/confirm"
 	"context"
 
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -153,13 +154,7 @@ templ Header(path string) {
 }
 
 templ SiteError(message string) {
-	@toast.Toast(toast.Props{
-		Description: message,
-		Variant:     toast.VariantError,
-		Position:    toast.PositionTopCenter,
-		Dismissible: true,
-		Icon:        true,
-	})
+	@errortoast.Toast("", message)
 }
 
 // SiteErrorRecorded is the toast for an error not written for users, such as the server's: it says it is recorded,

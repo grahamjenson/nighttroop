@@ -158,7 +158,7 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 						{{ date, _ := time.Parse(time.DateOnly, row.Date) }}
 						@table.Row(table.RowProps{ID: "site--reports--tdd--day-" + row.Date}) {
 							@table.Cell() {
-								{ date.Format("Mon 2 Jan 2006") }
+								{ date.Format(display.DayLayout) }
 							}
 							for _, value := range []*float64{row.Basal, row.Bolus, row.Dose} {
 								@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
@@ -248,7 +248,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 										{ title(ctx, p) }
 									}
 								}
-								for _, value := range []string{fmt.Sprint(p.Days), display.Value(p.TimeInRange, "%"), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
+								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(p.TimeInRange), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
 									@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 										{ value }
 									}

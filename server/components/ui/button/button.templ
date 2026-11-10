@@ -35,6 +35,8 @@ const (
 	SizeSm      Size = "sm"
 	SizeLg      Size = "lg"
 	SizeIcon    Size = "icon"
+	// SizeXl is a login or setup card's own button, its words large and bold
+	SizeXl Size = "xl"
 )
 
 type Props struct {
@@ -142,6 +144,8 @@ func (b Props) sizeClasses() string {
 		return "h-10 rounded-md px-6 has-[>svg]:px-4"
 	case SizeIcon:
 		return "size-9"
+	case SizeXl:
+		return "h-9 rounded-lg px-4 text-lg font-bold"
 	default: // SizeDefault
 		return "h-9 px-4 py-2 has-[>svg]:px-3"
 	}
