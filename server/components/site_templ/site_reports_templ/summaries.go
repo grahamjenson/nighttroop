@@ -55,6 +55,14 @@ func summariesLinks(first, now time.Time) (previous, next string) {
 	return link(first.AddDate(0, -1, 0)), link(first.AddDate(0, 1, 0))
 }
 
+// summariesTitle names a table of a month's summaries of period, as Weeks, or Months of 2026 for its year's months
+func summariesTitle(period, label string, first time.Time) string {
+	if period == "month" {
+		return label + "s of " + first.Format("2006")
+	}
+	return label + "s"
+}
+
 // emptyIn is when a past month's report has no summaries of period: in the month, or in its year for months
 func emptyIn(period string, first time.Time) string {
 	if period == "month" {

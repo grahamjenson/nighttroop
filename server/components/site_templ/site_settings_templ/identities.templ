@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/authenticator"
 	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
@@ -144,17 +145,15 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 			@roleCard("User", "A person using Nighttroop. Users can log in, view reports and use Nightscout features.")
 			@roleCard("Device", "A phone, SugarPixel or display. Devices use the Nightscout API but cannot log in. The PWD phone's credentials go into your loop (AAPS, Trio...).")
 		</div>
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			<h2 class="mb-3 text-lg font-semibold">Admins & Users</h2>
+		@card.Card(card.Props{Title: "Admins & Users"}) {
 			@buildIdentityTable("usersTable", users)
 			// The first role is picked to start with, so a user added without choosing one is a User, not an Admin
 			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Admin", Value: consts.IdentityRoleAdmin}})
-		</section>
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			<h2 class="mb-3 text-lg font-semibold">Devices</h2>
+		}
+		@card.Card(card.Props{Title: "Devices"}) {
 			@buildIdentityTable("devicesTable", devices)
 			@formCreateIdentity("devicesTable", "Device", []sitemodels.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
-		</section>
+		}
 		<div id="modal-container"></div>
 	</div>
 }

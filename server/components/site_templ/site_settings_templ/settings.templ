@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -153,13 +154,15 @@ func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemo
 // SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 	@settingsPageOf(generalPage, site, yours, nil)
-	if identity := signedIn(ctx); identity != nil {
-		@resetYourCredentials(identity)
-	}
-	if site != nil {
-		@downloadData()
-		@deleteSite()
-	}
+	<div class="mx-auto mt-6 max-w-4xl space-y-6">
+		if identity := signedIn(ctx); identity != nil {
+			@resetYourCredentials(identity)
+		}
+		if site != nil {
+			@downloadData()
+			@deleteSite()
+		}
+	</div>
 }
 
 // signedIn is the identity signed in to the site, or nil
@@ -173,8 +176,7 @@ func signedIn(ctx context.Context) *controldb.SiteIdentity {
 // resetYourCredentials resets the signed in identity's password, or its TOTP if it has one, warning that either signs
 // it out, to sign in again with the new one
 templ resetYourCredentials(identity *controldb.SiteIdentity) {
-	<section id="site--settings--credentials" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-gray-200 p-4 shadow-sm">
-		<h2 class="text-sm font-semibold text-brand-night">Password & TOTP</h2>
+	@card.Card(card.Props{ID: "site--settings--credentials", Title: "Password & TOTP", Class: "space-y-3"}) {
 		<p id="site--settings--credentials-warning" class="text-sm text-amber-800">
 			Resetting your password or TOTP signs you out. The new one is shown once, and you sign in again with it.
 		</p>
@@ -191,13 +193,12 @@ templ resetYourCredentials(identity *controldb.SiteIdentity) {
 			}
 		</div>
 		<div id="modal-container"></div>
-	</section>
+	}
 }
 
 // downloadData lets an admin download a zip of the site's data, a snapshot of its DB, to look through all its data
 templ downloadData() {
-	<section id="site--settings--download" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-gray-200 p-4 shadow-sm">
-		<h2 class="text-sm font-semibold text-brand-night">Download Data</h2>
+	@card.Card(card.Props{ID: "site--settings--download", Title: "Download Data", Class: "space-y-3"}) {
 		<p class="text-sm text-gray-600">
 			A copy of all the site's data, as it is now, in a zip of a SQLite file, which a SQLite browser can open to look through.
 		</p>
@@ -209,13 +210,12 @@ templ downloadData() {
 		}) {
 			Download Data
 		}
-	</section>
+	}
 }
 
 // deleteSite lets an admin delete the site, which archives it, after confirming
 templ deleteSite() {
-	<section id="site--settings--delete" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-red-200 p-4 shadow-sm">
-		<h2 class="text-sm font-semibold text-red-700">Delete Site</h2>
+	@card.Card(card.Props{ID: "site--settings--delete", Title: "Delete Site", Danger: true, Class: "space-y-3"}) {
 		<p class="text-sm text-gray-600">
 			Deleting the site signs everyone out and stops it being served, to you, your devices and Nightscout apps. Its
 			data is archived, so the server's admins can still bring it back.
@@ -233,7 +233,7 @@ templ deleteSite() {
 				Delete Site
 			}
 		</form>
-	</section>
+	}
 }
 
 templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
@@ -278,7 +278,7 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 		}
 		// On a phone each setting's label is above its controls, the site's and yours each named, and from sm up the
 		// columns are side by side under their titles
-		<div class={ "grid grid-cols-1 gap-2 rounded-xl border border-gray-200 p-4 shadow-sm sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
+		<div class={ "grid grid-cols-1 gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
 			<span class="hidden sm:block"></span>
 			for _, column := range columns {
 				<span class={ "text-sm font-semibold", templ.KV("hidden sm:block", len(columns) == 2) }>{ column.Title }</span>

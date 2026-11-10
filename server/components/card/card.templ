@@ -1,0 +1,44 @@
+package card
+
+// Props are a card's: its title, with a note under it and an action, such as a button or a link, at its right
+type Props struct {
+	ID     string
+	Title  string
+	Note   string
+	Action templ.Component
+	// Danger is a red card, for what cannot be undone, such as deleting a site
+	Danger bool
+	// Scroll keeps a long card, such as a list of records, to a height, scrolling what is in it
+	Scroll bool
+	// Class lays out the card's children, such as in a flex or a grid
+	Class string
+}
+
+// Card is a white box of its children, under its title when it has one: every box on a page but a list page's table
+templ Card(p Props) {
+	<section
+		if p.ID != "" {
+			id={ p.ID }
+		}
+		class={ "rounded-xl border bg-white p-4 shadow-sm", templ.KV("border-gray-200", !p.Danger), templ.KV("border-red-200", p.Danger) }
+	>
+		{{ header := p.Title != "" || p.Action != nil }}
+		if header {
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div class="max-w-2xl">
+					<h2 class={ "text-sm font-semibold uppercase tracking-wide", templ.KV("text-gray-500", !p.Danger), templ.KV("text-red-700", p.Danger) }>{ p.Title }</h2>
+					if p.Note != "" {
+						<p class="mt-1 text-sm text-gray-500">{ p.Note }</p>
+					}
+				</div>
+				if p.Action != nil {
+					@p.Action
+				}
+			</div>
+		}
+		// A card of only a title, such as one whose action is all it does, has no space under its title
+		<div class={ p.Class, templ.KV("mt-3 empty:hidden", header), templ.KV("max-h-96 overflow-y-auto", p.Scroll) }>
+			{ children... }
+		</div>
+	</section>
+}

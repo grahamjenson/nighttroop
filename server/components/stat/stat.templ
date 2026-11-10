@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 )
@@ -19,11 +20,14 @@ func isUnit(part string) bool {
 	return strings.Trim(part, "0123456789.–") != ""
 }
 
-// Tile is one figure, under its label and icon, with anything else about it, such as earlier figures, below
+// Tile is one figure, under its label and its icon, when it has one, with anything else about it, such as earlier
+// figures, below
 templ Tile(id, label, text string, ic func(...icon.Props) templ.Component) {
 	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-			@ic(icon.Props{Class: "size-4"})
+			if ic != nil {
+				@ic(icon.Props{Class: "size-4"})
+			}
 			{ label }
 		</div>
 		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
@@ -46,19 +50,30 @@ templ Numbers(text, unitClass string) {
 	}
 }
 
-// Section is a titled list, with a link to the page of all its records when it has one
+// NoteTile is a Tile with no icon, with a note about its figure, such as what it counts, below it
+templ NoteTile(id, label, text, note string) {
+	@Tile(id, label, text, nil) {
+		<div class="text-xs text-gray-500">{ note }</div>
+	}
+}
+
+// Section is a titled list, scrolling when it is long, with a link to the page of all its records when it has one
 templ Section(title, linkID, linkText, path string) {
-	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-		<div class="mb-2 flex items-baseline justify-between gap-2">
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ title }</h2>
-			if path != "" {
-				@nav.Link(linkID, path, "text-sm text-primary underline") {
-					{ linkText }
-				}
-			}
-		</div>
-		<div class="max-h-96 overflow-y-auto">
-			{ children... }
-		</div>
-	</section>
+	@card.Card(card.Props{Title: title, Scroll: true, Action: allLink(linkID, linkText, path)}) {
+		{ children... }
+	}
+}
+
+// allLink is a section's link to the page of all its records, or nil when it has none
+func allLink(id, text, path string) templ.Component {
+	if path == "" {
+		return nil
+	}
+	return link(id, text, path)
+}
+
+templ link(id, text, path string) {
+	@nav.Link(id, path, "text-sm text-primary underline") {
+		{ text }
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -47,8 +48,7 @@ func glucoseDayLabel(day *sitemodels.SiteSummaryDaily, today bool) string {
 templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 	{{ bottom, top := glucoseDaysAxis(ctx, days) }}
 	{{ low, high := RangeBounds(ctx) }}
-	<section id="site--glucose--days" class="rounded-xl border border-gray-200 p-4 shadow-sm">
-		<h2 class="mb-3 text-sm font-semibold text-gray-900">{ glucoseDaysTitle(len(days)) }</h2>
+	@card.Card(card.Props{ID: "site--glucose--days", Title: glucoseDaysTitle(len(days))}) {
 		<ol class="grid grid-cols-2 gap-3 sm:grid-cols-5">
 			for i, day := range slices.Backward(days) {
 				<li id={ "site--glucose--day--" + day.Date } class="rounded-lg border border-gray-200 p-2">
@@ -69,7 +69,7 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 				</li>
 			}
 		</ol>
-	</section>
+	}
 }
 
 // glucoseDaysTitle names the days shown: Today for a new site's first day, which has no others, or the last n days

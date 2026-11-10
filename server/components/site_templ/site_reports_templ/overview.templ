@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
@@ -20,8 +21,7 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 	@heading.Title("Overview")
 	<div id="site--reports" class="w-full space-y-4 py-4">
 		@periodHeader("overview", "Overview", p)
-		<section id="site--overview--glucose" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</h2>
+		@card.Card(card.Props{ID: "site--overview--glucose", Title: "Glucose"}) {
 			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 				<dl class="space-y-6">
 					@bigStat("site--overview--mean", "Average glucose", display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units), "") {
@@ -56,11 +56,11 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 					</dl>
 				</div>
 			</div>
-		</section>
+		}
 		if best := bestDay(daily, now); best != nil && p.Period != "day" {
 			{{ date, _ := time.ParseInLocation(time.DateOnly, best.Date, location) }}
 			{{ low, high := site_data_templ.RangeBounds(ctx) }}
-			<section id="site--overview--best-day" class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+			@card.Card(card.Props{ID: "site--overview--best-day", Class: "flex flex-wrap items-center gap-3"}) {
 				<span class="h-10 w-1.5 shrink-0 rounded-full bg-glucose-in-range"></span>
 				<div class="min-w-0 flex-1">
 					<h2 class="font-semibold text-gray-900">
@@ -70,10 +70,9 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 					<p class="text-sm text-gray-600">Glucose was in range about { display.Percent(best.TimeInRange) } of the day.</p>
 				</div>
 				@dayGlucose("site--overview--best-day--", "h-14 w-full sm:w-64", best.Glucose, p.Units, low, high)
-			</section>
+			}
 		}
-		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Each day</h2>
+		@card.Card(card.Props{Title: "Each day"}) {
 			<p class="mb-2 text-sm text-gray-600">
 				if p.Period == "day" {
 					The 7 days to this one, averaged into one day from midnight.
@@ -86,22 +85,23 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			} else {
 				@noGlucose("site--overview--no-glucose", p.Period)
 			}
-		</section>
-		<section id="site--overview--insulin" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<div class="mb-2 flex items-baseline justify-between gap-2">
-				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Insulin and carbs</h2>
-				{{ _, last := days(ctx, p) }}
-				@nav.Link("site--overview--tdd", tddLink(last, now), "text-sm text-primary underline") {
-					Each day's dose
-				}
-			</div>
+		}
+		{{ _, last := days(ctx, p) }}
+		@card.Card(card.Props{ID: "site--overview--insulin", Title: "Insulin and carbs", Action: tddAction(tddLink(last, now))}) {
 			<dl class="grid grid-cols-2 gap-6">
 				@bigStat("site--overview--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "")
 				@bigStat("site--overview--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g", "")
 			</dl>
 			@insulinSplit(p)
-		</section>
+		}
 	</div>
+}
+
+// tddAction opens the TDD report of each day's dose to the overview's last day, at path
+templ tddAction(path string) {
+	@nav.Link("site--overview--tdd", path, "text-sm text-primary underline") {
+		Each day's dose
+	}
 }
 
 // insulinSplit is how much of the daily dose is basal and how much boluses, as a bar of the two and each's units and
