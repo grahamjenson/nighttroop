@@ -70,7 +70,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 				@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
 			</div>
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+		<section id="control--sites--list" class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
 				for _, siteOrder := range siteOrders {
 					@sitesPageButton("control--sites--order-"+orDefault(siteOrder.order), siteOrder.label, 0, limit, siteOrder.order, siteOrder.order != order)
@@ -229,11 +229,13 @@ templ PublicSiteCreationChanged(on bool) {
 	</div>
 }
 
-// SiteCreated shows a site an admin created, with its credentials, which are shown only this once
+// SiteCreated shows a site an admin created, with its credentials, which are shown only this once, and reads the
+// sites again, newest first, so the list behind it has the new site
 templ SiteCreated(info publicmodels.NewSiteInfo) {
 	@modal.Modal(modal.Props{ID: "control--site--created", Title: "Site Created", Subtitle: info.URL}) {
 		@public_templ.CreateSiteInfo(info)
 	}
+	<div hx-get="/sites" hx-trigger="load" hx-select="#control--sites--list" hx-target="#control--sites--list" hx-swap="outerHTML"></div>
 }
 
 // SiteNotCreated is a toast saying why a site could not be created, such as its ID being taken
