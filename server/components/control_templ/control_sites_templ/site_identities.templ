@@ -1,24 +1,16 @@
 package control_sites_templ
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// canReset is whether the control identity is an admin, who can reset a site identity's password or TOTP, or sign in
-// as it
-func canReset(ctx context.Context) bool {
-	controlContext := httputils.GetControlContext(ctx)
-	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
-}
 
 // SiteIdentities is a site's identities, with buttons for an admin to reset one's password, or its TOTP when it logs in
 // with one, or sign in to the site as it. The new credentials are shown above the table, once.
@@ -43,7 +35,7 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
 					Last Seen
 				}
-				if canReset(ctx) {
+				if httputils.IsControlAdmin(ctx) {
 					@table.Head() {
 						Actions
 					}
@@ -54,7 +46,7 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 			for _, identity := range identities {
 				@table.Row(table.RowProps{ID: fmt.Sprintf("control--site--identity--%d", identity.ID)}) {
 					@table.Cell() {
-						<span title={ "Created " + formatDate(&identity.CreatedAt) + " by " + identity.CreatedByIdentityName }>{ identity.Name }</span>
+						<span title={ "Created " + display.DateTime(&identity.CreatedAt) + " by " + identity.CreatedByIdentityName }>{ identity.Name }</span>
 						<div id={ fmt.Sprintf("control--site--identity--%d--summary", identity.ID) } class="mt-0.5 text-xs text-gray-500 sm:hidden">{ identitySummary(identity) }</div>
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
@@ -67,9 +59,9 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 						{ yesNo(identity.HasTotp) }
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
-						<span title={ formatDate(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
+						<span title={ display.DateTime(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
 					}
-					if canReset(ctx) {
+					if httputils.IsControlAdmin(ctx) {
 						@table.Cell() {
 							// Each action has its own column, so the same action lines up down the table; on a phone they stack
 							<div class="grid gap-1 sm:grid-cols-3">
@@ -119,13 +111,13 @@ templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
 		<p class="font-semibold text-amber-800">New credentials for { credentials.Name }. Save them now: they are shown only this once.</p>
 		<dl class="mt-2 grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 font-mono">
 			if credentials.Password != nil {
-				@siteDetail("Password", *credentials.Password)
+				@modal.Detail("Password", *credentials.Password)
 			}
 			if credentials.NSToken != nil {
-				@siteDetail("NS token", *credentials.NSToken)
+				@modal.Detail("NS token", *credentials.NSToken)
 			}
 			if credentials.TotpSecret != nil {
-				@siteDetail("TOTP secret", *credentials.TotpSecret)
+				@modal.Detail("TOTP secret", *credentials.TotpSecret)
 			}
 		</dl>
 	</div>

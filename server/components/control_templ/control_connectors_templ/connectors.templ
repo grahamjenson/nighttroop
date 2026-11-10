@@ -13,14 +13,6 @@ import (
 	"nighttroop.t1d.nz/utils/display"
 )
 
-// formatDate shows an optional time in ms, or a dash when it is not set
-func formatDate(ms *int64) string {
-	if ms == nil {
-		return "-"
-	}
-	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
-}
-
 // orDash shows an optional count or duration as a whole number, e.g. 12345, or a dash when it is not set
 func orDash(value *int64) string {
 	if value == nil {
@@ -131,10 +123,10 @@ templ connectorRow(source *controlmodels.Connector) {
 			<span class={ stateClass(source) }>{ state(source) }</span>
 		}
 		@table.Cell() {
-			<span title={ formatDate(source.LastAttemptedSync) }>{ display.Ago(source.LastAttemptedSync, time.Now()) }</span>
+			<span title={ display.DateTime(source.LastAttemptedSync) }>{ display.Ago(source.LastAttemptedSync, time.Now()) }</span>
 		}
 		@table.Cell() {
-			<span title={ formatDate(source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
+			<span title={ display.DateTime(source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(source.TotalSuccessfulSyncs) }
@@ -149,26 +141,26 @@ templ connectorRow(source *controlmodels.Connector) {
 templ ConnectorModal(source *controlmodels.Connector) {
 	@modal.Modal(modal.Props{ID: "control--connector--details", Title: source.SiteID + " / " + string(source.Type)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@connectorDetail("State", state(source))
+			@modal.Detail("State", state(source))
 			if source.Region != nil {
-				@connectorDetail("Region", *source.Region)
+				@modal.Detail("Region", *source.Region)
 			}
-			@connectorDetail("Created", formatDate(&source.CreatedAt))
-			@connectorDetail("Updated", formatDate(&source.UpdatedAt))
-			@connectorDetail("First Successful Sync", formatDate(source.FirstSuccessfulSyncTime))
-			@connectorDetail("Sync Interval", fmt.Sprintf("%ds (%s)", source.SyncIntervalSeconds, source.SyncIntervalSecondsReason))
-			@connectorDetail("Last Attempted", formatDate(source.LastAttemptedSync))
-			@connectorDetail("Last Success", formatDate(source.LastSuccessfulSync))
-			@connectorDetail("Last Failure", formatDate(source.LastFailedSync))
-			@connectorDetail("Total Syncs", orDash(source.TotalSyncs))
-			@connectorDetail("Succeeded", orDash(source.TotalSuccessfulSyncs))
-			@connectorDetail("Failed", orDash(source.TotalFailedSyncs))
-			@connectorDetail("Successes In A Row", orDash(source.ConsecutiveSuccessfulSyncs))
-			@connectorDetail("Failures In A Row", orDash(source.ConsecutiveFailedSyncs))
-			@connectorDetail("Last Sync Duration (ms)", orDash(source.LastSyncDuration))
-			@connectorDetail("Total EMA", averageOrDash(source.TotalEma))
-			@connectorDetail("Success EMA", averageOrDash(source.SuccessEma))
-			@connectorDetail("Failure EMA", averageOrDash(source.FailureEma))
+			@modal.Detail("Created", display.DateTime(&source.CreatedAt))
+			@modal.Detail("Updated", display.DateTime(&source.UpdatedAt))
+			@modal.Detail("First Successful Sync", display.DateTime(source.FirstSuccessfulSyncTime))
+			@modal.Detail("Sync Interval", fmt.Sprintf("%ds (%s)", source.SyncIntervalSeconds, source.SyncIntervalSecondsReason))
+			@modal.Detail("Last Attempted", display.DateTime(source.LastAttemptedSync))
+			@modal.Detail("Last Success", display.DateTime(source.LastSuccessfulSync))
+			@modal.Detail("Last Failure", display.DateTime(source.LastFailedSync))
+			@modal.Detail("Total Syncs", orDash(source.TotalSyncs))
+			@modal.Detail("Succeeded", orDash(source.TotalSuccessfulSyncs))
+			@modal.Detail("Failed", orDash(source.TotalFailedSyncs))
+			@modal.Detail("Successes In A Row", orDash(source.ConsecutiveSuccessfulSyncs))
+			@modal.Detail("Failures In A Row", orDash(source.ConsecutiveFailedSyncs))
+			@modal.Detail("Last Sync Duration (ms)", orDash(source.LastSyncDuration))
+			@modal.Detail("Total EMA", averageOrDash(source.TotalEma))
+			@modal.Detail("Success EMA", averageOrDash(source.SuccessEma))
+			@modal.Detail("Failure EMA", averageOrDash(source.FailureEma))
 		</dl>
 		<h3 class="mt-4 text-sm font-semibold">Previous Errors</h3>
 		if len(source.PreviousSyncErrors) == 0 {
@@ -182,5 +174,3 @@ templ ConnectorModal(source *controlmodels.Connector) {
 		}
 	}
 }
-
-var connectorDetail = modal.Detail

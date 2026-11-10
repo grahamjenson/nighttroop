@@ -35,6 +35,32 @@ func TestAgo(t *testing.T) {
 	}
 }
 
+func TestDateTime(t *testing.T) {
+	at := func(when time.Time) *int64 {
+		ms := when.UnixMilli()
+		return &ms
+	}
+	zero := int64(0)
+	tests := []struct {
+		name string
+		ms   *int64
+		want string
+	}{
+		{"no time", nil, "-"},
+		{"zero", &zero, "-"},
+		{"utc", at(time.Date(2026, 10, 26, 12, 0, 5, 0, time.UTC)), "2026-10-26 12:00:05"},
+		{"another zone is shown in utc", at(time.Date(2026, 10, 27, 1, 30, 0, 0, time.FixedZone("NZDT", 13*60*60))), "2026-10-26 12:30:00"},
+		{"ms are dropped", at(time.Date(2026, 1, 2, 3, 4, 5, 999e6, time.UTC)), "2026-01-02 03:04:05"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DateTime(tt.ms); got != tt.want {
+				t.Errorf("DateTime() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestTimeAgo(t *testing.T) {
 	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
 	tests := []struct {

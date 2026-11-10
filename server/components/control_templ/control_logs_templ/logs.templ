@@ -1,8 +1,6 @@
 package control_logs_templ
 
 import (
-	"context"
-
 	"nighttroop.t1d.nz/data/db"
 	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
@@ -18,14 +16,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-func formatDate(ms int64) string {
-	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
-}
 
 // orServer is the row's site, or that it is the server's own
 func orServer(siteID *string) string {
@@ -52,12 +45,6 @@ func attributes(raw json.RawMessage) string {
 	return string(indented)
 }
 
-// isAdmin is whether the control identity is an admin, who can download the logs DB
-func isAdmin(ctx context.Context) bool {
-	controlContext := httputils.GetControlContext(ctx)
-	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
-}
-
 // page heads a page of rows with its title and description, and for an admin a download of the whole logs DB, and
 // pages it
 templ page(id string, title string, description string, path string, pagePath string, count int, skip int64, limit int64) {
@@ -66,7 +53,7 @@ templ page(id string, title string, description string, path string, pagePath st
 			@heading.Page(title) {
 				{ description }
 			}
-			if isAdmin(ctx) {
+			if httputils.IsControlAdmin(ctx) {
 				@button.Button(button.Props{
 					ID:         "control--logs-db--download",
 					Href:       "/logs-db",
@@ -166,7 +153,7 @@ templ EventsList(id string, events []*controlmodels.Event, withSite bool) {
 						}
 					}
 					@table.Cell() {
-						<span title={ formatDate(event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
+						<span title={ display.DateTime(&event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
 					}
 					@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 						{ duration(event) }
@@ -180,12 +167,12 @@ templ EventsList(id string, events []*controlmodels.Event, withSite bool) {
 templ EventModal(event *controlmodels.Event) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
-	@modal.Modal(modal.Props{ID: "control--event--details", Title: display.Name(event.Name), Subtitle: formatDate(event.StartedAt)}) {
+	@modal.Modal(modal.Props{ID: "control--event--details", Title: display.Name(event.Name), Subtitle: display.DateTime(&event.StartedAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("Site", orServer(event.SiteID))
-			@detail("Started", formatDate(event.StartedAt))
+			@detail("Started", display.DateTime(&event.StartedAt))
 			if event.FinishedAt != nil {
-				@detail("Finished", formatDate(*event.FinishedAt))
+				@detail("Finished", display.DateTime(event.FinishedAt))
 			}
 			@detail("Duration", duration(event))
 			@idDetails("control--event", "/events", event.RequestID, event.JobID)
@@ -236,7 +223,7 @@ templ ErrorsList(id string, errors []*controlmodels.Error, withSite bool) {
 						}
 					}
 					@table.Cell() {
-						<span title={ formatDate(e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
+						<span title={ display.DateTime(&e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
 					}
 				}
 			}
@@ -245,7 +232,7 @@ templ ErrorsList(id string, errors []*controlmodels.Error, withSite bool) {
 }
 
 templ ErrorModal(e *controlmodels.Error) {
-	@modal.Modal(modal.Props{ID: "control--error--details", Title: "Error", Subtitle: formatDate(e.CreatedAt)}) {
+	@modal.Modal(modal.Props{ID: "control--error--details", Title: "Error", Subtitle: display.DateTime(&e.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("Site", orServer(e.SiteID))
@@ -292,7 +279,7 @@ templ LogsTable(logs []*controlmodels.Log, q *apiquery.Query) {
 							{ orServer(log.SiteID) }
 						}
 						@table.Cell() {
-							<span title={ formatDate(log.CreatedAt) }>{ display.Ago(&log.CreatedAt, time.Now()) }</span>
+							<span title={ display.DateTime(&log.CreatedAt) }>{ display.Ago(&log.CreatedAt, time.Now()) }</span>
 						}
 					}
 				}
@@ -302,7 +289,7 @@ templ LogsTable(logs []*controlmodels.Log, q *apiquery.Query) {
 }
 
 templ LogModal(log *controlmodels.Log) {
-	@modal.Modal(modal.Props{ID: "control--log--details", Title: log.Level, Subtitle: formatDate(log.CreatedAt)}) {
+	@modal.Modal(modal.Props{ID: "control--log--details", Title: log.Level, Subtitle: display.DateTime(&log.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm">{ log.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("Site", orServer(log.SiteID))
