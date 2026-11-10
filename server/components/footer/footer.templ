@@ -1,6 +1,9 @@
 package footer
 
-import "nighttroop.t1d.nz/utils/httputils"
+import (
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/utils/httputils"
+)
 
 // Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
 // its terms of service, privacy policy and API docs, and Nighttroop's year, spaced apart and wrapping on a narrow
@@ -41,10 +44,11 @@ templ Footer() {
 // PublicFooter is a public page's footer, with the medical disclaimer above it
 templ PublicFooter() {
 	<div class="mb-3 px-4">
-		<p id="medical-disclaimer" role="note" class="mx-auto max-w-3xl rounded-md border border-amber-400 bg-amber-100 px-4 py-2 text-center text-sm text-amber-800">
+		@alert.Alert(alert.Props{ID: "medical-disclaimer", Variant: alert.VariantWarning, Class: "mx-auto max-w-3xl text-center",
+			Attributes: templ.Attributes{"role": "note"}}) {
 			<strong>Not a medical device.</strong> Nighttroop does not provide medical advice and is not a replacement for
 			proper medical care. Its data and alarms may be late, missing or wrong.
-		</p>
+		}
 	</div>
 	@Footer()
 }

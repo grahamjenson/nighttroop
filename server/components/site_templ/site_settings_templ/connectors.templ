@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
@@ -48,7 +50,7 @@ func enableOnFirstInput(source *sitemodels.Connector) templ.Attributes {
 
 templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
 	<div id="mainForm" class="mx-auto max-w-5xl">
-		@heading.PageBeside("Connectors", connectorsLiveBadge()) {
+		@heading.PageBeside("Connectors", badge.Live("site--settings--connectors--live", "/settings/connectors/events")) {
 			Choose where Nighttroop syncs your glucose data from.
 		}
 		@connectorsLive()
@@ -61,19 +63,7 @@ templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
 	</div>
 }
 
-// connectorsLiveBadge is shown beside the title while the page's stream is connected, and is what connectorsLive listens to
-templ connectorsLiveBadge() {
-	<span
-		id="site--settings--connectors--live"
-		class="hidden text-sm font-medium text-primary"
-		hx-sse:connect="/settings/connectors/events"
-		hx-on::sse:after:connection="this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"
-		hx-on::sse:close="this.classList.add('hidden')"
-		hx-on::sse:error="this.classList.add('hidden')"
-	>● Live</span>
-}
-
-// connectorsLive keeps each source's errors and status up to date: the connector settings' stream sends an event as a sync or
+// connectorsLive, listening to the Live badge beside the title, keeps each source's errors and status up to date: the connector settings' stream sends an event as a sync or
 // backfill finishes, and the page is read again, swapping in only the parts marked data-connectors-live, so a form being
 // edited is left as it is. A history the user opened stays open, even one opened while the page was being read: which
 // are open is taken as the response is swapped in, not as it is asked for. The page is read again when the stream
@@ -94,11 +84,11 @@ templ connectorsLive() {
 templ ConnectorErrors(source *sitemodels.Connector, name string) {
 	<div id={ "site--settings--" + name + "-connector--errors-live" } data-connectors-live>
 		if source != nil && len(source.PreviousSyncErrors) > 0 {
-			<div id={ "site--settings--" + name + "-connector--errors" } class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+			@alert.Alert(alert.Props{ID: "site--settings--" + name + "-connector--errors", Variant: alert.VariantError, Class: "mb-4"}) {
 				for _, syncError := range source.PreviousSyncErrors {
 					<p>{ syncError }</p>
 				}
-			</div>
+			}
 		}
 	</div>
 }

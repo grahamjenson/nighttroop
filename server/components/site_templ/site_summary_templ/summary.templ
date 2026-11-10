@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -103,14 +104,7 @@ templ Summary(summary *sitemodels.Summary) {
 			<div>
 				<div class="flex items-center gap-2">
 					<h1 class="text-2xl font-bold">Summary</h1>
-					<span
-						id="site--summary--live"
-						class="hidden text-sm font-medium text-primary"
-						hx-sse:connect="/data/summary/events"
-						hx-on::sse:after:connection="this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"
-						hx-on::sse:close="this.classList.add('hidden')"
-						hx-on::sse:error="this.classList.add('hidden')"
-					>● Live</span>
+					@badge.Live("site--summary--live", "/data/summary/events")
 				</div>
 				<span id="site--summary--hours" class="text-sm text-gray-500">{ fmt.Sprintf("Last %d hours", summary.Hours) }</span>
 			</div>
@@ -213,7 +207,9 @@ templ glucoseHero(summary *sitemodels.Summary) {
 				<div class="flex items-center gap-2">
 					<span class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</span>
 					if stale != "" {
-						<span id="site--summary--glucose--stale" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">No reading for { stale }</span>
+						@badge.Badge(badge.Props{ID: "site--summary--glucose--stale", Variant: badge.VariantWarning}) {
+							No reading for { stale }
+						}
 					}
 				</div>
 				<div class="flex items-baseline gap-2">

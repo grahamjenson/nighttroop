@@ -1,0 +1,51 @@
+package alert
+
+import "nighttroop.t1d.nz/utils/templui/utils"
+
+// Variant is an alert's colour: amber for a warning, red for an error and blue for information
+type Variant string
+
+const (
+	VariantWarning Variant = "warning"
+	VariantError   Variant = "error"
+	VariantInfo    Variant = "info"
+)
+
+var variantClasses = map[Variant]string{
+	VariantWarning: "border-amber-400 bg-amber-100 text-amber-800",
+	VariantError:   "border-red-200 bg-red-50 text-red-700",
+	VariantInfo:    "border-blue-200 bg-blue-50 text-blue-700",
+}
+
+type Props struct {
+	ID         string
+	Class      string
+	Attributes templ.Attributes
+	Variant    Variant
+	// Title is shown in bold above the children, when there is one
+	Title string
+}
+
+// Alert is a box calling out a warning, an error or information, with its children directly inside it
+templ Alert(p Props) {
+	<div
+		if p.ID != "" {
+			id={ p.ID }
+		}
+		class={ utils.TwMerge("rounded-lg border p-3 text-sm", Class(p.Variant), p.Class) }
+		{ p.Attributes... }
+	>
+		if p.Title != "" {
+			<p class="font-semibold">{ p.Title }</p>
+		}
+		{ children... }
+	</div>
+}
+
+// Class is a variant's colours, a warning's when it has none
+func Class(variant Variant) string {
+	if class, ok := variantClasses[variant]; ok {
+		return class
+	}
+	return variantClasses[VariantWarning]
+}

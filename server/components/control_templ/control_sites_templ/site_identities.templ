@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/ui/alert"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
@@ -107,9 +108,9 @@ templ resetButton(siteID string, identity *controlmodels.SiteIdentity, what stri
 
 // SiteIdentityReset shows an identity's new credentials after a reset, which are shown only this once
 templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
-	<div id="control--site--identity-reset" class="mt-2 rounded-lg border border-amber-400 bg-amber-100 p-3 text-sm">
-		<p class="font-semibold text-amber-800">New credentials for { credentials.Name }. Save them now: they are shown only this once.</p>
-		<dl class="mt-2 grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 font-mono">
+	@alert.Alert(alert.Props{ID: "control--site--identity-reset", Variant: alert.VariantWarning, Class: "mt-2",
+		Title: "New credentials for " + credentials.Name + ". Save them now: they are shown only this once."}) {
+		<dl class="mt-2 grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 font-mono text-gray-900">
 			if credentials.Password != nil {
 				@modal.Detail("Password", *credentials.Password)
 			}
@@ -120,7 +121,7 @@ templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
 				@modal.Detail("TOTP secret", *credentials.TotpSecret)
 			}
 		</dl>
-	</div>
+	}
 }
 
 // assumeButton signs the admin in to the site as an identity, after asking to confirm, in a new tab: control sends the

@@ -72,7 +72,7 @@ func TestGlucoseHeroGreysAnOldReading(t *testing.T) {
 				require.NotContains(t, html, "site--summary--glucose--stale")
 				require.Contains(t, html, `class="text-6xl font-extrabold tracking-tight text-glucose-in-range"`)
 			} else {
-				require.Contains(t, html, `text-amber-800">`+tt.badge+`</span>`)
+				require.Regexp(t, `id="site--summary--glucose--stale" class="[^"]*\btext-amber-800\b[^"]*">`+tt.badge+`</span>`, html)
 				require.Contains(t, html, `class="text-6xl font-extrabold tracking-tight text-gray-400"`)
 			}
 		})

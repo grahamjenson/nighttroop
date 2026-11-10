@@ -5,6 +5,8 @@ import (
 	"nighttroop.t1d.nz/server/components/authenticator"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/consts"
@@ -70,7 +72,9 @@ templ createPage() {
 				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm group-has-[.public--compact]:hidden">
 					@icon.Rocket(icon.Props{Class: "size-3.5 text-brand-gold"})
 					Free hosting, Nightscout compatible
-					<span class="rounded-full bg-brand-gold px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-night">Alpha</span>
+					@badge.Badge(badge.Props{Variant: badge.VariantGold}) {
+					Alpha
+				}
 				</p>
 				<div class="flex flex-col items-center group-has-[.public--compact]:flex-row group-has-[.public--compact]:justify-center group-has-[.public--compact]:gap-3">
 					<img id="public--logo" src="/logo.svg" alt="" class="mt-4 size-16 sm:size-20 group-has-[.public--compact]:mt-0 group-has-[.public--compact]:size-10"/>
@@ -113,7 +117,7 @@ templ feature(ic func(...icon.Props) templ.Component, title, body string) {
 }
 
 templ CreateSiteRateLimited(seconds int) {
-	<div id="rate-limit-alert" class="mt-3 rounded-xl bg-amber-500/10 p-4 text-amber-800 border border-amber-500/20 shadow-sm" role="alert">
+	@alert.Alert(alert.Props{ID: "rate-limit-alert", Variant: alert.VariantWarning, Class: "mt-3", Attributes: templ.Attributes{"role": "alert"}}) {
 		<div class="flex items-center justify-center">
 			<!-- Animated Tailwind Spinner -->
 			<div class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-400" role="status"></div>
@@ -123,7 +127,7 @@ templ CreateSiteRateLimited(seconds int) {
 				seconds.
 			</span>
 		</div>
-	</div>
+	}
 	<script>
     document.span = document.getElementById('countdownNum');
 

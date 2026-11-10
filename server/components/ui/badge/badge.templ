@@ -1,0 +1,65 @@
+package badge
+
+import "nighttroop.t1d.nz/utils/templui/utils"
+
+// Variant is a badge's colour: the theme's for branding and live states, amber for a warning, red for an error and
+// grey for anything else
+type Variant string
+
+const (
+	VariantNeutral Variant = "neutral"
+	VariantPrimary Variant = "primary"
+	VariantGold    Variant = "gold"
+	VariantWarning Variant = "warning"
+	VariantError   Variant = "error"
+)
+
+var variantClasses = map[Variant]string{
+	VariantNeutral: "bg-gray-100 text-gray-700",
+	VariantPrimary: "bg-primary/10 text-primary",
+	VariantGold:    "bg-brand-gold text-brand-night",
+	VariantWarning: "bg-amber-100 text-amber-800",
+	VariantError:   "bg-red-100 text-red-800",
+}
+
+type Props struct {
+	ID         string
+	Class      string
+	Attributes templ.Attributes
+	Variant    Variant
+}
+
+// Badge is a small pill naming a state, such as Live, Default or Over limit, all one size and weight. It sets no
+// display of its own, so a Class can hide it.
+templ Badge(p Props) {
+	<span
+		if p.ID != "" {
+			id={ p.ID }
+		}
+		class={ utils.TwMerge("whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold", Class(p.Variant), p.Class) }
+		{ p.Attributes... }
+	>
+		{ children... }
+	</span>
+}
+
+// Live is a primary badge shown while the page's stream of events is connected. It is triggered reconnected when the
+// stream connects again, as changes may have been missed while it was not.
+templ Live(id string, events string) {
+	@Badge(Props{ID: id, Variant: VariantPrimary, Class: "hidden", Attributes: templ.Attributes{
+		"hx-sse:connect": events,
+		"hx-on::sse:after:connection": templ.JSUnsafeFuncCall("this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"),
+		"hx-on::sse:close": templ.JSUnsafeFuncCall("this.classList.add('hidden')"),
+		"hx-on::sse:error": templ.JSUnsafeFuncCall("this.classList.add('hidden')"),
+	}}) {
+		● Live
+	}
+}
+
+// Class is a variant's colours, neutral's when it has none
+func Class(variant Variant) string {
+	if class, ok := variantClasses[variant]; ok {
+		return class
+	}
+	return variantClasses[VariantNeutral]
+}
