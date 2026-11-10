@@ -2,13 +2,12 @@ package site_presets_templ
 
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -81,22 +80,17 @@ templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
 	}
 }
 
+// profilePresetFields are what a profile has that a person can change, as the rest comes from the loop that uploaded it
+var profilePresetFields = []addmodal.Field{
+	{Name: "name", Label: "Name", Help: "What the profile is called, e.g. to switch to it by.", Required: true, Kind: addmodal.Text, Max: "64"},
+}
+
 templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 	{{ units := orEmpty(profile.Units) }}
-	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(ctx, profile.OccurredAt), Actions: modal.Submit("presets--profiles--edit", "Rename")}) {
-		<form
-			id="presets--profiles--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/presets/profiles/" + profile.ID }
-			hx-target={ "#presets--profiles--" + profile.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@field.Field("presets--profiles--edit--name", "Name", "w-64") {
-				@input.Input(input.Props{ID: "presets--profiles--edit--name", Name: "name", Placeholder: "Name", Value: orEmpty(profile.Name), Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-			}
-		</form>
+	{{ edit := addmodal.Edit("presets--profiles", "/presets/profiles", profile.ID, profilePresetFields, map[string]string{"name": orEmpty(profile.Name)}) }}
+	{{ edit.Submit = "Rename" }}
+	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(ctx, profile.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<div id="presets--profiles--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
 			@site_data_templ.ProfileSchedule("presets--profiles--basal-rates", "Basal (U/h)", profile.BasalRates, site_data_templ.ScheduleValue)
 			@site_data_templ.ProfileSchedule("presets--profiles--carb-ratios", "Carb Ratio (g/U)", profile.CarbRatios, site_data_templ.ScheduleValue)
@@ -110,13 +104,7 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 			@presetDetail("Carbs per Hour", orDash(profile.CarbsHr))
 			@presetDetail("Delay", orDash(profile.Delay))
 			@presetDetail("Timezone", orDash(profile.Timezone))
-			@modal.Section("Record")
-			@presetDetail("ID", profile.ID)
-			@presetDetail("App", orDash(profile.CreatedByAppName))
-			@presetDetail("Device", orDash(profile.CreatedByDeviceName))
-			@presetDetail("Created By", profile.CreatedByIdentityName)
-			@presetDetail("Updated", formatDate(ctx, profile.UpdatedAt))
-			@presetDetail("Updated By", orDash(profile.UpdatedByIdentityName))
+			@site_data_templ.RecordDetails(site_data_templ.Record{ID: profile.ID, UtcOffset: profile.UtcOffsetMinutes, App: profile.CreatedByAppName, Device: profile.CreatedByDeviceName, CreatedBy: profile.CreatedByIdentityName, Created: profile.CreatedAt, Updated: profile.UpdatedAt, UpdatedBy: profile.UpdatedByIdentityName})
 		</dl>
 	}
 }

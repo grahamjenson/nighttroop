@@ -5,22 +5,12 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
-
-// numberOrEmpty is an optional number for an input, empty when it is not set
-func numberOrEmpty(value *int64) string {
-	if value == nil {
-		return ""
-	}
-	return fmt.Sprint(*value)
-}
 
 // ActivitiesTable shows one page of activities, newest first, with buttons to the pages either side
 templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit int64) {
@@ -91,25 +81,6 @@ var activityFields = []addmodal.Field{
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
-templ activityInputs(id string, name string, duration string, notes string) {
-	@field.Field(id+"--name", "Name", "w-40") {
-		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name, Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-	}
-	@field.Field(id+"--duration", "Duration (min)", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--duration",
-			Type:        input.TypeNumber,
-			Name:        "duration_minutes",
-			Placeholder: "Minutes",
-			Value:       duration,
-			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "1440"},
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // activityRow opens the activity's details when clicked.
 templ activityRow(activity *sitemodels.SiteActivity) {
 	@table.DataRow("site--activity--"+activity.ID, "/data/activities/"+activity.ID, "Delete this activity?") {
@@ -135,18 +106,9 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 }
 
 templ ActivityModal(activity *sitemodels.SiteActivity) {
-	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt), Actions: modal.Submit("site--activity--edit", "Save")}) {
-		<form
-			id="site--activity--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/activities/" + activity.ID }
-			hx-target={ "#site--activity--" + activity.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@activityInputs("site--activity--edit", orEmpty(activity.Name), numberOrEmpty(activity.DurationMinutes), orEmpty(activity.Notes))
-		</form>
+	{{ edit := addmodal.Edit("site--activity", "/data/activities", activity.ID, activityFields, map[string]string{"name": orEmpty(activity.Name), "duration_minutes": orEmpty(activity.DurationMinutes), "notes": orEmpty(activity.Notes)}) }}
+	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Minutes", orDash(activity.DurationMinutes))
 			@readingDetail("Calories", orDash(activity.Calories))
@@ -154,15 +116,7 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 			@readingDetail("Heart Rate", orDash(activity.HeartRate))
 			@readingDetail("Notes", orDash(activity.Notes))
 			@readingDetail("Reason", orDash(activity.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", activity.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(activity.UtcOffsetMinutes))
-			@readingDetail("App", orDash(activity.CreatedByAppName))
-			@readingDetail("Device", orDash(activity.CreatedByDeviceName))
-			@readingDetail("Created By", activity.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, activity.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, activity.UpdatedAt))
-			@readingDetail("Updated By", orDash(activity.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: activity.ID, UtcOffset: activity.UtcOffsetMinutes, App: activity.CreatedByAppName, Device: activity.CreatedByDeviceName, CreatedBy: activity.CreatedByIdentityName, Created: activity.CreatedAt, Updated: activity.UpdatedAt, UpdatedBy: activity.UpdatedByIdentityName})
 		</dl>
 	}
 }

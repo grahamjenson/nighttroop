@@ -522,9 +522,11 @@ Adding a record on a data page opens a modal of all the fields a person can type
 units, whether it is required, with its limits, and a dropdown or suggestions for its types. Its time is typed in the
 settings' timezone, and is now when left blank; other fields left blank are not set.
 
-A record's details, on a data or presets page, edit it in a form whose every input is labelled, which wraps onto more
-lines on a phone so each input can be seen and tapped. Its Save (Rename for a profile) is at the modal's foot beside
-Close, as an add modal's Add is, and Enter in an input saves too.
+A record's details, on a data or presets page, edit it in a form of the add modal's fields it can change, labelled,
+explained and limited as adding them is (e.g. notes of at most 1024 characters), in one column on a phone so each input
+can be seen and tapped; a text emptied in it is cleared. Its Save (Rename for a profile) is at the modal's foot beside
+Close, as an add modal's Add is, and Enter in an input saves too. The details end with the same Record section on every
+page: its ID, UTC offset, app, device, who created and last updated it and when, each left out when it is not set.
 
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
 opens its details; Enter on its delete button deletes it without opening them. A row's delete icon, here and in

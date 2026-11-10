@@ -1,0 +1,25 @@
+package site_data_templ
+
+import "nighttroop.t1d.nz/server/components/modal"
+
+// Record is who and what made a record, and when, each nil one left out
+type Record struct {
+	ID                     string
+	UtcOffset              *int64
+	App, Device, UpdatedBy *string
+	CreatedBy              string
+	Created, Updated       int64
+}
+
+// RecordDetails are a record's own details, at the foot of its details modal's list
+templ RecordDetails(r Record) {
+	@modal.Section("Record")
+	@readingDetail("ID", r.ID)
+	@readingDetail("UTC Offset (minutes)", orDash(r.UtcOffset))
+	@readingDetail("App", orDash(r.App))
+	@readingDetail("Device", orDash(r.Device))
+	@readingDetail("Created By", r.CreatedBy)
+	@readingDetail("Created", formatReadingDate(ctx, r.Created))
+	@readingDetail("Updated", formatReadingDate(ctx, r.Updated))
+	@readingDetail("Updated By", orDash(r.UpdatedBy))
+}

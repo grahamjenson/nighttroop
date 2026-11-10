@@ -5,12 +5,10 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -78,25 +76,6 @@ var notificationEventFields = []addmodal.Field{
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
-templ notificationEventInputs(id string, title string, severity string, notes string) {
-	@field.Field(id+"--title", "Title", "w-48") {
-		@input.Input(input.Props{ID: id + "--title", Name: "title", Placeholder: "Title", Value: title, Required: true, Attributes: templ.Attributes{"maxlength": "128"}})
-	}
-	@field.Field(id+"--severity", "Severity (0-5)", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--severity",
-			Type:        input.TypeNumber,
-			Name:        "severity",
-			Placeholder: "Severity",
-			Value:       severity,
-			Attributes:  templ.Attributes{"step": "1", "min": "0", "max": "5"},
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // notificationEventRow opens the notification's details when clicked.
 templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
 	@table.DataRow("site--notification--"+event.ID, "/data/notifications/"+event.ID, "Delete this notification?") {
@@ -119,32 +98,15 @@ templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
 }
 
 templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
-	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: modal.Submit("site--notification--edit", "Save")}) {
-		<form
-			id="site--notification--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/notifications/" + event.ID }
-			hx-target={ "#site--notification--" + event.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@notificationEventInputs("site--notification--edit", event.Title, fmt.Sprint(event.Severity), orEmpty(event.Notes))
-		</form>
+	{{ edit := addmodal.Edit("site--notification", "/data/notifications", event.ID, notificationEventFields, map[string]string{"title": event.Title, "severity": fmt.Sprint(event.Severity), "notes": orEmpty(event.Notes)}) }}
+	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Severity", fmt.Sprint(event.Severity))
 			@readingDetail("Content", orDash(event.Content))
 			@readingDetail("Notes", orDash(event.Notes))
 			@readingDetail("Reason", orDash(event.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", event.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(event.UtcOffsetMinutes))
-			@readingDetail("App", orDash(event.CreatedByAppName))
-			@readingDetail("Device", orDash(event.CreatedByDeviceName))
-			@readingDetail("Created By", event.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, event.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, event.UpdatedAt))
-			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: event.ID, UtcOffset: event.UtcOffsetMinutes, App: event.CreatedByAppName, Device: event.CreatedByDeviceName, CreatedBy: event.CreatedByIdentityName, Created: event.CreatedAt, Updated: event.UpdatedAt, UpdatedBy: event.UpdatedByIdentityName})
 		</dl>
 	}
 }

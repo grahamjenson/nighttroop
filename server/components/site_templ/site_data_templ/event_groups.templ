@@ -146,22 +146,23 @@ templ eventGroupAdd() {
 // eventGroupForm adds a group of groupType, or with a group changes it, its events picked from those near its time of
 // the kinds its type can have
 func eventGroupForm(ctx context.Context, group *sitemodels.SiteEventGroup, groupType string) addmodal.Props {
+	inputTime := func(t time.Time) string { return t.In(Location(ctx)).Format("2006-01-02T15:04") }
+	// A new group's type is fixed, so only a group being changed has a field for it
+	fields := []addmodal.Field{
+		{Name: "group_type", Label: "Type", Help: "What kind of treatment it is, as Nightscout calls it.", Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes},
+		{Name: "occurred_at", Label: "When", Help: "When it happened. Events within an hour of it can be picked.", Kind: addmodal.When, Value: inputTime(time.Now())},
+		{Name: "reason", Label: "Reason", Help: "Why, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024"},
+	}
 	p := addmodal.Props{ID: "site--event-group--create", Title: "Add " + groupType, Path: "/data/event-groups", Target: "#eventGroupsTable tbody",
-		Submit: "Add " + groupType}
-	when, reason, notes := time.Now(), "", ""
+		Submit: "Add " + groupType, Fields: fields[1:]}
 	choices := "/data/event-groups/choices"
 	if group != nil {
-		p.ID, p.Path, p.Target, p.Swap, p.Submit = "site--event-group--edit", "/data/event-groups/"+group.ID, "#site--event-group--"+group.ID, "outerHTML", "Save"
-		when, reason, notes = time.UnixMilli(group.OccurredAt), orEmpty(group.Reason), orEmpty(group.Notes)
+		p = addmodal.Edit("site--event-group", "/data/event-groups", group.ID, fields, map[string]string{"group_type": groupType,
+			"occurred_at": inputTime(time.UnixMilli(group.OccurredAt)), "reason": orEmpty(group.Reason), "notes": orEmpty(group.Notes)})
 		choices += "?group_id=" + group.ID
-		p.Fields = []addmodal.Field{{Name: "group_type", Label: "Type", Help: "What kind of treatment it is, as Nightscout calls it.", Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes, Value: groupType}}
 	}
 	p.Extra = eventGroupChoicesLoader(p.ID, choices, group == nil, groupType)
-	p.Fields = append(p.Fields, []addmodal.Field{
-		{Name: "occurred_at", Label: "When", Help: "When it happened. Events within an hour of it can be picked.", Kind: addmodal.When, Value: when.In(Location(ctx)).Format("2006-01-02T15:04")},
-		{Name: "reason", Label: "Reason", Help: "Why, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64", Value: reason},
-		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Value: notes},
-	}...)
 	return p
 }
 
@@ -276,15 +277,7 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 			@readingDetail("Minutes", orDash(eventGroup.DurationMinutes))
 			@readingDetail("Notes", orDash(eventGroup.Notes))
 			@readingDetail("Reason", orDash(eventGroup.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", eventGroup.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(eventGroup.UtcOffsetMinutes))
-			@readingDetail("App", orDash(eventGroup.CreatedByAppName))
-			@readingDetail("Device", orDash(eventGroup.CreatedByDeviceName))
-			@readingDetail("Created By", eventGroup.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, eventGroup.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, eventGroup.UpdatedAt))
-			@readingDetail("Updated By", orDash(eventGroup.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: eventGroup.ID, UtcOffset: eventGroup.UtcOffsetMinutes, App: eventGroup.CreatedByAppName, Device: eventGroup.CreatedByDeviceName, CreatedBy: eventGroup.CreatedByIdentityName, Created: eventGroup.CreatedAt, Updated: eventGroup.UpdatedAt, UpdatedBy: eventGroup.UpdatedByIdentityName})
 		</dl>
 	}
 }

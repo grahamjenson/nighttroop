@@ -60,8 +60,8 @@
 1. P5: Name the reports header's and TDD title's days with `display.DayLayout` and `display.ShortDayLayout`
    (`reports.templ`'s `title` and `TDDReport`), and draw the AGP's regions and the overview's bands from one map of
    the glucose colours, as the summary, readings and glucose days are
-1. P3: Build the details modals' edit forms from their `addmodal` fields, as `EventGroupModal` does, so they edit every
-   field the add form has with the same labels and help, and delete the `*Inputs` templs
+1. P4: Let the details modals' `addmodal.Edit` forms edit every field their add form has, not only the few they did
+   before (e.g. food presets edit 3 of 12), checking each collection's `UpdateRow` changes them
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
    record's model and reads it back as a map (`utils.ToMap`) before the response is marshalled again, about 40% of
    the CPU of a 288 entry `/api/v1/entries` search

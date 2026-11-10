@@ -8,12 +8,10 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
@@ -202,23 +200,6 @@ func glucoseFields(ctx context.Context) []addmodal.Field {
 	}
 }
 
-templ glucoseInputs(id string, value string, notes string) {
-	@field.Field(id+"--reading", "Reading ("+string(*glucoseUnits(ctx))+")", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--reading",
-			Type:        input.TypeNumber,
-			Name:        "reading",
-			Placeholder: string(*glucoseUnits(ctx)),
-			Value:       value,
-			Required:    true,
-			Attributes:  glucoseInputAttributes(ctx),
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // glucoseReadingRow opens the reading's details when clicked.
 templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 	@table.DataRow("site--glucose--"+reading.ID, "/data/glucose/"+reading.ID, "Delete this glucose reading?") {
@@ -242,18 +223,9 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 }
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
-	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: modal.Submit("site--glucose--edit", "Save")}) {
-		<form
-			id="site--glucose--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/glucose/" + reading.ID }
-			hx-target={ "#site--glucose--" + reading.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@glucoseInputs("site--glucose--edit", formatGlucose(reading.Reading, reading.Units), orEmpty(reading.Notes))
-		</form>
+	{{ edit := addmodal.Edit("site--glucose", "/data/glucose", reading.ID, glucoseFields(ctx), map[string]string{"reading": formatGlucose(reading.Reading, reading.Units), "notes": orEmpty(reading.Notes)}) }}
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Type", display.ReadingType(reading.ReadingType))
 			@readingDetail("Original Units", orDash(reading.OriginalUnits))
@@ -266,26 +238,19 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			@readingDetail("RSSI", orDash(reading.Rssi))
 			@readingDetail("Notes", orDash(reading.Notes))
 			@readingDetail("Reason", orDash(reading.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", reading.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(reading.UtcOffsetMinutes))
-			@readingDetail("App", orDash(reading.CreatedByAppName))
-			@readingDetail("Device", orDash(reading.CreatedByDeviceName))
-			@readingDetail("Created By", reading.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, reading.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, reading.UpdatedAt))
-			@readingDetail("Updated By", orDash(reading.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: reading.ID, UtcOffset: reading.UtcOffsetMinutes, App: reading.CreatedByAppName, Device: reading.CreatedByDeviceName, CreatedBy: reading.CreatedByIdentityName, Created: reading.CreatedAt, Updated: reading.UpdatedAt, UpdatedBy: reading.UpdatedByIdentityName})
 		</dl>
 	}
 }
 
 var readingDetail = modal.DetailIfSet
 
-func orEmpty(value *string) string {
+// orEmpty is an optional value for an input, empty when it is not set
+func orEmpty[T any](value *T) string {
 	if value == nil {
 		return ""
 	}
-	return *value
+	return fmt.Sprint(*value)
 }
 
 templ GlucoseReadingCreated(reading *sitemodels.SiteGlucoseReading) {

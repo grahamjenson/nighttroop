@@ -89,9 +89,23 @@ CLICK "Meter"
 ASSERT_TEXT_VISIBLE 8.6 mmol/L
 ASSERT_TEXT_VISIBLE Rechecked
 
-// Notes longer than the database keeps are refused in its own words, which the toast leaves to the Errors page
+// Notes are limited to the 1024 characters the database keeps, as when adding, so longer ones are cut short
+ASSERT_VISIBLE #site--glucose--edit--notes[maxlength="1024"]
 INPUT #site--glucose--edit--notes {{ repeat "a" 1100 }}
 CLICK #site--glucose--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Glucose Reading Updated
+CLICK "Meter"
+ASSERT_VISIBLE #site--glucose--edit--notes[value="{{ repeat "a" 1024 }}"]
+CLICK #site--glucose--details--close
+ASSERT_NOT_VISIBLE #site--glucose--details
+
+// A time before 1970, which the database does not keep, is refused in its own words, which the toast leaves to the
+// Errors page
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 7.9
+INPUT #site--glucose--create--occurred-at 1960-01-01T00:00
+CLICK #site--glucose--create--submit
 ASSERT_STATUS 400
 ASSERT_TEXT_VISIBLE Something went wrong.
 ASSERT_VISIBLE #toaster >> text=Errors page
