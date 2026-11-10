@@ -130,16 +130,17 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 	return docs
 }
 
-// WriteVirtualData writes the virtual documents for the window into the
-// site through the Nightscout collections, returning how many were new.
-// Collections named in skip are left out, as are device statuses older than
-// deviceStatusBackfillAge.
-func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPIStore, siteContext *httputils.SiteContext, end time.Time, span time.Duration, skip ...nsutils.Collection) (int, error) {
+// WriteVirtualData writes the virtual documents for the window into the site through the Nightscout collections,
+// returning how many were new
+func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPIStore, siteContext *httputils.SiteContext, end time.Time, span time.Duration) (int, error) {
+	return writeVirtualDocuments(ctx, store, siteContext, VirtualDocuments(end, span))
+}
+
+// writeVirtualDocuments writes the documents into the site, but no device statuses older than deviceStatusBackfillAge,
+// returning how many were new
+func writeVirtualDocuments(ctx context.Context, store *nightscoutapi.NightTroopAPIStore, siteContext *httputils.SiteContext, docs []virtualDoc) (int, error) {
 	added, oldestStatus := 0, time.Now().Add(-deviceStatusBackfillAge).UnixMilli()
-	for _, doc := range VirtualDocuments(end, span) {
-		if slices.Contains(skip, doc.collection) {
-			continue
-		}
+	for _, doc := range docs {
 		// As a Nightscout backfill copies, no device status older than deviceStatusBackfillAge
 		if date, _ := doc.data["date"].(int64); doc.collection == nsutils.Devicestatus && date < oldestStatus {
 			continue
@@ -167,12 +168,7 @@ func (b *ConnectorJobManager) syncVirtual(jobInfo *ConnectorJobInfo) (int, error
 	ctx, cancel := context.WithTimeout(jobInfo.ctx, 20*time.Second)
 	defer cancel()
 
-	// The first sync fills the last 30 minutes, profile included, so the site has data to show straight away
-	span, skip := virtualSlot, []nsutils.Collection{nsutils.Profile}
-	if jobInfo.firstSync {
-		span, skip = 30*time.Minute, nil
-	}
-	added, err := WriteVirtualData(ctx, b.nightscoutStore, jobInfo.Site.siteContext(virtualIdentity), time.Now(), span, skip...)
+	added, err := writeVirtualDocuments(ctx, b.nightscoutStore, jobInfo.Site.siteContext(virtualIdentity), virtualSyncDocuments(time.Now(), jobInfo.firstSync))
 	if err != nil {
 		return 0, err
 	}
@@ -180,4 +176,14 @@ func (b *ConnectorJobManager) syncVirtual(jobInfo *ConnectorJobInfo) (int, error
 		slog.InfoContext(ctx, "Added virtual data for user", "added", added)
 	}
 	return added, nil
+}
+
+// virtualSyncDocuments are what a sync at now writes: its slot's, without the profile; or, the first sync, the last 30
+// minutes', profile included, so the site has data to show straight away. The first sync leaves out a meter reading,
+// so it is the same 6 readings whenever it runs, not 7 in the half hour after 07:00 and 19:00 UTC; a backfill writes it.
+func virtualSyncDocuments(now time.Time, firstSync bool) []virtualDoc {
+	if !firstSync {
+		return slices.DeleteFunc(VirtualDocuments(now, virtualSlot), func(doc virtualDoc) bool { return doc.collection == nsutils.Profile })
+	}
+	return slices.DeleteFunc(VirtualDocuments(now, 30*time.Minute), func(doc virtualDoc) bool { return doc.data["type"] == "mbg" })
 }

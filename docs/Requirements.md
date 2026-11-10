@@ -548,6 +548,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   and a correction at its peak, over a 25 hour one, so days differ. It reaches every range, about 2% very low (below
   54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL. It
   also has a finger prick meter reading twice a day, at 07:02 and 19:02 UTC, 6 mg/dL above the CGM then.
+- The virtual connector's first sync writes the last 30 minutes, always 6 CGM readings and no meter reading, whatever
+  time it runs; a backfill writes a meter reading in them.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
