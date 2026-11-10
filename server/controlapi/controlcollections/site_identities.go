@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -147,12 +146,9 @@ func (s *SitesCollection) AssumeHandler(cfg *config.ServerConfig) http.HandlerFu
 	}
 }
 
-// adminsSiteIdentity is the site's identity in the URL, for an admin only
+// adminsSiteIdentity is the site's identity in the URL
 func adminsSiteIdentity(r *http.Request) (*controldb.SiteIdentity, error) {
 	controlContext := httputils.GetControlContext(r.Context())
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		return nil, apiutils.ErrForbidden
-	}
 	identityID, err := strconv.ParseInt(chi.URLParam(r, "identity"), 10, 64)
 	if err != nil {
 		return nil, apiutils.ErrNotFound

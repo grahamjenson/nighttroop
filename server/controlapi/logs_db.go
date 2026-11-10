@@ -12,7 +12,6 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/backup"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -33,10 +32,6 @@ const logsDBWriteTimeout = 10 * time.Minute
 // large one is not cut off by the request timeout.
 func LogsDBHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	if !downloadingLogsDB.TryLock() {
 		errDownloadingLogsDB.Write(acceptType, w)
 		return
