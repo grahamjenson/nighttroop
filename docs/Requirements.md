@@ -382,9 +382,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day.
 - The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the week with yesterday in it at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
-- The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days
-  (the last 31), weeks, fortnights and months (the last year): each one's days with data, time in range, daily dose
-  and daily carbs, newest first, each opening its AGP report.
+- The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), is of a month, this one unless it is
+  given as `?month=2026-10`, and has a table of each of its kept days, the weeks and fortnights with a day in it, and
+  the months of its year: each one's days with data, time in range, daily dose and daily carbs, newest first, each
+  opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
+  month outside those is refused. A past month's empty table says it has none in that month, or year for months.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
