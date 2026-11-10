@@ -56,10 +56,15 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/push-credentials/new", (&controlcollections.PushCredentialsCollection{}).NewHandler)
 		r.Post("/push-credentials", (&controlcollections.PushCredentialsCollection{}).CreateHandler)
 		r.Delete("/push-credentials/{id}", (&controlcollections.PushCredentialsCollection{}).DeleteHandler)
+		// Control's admins, which an admin manages, never itself
+		r.Get("/admins", controlapi.ControlAdminsHandler)
+		r.Post("/admins", controlapi.CreateControlAdminHandler)
+		r.Post("/admins/{id}/role", controlapi.SetControlAdminRoleHandler)
+		r.Post("/admins/{id}/password", controlapi.ResetControlAdminPasswordHandler)
+		r.Post("/admins/{id}/totp", controlapi.ResetControlAdminTOTPHandler)
+		r.Delete("/admins/{id}", controlapi.DeleteControlAdminHandler)
 
-		// Not here yet: a site's API use per device and DB table sizes, and managing the control admins themselves,
-		// listing them, resetting another's password or TOTP, changing their role or deleting one (never the one
-		// signed in)
+		// Not here yet: a site's API use per device and DB table sizes
 	})
 	return r
 }
