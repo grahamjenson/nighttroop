@@ -255,15 +255,7 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 			@readingDetail("Minutes", orDash(eventGroup.DurationMinutes))
 			@readingDetail("Notes", orDash(eventGroup.Notes))
 			@readingDetail("Reason", orDash(eventGroup.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", eventGroup.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(eventGroup.UtcOffsetMinutes))
-			@readingDetail("App", orDash(eventGroup.CreatedByAppName))
-			@readingDetail("Device", orDash(eventGroup.CreatedByDeviceName))
-			@readingDetail("Created By", eventGroup.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, eventGroup.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, eventGroup.UpdatedAt))
-			@readingDetail("Updated By", orDash(eventGroup.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: eventGroup.ID, UtcOffset: eventGroup.UtcOffsetMinutes, App: eventGroup.CreatedByAppName, Device: eventGroup.CreatedByDeviceName, CreatedBy: eventGroup.CreatedByIdentityName, Created: eventGroup.CreatedAt, Updated: eventGroup.UpdatedAt, UpdatedBy: eventGroup.UpdatedByIdentityName})
 		</dl>
 	}
 }

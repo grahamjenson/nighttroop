@@ -86,15 +86,7 @@ templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
 			@readingDetail("Content", orDash(event.Content))
 			@readingDetail("Notes", orDash(event.Notes))
 			@readingDetail("Reason", orDash(event.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", event.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(event.UtcOffsetMinutes))
-			@readingDetail("App", orDash(event.CreatedByAppName))
-			@readingDetail("Device", orDash(event.CreatedByDeviceName))
-			@readingDetail("Created By", event.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, event.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, event.UpdatedAt))
-			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: event.ID, UtcOffset: event.UtcOffsetMinutes, App: event.CreatedByAppName, Device: event.CreatedByDeviceName, CreatedBy: event.CreatedByIdentityName, Created: event.CreatedAt, Updated: event.UpdatedAt, UpdatedBy: event.UpdatedByIdentityName})
 		</dl>
 	}
 }

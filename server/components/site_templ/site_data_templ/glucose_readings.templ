@@ -229,15 +229,7 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			@readingDetail("RSSI", orDash(reading.Rssi))
 			@readingDetail("Notes", orDash(reading.Notes))
 			@readingDetail("Reason", orDash(reading.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", reading.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(reading.UtcOffsetMinutes))
-			@readingDetail("App", orDash(reading.CreatedByAppName))
-			@readingDetail("Device", orDash(reading.CreatedByDeviceName))
-			@readingDetail("Created By", reading.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, reading.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, reading.UpdatedAt))
-			@readingDetail("Updated By", orDash(reading.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: reading.ID, UtcOffset: reading.UtcOffsetMinutes, App: reading.CreatedByAppName, Device: reading.CreatedByDeviceName, CreatedBy: reading.CreatedByIdentityName, Created: reading.CreatedAt, Updated: reading.UpdatedAt, UpdatedBy: reading.UpdatedByIdentityName})
 		</dl>
 	}
 }

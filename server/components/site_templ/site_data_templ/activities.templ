@@ -93,15 +93,7 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 			@readingDetail("Heart Rate", orDash(activity.HeartRate))
 			@readingDetail("Notes", orDash(activity.Notes))
 			@readingDetail("Reason", orDash(activity.Reason))
-			@modal.Section("Record")
-			@readingDetail("ID", activity.ID)
-			@readingDetail("UTC Offset (minutes)", orDash(activity.UtcOffsetMinutes))
-			@readingDetail("App", orDash(activity.CreatedByAppName))
-			@readingDetail("Device", orDash(activity.CreatedByDeviceName))
-			@readingDetail("Created By", activity.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(ctx, activity.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(ctx, activity.UpdatedAt))
-			@readingDetail("Updated By", orDash(activity.UpdatedByIdentityName))
+			@RecordDetails(Record{ID: activity.ID, UtcOffset: activity.UtcOffsetMinutes, App: activity.CreatedByAppName, Device: activity.CreatedByDeviceName, CreatedBy: activity.CreatedByIdentityName, Created: activity.CreatedAt, Updated: activity.UpdatedAt, UpdatedBy: activity.UpdatedByIdentityName})
 		</dl>
 	}
 }

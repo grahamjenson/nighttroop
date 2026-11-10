@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/alert"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -177,9 +178,9 @@ func signedIn(ctx context.Context) *controldb.SiteIdentity {
 // it out, to sign in again with the new one
 templ resetYourCredentials(identity *controldb.SiteIdentity) {
 	@card.Card(card.Props{ID: "site--settings--credentials", Title: "Password & TOTP", Class: "space-y-3"}) {
-		<p id="site--settings--credentials-warning" class="text-sm text-amber-800">
+		@alert.Alert(alert.Props{ID: "site--settings--credentials-warning", Variant: alert.VariantWarning}) {
 			Resetting your password or TOTP signs you out. The new one is shown once, and you sign in again with it.
-		</p>
+		}
 		<div class="flex gap-2">
 			@resetButton(button.Props{ID: "site--settings--reset-password", Variant: button.VariantOutline}, identity.ID, "password",
 				"Reset your password", "Reset your password? You will be signed out, and must sign in again with the new one.") {
