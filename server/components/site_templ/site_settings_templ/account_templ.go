@@ -435,7 +435,8 @@ func AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) t
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,
 			Attributes: templ.Attributes{"hx-post": "/settings/account/truncate", "hx-target": "#site--account--storage", "hx-swap": "outerHTML",
-				"hx-status:4xx": "target:#toaster swap:beforeend", "hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+				"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
+				"hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
