@@ -152,6 +152,12 @@ func TestDirection(t *testing.T) {
 			t.Errorf("Direction(%v) = %q, want %q", tt.in, got, tt.want)
 		}
 	}
+	// Beside a reading, a direction with no arrow, or none, shows nothing
+	for in, want := range map[*string]string{nil: "", str("Flat"): "→", str("NOT COMPUTABLE"): ""} {
+		if got := Arrow(in); got != want {
+			t.Errorf("Arrow(%v) = %q, want %q", in, got, want)
+		}
+	}
 }
 
 func TestName(t *testing.T) {

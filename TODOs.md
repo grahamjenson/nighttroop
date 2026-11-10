@@ -63,6 +63,9 @@
        the focus too
 1. P4: Show the event group picker's times (`event_groups.templ`'s choices and range) in the time format, as other
    times are, rather than as 24-hour HH:mm
+1. P5: Name the reports header's and TDD title's days with `display.DayLayout` and `display.ShortDayLayout`
+   (`reports.templ`'s `title` and `TDDReport`), and draw the AGP's regions and the overview's bands from one map of
+   the glucose colours, as the summary, readings and glucose days are
 1. P3: Build the details modals' edit forms from their `addmodal` fields, as `EventGroupModal` does, so they edit every
    field the add form has with the same labels and help, and delete the `*Inputs` templs
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
