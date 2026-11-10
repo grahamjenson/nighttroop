@@ -72,7 +72,6 @@ ASSERT_TEXT_VISIBLE Showing 1 to 7
 ASSERT_TEXT_VISIBLE Meter
 ASSERT_TEXT_VISIBLE Sensor
 ASSERT_VISIBLE #glucoseReadingsTable span[title]:not([title="-"]) >> nth=0
-SCREENSHOT glucose_reading_created
 
 // Its details can be edited, which updates its row
 CLICK "Meter"
@@ -86,7 +85,6 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Glucose Reading Updated
 ASSERT_NOT_VISIBLE #site--glucose--details
 ASSERT_TEXT_VISIBLE 8.6
-SCREENSHOT glucose_reading_updated
 
 // The edit is saved
 CLICK "Meter"
@@ -146,7 +144,6 @@ ASSERT_NOT_VISIBLE #site--glucose--previous
 CLICK #site--glucose--next
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 2 to 2
-SCREENSHOT glucose_readings_paged
 
 CLICK #site--glucose--previous
 ASSERT_STATUS 200
@@ -171,7 +168,6 @@ ASSERT_TEXT_VISIBLE Glucose Reading Deleted
 ASSERT_NOT_VISIBLE #site--glucose--details
 // The count under the table stops counting it straight away, without a reload
 ASSERT_TEXT_VISIBLE Showing 1 to 6
-SCREENSHOT glucose_reading_deleted
 
 // The deleted reading stays gone after a reload
 GOTO /data/glucose

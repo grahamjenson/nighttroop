@@ -57,7 +57,6 @@ ASSERT_TEXT_VISIBLE Everyday
 CLICK #profilePresetsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Profile Deleted
 ASSERT_NOT_VISIBLE #presets--profiles--details
-SCREENSHOT profile_deleted
 
 // The deleted profile stays gone after a reload
 GOTO /presets/profiles

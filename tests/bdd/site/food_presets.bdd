@@ -42,7 +42,6 @@ INPUT #presets--food--create--food-type snack
 CLICK #presets--food--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Toast
-SCREENSHOT food_preset_created
 
 // Clicking a food preset shows all its details, and they can be edited, which updates its row
 CLICK #foodPresetsTable tbody tr >> nth=0
@@ -61,7 +60,6 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Food Preset Updated
 ASSERT_NOT_VISIBLE #presets--food--details
 ASSERT_TEXT_VISIBLE Brown toast
-SCREENSHOT food_preset_updated
 
 // The edit is saved
 CLICK #foodPresetsTable tbody tr >> nth=0
@@ -92,7 +90,6 @@ ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #foodPresetsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Food Preset Deleted
 ASSERT_NOT_VISIBLE #presets--food--details
-SCREENSHOT food_preset_deleted
 
 // The deleted food preset stays gone after a reload
 GOTO /presets/food

@@ -43,7 +43,6 @@ INPUT #site--food--create--notes Lunch
 CLICK #site--food--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Lunch
-SCREENSHOT food_intake_created
 
 // Clicking a food intake shows all its details, and they can be edited, which updates its row
 CLICK #foodIntakesTable tbody tr >> nth=0
@@ -58,7 +57,6 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Food Intake Updated
 ASSERT_NOT_VISIBLE #site--food--details
 ASSERT_TEXT_VISIBLE Big lunch
-SCREENSHOT food_intake_updated
 
 // The edit is saved
 CLICK #foodIntakesTable tbody tr >> nth=0
@@ -77,7 +75,6 @@ CLICK #site--food--next
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 2 to 2
 ASSERT_TEXT_VISIBLE Correction
-SCREENSHOT food_intakes_paged
 
 CLICK #site--food--previous
 ASSERT_STATUS 200
@@ -90,7 +87,6 @@ ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #foodIntakesTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Food Intake Deleted
 ASSERT_NOT_VISIBLE #site--food--details
-SCREENSHOT food_intake_deleted
 
 // The deleted food intake stays gone after a reload
 GOTO /data/food

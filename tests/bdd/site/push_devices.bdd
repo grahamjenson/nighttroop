@@ -34,7 +34,6 @@ CLICK #pushDevicesTable tbody tr:has(td:text-is("admin")) >> button[title=Delete
 ASSERT_TEXT_VISIBLE Push Device Deleted
 ASSERT_NOT_VISIBLE #pushDevicesTable >> text="com.TEAM123456.loopkit.Loop"
 ASSERT_VISIBLE #site--push-device--empty
-SCREENSHOT push_device_deleted
 GOTO /settings/push-devices
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--push-device--empty

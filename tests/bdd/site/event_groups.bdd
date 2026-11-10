@@ -44,7 +44,6 @@ CLICK #eventGroupsTable tbody tr:has(td:text-is("Temp Basal")) >> button[title=D
 ASSERT_TEXT_VISIBLE Event Group Deleted
 ASSERT_NOT_VISIBLE #site--event-group--details
 ASSERT_NOT_VISIBLE #eventGroupsTable >> text="Temp Basal"
-SCREENSHOT event_group_deleted
 
 // The deleted group and its temp basal stay gone after a reload
 GOTO /data/event-groups
