@@ -34,6 +34,7 @@ ASSERT_PATH /api-docs
 ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop")
 ASSERT_VISIBLE #api-docs a[download][href$="/openapi.json"]
 ASSERT_VISIBLE #api-docs li[data-item-id="tag/Nightscout"]
+CLICK #api-docs li[data-item-id="tag/Site"] > label
 CLICK #api-docs li[data-item-id="tag/Site/operation/Login"] label
 ASSERT_VISIBLE #api-docs [id="tag/Site/operation/Login"] h2:has-text("Signs an admin")
 ASSERT_VISIBLE #api-docs [id="tag/Site/operation/Login"] :text("Request samples")
@@ -41,6 +42,7 @@ ASSERT_VISIBLE #api-docs [id="tag/Site/operation/Login"] :text("expires_at") >> 
 
 // Each endpoint shows the host it is on, on this server, with the site's ID for the reader to fill in: the Nightscout
 // API is on a site's Nightscout host
+CLICK #api-docs li[data-item-id="tag/Nightscout"] > label
 CLICK #api-docs li[data-item-id="tag/Nightscout/operation/NsV1Search"] label
 CLICK #api-docs [id="tag/Nightscout/operation/NsV1Search"] button:has-text("/api/v1/{collection}")
 ASSERT_VISIBLE #api-docs [id="tag/Nightscout/operation/NsV1Search"] span:has-text("://{site_id}.ns.localhost")
