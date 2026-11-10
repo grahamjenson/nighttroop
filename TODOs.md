@@ -55,9 +55,9 @@
    header then marks no hub and only the open menu marks it
 1. P4: Leave out of the details modals' lists (`readingDetail` and `presetDetail` rows) the fields their edit forms
    now show, e.g. an insulin dose's split, type, notes and reason, so each is shown once
-1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
-   record's model and reads it back as a map (`utils.ToMap`) before the response is marshalled again, about 40% of
-   the CPU of a 288 entry `/api/v1/entries` search
+1. P4: Marshal an entry without `Entry.MarshalJSON` (`models/nightscoutmodels/entries.go`) marshalling it again as
+   an alias and making a `time.FixedZone` for its `dateString`, about a quarter of the CPU of a 288 entry
+   `/api/v1/entries` search now its fields are not read back as a map (`BenchmarkWriteRecordsV1Entries`)
 1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
