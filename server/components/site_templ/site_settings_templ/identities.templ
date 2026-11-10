@@ -17,6 +17,8 @@ import (
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -211,7 +213,9 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 		@table.Cell() {
 			{ identity.Name }
 			if identity.CurrentIdentity {
-				<span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">You</span>
+				@badge.Badge(badge.Props{Class: "ml-2"}) {
+					You
+				}
 			}
 		}
 		@table.Cell() {
@@ -504,7 +508,9 @@ templ CredentialsModal(url string, name string, password string, totpSecret *str
 	@modal.Modal(modal.Props{ID: "site--identities--credentials", Title: "Credentials for " + name, Actions: credentialsActions(signedOut), Dismiss: dismiss}) {
 		<div class="mt-4 flex flex-col items-center">
 			if signedOut {
-				<p id="site--identities--signed-out" class="mb-4 text-sm font-medium text-amber-800">You have been signed out. Save these, then sign in again with them.</p>
+				@alert.Alert(alert.Props{ID: "site--identities--signed-out", Variant: alert.VariantWarning, Class: "mb-4 w-full"}) {
+					You have been signed out. Save these, then sign in again with them.
+				}
 			}
 			@createdUserInfo(url, name, password, totpSecret, nsToken)
 			{ children... }
@@ -537,7 +543,7 @@ templ savedThese() {
 				I Have Saved These
 			}
 		</div>
-		<div hidden class="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800">
+		@alert.Alert(alert.Props{Variant: alert.VariantWarning, Class: "space-y-3", Attributes: templ.Attributes{"hidden": true}}) {
 			<p id="site--identities--saved-warning" class="font-medium">
 				Once closed, these credentials disappear and are never shown again. If they are lost, they can only be reset.
 			</p>
@@ -562,7 +568,7 @@ templ savedThese() {
 					Close
 				}
 			</div>
-		</div>
+		}
 	</div>
 }
 

@@ -18,7 +18,7 @@ ASSERT_VISIBLE #control--nav--logo
 // marked inactive and can be disabled
 ASSERT_PATH /
 ASSERT_VISIBLE #controlSitesTable
-ASSERT_TEXT_VISIBLE inactive
+ASSERT_TEXT_VISIBLE Inactive
 SCREENSHOT dashboard
 
 // The control site sees every site, newest first

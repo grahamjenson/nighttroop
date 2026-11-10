@@ -21,6 +21,7 @@ import (
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/server/components/stat"
 	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -204,7 +205,9 @@ templ siteRow(site *controlmodels.Site) {
 		@table.Cell() {
 			{ display.Name(site.State) }
 			if inactive(ctx, site) {
-				<span id={ "control--site--" + site.ID + "--inactive" } class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">inactive</span>
+				@badge.Badge(badge.Props{ID: "control--site--" + site.ID + "--inactive", Variant: badge.VariantWarning, Class: "ml-2"}) {
+					Inactive
+				}
 			}
 		}
 		@table.Cell() {
@@ -219,21 +222,16 @@ templ siteRow(site *controlmodels.Site) {
 		@table.Cell(table.NumCell) {
 			{ sizeMB(site.EstimatedDbSizeKb) }
 			if site.Oversized() {
-				<span class="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">over limit</span>
+				@badge.Badge(badge.Props{Variant: badge.VariantError, Class: "ml-2"}) {
+					Over limit
+				}
 			}
 		}
 	}
 }
 
-// stateClasses colour a site's state badge: live in the theme's colour, disabled as a warning, and gone grey
-var stateClasses = map[string]string{"live": "bg-primary/10 text-primary", "disabled": "bg-amber-100 text-amber-800"}
-
-func stateClass(state string) string {
-	if class, ok := stateClasses[state]; ok {
-		return class
-	}
-	return "bg-gray-100 text-gray-700"
-}
+// stateVariants colour a site's state badge: live in the theme's colour, disabled as a warning, and gone neutral grey
+var stateVariants = map[string]badge.Variant{"live": badge.VariantPrimary, "disabled": badge.VariantWarning}
 
 // lifecycle is when the site was made, its batch, and when it was disabled, archived or deleted, if it was
 func lifecycle(site *controlmodels.Site) string {
@@ -294,12 +292,18 @@ templ SitePage(page *controlmodels.SitePage) {
 		<div>
 			<div class="flex flex-wrap items-center gap-2">
 				<h1 class="font-mono text-2xl font-bold">{ site.ID }</h1>
-				<span id="control--site--state" class={ "rounded-full px-2 py-0.5 text-xs font-medium", stateClass(site.State) }>{ display.Name(site.State) }</span>
+				@badge.Badge(badge.Props{ID: "control--site--state", Variant: stateVariants[site.State]}) {
+					{ display.Name(site.State) }
+				}
 				if inactive(ctx, site) {
-					<span id="control--site--inactive" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Inactive</span>
+					@badge.Badge(badge.Props{ID: "control--site--inactive", Variant: badge.VariantWarning}) {
+						Inactive
+					}
 				}
 				if site.Oversized() {
-					<span id="control--site--over-limit" class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Over limit</span>
+					@badge.Badge(badge.Props{ID: "control--site--over-limit", Variant: badge.VariantError}) {
+						Over limit
+					}
 				}
 			</div>
 			<p id="control--site--lifecycle" class="mt-1 text-sm text-gray-500">{ lifecycle(site) }</p>
