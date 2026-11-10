@@ -157,18 +157,9 @@ templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
 	}
 }
 
-// deviceStatusRow opens the status's details when clicked. The delete button stops its click reaching the row.
+// deviceStatusRow opens the status's details when clicked.
 templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
-	{{ id := "site--device-status--" + status.ID }}
-	@table.Row(table.RowProps{
-		ID:    id,
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    "/data/device-status/" + status.ID,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.DataRow("site--device-status--"+status.ID, "/data/device-status/"+status.ID, "Delete this device status?") {
 		@table.Cell() {
 			{ formatReadingDate(ctx, status.OccurredAt) }
 		}
@@ -186,28 +177,6 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ withUnit(status.LoopCob, "") }
-		}
-		@table.Cell() {
-			<div class="flex justify-end">
-				@button.Button(button.Props{
-					ID:      id + "--delete",
-					Variant: button.VariantGhost,
-					Size:    button.SizeIcon,
-					Attributes: templ.Attributes{
-						"title":                "Delete",
-						"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-						"hx-delete":            "/data/device-status/" + status.ID,
-						"hx-confirm":           "Delete this device status?",
-						"hx-target":            "#toaster",
-						"hx-swap":              "beforeend",
-						"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-						"hx-status:4xx":        "target:#toaster swap:beforeend",
-						"hx-status:5xx":        "target:#toaster swap:beforeend",
-					},
-				}) {
-					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
-				}
-			</div>
 		}
 	}
 }

@@ -83,15 +83,7 @@ templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
 }
 
 templ jobRow(job *controlmodels.Job) {
-	@table.Row(table.RowProps{
-		ID:    fmt.Sprintf("control--job--%d", job.ID),
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    fmt.Sprintf("/jobs/%d", job.ID),
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.ModalRow(fmt.Sprintf("control--job--%d", job.ID), fmt.Sprintf("/jobs/%d", job.ID)) {
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(job.ID) }
 		}

@@ -95,14 +95,7 @@ templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int6
 
 templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
 	{{ day, queue, job := dayQueueJob(stats) }}
-	@table.Row(table.RowProps{
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    "/job-stats/" + stats.DayQueueJob,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.ModalRow("", "/job-stats/"+stats.DayQueueJob) {
 		@table.Cell() {
 			{ day }
 		}

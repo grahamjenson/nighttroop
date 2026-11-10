@@ -395,7 +395,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(day)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 107, Col: 8}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 100, Col: 8}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -422,7 +422,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(queue)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 110, Col: 10}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 103, Col: 10}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -449,7 +449,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(job)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 113, Col: 8}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 106, Col: 8}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -476,7 +476,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(stats.TotalJobs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 116, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 109, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -503,7 +503,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(stats.TotalSuccess))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 119, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 112, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -530,7 +530,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(stats.TotalFailed))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 122, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 115, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -557,7 +557,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(meanDuration(stats))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 125, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 118, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -571,14 +571,7 @@ func jobStatsRow(stats *controlmodels.JobStatsDaily) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.Row(table.RowProps{
-			Class: "cursor-pointer",
-			Attributes: templ.Attributes{
-				"hx-get":    "/job-stats/" + stats.DayQueueJob,
-				"hx-target": "#modal-container",
-				"hx-swap":   "innerHTML",
-			},
-		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.ModalRow("", "/job-stats/"+stats.DayQueueJob).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -672,7 +665,7 @@ func JobStatsModal(stats *controlmodels.JobStatsDaily) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 150, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_job_stats_templ/job_stats.templ`, Line: 143, Col: 30}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {

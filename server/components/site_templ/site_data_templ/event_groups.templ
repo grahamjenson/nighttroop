@@ -97,18 +97,9 @@ templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, lim
 	</div>
 }
 
-// eventGroupRow opens the group's details when clicked. The delete button stops its click reaching the row.
+// eventGroupRow opens the group's details when clicked.
 templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
-	{{ id := "site--event-group--" + eventGroup.ID }}
-	@table.Row(table.RowProps{
-		ID:    id,
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    "/data/event-groups/" + eventGroup.ID,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.DataRow("site--event-group--"+eventGroup.ID, "/data/event-groups/"+eventGroup.ID, "Delete this event group and all its events?") {
 		@table.Cell() {
 			{ formatReadingDate(ctx, eventGroup.OccurredAt) }
 		}
@@ -123,28 +114,6 @@ templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
 		}
 		@table.Cell() {
 			{ orDash(eventGroup.CreatedByDeviceName) }
-		}
-		@table.Cell() {
-			<div class="flex justify-end">
-				@button.Button(button.Props{
-					ID:      id + "--delete",
-					Variant: button.VariantGhost,
-					Size:    button.SizeIcon,
-					Attributes: templ.Attributes{
-						"title":                "Delete",
-						"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-						"hx-delete":            "/data/event-groups/" + eventGroup.ID,
-						"hx-confirm":           "Delete this event group and all its events?",
-						"hx-target":            "#toaster",
-						"hx-swap":              "beforeend",
-						"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-						"hx-status:4xx":        "target:#toaster swap:beforeend",
-						"hx-status:5xx":        "target:#toaster swap:beforeend",
-					},
-				}) {
-					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
-				}
-			</div>
 		}
 	}
 }

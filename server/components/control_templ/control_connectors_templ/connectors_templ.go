@@ -420,7 +420,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(source.SiteID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 132, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 125, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -447,7 +447,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(string(source.Type))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 135, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 128, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -514,7 +514,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(state(source))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 138, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 131, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -549,7 +549,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formatDate(source.LastAttemptedSync)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 141, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 134, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 				if templ_7745c5c3_Err != nil {
@@ -562,7 +562,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(source.LastAttemptedSync, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 141, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 134, Col: 107}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -597,7 +597,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formatDate(source.LastSuccessfulSync)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 144, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 137, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 				if templ_7745c5c3_Err != nil {
@@ -610,7 +610,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(source.LastSuccessfulSync, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 144, Col: 109}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 137, Col: 109}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -641,7 +641,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(source.TotalSuccessfulSyncs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 147, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 140, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -708,7 +708,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(source.TotalFailedSyncs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 150, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 143, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -726,14 +726,7 @@ func connectorRow(source *controlmodels.Connector) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.Row(table.RowProps{
-			Class: "cursor-pointer",
-			Attributes: templ.Attributes{
-				"hx-get":    "/connectors/" + source.ID(),
-				"hx-target": "#modal-container",
-				"hx-swap":   "innerHTML",
-			},
-		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.ModalRow("", "/connectors/"+source.ID()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -871,7 +864,7 @@ func ConnectorModal(source *controlmodels.Connector) templ.Component {
 					var templ_7745c5c3_Var38 string
 					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 186, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_connectors_templ/connectors.templ`, Line: 179, Col: 30}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 					if templ_7745c5c3_Err != nil {

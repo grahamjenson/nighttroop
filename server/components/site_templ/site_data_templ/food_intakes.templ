@@ -10,8 +10,6 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -108,18 +106,9 @@ templ foodIntakeInputs(id string, carbs string, name string, notes string) {
 	}
 }
 
-// foodIntakeRow opens the food intake's details when clicked. The delete button stops its click reaching the row.
+// foodIntakeRow opens the food intake's details when clicked.
 templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
-	{{ id := "site--food--" + foodIntake.ID }}
-	@table.Row(table.RowProps{
-		ID:    id,
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    "/data/food/" + foodIntake.ID,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.DataRow("site--food--"+foodIntake.ID, "/data/food/"+foodIntake.ID, "Delete this food intake?") {
 		@table.Cell() {
 			{ formatReadingDate(ctx, foodIntake.OccurredAt) }
 		}
@@ -134,28 +123,6 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 		}
 		@table.Cell() {
 			{ orDash(foodIntake.CreatedByDeviceName) }
-		}
-		@table.Cell() {
-			<div class="flex justify-end">
-				@button.Button(button.Props{
-					ID:      id + "--delete",
-					Variant: button.VariantGhost,
-					Size:    button.SizeIcon,
-					Attributes: templ.Attributes{
-						"title":                "Delete",
-						"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-						"hx-delete":            "/data/food/" + foodIntake.ID,
-						"hx-confirm":           "Delete this food intake?",
-						"hx-target":            "#toaster",
-						"hx-swap":              "beforeend",
-						"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-						"hx-status:4xx":        "target:#toaster swap:beforeend",
-						"hx-status:5xx":        "target:#toaster swap:beforeend",
-					},
-				}) {
-					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
-				}
-			</div>
 		}
 	}
 }
