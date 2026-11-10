@@ -188,10 +188,8 @@ templ InsulinDoseCreated(insulinDose *sitemodels.SiteInsulinDose) {
 // InsulinDoseUpdated replaces the insulin dose's row, closes its details and shows a toast
 templ InsulinDoseUpdated(insulinDose *sitemodels.SiteInsulinDose) {
 	@insulinDoseRow(insulinDose)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Insulin Dose Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Insulin Dose Updated")
 }
 
 templ InsulinDoseDeleted() {

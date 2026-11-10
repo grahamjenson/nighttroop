@@ -196,10 +196,8 @@ templ FoodPresetCreated(foodPreset *sitemodels.SiteFoodPreset) {
 // FoodPresetUpdated replaces the food preset's row, closes its details and shows a toast
 templ FoodPresetUpdated(foodPreset *sitemodels.SiteFoodPreset) {
 	@foodPresetRow(foodPreset)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Food Preset Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Food Preset Updated")
 }
 
 templ FoodPresetDeleted() {

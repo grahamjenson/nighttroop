@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -182,17 +183,7 @@ templ PublicSiteCreation(on bool) {
 // PublicSiteCreationChanged replaces the public site creation switch, with a toast saying which way it was turned
 templ PublicSiteCreationChanged(on bool) {
 	@PublicSiteCreation(on)
-	<div hx-swap-oob="beforeend:#toaster">
-		@toast.Toast(toast.Props{
-			Title:       "Success",
-			Description: map[bool]string{true: "Public site creation turned on", false: "Public site creation turned off"}[on],
-			Variant:     toast.VariantSuccess,
-			Position:    toast.PositionTopCenter,
-			Duration:    5000,
-			Dismissible: true,
-			Icon:        true,
-		})
-	</div>
+	@successtoast.OOB(map[bool]string{true: "Public site creation turned on", false: "Public site creation turned off"}[on])
 }
 
 // SiteCreated shows a site an admin created, with its credentials, which are shown only this once, and reads the
@@ -480,15 +471,5 @@ templ SiteTruncated(site *controlmodels.Site) {
 // siteChanged loads the site's page again, as it changed, with a toast saying how
 templ siteChanged(site *controlmodels.Site, description string) {
 	<div hx-get={ "/sites/" + site.ID } hx-trigger="load" hx-target="#main-content" hx-swap="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@toast.Toast(toast.Props{
-			Title:       "Success",
-			Description: description,
-			Variant:     toast.VariantSuccess,
-			Position:    toast.PositionTopCenter,
-			Duration:    5000,
-			Dismissible: true,
-			Icon:        true,
-		})
-	</div>
+	@successtoast.OOB(description)
 }

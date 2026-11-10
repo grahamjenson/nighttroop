@@ -11,9 +11,9 @@ import (
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -108,10 +108,7 @@ templ AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) 
 
 // AccountTruncated is a toast saying the site was truncated, and its size now
 templ AccountTruncated(sizeKB *int64) {
-	<div hx-swap-oob="beforeend:#toaster">
-		@toast.Toast(toast.Props{Title: "Site Truncated", Description: truncatedSize(sizeKB), Variant: toast.VariantSuccess,
-			Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true})
-	</div>
+	@successtoast.TitledOOB("Site Truncated", truncatedSize(sizeKB), 5000)
 }
 
 // truncatedSize says the site's DB size after truncating, when it is known
