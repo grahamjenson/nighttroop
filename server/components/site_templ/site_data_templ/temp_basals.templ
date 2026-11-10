@@ -6,7 +6,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -16,52 +16,28 @@ import (
 
 // TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
 templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64) {
-	<div id="temp_basals_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Temp Basals", addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal")) {
-			Newest first. Click a temp basal to see all its details.
+	@listpage.Page(listpage.Props{
+		ID:          "temp_basals_table",
+		Title:       "Temp Basals",
+		Description: "Newest first. Click a temp basal to see all its details.",
+		Action:      addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal"),
+		Above:       searchTotals("site--temp-basal", "temp basal", "temp basals"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "tempBasalsTable",
+			EmptyID: "site--temp-basal--empty",
+			Empty:   "No temp basals here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "U/hr", Numeric: true}, {Label: "Basal (%)", Numeric: true},
+				{Label: "Minutes", Numeric: true}, {Label: "Reason"}, {Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit},
+	}) {
+		for _, tempBasal := range tempBasals {
+			@tempBasalRow(tempBasal)
 		}
-		@searchTotals("site--temp-basal", "temp basal", "temp basals")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "tempBasalsTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Time
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							U/hr
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Basal (%)
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Minutes
-						}
-						@table.Head() {
-							Reason
-						}
-						@table.Head() {
-							Device
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, tempBasal := range tempBasals {
-						@tempBasalRow(tempBasal)
-					}
-					@pager.Empty("site--temp-basal--empty", 7, "No temp basals here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // TempBasalNew adds a temp basal with all its fields, putting its row at the top of the table
@@ -114,13 +90,13 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, tempBasal.OccurredAt) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(tempBasal.Rate) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ percentOr(tempBasal.Multiplier, "-") }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(tempBasal.DurationMinutes) }
 		}
 		@table.Cell(notesCell) {

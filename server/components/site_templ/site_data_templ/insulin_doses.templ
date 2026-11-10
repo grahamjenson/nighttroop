@@ -6,7 +6,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -16,49 +16,28 @@ import (
 
 // InsulinDosesTable shows one page of insulin doses, newest first, with buttons to the pages either side
 templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, limit int64) {
-	<div id="insulin_doses_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Insulin Doses", addmodal.Open("site--insulin--add", "/data/insulin/new", "Add Insulin Dose")) {
-			Newest first. Click an insulin dose to see all its details.
+	@listpage.Page(listpage.Props{
+		ID:          "insulin_doses_table",
+		Title:       "Insulin Doses",
+		Description: "Newest first. Click an insulin dose to see all its details.",
+		Action:      addmodal.Open("site--insulin--add", "/data/insulin/new", "Add Insulin Dose"),
+		Above:       searchTotals("site--insulin", "insulin dose", "insulin doses"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "insulinDosesTable",
+			EmptyID: "site--insulin--empty",
+			Empty:   "No insulin doses here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Units", Numeric: true}, {Label: "Type"}, {Label: "Notes"}, {Label: "Device"},
+				{Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--insulin", Path: "/data/insulin", Count: len(insulinDoses), Skip: skip, Limit: limit},
+	}) {
+		for _, insulinDose := range insulinDoses {
+			@insulinDoseRow(insulinDose)
 		}
-		@searchTotals("site--insulin", "insulin dose", "insulin doses")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "insulinDosesTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Time
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Units
-						}
-						@table.Head() {
-							Type
-						}
-						@table.Head() {
-							Notes
-						}
-						@table.Head() {
-							Device
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, insulinDose := range insulinDoses {
-						@insulinDoseRow(insulinDose)
-					}
-					@pager.Empty("site--insulin--empty", 6, "No insulin doses here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "site--insulin", Path: "/data/insulin", Count: len(insulinDoses), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // InsulinDoseNew adds an insulin dose with all its fields, putting its row at the top of the table
@@ -101,7 +80,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, insulinDose.OccurredAt) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(insulinDose.Dose) }
 		}
 		@table.Cell() {

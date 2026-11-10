@@ -6,7 +6,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -24,52 +24,28 @@ func numberOrEmpty(value *int64) string {
 
 // ActivitiesTable shows one page of activities, newest first, with buttons to the pages either side
 templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit int64) {
-	<div id="activities_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Activities", addmodal.Open("site--activity--add", "/data/activities/new", "Add Activity")) {
-			Newest first. Click an activity to see all its details.
+	@listpage.Page(listpage.Props{
+		ID:          "activities_table",
+		Title:       "Activities",
+		Description: "Newest first. Click an activity to see all its details.",
+		Action:      addmodal.Open("site--activity--add", "/data/activities/new", "Add Activity"),
+		Above:       searchTotals("site--activity", "activity", "activities"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "activitiesTable",
+			EmptyID: "site--activity--empty",
+			Empty:   "No activities here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Type"}, {Label: "Name"}, {Label: "Minutes", Numeric: true}, {Label: "Notes"},
+				{Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--activity", Path: "/data/activities", Count: len(activities), Skip: skip, Limit: limit},
+	}) {
+		for _, activity := range activities {
+			@activityRow(activity)
 		}
-		@searchTotals("site--activity", "activity", "activities")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "activitiesTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Time
-						}
-						@table.Head() {
-							Type
-						}
-						@table.Head() {
-							Name
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Minutes
-						}
-						@table.Head() {
-							Notes
-						}
-						@table.Head() {
-							Device
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, activity := range activities {
-						@activityRow(activity)
-					}
-					@pager.Empty("site--activity--empty", 7, "No activities here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "site--activity", Path: "/data/activities", Count: len(activities), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // ActivityNew adds an activity with all its fields, putting its row at the top of the table
@@ -122,7 +98,7 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 		@table.Cell() {
 			{ orDash(activity.Name) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(activity.DurationMinutes) }
 		}
 		@table.Cell(notesCell) {
