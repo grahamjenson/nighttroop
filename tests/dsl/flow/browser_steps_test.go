@@ -39,6 +39,24 @@ func TestScrollTurnsTheWheelByPixels(t *testing.T) {
 	require.Equal(t, "SCROLL -100", file[2].ToFlatString())
 }
 
+func TestHoldHoldsAPathsRequestsUntilReleased(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/hold.bdd": {Data: []byte("GOTO /\nHOLD /refresh\nRUN_BACKGROUND_JOBS\nASSERT_HELD /refresh\nRELEASE /refresh\nASSERT_VISIBLE #done\n")},
+	}
+
+	file, err := parseBrowser(fsys, "site/hold.bdd")
+	require.NoError(t, err)
+	require.Len(t, file, 4)
+	require.Equal(t, &Hold{Path: "/refresh", TestPath: "site/hold.bdd", TestLine: 2}, file[1])
+	require.Equal(t, []BrowserAssert{&AssertHeld{Path: "/refresh", TestPath: "site/hold.bdd", TestLine: 4}}, file[2].(*RunBackgroundJobs).Asserts)
+	release := file[3].(*Hold)
+	require.Equal(t, "RELEASE /refresh", release.ToFlatString())
+	require.Len(t, release.Asserts, 1)
+
+	_, err = parseBrowser(fstest.MapFS{"site/bad.bdd": {Data: []byte("GOTO /\nHOLD\n")}}, "site/bad.bdd")
+	require.ErrorContains(t, err, "HOLD needs a path")
+}
+
 func TestHoverPointsAtAShareAcross(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/hover.bdd": {Data: []byte("GOTO /\nHOVER #graph svg\nASSERT_TEXT_VISIBLE Basal\nHOVER 95% #graph svg\n")},

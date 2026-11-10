@@ -181,6 +181,14 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 			flush()
 
 			current = &ClearCookie{TestPath: path, TestLine: lineNumber, Name: second}
+		case "HOLD", "RELEASE":
+			// HOLD <path> holds the page's requests to path, unsent, until RELEASE <path> sends them and those after, as
+			// a slow server would, so steps between can act while one is on its way
+			flush()
+			if second == "" {
+				return nil, fmt.Errorf("%s:%d: %s needs a path", path, lineNumber, first)
+			}
+			current = &Hold{TestPath: path, TestLine: lineNumber, Path: second, Release: first == "RELEASE"}
 		case "RUN_BACKGROUND_JOBS":
 			flush()
 			// Asserts after it check the page once the jobs have run, e.g. that it updated itself live
@@ -323,6 +331,16 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 			})
+		case "ASSERT_HELD":
+			// ASSERT_HELD <path> waits for the page to send a request to the path HOLD holds
+			if current == nil {
+				return nil, fmt.Errorf("assert_held before action")
+			}
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+			assertable.AddAssert(&AssertHeld{Path: second, TestPath: path, TestLine: lineNumber})
 		case "ASSERT_NO_PAGE_ERRORS":
 			// ASSERT_NO_PAGE_ERRORS is the page having thrown no uncaught error, nor htmx logged one, since the flow went to it
 			if current == nil {

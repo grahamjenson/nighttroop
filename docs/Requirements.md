@@ -581,7 +581,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   and backfills, and in its last sync, its backfill and its recent events. It shows the date its last backfill fetched
   back to, and how long ago that is, so how far back its backfills have gone; - until it has been backfilled.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
-  leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
+  leaving a form being edited as it is and an opened history open, even one opened as it updates. While it does,
+  ● Live shows beside its title.
 - Connector credentials are encrypted at rest.
 - A connector's password, API secret or token, and its username, email or URL, are not offered to the browser or a
   password manager to save or fill, as they are not this site's sign in: the password is a masked text box, not a
