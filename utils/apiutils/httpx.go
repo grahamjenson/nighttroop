@@ -59,9 +59,8 @@ func FormToMap[T any](form url.Values, location *time.Location) map[string]any {
 		setNestedValue(doc, strings.Split(key, "."), values[0])
 	}
 
-	t := reflect.TypeFor[T]()
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
+	// Each field, with those of a struct it embeds, as the JSON it is read from has them
+	for _, f := range reflect.VisibleFields(reflect.TypeFor[T]()) {
 		name := strings.Split(f.Tag.Get("json"), ",")[0]
 		if name == "" || name == "-" {
 			name = f.Name

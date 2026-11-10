@@ -30,6 +30,7 @@ func NewControlStore() *ControlStore {
 	store.registerCollection(&LogsCollection{})
 	store.registerCollection(&EventsCollection{})
 	store.registerCollection(&ErrorsCollection{})
+	store.registerCollection(&PushCredentialsCollection{})
 
 	return store
 }
