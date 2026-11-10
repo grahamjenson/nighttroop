@@ -11,6 +11,8 @@ ASSERT_TITLE Overview · Nighttroop
 ASSERT_VISIBLE #site--reports--overview-button[aria-current="page"]
 ASSERT_TEXT_EQUALS #site--overview--mean –
 ASSERT_TEXT_EQUALS #site--overview--gmi –
+// With no GMI there is nothing to caution about it
+ASSERT_NOT_VISIBLE #site--overview--gmi--note
 ASSERT_TEXT_EQUALS #site--overview--daily-dose –
 ASSERT_TEXT_EQUALS #site--reports--range-in-range – In range
 ASSERT_VISIBLE #site--overview--no-glucose >> text=show here the day after
@@ -50,6 +52,8 @@ ASSERT_VISIBLE #site--overview--mean >> text=/^\d+\.\d$/
 ASSERT_VISIBLE #site--overview--glucose >> text=mmol/L >> nth=0
 ASSERT_VISIBLE #site--overview--sd >> text=/^\d+\.\d$/
 ASSERT_VISIBLE #site--overview--gmi >> text=/^\d+\.\d$/
+// A GMI of fewer than 14 days with data is cautioned as less reliable, as the AGP consensus has it
+ASSERT_TEXT_EQUALS #site--overview--gmi--note Reliable from 14 days of data
 ASSERT_VISIBLE #site--overview--cv >> text=/^\d+\.\d$/
 // Its time in each range, very high at the top, as a stacked bar and a percent of each, with the target range
 ASSERT_COUNT #site--reports--ranges li 5
@@ -60,10 +64,14 @@ ASSERT_VISIBLE #site--overview--target >> text=/^Target range \d+\.\d–\d+\.\d 
 // How much of it the CGM read: days with data of its days so far, the time it was active and meter readings a day
 ASSERT_VISIBLE #site--overview--days >> text=/^\d+\/\d+$/
 ASSERT_VISIBLE #site--overview--cgm-active >> text=/^\d+%$/
+// The CGM read for under the 70% of the month so far its numbers need, so they are cautioned as maybe not typical
+ASSERT_TEXT_EQUALS #site--overview--cgm-active--note Under 70%, so these numbers may not be typical
 // The virtual connector's meter readings, twice a day, are counted
 ASSERT_VISIBLE #site--overview--meter >> text=/^(?!0\.0$)\d+\.\d$/
 // Its best whole day by time in range
 ASSERT_VISIBLE #site--overview--best-day >> text=/Glucose was in range about (\d+%|<1%) of the day/
+// with its glucose through the day beside it
+ASSERT_DRAWN #site--overview--best-day .site--agp--glucose >> nth=1
 // Its days averaged into one from midnight: a bar of each 15 minutes from its 25th to 75th percentile, a dot at each's
 // mean, and the range's bounds marked
 ASSERT_DRAWN #site--overview--graph
