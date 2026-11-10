@@ -201,22 +201,22 @@ templ overviewGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 					{{ x := g.Left + width*float64(bar.Slot) + width*0.15 }}
 					<rect class="fill-gray-300" x={ f(x) } width={ f(width * 0.7) } y={ f(g.Y(min(bar.Upper, high))) } height={ f(max(g.Y(max(bar.Lower, low))-g.Y(min(bar.Upper, high)), 0)) }></rect>
 					if bar.Upper > high {
-						<rect class="fill-glucose-high" x={ f(x) } width={ f(width * 0.7) } y={ f(g.Y(bar.Upper)) } height={ f(g.Y(max(bar.Lower, high)) - g.Y(bar.Upper)) }></rect>
+						<rect class={ site_data_templ.GlucoseColours["High"].Fill } x={ f(x) } width={ f(width * 0.7) } y={ f(g.Y(bar.Upper)) } height={ f(g.Y(max(bar.Lower, high)) - g.Y(bar.Upper)) }></rect>
 					}
 					if bar.Lower < low {
-						<rect class="fill-glucose-low" x={ f(x) } width={ f(width * 0.7) } y={ f(g.Y(min(bar.Upper, low))) } height={ f(g.Y(bar.Lower) - g.Y(min(bar.Upper, low))) }></rect>
+						<rect class={ site_data_templ.GlucoseColours["Low"].Fill } x={ f(x) } width={ f(width * 0.7) } y={ f(g.Y(min(bar.Upper, low))) } height={ f(g.Y(bar.Lower) - g.Y(min(bar.Upper, low))) }></rect>
 					}
 				}
 			}
-			<line class="stroke-glucose-high" stroke-width="2" x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(high)) } y2={ f(g.Y(high)) }></line>
-			<line class="stroke-glucose-low" stroke-width="2" x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(low)) } y2={ f(g.Y(low)) }></line>
+			<line class={ site_data_templ.GlucoseColours["High"].Stroke } stroke-width="2" x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(high)) } y2={ f(g.Y(high)) }></line>
+			<line class={ site_data_templ.GlucoseColours["Low"].Stroke } stroke-width="2" x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(low)) } y2={ f(g.Y(low)) }></line>
 			for _, bar := range bars {
 				if bar.Mean != nil {
 					<circle class="site--overview--mean fill-gray-900" cx={ f(g.Left + width*(float64(bar.Slot)+0.5)) } cy={ f(g.Y(*bar.Mean)) } r="2"></circle>
 				}
 			}
-			@boundLabel(g, high, "fill-glucose-high", p)
-			@boundLabel(g, low, "fill-glucose-low", p)
+			@boundLabel(g, high, site_data_templ.GlucoseColours["High"].Fill, p)
+			@boundLabel(g, low, site_data_templ.GlucoseColours["Low"].Fill, p)
 			@hourAxis(g, true)
 		</svg>
 	</div>

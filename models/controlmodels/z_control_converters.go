@@ -84,6 +84,23 @@ func ConnectorFromDB(source *controldb.SiteConnector) *Connector {
 	}
 	return pControlmodelsConnector
 }
+func ControlAdminFromDB(source *controldb.ControlIdentity) *ControlAdmin {
+	var pControlmodelsControlAdmin *ControlAdmin
+	if source != nil {
+		var controlmodelsControlAdmin ControlAdmin
+		controlmodelsControlAdmin.ID = (*source).ID
+		controlmodelsControlAdmin.Name = (*source).Name
+		controlmodelsControlAdmin.Role = consts.ControlRole((*source).Role)
+		controlmodelsControlAdmin.CreatedAt = (*source).CreatedAt
+		controlmodelsControlAdmin.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring := *(*source).UpdatedByIdentityName
+			controlmodelsControlAdmin.UpdatedByIdentityName = &xstring
+		}
+		pControlmodelsControlAdmin = &controlmodelsControlAdmin
+	}
+	return pControlmodelsControlAdmin
+}
 func ErrorFromDB(source *logsdb.Error) *Error {
 	var pControlmodelsError *Error
 	if source != nil {

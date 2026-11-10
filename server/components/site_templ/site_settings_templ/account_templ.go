@@ -382,7 +382,8 @@ func AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) t
 		templ_7745c5c3_Err = card.Card(card.Props{ID: "site--account--truncate-card", Title: "Truncate",
 			Note: "Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all " +
 				"but each device's newest report, and thins device reports to fewer the older they are, deleting those over " +
-				"30 days old. Readings, treatments, profiles and everything else are kept. The DB is then shrunk.",
+				"30 days old, and deletes old loop settings no profile or device report refers to any more. Readings, " +
+				"treatments, profiles and everything else are kept. The DB is then shrunk.",
 			Action: labelled("Truncate", button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,
 				Attributes: templ.Attributes{"hx-post": "/settings/account/truncate", "hx-target": "#site--account--storage", "hx-swap": "outerHTML",
 					"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
@@ -431,7 +432,7 @@ func labelled(text string, p button.Props) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/account.templ`, Line: 96, Col: 8}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/account.templ`, Line: 97, Col: 8}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {

@@ -34,6 +34,15 @@ func glucoseDaysY(value, bottom, top float64) string {
 	return fmt.Sprintf("%.1f", glucoseDaysHeight*(1-display.Scale(value, bottom, top)))
 }
 
+// glucoseDaysMark is how tall a reading's mark is on a day's graph
+const glucoseDaysMark = 3.0
+
+// glucoseDaysMarkY is how far down a day's graph a reading's mark starts, so all of it is inside the graph: a reading at
+// the bottom of the axis, such as a CGM's lowest of 40 mg/dL, sits on the bottom edge rather than below it, unseen
+func glucoseDaysMarkY(value, bottom, top float64) string {
+	return fmt.Sprintf("%.1f", (glucoseDaysHeight-glucoseDaysMark)*(1-display.Scale(value, bottom, top)))
+}
+
 // glucoseDayLabel is a day's weekday and date, or Today for the first, which is today so far
 func glucoseDayLabel(day *sitemodels.SiteSummaryDaily, today bool) string {
 	if today {
@@ -62,7 +71,7 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 						<rect class="fill-glucose-in-range/10" x="0" width="100%" y={ glucoseDaysY(high, bottom, top) } height={ fmt.Sprintf("%.1f", glucoseDaysHeight*(high-low)/(top-bottom)) }></rect>
 						for slot, value := range day.Glucose {
 							if value != nil {
-								<rect class={ GlucoseFill[glucoseRange(ctx, *value)] } x={ fmt.Sprint(slot) } y={ glucoseDaysY(*value, bottom, top) } width="1.5" height="3"></rect>
+								<rect class={ GlucoseColours[glucoseRange(ctx, *value)].Fill } x={ fmt.Sprint(slot) } y={ glucoseDaysMarkY(*value, bottom, top) } width="1.5" height={ fmt.Sprint(glucoseDaysMark) }></rect>
 							}
 						}
 					</svg>

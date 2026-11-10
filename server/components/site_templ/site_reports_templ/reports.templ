@@ -46,7 +46,7 @@ func title(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	last := time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)
 	switch p.Period {
 	case "day":
-		return first.Format("Mon 2 Jan 2006")
+		return first.Format(display.DayLayout)
 	case "month":
 		return first.Format("January 2006")
 	}
@@ -112,25 +112,26 @@ templ periodNav(name, id, titleID, title, previous, next, unit string) {
 }
 
 // TDDReport is the total daily dose of each day of the month ending on last: a bar of each day with insulin, how many
-// days had it and their mean, lowest and highest, and a table of every day's dose, newest first, with arrows beside its
-// dates to the month before and after
+// days before today had it and their mean, lowest and highest, and a table of every day's dose, newest first, today
+// marked so far, with arrows beside its dates to the month before and after
 templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
-	{{ first := last.AddDate(0, 0, 1-TDDDays) }}
-	{{ previous, next := tddLinks(last, tddYesterday(time.Now(), last.Location())) }}
+	{{ first, today := last.AddDate(0, 0, 1-TDDDays), tddToday(time.Now(), last.Location()) }}
+	{{ previous, next := tddLinks(last, today) }}
 	{{ withInsulin := dosed(days) }}
-	{{ mean, lowest, highest := tddStats(withInsulin) }}
+	{{ over := tddOver(withInsulin, today) }}
+	{{ mean, lowest, highest := tddStats(over) }}
 	@heading.Title("TDD")
 	<div id="site--reports" class="w-full space-y-4 py-4">
-		@periodNav("TDD", "site--reports--tdd", "site--reports--title", first.Format("Mon 2 Jan")+" to "+last.Format("Mon 2 Jan 2006"), previous, next, "month")
+		@periodNav("TDD", "site--reports--tdd", "site--reports--title", first.Format(display.ShortDayLayout)+" to "+last.Format(display.DayLayout), previous, next, "month")
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@stat.Tile("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(withInsulin)), nil)
+			@stat.Tile("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(over)), nil)
 			@stat.Tile("site--reports--tdd--mean", "Daily dose", display.Value(mean, " U"), nil)
 			@stat.Tile("site--reports--tdd--lowest", "Lowest", display.Value(lowest, " U"), nil)
 			@stat.Tile("site--reports--tdd--highest", "Highest", display.Value(highest, " U"), nil)
 		</div>
 		@card.Card(card.Props{Title: "Total daily dose"}) {
 			if len(withInsulin) > 0 {
-				{{ chart := tddChart(withInsulin, first, last) }}
+				{{ chart := tddChart(withInsulin, first, last, today) }}
 				<div id="site--reports--tdd--chart" class="h-90 w-full text-xs">
 					<div id={ chart.ChartID } class="h-full w-full"></div>
 					@templ.Raw(chart.RenderSnippet().Script)
@@ -138,6 +139,14 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 			} else {
 				<p id="site--reports--tdd--empty" class="text-sm text-gray-500">No insulin on these days.</p>
 			}
+			<p id="site--reports--tdd--help" class="mt-2 text-xs text-gray-500">
+				Basal is estimated from the basal rate in force each minute, the profile's scheduled basal or a temp basal;
+				the rest of the daily dose is boluses.
+				if last.Equal(today) {
+					Today, paler and marked so far, is not over, so it is left out of the days with insulin and their daily
+					dose, lowest and highest.
+				}
+			</p>
 		}
 		@card.Card(card.Props{Title: "Each day"}) {
 			@table.Table(table.Props{ID: "site--reports--tdd--table", Class: "rounded-lg border border-gray-200"}) {
@@ -154,11 +163,14 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 					}
 				}
 				@table.Body() {
-					for _, row := range tddRows(days, first, last) {
+					for _, row := range tddRows(days, first, last, today) {
 						{{ date, _ := time.Parse(time.DateOnly, row.Date) }}
 						@table.Row(table.RowProps{ID: "site--reports--tdd--day-" + row.Date}) {
 							@table.Cell() {
 								{ date.Format(display.DayLayout) }
+								if row.SoFar {
+									<span id="site--reports--tdd--so-far" class="ml-1 text-xs font-medium text-gray-500">so far</span>
+								}
 							}
 							for _, value := range []*float64{row.Basal, row.Bolus, row.Dose} {
 								@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {

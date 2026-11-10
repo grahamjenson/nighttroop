@@ -20,6 +20,21 @@ ASSERT_VISIBLE #identities_table .border-gray-200>h2.text-brand-night:text-is("D
 ASSERT_NOT_VISIBLE #identities_table .bg-red-50
 SCREENSHOT identities
 
+// A name longer than the database keeps is refused in its own words, which the toast leaves to the Errors page
+INPUT #name-createIdentityFormusersTable {{ repeat "a" 40 }}
+CLICK "Add User"
+ASSERT_STATUS 400
+ASSERT_TEXT_VISIBLE Something went wrong.
+ASSERT_VISIBLE #toaster >> text=Errors page
+ASSERT_NOT_VISIBLE #toaster >> text=CHECK constraint failed
+SCREENSHOT identity_error_recorded
+CLICK #toaster >> text=Errors page
+ASSERT_PATH /logs/errors
+ASSERT_VISIBLE #siteErrorsTable >> text=CHECK constraint failed
+SCREENSHOT identity_error_on_errors_page
+GOTO /settings/identities
+ASSERT_STATUS 200
+
 // Adding a user without choosing a role makes a User, not an Admin
 ASSERT_TEXT_EQUALS #select-form-createIdentityFormusersTable User
 INPUT #name-createIdentityFormusersTable nurse

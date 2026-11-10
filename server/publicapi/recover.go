@@ -20,8 +20,8 @@ func GETRecoverSitePageHandler() http.HandlerFunc {
 }
 
 // POSTRecoverSiteHandler is the recover page's form: a site's ID and backup key give its admin a new password and TOTP,
-// and the site a new backup key, shown as a new site's credentials are. Any failure is the same 401, so it says
-// nothing of why, or whether the site exists.
+// and the site a new backup key, shown on the site's own address as a new site's credentials are. Any failure is the
+// same 401, so it says nothing of why, or whether the site exists.
 func POSTRecoverSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 1024)
@@ -46,12 +46,16 @@ func POSTRecoverSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		// The answer is credentials, which nothing between should keep
-		w.Header().Set("Cache-Control", "no-store")
-		info := publicmodels.NewSiteInfo{URL: siteDB.URL(), AdminPassword: recovered.Password, AdminTotpSecret: recovered.TotpSecret,
-			BackupKey: recovered.BackupKey, RecoverURL: config.RecoverURL()}
-		if err := public_templ.CreateSiteInfo(info).Render(r.Context(), w); err != nil {
-			slog.ErrorContext(r.Context(), "Unable to show the recovered site", "error", err)
-		}
+		// The credentials are shown on the site's own address, as a new site's are, where its admin logs in and adds a
+		// passkey in place of any the recovery removed
+		w.Header().Set("HX-Redirect", welcomeURL(siteDB.Subdomain, publicmodels.NewSiteInfo{
+			URL:             siteDB.URL(),
+			AdminPassword:   recovered.Password,
+			AdminTotpSecret: recovered.TotpSecret,
+			BackupKey:       recovered.BackupKey,
+			RecoverURL:      config.RecoverURL(),
+			Passkey:         true,
+		}))
+		w.WriteHeader(http.StatusOK)
 	}
 }

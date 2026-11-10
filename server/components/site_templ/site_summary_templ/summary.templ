@@ -95,8 +95,9 @@ var ranges = []struct {
 
 // Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts.
 // It streams the summary's events, shown Live while connected, and reloads its content a second after changes stop
-// arriving, and when the stream reconnects, as changes may have been missed while it was not. The header, with the
-// stream, is not reloaded, so the stream stays open.
+// arriving, when the stream reconnects, as changes may have been missed while it was not, and once its latest reading
+// turns stale, so it greys then rather than at the next change. The header, with the stream, is not reloaded, so the
+// stream stays open.
 templ Summary(summary *sitemodels.Summary) {
 	@heading.Title("Summary")
 	<div id="site--summary" class="w-full space-y-4 py-4">
@@ -127,7 +128,7 @@ templ Summary(summary *sitemodels.Summary) {
 			id="site--summary--content"
 			class="space-y-4"
 			hx-get={ fmt.Sprintf("/?hours=%d", summary.Hours) }
-			hx-trigger="created from:#site--summary--live delay:1s, updated from:#site--summary--live delay:1s, deleted from:#site--summary--live delay:1s, reconnected from:#site--summary--live"
+			hx-trigger={ "created from:#site--summary--live delay:1s, updated from:#site--summary--live delay:1s, deleted from:#site--summary--live delay:1s, reconnected from:#site--summary--live" + staleTrigger(ctx, summary, time.Now()) }
 			hx-select="#site--summary--content"
 			hx-target="this"
 			hx-swap="outerHTML"
@@ -205,6 +206,18 @@ func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
 	return display.Duration(age.Milliseconds())
 }
 
+// staleTrigger is the summary content's trigger to reload once its latest reading turns stale, a second after so the
+// reload finds it so, or "" when there is no reading or it already is. A reading from the future waits no longer than
+// the stale minutes, as a timer too long for the browser fires at once, which would reload again and again.
+func staleTrigger(ctx context.Context, summary *sitemodels.Summary, now time.Time) string {
+	if len(summary.GlucoseReadings) == 0 || staleFor(ctx, summary.GlucoseReadings[0].OccurredAt, now) != "" {
+		return ""
+	}
+	after := time.Duration(staleAfterMinutes(ctx)) * time.Minute
+	in := min(time.UnixMilli(summary.GlucoseReadings[0].OccurredAt).Add(after).Sub(now), after) + time.Second
+	return fmt.Sprintf(", load delay:%dms", in.Milliseconds())
+}
+
 templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 		if len(summary.GlucoseReadings) > 0 {
@@ -219,11 +232,11 @@ templ glucoseHero(summary *sitemodels.Summary) {
 				</div>
 				<div class="flex items-baseline gap-2">
 					// An old reading is grey, as it may no longer be the glucose
-					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseText[outOfRange], stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(latest.Reading, latest.Units) }</span>
+					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseColours[outOfRange].Text, stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(latest.Reading, latest.Units) }</span>
 					<span class="text-lg text-gray-500">{ display.Units(latest.Units) }</span>
 					<span class="ml-2 text-4xl text-gray-700">{ display.Arrow(latest.Direction) }</span>
 					if outOfRange != "" {
-						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseText[outOfRange] }>{ outOfRange }</span>
+						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseColours[outOfRange].Text }>{ outOfRange }</span>
 					}
 				</div>
 				<div class="mt-1 flex gap-3 text-sm">

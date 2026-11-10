@@ -13,30 +13,35 @@ templ ModalRow(id, path string) {
 	}
 }
 
-// DeleteCell is a cell with a button, with the given id, deleting path once confirmed. On success it removes its row,
-// and the toast in the response, or an error, goes to #toaster. Its click stops at the button, never opening a ModalRow.
+// DeleteCell is a cell with a DeleteButton
 templ DeleteCell(id, path, confirm string) {
 	@Cell() {
 		<div class="flex justify-end">
-			@button.Button(button.Props{
-				ID:      id,
-				Variant: button.VariantGhost,
-				Size:    button.SizeIcon,
-				Attributes: templ.Attributes{
-					"title":                "Delete",
-					"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-					"hx-delete":            path,
-					"hx-confirm":           confirm,
-					"hx-target":            "#toaster",
-					"hx-swap":              "beforeend",
-					"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-					"hx-status:4xx":        "target:#toaster swap:beforeend",
-					"hx-status:5xx":        "target:#toaster swap:beforeend",
-				},
-			}) {
-				@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
-			}
+			@DeleteButton(id, path, confirm)
 		</div>
+	}
+}
+
+// DeleteButton is a button, with the given id, deleting path once confirmed. On success it removes its row, and the
+// toast in the response, or an error, goes to #toaster. Its click stops at the button, never opening a ModalRow.
+templ DeleteButton(id, path, confirm string) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantGhost,
+		Size:    button.SizeIcon,
+		Attributes: templ.Attributes{
+			"title":                "Delete",
+			"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
+			"hx-delete":            path,
+			"hx-confirm":           confirm,
+			"hx-target":            "#toaster",
+			"hx-swap":              "beforeend",
+			"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
+			"hx-status:4xx":        "target:#toaster swap:beforeend",
+			"hx-status:5xx":        "target:#toaster swap:beforeend",
+		},
+	}) {
+		@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 	}
 }
 
