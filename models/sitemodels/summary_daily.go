@@ -34,24 +34,26 @@ var AGPPercentiles = []float64{5, 25, 50, 75, 95}
 // SiteSummaryDaily is a day of the site's data, from midnight in its timezone: its time in range, total daily dose and
 // carbs, and its glucose every 5 minutes from midnight, null when there was no reading, in the settings' units
 type SiteSummaryDaily struct {
-	Date           string        `json:"date"`
-	Timezone       string        `json:"timezone"`
-	Start          int64         `json:"start"`
-	End            int64         `json:"end"`
-	TimeInRange    *float64      `json:"time_in_range"`
-	TotalDailyDose float64       `json:"total_daily_dose"`
-	TotalCarbs     float64       `json:"total_carbs"`
-	Glucose        []*float64    `json:"glucose"`
-	Units          *consts.Units `json:"units"`
-	CreatedAt      int64         `json:"created_at"`
-	UpdatedAt      int64         `json:"updated_at"`
+	Date           string   `json:"date"`
+	Timezone       string   `json:"timezone"`
+	Start          int64    `json:"start"`
+	End            int64    `json:"end"`
+	TimeInRange    *float64 `json:"time_in_range"`
+	TotalDailyDose float64  `json:"total_daily_dose"`
+	// TotalDailyBasal is the basal of its daily dose; the rest is boluses
+	TotalDailyBasal float64       `json:"total_daily_basal"`
+	TotalCarbs      float64       `json:"total_carbs"`
+	Glucose         []*float64    `json:"glucose"`
+	Units           *consts.Units `json:"units"`
+	CreatedAt       int64         `json:"created_at"`
+	UpdatedAt       int64         `json:"updated_at"`
 }
 
 // SummaryDailyFromDB is the site model of a summary day, with its glucose in the site context's units
 func SummaryDailyFromDB(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *SiteSummaryDaily {
 	units := ContextUnits(siteContext)
 	model := &SiteSummaryDaily{Date: row.Date, Timezone: row.Timezone, Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange,
-		TotalDailyDose: row.TotalDailyDose, TotalCarbs: row.TotalDailyCarbs, Glucose: []*float64{}, Units: units,
+		TotalDailyDose: row.TotalDailyDose, TotalDailyBasal: row.TotalDailyBasal, TotalCarbs: row.TotalDailyCarbs, Glucose: []*float64{}, Units: units,
 		CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt}
 	var mgdl []*int64
 	_ = json.Unmarshal([]byte(row.GlucoseMgdlJson), &mgdl)
@@ -131,10 +133,11 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 	}
 	for i, m := range minutes {
 		if within(minutesSince+int64(i)*60_000) && m.Basal != nil {
-			day.TotalDailyDose += *m.Basal / 60
+			day.TotalDailyBasal += *m.Basal / 60
 		}
 	}
-	day.TotalDailyDose = consts.Round(day.TotalDailyDose, 2)
+	day.TotalDailyDose = consts.Round(day.TotalDailyDose+day.TotalDailyBasal, 2)
+	day.TotalDailyBasal = consts.Round(day.TotalDailyBasal, 2)
 	for _, f := range food {
 		if within(f.OccurredAt) && f.Carbs != nil {
 			day.TotalDailyCarbs += *f.Carbs
@@ -215,7 +218,7 @@ func NewSummaryPeriod(period, date, timezone string, start, end, until int64, da
 	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	times, weighed, sum, squares := [5]float64{}, 0.0, 0.0, 0.0
 	// dose, carbs and over are the whole days' daily doses, carbs and count, and the same of every day with data
-	dose, carbs, over := [2]float64{}, [2]float64{}, [2]int{}
+	dose, basal, carbs, over := [2]float64{}, [2]float64{}, [2]float64{}, [2]int{}
 	sums, counts := make([]int64, 24*60*60_000/SummaryDailySlotMs), make([]int64, 24*60*60_000/SummaryDailySlotMs)
 	bins := make([][]int64, 24*60*60_000/AGPSlotMs)
 	loopSums, loopCounts := [4][]float64{}, [4][]int64{}
@@ -229,7 +232,7 @@ func NewSummaryPeriod(period, date, timezone string, start, end, until int64, da
 		row.Days++
 		for i, counts := range []bool{day.EndAt <= until, true} {
 			if counts {
-				dose[i], carbs[i], over[i] = dose[i]+day.TotalDailyDose, carbs[i]+day.TotalDailyCarbs, over[i]+1
+				dose[i], basal[i], carbs[i], over[i] = dose[i]+day.TotalDailyDose, basal[i]+day.TotalDailyBasal, carbs[i]+day.TotalDailyCarbs, over[i]+1
 			}
 		}
 		if day.TimeInRange != nil {
@@ -281,6 +284,7 @@ func NewSummaryPeriod(period, date, timezone string, start, end, until int64, da
 	}
 	if i := map[bool]int{true: 0, false: 1}[over[0] > 0]; over[i] > 0 {
 		row.TotalDailyDose = consts.Round(dose[i]/float64(over[i]), 2)
+		row.TotalDailyBasal = consts.Round(basal[i]/float64(over[i]), 2)
 		row.TotalDailyCarbs = consts.Round(carbs[i]/float64(over[i]), 1)
 	}
 	slots := make([]*int64, len(sums))

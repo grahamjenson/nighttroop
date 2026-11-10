@@ -385,7 +385,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   percentile, the part above the range high and below the range low in their colours, a dot at each's mean, and the
   range's bounds as lines labelled with their values, with hours in the settings' time format. A day's is of the 7
   days to it. One with no glucose says so, and that a day's readings show the day after.
-- An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day.
+- An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day, and
+  under them how much of the daily dose is basal and how much boluses, as a bar of the two and each's units and
+  percent.
 - The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the 7 days to yesterday at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), is of a month, this one unless it is
@@ -423,11 +425,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   month, and the one before past a year ago. A last day after yesterday or more than a year ago is refused. Back and
   forward move between them.
 - It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers, the bars a couple of
-  pixels apart; a day with no insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
+  pixels apart, its basal (in gold) under its boluses, with a legend of the two; a day with no insulin has no bar and is
+  not counted. Hovering a bar shows its date and its basal or boluses in U.
 - It shows how many of its days have insulin and their mean, lowest and highest daily dose, and says when none have
   insulin.
-- Under the bars, a table lists every day it covers, newest first, with its total daily dose in U, or "–" for a day
-  with no insulin.
+- Under the bars, a table lists every day it covers, newest first, with its basal, boluses and total daily dose in U,
+  or "–" for a day with no insulin.
 
 ### Getting started
 
@@ -806,6 +809,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   and its times are of all of them, so a day of few readings, such as today so far, counts for little. Its daily dose
   and carbs are the means of its days that are over, as today has had only some of its insulin and food, or of all its
   days with data when none is over. `cgm_active` is the percent of its 5 minutes, up to now, with a CGM reading.
+- A summary period also has its daily dose's basal (`total_daily_basal`), the basal in force through a day, and a
+  period's the mean of its days', as its daily dose is; the rest of the daily dose is boluses.
 - A summary period also has the loop's IOB (`loop_iob`, `loop_iob_basal`, `loop_iob_treatment`) and COB (`loop_cob`)
   every 5 minutes from midnight: a day's newest loop device report in each 5 minutes, or else in the 5 minutes before,
   as one is kept only every 10 minutes once an hour old, null when there was none, and a

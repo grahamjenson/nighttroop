@@ -507,6 +507,9 @@ CREATE TABLE summary_period (
     days INTEGER NOT NULL,
     time_in_range REAL,
     total_daily_dose REAL NOT NULL,
+    -- The basal of the daily dose, the basal in force through the day, and a period's the mean of its days', as its daily
+    -- dose is; the rest of the dose is boluses
+    total_daily_basal REAL NOT NULL DEFAULT 0 CHECK(total_daily_basal >= 0),
     total_daily_carbs REAL NOT NULL,
     glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
     agp_mgdl_json TEXT CHECK(agp_mgdl_json IS NULL OR (length(agp_mgdl_json) <= 8192 AND json_valid(agp_mgdl_json))),

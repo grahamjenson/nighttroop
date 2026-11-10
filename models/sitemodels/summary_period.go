@@ -29,6 +29,7 @@ type SiteSummaryPeriod struct {
 	Days            int64         `json:"days"`
 	TimeInRange     *float64      `json:"time_in_range"`
 	TotalDailyDose  float64       `json:"total_daily_dose"`
+	TotalDailyBasal float64       `json:"total_daily_basal"`
 	TotalDailyCarbs float64       `json:"total_daily_carbs"`
 	Glucose         []*float64    `json:"glucose"`
 	AGP             [][]float64   `json:"agp"`
@@ -60,7 +61,7 @@ var ReportDays = map[string]int{"week": 7, "fortnight": 14}
 func SummaryPeriodFromDB(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *SiteSummaryPeriod {
 	day := SummaryDailyFromDB(row, siteContext)
 	model := &SiteSummaryPeriod{Period: row.Period, Date: row.Date, Timezone: row.Timezone, Start: row.StartAt, End: row.EndAt,
-		Days: row.Days, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose, TotalDailyCarbs: row.TotalDailyCarbs,
+		Days: row.Days, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose, TotalDailyBasal: row.TotalDailyBasal, TotalDailyCarbs: row.TotalDailyCarbs,
 		Glucose: day.Glucose, AGP: [][]float64{}, Units: day.Units, GlucoseReadings: row.GlucoseReadings, MeterReadings: row.MeterReadings,
 		TimeVeryLow: row.TimeVeryLow, TimeLow: row.TimeLow, TimeHigh: row.TimeHigh, TimeVeryHigh: row.TimeVeryHigh}
 	if mean, sd := row.GlucoseMeanMgdl, row.GlucoseSdMgdl; mean != nil && sd != nil && *mean > 0 {

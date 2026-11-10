@@ -74,6 +74,9 @@ ASSERT_VISIBLE #site--overview--graph >> text=12:00
 // And its daily dose and carbs
 ASSERT_VISIBLE #site--overview--daily-dose >> text=/^\d+(\.\d+)?$/
 ASSERT_VISIBLE #site--overview--daily-carbs >> text=/^\d+(\.\d+)?$/
+// and how much of the daily dose is basal and how much boluses
+ASSERT_VISIBLE #site--overview--basal >> text=/^Basal \d+(\.\d+)? U · \d+%$/
+ASSERT_VISIBLE #site--overview--bolus >> text=/^Bolus \d+(\.\d+)? U · \d+%$/
 SCREENSHOT overview_month
 SCROLL 450
 SCREENSHOT overview_month_graph

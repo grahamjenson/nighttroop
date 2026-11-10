@@ -313,3 +313,19 @@ func TestNewSummaryPeriodWeighsDays(t *testing.T) {
 	today := NewSummaryPeriod("week", "2026-10-26", "UTC", 0, 10, 5, []*sitedb.SummaryPeriod{day(10, 6, 0, 3, 20)})
 	require.Equal(t, []any{3.0, 20.0}, []any{today.TotalDailyDose, today.TotalDailyCarbs})
 }
+
+// A day's basal is the basal in force through it, of its daily dose, the rest of which is its boluses, and a period's
+// is the mean of its days', as its daily dose is
+func TestSummaryBasal(t *testing.T) {
+	const hour = int64(60 * 60_000)
+	rate := 1.5
+	minutes := make([]SummaryMinute, 60)
+	for i := range minutes {
+		minutes[i].Basal = &rate
+	}
+	day := NewSummaryDaily("1970-01-01", "UTC", hour, 2*hour, 70, 180, nil, []*sitedb.InsulinDose{{OccurredAt: hour, Dose: 4}}, nil, nil, hour, minutes)
+	require.Equal(t, []float64{5.5, 1.5}, []float64{day.TotalDailyDose, day.TotalDailyBasal})
+	week := NewSummaryPeriod("week", "1970-01-01", "UTC", 0, 2, 2, []*sitedb.SummaryPeriod{
+		{Days: 1, TotalDailyDose: 40, TotalDailyBasal: 20, GlucoseMgdlJson: "[]"}, {Days: 1, TotalDailyDose: 30, TotalDailyBasal: 10, GlucoseMgdlJson: "[]"}})
+	require.Equal(t, []float64{35, 15}, []float64{week.TotalDailyDose, week.TotalDailyBasal})
+}

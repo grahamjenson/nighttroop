@@ -12,7 +12,7 @@ import (
 func tddDays(doses map[string]float64, dates ...string) []*sitemodels.SiteSummaryDaily {
 	days := []*sitemodels.SiteSummaryDaily{}
 	for _, date := range dates {
-		days = append(days, &sitemodels.SiteSummaryDaily{Date: date, TotalDailyDose: doses[date]})
+		days = append(days, &sitemodels.SiteSummaryDaily{Date: date, TotalDailyDose: doses[date], TotalDailyBasal: doses[date] / 4})
 	}
 	return days
 }
@@ -44,8 +44,8 @@ func TestTDDStats(t *testing.T) {
 	}
 }
 
-// The chart has a bar of each day with insulin, named by its date, on an axis of every date of the report, with no bar
-// where a day has none, even before the first day with insulin
+// The chart has a bar of each day with insulin, its basal under its boluses, named by its date, on an axis of every
+// date of the report, with no bar where a day has none, even before the first day with insulin
 func TestTDDChart(t *testing.T) {
 	days := dosed(tddDays(map[string]float64{"2026-10-31": 20, "2026-11-02": 31.5}, "2026-10-31", "2026-11-01", "2026-11-02"))
 	chart := tddChart(days, date("2026-10-30"), date("2026-11-02"))
@@ -55,14 +55,21 @@ func TestTDDChart(t *testing.T) {
 
 	xAxis := option["xAxis"].([]any)[0].(map[string]any)
 	require.Equal(t, []any{"30 Oct", "31 Oct", "1 Nov", "2 Nov"}, xAxis["data"])
-	series := option["series"].([]any)[0].(map[string]any)
-	require.Equal(t, "bar", series["type"])
+	basal, boluses := option["series"].([]any)[0].(map[string]any), option["series"].([]any)[1].(map[string]any)
+	require.Equal(t, []any{"Basal", "Bolus", "bar", "dose"}, []any{basal["name"], boluses["name"], basal["type"], basal["stack"]})
+	require.Equal(t, basal["stack"], boluses["stack"])
 	require.Equal(t, []any{
 		map[string]any{"name": "Fri 30 Oct 2026", "value": "-"},
-		map[string]any{"name": "Sat 31 Oct 2026", "value": 20.0},
+		map[string]any{"name": "Sat 31 Oct 2026", "value": 5.0},
 		map[string]any{"name": "Sun 1 Nov 2026", "value": "-"},
-		map[string]any{"name": "Mon 2 Nov 2026", "value": 31.5},
-	}, series["data"])
+		map[string]any{"name": "Mon 2 Nov 2026", "value": 7.875},
+	}, basal["data"])
+	require.Equal(t, []any{
+		map[string]any{"name": "Fri 30 Oct 2026", "value": "-"},
+		map[string]any{"name": "Sat 31 Oct 2026", "value": 15.0},
+		map[string]any{"name": "Sun 1 Nov 2026", "value": "-"},
+		map[string]any{"name": "Mon 2 Nov 2026", "value": 23.63},
+	}, boluses["data"])
 }
 
 func date(day string) time.Time {
@@ -133,14 +140,14 @@ func TestTDDChartBarGaps(t *testing.T) {
 	require.Len(t, option["xAxis"].([]any)[0].(map[string]any)["data"], TDDDays)
 }
 
-// The table has every day of the report, newest first, each with its daily dose, or none for a day without insulin or
-// not kept
+// The table has every day of the report, newest first, each with its daily dose and its basal and boluses, or none for
+// a day without insulin or not kept
 func TestTDDRows(t *testing.T) {
 	days := tddDays(map[string]float64{"2026-10-31": 20, "2026-11-01": 0, "2026-11-02": 31.5}, "2026-10-31", "2026-11-01", "2026-11-02")
 	require.Equal(t, []tddRow{
-		{Date: "2026-11-02", Dose: new(31.5)},
+		{Date: "2026-11-02", Dose: new(31.5), Basal: new(7.875), Bolus: new(23.63)},
 		{Date: "2026-11-01"},
-		{Date: "2026-10-31", Dose: new(20.0)},
+		{Date: "2026-10-31", Dose: new(20.0), Basal: new(5.0), Bolus: new(15.0)},
 		{Date: "2026-10-30"},
 	}, tddRows(days, date("2026-10-30"), date("2026-11-02")))
 }
