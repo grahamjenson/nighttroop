@@ -40,6 +40,8 @@ ASSERT_NOT_VISIBLE #controlEventsTable >> text=site_created
 // The control admin signing in is an event, with where from by DB-IP's estimate, so the footer links to DB-IP
 ASSERT_VISIBLE #controlEventsTable >> text=Signed in >> nth=0
 ASSERT_VISIBLE #footer--dbip-link[target="_blank"]
+// Its pager is named by the page, as its filter is
+ASSERT_VISIBLE #control--events--showing >> text=Showing 1 to
 SCREENSHOT events
 
 // Clicking an event shows when it started and how long it took
