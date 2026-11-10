@@ -66,3 +66,17 @@ func TestGraphTicks(t *testing.T) {
 	require.Equal(t, g.Top, g.Y(400))
 	require.Equal(t, g.Right, g.X(24*60*60_000))
 }
+
+// The next week or fortnight is its 7 or 14 days after, or the days to today when fewer are over, with none after
+// today's; the next day or month is the one after
+func TestNext(t *testing.T) {
+	today := time.Now().UTC()
+	date := func(days int) string { return today.AddDate(0, 0, days).Format(time.DateOnly) }
+	week, fortnight := &sitemodels.SiteSummaryPeriod{Period: "week"}, &sitemodels.SiteSummaryPeriod{Period: "fortnight"}
+	require.Equal(t, "/reports/agp/week-"+date(-13), next("agp", week, today.AddDate(0, 0, -20)))
+	require.Equal(t, "/reports/overview/week-"+date(0), next("overview", week, today.AddDate(0, 0, -3)))
+	require.Equal(t, "/reports/agp/fortnight-"+date(-6), next("agp", fortnight, today.AddDate(0, 0, -20)))
+	require.Equal(t, "", next("agp", week, today))
+	require.Equal(t, "/reports/agp/day-"+date(-1), next("agp", &sitemodels.SiteSummaryPeriod{Period: "day"}, today.AddDate(0, 0, -2)))
+	require.Equal(t, "", next("agp", &sitemodels.SiteSummaryPeriod{Period: "day"}, today))
+}

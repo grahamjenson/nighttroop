@@ -41,6 +41,19 @@ func title(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	return first.Format("2 Jan") + " – " + last.Format("2 Jan 2006")
 }
 
+// next is the path of the report after p, whose last day is last: for a week or fortnight its ReportDays after, or to
+// today when fewer are over, and for a day or month the one after its end; "" after today's
+func next(report string, p *sitemodels.SiteSummaryPeriod, last time.Time) string {
+	end := last.AddDate(0, 0, 1)
+	today := time.Now().In(last.Location()).Format(time.DateOnly)
+	if n, ok := sitemodels.ReportDays[p.Period]; ok && last.Format(time.DateOnly) < today {
+		if end = last.AddDate(0, 0, n); end.Format(time.DateOnly) > today {
+			end = time.Now().In(last.Location())
+		}
+	}
+	return link(report, p.Period, end)
+}
+
 // link is the path of the report, as agp, of period with date in it, from today back a year, or "" for one out of that
 // range
 func link(report, period string, date time.Time) string {
@@ -63,7 +76,7 @@ templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
 					@icon.ChevronLeft()
 				}
 				<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title(ctx, p) }</span>
-				@arrowButton("site--reports--next", link(report, p.Period, time.UnixMilli(p.End).In(first.Location())), "Next "+p.Period) {
+				@arrowButton("site--reports--next", next(report, p, time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)), "Next "+p.Period) {
 					@icon.ChevronRight()
 				}
 			</div>
@@ -223,7 +236,7 @@ templ SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admi
 						for _, p := range summaries[kind.Period] {
 							@table.Row() {
 								@table.Cell() {
-									{{ path := link("agp", p.Period, time.UnixMilli(p.Start).In(site_data_templ.Location(ctx))) }}
+									{{ path := link("agp", p.Period, time.UnixMilli(p.End).In(site_data_templ.Location(ctx)).AddDate(0, 0, -1)) }}
 									<a class="text-primary underline" href={ templ.SafeURL(path) } hx-get={ path } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ title(ctx, p) }</a>
 								}
 								for _, value := range []string{fmt.Sprint(p.Days), display.Value(p.TimeInRange, "%"), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {

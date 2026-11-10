@@ -173,8 +173,9 @@ func profileWeeks(ctx context.Context, p *sitemodels.SiteSummaryPeriod, daily []
 		byDate[day.Date] = day
 	}
 	first, end := time.UnixMilli(p.Start).In(location), time.UnixMilli(p.End).In(location)
+	// A month's first week starts on the site's week start day, and a week or fortnight's on its own first day
 	before := 0
-	if p.Period != "day" {
+	if p.Period == "month" {
 		before = (int(first.Weekday()) - weekStartDay(ctx) + 7) % 7
 	}
 	var weeks [][]profileDay

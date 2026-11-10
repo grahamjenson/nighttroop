@@ -363,7 +363,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
-- The Reports hub has Overview, at `/reports/overview`, which shows the week with yesterday in it at first, and the
+- A report's week and fortnight, on the Overview and AGP pages, are the 7 and 14 days to its date, as Dexcom Clarity's
+  are, not the calendar week or fortnight a summary period is, which may have only just begun; a day is the day and a
+  month the month with the date in it. A week or fortnight to today has today so far in it.
+- The Reports hub has Overview, at `/reports/overview`, which shows the 7 days to yesterday at first, and the
   overview of any day, week, fortnight or month from today back a year is at `/reports/overview/{period}-{date}`, with
   the same buttons to other periods as the AGP report. Any other id is not found.
 - An overview shows its glucose's average and standard deviation, in the settings' units, and its GMI and coefficient
@@ -380,7 +383,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   range's bounds as lines labelled with their values, with hours in the settings' time format. A day's is of the 7
   days to it. One with no glucose says so, and that a day's readings show the day after.
 - An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day.
-- The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the week with yesterday in it at first, and a
+- The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the 7 days to yesterday at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days
   (the last 31), weeks, fortnights and months (the last year): each one's days with data, time in range, daily dose
@@ -401,12 +404,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   apart when close), and hours in the settings' time format. A day's report draws the day's glucose over the AGP of the
   7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's
   readings show the day after; the summaries' empty tables say the same.
-- An AGP report's daily glucose profiles are its days as a calendar under their weekdays from the site's week start
-  day, each with its glucose from midnight over the range shaded, coloured above and below it, opening that day's AGP
+- An AGP report's daily glucose profiles are its days as a calendar under their weekdays, a month's from the site's
+  week start day and a week's or fortnight's from its first day, each with its glucose from midnight over the range shaded, coloured above and below it, opening that day's AGP
   report; a day's report has only its own.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; arrow buttons
-  either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after, disabled
-  past today or a year ago. Back and forward move between reports.
+  either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after (a
+  week's or fortnight's the 7 or 14 days before and after, or to today when fewer are over), disabled past today or a
+  year ago. Back and forward move between reports.
 - Clicking around the reports quickly shows the last one clicked, logging no error for the pages it replaced.
 - The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
   as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and

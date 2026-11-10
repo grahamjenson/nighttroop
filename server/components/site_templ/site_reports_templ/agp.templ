@@ -52,7 +52,7 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 				if p.Period == "day" {
 					the 7 days to this one, as if they were one day, with this day's own glucose over them.
 				} else {
-					this { p.Period }'s glucose, as if it were one day.
+					these { fmt.Sprint(periodDays(p, time.Now(), site_data_templ.Location(ctx))) } days' glucose, as if they were one day.
 				}
 			</p>
 			if hasGlucose(p) {

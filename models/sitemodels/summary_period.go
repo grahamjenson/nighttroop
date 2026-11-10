@@ -52,6 +52,10 @@ type SiteSummaryPeriod struct {
 	CGMActive       *float64 `json:"cgm_active"`
 }
 
+// ReportDays are how many days a report's week and fortnight are: the days to its date, as Dexcom Clarity's are,
+// rather than the calendar week or fortnight a summary period is, which may have only begun
+var ReportDays = map[string]int{"week": 7, "fortnight": 14}
+
 // SummaryPeriodFromDB is the site model of a summary period, with its glucose and AGP in the site context's units
 func SummaryPeriodFromDB(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *SiteSummaryPeriod {
 	day := SummaryDailyFromDB(row, siteContext)
