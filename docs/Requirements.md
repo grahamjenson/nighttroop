@@ -964,7 +964,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
-  Go Back keeps them open.
+  Go Back keeps them open. They are a dialog named for the identity that takes the focus, and Escape or pressing beside
+  it shows that same warning rather than closing them; once a reset has signed you out, neither closes them, leaving
+  Sign In Again.
 - Adding a user starts on the User role, so one added without choosing a role is a User, not an Admin; the server
   refuses an identity sent with no role.
 - Picking the role a select already has keeps it, rather than leaving the select empty.

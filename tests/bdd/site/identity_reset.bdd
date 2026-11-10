@@ -61,6 +61,10 @@ ASSERT_VISIBLE #site--identities--created--totp-copy
 ASSERT_NOT_VISIBLE #site--identities--created--password
 SCREENSHOT settings_totp_reset
 SAVE_VALUE #site--identities--created--totp-value admin_totp_secret
+// Signed out, Escape does not close them either, leaving Sign In Again the way on
+PRESS Escape
+ASSERT_VISIBLE #site--identities--signed-out
+ASSERT_VISIBLE #site--identities--sign-in-again
 CLICK #site--identities--sign-in-again
 ASSERT_PATH /login
 INPUT #site--login--name admin
