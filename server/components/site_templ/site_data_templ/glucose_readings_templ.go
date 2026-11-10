@@ -564,47 +564,35 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Type", display.ReadingType(reading.ReadingType)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "reading_type", "Type", display.ReadingType(reading.ReadingType)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Original Units", orDash(reading.OriginalUnits)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "original_units", "Original Units", orDash(reading.OriginalUnits)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Measurement Method", orDash(reading.MeasurementMethod)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "measurement_method", "Measurement Method", orDash(reading.MeasurementMethod)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Direction", directionDetail(reading.Direction)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "delta", "Delta", orDash(reading.Delta)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Delta", orDash(reading.Delta)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "noise", "Noise", orDash(reading.Noise)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Noise", orDash(reading.Noise)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "filtered", "Filtered", orDash(reading.Filtered)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Filtered", orDash(reading.Filtered)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "unfiltered", "Unfiltered", orDash(reading.Unfiltered)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Unfiltered", orDash(reading.Unfiltered)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("RSSI", orDash(reading.Rssi)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Notes", orDash(reading.Notes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Reason", orDash(reading.Reason)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "rssi", "RSSI", orDash(reading.Rssi)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -360,18 +360,6 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Basal (%)", percentOr(tempBasal.Multiplier, "-")).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Notes", orDash(tempBasal.Notes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Reason", orDash(tempBasal.Reason)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
 			templ_7745c5c3_Err = RecordDetails(Record{ID: tempBasal.ID, UtcOffset: tempBasal.UtcOffsetMinutes, App: tempBasal.CreatedByAppName, Device: tempBasal.CreatedByDeviceName, CreatedBy: tempBasal.CreatedByIdentityName, Created: tempBasal.CreatedAt, Updated: tempBasal.UpdatedAt, UpdatedBy: tempBasal.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

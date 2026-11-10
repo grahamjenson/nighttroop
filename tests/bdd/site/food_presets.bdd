@@ -48,9 +48,12 @@ SCREENSHOT food_preset_created
 CLICK #foodPresetsTable tbody tr >> nth=0
 ASSERT_VISIBLE #presets--food--details
 ASSERT_TEXT_VISIBLE admin
-// Its details, below its edit form, are labelled as the add form's fields are
-ASSERT_COUNT #presets--food--details dt:text-is("Fat (g)") 1
+// Each field its edit form has is shown once, in the form, not again in the details listed below it
+ASSERT_COUNT #presets--food--details :is(dt, label):has-text("Fat (g)") 1
 SCREENSHOT food_preset_edit
+// Scrolled to its foot, below the form are only the record's own details
+SCROLL 2000
+ASSERT_VISIBLE #presets--food--details dt:text-is("ID")
 INPUT #presets--food--edit--name Brown toast
 INPUT #presets--food--edit--carbs 25
 CLICK #presets--food--edit--submit

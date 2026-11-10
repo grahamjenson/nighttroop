@@ -53,8 +53,6 @@
 1. Performance testing (cost estimate for running full node)
 1. P4: Mark the user menu's button in the header while a page of Settings, Alarms, or Logs & Events is shown, as the
    header then marks no hub and only the open menu marks it
-1. P4: Leave out of the details modals' lists (`readingDetail` and `presetDetail` rows) the fields their edit forms
-   now show, e.g. an insulin dose's split, type, notes and reason, so each is shown once
 1. P4: Marshal an entry without `Entry.MarshalJSON` (`models/nightscoutmodels/entries.go`) marshalling it again as
    an alias and making a `time.FixedZone` for its `dateString`, about a quarter of the CPU of a 288 entry
    `/api/v1/entries` search now its fields are not read back as a map (`BenchmarkWriteRecordsV1Entries`)
