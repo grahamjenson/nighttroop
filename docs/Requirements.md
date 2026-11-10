@@ -114,7 +114,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
-    does its newest, then shrinks its DB.
+    does its newest, deletes its old loop settings no record refers to any more, then shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
   TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
   can be hydrated.
@@ -546,6 +546,10 @@ Close or saving) gives the focus back to the row or button that opened it.
   its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses (an empty
   one is none sent). Each shows its app, what it came in, its device and when it was first and last seen, newest
   first; clicking one shows the settings as sent, indented to inspect.
+  - Clicking a set also shows what changed from the same app's set last seen before it: each setting changed, added
+    or removed, by its name (a preset's by the preset's name, as `overridePresets.Running.targetRange`), old then new
+    ("not sent" when it was not), glucose in the site's units; an app's first set says there is no set before it. The
+    API gives these as `changes`, with the set before's `previous_id` and the `units`.
   - Deleting a set keeps the profiles and device statuses sent with it; the Nightscout API reads them back without it.
   - The Nightscout API reads each profile and device status back with the settings it was sent with.
 
@@ -1013,7 +1017,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   control site's page of the site does. Others' My Account, and control's, do not.
 - Its Truncate, after asking, truncates the site as control's Truncate does: the loop's status and pump as sent are
   cleared from all but each device's newest report, device reports are thinned and those over 30 days old deleted,
-  and the DB is shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
+  loop settings no profile or device status refers to any more are deleted, but each app's last seen, and the DB is
+  shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
   the DB's new size, and records a "Site truncated" event with the admin. It shares the site's few downloads a minute.
 
 ### Own settings and alarms

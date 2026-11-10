@@ -2,6 +2,9 @@ package sitepresets
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -26,12 +29,35 @@ func (s *LoopSettingsCollection) GetRoute() string {
 	return "loop-settings"
 }
 
-func (s *LoopSettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.LoopSetting, error) {
-	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetLoopSettings, sitedb.GetLoopSettingsParams{ID: id})
+// GetRow is the settings, with what changed from the set of the same app last seen before them
+func (s *LoopSettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteLoopSettings, error) {
+	row, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetLoopSettings, sitedb.GetLoopSettingsParams{ID: id})
+	if err != nil {
+		return nil, err
+	}
+	previous, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetPreviousLoopSettings, sitedb.GetPreviousLoopSettingsParams{App: row.App, LastSeenAt: row.LastSeenAt, ID: row.ID})
+	model := s.fromDB(row, siteContext)
+	switch {
+	case errors.Is(err, sql.ErrNoRows): // the app's first set
+	case err != nil:
+		return nil, err
+	default:
+		model.PreviousID = &previous.ID
+		model.Changes = sitemodels.LoopSettingsChanges(row.App, json.RawMessage(previous.SettingsJson), model.Settings, model.Units)
+	}
+	return model, nil
 }
 
-func (s *LoopSettingsCollection) ToModel(row *sitedb.LoopSetting, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
-	return sitemodels.LoopSettingsFromDB(row)
+// fromDB is the model of the settings, with the site's units, which glucose in their changes is in
+func (s *LoopSettingsCollection) fromDB(row *sitedb.LoopSetting, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
+	model := sitemodels.LoopSettingsFromDB(row)
+	model.Units = siteContext.GetSettings().GetUnits()
+	return model
+}
+
+// ToModel is the settings as read, which are already the model
+func (s *LoopSettingsCollection) ToModel(row *sitemodels.SiteLoopSettings, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
+	return row
 }
 
 // GetHTMXResponse is the settings, to inspect, in a modal
@@ -40,8 +66,13 @@ func (s *LoopSettingsCollection) GetHTMXResponse(model *sitemodels.SiteLoopSetti
 }
 
 // SearchRows are the settings, the last seen first
-func (s *LoopSettingsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.LoopSetting, error) {
-	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SearchLoopSettings, sitedb.SearchLoopSettingsParams{Limit: query.Limit, Skip: query.Skip})
+func (s *LoopSettingsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteLoopSettings, error) {
+	rows, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SearchLoopSettings, sitedb.SearchLoopSettingsParams{Limit: query.Limit, Skip: query.Skip})
+	models := make([]*sitemodels.SiteLoopSettings, 0, len(rows))
+	for _, row := range rows {
+		models = append(models, s.fromDB(row, siteContext))
+	}
+	return models, err
 }
 
 func (s *LoopSettingsCollection) SearchHTMXResponse(models []*sitemodels.SiteLoopSettings, query *apiutils.Query) templ.Component {

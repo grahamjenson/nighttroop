@@ -216,20 +216,38 @@ type LoginToken struct {
 // LoopSettings A set of a loop app's settings, kept once however often it was sent: Loop's from its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses
 type LoopSettings struct {
 	// App loop, trio or aaps
-	App                 string  `json:"app"`
-	CreatedAt           int64   `json:"created_at"`
-	CreatedByDeviceName *string `json:"created_by_device_name"`
-	FirstSeenAt         int64   `json:"first_seen_at"`
+	App string `json:"app"`
+
+	// Changes The settings that differ from the previous set, glucose in units; only on a set read alone
+	Changes             *[]LoopSettingsChange `json:"changes"`
+	CreatedAt           int64                 `json:"created_at"`
+	CreatedByDeviceName *string               `json:"created_by_device_name"`
+	FirstSeenAt         int64                 `json:"first_seen_at"`
 
 	// Id The SHA-256 of the app and the settings, in hex
 	Id         string `json:"id"`
 	LastSeenAt int64  `json:"last_seen_at"`
+
+	// PreviousId The set of the same app last seen before this one; only on a set read alone, null for an app's first
+	PreviousId *string `json:"previous_id"`
 
 	// Settings As the app sent them
 	Settings map[string]interface{} `json:"settings"`
 
 	// Source What they were sent in: profile or devicestatus
 	Source string `json:"source"`
+	Units  *Units `json:"units,omitempty"`
+}
+
+// LoopSettingsChange A setting that differs from the set before, by its names joined by dots, a preset's by its name
+type LoopSettingsChange struct {
+	Field string `json:"field"`
+
+	// New As it reads, null when it is not sent
+	New *string `json:"new"`
+
+	// Old As it reads, null when it was not sent
+	Old *string `json:"old"`
 }
 
 // NsAuthorization defines model for NsAuthorization.

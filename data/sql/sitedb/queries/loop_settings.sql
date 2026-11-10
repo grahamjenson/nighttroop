@@ -18,3 +18,20 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 
 -- name: DeleteLoopSettings :execresult
 DELETE FROM loop_settings WHERE id = ?;
+
+-- name: GetPreviousLoopSettings :one
+-- The set of the same app last seen before this one, the next of the app's down the Loop Settings page, which its
+-- changes are shown from
+SELECT * FROM loop_settings
+WHERE app = sqlc.arg('App') AND (last_seen_at < sqlc.arg('LastSeenAt') OR (last_seen_at = sqlc.arg('LastSeenAt') AND id > sqlc.arg('ID')))
+ORDER BY last_seen_at DESC, id
+LIMIT 1;
+
+-- name: DeleteUnreferencedLoopSettings :exec
+-- Deletes the sets no profile or device report refers to any more, as when the reports sent with them were thinned,
+-- but each app's last seen, its settings now, which AAPS sends only now and then
+DELETE FROM loop_settings WHERE id NOT IN (
+    SELECT loop_settings_id FROM profile_presets WHERE loop_settings_id IS NOT NULL
+    UNION SELECT remote_settings_id FROM profile_presets WHERE remote_settings_id IS NOT NULL
+    UNION SELECT configuration_id FROM device_reports WHERE configuration_id IS NOT NULL
+) AND last_seen_at < (SELECT MAX(newest.last_seen_at) FROM loop_settings newest WHERE newest.app = loop_settings.app);

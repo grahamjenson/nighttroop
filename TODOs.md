@@ -100,8 +100,6 @@
        client control (pairing and remote commands) uses
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
-    1. P3: Show what changed between two sets of loop settings on the Loop Settings page, and clear sets no record
-       refers to when a site is truncated ([docs/loop_settings.md](docs/loop_settings.md))
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
