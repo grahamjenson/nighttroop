@@ -71,8 +71,6 @@
        forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
-    1. P3: A delete button on Push Devices (`/settings/push-devices`), for an identity's own registrations and an
-       admin's for the site's; the push registrations collection's HTMX responses are empty until then
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
     1. P2: Before any server credential (one with no site) is added: use it only for tokens its app registered itself,
        require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token. Then
