@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_logs_templ"
 	"nighttroop.t1d.nz/server/components/dbsize"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/heading"
@@ -720,8 +721,7 @@ func SiteNotCreated(message string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = toast.Toast(toast.Props{Title: "Site Not Created", Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter,
-			Dismissible: true, Icon: true}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = errortoast.Toast("Site Not Created", message).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/control_templ/control_login_templ"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -148,7 +149,7 @@ func loginFailed(w http.ResponseWriter, r *http.Request, status int, message str
 		return
 	}
 	w.WriteHeader(status)
-	if err := control_login_templ.LoginError(message).Render(r.Context(), w); err != nil {
+	if err := errortoast.Toast("", message).Render(r.Context(), w); err != nil {
 		slog.ErrorContext(r.Context(), "Failed to render the login error", "error", err)
 	}
 }
