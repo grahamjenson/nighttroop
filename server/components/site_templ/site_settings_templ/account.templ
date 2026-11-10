@@ -95,7 +95,8 @@ templ AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) 
 				<p class="mt-1 text-sm text-gray-500">
 					Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all
 					but each device's newest report, and thins device reports to fewer the older they are, deleting those over
-					30 days old. Readings, treatments, profiles and everything else are kept. The DB is then shrunk.
+					30 days old, and deletes old loop settings no profile or device report refers to any more. Readings,
+					treatments, profiles and everything else are kept. The DB is then shrunk.
 				</p>
 			</div>
 			@button.Button(button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,

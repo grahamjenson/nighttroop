@@ -114,7 +114,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
-    does its newest, then shrinks its DB.
+    does its newest, deletes its old loop settings no record refers to any more, then shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
   TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
   can be hydrated.
@@ -157,6 +157,20 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A control admin can send any of them a test push with its Test button (`POST /push-devices/{id}/test`), within its
   site's push limit, seeing its new last push or why it failed; a read only control identity sees no Test buttons and
   is refused (403).
+
+### Push credentials
+
+- Push Credentials (`/push-credentials`, in the menu under Users) lists every site's push credentials and those for
+  every site ("Every site"), newest first: its site, name, service, team or project and key ID, apps, bundle IDs and
+  who added it, never its secret, in the page or the JSON API (`/push-credentials`, `/push-credentials/{id}`).
+- A control admin can add one to a live site with Add Push Credential (`POST /push-credentials`, with `site_id`),
+  checked and kept encrypted as the site's admin's is, within the site's 5, added by the control admin's name; the
+  site's admin sees it on their Push Notifications page. A site that is not live, or a key that cannot be read, is
+  refused with the modal left open.
+- One for every site, with no `site_id`, is refused (400) until the server uses it only for tokens its app registered
+  itself, requires its bundle IDs and limits pushes across the server.
+- A control admin can delete any of them, a site's or one for every site, after a confirmation, removing its secret
+  so pushes stop using it; a read only control identity is refused (403) adding or deleting one.
 
 ### Logs
 
@@ -329,8 +343,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, the
   treatments, and each device's latest status.
 - Under the graph, an Insulin & Carbs table lists each dose and meal's carbs, newest first, with how long ago it was,
-  in an Insulin and a Carbs column; a loop's SMBs are marked SMB. Beside it, Other Treatments lists the temp targets
-  and temp basals.
+  in an Insulin and a Carbs column; a loop's SMBs, Trio's `SMB` doses and Loop's automatic boluses, are marked
+  SMB. Beside it, Other Treatments lists the temp targets and temp basals.
 - A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it. A
   site opens on the last 6 hours, and its range buttons choose 6 hours, 24 hours, 48 hours or a week:
   - The glucose axis is always 0 to 16 mmol/L (288 mg/dL), marked at each quarter, whatever the readings: a reading
@@ -342,7 +356,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - The basal in force along the bottom, its highest rate reaching 3 mmol/L up the glucose axis and labelled on the
     right. A profile sent without its own timezone has its schedules read in the site's timezone, whoever views it.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
-    labels overlap; a loop's SMBs are smaller, fainter and not labelled.
+    labels overlap; a loop's SMBs, Trio's `SMB` doses and Loop's automatic boluses, are smaller, fainter and not
+    labelled.
   - A legend of insulin and SMB (triangles pointing down), carbs (pointing up), basal (an outlined area) and target
     (a line), each drawn as on the graph.
   - Pointing anywhere on the graph shows what was then: the time, the reading nearest it within 5 minutes and when
@@ -359,6 +374,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
   long there has been no reading, as "No reading for 45 min".
+- An open summary greys its latest glucose and shows that badge when it turns old, without a change or a reload of
+  the page, reading the summary again once then rather than every few seconds.
 - The summary says how long ago things were in words, to the nearest hour once over an hour, as "45 minutes ago" or
   "2 days 1 hour ago", and its tiles and devices show units smaller and grey beside their numbers.
 - The summary's latest glucose links to the page of every reading, and each other treatment's kind (e.g. Temp Basal)
@@ -441,18 +458,22 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   year ago. Back and forward move between reports.
 - Clicking around the reports quickly, their tabs, periods and arrows, shows the last one clicked, logging no error for
   the pages it replaced.
-- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
-  as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and
-  ›) to the 30 days before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest
-  month, and the one before past a year ago. A last day after yesterday or more than a year ago is refused. Back and
-  forward move between them.
+- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days to today, today so far. It
+  says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and ›) to the 30 days
+  before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest month, and the one
+  before past a year ago. A last day after today or more than a year before yesterday is refused. Back and forward move
+  between them.
 - It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers, the bars a couple of
   pixels apart, its basal (in gold) under its boluses, with a legend of the two; a day with no insulin has no bar and is
-  not counted. Hovering a bar shows its date and its basal or boluses in U.
-- It shows how many of its days have insulin and their mean, lowest and highest daily dose, and says when none have
-  insulin.
+  not counted. Hovering a bar shows its date and its basal or boluses in U. Today's bar is paler, labelled "so far" to
+  its right, and its tooltip's date says so far.
+- It shows how many of its days before today have insulin and their mean, lowest and highest daily dose, today left
+  out as it is not over, and says when none have insulin.
 - Under the bars, a table lists every day it covers, newest first, with its basal, boluses and total daily dose in U,
-  or "–" for a day with no insulin.
+  or "–" for a day with no insulin; today's date is marked "so far", with insulin or not.
+- Under the bars, a note says basal is estimated from the basal rate in force each minute, the profile's scheduled
+  basal or a temp basal, the rest of the daily dose being boluses; and, when today is in it, that today, paler and
+  marked so far, is left out of the days with insulin and their daily dose, lowest and highest.
 
 ### Getting started
 
@@ -491,6 +512,8 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
     days", or Today on a new site's first day.
 - **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%, typed in
   and shown on the site as percents, 0 to 100
+  - A dose's `automatic` is whether a loop gave it, true or false as Loop uploaded it and null for apps that do not
+    say; the site API gives it but does not change it, ignoring it on a create or update.
 - **Food intakes**
 - **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp;
   the site types it in and shows it as a percent, from 1% to 1100%
@@ -527,8 +550,11 @@ units, whether it is required, with its limits, and a dropdown or suggestions fo
 settings' timezone, and is now when left blank; other fields left blank are not set.
 
 A record's details, on a data or presets page, edit it in a form whose every input is labelled, which wraps onto more
-lines on a phone so each input can be seen and tapped. Its Save (Rename for a profile) is at the modal's foot beside
-Close, as an add modal's Add is, and Enter in an input saves too.
+lines on a phone so each input can be seen and tapped. It has every field its add modal has, with the same labels,
+help and limits, filled in with the record's, but its time and those an edit does not change (a reading's type and
+method, a temp target's insulin needs). Emptying its notes or reason clears them; a number left blank stays as
+it was. Its Save (Rename for a profile) is at the modal's foot beside Close, as an add modal's Add is, and Enter in
+an input saves too.
 
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
 opens its details; Enter on its delete button deletes it without opening them. A row's delete icon, here and in
@@ -547,6 +573,10 @@ Close or saving) gives the focus back to the row or button that opened it.
   its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses (an empty
   one is none sent). Each shows its app, what it came in, its device and when it was first and last seen, newest
   first; clicking one shows the settings as sent, indented to inspect.
+  - Clicking a set also shows what changed from the same app's set last seen before it: each setting changed, added
+    or removed, by its name (a preset's by the preset's name, as `overridePresets.Running.targetRange`), old then new
+    ("not sent" when it was not), glucose in the site's units; an app's first set says there is no set before it. The
+    API gives these as `changes`, with the set before's `previous_id` and the `units`.
   - Deleting a set keeps the profiles and device statuses sent with it; the Nightscout API reads them back without it.
   - The Nightscout API reads each profile and device status back with the settings it was sent with.
 
@@ -966,7 +996,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
-  Go Back keeps them open.
+  Go Back keeps them open. They are a dialog named for the identity that takes the focus, and Escape or pressing beside
+  it shows that same warning rather than closing them; once a reset has signed you out, neither closes them, leaving
+  Sign In Again.
 - Adding a user starts on the User role, so one added without choosing a role is a User, not an Admin; the server
   refuses an identity sent with no role.
 - Picking the role a select already has keeps it, rather than leaving the select empty.
@@ -1012,7 +1044,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   control site's page of the site does. Others' My Account, and control's, do not.
 - Its Truncate, after asking, truncates the site as control's Truncate does: the loop's status and pump as sent are
   cleared from all but each device's newest report, device reports are thinned and those over 30 days old deleted,
-  and the DB is shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
+  loop settings no profile or device status refers to any more are deleted, but each app's last seen, and the DB is
+  shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
   the DB's new size, and records a "Site truncated" event with the admin. It shares the site's few downloads a minute.
 
 ### Own settings and alarms

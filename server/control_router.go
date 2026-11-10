@@ -53,6 +53,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/push-devices", controlapi.PushDevicesHandler)
 		r.Get(httputils.ControlLogsDBPath, controlapi.LogsDBHandler)
 		r.Post("/push-devices/{id}/test", controlapi.PushTestHandler)
+		r.Get("/push-credentials/new", (&controlcollections.PushCredentialsCollection{}).NewHandler)
+		r.Post("/push-credentials", (&controlcollections.PushCredentialsCollection{}).CreateHandler)
+		r.Delete("/push-credentials/{id}", (&controlcollections.PushCredentialsCollection{}).DeleteHandler)
 
 		// Not here yet: a site's API use per device and DB table sizes, and managing the control admins themselves,
 		// listing them, resetting another's password or TOTP, changing their role or deleting one (never the one

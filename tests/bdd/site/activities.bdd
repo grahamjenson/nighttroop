@@ -39,7 +39,7 @@ CLICK #activitiesTable tbody tr >> nth=1
 ASSERT_VISIBLE #site--activity--details
 ASSERT_TEXT_VISIBLE exercise: Football
 SCREENSHOT activity_details
-INPUT #site--activity--edit--duration 75
+INPUT #site--activity--edit--duration-minutes 75
 INPUT #site--activity--edit--notes Match
 CLICK #site--activity--edit--submit
 ASSERT_STATUS 200

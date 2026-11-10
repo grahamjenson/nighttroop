@@ -40,6 +40,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS ".settings_id" "@result.id"
 ASSERT_EQUALS 10 "@result.settings.maximumBolus"
+ASSERT_EQUALS null "@result.previous_id"
 
 // Each profile reads back with the settings it was sent with
 NAME profiles_with_settings
@@ -63,6 +64,19 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@result.items"
 ASSERT_EQUALS 12 "@result.items.0.settings.maximumBolus"
 ASSERT_EQUALS 10 "@result.items.1.settings.maximumBolus"
+SET changed_id {{ dig "list_changed_loop_settings.result.items.0.id" }}
+
+// The changed settings say what changed from those before, by field, old then new
+NAME get_changed_loop_settings
+GET http://{{ site }}/presets/loop-settings/{{ .changed_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS ".settings_id" "@result.previous_id"
+ASSERT_LENGTH 1 "@result.changes"
+ASSERT_EQUALS "maximumBolus" "@result.changes.0.field"
+ASSERT_EQUALS "10" "@result.changes.0.old"
+ASSERT_EQUALS "12" "@result.changes.0.new"
 
 // Deleting the first settings keeps the profiles sent with them, which read back without them
 NAME delete_loop_settings

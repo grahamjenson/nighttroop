@@ -60,15 +60,31 @@ changes about them.
 ## The site
 
 The Data hub's Presets group has a Loop Settings page (`/presets/loop-settings`): each set, the last seen first, with
-its app, what it came in, the device and when it was first and last seen. Clicking one shows the settings as they were
-sent, indented to inspect. A set can be deleted there.
+its app, what it came in, the device and when it was first and last seen. Clicking one shows what changed from the
+set of the same app last seen before it, the next of that app's down the page, then the settings as they were sent,
+indented to inspect. A set can be deleted there.
+
+What changed (`sitemodels.LoopSettingsChanges`, and `changes` in the API with the set before's `previous_id`) is each
+setting whose value differs, was added or was removed, old then new:
+
+- A setting is named by where it is, its names joined by dots, as `overridePresets.Running.targetRange`. A list of
+  presets is matched by each one's name, so adding one does not change the rest; one without a name, or with one a
+  preset before it had, is by its place in the list.
+- Glucose, in Loop's `minimumBGGuard`, `preMealTargetRange` and presets' `targetRange`, and Trio's presets' `target`,
+  is in the site's units. Loop sends it in its profile's units, which the set does not keep, so they are guessed from
+  its size, as a value over 30 is mg/dL. AAPS's configuration has none.
+- Any other value is shown as sent: text as it is, and anything else as JSON.
+
+## Truncating
+
+Truncating a site (My Account's Truncate, or control's) deletes the sets no profile or device report refers to any
+more, as when the device reports sent with them were thinned or deleted, or a profile was deleted, but keeps each
+app's last seen: the settings it has now, which AAPS sends only now and then. The job every 10 minutes does not.
+Deleting a site deletes its whole DB, `loop_settings` with it.
 
 ## Afterwards
 
-- What changed between two sets, shown on the page.
 - When settings were in force can be read from the records that refer to them, in time order, while those records
   are kept; `first_seen_at` and `last_seen_at` keep the outline after they are deleted.
-- Sets no record refers to any more could be cleared when a site is truncated. Deleting a site deletes its whole DB,
-  `loop_settings` with it.
 - Limits: a client that sends different settings on every upload adds a row each time. Uploads are already rate
   limited, and a row is at most 8 KB, but a cap on rows a day may be worth adding.

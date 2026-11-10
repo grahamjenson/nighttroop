@@ -413,7 +413,7 @@ func AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) t
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div id=\"site--account--truncate-card\" class=\"flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 shadow-sm\"><div class=\"max-w-2xl\"><h2 class=\"text-sm font-semibold uppercase tracking-wide text-gray-500\">Truncate</h2><p class=\"mt-1 text-sm text-gray-500\">Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all but each device's newest report, and thins device reports to fewer the older they are, deleting those over 30 days old. Readings, treatments, profiles and everything else are kept. The DB is then shrunk.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div id=\"site--account--truncate-card\" class=\"flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 shadow-sm\"><div class=\"max-w-2xl\"><h2 class=\"text-sm font-semibold uppercase tracking-wide text-gray-500\">Truncate</h2><p class=\"mt-1 text-sm text-gray-500\">Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all but each device's newest report, and thins device reports to fewer the older they are, deleting those over 30 days old, and deletes old loop settings no profile or device report refers to any more. Readings, treatments, profiles and everything else are kept. The DB is then shrunk.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
