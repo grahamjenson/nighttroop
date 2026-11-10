@@ -113,6 +113,20 @@ func SummaryDays(ctx context.Context, q *sitedb.Queries, first, last string) ([]
 	return days, err
 }
 
+// SummaryDaysSoFar are the SummaryDays from first to last, and today so far after them when last is today, built from
+// its data up to now and not kept, as it is not over
+func SummaryDaysSoFar(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, last string, now time.Time) ([]*sitedb.SummaryPeriod, error) {
+	days, err := SummaryDays(ctx, q, first, last)
+	if err != nil || last != LocalDate(now, siteContext.GetSiteTimezone(), 0) {
+		return days, err
+	}
+	today, err := buildSummaryDaily(ctx, q, siteContext, last, now.UnixMilli())
+	if err != nil {
+		return nil, err
+	}
+	return append(days, today), nil
+}
+
 // LocalDate is the date days from now's, in location's time
 func LocalDate(now time.Time, location *time.Location, days int) string {
 	return now.In(location).AddDate(0, 0, days).Format(time.DateOnly)

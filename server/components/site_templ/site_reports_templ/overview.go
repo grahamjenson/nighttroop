@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -96,12 +97,13 @@ type band struct {
 
 // bands are the period's very high, high, in range, low and very low, top down as they are drawn
 func bands(p *sitemodels.SiteSummaryPeriod) []band {
+	colours := site_data_templ.GlucoseColours
 	return []band{
-		{"very-high", "Very high", p.TimeVeryHigh, "bg-glucose-very-high"},
-		{"high", "High", p.TimeHigh, "bg-glucose-high"},
-		{"in-range", "In range", p.TimeInRange, "bg-glucose-in-range"},
-		{"low", "Low", p.TimeLow, "bg-glucose-low"},
-		{"very-low", "Very low", p.TimeVeryLow, "bg-glucose-very-low"},
+		{"very-high", "Very high", p.TimeVeryHigh, colours["Very high"].Background},
+		{"high", "High", p.TimeHigh, colours["High"].Background},
+		{"in-range", "In range", p.TimeInRange, colours[""].Background},
+		{"low", "Low", p.TimeLow, colours["Low"].Background},
+		{"very-low", "Very low", p.TimeVeryLow, colours["Very low"].Background},
 	}
 }
 
@@ -269,7 +271,7 @@ func overviewTop(bars []overviewBar) float64 {
 	return top
 }
 
-// tddLink is the TDD report of the month ending on the day, or yesterday's for today or later
+// tddLink is the TDD report of the month ending on the day, or the latest, to today so far, for today or later
 func tddLink(day, now time.Time) string {
 	if day.Format(time.DateOnly) >= now.In(day.Location()).Format(time.DateOnly) {
 		return "/reports/tdd"

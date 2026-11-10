@@ -135,6 +135,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
 	}
+	if q.deleteUnreferencedLoopSettingsStmt, err = db.PrepareContext(ctx, deleteUnreferencedLoopSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteUnreferencedLoopSettings: %w", err)
+	}
 	if q.deviceReportAscendingIDsStmt, err = db.PrepareContext(ctx, deviceReportAscendingIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportAscendingIDs: %w", err)
 	}
@@ -215,6 +218,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getNotificationEventStmt, err = db.PrepareContext(ctx, getNotificationEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNotificationEvent: %w", err)
+	}
+	if q.getPreviousLoopSettingsStmt, err = db.PrepareContext(ctx, getPreviousLoopSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPreviousLoopSettings: %w", err)
 	}
 	if q.getProfilePresetStmt, err = db.PrepareContext(ctx, getProfilePreset); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfilePreset: %w", err)
@@ -670,6 +676,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteSummaryPeriodsStmt: %w", cerr)
 		}
 	}
+	if q.deleteUnreferencedLoopSettingsStmt != nil {
+		if cerr := q.deleteUnreferencedLoopSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteUnreferencedLoopSettingsStmt: %w", cerr)
+		}
+	}
 	if q.deviceReportAscendingIDsStmt != nil {
 		if cerr := q.deviceReportAscendingIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deviceReportAscendingIDsStmt: %w", cerr)
@@ -803,6 +814,11 @@ func (q *Queries) Close() error {
 	if q.getNotificationEventStmt != nil {
 		if cerr := q.getNotificationEventStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getNotificationEventStmt: %w", cerr)
+		}
+	}
+	if q.getPreviousLoopSettingsStmt != nil {
+		if cerr := q.getPreviousLoopSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPreviousLoopSettingsStmt: %w", cerr)
 		}
 	}
 	if q.getProfilePresetStmt != nil {
@@ -1321,6 +1337,7 @@ type Queries struct {
 	deleteLoopSettingsStmt                      *sql.Stmt
 	deleteOldDeviceReportsStmt                  *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
+	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
 	deviceReportHistoryIDsStmt                  *sql.Stmt
 	deviceReportTotalsStmt                      *sql.Stmt
@@ -1348,6 +1365,7 @@ type Queries struct {
 	getLoopSettingsStmt                         *sql.Stmt
 	getMostRecentProfileStoreStmt               *sql.Stmt
 	getNotificationEventStmt                    *sql.Stmt
+	getPreviousLoopSettingsStmt                 *sql.Stmt
 	getProfilePresetStmt                        *sql.Stmt
 	getProfileStoreStmt                         *sql.Stmt
 	getProfileSwitchStmt                        *sql.Stmt
@@ -1479,6 +1497,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
 		deleteOldDeviceReportsStmt:                  q.deleteOldDeviceReportsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
+		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
 		deviceReportHistoryIDsStmt:                  q.deviceReportHistoryIDsStmt,
 		deviceReportTotalsStmt:                      q.deviceReportTotalsStmt,
@@ -1506,6 +1525,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getLoopSettingsStmt:                         q.getLoopSettingsStmt,
 		getMostRecentProfileStoreStmt:               q.getMostRecentProfileStoreStmt,
 		getNotificationEventStmt:                    q.getNotificationEventStmt,
+		getPreviousLoopSettingsStmt:                 q.getPreviousLoopSettingsStmt,
 		getProfilePresetStmt:                        q.getProfilePresetStmt,
 		getProfileStoreStmt:                         q.getProfileStoreStmt,
 		getProfileSwitchStmt:                        q.getProfileSwitchStmt,

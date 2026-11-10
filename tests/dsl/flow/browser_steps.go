@@ -193,6 +193,16 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 			flush()
 			// Asserts after it check the page once the jobs have run, e.g. that it updated itself live
 			current = &RunBackgroundJobs{TestPath: path, TestLine: lineNumber}
+		case "WAIT_VISIBLE":
+			// WAIT_VISIBLE <seconds> <locator> waits up to that many seconds, longer than an assert's 5, for what a timer
+			// on the page shows, e.g. a reload when a reading turns stale; asserts after it check the page then
+			flush()
+			parts := strings.SplitN(second, " ", 2)
+			seconds, err := strconv.Atoi(parts[0])
+			if len(parts) != 2 || err != nil || seconds < 1 || seconds > 60 {
+				return nil, fmt.Errorf("%s:%d: WAIT_VISIBLE needs 1 to 60 seconds and a locator", path, lineNumber)
+			}
+			current = &WaitVisible{TestPath: path, TestLine: lineNumber, Seconds: seconds, Locator: parts[1]}
 		// Adding screenshot action
 		case "SCREENSHOT":
 			if current == nil {
