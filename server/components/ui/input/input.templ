@@ -42,6 +42,10 @@ type Props struct {
 	FileAccept       string
 	HasError         bool
 	NoTogglePassword bool
+	// NotSaved is a password a password manager is not offered to save, such as a connector's, which is not this
+	// site's. Chrome offers to save any password box sent, whatever its autocomplete, so it is a text box masked
+	// with -webkit-text-security, and a password box again in a browser that cannot mask one (input.js).
+	NotSaved bool
 }
 
 templ Input(props ...Props) {
@@ -55,10 +59,23 @@ templ Input(props ...Props) {
 	if p.ID == "" {
 		{{ p.ID = utils.RandomID() }}
 	}
+	{{ inputType := p.Type }}
+	if p.NotSaved && p.Type == TypePassword {
+		{{ inputType = TypeText }}
+	}
 	<div class="relative w-full">
 		<input
 			id={ p.ID }
-			type={ string(p.Type) }
+			type={ string(inputType) }
+			if p.NotSaved && p.Type == TypePassword {
+				data-tui-input-masked
+				style="-webkit-text-security: disc"
+				autocomplete="off"
+				data-1p-ignore
+				data-lpignore="true"
+				data-bwignore
+				data-form-type="other"
+			}
 			if p.Name != "" {
 				name={ p.Name }
 			}
