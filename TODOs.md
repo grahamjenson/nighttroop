@@ -61,8 +61,6 @@
 1. Accessibility:
     1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes
        the focus too
-1. P4: Show the event group picker's times (`event_groups.templ`'s choices and range) in the time format, as other
-   times are, rather than as 24-hour HH:mm
 1. P3: Build the details modals' edit forms from their `addmodal` fields, as `EventGroupModal` does, so they edit every
    field the add form has with the same labels and help, and delete the `*Inputs` templs
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each

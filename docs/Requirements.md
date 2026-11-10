@@ -495,7 +495,8 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
   - An event group can also be added on the site: the Add Event Group menu lists the Nightscout types (e.g. Meal Bolus),
     and each opens a modal for that type with a time and up to one event of each kind that type can have (e.g. a Meal
     Bolus can have glucose, insulin, food and a site or sensor change, an Exercise only an activity), picked from those
-    within an hour of the time. Changing the time lists the events near it.
+    within an hour of the time. Changing the time lists the events near it. The events' times, and the window they are
+    picked from, are in the time format, as other times are.
   - Adding or editing a group with a kind of event its type cannot have, or of an unknown type, is refused.
   - Clicking a group edits its type, time, notes and events; changing its type offers only the kinds of event the new
     type can have. An event taken out of a group is in no group.
