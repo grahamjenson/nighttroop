@@ -529,6 +529,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 - A site can pull data from **Dexcom** (with its region), **LibreLinkUp** (with its region) or another
   **Nightscout** site, or from the **virtual connector**, which makes realistic test data.
+- The virtual connector writes its readings, treatments and device statuses on the 5 minute grid, whatever window it
+  syncs or backfills, so windows that overlap write the same records at the same times and none is written twice.
 - The virtual connector's glucose is the same for the same time on every site: a 6 hour wave, with a meal as it rises
   and a correction at its peak, over a 25 hour one, so days differ. It reaches every range, about 2% very low (below
   54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL. It
