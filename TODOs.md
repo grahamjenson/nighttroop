@@ -18,8 +18,6 @@
 
 1. Alarms:
     1. Push notifications to phones, as alarms now only reach an open site page or a Nightscout socket client
-    1. P3: Reload the summary when its latest reading turns stale, as an open summary only greys it and says "No
-       reading for" on its next reload: a change, its stream reconnecting (at most an hour) or the page loading
 
 1. Bad Sites
     1. write entry compression

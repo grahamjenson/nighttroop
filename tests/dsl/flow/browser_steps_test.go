@@ -57,6 +57,25 @@ func TestHoldHoldsAPathsRequestsUntilReleased(t *testing.T) {
 	require.ErrorContains(t, err, "HOLD needs a path")
 }
 
+func TestWaitVisibleWaitsSecondsForALocator(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/wait.bdd": {Data: []byte("GOTO /\nWAIT_VISIBLE 30 #badge:text-matches(\"^No reading$\")\nASSERT_VISIBLE #grey\n")},
+	}
+
+	file, err := parseBrowser(fsys, "site/wait.bdd")
+	require.NoError(t, err)
+	require.Len(t, file, 2)
+	wait := file[1].(*WaitVisible)
+	require.Equal(t, 30, wait.Seconds)
+	require.Equal(t, `#badge:text-matches("^No reading$")`, wait.Locator)
+	require.Len(t, wait.Asserts, 1)
+
+	for _, bad := range []string{"WAIT_VISIBLE #badge", "WAIT_VISIBLE 0 #badge", "WAIT_VISIBLE 61 #badge", "WAIT_VISIBLE 30"} {
+		_, err = parseBrowser(fstest.MapFS{"site/bad.bdd": {Data: []byte("GOTO /\n" + bad + "\n")}}, "site/bad.bdd")
+		require.ErrorContains(t, err, "WAIT_VISIBLE needs 1 to 60 seconds and a locator", bad)
+	}
+}
+
 func TestHoverPointsAtAShareAcross(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/hover.bdd": {Data: []byte("GOTO /\nHOVER #graph svg\nASSERT_TEXT_VISIBLE Basal\nHOVER 95% #graph svg\n")},

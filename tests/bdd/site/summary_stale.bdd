@@ -1,0 +1,19 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A reading 15 seconds short of the no data alarm's minutes (20 by default) comes in to the open summary, which shows
+// it coloured, and schedules its content to reload once it turns stale. The reload is unit tested to come a second
+// after then, in summary_test.go.
+POST /data/glucose {"reading": 6.4, "reading_type": "sgv", "occurred_at": {{ addms (itime 20) 15000 }}}
+RUN_BACKGROUND_JOBS
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-in-range
+ASSERT_VISIBLE #site--summary--content[hx-trigger*="load delay:"]
+ASSERT_NOT_VISIBLE #site--summary--glucose--stale
+
+// With no other change, the open summary then greys it and says there has been no reading for 20 minutes, and
+// schedules no more reloads
+WAIT_VISIBLE 30 #site--summary--glucose--stale:text-matches("^No reading for 20 min$")
+ASSERT_VISIBLE #site--summary--glucose--reading.text-gray-400
+ASSERT_NOT_VISIBLE #site--summary--content[hx-trigger*="load delay:"]
+ASSERT_PATH /
+SCREENSHOT summary_stale_reloaded
