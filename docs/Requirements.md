@@ -437,18 +437,22 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   year ago. Back and forward move between reports.
 - Clicking around the reports quickly, their tabs, periods and arrows, shows the last one clicked, logging no error for
   the pages it replaced.
-- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
-  as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and
-  ›) to the 30 days before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest
-  month, and the one before past a year ago. A last day after yesterday or more than a year ago is refused. Back and
-  forward move between them.
+- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days to today, today so far. It
+  says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and ›) to the 30 days
+  before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest month, and the one
+  before past a year ago. A last day after today or more than a year before yesterday is refused. Back and forward move
+  between them.
 - It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers, the bars a couple of
   pixels apart, its basal (in gold) under its boluses, with a legend of the two; a day with no insulin has no bar and is
-  not counted. Hovering a bar shows its date and its basal or boluses in U.
-- It shows how many of its days have insulin and their mean, lowest and highest daily dose, and says when none have
-  insulin.
+  not counted. Hovering a bar shows its date and its basal or boluses in U. Today's bar is paler, labelled "so far" to
+  its right, and its tooltip's date says so far.
+- It shows how many of its days before today have insulin and their mean, lowest and highest daily dose, today left
+  out as it is not over, and says when none have insulin.
 - Under the bars, a table lists every day it covers, newest first, with its basal, boluses and total daily dose in U,
-  or "–" for a day with no insulin.
+  or "–" for a day with no insulin; today's date is marked "so far", with insulin or not.
+- Under the bars, a note says basal is estimated from the basal rate in force each minute, the profile's scheduled
+  basal or a temp basal, the rest of the daily dose being boluses; and, when today is in it, that today, paler and
+  marked so far, is left out of the days with insulin and their daily dose, lowest and highest.
 
 ### Getting started
 

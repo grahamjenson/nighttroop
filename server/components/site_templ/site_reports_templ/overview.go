@@ -269,7 +269,7 @@ func overviewTop(bars []overviewBar) float64 {
 	return top
 }
 
-// tddLink is the TDD report of the month ending on the day, or yesterday's for today or later
+// tddLink is the TDD report of the month ending on the day, or the latest, to today so far, for today or later
 func tddLink(day, now time.Time) string {
 	if day.Format(time.DateOnly) >= now.In(day.Location()).Format(time.DateOnly) {
 		return "/reports/tdd"
