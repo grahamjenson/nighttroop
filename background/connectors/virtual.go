@@ -71,8 +71,10 @@ type virtualDoc struct {
 // correction bolus once per wave, and, at the start of the window, the temp
 // basal, temp target, profile switch and profile.
 func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
+	// The window is its slots after end less span up to end's, every one on the 5 minute grid, so windows of any span
+	// that overlap, as a backfill's and the sync's do, write the same documents at the same times and they dedupe
+	start := end.UTC().Add(-span).Truncate(virtualSlot).Add(virtualSlot)
 	end = end.UTC().Truncate(virtualSlot)
-	start := end.Add(-span + virtualSlot)
 	startMs := start.UnixMilli()
 	block := func(value float64) []map[string]any {
 		return []map[string]any{{"time": "00:00", "timeAsSeconds": 0, "value": value}}

@@ -95,3 +95,26 @@ func TestVirtualDocumentsMeterReadings(t *testing.T) {
 	}
 	require.Equal(t, []time.Time{day.Add(7*time.Hour + 2*time.Minute), day.Add(19*time.Hour + 2*time.Minute)}, meters)
 }
+
+// Windows of any span, as a backfill's ending now is, write on the 5 minute grid, so ones that overlap, as a backfill's
+// recent days and the sync's do, write the same documents at the same times, which dedupe, rather than another of each
+// a few minutes off
+func TestVirtualDocumentsOnTheSlotGrid(t *testing.T) {
+	end := waveStart.Add(3*time.Hour + 2*time.Minute + 17*time.Second)
+	dates := func(span time.Duration) map[int64]bool {
+		all := map[int64]bool{}
+		for _, doc := range VirtualDocuments(end, span) {
+			if doc.collection == nsutils.Entries && doc.data["type"] == "sgv" {
+				date := doc.data["date"].(int64)
+				require.Zero(t, date%virtualSlot.Milliseconds(), "a reading on the grid")
+				all[date] = true
+			}
+		}
+		return all
+	}
+	short, long := dates(time.Hour+3*time.Minute+41*time.Second), dates(2*time.Hour+11*time.Second)
+	require.Len(t, short, 13)
+	for date := range short {
+		require.True(t, long[date], "the longer window has the shorter's readings at the same times")
+	}
+}
