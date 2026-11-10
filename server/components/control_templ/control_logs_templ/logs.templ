@@ -96,8 +96,6 @@ templ attributesDetail(id string, raw json.RawMessage) {
 	}
 }
 
-var detail = modal.Detail
-
 // ids are the site, request and job a page's rows can be narrowed to
 func ids(q *apiquery.Query) []filter.ID {
 	return []filter.ID{{Name: "site_id", Label: "Site ID", Value: q.SiteID}, {Name: "request_id", Label: "Request ID", Value: q.RequestID}, {Name: "job_id", Label: "Job ID", Value: q.JobID}}
@@ -183,12 +181,12 @@ templ EventModal(event *controlmodels.Event) {
 	@footer.DBIPCredit()
 	@modal.Modal(modal.Props{ID: "control--event--details", Title: display.Name(event.Name), Subtitle: display.DateTime(&event.StartedAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@detail("Site", orServer(event.SiteID))
-			@detail("Started", display.DateTime(&event.StartedAt))
+			@modal.Detail("Site", orServer(event.SiteID))
+			@modal.Detail("Started", display.DateTime(&event.StartedAt))
 			if event.FinishedAt != nil {
-				@detail("Finished", display.DateTime(event.FinishedAt))
+				@modal.Detail("Finished", display.DateTime(event.FinishedAt))
 			}
-			@detail("Duration", duration(event))
+			@modal.Detail("Duration", duration(event))
 			@idDetails("control--event", "/events", event.RequestID, event.JobID)
 		</dl>
 		@attributesDetail("control--event--attributes", event.Attributes)
@@ -249,7 +247,7 @@ templ ErrorModal(e *controlmodels.Error) {
 	@modal.Modal(modal.Props{ID: "control--error--details", Title: "Error", Subtitle: display.DateTime(&e.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@detail("Site", orServer(e.SiteID))
+			@modal.Detail("Site", orServer(e.SiteID))
 			@idDetails("control--error", "/errors", e.RequestID, e.JobID)
 		</dl>
 		@attributesDetail("control--error--attributes", e.Attributes)
@@ -306,7 +304,7 @@ templ LogModal(log *controlmodels.Log) {
 	@modal.Modal(modal.Props{ID: "control--log--details", Title: log.Level, Subtitle: display.DateTime(&log.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm">{ log.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@detail("Site", orServer(log.SiteID))
+			@modal.Detail("Site", orServer(log.SiteID))
 			@idDetails("control--log", "/logs", log.RequestID, log.JobID)
 		</dl>
 		@attributesDetail("control--log--attributes", log.Attributes)

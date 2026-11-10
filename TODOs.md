@@ -34,8 +34,6 @@
     1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
     1. P4: Measure each site's DB tables in the resource check and keep them, as a site's page reads every page of its DB
        (SQLite's `dbstat`) to split its DB size bar, which a DB of hundreds of MB takes a while to do
-    1. P5: Use `modal.Detail` directly in the logs pages too (`control_logs_templ`'s `detail` alias), as the other
-       control pages now do
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
