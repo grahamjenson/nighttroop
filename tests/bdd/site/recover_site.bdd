@@ -25,12 +25,15 @@ ASSERT_STATUS 401
 ASSERT_VISIBLE #public--recover--error
 SCREENSHOT refused
 
-// The site's ID and backup key give the admin a new password and TOTP, and the site a new backup key, shown as a new
-// site's credentials are, less the phone's, which are left as they were
+// The site's ID and backup key give the admin a new password and TOTP, and the site a new backup key, shown on the
+// site's own address as a new site's credentials are, less the phone's, which are left as they were
 INPUT #public--recover--backup-key {{ .backup_key }}
 CLICK #public--recover--submit
 ASSERT_STATUS 200
+ASSERT_PATH /welcome
 ASSERT_TEXT_VISIBLE Save your credentials somewhere safe
+// The recovery removed the admin's passkeys, so this browser can add one here, as a new site's can
+ASSERT_VISIBLE #public--passkey-login-button
 ASSERT_VISIBLE #public--site-info--password
 ASSERT_VISIBLE #public--site-info--backup-key
 ASSERT_NOT_VISIBLE #public--site-info--ns-token
@@ -39,6 +42,7 @@ ASSERT_TEXT_EQUALS #public--site-info--totp-text Fake TOTP Secr etFo rDev Only
 SCREENSHOT recovered
 SAVE_TEXT #public--site-info--backup-key new_backup_key
 SAVE_VALUE #public--site-info--totp-value totp_secret
+SAVE_TEXT #public--site-info--url site_url
 
 // The admin logs in with them
 // Login is offered once a code from the authenticator app has been checked
@@ -64,4 +68,11 @@ ASSERT_VISIBLE #public--recover--error
 INPUT #public--recover--backup-key {{ .new_backup_key }}
 CLICK #public--recover--submit
 ASSERT_STATUS 200
+ASSERT_PATH /welcome
 ASSERT_VISIBLE #public--site-info--password
+
+// They are shown once, so opening the site's welcome page again says so
+GOTO {{ .site_url }}/welcome
+ASSERT_STATUS 200
+ASSERT_VISIBLE #public--welcome-gone
+ASSERT_NOT_VISIBLE #public--site-info--backup-key
