@@ -65,6 +65,8 @@
     --color-glucose-very-high: oklch(55.3% 0.195 38.402);
     --color-glucose-high-text: oklch(47.3% 0.137 46.201);
     --color-glucose-in-range: #10203F;
+    /* The reports' in range, green as other diabetes reports draw it, where the glucose pages keep the brand's */
+    --color-report-in-range: oklch(62.7% 0.194 149.214);
 
     /* Success */
     --color-green-50: oklch(98.2% 0.018 155.826);
