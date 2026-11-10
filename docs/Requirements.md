@@ -1025,11 +1025,14 @@ Connectors are a site's third party integrations, each syncing from one service.
   Registering a token again updates it, and from another of the site's identities moves it there; another site
   registering the same token has its own, so no site can take or change another's. An APNs token is the same in upper
   or lower case. An identity has at most 10, even from profiles uploaded at once, though it can always register one
-  of them again, and sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own.
+  of them again, and sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own; an
+  admin can also get and delete any of the site's, but its search and stream are still only its own.
 - Settings, Push Devices (`/settings/push-devices`) lists the apps registered for pushes, with whose they are, the app
   and its service, its bundle ID, whether it is a development build, when it registered, and its last push and error;
   never its token. An admin sees every identity's on the site, and anyone else only their own. Each has a Test button,
-  which sends it a test push and shows its new last push, or a toast with why it failed.
+  which sends it a test push and shows its new last push, or a toast with why it failed, and a Delete button, which
+  after a confirmation removes its row with a "Push Device Deleted" toast, showing the table is empty again after the
+  last; pushes to it stop until its app registers again. Anyone but an admin is refused (404) another identity's.
 - An identity can send a test push to one of its registrations, and an admin to any of the site's
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
   Without one it is refused, saying to add one; a token Apple says is gone, or Firebase says is `UNREGISTERED`,
