@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -65,50 +65,27 @@ func failedClass(source *controlmodels.Connector) string {
 
 // ConnectorsTable shows one page of connectors, the most recently failed first, with buttons to the pages either side
 templ ConnectorsTable(sources []*controlmodels.Connector, skip int64, limit int64) {
-	<div id="connectors_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Connectors") {
-			Every site's connectors, the most recently failed first. Click a source to see its reports.
+	@listpage.Page(listpage.Props{
+		ID:          "connectors_table",
+		Title:       "Connectors",
+		Description: "Every site's connectors, the most recently failed first. Click a source to see its reports.",
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:     "controlConnectorsTable",
+			Static: true,
+			Rows:   len(sources),
+			Empty:  "No connectors here.",
+			Columns: []table.Column{
+				{Label: "Site"}, {Label: "Type"}, {Label: "State"}, {Label: "Last Attempted"}, {Label: "Last Success"},
+				{Label: "Succeeded", Numeric: true}, {Label: "Failed", Numeric: true},
+			},
+		},
+		Pager: &pager.Props{ID: "control--connectors", Path: "/connectors", Count: len(sources), Skip: skip, Limit: limit},
+	}) {
+		for _, source := range sources {
+			@connectorRow(source)
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{ID: "controlConnectorsTable", Class: "rounded-lg border border-gray-200"}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Site
-						}
-						@table.Head() {
-							Type
-						}
-						@table.Head() {
-							State
-						}
-						@table.Head() {
-							Last Attempted
-						}
-						@table.Head() {
-							Last Success
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Succeeded
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Failed
-						}
-					}
-				}
-				@table.Body() {
-					if len(sources) == 0 {
-						<tr><td colspan="7" class="p-4 text-sm text-gray-500">No connectors here.</td></tr>
-					}
-					for _, source := range sources {
-						@connectorRow(source)
-					}
-				}
-			}
-			@pager.Pager(pager.Props{ID: "control--connectors", Path: "/connectors", Count: len(sources), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 templ connectorRow(source *controlmodels.Connector) {
@@ -128,10 +105,10 @@ templ connectorRow(source *controlmodels.Connector) {
 		@table.Cell() {
 			<span title={ display.DateTime(source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(source.TotalSuccessfulSyncs) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			<span class={ failedClass(source) }>{ orDash(source.TotalFailedSyncs) }</span>
 		}
 	}

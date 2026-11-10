@@ -11,7 +11,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -52,49 +52,28 @@ func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 
 // EventGroupsTable shows one page of event groups, newest first, with buttons to the pages either side
 templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limit int64) {
-	<div id="event_groups_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Event Groups", eventGroupAdd()) {
-			Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.
+	@listpage.Page(listpage.Props{
+		ID:          "event_groups_table",
+		Title:       "Event Groups",
+		Description: "Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.",
+		Action:      eventGroupAdd(),
+		Above:       searchTotals("site--event-group", "event group", "event groups"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "eventGroupsTable",
+			EmptyID: "site--event-group--empty",
+			Empty:   "No event groups here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Type"}, {Label: "Events"}, {Label: "Notes"}, {Label: "Device"},
+				{Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--event-group", Path: "/data/event-groups", Count: len(eventGroups), Skip: skip, Limit: limit},
+	}) {
+		for _, eventGroup := range eventGroups {
+			@eventGroupRow(eventGroup)
 		}
-		@searchTotals("site--event-group", "event group", "event groups")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "eventGroupsTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Time
-						}
-						@table.Head() {
-							Type
-						}
-						@table.Head() {
-							Events
-						}
-						@table.Head() {
-							Notes
-						}
-						@table.Head() {
-							Device
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, eventGroup := range eventGroups {
-						@eventGroupRow(eventGroup)
-					}
-					@pager.Empty("site--event-group--empty", 6, "No event groups here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "site--event-group", Path: "/data/event-groups", Count: len(eventGroups), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // eventGroupRow opens the group's details when clicked.

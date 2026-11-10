@@ -5,27 +5,18 @@ import (
 	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
 	"nighttroop.t1d.nz/server/components/footer"
-	"encoding/json"
-	"fmt"
-	"strings"
-	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/heading"
-	"nighttroop.t1d.nz/server/components/modal"
-	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/logview"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/utils/display"
 )
 
-// duration is how long an event took, or a dash when it happened at a moment
-func duration(event *sitemodels.SiteEvent) string {
-	if event.FinishedAt == nil {
-		return "-"
-	}
-	return display.Duration(*event.FinishedAt - event.StartedAt)
-}
+// view shows a site its own rows only: they have no site ID to show, and their request and job IDs are plain text,
+// never links to control
+var view = logview.View{Prefix: "site", Path: "/logs", Date: site_data_templ.FormatDate}
+
+// eventsView also shows who each event was for, this site or its batch
+var eventsView = logview.View{Prefix: "site", Path: "/logs", About: "For", Date: site_data_templ.FormatDate}
 
 // about is who an event was for: this site, or the batch of sites it is backed up with
 func about(event *sitemodels.SiteEvent) string {
@@ -35,208 +26,52 @@ func about(event *sitemodels.SiteEvent) string {
 	return "This site"
 }
 
-// attributes are a row's attributes as JSON, indented to read
-func attributes(raw json.RawMessage) string {
-	indented, err := json.MarshalIndent(raw, "", "  ")
-	if err != nil {
-		return string(raw)
-	}
-	return string(indented)
+func eventRow(e *sitemodels.SiteEvent) logview.Row {
+	return logview.Row{ID: e.ID, Name: e.Name, About: about(e), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
 }
 
-// page heads a page of rows with its title and description, and pages it
-templ page(id string, title string, description string, path string, pagePath string, count int, skip int64, limit int64) {
-	<div id={ id } class="mx-auto max-w-5xl space-y-6">
-		@heading.Page(title) {
-			{ description }
-		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			{ children... }
-			@pager.Pager(pager.Props{ID: "site--" + strings.TrimPrefix(path, "/logs/"), Path: pagePath, Count: count, Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+func errorRow(e *sitemodels.SiteError) logview.Row {
+	return logview.Row{ID: e.ID, Message: e.Message, At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
 }
 
-templ empty(columns string, what string) {
-	<tr><td colspan={ columns } class="p-4 text-sm text-gray-500">No { what } here.</td></tr>
-}
-
-templ attributesDetail(id string, raw json.RawMessage) {
-	if len(raw) > 0 {
-		<pre id={ id } class="mt-4 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ attributes(raw) }</pre>
-	}
-}
-
-var detail = modal.Detail
-
-// idDetails are the request and job a row was for, when it has them, to find it by
-templ idDetails(id string, requestID *string, jobID *string) {
-	if requestID != nil {
-		<dt class="text-gray-500">Request</dt>
-		<dd id={ id + "--request-id" } class="break-all">{ *requestID }</dd>
-	}
-	if jobID != nil {
-		<dt class="text-gray-500">Job</dt>
-		<dd id={ id + "--job-id" } class="break-all">{ *jobID }</dd>
-	}
+func logRow(l *sitemodels.SiteLog) logview.Row {
+	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
 }
 
 // EventsTable shows one page of the site's events and its batch's, the newest first
 templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
-	@page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first. A search looks through the newest 10,000.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit) {
+	@logview.Page(logview.PageProps{ID: "events_table", Title: "Events", Description: "What happened to this site and the batch of sites it is backed up with, newest first. A search looks through the newest 10,000.", Pager: "site--events", Path: filter.PagePath("/logs/events", eventType, search), Count: len(events), Skip: skip, Limit: limit}) {
 		@filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search})
-		@table.Table(table.Props{ID: "siteEventsTable", Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					@table.Head() {
-						Event
-					}
-					@table.Head() {
-						For
-					}
-					@table.Head() {
-						Started
-					}
-					@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-						Duration
-					}
-				}
-			}
-			@table.Body() {
-				if len(events) == 0 {
-					@empty("4", "events")
-				}
-				for _, event := range events {
-					@table.ModalRow(fmt.Sprintf("site--event--%d", event.ID), fmt.Sprintf("/logs/events/%d", event.ID)) {
-						@table.Cell() {
-							{ display.Name(event.Name) }
-						}
-						@table.Cell() {
-							{ about(event) }
-						}
-						@table.Cell() {
-							<span title={ site_data_templ.FormatDate(ctx, event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
-						}
-						@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-							{ duration(event) }
-						}
-					}
-				}
-			}
-		}
+		@logview.EventsTable(eventsView, "siteEventsTable", logview.Rows(events, eventRow))
 	}
 }
 
 templ EventModal(event *sitemodels.SiteEvent) {
-	// Sign ins are from where DB-IP estimates
-	@footer.DBIPCredit()
-	@modal.Modal(modal.Props{ID: "site--event--details", Title: display.Name(event.Name), Subtitle: site_data_templ.FormatDate(ctx, event.StartedAt)}) {
-		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@detail("For", about(event))
-			@detail("Started", site_data_templ.FormatDate(ctx, event.StartedAt))
-			if event.FinishedAt != nil {
-				@detail("Finished", site_data_templ.FormatDate(ctx, *event.FinishedAt))
-			}
-			@detail("Duration", duration(event))
-			@idDetails("site--event", event.RequestID, event.JobID)
-		</dl>
-		@attributesDetail("site--event--attributes", event.Attributes)
-	}
+	@logview.EventModal(eventsView, eventRow(event))
 }
 
 // ErrorsTable shows one page of the site's errors, the newest first
 templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *string, search *string) {
-	@page("errors_table", "Errors", "What failed for this site, newest first. A search or kind looks through the newest 10,000.", "/logs/errors", filter.PagePath("/logs/errors", kind, search), len(errors), skip, limit) {
+	@logview.Page(logview.PageProps{ID: "errors_table", Title: "Errors", Description: "What failed for this site, newest first. A search or kind looks through the newest 10,000.", Pager: "site--errors", Path: filter.PagePath("/logs/errors", kind, search), Count: len(errors), Skip: skip, Limit: limit}) {
 		@filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search})
-		@table.Table(table.Props{ID: "siteErrorsTable", Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					@table.Head() {
-						Error
-					}
-					@table.Head() {
-						When
-					}
-				}
-			}
-			@table.Body() {
-				if len(errors) == 0 {
-					@empty("2", "errors")
-				}
-				for _, e := range errors {
-					@table.ModalRow(fmt.Sprintf("site--error--%d", e.ID), fmt.Sprintf("/logs/errors/%d", e.ID)) {
-						@table.Cell() {
-							<span class="block max-w-xl truncate text-red-700">{ e.Message }</span>
-						}
-						@table.Cell() {
-							<span title={ site_data_templ.FormatDate(ctx, e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
-						}
-					}
-				}
-			}
-		}
+		@logview.ErrorsTable(view, "siteErrorsTable", logview.Rows(errors, errorRow))
 	}
 }
 
 templ ErrorModal(e *sitemodels.SiteError) {
-	@modal.Modal(modal.Props{ID: "site--error--details", Title: "Error", Subtitle: site_data_templ.FormatDate(ctx, e.CreatedAt)}) {
-		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
-		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@idDetails("site--error", e.RequestID, e.JobID)
-		</dl>
-		@attributesDetail("site--error--attributes", e.Attributes)
-	}
+	@logview.ErrorModal(view, errorRow(e))
 }
 
 // LogsTable shows one page of the site's logs, the newest first
 templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *string) {
-	@page("logs_table", "Logs", "Messages logged for this site, newest first. A search looks through the newest 10,000.", "/logs/logs", filter.PagePath("/logs/logs", nil, search), len(logs), skip, limit) {
+	@logview.Page(logview.PageProps{ID: "logs_table", Title: "Logs", Description: "Messages logged for this site, newest first. A search looks through the newest 10,000.", Pager: "site--logs", Path: filter.PagePath("/logs/logs", nil, search), Count: len(logs), Skip: skip, Limit: limit}) {
 		@filter.Filter(filter.Props{ID: "site--logs--filter", Path: "/logs/logs", Search: search})
-		@table.Table(table.Props{ID: "siteLogsTable", Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					@table.Head() {
-						Level
-					}
-					@table.Head() {
-						Message
-					}
-					@table.Head() {
-						When
-					}
-				}
-			}
-			@table.Body() {
-				if len(logs) == 0 {
-					@empty("3", "logs")
-				}
-				for _, log := range logs {
-					@table.ModalRow(fmt.Sprintf("site--log--%d", log.ID), fmt.Sprintf("/logs/logs/%d", log.ID)) {
-						@table.Cell() {
-							{ log.Level }
-						}
-						@table.Cell() {
-							<span class="block max-w-xl truncate">{ log.Message }</span>
-						}
-						@table.Cell() {
-							<span title={ site_data_templ.FormatDate(ctx, log.CreatedAt) }>{ display.Ago(&log.CreatedAt, time.Now()) }</span>
-						}
-					}
-				}
-			}
-		}
+		@logview.LogsTable(view, "siteLogsTable", logview.Rows(logs, logRow))
 	}
 }
 
 templ LogModal(log *sitemodels.SiteLog) {
-	@modal.Modal(modal.Props{ID: "site--log--details", Title: log.Level, Subtitle: site_data_templ.FormatDate(ctx, log.CreatedAt)}) {
-		<p class="mt-2 break-all text-sm">{ log.Message }</p>
-		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@idDetails("site--log", log.RequestID, log.JobID)
-		</dl>
-		@attributesDetail("site--log--attributes", log.Attributes)
-	}
+	@logview.LogModal(view, logRow(log))
 }

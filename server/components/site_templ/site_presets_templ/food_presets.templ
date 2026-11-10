@@ -3,7 +3,7 @@ package site_presets_templ
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
@@ -12,45 +12,27 @@ import (
 
 // FoodPresetsTable shows one page of food presets, newest first, with buttons to the pages either side
 templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, limit int64) {
-	<div id="food_presets_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.PageWith("Food Presets", addmodal.Open("presets--food--add", "/presets/food/new", "Add Food Preset")) {
-			Foods kept to pick from, with what a portion has. Click one to see and edit it.
+	@listpage.Page(listpage.Props{
+		ID:          "food_presets_table",
+		Title:       "Food Presets",
+		Description: "Foods kept to pick from, with what a portion has. Click one to see and edit it.",
+		Action:      addmodal.Open("presets--food--add", "/presets/food/new", "Add Food Preset"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "foodPresetsTable",
+			EmptyID: "presets--food--empty",
+			Empty:   "No food presets here.",
+			Columns: []table.Column{
+				{Label: "Name"}, {Label: "Carbs (g)", Numeric: true}, {Label: "Absorption (min)", Numeric: true},
+				{Label: "Category"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "presets--food", Path: "/presets/food", Count: len(foodPresets), Skip: skip, Limit: limit},
+	}) {
+		for _, foodPreset := range foodPresets {
+			@foodPresetRow(foodPreset)
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@table.Table(table.Props{
-				ID:    "foodPresetsTable",
-				Class: "rounded-lg border border-gray-200",
-			}) {
-				@table.Header() {
-					@table.Row() {
-						@table.Head() {
-							Name
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Carbs (g)
-						}
-						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Absorption (min)
-						}
-						@table.Head() {
-							Category
-						}
-						@table.Head() {
-							<span class="sr-only">Actions</span>
-						}
-					}
-				}
-				@table.Body() {
-					for _, foodPreset := range foodPresets {
-						@foodPresetRow(foodPreset)
-					}
-					@pager.Empty("presets--food--empty", 5, "No food presets here.")
-				}
-			}
-			@pager.Pager(pager.Props{ID: "presets--food", Path: "/presets/food", Count: len(foodPresets), Skip: skip, Limit: limit})
-		</section>
-		<div id="modal-container"></div>
-	</div>
+	}
 }
 
 // FoodPresetNew adds a food preset with all its fields, putting its row at the top of the table
@@ -81,10 +63,10 @@ templ foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) {
 		@table.Cell() {
 			{ orDash(foodPreset.Name) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(foodPreset.Carbs) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(table.NumCell) {
 			{ orDash(foodPreset.AbsorptionTimeMinutes) }
 		}
 		@table.Cell() {

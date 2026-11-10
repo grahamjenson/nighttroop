@@ -1,0 +1,49 @@
+// Hand-written columns shared by the list pages, beside the templui table
+package table
+
+import (
+	"strconv"
+
+	"nighttroop.t1d.nz/utils/templui/utils"
+)
+
+// Numeric is the class of a column of numbers: right aligned, in figures of one width, so they line up
+const Numeric = "text-right tabular-nums"
+
+// NumCell is a cell of a Numeric column
+var NumCell = CellProps{Class: Numeric}
+
+// Column is one of a table's columns: its heading, whether it is Numeric, or whether it is the rows' actions, such as
+// a delete button, whose heading only a screen reader reads
+type Column struct {
+	Label   string
+	Numeric bool
+	Actions bool
+}
+
+// Heads is a table's header: a row with each column's heading
+templ Heads(columns []Column) {
+	@Header() {
+		@Row() {
+			for _, column := range columns {
+				@Head(HeadProps{Class: utils.If(column.Numeric, Numeric)}) {
+					if column.Actions {
+						<span class="sr-only">Actions</span>
+					} else {
+						{ column.Label }
+					}
+				}
+			}
+		}
+	}
+}
+
+// Empty is a table body's row saying it has no rows, for a body whose rows are never added or deleted in place, so
+// it is there only when there are none. It has id, unless that is "".
+templ Empty(id string, columns int, text string) {
+	<tr
+		if id != "" {
+			id={ id }
+		}
+	><td colspan={ strconv.Itoa(columns) } class="p-4 text-sm text-gray-500">{ text }</td></tr>
+}
