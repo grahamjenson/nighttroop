@@ -545,7 +545,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A connector not saved yet has only Save. Once saved, without a reload, it also has Backfill, and Delete as a red
   outline button, apart from Save, so the destructive action is not the boldest on the form.
 - The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
-  and backfills, and in its last sync, its backfill and its recent events.
+  and backfills, and in its last sync, its backfill and its recent events. It shows the date its last backfill fetched
+  back to, and how long ago that is, so how far back its backfills have gone; - until it has been backfilled.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
   leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
 - Connector credentials are encrypted at rest.

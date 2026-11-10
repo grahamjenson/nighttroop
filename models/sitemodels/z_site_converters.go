@@ -358,13 +358,17 @@ func ConnectorFromDB(source *controldb.SiteConnector, context *security.Security
 			xint648 := *(*source).LastBackfillFinishedAt
 			sitemodelsConnector.LastBackfillFinishedAt = &xint648
 		}
+		if (*source).LastBackfillFrom != nil {
+			xint649 := *(*source).LastBackfillFrom
+			sitemodelsConnector.LastBackfillFrom = &xint649
+		}
 		if (*source).LastBackfillDuration != nil {
-			xint649 := *(*source).LastBackfillDuration
-			sitemodelsConnector.LastBackfillDuration = &xint649
+			xint6410 := *(*source).LastBackfillDuration
+			sitemodelsConnector.LastBackfillDuration = &xint6410
 		}
 		if (*source).LastBackfillRecords != nil {
-			xint6410 := *(*source).LastBackfillRecords
-			sitemodelsConnector.LastBackfillRecords = &xint6410
+			xint6411 := *(*source).LastBackfillRecords
+			sitemodelsConnector.LastBackfillRecords = &xint6411
 		}
 		if (*source).LastBackfillError != nil {
 			xstring2 := *(*source).LastBackfillError
@@ -373,8 +377,8 @@ func ConnectorFromDB(source *controldb.SiteConnector, context *security.Security
 		sitemodelsConnector.TotalBackfills = (*source).TotalBackfills
 		sitemodelsConnector.TotalRecords = (*source).TotalRecords
 		if (*source).LastSyncRecords != nil {
-			xint6411 := *(*source).LastSyncRecords
-			sitemodelsConnector.LastSyncRecords = &xint6411
+			xint6412 := *(*source).LastSyncRecords
+			sitemodelsConnector.LastSyncRecords = &xint6412
 		}
 		pSitemodelsConnector = &sitemodelsConnector
 	}
