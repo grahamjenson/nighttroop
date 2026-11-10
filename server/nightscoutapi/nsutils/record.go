@@ -1,6 +1,9 @@
 package nsutils
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Document is one stored record as the Nightscout API writes it, whatever collection it is from
 type Document interface {
@@ -12,27 +15,11 @@ type Document interface {
 	OccurredAt() int64
 	// Fields is it as JSON fields: API v3's with the server's fields, or v1's with an _id
 	Fields(v3 bool) map[string]any
+	// JSON is Fields as JSON, with only the fields given less _id when there are any
+	JSON(v3 bool, fields []string) json.RawMessage
 }
 
 // DateString is when the document happened, as Nightscout's dateString
 func DateString(doc Document) string {
 	return time.UnixMilli(doc.OccurredAt()).UTC().Format(time.RFC3339Nano)
-}
-
-// SelectFields projects a document to the requested fields.
-func SelectFields(doc Document, fields []string, version3 bool) map[string]any {
-	full := doc.Fields(version3)
-	if len(fields) == 0 {
-		return full
-	}
-	out := make(map[string]any, len(fields))
-	for _, field := range fields {
-		if value, ok := full[field]; ok {
-			out[field] = value
-		}
-	}
-	if len(fields) > 0 {
-		delete(out, "_id")
-	}
-	return out
 }

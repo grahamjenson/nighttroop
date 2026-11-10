@@ -2,6 +2,7 @@ package nsutils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -24,7 +25,7 @@ func WriteRecordV3(w http.ResponseWriter, record Document, fields []string, crea
 	if createdType == Created {
 		status = http.StatusCreated
 	}
-	body := map[string]any{"status": status, "result": SelectFields(record, fields, true)}
+	body := map[string]any{"status": status, "result": record.JSON(true, fields)}
 	if record.Identifier() != "" {
 		body["identifier"] = record.Identifier()
 		body["lastModified"] = record.Modified()
@@ -48,9 +49,9 @@ func WriteRecordsV3(w http.ResponseWriter, records []Document, fields []string) 
 		return
 	}
 
-	result := make([]map[string]any, 0, len(records))
+	result := make([]json.RawMessage, 0, len(records))
 	for _, record := range records {
-		result = append(result, SelectFields(record, fields, true))
+		result = append(result, record.JSON(true, fields))
 	}
 
 	writeHeadersForRecords(w, records)
@@ -59,16 +60,16 @@ func WriteRecordsV3(w http.ResponseWriter, records []Document, fields []string) 
 }
 
 func WriteRecordsV1(w http.ResponseWriter, records []Document, fields []string) {
-	response := make([]map[string]any, 0, len(records))
+	response := make([]json.RawMessage, 0, len(records))
 	for _, record := range records {
-		response = append(response, SelectFields(record, fields, false))
+		response = append(response, record.JSON(false, fields))
 	}
 	writeHeadersForRecords(w, records)
 	apiutils.WriteJSON(w, http.StatusOK, response)
 }
 
 func WriteRecordV1(w http.ResponseWriter, record Document, fields []string) {
-	response := SelectFields(record, fields, false)
+	response := record.JSON(false, fields)
 
 	w.Header().Set("Last-Modified", time.UnixMilli(record.Modified()).UTC().Format(http.TimeFormat))
 	w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.Modified()))
