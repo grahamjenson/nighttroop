@@ -37,6 +37,17 @@ SELECT * FROM push_credentials WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 -- name: CountPushCredentials :one
 SELECT COUNT(*) FROM push_credentials WHERE site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL;
 
+-- name: PruneDeletedPushCredentials :exec
+-- Deletes for good a site's deleted credentials but its newest Keep, which have no secret, so deleting and adding
+-- credentials again and again cannot grow the table
+DELETE FROM push_credentials
+WHERE push_credentials.site_id IS sqlc.narg('SiteID') AND push_credentials.deleted_at IS NOT NULL
+  AND push_credentials.id NOT IN (
+    SELECT kept.id FROM push_credentials AS kept
+    WHERE kept.site_id IS sqlc.narg('SiteID') AND kept.deleted_at IS NOT NULL
+    ORDER BY kept.id DESC LIMIT CAST(sqlc.arg('Keep') AS INTEGER)
+  );
+
 -- name: DeletePushCredential :execrows
 -- Soft deletes it, removing its secret
 UPDATE push_credentials SET

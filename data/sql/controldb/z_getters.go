@@ -2869,6 +2869,26 @@ func (m *GetPushRegistrationParams) SetIdentityID(v *int64) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m PruneDeletedPushCredentialsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated PruneDeletedPushCredentialsParams.
+func (m *PruneDeletedPushCredentialsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetKeep returns the Keep value.
+func (m PruneDeletedPushCredentialsParams) GetKeep() int64 {
+	return m.Keep
+}
+
+// SetKeep sets the Keep value and returns the updated PruneDeletedPushCredentialsParams.
+func (m *PruneDeletedPushCredentialsParams) SetKeep(v int64) {
+	m.Keep = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m PushCredentialForParams) GetSiteID() *string {
 	return m.SiteID
 }

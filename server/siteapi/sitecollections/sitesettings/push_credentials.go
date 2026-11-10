@@ -56,6 +56,8 @@ func (s *PushCredentialsCollection) CreateRow(ctx context.Context, collectionTx 
 
 // CreatePushCredential checks the credential and keeps it as params, its secret encrypted, within its site's limit,
 // counted with q, so in a transaction two creates at once cannot both pass it. The control site adds them with it too.
+// It deletes for good the site's deleted credentials but the newest few, so a loop of adding and deleting them cannot
+// grow the control DB without bound.
 func CreatePushCredential(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfig, model *sitemodels.PushCredential, params controldb.CreatePushCredentialParams) (*sitemodels.PushCredential, error) {
 	if model.Name == "" || len(model.Name) > 64 || model.Secret == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("name (at most 64 characters) and secret")
@@ -66,6 +68,9 @@ func CreatePushCredential(ctx context.Context, q *controldb.Queries, sec *securi
 	}
 	secretEnc, err := sec.Encrypt(*model.Secret)
 	if err != nil {
+		return nil, err
+	}
+	if err := q.PruneDeletedPushCredentials(ctx, controldb.PruneDeletedPushCredentialsParams{SiteID: params.SiteID, Keep: maxPushCredentials}); err != nil {
 		return nil, err
 	}
 	count, err := q.CountPushCredentials(ctx, controldb.CountPushCredentialsParams{SiteID: params.SiteID})

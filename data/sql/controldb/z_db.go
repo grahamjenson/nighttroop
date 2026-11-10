@@ -207,6 +207,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listSiteIdentityPasskeysStmt, err = db.PrepareContext(ctx, listSiteIdentityPasskeys); err != nil {
 		return nil, fmt.Errorf("error preparing query ListSiteIdentityPasskeys: %w", err)
 	}
+	if q.pruneDeletedPushCredentialsStmt, err = db.PrepareContext(ctx, pruneDeletedPushCredentials); err != nil {
+		return nil, fmt.Errorf("error preparing query PruneDeletedPushCredentials: %w", err)
+	}
 	if q.pushCredentialForStmt, err = db.PrepareContext(ctx, pushCredentialFor); err != nil {
 		return nil, fmt.Errorf("error preparing query PushCredentialFor: %w", err)
 	}
@@ -625,6 +628,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listSiteIdentityPasskeysStmt: %w", cerr)
 		}
 	}
+	if q.pruneDeletedPushCredentialsStmt != nil {
+		if cerr := q.pruneDeletedPushCredentialsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing pruneDeletedPushCredentialsStmt: %w", cerr)
+		}
+	}
 	if q.pushCredentialForStmt != nil {
 		if cerr := q.pushCredentialForStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing pushCredentialForStmt: %w", cerr)
@@ -905,6 +913,7 @@ type Queries struct {
 	hydrateSiteStmt                         *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
+	pruneDeletedPushCredentialsStmt         *sql.Stmt
 	pushCredentialForStmt                   *sql.Stmt
 	recordPushStmt                          *sql.Stmt
 	resetSiteAdminCredentialsStmt           *sql.Stmt
@@ -1008,6 +1017,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,
+		pruneDeletedPushCredentialsStmt:         q.pruneDeletedPushCredentialsStmt,
 		pushCredentialForStmt:                   q.pushCredentialForStmt,
 		recordPushStmt:                          q.recordPushStmt,
 		resetSiteAdminCredentialsStmt:           q.resetSiteAdminCredentialsStmt,

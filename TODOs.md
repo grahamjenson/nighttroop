@@ -74,7 +74,6 @@
        until then
     1. P2: Decide whether Loop's and Trio's device tokens stay in plaintext in their profiles, which every reader of
        the site gets from the Nightscout profile API, as LoopFollow needs them
-    1. P3: Cap a site's deleted push credentials too, or delete them for good, as only live ones are counted
 1. Nightscout API:
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
