@@ -13757,6 +13757,36 @@ func (m *GetLoopSettingsParams) SetID(v string) {
 }
 
 // GetApp returns the App value.
+func (m GetPreviousLoopSettingsParams) GetApp() string {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated GetPreviousLoopSettingsParams.
+func (m *GetPreviousLoopSettingsParams) SetApp(v string) {
+	m.App = v
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m GetPreviousLoopSettingsParams) GetLastSeenAt() int64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetPreviousLoopSettingsParams.
+func (m *GetPreviousLoopSettingsParams) SetLastSeenAt(v int64) {
+	m.LastSeenAt = v
+}
+
+// GetID returns the ID value.
+func (m GetPreviousLoopSettingsParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetPreviousLoopSettingsParams.
+func (m *GetPreviousLoopSettingsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetApp returns the App value.
 func (m SearchLoopSettingsParams) GetApp() *string {
 	return m.App
 }

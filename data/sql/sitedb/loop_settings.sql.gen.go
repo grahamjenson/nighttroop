@@ -22,6 +22,21 @@ func (q *Queries) DeleteLoopSettings(ctx context.Context, arg DeleteLoopSettings
 	return q.exec(ctx, q.deleteLoopSettingsStmt, deleteLoopSettings, arg.ID)
 }
 
+const deleteUnreferencedLoopSettings = `-- name: DeleteUnreferencedLoopSettings :exec
+DELETE FROM loop_settings WHERE id NOT IN (
+    SELECT loop_settings_id FROM profile_presets WHERE loop_settings_id IS NOT NULL
+    UNION SELECT remote_settings_id FROM profile_presets WHERE remote_settings_id IS NOT NULL
+    UNION SELECT configuration_id FROM device_reports WHERE configuration_id IS NOT NULL
+) AND last_seen_at < (SELECT MAX(newest.last_seen_at) FROM loop_settings newest WHERE newest.app = loop_settings.app)
+`
+
+// Deletes the sets no profile or device report refers to any more, as when the reports sent with them were thinned,
+// but each app's last seen, its settings now, which AAPS sends only now and then
+func (q *Queries) DeleteUnreferencedLoopSettings(ctx context.Context) error {
+	_, err := q.exec(ctx, q.deleteUnreferencedLoopSettingsStmt, deleteUnreferencedLoopSettings)
+	return err
+}
+
 const getLoopSettings = `-- name: GetLoopSettings :one
 SELECT id, app, source, settings_json, first_seen_at, last_seen_at, created_by_device_name, created_at FROM loop_settings WHERE id = ?
 `
@@ -32,6 +47,37 @@ type GetLoopSettingsParams struct {
 
 func (q *Queries) GetLoopSettings(ctx context.Context, arg GetLoopSettingsParams) (*LoopSetting, error) {
 	row := q.queryRow(ctx, q.getLoopSettingsStmt, getLoopSettings, arg.ID)
+	var i LoopSetting
+	err := row.Scan(
+		&i.ID,
+		&i.App,
+		&i.Source,
+		&i.SettingsJson,
+		&i.FirstSeenAt,
+		&i.LastSeenAt,
+		&i.CreatedByDeviceName,
+		&i.CreatedAt,
+	)
+	return &i, err
+}
+
+const getPreviousLoopSettings = `-- name: GetPreviousLoopSettings :one
+SELECT id, app, source, settings_json, first_seen_at, last_seen_at, created_by_device_name, created_at FROM loop_settings
+WHERE app = ?1 AND (last_seen_at < ?2 OR (last_seen_at = ?2 AND id > ?3))
+ORDER BY last_seen_at DESC, id
+LIMIT 1
+`
+
+type GetPreviousLoopSettingsParams struct {
+	App        string
+	LastSeenAt int64
+	ID         string
+}
+
+// The set of the same app last seen before this one, the next of the app's down the Loop Settings page, which its
+// changes are shown from
+func (q *Queries) GetPreviousLoopSettings(ctx context.Context, arg GetPreviousLoopSettingsParams) (*LoopSetting, error) {
+	row := q.queryRow(ctx, q.getPreviousLoopSettingsStmt, getPreviousLoopSettings, arg.App, arg.LastSeenAt, arg.ID)
 	var i LoopSetting
 	err := row.Scan(
 		&i.ID,

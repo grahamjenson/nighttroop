@@ -264,6 +264,54 @@ func TestTruncateClearsOldPumps(t *testing.T) {
 	require.JSONEq(t, pump, *report("newest").PumpJson, "the newest with a pump is kept")
 }
 
+// Truncating a site deletes the loop settings no profile or device report refers to any more, such as a deleted
+// profile's, but each app's last seen, and keeps those one does; the job every 10 minutes leaves them all
+func TestTruncateDeletesUnreferencedLoopSettings(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	ids := map[string]string{}
+	upsert := func(name, app string, seenAt int64) {
+		ids[name] = fmt.Sprintf("%064x", len(ids)+1)
+		require.NoError(t, q.UpsertLoopSettings(ctx, sitedb.UpsertLoopSettingsParams{ID: ids[name], App: app, Source: "profile", SettingsJson: `{"maximumBolus":10}`, SeenAt: seenAt}))
+	}
+	for _, name := range []string{"loop", "remote", "configuration", "deleted-profile", "unreferenced"} {
+		upsert(name, "loop", 1)
+	}
+	upsert("loop-newest", "loop", 2)
+	upsert("aaps-older", "aaps", 1)
+	upsert("aaps-newest", "aaps", 2)
+	profile := func(id, loopSettingsID string, remoteSettingsID *string) {
+		_, err := q.CreateProfilePreset(ctx, sitedb.CreateProfilePresetParams{ID: id, Name: "Default", ProfileStoreID: id, LoopSettingsID: &loopSettingsID,
+			RemoteSettingsID: remoteSettingsID, OccurredAt: 1, CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	profile("kept", ids["loop"], new(ids["remote"]))
+	profile("deleted", ids["deleted-profile"], nil)
+	_, err := q.HardDeleteProfilePreset(ctx, sitedb.HardDeleteProfilePresetParams{ID: "deleted"})
+	require.NoError(t, err)
+	_, err = q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "report", ConfigurationID: new(ids["configuration"]), OccurredAt: time.Now().UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	kept := func(name string) bool {
+		_, err := q.GetLoopSettings(ctx, sitedb.GetLoopSettingsParams{ID: ids[name]})
+		if errors.Is(err, sql.ErrNoRows) {
+			return false
+		}
+		require.NoError(t, err)
+		return true
+	}
+
+	require.NoError(t, controlDB.TruncateSites(ctx))
+	require.True(t, kept("unreferenced") && kept("deleted-profile"), "the job every 10 minutes keeps them")
+	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	for _, name := range []string{"loop", "remote", "configuration", "loop-newest", "aaps-newest"} {
+		require.True(t, kept(name), "%s's settings are kept", name)
+	}
+	for _, name := range []string{"deleted-profile", "unreferenced", "aaps-older"} {
+		require.False(t, kept(name), "%s's settings, which no record refers to, are deleted", name)
+	}
+}
+
 // deviceReportsFixture makes device reports and says which of them thinning keeps
 type deviceReportsFixture struct {
 	t       *testing.T

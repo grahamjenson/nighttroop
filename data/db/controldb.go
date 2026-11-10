@@ -431,8 +431,9 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 }
 
 // TruncateSite truncates a site as the job every 10 minutes does, but looking at all its device reports, so it clears
-// those the job no longer looks at, such as the newest of a device that then went a day without reporting. It then
-// shrinks its DB, without its free pages, and records its new size, which it returns.
+// those the job no longer looks at, such as the newest of a device that then went a day without reporting. It deletes
+// the loop settings no record refers to any more, then shrinks its DB, without its free pages, and records its new
+// size, which it returns.
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	site := db.sites.get(subdomain)
 	if site == nil {
@@ -440,6 +441,9 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	}
 	if err := truncateSite(ctx, site, 0); err != nil {
 		return nil, err
+	}
+	if err := site.Queries().DeleteUnreferencedLoopSettings(ctx); err != nil {
+		return nil, fmt.Errorf("cannot delete the unreferenced loop settings of site %s: %w", subdomain, err)
 	}
 	if err := site.Vacuum(ctx); err != nil {
 		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)

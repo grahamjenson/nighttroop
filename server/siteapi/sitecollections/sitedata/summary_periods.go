@@ -81,12 +81,7 @@ func SummaryReport(ctx context.Context, q *sitedb.Queries, siteContext *httputil
 	}
 	if n, ok := sitemodels.ReportDays[period]; ok {
 		first, last := at.AddDate(0, 0, 1-n), at.Format(time.DateOnly)
-		days, err := SummaryDays(ctx, q, first.Format(time.DateOnly), last)
-		if err == nil && last == LocalDate(now, at.Location(), 0) {
-			var today *sitedb.SummaryPeriod
-			today, err = buildSummaryDaily(ctx, q, siteContext, last, now.UnixMilli())
-			days = append(days, today)
-		}
+		days, err := SummaryDaysSoFar(ctx, q, siteContext, first.Format(time.DateOnly), last, now)
 		row := sitemodels.NewSummaryPeriod(period, first.Format(time.DateOnly), at.Location().String(), first.UnixMilli(), at.AddDate(0, 0, 1).UnixMilli(), now.UnixMilli(), days)
 		return row, days, err
 	}

@@ -1,0 +1,41 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Loop uploads its profile with its settings, then again an hour later having changed some: how it doses, its maximum
+// bolus, its suspend threshold and its Running preset's range, adding a pre-meal range
+HTTP
+NAME first_settings
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/profile?token={{ .create_new_site.pwd_nstoken }}
+B {"defaultProfile": "Default", "startDate": "{{ time 60 }}", "units": "mg/dL", "enteredBy": "Loop", "device": "phone", "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.7}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 7}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}, "loopSettings": {"dosingEnabled": true, "dosingStrategy": "tempBasalOnly", "maximumBolus": 10, "maximumBasalRatePerHour": 3, "minimumBGGuard": 80, "overridePresets": [{"name": "Running", "targetRange": [140, 160], "duration": 3600, "insulinNeedsScaleFactor": 0.8}]}}
+ASSERT_STATUS 200
+
+NAME changed_settings
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/profile?token={{ .create_new_site.pwd_nstoken }}
+B {"defaultProfile": "Default", "startDate": "{{ time 0 }}", "units": "mg/dL", "enteredBy": "Loop", "device": "phone", "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.7}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 7}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}, "loopSettings": {"dosingEnabled": true, "dosingStrategy": "automaticBolus", "maximumBolus": 12, "maximumBasalRatePerHour": 3, "minimumBGGuard": 90, "preMealTargetRange": [80, 90], "overridePresets": [{"name": "Running", "targetRange": [150, 170], "duration": 3600, "insulinNeedsScaleFactor": 0.8}]}}
+ASSERT_STATUS 200
+
+BROWSE
+CLICK #site--nav--data
+CLICK #site--presets--loop-settings-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+
+// The newer settings show only what changed from those before, old then new, with glucose in the site's mmol/L
+CLICK #loopSettingsTable tbody tr >> nth=0
+ASSERT_VISIBLE #presets--loop-settings--details
+ASSERT_TEXT_VISIBLE Changed From the Set Before
+ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("dosingStrategy"):has-text("tempBasalOnly"):has-text("automaticBolus")
+ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("maximumBolus"):has-text("10"):has-text("12")
+ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("minimumBGGuard"):has-text("4.4 mmol/L"):has-text("5.0 mmol/L")
+ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("overridePresets.Running.targetRange"):has-text("7.8–8.9 mmol/L"):has-text("8.3–9.4 mmol/L")
+ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("preMealTargetRange"):has-text("not sent"):has-text("4.4–5.0 mmol/L")
+ASSERT_COUNT #presets--loop-settings--changes li 5
+ASSERT_NOT_VISIBLE #presets--loop-settings--changes li:has-text("maximumBasalRatePerHour")
+SCREENSHOT loop_settings_changes
+CLICK #presets--loop-settings--details--close
+ASSERT_NOT_VISIBLE #presets--loop-settings--details
+
+// The first settings have none before them to compare
+CLICK #loopSettingsTable tbody tr >> nth=1
+ASSERT_VISIBLE #presets--loop-settings--changes >> text=These are the first of Loop's settings kept
+ASSERT_NOT_VISIBLE #presets--loop-settings--changes li

@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/push"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 // maxPushCredentials is the most push credentials a site can have, far more than a family's own builds of apps need
@@ -46,6 +47,16 @@ func (s *PushCredentialsCollection) ToModel(row *sitemodels.PushCredential, _ *h
 
 // CreateRow checks the credential and keeps it, its secret encrypted, for the site the request is for
 func (s *PushCredentialsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.PushCredential) (*sitemodels.PushCredential, error) {
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+	return CreatePushCredential(ctx, q, siteContext.Config.Security, model, sitemodels.PushCredentialToCreate(model, siteContext))
+}
+
+// CreatePushCredential checks the credential and keeps it as params, its secret encrypted, within its site's limit,
+// counted with q, so in a transaction two creates at once cannot both pass it. The control site adds them with it too.
+func CreatePushCredential(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfig, model *sitemodels.PushCredential, params controldb.CreatePushCredentialParams) (*sitemodels.PushCredential, error) {
 	if model.Name == "" || len(model.Name) > 64 || model.Secret == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("name (at most 64 characters) and secret")
 	}
@@ -53,24 +64,17 @@ func (s *PushCredentialsCollection) CreateRow(ctx context.Context, collectionTx 
 		Secret: *model.Secret, Apps: model.Apps, BundleIDs: model.BundleIDs}); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err.Error())
 	}
-	secretEnc, err := siteContext.Config.Security.Encrypt(*model.Secret)
+	secretEnc, err := sec.Encrypt(*model.Secret)
 	if err != nil {
 		return nil, err
 	}
-
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	// Counted inside the transaction, so two creates at once cannot both pass the limit
-	count, err := q.CountPushCredentials(ctx, controldb.CountPushCredentialsParams{SiteID: &siteContext.SiteID})
+	count, err := q.CountPushCredentials(ctx, controldb.CountPushCredentialsParams{SiteID: params.SiteID})
 	if err != nil {
 		return nil, err
 	}
 	if count >= maxPushCredentials {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d push credentials", maxPushCredentials))
 	}
-	params := sitemodels.PushCredentialToCreate(model, siteContext)
 	params.SecretEnc = &secretEnc
 	credential, err := q.CreatePushCredential(ctx, params)
 	if err != nil {

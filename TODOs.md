@@ -12,16 +12,11 @@
 
 1. Reports/Derived Values:
     1. P3: Reports: the AGP's percentiles at a time in a tooltip
-    1. P4: Reports: the daily dose report split into bolus and basal, and today so far marked as such
     1. Time below and above range, as well as time in range
     1. Small multiples Daily
-    1. P3: Give an insulin dose's `automatic` in the site API, and draw a Loop bolus with it as an SMB on the summary
-       graph, as Trio's `SMB` treatments are
 
 1. Alarms:
     1. Push notifications to phones, as alarms now only reach an open site page or a Nightscout socket client
-    1. P3: Reload the summary when its latest reading turns stale, as an open summary only greys it and says "No
-       reading for" on its next reload: a change, its stream reconnecting (at most an hour) or the page loading
 
 1. Bad Sites
     1. write entry compression
@@ -72,14 +67,14 @@
        fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,
        forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
-    1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
     1. P3: A delete button on Push Devices (`/settings/push-devices`), for an identity's own registrations and an
        admin's for the site's; the push registrations collection's HTMX responses are empty until then
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
-    1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
     1. P2: Before any server credential (one with no site) is added: use it only for tokens its app registered itself,
-       require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token
+       require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token. Then
+       let the control site's Push Credentials (`POST /push-credentials`) add one with no `site_id`, which it refuses
+       until then
     1. P2: Decide whether Loop's and Trio's device tokens stay in plaintext in their profiles, which every reader of
        the site gets from the Nightscout profile API, as LoopFollow needs them
     1. P3: Cap a site's deleted push credentials too, or delete them for good, as only live ones are counted
@@ -97,8 +92,6 @@
        client control (pairing and remote commands) uses
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
-    1. P3: Show what changed between two sets of loop settings on the Loop Settings page, and clear sets no record
-       refers to when a site is truncated ([docs/loop_settings.md](docs/loop_settings.md))
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
