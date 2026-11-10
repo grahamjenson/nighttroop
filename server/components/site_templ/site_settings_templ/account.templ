@@ -5,17 +5,21 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/dbsize"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
 )
 
 // MyAccount is the signed in identity's, or control admin's, own page at path: who it is, and up to most passkeys it
-// adds, on its own address, and removes. A site identity's, with guide, also opens the guide to setting the site up.
-templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string, guide bool) {
+// adds, on its own address, and removes. A site identity's, with guide, also opens the guide to setting the site up,
+// and a site admin's has its site's storage (AccountStorage) under them; others' storage is nil.
+templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string, guide bool, storage templ.Component) {
 	<div id="site--account" class="mx-auto max-w-5xl space-y-6">
 		@heading.Page("My Account") {
 			You are signed in as { name }, with the { role } role. A passkey signs you in with your fingerprint, face or device PIN, with
@@ -71,6 +75,48 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 				}
 			}
 		</section>
+		if storage != nil {
+			@storage
+		}
 		@site_login_templ.PasskeyScript()
 	</div>
+}
+
+// AccountStorage is the site's DB size against its limit and where its data builds up, by table, as the control site
+// shows it, with a button to truncate it, which says what truncating removes and keeps
+templ AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) {
+	<section id="site--account--storage" class="space-y-3">
+		@dbsize.Panel("site--account", sizeKB, limitKB, tables)
+		<div id="site--account--truncate-card" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 shadow-sm">
+			<div class="max-w-2xl">
+				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Truncate</h2>
+				<p class="mt-1 text-sm text-gray-500">
+					Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all
+					but each device's newest report, and thins device reports to fewer the older they are, deleting those over
+					30 days old. Readings, treatments, profiles and everything else are kept. The DB is then shrunk.
+				</p>
+			</div>
+			@button.Button(button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,
+				Attributes: templ.Attributes{"hx-post": "/settings/account/truncate", "hx-target": "#site--account--storage", "hx-swap": "outerHTML",
+					"hx-status:4xx": "target:#toaster swap:beforeend", "hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}}) {
+				Truncate
+			}
+		</div>
+	</section>
+}
+
+// AccountTruncated is a toast saying the site was truncated, and its size now
+templ AccountTruncated(sizeKB *int64) {
+	<div hx-swap-oob="beforeend:#toaster">
+		@toast.Toast(toast.Props{Title: "Site Truncated", Description: truncatedSize(sizeKB), Variant: toast.VariantSuccess,
+			Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true})
+	</div>
+}
+
+// truncatedSize says the site's DB size after truncating, when it is known
+func truncatedSize(sizeKB *int64) string {
+	if sizeKB == nil {
+		return "Its device reports were truncated."
+	}
+	return fmt.Sprintf("Its DB is now %.2f MB.", float64(*sizeKB)/1024)
 }

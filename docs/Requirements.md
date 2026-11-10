@@ -960,6 +960,13 @@ Connectors are a site's third party integrations, each syncing from one service.
   the identity (e.g. admin), so no name, email or device of the person is asked for or kept. A passkey the browser
   already has for the identity is not added again, and an identity has at most 10.
 - "Remove" (after asking) removes one of the identity's own passkeys, as for a lost device, so it signs in no more.
+- An admin's My Account also shows the site's DB size, measured as it opens, against its limit, and where its data
+  builds up: a bar and a key of its largest tables, each with its records, size and share, the rest as Other, as the
+  control site's page of the site does. Others' My Account, and control's, do not.
+- Its Truncate, after asking, truncates the site as control's Truncate does: the loop's status and pump as sent are
+  cleared from all but each device's newest report, device reports are thinned and those over 30 days old deleted,
+  and the DB is shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
+  the DB's new size, and records a "Site truncated" event with the admin. It shares the site's few downloads a minute.
 
 ### Own settings and alarms
 
