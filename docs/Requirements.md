@@ -270,8 +270,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Every page's footer links to contact, the terms of service, the privacy policy and the API docs, and each footer link
   opens in a new tab, so the page the user was on stays open.
 - The API docs, at `/api-docs` on every host, show the OpenAPI schema, `/openapi.json`, with Redoc in the site's
-  colours: a menu and search of every endpoint, each with how it is signed in to, its parameters, body, responses and
-  samples of them, and a link to download the schema. The page loads no images from anywhere else.
+  colours: a menu and search of every endpoint, grouped into Site, Data, Settings and Nightscout and each named by its
+  summary, each with how it is signed in to, its parameters, body, responses and samples of them, and a link to
+  download the schema. The page loads no images from anywhere else.
 - Each endpoint in the API docs, and in the schema served, gives the host it is on, on this server: `POST /site` the
   public host (e.g. `https://staging.nighttroop.nz`), the Nightscout API a site's Nightscout host
   (`https://{site_id}.ns.staging.nighttroop.nz`), and the rest a site's host (`https://{site_id}.staging.nighttroop.nz`).
@@ -281,6 +282,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   gives no medical advice, and its data and alarms may be late, missing or wrong.
 - The create site page, its medical note and footer included, and the site and control login pages fit a laptop's or
   a phone's window, so none of them needs scrolling.
+- The site login, control login and control setup pages each show their white card in the middle of a grey page that
+  fills the window, above the control site's footer.
 - A TOTP code's six boxes fit inside their card on a phone, the last one included: they shrink to fit a card narrower
   than them, as the site and control login cards are on a phone.
 - A staging server (`MODE=staging`) says it is a test site in a large banner at the top of every page, public, site and
@@ -348,6 +351,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month. A period with no data shows "–" for its time in range and daily dose, not 0; one with data and no insulin
   shows 0 U.
+- A time in range reads the same on the summary, the Summaries page, overviews, AGP reports and the readings' glucose
+  days: a whole percent, "<1%" for one above 0 that rounds to 0, and "–" for none.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
@@ -456,8 +461,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
 deleted (after a confirmation). Every confirmation, on the site and control, is a dialog in the site's own style rather
-than the browser's: its question, Cancel, and a red Delete for a delete or Continue otherwise; Cancel, Escape or
-pressing beside it does nothing. Its Add button, the page's main action, is at the right of its title (below it on a
+than the browser's: its question, Cancel, and a red Delete for a delete, including deleting the site, a red Remove
+for removing a passkey, or Continue otherwise; Cancel, Escape or pressing beside it does nothing. Its Add button, the
+page's main action, is at the right of its title (below it on a
 phone), as on the presets and push credentials pages. On a phone, a table wider than the window scrolls sideways in its card, so the page
 does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap.
 Adding or deleting a record updates the table's "Showing" count straight away, without a reload, and deleting the
@@ -548,6 +554,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   and a correction at its peak, over a 25 hour one, so days differ. It reaches every range, about 2% very low (below
   54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL. It
   also has a finger prick meter reading twice a day, at 07:02 and 19:02 UTC, 6 mg/dL above the CGM then.
+- The virtual connector's first sync writes the last 30 minutes, always 6 CGM readings and no meter reading, whatever
+  time it runs; a backfill writes a meter reading in them.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
@@ -573,7 +581,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   and backfills, and in its last sync, its backfill and its recent events. It shows the date its last backfill fetched
   back to, and how long ago that is, so how far back its backfills have gone; - until it has been backfilled.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
-  leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
+  leaving a form being edited as it is and an opened history open, even one opened as it updates. While it does,
+  ● Live shows beside its title.
 - Connector credentials are encrypted at rest.
 - A connector's password, API secret or token, and its username, email or URL, are not offered to the browser or a
   password manager to save or fill, as they are not this site's sign in: the password is a masked text box, not a

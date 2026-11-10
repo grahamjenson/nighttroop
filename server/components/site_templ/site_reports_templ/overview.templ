@@ -23,10 +23,10 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			<h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</h2>
 			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 				<dl class="space-y-6">
-					@bigStat("site--overview--mean", "Average glucose", glucoseText(p.Mean, p.Units), string(*p.Units), "") {
+					@bigStat("site--overview--mean", "Average glucose", display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units), "") {
 						@statChange("site--overview--mean", p, glucoseChange(p, previous))
 					}
-					@bigStat("site--overview--sd", "Standard deviation", glucoseText(p.SD, p.Units), string(*p.Units), "")
+					@bigStat("site--overview--sd", "Standard deviation", display.GlucoseOr(p.SD, p.Units), display.Units(p.Units), "")
 				</dl>
 				<dl class="space-y-6">
 					@bigStat("site--overview--gmi", "GMI", oneDecimal(p.GMI), "%", gmiNote(p)) {
@@ -41,14 +41,14 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 					@timeInRanges(p)
 					@statChange("site--overview--in-range", p, change(p.TimeInRange, previousOf(previous).TimeInRange, 0, "% in range"))
 					<p id="site--overview--target" class="mt-2 text-xs text-gray-500">
-						Target range { site_data_templ.FormatGlucose(low, p.Units) }–{ site_data_templ.FormatGlucose(high, p.Units) } { string(*p.Units) }
+						Target range { display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }
 					</p>
 				</div>
 				<div>
 					<h3 class="text-sm font-medium text-gray-700">Sensor usage</h3>
 					<dl class="mt-2 space-y-3">
 						@smallStat("site--overview--days", "Days with data", fmt.Sprintf("%d/%d", p.Days, periodDays(p, now, location)), "days", "")
-						@smallStat("site--overview--cgm-active", "Time CGM active", percentText(p.CGMActive), "", cgmActiveNote(p)) {
+						@smallStat("site--overview--cgm-active", "Time CGM active", display.Percent(p.CGMActive), "", cgmActiveNote(p)) {
 							@statChange("site--overview--cgm-active", p, change(p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
 						}
 						@smallStat("site--overview--meter", "Meter readings a day", perDay(p.MeterReadings, periodDays(p, now, location)), "", "")
@@ -64,9 +64,9 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				<div class="min-w-0 flex-1">
 					<h2 class="font-semibold text-gray-900">
 						Best day:
-						<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } hx-get={ link("overview", "day", date) } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ date.Format("Monday 2 January 2006") }</a>
+						<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } hx-get={ link("overview", "day", date) } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ date.Format(display.LongDayLayout) }</a>
 					</h2>
-					<p class="text-sm text-gray-600">Glucose was in range about { percentText(best.TimeInRange) } of the day.</p>
+					<p class="text-sm text-gray-600">Glucose was in range about { display.Percent(best.TimeInRange) } of the day.</p>
 				</div>
 				@dayGlucose("site--overview--best-day--", "h-14 w-full sm:w-64", best.Glucose, p.Units, low, high)
 			</section>
@@ -83,10 +83,7 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			if hasGlucose(p) {
 				@overviewGraph(p, low, high)
 			} else {
-				<p id="site--overview--no-glucose" class="text-sm text-gray-500">
-					No glucose in this { p.Period }. Reports are made from whole days, so a day's readings show here the
-					day after.
-				</p>
+				@noGlucose("site--overview--no-glucose", p.Period)
 			}
 		</section>
 		<section id="site--overview--insulin" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -115,8 +112,8 @@ templ insulinSplit(p *sitemodels.SiteSummaryPeriod) {
 				<div class="flex-1 bg-brand-night"></div>
 			</div>
 			<div class="mt-1 flex justify-between gap-3 text-xs text-gray-600">
-				<span id="site--overview--basal"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-gold"></span>Basal { display.Value(&p.TotalDailyBasal, " U") } · { fmt.Sprintf("%.0f%%", basal) }</span>
-				<span id="site--overview--bolus"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-night"></span>Bolus { display.Value(new(bolus(p.TotalDailyDose, p.TotalDailyBasal)), " U") } · { fmt.Sprintf("%.0f%%", 100-basal) }</span>
+				<span id="site--overview--basal"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-gold"></span>Basal { display.Value(&p.TotalDailyBasal, " U") } · { display.Percent(&basal) }</span>
+				<span id="site--overview--bolus"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-night"></span>Bolus { display.Value(new(bolus(p.TotalDailyDose, p.TotalDailyBasal)), " U") } · { display.Percent(new(100 - basal)) }</span>
 			</div>
 		</div>
 	}
@@ -171,15 +168,11 @@ templ statNote(id, note string) {
 // with its percent
 templ timeInRanges(p *sitemodels.SiteSummaryPeriod) {
 	<div id="site--reports--ranges" class="mt-2 flex gap-3">
-		<div class="flex h-36 w-8 shrink-0 flex-col gap-px overflow-hidden rounded-sm bg-gray-100" aria-hidden="true">
-			for _, b := range bands(p) {
-				<div class={ b.Class } style={ "height: " + bandHeight(b.Percent) }></div>
-			}
-		</div>
+		@rangeBar("h-36 w-8", bands(p))
 		<ul class="flex flex-col justify-between text-sm">
 			for _, b := range bands(p) {
 				<li id={ "site--reports--range-" + b.ID } class={ templ.KV("font-semibold", b.ID == "in-range") }>
-					<span class="tabular-nums">{ percentText(b.Percent) }</span> { b.Label }
+					<span class="tabular-nums">{ display.Percent(b.Percent) }</span> { b.Label }
 				</li>
 			}
 		</ul>
@@ -197,9 +190,9 @@ templ overviewGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 		<svg id="site--overview--graph" class="h-auto w-full min-w-[40rem] text-[11px]" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label="Glucose each 15 minutes of the day, averaged">
 			for _, tick := range g.Ticks() {
 				<line class="stroke-gray-200" x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(tick)) } y2={ f(g.Y(tick)) }></line>
-				<text class="fill-gray-500" x={ f(g.Right + 6) } y={ f(g.Y(tick) + 4) }>{ site_data_templ.FormatGlucose(tick, p.Units) }</text>
+				<text class="fill-gray-500" x={ f(g.Right + 6) } y={ f(g.Y(tick) + 4) }>{ display.Glucose(tick, p.Units) }</text>
 			}
-			<text class="fill-gray-500" x={ f(g.Width - 4) } y="12" text-anchor="end">{ string(*p.Units) }</text>
+			<text class="fill-gray-500" x={ f(g.Width - 4) } y="12" text-anchor="end">{ display.Units(p.Units) }</text>
 			for _, bar := range bars {
 				if bar.HasPercentiles {
 					{{ x := g.Left + width*float64(bar.Slot) + width*0.15 }}
@@ -221,23 +214,14 @@ templ overviewGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 			}
 			@boundLabel(g, high, "fill-glucose-high", p)
 			@boundLabel(g, low, "fill-glucose-low", p)
-			for _, hour := range g.Hours() {
-				{{ x := g.X(float64(hour) * 60 * 60_000) }}
-				<line class="stroke-gray-300" x1={ f(x) } x2={ f(x) } y1={ f(g.Bottom) } y2={ f(g.Bottom + 5) }></line>
-				<text class="fill-gray-600" x={ f(x) } y={ f(g.Bottom + 18) } text-anchor="middle">{ hourLabel(ctx, hour) }</text>
-			}
+			@hourAxis(g, true)
 		</svg>
 	</div>
-	<ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-		<li class="flex items-center gap-1.5"><span class="h-3 w-2 rounded-sm bg-glucose-high"></span>Above the range</li>
-		<li class="flex items-center gap-1.5"><span class="h-3 w-2 rounded-sm bg-gray-300"></span>25th to 75th percentile</li>
-		<li class="flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-gray-900"></span>Average</li>
-		<li class="flex items-center gap-1.5"><span class="h-3 w-2 rounded-sm bg-glucose-low"></span>Below the range</li>
-	</ul>
+	@legend(overviewLegend)
 }
 
 // boundLabel is a range bound's value in a pill of its colour, on the graph's left edge at its height
 templ boundLabel(g graph, value float64, class string, p *sitemodels.SiteSummaryPeriod) {
 	<rect class={ class } x="2" y={ f(g.Y(value) - 8) } width={ f(g.Left - 6) } height="16" rx="8"></rect>
-	<text class="fill-white font-semibold" x={ f((g.Left - 4) / 2 + 2) } y={ f(g.Y(value) + 4) } text-anchor="middle">{ site_data_templ.FormatGlucose(value, p.Units) }</text>
+	<text class="fill-white font-semibold" x={ f((g.Left - 4) / 2 + 2) } y={ f(g.Y(value) + 4) } text-anchor="middle">{ display.Glucose(value, p.Units) }</text>
 }

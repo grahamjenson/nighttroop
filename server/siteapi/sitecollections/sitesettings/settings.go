@@ -14,10 +14,10 @@ import (
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
 )
@@ -54,7 +54,7 @@ func settingID(name string) string {
 // showSetting is a setting's value as the page shows it, one kept in mg/dL in the settings' units
 func showSetting(setting *settings.SettingAnyType, units *consts.Units) string {
 	if mgdl, ok := setting.Value.(int64); ok && strings.HasSuffix(setting.Identifier, "_mgdl") {
-		return site_data_templ.FormatGlucose(units.FromMGDL(float64(mgdl)), units)
+		return display.Glucose(units.FromMGDL(float64(mgdl)), units)
 	}
 	return fmt.Sprint(setting.Value)
 }

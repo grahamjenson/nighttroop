@@ -202,10 +202,8 @@ templ TempBasalCreated(tempBasal *sitemodels.SiteTempBasal) {
 // TempBasalUpdated replaces the temp basal's row, closes its details and shows a toast
 templ TempBasalUpdated(tempBasal *sitemodels.SiteTempBasal) {
 	@tempBasalRow(tempBasal)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Temp Basal Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Temp Basal Updated")
 }
 
 templ TempBasalDeleted() {

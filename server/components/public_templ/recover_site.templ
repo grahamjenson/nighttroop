@@ -33,7 +33,7 @@ templ RecoverSite() {
 						}
 						@input.Input(input.Props{ID: "public--recover--backup-key", Type: input.TypePassword, Name: "backup_key", Required: true})
 					}
-					@button.Button(button.Props{ID: "public--recover--submit", Type: button.TypeSubmit, Class: "w-full py-3 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg"}) {
+					@button.Button(button.Props{ID: "public--recover--submit", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
 						Recover
 					}
 					<div id="error-container"></div>

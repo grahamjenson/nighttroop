@@ -9,11 +9,9 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "nighttroop.t1d.nz/server/components/ui/button"
 
-// passkeyButtonClass is the login's own button's look, outlined so the password login stays the first choice
-const passkeyButtonClass = "w-full py-3 px-4 text-brand-night text-lg font-bold rounded-lg shadow-sm cursor-pointer"
-
 // PasskeyLogin signs in with any of the site's, or control's, passkeys the browser has, with no name or password
-// typed; its elements' IDs start with prefix
+// typed; its elements' IDs start with prefix. Its button is the login's own button's size, outlined so the password
+// login stays the first choice.
 func PasskeyLogin(prefix string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -57,7 +55,9 @@ func PasskeyLogin(prefix string) templ.Component {
 			ID:         prefix + "--passkey",
 			Type:       button.TypeButton,
 			Variant:    button.VariantOutline,
-			Class:      passkeyButtonClass,
+			Size:       button.SizeXl,
+			FullWidth:  true,
+			Class:      "text-primary",
 			Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": prefix + "--passkey-error"},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

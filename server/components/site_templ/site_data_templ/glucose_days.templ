@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // glucoseDaysHeight is how tall each day's graph is drawn, and its width is its count of 5 minute slots
@@ -29,11 +30,8 @@ func glucoseDaysAxis(ctx context.Context, days []*sitemodels.SiteSummaryDaily) (
 
 // glucoseDaysY is how far down a day's graph a glucose value is drawn, kept inside it
 func glucoseDaysY(value, bottom, top float64) string {
-	return fmt.Sprintf("%.1f", glucoseDaysHeight*(top-min(max(value, bottom), top))/(top-bottom))
+	return fmt.Sprintf("%.1f", glucoseDaysHeight*(1-display.Scale(value, bottom, top)))
 }
-
-// glucoseDaysFill colours a reading as the table does: low, high or in range
-var glucoseDaysFill = map[string]string{"Low": "fill-glucose-low", "High": "fill-glucose-high", "": "fill-glucose-in-range"}
 
 // glucoseDayLabel is a day's weekday and date, or Today for the first, which is today so far
 func glucoseDayLabel(day *sitemodels.SiteSummaryDaily, today bool) string {
@@ -41,14 +39,14 @@ func glucoseDayLabel(day *sitemodels.SiteSummaryDaily, today bool) string {
 		return "Today"
 	}
 	date, _ := time.Parse(time.DateOnly, day.Date)
-	return date.Format("Mon 2 Jan")
+	return date.Format(display.ShortDayLayout)
 }
 
 // GlucoseDays are the days' glucose as small graphs of the same scale, oldest first so today is last, each with the
 // range shaded and its time in range
 templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 	{{ bottom, top := glucoseDaysAxis(ctx, days) }}
-	{{ low, high := glucoseRangeBounds(ctx) }}
+	{{ low, high := RangeBounds(ctx) }}
 	<section id="site--glucose--days" class="rounded-xl border border-gray-200 p-4 shadow-sm">
 		<h2 class="mb-3 text-sm font-semibold text-gray-900">{ glucoseDaysTitle(len(days)) }</h2>
 		<ol class="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -57,14 +55,14 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 					<div class="flex items-baseline justify-between text-xs">
 						<span class="font-medium text-gray-900">{ glucoseDayLabel(day, i == 0) }</span>
 						if day.TimeInRange != nil {
-							<span class="tabular-nums text-gray-600" title="Time in range">{ fmt.Sprintf("%.0f%%", *day.TimeInRange) }</span>
+							<span class="tabular-nums text-gray-600" title="Time in range">{ display.Percent(day.TimeInRange) }</span>
 						}
 					</div>
 					<svg class="mt-1 h-16 w-full" viewBox={ fmt.Sprintf("0 0 %d %.0f", max(len(day.Glucose), 1), glucoseDaysHeight) } preserveAspectRatio="none" role="img" aria-label={ "Glucose on " + day.Date }>
 						<rect class="fill-glucose-in-range/10" x="0" width="100%" y={ glucoseDaysY(high, bottom, top) } height={ fmt.Sprintf("%.1f", glucoseDaysHeight*(high-low)/(top-bottom)) }></rect>
 						for slot, value := range day.Glucose {
 							if value != nil {
-								<rect class={ glucoseDaysFill[glucoseRange(ctx, *value)] } x={ fmt.Sprint(slot) } y={ glucoseDaysY(*value, bottom, top) } width="1.5" height="3"></rect>
+								<rect class={ GlucoseFill[glucoseRange(ctx, *value)] } x={ fmt.Sprint(slot) } y={ glucoseDaysY(*value, bottom, top) } width="1.5" height="3"></rect>
 							}
 						}
 					</svg>

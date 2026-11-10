@@ -191,10 +191,8 @@ templ ComponentEventCreated(event *sitemodels.SiteComponentEvent) {
 // ComponentEventUpdated replaces the change's row, closes its details and shows a toast
 templ ComponentEventUpdated(event *sitemodels.SiteComponentEvent) {
 	@componentEventRow(event)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Change Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Change Updated")
 }
 
 templ ComponentEventDeleted() {
