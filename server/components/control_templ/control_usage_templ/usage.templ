@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/stat"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/usage"
@@ -70,45 +72,44 @@ templ Usage(model controlmodels.Usage) {
 		@heading.Page("Usage") {
 			How many use the server and how much. Active sites and users are from the DB; the rest is counted since the server started { display.TimeAgo(model.SinceStart.Started, model.NowTime()) }. Updates every 10 seconds.
 		}
-		@section("Active") {
-			@tile("control--usage--sites-day", "Sites today", fmt.Sprint(model.ActiveSitesDay), "seen in the last 24 hours")
-			@tile("control--usage--sites-week", "Sites this week", fmt.Sprint(model.ActiveSitesWeek), "seen in the last 7 days")
-			@tile("control--usage--users-day", "Users today", fmt.Sprint(model.ActiveIdentitiesDay), "people and devices")
-			@tile("control--usage--users-week", "Users this week", fmt.Sprint(model.ActiveIdentitiesWeek), "people and devices")
+		@card.Card(card.Props{Title: "Active", Class: tiles}) {
+			@stat.NoteTile("control--usage--sites-day", "Sites today", fmt.Sprint(model.ActiveSitesDay), "seen in the last 24 hours")
+			@stat.NoteTile("control--usage--sites-week", "Sites this week", fmt.Sprint(model.ActiveSitesWeek), "seen in the last 7 days")
+			@stat.NoteTile("control--usage--users-day", "Users today", fmt.Sprint(model.ActiveIdentitiesDay), "people and devices")
+			@stat.NoteTile("control--usage--users-week", "Users this week", fmt.Sprint(model.ActiveIdentitiesWeek), "people and devices")
 			for _, state := range slices.Sorted(maps.Keys(model.SitesByState)) {
-				@tile("control--usage--sites-"+state, display.Name(state)+" sites", fmt.Sprint(model.SitesByState[state]), "in all")
+				@stat.NoteTile("control--usage--sites-"+state, display.Name(state)+" sites", fmt.Sprint(model.SitesByState[state]), "in all")
 			}
 		}
-		@section("Sites created") {
-			@tile("control--usage--created-today", "Today", fmt.Sprint(model.SitesCreatedToday), "since midnight UTC")
-			@tile("control--usage--created-week", "This week", fmt.Sprint(model.SitesCreatedWeek), "since Monday UTC")
-			@tile("control--usage--created-month", "This month", fmt.Sprint(model.SitesCreatedMonth), "since the 1st UTC")
+		@card.Card(card.Props{Title: "Sites created", Class: tiles}) {
+			@stat.NoteTile("control--usage--created-today", "Today", fmt.Sprint(model.SitesCreatedToday), "since midnight UTC")
+			@stat.NoteTile("control--usage--created-week", "This week", fmt.Sprint(model.SitesCreatedWeek), "since Monday UTC")
+			@stat.NoteTile("control--usage--created-month", "This month", fmt.Sprint(model.SitesCreatedMonth), "since the 1st UTC")
 		}
-		@section("Use since start") {
-			@tile("control--usage--requests-today", "Requests today", fmt.Sprint(model.SinceStart.Today.Requests), fmt.Sprintf("%d this week", model.SinceStart.Week.Requests))
-			@tile("control--usage--ingested-today", "Ingested today", display.Bytes(float64(model.SinceStart.Today.Ingested)), display.Bytes(float64(model.SinceStart.Week.Ingested))+" this week")
-			@tile("control--usage--ingested-total", "Ingested in all", display.Bytes(float64(model.SinceStart.Ingested)), "since start")
-			@tile("control--usage--requests-per-site", "Requests per site day", meanStd(model.SinceStart.RequestsPerSiteDay, count), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.RequestsPerSiteDay.N))
-			@tile("control--usage--ingested-per-site", "Ingested per site day", meanStd(model.SinceStart.IngestedPerSiteDay, display.Bytes), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.IngestedPerSiteDay.N))
+		@card.Card(card.Props{Title: "Use since start", Class: tiles}) {
+			@stat.NoteTile("control--usage--requests-today", "Requests today", fmt.Sprint(model.SinceStart.Today.Requests), fmt.Sprintf("%d this week", model.SinceStart.Week.Requests))
+			@stat.NoteTile("control--usage--ingested-today", "Ingested today", display.Bytes(float64(model.SinceStart.Today.Ingested)), display.Bytes(float64(model.SinceStart.Week.Ingested))+" this week")
+			@stat.NoteTile("control--usage--ingested-total", "Ingested in all", display.Bytes(float64(model.SinceStart.Ingested)), "since start")
+			@stat.NoteTile("control--usage--requests-per-site", "Requests per site day", meanStd(model.SinceStart.RequestsPerSiteDay, count), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.RequestsPerSiteDay.N))
+			@stat.NoteTile("control--usage--ingested-per-site", "Ingested per site day", meanStd(model.SinceStart.IngestedPerSiteDay, display.Bytes), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.IngestedPerSiteDay.N))
 		}
-		@section("Push notifications") {
-			@tile("control--usage--pushes-today", "Pushes today", fmt.Sprint(model.Pushes.Today.Sent), fmt.Sprintf("%d failed, since midnight UTC", model.Pushes.Today.Failed))
-			@tile("control--usage--pushes-week", "Pushes this week", fmt.Sprint(model.Pushes.Week.Sent), fmt.Sprintf("%d failed, since Monday UTC", model.Pushes.Week.Failed))
+		@card.Card(card.Props{Title: "Push notifications", Class: tiles}) {
+			@stat.NoteTile("control--usage--pushes-today", "Pushes today", fmt.Sprint(model.Pushes.Today.Sent), fmt.Sprintf("%d failed, since midnight UTC", model.Pushes.Today.Failed))
+			@stat.NoteTile("control--usage--pushes-week", "Pushes this week", fmt.Sprint(model.Pushes.Week.Sent), fmt.Sprintf("%d failed, since Monday UTC", model.Pushes.Week.Failed))
 		}
-		@section("Server") {
-			@tile("control--usage--cpu", "CPU", fmt.Sprintf("%.1f%%", model.Server.CPUPercent), fmt.Sprintf("of %d%% for %d cores, last 5 seconds", 100*model.Server.CPUs, model.Server.CPUs))
+		@card.Card(card.Props{Title: "Server", Class: tiles}) {
+			@stat.NoteTile("control--usage--cpu", "CPU", fmt.Sprintf("%.1f%%", model.Server.CPUPercent), fmt.Sprintf("of %d%% for %d cores, last 5 seconds", 100*model.Server.CPUs, model.Server.CPUs))
 			if model.Server.ResidentBytes > 0 {
 				// All the process's memory, as the OS counts it: SQLite's is outside Go's
-				@tile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.ResidentBytes)), display.Bytes(float64(model.Server.HeapBytes))+" in Go's heap, the rest mostly SQLite")
+				@stat.NoteTile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.ResidentBytes)), display.Bytes(float64(model.Server.HeapBytes))+" in Go's heap, the rest mostly SQLite")
 			} else {
-				@tile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.HeapBytes)), display.Bytes(float64(model.Server.SysBytes))+" from the OS")
+				@stat.NoteTile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.HeapBytes)), display.Bytes(float64(model.Server.SysBytes))+" from the OS")
 			}
-			@tile("control--usage--goroutines", "Goroutines", fmt.Sprint(model.Server.Goroutines), fmt.Sprintf("%d GCs", model.Server.GCs))
-			@tile("control--usage--disk", "DB disk used", display.Bytes(float64(model.Server.DiskUsed)), display.Bytes(float64(model.Server.DiskFree))+" free on disk")
-			@tile("control--usage--uptime", "Uptime", display.Duration(model.Server.UptimeMs), "since start")
+			@stat.NoteTile("control--usage--goroutines", "Goroutines", fmt.Sprint(model.Server.Goroutines), fmt.Sprintf("%d GCs", model.Server.GCs))
+			@stat.NoteTile("control--usage--disk", "DB disk used", display.Bytes(float64(model.Server.DiskUsed)), display.Bytes(float64(model.Server.DiskFree))+" free on disk")
+			@stat.NoteTile("control--usage--uptime", "Uptime", display.Duration(model.Server.UptimeMs), "since start")
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			<h2 class="mb-3 text-sm font-semibold text-brand-night">Resources, checked every 5 minutes</h2>
+		@card.Card(card.Props{Title: "Resources, checked every 5 minutes"}) {
 			if len(model.ResourceReadings) == 0 {
 				<p id="control--usage--resources-empty" class="text-sm text-gray-500">Not checked yet since the server started.</p>
 			} else {
@@ -118,9 +119,8 @@ templ Usage(model controlmodels.Usage) {
 					@resourceGraph(model, "disk", "DB disk used", diskPercent, model.DiskAlertPercent, 100)
 				</div>
 			}
-		</section>
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			<h2 class="mb-3 text-sm font-semibold text-brand-night">Most asked for routes</h2>
+		}
+		@card.Card(card.Props{Title: "Most asked for routes"}) {
 			@table.Table(table.Props{ID: "control--usage--routes", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {
 					@table.Row() {
@@ -154,7 +154,7 @@ templ Usage(model controlmodels.Usage) {
 					}
 				}
 			}
-		</section>
+		}
 		@slowestQueries(model)
 	</div>
 }
@@ -178,22 +178,8 @@ templ resourceGraph(model controlmodels.Usage, name string, label string, value 
 	</div>
 }
 
-templ section(title string) {
-	<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-		<h2 class="mb-3 text-sm font-semibold text-brand-night">{ title }</h2>
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-			{ children... }
-		</div>
-	</section>
-}
-
-templ tile(id, label, value, note string) {
-	<div class="rounded-lg border border-gray-200 p-3">
-		<div class="text-xs font-semibold uppercase tracking-wide text-gray-500">{ label }</div>
-		<div id={ id } class="mt-1 text-xl font-bold tabular-nums text-gray-900">{ value }</div>
-		<div class="text-xs text-gray-500">{ note }</div>
-	</div>
-}
+// tiles lays out a card's tiles, five to a row on a wide screen
+const tiles = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
 
 // numberClass right aligns a column of numbers
 func numberClass(number bool) string {
@@ -205,9 +191,7 @@ func numberClass(number bool) string {
 
 // slowestQueries are the DB queries whose sampled runs took the longest in all, where speeding one up saves the most
 templ slowestQueries(model controlmodels.Usage) {
-	<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-		<h2 class="text-sm font-semibold text-brand-night">Slowest queries</h2>
-		<p class="mb-3 text-xs text-gray-500">{ fmt.Sprintf("By the total time of the %d%% of queries sampled since the server started", model.QuerySamplePercent) }</p>
+	@card.Card(card.Props{Title: "Slowest queries", Note: fmt.Sprintf("By the total time of the %d%% of queries sampled since the server started", model.QuerySamplePercent)}) {
 		@table.Table(table.Props{ID: "control--usage--queries", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -236,5 +220,5 @@ templ slowestQueries(model controlmodels.Usage) {
 				}
 			}
 		}
-	</section>
+	}
 }

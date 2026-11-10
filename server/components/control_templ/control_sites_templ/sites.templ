@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/models/publicmodels"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/control_templ/control_logs_templ"
 	"nighttroop.t1d.nz/server/components/dbsize"
 	"nighttroop.t1d.nz/server/components/errortoast"
@@ -111,7 +112,7 @@ func orDefault(order string) string {
 templ createSiteForm() {
 	<form
 		id="control--sites--create"
-		class="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 shadow-sm"
+		class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
 		hx-post="/sites"
 		hx-target="#modal-container"
 		hx-swap="innerHTML"
@@ -148,7 +149,7 @@ templ createSiteForm() {
 templ PublicSiteCreation(on bool) {
 	<form
 		id="control--sites--public-creation"
-		class="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 shadow-sm"
+		class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
 		hx-post="/settings"
 		hx-swap="outerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
@@ -342,8 +343,7 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 // a copy of its DB or truncate it while it is here, disable it once no one has used it for a while, and archive it once
 // it is disabled. One that cannot be done yet says when it can, in place of its button.
 templ siteActions(site *controlmodels.Site) {
-	<section id="control--site--actions" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-		<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Actions</h2>
+	@card.Card(card.Props{ID: "control--site--actions", Title: "Actions"}) {
 		<div class="grid gap-3 sm:grid-cols-2">
 			{{ url := siteURL(ctx, site.ID) }}
 			@actionCard("control--site--action-open", "Open Site", "Opens the site in a new tab.", unless(url != "" && site.State == "live", "Only a live site is served."), icon.ExternalLink) {
@@ -377,7 +377,7 @@ templ siteActions(site *controlmodels.Site) {
 				}
 			}
 		</div>
-	</section>
+	}
 }
 
 // unless is why an action cannot be done, or nothing when it can

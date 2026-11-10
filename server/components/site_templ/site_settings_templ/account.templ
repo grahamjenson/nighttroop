@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/dbsize"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
@@ -27,25 +28,14 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 			no password or code. It is named { name }, and nothing about you is asked for or kept.
 		}
 		if guide {
-			<section id="site--account--getting-started" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 shadow-sm">
-				<div>
-					<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Getting Started</h2>
-					<p class="mt-1 text-sm text-gray-500">The guide to setting up the site: getting glucose in, adding people and devices, settings and alarms.</p>
-				</div>
-				@button.Button(button.Props{ID: "site--getting-started-button", Variant: button.VariantOutline, Size: button.SizeSm,
-					Attributes: nav.Attributes("/getting-started")}) {
-					Open the guide
-				}
-			</section>
+			@card.Card(card.Props{ID: "site--account--getting-started", Title: "Getting Started",
+				Note: "The guide to setting up the site: getting glucose in, adding people and devices, settings and alarms.",
+				Action: labelled("Open the guide", button.Props{ID: "site--getting-started-button", Variant: button.VariantOutline, Size: button.SizeSm,
+					Attributes: nav.Attributes("/getting-started")})})
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			<div class="mb-2 flex items-center justify-between gap-2">
-				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Passkeys</h2>
-				@button.Button(button.Props{ID: "site--account--add-passkey", Type: button.TypeButton, Size: button.SizeSm, Disabled: len(passkeys) >= most,
-					Attributes: templ.Attributes{"data-passkey-begin": path + "/passkeys/begin", "data-passkey-finish": path + "/passkeys/finish", "data-passkey-error": "site--account--passkey-error"}}) {
-					Add a passkey
-				}
-			</div>
+		@card.Card(card.Props{Title: "Passkeys", Action: labelled("Add a passkey", button.Props{ID: "site--account--add-passkey", Type: button.TypeButton, Size: button.SizeSm,
+			Disabled: len(passkeys) >= most, Attributes: templ.Attributes{"data-passkey-begin": path + "/passkeys/begin", "data-passkey-finish": path + "/passkeys/finish",
+				"data-passkey-error": "site--account--passkey-error"}})}) {
 			<p id="site--account--passkey-error" class="text-sm text-red-600"></p>
 			@table.Table(table.Props{ID: "site--account--passkeys"}) {
 				@table.Body() {
@@ -76,7 +66,7 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 					}
 				}
 			}
-		</section>
+		}
 		if storage != nil {
 			@storage
 		}
@@ -89,24 +79,23 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 templ AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) {
 	<section id="site--account--storage" class="space-y-3">
 		@dbsize.Panel("site--account", sizeKB, limitKB, tables)
-		<div id="site--account--truncate-card" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 shadow-sm">
-			<div class="max-w-2xl">
-				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Truncate</h2>
-				<p class="mt-1 text-sm text-gray-500">
-					Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all
-					but each device's newest report, and thins device reports to fewer the older they are, deleting those over
-					30 days old, and deletes old loop settings no profile or device report refers to any more. Readings,
-					treatments, profiles and everything else are kept. The DB is then shrunk.
-				</p>
-			</div>
-			@button.Button(button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,
+		@card.Card(card.Props{ID: "site--account--truncate-card", Title: "Truncate",
+			Note: "Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all " +
+				"but each device's newest report, and thins device reports to fewer the older they are, deleting those over " +
+				"30 days old, and deletes old loop settings no profile or device report refers to any more. Readings, " +
+				"treatments, profiles and everything else are kept. The DB is then shrunk.",
+			Action: labelled("Truncate", button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,
 				Attributes: templ.Attributes{"hx-post": "/settings/account/truncate", "hx-target": "#site--account--storage", "hx-swap": "outerHTML",
 					"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
-					"hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}}) {
-				Truncate
-			}
-		</div>
+					"hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}})})
 	</section>
+}
+
+// labelled is a button of a card's action, as its text
+templ labelled(text string, p button.Props) {
+	@button.Button(p) {
+		{ text }
+	}
 }
 
 // AccountTruncated is a toast saying the site was truncated, and its size now

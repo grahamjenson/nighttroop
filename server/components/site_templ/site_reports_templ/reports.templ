@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/stat"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -121,14 +123,13 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 	@heading.Title("TDD")
 	<div id="site--reports" class="w-full space-y-4 py-4">
 		@periodNav("TDD", "site--reports--tdd", "site--reports--title", first.Format(display.ShortDayLayout)+" to "+last.Format(display.DayLayout), previous, next, "month")
-		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@stat("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(over)))
-			@stat("site--reports--tdd--mean", "Daily dose", display.Value(mean, " U"))
-			@stat("site--reports--tdd--lowest", "Lowest", display.Value(lowest, " U"))
-			@stat("site--reports--tdd--highest", "Highest", display.Value(highest, " U"))
-		</dl>
-		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Total daily dose</h2>
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			@stat.Tile("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(over)), nil)
+			@stat.Tile("site--reports--tdd--mean", "Daily dose", display.Value(mean, " U"), nil)
+			@stat.Tile("site--reports--tdd--lowest", "Lowest", display.Value(lowest, " U"), nil)
+			@stat.Tile("site--reports--tdd--highest", "Highest", display.Value(highest, " U"), nil)
+		</div>
+		@card.Card(card.Props{Title: "Total daily dose"}) {
 			if len(withInsulin) > 0 {
 				{{ chart := tddChart(withInsulin, first, last, today) }}
 				<div id="site--reports--tdd--chart" class="h-90 w-full text-xs">
@@ -146,9 +147,8 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 					dose, lowest and highest.
 				}
 			</p>
-		</section>
-		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Each day</h2>
+		}
+		@card.Card(card.Props{Title: "Each day"}) {
 			@table.Table(table.Props{ID: "site--reports--tdd--table", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {
 					@table.Row() {
@@ -181,7 +181,7 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 					}
 				}
 			}
-		</section>
+		}
 	</div>
 }
 
@@ -200,13 +200,6 @@ templ arrowButton(id, path, label string) {
 	}
 }
 
-templ stat(id, label, text string) {
-	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-		<dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">{ label }</dt>
-		<dd id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ text }</dd>
-	</div>
-}
-
 // SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, a table for
 // each period, newest first, each opening its AGP report: the month's days, the weeks and fortnights with a day in it,
 // and the months of its year. Arrows beside the month go to the month before and after. An admin can have them all
@@ -219,13 +212,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 			<span class="text-sm text-gray-500">The month's days, the weeks and fortnights with a day in it, and its year's months, built from the site's data</span>
 		}
 		for _, kind := range periods {
-			<section id={ "site--summaries--" + kind.Period } class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-				<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
-					{ kind.Label }s
-					if kind.Period == "month" {
-						of { first.Format("2006") }
-					}
-				</h2>
+			@card.Card(card.Props{ID: "site--summaries--" + kind.Period, Title: summariesTitle(kind.Period, kind.Label, first)}) {
 				@table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}) {
 					@table.Header() {
 						@table.Row() {
@@ -269,7 +256,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 						}
 					}
 				}
-			</section>
+			}
 		}
 		if admin {
 			@regenerateSummaries()

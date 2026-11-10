@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
@@ -21,11 +22,7 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 	<div id="site--reports" class="w-full space-y-4 py-4">
 		@periodHeader("agp", "AGP", p)
 		<div class="grid gap-4 lg:grid-cols-2">
-			<section id="site--agp--ranges" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-				<div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-3">
-					<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Time in ranges</h2>
-					<span class="text-xs text-gray-500">Goals for type 1 and type 2 diabetes</span>
-				</div>
+			@card.Card(card.Props{ID: "site--agp--ranges", Title: "Time in ranges", Note: "Goals for type 1 and type 2 diabetes"}) {
 				@rangesWithGoals(p, previous)
 				<ul class="mt-3 space-y-0.5 text-xs text-gray-600">
 					<li id="site--agp--target"><span class="font-semibold">{ "Target range: " }</span>{ display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }</li>
@@ -33,9 +30,8 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 					<li><span class="font-semibold">{ "Very low: " }</span>below { display.Glucose(p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units) } { display.Units(p.Units) }</li>
 				</ul>
 				<p class="mt-2 text-xs text-gray-500">Each 5% more time in range is clinically beneficial. Each 1% is about 15 minutes a day.</p>
-			</section>
-			<section id="site--agp--metrics" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-				<h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose metrics</h2>
+			}
+			@card.Card(card.Props{ID: "site--agp--metrics", Title: "Glucose metrics"}) {
 				<dl class="divide-y divide-gray-200">
 					@metric("site--reports--mean", "Average glucose", "Goal: "+goalGlucose(p.Units), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units)) {
 						@statChange("site--reports--mean", p, glucoseChange(p, previous))
@@ -53,10 +49,9 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 					@metric("site--reports--daily-dose", "Daily dose", "", display.PerDay(p.Days, p.TotalDailyDose, ""), "U")
 					@metric("site--reports--daily-carbs", "Daily carbs", "", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g")
 				</dl>
-			</section>
+			}
 		</div>
-		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Ambulatory glucose profile</h2>
+		@card.Card(card.Props{Title: "Ambulatory glucose profile"}) {
 			<p class="mb-2 text-sm text-gray-600">
 				The median (50%) and other percentiles of
 				if p.Period == "day" {
@@ -70,12 +65,10 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 			} else {
 				@noGlucose("site--reports--no-glucose", p.Period)
 			}
-		</section>
-		<section id="site--agp--daily" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Daily glucose profiles</h2>
-			<p class="mb-2 text-sm text-gray-600">Each runs from midnight to midnight, and opens that day's report.</p>
+		}
+		@card.Card(card.Props{ID: "site--agp--daily", Title: "Daily glucose profiles", Note: "Each runs from midnight to midnight, and opens that day's report."}) {
 			@dailyProfiles(p, daily, low, high)
-		</section>
+		}
 	</div>
 }
 
