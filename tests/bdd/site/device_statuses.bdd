@@ -75,3 +75,16 @@ ASSERT_STATUS 200
 CLICK #site--device-status--show-all-0
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 5
+
+// Deleting the last status on the page says there are none, and nothing is shown
+ASSERT_NOT_VISIBLE #deviceStatusTable--empty
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_VISIBLE #deviceStatusTable--empty
+ASSERT_TEXT_VISIBLE No statuses here.
+ASSERT_NOT_VISIBLE #site--device-status--showing >> text=Showing
+SCREENSHOT device_status_history_empty

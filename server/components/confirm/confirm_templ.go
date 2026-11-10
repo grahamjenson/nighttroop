@@ -11,7 +11,8 @@ import "nighttroop.t1d.nz/server/components/ui/button"
 
 // Dialog asks to confirm a request with hx-confirm, such as a delete, in the site's own style rather than the browser's
 // plain one: its question, Cancel, and a button doing it, a red Delete for a delete and Continue for anything else.
-// Cancel, Escape or pressing beside it drops the request.
+// What asks can say it deletes, though it is not an hx-delete, with data-confirm-delete, whose value, if any, names
+// the red button instead, e.g. data-confirm-delete="Remove". Cancel, Escape or pressing beside it drops the request.
 func Dialog() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -77,7 +78,7 @@ func Dialog() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></dialog><script>\n\t\tdocument.addEventListener(\"htmx:confirm\", (event) => {\n\t\t\tconst dialog = document.getElementById(\"confirm\");\n\t\t\tif (!dialog || dialog.open) return;\n\t\t\tevent.preventDefault();\n\t\t\tconst { ctx, issueRequest, dropRequest } = event.detail;\n\t\t\tconst ok = dialog.querySelector(\"#confirm--ok\"), isDelete = event.target.hasAttribute(\"hx-delete\");\n\t\t\tdialog.querySelector(\"#confirm--message\").textContent = ctx.confirm;\n\t\t\tok.textContent = isDelete ? \"Delete\" : \"Continue\";\n\t\t\tok.toggleAttribute(\"data-delete\", isDelete);\n\t\t\tlet answered = false;\n\t\t\tconst answer = (confirmed) => {\n\t\t\t\tif (answered) return;\n\t\t\t\tanswered = true;\n\t\t\t\tdialog.close();\n\t\t\t\tconfirmed ? issueRequest() : dropRequest();\n\t\t\t};\n\t\t\tok.onclick = () => answer(true);\n\t\t\tdialog.querySelector(\"#confirm--cancel\").onclick = () => answer(false);\n\t\t\tdialog.onclose = () => answer(false);\n\t\t\tdialog.onclick = (click) => { if (click.target === dialog) answer(false); };\n\t\t\tdialog.showModal();\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></dialog><script>\n\t\tdocument.addEventListener(\"htmx:confirm\", (event) => {\n\t\t\tconst dialog = document.getElementById(\"confirm\");\n\t\t\tif (!dialog || dialog.open) return;\n\t\t\tevent.preventDefault();\n\t\t\tconst { ctx, issueRequest, dropRequest } = event.detail;\n\t\t\tconst ok = dialog.querySelector(\"#confirm--ok\"), label = event.target.getAttribute(\"data-confirm-delete\");\n\t\t\tconst isDelete = event.target.hasAttribute(\"hx-delete\") || label !== null;\n\t\t\tdialog.querySelector(\"#confirm--message\").textContent = ctx.confirm;\n\t\t\tok.textContent = isDelete ? label || \"Delete\" : \"Continue\";\n\t\t\tok.toggleAttribute(\"data-delete\", isDelete);\n\t\t\tlet answered = false;\n\t\t\tconst answer = (confirmed) => {\n\t\t\t\tif (answered) return;\n\t\t\t\tanswered = true;\n\t\t\t\tdialog.close();\n\t\t\t\tconfirmed ? issueRequest() : dropRequest();\n\t\t\t};\n\t\t\tok.onclick = () => answer(true);\n\t\t\tdialog.querySelector(\"#confirm--cancel\").onclick = () => answer(false);\n\t\t\tdialog.onclose = () => answer(false);\n\t\t\tdialog.onclick = (click) => { if (click.target === dialog) answer(false); };\n\t\t\tdialog.showModal();\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -193,6 +193,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 					"hx-target":     "#site--alarms--alarm-" + alarm.ID,
 					"hx-swap":       "outerHTML",
 					"hx-status:4xx": "target:#toaster swap:beforeend",
+					"hx-status:5xx": "target:#toaster swap:beforeend",
 				},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -210,7 +211,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--alarms--alarm-" + alarm.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 66, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 67, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -223,7 +224,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(alarmNames[alarm.ID])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 67, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 68, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

@@ -55,8 +55,6 @@
 1. Docs hosting
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
-1. P4: Tag each endpoint in `clients/nighttroop/openapi.json` (site, data, settings, Nightscout), so the API docs'
-   menu groups its 51 endpoints, and give each a summary, as those without one are listed by their operation ID
 1. Performance testing (cost estimate for running full node)
 1. Accessibility:
     1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes

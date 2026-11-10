@@ -223,6 +223,7 @@ templ deleteSite() {
 		<form
 			hx-post="/settings/site/delete"
 			hx-confirm="Delete this site? Everyone is signed out and its data is archived."
+			data-confirm-delete
 			hx-target="#toaster"
 			hx-swap="beforeend"
 			hx-status:4xx="target:#toaster swap:beforeend"

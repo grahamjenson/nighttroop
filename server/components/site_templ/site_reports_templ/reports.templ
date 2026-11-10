@@ -297,6 +297,7 @@ templ regenerateSummaries() {
 		<p>Summaries look wrong, as after changing the site's timezone or uploading old readings? Build the last year of them again from the site's data.</p>
 		@button.Button(button.Props{ID: "site--summaries--regenerate", Variant: button.VariantOutline, Size: button.SizeSm,
 			Attributes: templ.Attributes{"hx-post": "/reports/summaries/regenerate", "hx-swap": "none", "hx-status:4xx": "target:#toaster swap:beforeend",
+				"hx-status:5xx": "target:#toaster swap:beforeend",
 				"hx-confirm": "Regenerate the last year of summaries from the site's data? It runs in the background and takes a minute."}}) {
 			Regenerate summaries
 		}

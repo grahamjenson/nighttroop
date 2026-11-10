@@ -39,6 +39,8 @@ ASSERT_TEXT_VISIBLE This site
 ASSERT_TEXT_VISIBLE A search looks through the newest 10,000.
 // With nothing filtered there is nothing to clear
 ASSERT_NOT_VISIBLE #site--events--filter--clear
+// Its pager is named by the page, as its filter is
+ASSERT_VISIBLE #site--events--showing >> text=Showing 1 to
 SCREENSHOT events
 
 // Clicking an event shows when it started and how long it took
