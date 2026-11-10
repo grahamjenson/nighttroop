@@ -379,8 +379,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the target range below it.
 - An overview's sensor usage is its days with data of its days so far (as 6/9), the percent of its time the CGM read,
   and its meter readings a day.
+- As the international consensus on CGM metrics has it, an overview cautions under its GMI that it is reliable from 14
+  days of data when it has fewer, and under its time CGM active that its numbers may not be typical when the CGM read
+  for under 70% of the time.
 - A week's, fortnight's or month's overview names its best whole day, the one with the most time in range (the later
-  of two the same), which opens that day's overview; today is left out, and a day's overview has none.
+  of two the same), with a small graph of its glucose through the day, which opens that day's overview; today is left out, and a day's overview has none.
 - An overview draws its days averaged into one from midnight: a bar of each 15 minutes from its 25th to its 75th
   percentile, the part above the range high and below the range low in their colours, a dot at each's mean, and the
   range's bounds as lines labelled with their values, with hours in the settings' time format. A day's is of the 7
@@ -532,6 +535,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 - A site can pull data from **Dexcom** (with its region), **LibreLinkUp** (with its region) or another
   **Nightscout** site, or from the **virtual connector**, which makes realistic test data.
+- The virtual connector writes its readings, treatments and device statuses on the 5 minute grid, whatever window it
+  syncs or backfills, so windows that overlap write the same records at the same times and none is written twice.
 - The virtual connector's glucose is the same for the same time on every site: a 6 hour wave, with a meal as it rises
   and a correction at its peak, over a 25 hour one, so days differ. It reaches every range, about 2% very low (below
   54 mg/dL), 4% low, 63% in range, 27% high and 4% very high (above 250 mg/dL), and never reads below 40 mg/dL. It
