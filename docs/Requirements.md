@@ -445,10 +445,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the 7 days to yesterday at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), is of a month, this one unless it is
-  given as `?month=2026-10`, and has a table of each of its kept days, the weeks and fortnights with a day in it, and
-  the months of its year: each one's days with data, time in range, daily dose and daily carbs, newest first, each
-  opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
+  given as `?month=2026-10`, and has a table of each, the longest first: the kept months of its year, the fortnights
+  and weeks with a day in it, and its days: each one's days with data, time in range, daily dose and daily carbs,
+  newest first, each opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
   month outside those is refused. A past month's empty table says it has none in that month, or year for months.
+- Data written for a day before today, as a backfill or a late sync writes, or changed or deleted, builds that day's
+  summary again, and the whole weeks, fortnights and months with it in, without building the rest: once the site's
+  data has gone 2 minutes without more, or after 15 minutes of it at most, so a backfill's many records are built
+  once. Glucose, insulin, food, temp basals and targets, profile switches and device statuses count; today is built
+  as it is read.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
@@ -626,7 +631,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   the site refuses, such as a Nightscout treatment with an eventType it does not know, is skipped. The first of each
   sync is recorded as an error of the site's connector with the record (up to 8 KB) and sent to Sentry with it, to
   debug it by.
-- A working source can be backfilled with the days before its oldest reading. A Nightscout or virtual backfill also
+- A working source can be backfilled with the days before its oldest reading, from midnight in the site's timezone,
+  so its data starts at the start of a day. A Nightscout or virtual backfill also
   fetches the last 2 days again, to fill gaps the site missed while it was down, as for a deploy, and its toast says so;
   Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours. A Nightscout backfill keeps the
   device statuses it adds without their loop status (`openaps` or `loop`) or `pump` as sent, which are of no use once old
