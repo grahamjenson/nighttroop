@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -64,7 +65,7 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				<div class="min-w-0 flex-1">
 					<h2 class="font-semibold text-gray-900">
 						Best day:
-						<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } hx-get={ link("overview", "day", date) } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ date.Format("Monday 2 January 2006") }</a>
+						<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } { nav.Attributes(link("overview", "day", date))... }>{ date.Format("Monday 2 January 2006") }</a>
 					</h2>
 					<p class="text-sm text-gray-600">Glucose was in range about { percentText(best.TimeInRange) } of the day.</p>
 				</div>
@@ -93,7 +94,9 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			<div class="mb-2 flex items-baseline justify-between gap-2">
 				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Insulin and carbs</h2>
 				{{ _, last := days(ctx, p) }}
-				<a id="site--overview--tdd" class="text-sm text-primary underline" href={ templ.SafeURL(tddLink(last, now)) } hx-get={ tddLink(last, now) } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">Each day's dose</a>
+				@nav.Link("site--overview--tdd", tddLink(last, now), "text-sm text-primary underline") {
+					Each day's dose
+				}
 			</div>
 			<dl class="grid grid-cols-2 gap-6">
 				@bigStat("site--overview--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "")

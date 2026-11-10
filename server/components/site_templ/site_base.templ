@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
@@ -84,7 +85,7 @@ func identityName(ctx context.Context) string {
 }
 
 templ menuItem(id string, path string, label string, itemIcon templ.Component) {
-	@dropdown.Item(dropdown.ItemProps{ID: id, Href: "#", Attributes: navAttributes(path)}) {
+	@dropdown.Item(dropdown.ItemProps{ID: id, Href: "#", Attributes: nav.Attributes(path)}) {
 		<span class="flex items-center">
 			@itemIcon
 			{ label }

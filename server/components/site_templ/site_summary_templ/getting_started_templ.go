@@ -12,7 +12,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
-	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -370,7 +370,7 @@ func stepLink(id, path, text string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = stat.PageLink(id, path, "inline-flex items-center rounded-lg bg-brand-night px-4 py-2 font-medium text-white hover:bg-brand-night/90").Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = nav.Link(id, path, "inline-flex items-center rounded-lg bg-brand-night px-4 py-2 font-medium text-white hover:bg-brand-night/90").Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

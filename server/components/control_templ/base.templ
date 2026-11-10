@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -124,12 +125,7 @@ templ menuItem(id string, path string, label string, itemIcon func(...icon.Props
 	@dropdown.Item(dropdown.ItemProps{
 		ID:   id,
 		Href: "#",
-		Attributes: templ.Attributes{
-			"hx-get":      path,
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
+		Attributes: nav.Attributes(path),
 	}) {
 		<span class="flex items-center">
 			@itemIcon(icon.Props{Class: "size-4 mr-2"})

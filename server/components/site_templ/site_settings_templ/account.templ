@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/dbsize"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -32,7 +33,7 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 					<p class="mt-1 text-sm text-gray-500">The guide to setting up the site: getting glucose in, adding people and devices, settings and alarms.</p>
 				</div>
 				@button.Button(button.Props{ID: "site--getting-started-button", Variant: button.VariantOutline, Size: button.SizeSm,
-					Attributes: templ.Attributes{"hx-get": "/getting-started", "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML"}}) {
+					Attributes: nav.Attributes("/getting-started")}) {
 					Open the guide
 				}
 			</section>

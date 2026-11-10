@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/utils/apiutils"
 )
@@ -30,10 +31,10 @@ templ Pager(p Props) {
 		</span>
 		<div class="flex gap-2">
 			if p.Skip > 0 {
-				@pageButton(p.ID+"--previous", "Previous", pageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
+				@pageButton(p.ID+"--previous", "Previous", PageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
 			}
 			if hasNext(ctx, p) {
-				@pageButton(p.ID+"--next", "Next", pageURL(p.Path, p.Skip+p.Limit, p.Limit))
+				@pageButton(p.ID+"--next", "Next", PageURL(p.Path, p.Skip+p.Limit, p.Limit))
 			}
 		</div>
 	</div>
@@ -71,12 +72,7 @@ templ pageButton(id string, label string, url string) {
 	@button.Button(button.Props{
 		ID:      id,
 		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      url,
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
+		Attributes: nav.Attributes(url),
 	}) {
 		{ label }
 	}
@@ -91,7 +87,8 @@ func hasNext(ctx context.Context, p Props) bool {
 	return int64(p.Count) == p.Limit
 }
 
-func pageURL(path string, skip int64, limit int64) string {
+// PageURL is path, which may have a query of its own, at the page of rows from skip
+func PageURL(path string, skip int64, limit int64) string {
 	separator := "?"
 	if strings.Contains(path, "?") {
 		separator = "&"

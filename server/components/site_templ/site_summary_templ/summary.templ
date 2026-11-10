@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/stat"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -116,27 +117,6 @@ var ranges = []struct {
 	Label string
 }{{6, "6h"}, {24, "24h"}, {48, "48h"}, {7 * 24, "Week"}}
 
-// rangeButton reloads the summary over another range, so back and forward move between them
-templ rangeButton(hours int64, label string, selected bool) {
-	{{ variant := button.VariantOutline }}
-	if selected {
-		{{ variant = button.VariantDefault }}
-	}
-	@button.Button(button.Props{
-		ID:      fmt.Sprintf("site--summary--range-%d", hours),
-		Variant: variant,
-		Size:    button.SizeSm,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/?hours=%d", hours),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
-}
-
 // Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts.
 // It streams the summary's events, shown Live while connected, and reloads its content a second after changes stop
 // arriving, and when the stream reconnects, as changes may have been missed while it was not. The header, with the
@@ -161,7 +141,9 @@ templ Summary(summary *sitemodels.Summary) {
 			</div>
 			<div class="flex gap-1">
 				for _, r := range ranges {
-					@rangeButton(r.Hours, r.Label, summary.Hours == r.Hours)
+					@nav.Toggle(fmt.Sprintf("site--summary--range-%d", r.Hours), fmt.Sprintf("/?hours=%d", r.Hours), button.SizeSm, summary.Hours == r.Hours) {
+						{ r.Label }
+					}
 				}
 			</div>
 		</div>
@@ -270,7 +252,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 				</div>
 				<div class="mt-1 flex gap-3 text-sm">
 					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</span>
-					@stat.PageLink("site--summary--all-readings", "/data/glucose", "text-primary underline") {
+					@nav.Link("site--summary--all-readings", "/data/glucose", "text-primary underline") {
 						All readings
 					}
 				</div>
@@ -280,15 +262,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 				<div class="text-2xl font-bold text-gray-900">No glucose readings in this time</div>
 				<div class="mt-1 text-sm text-gray-500">
 					Upload from your phone, or connect a source in
-					<a
-						id="site--summary--connectors-link"
-						href="/settings/connectors"
-						hx-get="/settings/connectors"
-						hx-target="#main-content"
-						hx-push-url="true"
-						hx-swap="innerHTML"
-						class="text-primary underline"
-					>Connectors</a>.
+					<a id="site--summary--connectors-link" href="/settings/connectors" { nav.Attributes("/settings/connectors")... } class="text-primary underline">Connectors</a>.
 				</div>
 			</div>
 		}
@@ -344,7 +318,7 @@ templ treatmentsTable(list []treatment) {
 						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
-						@stat.PageLink("", t.Path, "font-medium text-primary underline") {
+						@nav.Link("", t.Path, "font-medium text-primary underline") {
 							{ t.Kind }
 						}
 					}
