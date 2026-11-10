@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -617,6 +618,98 @@ func (r *RunBackgroundJobs) Execute(t *testing.T, page playwright.Page, ctx map[
 		}
 	}
 	return page, nil
+}
+
+// Hold holds the page's requests to a path, unsent, from HOLD until RELEASE sends them, as a slow server would, so a
+// flow can act while one is on its way, e.g. open what a refresh will swap before it lands
+type Hold struct {
+	Path string
+	// Release sends the requests held and those after, for RELEASE
+	Release bool
+
+	Asserts []BrowserAssert
+
+	TestPath string
+	TestLine int
+}
+
+// held are the requests to a path HOLD holds, until RELEASE
+type held struct {
+	sync.Mutex
+	routes   []playwright.Route
+	released bool
+}
+
+// heldKey is where the flow's context keeps the requests held to path, for ASSERT_HELD and RELEASE
+func heldKey(path string) string {
+	return "__held " + path
+}
+
+func (r *Hold) ToFlatString() string {
+	if r.Release {
+		return "RELEASE " + r.Path
+	}
+	return "HOLD " + r.Path
+}
+
+func (r *Hold) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *Hold) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *Hold) AddAssert(assert BrowserAssert) {
+	r.Asserts = append(r.Asserts, assert)
+}
+
+// Execute holds the path's requests, or sends them and runs its asserts, which check the page once they land
+func (r *Hold) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	if r.Release {
+		if err := r.release(ctx); err != nil {
+			return nil, err
+		}
+		for _, assert := range r.Asserts {
+			if err := assert.Execute(t, ctx, page, nil); err != nil {
+				t.Fatalf("\n\n ASSERT FAILED \n %s: %v \n\n", r.ToErrorLine("Error with ASSERT"), err)
+			}
+		}
+		return page, nil
+	}
+	h := &held{}
+	ctx[heldKey(r.Path)] = h
+	matches := func(raw string) bool {
+		u, err := url.Parse(raw)
+		return err == nil && u.Path == r.Path
+	}
+	return page, page.Route(matches, func(route playwright.Route) {
+		h.Lock()
+		defer h.Unlock()
+		if h.released {
+			_ = route.Continue()
+			return
+		}
+		h.routes = append(h.routes, route)
+	})
+}
+
+// release sends the requests HOLD held, and lets those after go straight away
+func (r *Hold) release(ctx map[string]any) error {
+	h, ok := ctx[heldKey(r.Path)].(*held)
+	if !ok {
+		return fmt.Errorf("%s", r.ToErrorLine("nothing is held"))
+	}
+	h.Lock()
+	defer h.Unlock()
+	h.released = true
+	for _, route := range h.routes {
+		if err := route.Continue(); err != nil {
+			return err
+		}
+	}
+	h.routes = nil
+	return nil
 }
 
 // resolveAgainstPage turns a path like /data/glucose into a full URL on the current page's host
