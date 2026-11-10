@@ -6,9 +6,9 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -87,15 +87,5 @@ templ archivedSiteRow(site *controlmodels.Site) {
 
 // SiteHydrated takes the site out of the archived sites, and shows a toast saying it is live again
 templ SiteHydrated(site *controlmodels.Site) {
-	<div hx-swap-oob="beforeend:#toaster">
-		@toast.Toast(toast.Props{
-			Title:       "Success",
-			Description: "Site Hydrated: " + site.ID + " is live again",
-			Variant:     toast.VariantSuccess,
-			Position:    toast.PositionTopCenter,
-			Duration:    5000,
-			Dismissible: true,
-			Icon:        true,
-		})
-	</div>
+	@successtoast.OOB("Site Hydrated: " + site.ID + " is live again")
 }

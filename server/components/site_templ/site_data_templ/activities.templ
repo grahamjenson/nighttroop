@@ -174,10 +174,8 @@ templ ActivityCreated(activity *sitemodels.SiteActivity) {
 // ActivityUpdated replaces the activity's row, closes its details and shows a toast
 templ ActivityUpdated(activity *sitemodels.SiteActivity) {
 	@activityRow(activity)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Activity Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Activity Updated")
 }
 
 templ ActivityDeleted() {

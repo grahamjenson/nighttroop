@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
 // CreateSite is the home page, whose button creates a site when the public can, and opens the new site's welcome page
@@ -253,7 +254,7 @@ templ copyButton(id, targetID, label, class string) {
 // loginButton opens the new site's login, disabled until the authenticator's code has been checked; oob swaps it into
 // the page, from a code's check
 templ loginButton(url string, oob bool) {
-	<div id="public--login" class="flex flex-col items-center gap-2 p-6" { oobAttributes(oob)... }>
+	<div id="public--login" class="flex flex-col items-center gap-2 p-6" { utils.If(oob, templ.Attributes{"hx-swap-oob": "true"})... }>
 		@button.Button(button.Props{
 			ID:       "public--login-button",
 			Size:     button.SizeLg,
@@ -294,13 +295,6 @@ templ passkeyLogin() {
 		<p id="public--passkey-error" class="text-sm text-red-700 empty:hidden"></p>
 		@site_login_templ.PasskeyScript()
 	</div>
-}
-
-func oobAttributes(oob bool) templ.Attributes {
-	if oob {
-		return templ.Attributes{"hx-swap-oob": "true"}
-	}
-	return nil
 }
 
 // TOTPChecked is a code from the authenticator matching the new site's TOTP secret, and its login button enabled

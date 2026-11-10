@@ -186,10 +186,8 @@ templ TempTargetCreated(tempTarget *sitemodels.SiteTempTarget) {
 // TempTargetUpdated replaces the temp target's row, closes its details and shows a toast
 templ TempTargetUpdated(tempTarget *sitemodels.SiteTempTarget) {
 	@tempTargetRow(tempTarget)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Temp Target Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Temp Target Updated")
 }
 
 templ TempTargetDeleted() {

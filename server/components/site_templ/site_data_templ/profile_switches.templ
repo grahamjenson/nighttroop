@@ -211,10 +211,8 @@ templ ProfileSwitchCreated(profileSwitch *sitemodels.SiteProfileSwitch) {
 // ProfileSwitchUpdated replaces the profile switch's row, closes its details and shows a toast
 templ ProfileSwitchUpdated(profileSwitch *sitemodels.SiteProfileSwitch) {
 	@profileSwitchRow(profileSwitch)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Profile Switch Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Profile Switch Updated")
 }
 
 templ ProfileSwitchDeleted() {

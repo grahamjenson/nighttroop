@@ -24,6 +24,8 @@ INPUT #control--rate-settings--site_push--per_minute 20
 INPUT #control--rate-settings--site_push--burst 40
 CLICK #control--rate-settings--save
 ASSERT_TEXT_VISIBLE Rate limits saved
+// Its toast is a success toast like every page's, with a bar of the time it has left
+ASSERT_COUNT #toaster [data-tui-toast][data-variant="success"]:has-text("Rate limits saved") .toast-progress 1
 ASSERT_VISIBLE #control--rate-settings--site_push >> text=set here
 ASSERT_VISIBLE #control--rate-limits--site_push td:nth-child(4):has-text("40")
 SCREENSHOT rate_limits_set

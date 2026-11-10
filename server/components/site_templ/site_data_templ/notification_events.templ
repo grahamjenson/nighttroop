@@ -156,10 +156,8 @@ templ NotificationEventCreated(event *sitemodels.SiteNotificationEvent) {
 // NotificationEventUpdated replaces the notification's row, closes its details and shows a toast
 templ NotificationEventUpdated(event *sitemodels.SiteNotificationEvent) {
 	@notificationEventRow(event)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Notification Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Notification Updated")
 }
 
 templ NotificationEventDeleted() {

@@ -28,6 +28,8 @@ SCREENSHOT account_storage
 // with the DB's new size
 CLICK #site--account--truncate
 ASSERT_TEXT_VISIBLE Site Truncated
+// Its toast is a success toast like every page's, with a bar of the time it has left
+ASSERT_COUNT #toaster [data-tui-toast][data-variant="success"]:has-text("Site Truncated") .toast-progress 1
 ASSERT_VISIBLE #site--account--db-size >> text=/^\d+\.\d\d$/
 ASSERT_VISIBLE #site--account--db-table--Other
 ASSERT_NO_PAGE_ERRORS
