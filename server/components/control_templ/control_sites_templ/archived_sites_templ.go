@@ -13,9 +13,9 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -530,23 +530,7 @@ func SiteHydrated(site *controlmodels.Site) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div hx-swap-oob=\"beforeend:#toaster\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:       "Success",
-			Description: "Site Hydrated: " + site.ID + " is live again",
-			Variant:     toast.VariantSuccess,
-			Position:    toast.PositionTopCenter,
-			Duration:    5000,
-			Dismissible: true,
-			Icon:        true,
-		}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div>")
+		templ_7745c5c3_Err = successtoast.OOB("Site Hydrated: "+site.ID+" is live again").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

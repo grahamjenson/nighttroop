@@ -126,7 +126,5 @@ templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
 // PushDeviceTested is the registration's status after a test push reached its push service, and a toast saying so
 templ PushDeviceTested(registration *sitemodels.PushRegistration) {
 	@pushDeviceStatus(registration)
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Test push sent to " + string(registration.App))
-	</div>
+	@successtoast.OOB("Test push sent to " + string(registration.App))
 }

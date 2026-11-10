@@ -207,10 +207,8 @@ templ FoodIntakeCreated(foodIntake *sitemodels.SiteFoodIntake) {
 // FoodIntakeUpdated replaces the food intake's row, closes its details and shows a toast
 templ FoodIntakeUpdated(foodIntake *sitemodels.SiteFoodIntake) {
 	@foodIntakeRow(foodIntake)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Food Intake Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Food Intake Updated")
 }
 
 templ FoodIntakeDeleted() {

@@ -157,10 +157,8 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 // ProfilePresetUpdated replaces the profile's row, closes its details and shows a toast
 templ ProfilePresetUpdated(profile *sitemodels.SiteProfilePreset) {
 	@profilePresetRow(profile)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Profile Renamed")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Profile Renamed")
 }
 
 templ ProfilePresetDeleted() {

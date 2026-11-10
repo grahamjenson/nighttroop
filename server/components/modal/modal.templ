@@ -98,3 +98,8 @@ templ Submit(form, label string) {
 		{ label }
 	}
 }
+
+// CloseOOB closes the open modal out of band, beside the rest of a response, by emptying #modal-container
+templ CloseOOB() {
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+}

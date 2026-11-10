@@ -4,14 +4,31 @@ import "nighttroop.t1d.nz/server/components/ui/toast"
 
 // Toast says an action worked, as every page says it: at the top, for five seconds, with a bar of the time left
 templ Toast(description string) {
+	@Titled("Success", description, 5000)
+}
+
+// Titled is a Toast with a title of its own, shown for durationMs
+templ Titled(title string, description string, durationMs int) {
 	@toast.Toast(toast.Props{
-		Title:         "Success",
+		Title:         title,
 		Description:   description,
 		Variant:       toast.VariantSuccess,
 		Position:      toast.PositionTopCenter,
-		Duration:      5000,
+		Duration:      durationMs,
 		Dismissible:   true,
 		Icon:          true,
 		ShowIndicator: true,
 	})
+}
+
+// OOB is a Toast swapped into the page's #toaster out of band, beside the rest of a response
+templ OOB(description string) {
+	@TitledOOB("Success", description, 5000)
+}
+
+// TitledOOB is a Titled toast swapped into the page's #toaster out of band, beside the rest of a response
+templ TitledOOB(title string, description string, durationMs int) {
+	<div hx-swap-oob="beforeend:#toaster">
+		@Titled(title, description, durationMs)
+	</div>
 }

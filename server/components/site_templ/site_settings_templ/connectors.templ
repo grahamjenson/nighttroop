@@ -12,9 +12,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
 func findConnector(
@@ -493,7 +493,7 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 // saved yet has nothing to backfill or delete. Saving swaps them in out of band, as oob, so they show once it is saved.
 templ connectorActions(source *sitemodels.Connector, connectorType consts.ConnectorType, oob bool) {
 	{{ name := string(connectorType) }}
-	<div id={ "site--settings--" + name + "-connector--actions" } { swapOutOfBand(oob)... } class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+	<div id={ "site--settings--" + name + "-connector--actions" } { utils.If(oob, templ.Attributes{"hx-swap-oob": "true"})... } class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
 		<div>
 			if source != nil {
 				@button.Button(button.Props{
@@ -567,16 +567,7 @@ templ BackfillQueued(sourceType consts.ConnectorType, from int64, to int64, rece
 	if recentFrom > 0 {
 		{{ description += ", and again from " + backfillTime(recentFrom) + " UTC to fill any gaps" }}
 	}
-	@toast.Toast(toast.Props{
-		Title:         "Backfilling " + strings.ToUpper(string(sourceType)[:1]) + string(sourceType)[1:],
-		Description:   description,
-		Variant:       toast.VariantSuccess,
-		Position:      toast.PositionTopCenter,
-		Duration:      8000,
-		Dismissible:   true,
-		Icon:          true,
-		ShowIndicator: true,
-	})
+	@successtoast.Titled("Backfilling " + strings.ToUpper(string(sourceType)[:1]) + string(sourceType)[1:], description, 8000)
 }
 
 // backfillTime is a time in ms a backfill fetches from or to, as 2 Jan 15:04 in UTC
@@ -587,14 +578,6 @@ func backfillTime(ms int64) string {
 templ SuccessfulUpdate(model *sitemodels.Connector) {
 	@successtoast.Toast("Connector Updated")
 	@connectorActions(model, model.Type, true)
-}
-
-// swapOutOfBand swaps an element of a response in by its ID, out of band, when oob
-func swapOutOfBand(oob bool) templ.Attributes {
-	if oob {
-		return templ.Attributes{"hx-swap-oob": "true"}
-	}
-	return templ.Attributes{}
 }
 
 // connectorLabel is what a connector is called in its confirmations
@@ -622,11 +605,5 @@ templ ConnectorDeleted(sourceType consts.ConnectorType) {
 		case consts.ConnectorTypeVirtual:
 			@VirtualConnectorForm(nil)
 	}
-	<div hx-swap-oob="beforeend:#toaster">
-		@SuccessfulDelete()
-	</div>
-}
-
-templ SuccessfulDelete() {
-	@successtoast.Toast("Connector Deleted")
+	@successtoast.OOB("Connector Deleted")
 }

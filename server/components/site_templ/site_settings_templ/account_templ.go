@@ -17,9 +17,9 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -465,16 +465,7 @@ func AccountTruncated(sizeKB *int64) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div hx-swap-oob=\"beforeend:#toaster\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = toast.Toast(toast.Props{Title: "Site Truncated", Description: truncatedSize(sizeKB), Variant: toast.VariantSuccess,
-			Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</div>")
+		templ_7745c5c3_Err = successtoast.TitledOOB("Site Truncated", truncatedSize(sizeKB), 5000).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
