@@ -69,6 +69,24 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
 - Every control page shows its dates and times in UTC, e.g. `2026-10-26 12:00:00`, and `-` for one not set.
 
+### Control admins
+
+- Admins, under Security in the control menu, lists every control admin, newest first, with its role (Admin or Read
+  only), when it was made and by whom; the admin signed in is marked "You". Secrets are never shown or returned.
+- An Admin adds another admin with a name (1 to 32 characters, unique) and a role, Read only unless chosen, and its
+  password and TOTP secret are shown once, in the same credentials dialog, with its "never shown again" warning on
+  Escape or pressing beside it, as a site's Users & Devices. Control has at most 20 admins.
+- An Admin changes another's role from its Role select, which says so in a toast; a refused change puts it back. The
+  admin changed is signed out, as its sign in was for its old role.
+- An Admin resets another's password or TOTP from its Manage menu, after confirming, and the new one is shown once in
+  the credentials dialog. The reset removes the admin's passkeys and is recorded as a credentials changed event; the
+  secret is never logged. Its sign in, if it has one, keeps working until it ends, within the hour.
+- An Admin deletes another from its Manage menu, after confirming in the confirm dialog, which removes its row and its
+  passkeys and signs it out.
+- Only an Admin can add, change, reset or delete admins; a Read only admin sees the list only. No admin can change,
+  reset or delete themselves here, and the last Admin can never be deleted or made Read only, checked as it is written
+  so two admins removing each other at once cannot leave none.
+
 ### Sites
 
 - The dashboard lists every site, newest first, with its state and DB size in MB, to two places, as do the archived

@@ -1,0 +1,221 @@
+package control_admins_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/dropdown"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// Roles are the control roles, as an admin chooses them, the first picked to start with so an admin added without
+// choosing one is read only
+var Roles = []consts.ControlRole{consts.ControlRoleRead, consts.ControlRoleAdmin}
+
+func RoleLabel(role consts.ControlRole) string {
+	return map[consts.ControlRole]string{consts.ControlRoleAdmin: "Admin", consts.ControlRoleRead: "Read only"}[role]
+}
+
+// Admins is control's admins, newest first. An admin adds others, changes their role, resets their password or TOTP,
+// showing the new one once, or deletes them, but never themselves, so control always has an admin to manage it.
+templ Admins(admins []*controlmodels.ControlAdmin) {
+	<div id="control--admins" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page("Admins") {
+			Who can sign in to control. Admins manage sites and the other admins; read only admins only look. You cannot
+			change yourself here, and the last admin cannot be deleted or made read only.
+		}
+		@table.Table(table.Props{ID: "control--admins--table", Class: "rounded-lg border border-gray-200 text-sm"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Name
+					}
+					@table.Head() {
+						Role
+					}
+					@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
+						Created
+					}
+					@table.Head() {
+						<span class="sr-only">Actions</span>
+					}
+				}
+			}
+			@table.Body() {
+				for _, admin := range admins {
+					@AdminRow(admin)
+				}
+			}
+		}
+		if httputils.IsControlAdmin(ctx) {
+			@addForm()
+		}
+		<div id="modal-container"></div>
+	</div>
+}
+
+// AdminRow is an admin, with its role to choose and a Manage menu for an admin, unless it is the one signed in
+templ AdminRow(admin *controlmodels.ControlAdmin) {
+	{{ id := fmt.Sprintf("control--admin--%d", admin.ID) }}
+	{{ path := fmt.Sprintf("/admins/%d", admin.ID) }}
+	{{ you := httputils.GetControlContext(ctx).IdentityModel.ID == admin.ID }}
+	{{ manage := httputils.IsControlAdmin(ctx) && !you }}
+	@table.Row(table.RowProps{ID: id}) {
+		@table.Cell() {
+			{ admin.Name }
+			if you {
+				<span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">You</span>
+			}
+		}
+		@table.Cell() {
+			if manage {
+				// A refused change, as for the last admin, puts the role back
+				<select
+					id={ id + "--role" }
+					name="role"
+					aria-label={ "Role of " + admin.Name }
+					data-role={ string(admin.Role) }
+					class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm"
+					hx-post={ path + "/role" }
+					hx-trigger="change"
+					hx-target="#toaster"
+					hx-swap="beforeend"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
+					hx-on::after:request="if (ctx.response.status >= 400) this.value = this.dataset.role; else this.dataset.role = this.value"
+				>
+					for _, role := range Roles {
+						<option value={ string(role) } selected?={ role == admin.Role }>{ RoleLabel(role) }</option>
+					}
+				</select>
+			} else {
+				<span id={ id + "--role" }>{ RoleLabel(admin.Role) }</span>
+			}
+		}
+		@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
+			{ display.DateTime(&admin.CreatedAt) }
+			if admin.CreatedByIdentityName != "" {
+				by { admin.CreatedByIdentityName }
+			}
+		}
+		@table.Cell() {
+			if manage {
+				@manageMenu(id, path, admin.Name)
+			}
+		}
+	}
+}
+
+// manageMenu resets an admin's password or TOTP, after asking, showing the new one in the page's modal, or deletes it
+templ manageMenu(id string, path string, name string) {
+	@dropdown.Dropdown(dropdown.Props{ID: id + "--menu"}) {
+		@dropdown.Trigger() {
+			@button.Button(button.Props{ID: id + "--manage", Variant: button.VariantOutline, Size: button.SizeSm}) {
+				Manage
+				@icon.ChevronDown(icon.Props{Class: "size-4"})
+			}
+		}
+		@dropdown.Content(dropdown.ContentProps{Placement: dropdown.PlacementBottomEnd, Class: "w-48"}) {
+			@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Attributes: resetAttributes(path+"/password", "Reset "+name+"'s password? Its old one and its passkeys stop working.")}) {
+				@menuLabel(icon.KeyRound, "Reset password")
+			}
+			@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-totp", Attributes: resetAttributes(path+"/totp", "Reset "+name+"'s TOTP? Codes from its old secret and its passkeys stop working.")}) {
+				@menuLabel(icon.RotateCcwKey, "Reset TOTP")
+			}
+			@dropdown.Separator()
+			@dropdown.Item(dropdown.ItemProps{ID: id + "--delete", Class: "text-red-600 hover:text-red-700",
+				Attributes: templ.Attributes{
+					"hx-delete":            path,
+					"hx-confirm":           "Delete " + name + "? They can no longer sign in to control.",
+					"hx-target":            "#toaster",
+					"hx-swap":              "beforeend",
+					"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
+					"hx-status:4xx":        "target:#toaster swap:beforeend",
+					"hx-status:5xx":        "target:#toaster swap:beforeend",
+				}}) {
+				@menuLabel(icon.Trash2, "Delete")
+			}
+		}
+	}
+}
+
+templ menuLabel(ic func(...icon.Props) templ.Component, label string) {
+	<span class="flex items-center gap-2">
+		@ic(icon.Props{Class: "size-4"})
+		{ label }
+	</span>
+}
+
+func resetAttributes(path string, confirm string) templ.Attributes {
+	return templ.Attributes{
+		"hx-post":       path,
+		"hx-confirm":    confirm,
+		"hx-target":     "#modal-container",
+		"hx-swap":       "innerHTML",
+		"hx-status:4xx": "target:#toaster swap:beforeend",
+		"hx-status:5xx": "target:#toaster swap:beforeend",
+	}
+}
+
+// addForm adds an admin, showing its credentials once, and empties itself for the next
+templ addForm() {
+	<form
+		id="control--admins--add"
+		class="flex flex-wrap items-end justify-end gap-2"
+		hx-on::after:request="if (ctx.response.status < 400) this.reset()"
+		hx-post="/admins"
+		hx-target="#control--admins--table tbody"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		@field.Field("control--admins--add--name", "Name", "w-40") {
+			@input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": "32", "autocomplete": "off"}})
+		}
+		@field.Field("control--admins--add--role", "Role", "w-36") {
+			<select id="control--admins--add--role" name="role" class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
+				for _, role := range Roles {
+					<option value={ string(role) }>{ RoleLabel(role) }</option>
+				}
+			</select>
+		}
+		@button.Button(button.Props{ID: "control--admins--add--submit", Type: button.TypeSubmit}) {
+			Add Admin
+		}
+	</form>
+}
+
+// Added is the new admin's row, and its credentials, shown once
+templ Added(url string, admin *controlmodels.ControlAdmin, credentials *controlmodels.SiteIdentityCredentials) {
+	@AdminRow(admin)
+	<div id="modal-container" hx-swap-oob="innerHTML">
+		@Credentials(url, credentials)
+	</div>
+}
+
+// Credentials are an admin's new credentials, in the dialog the site shows its identities' in, shown once
+templ Credentials(url string, credentials *controlmodels.SiteIdentityCredentials) {
+	{{ password := "" }}
+	if credentials.Password != nil {
+		{{ password = *credentials.Password }}
+	}
+	@site_settings_templ.CredentialsModal(url, credentials.Name, password, credentials.TotpSecret, nil, false)
+}
+
+templ RoleChanged(admin *controlmodels.ControlAdmin) {
+	@successtoast.Toast(admin.Name + " is now " + RoleLabel(admin.Role))
+}
+
+templ Deleted(admin *controlmodels.ControlAdmin) {
+	@successtoast.Toast(admin.Name + " deleted")
+}

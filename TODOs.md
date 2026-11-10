@@ -31,7 +31,8 @@
     1. Show bad users
     1. Block IP addresses
     1. Restore one site from its backup
-    1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
+    1. P4: Sign out a control admin whose password or TOTP another resets, as a reset site identity is; its control
+       sign in, which lasts an hour, keeps working until then
     1. P4: Measure each site's DB tables in the resource check and keep them, as a site's page reads every page of its DB
        (SQLite's `dbstat`) to split its DB size bar, which a DB of hundreds of MB takes a while to do
 

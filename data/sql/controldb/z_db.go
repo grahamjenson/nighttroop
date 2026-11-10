@@ -24,6 +24,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.allControlIdentitiesStmt, err = db.PrepareContext(ctx, allControlIdentities); err != nil {
+		return nil, fmt.Errorf("error preparing query AllControlIdentities: %w", err)
+	}
 	if q.allSiteIdentitiesStmt, err = db.PrepareContext(ctx, allSiteIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllSiteIdentities: %w", err)
 	}
@@ -77,6 +80,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteConnectorStmt, err = db.PrepareContext(ctx, deleteConnector); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteConnector: %w", err)
+	}
+	if q.deleteControlIdentityStmt, err = db.PrepareContext(ctx, deleteControlIdentity); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteControlIdentity: %w", err)
+	}
+	if q.deleteControlIdentityPasskeysStmt, err = db.PrepareContext(ctx, deleteControlIdentityPasskeys); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteControlIdentityPasskeys: %w", err)
 	}
 	if q.deleteControlPasskeyStmt, err = db.PrepareContext(ctx, deleteControlPasskey); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteControlPasskey: %w", err)
@@ -252,6 +261,15 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateConnectorReportsSuccessStmt, err = db.PrepareContext(ctx, updateConnectorReportsSuccess); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateConnectorReportsSuccess: %w", err)
 	}
+	if q.updateControlIdentityPasswordStmt, err = db.PrepareContext(ctx, updateControlIdentityPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateControlIdentityPassword: %w", err)
+	}
+	if q.updateControlIdentityRoleStmt, err = db.PrepareContext(ctx, updateControlIdentityRole); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateControlIdentityRole: %w", err)
+	}
+	if q.updateControlIdentityTOTPStmt, err = db.PrepareContext(ctx, updateControlIdentityTOTP); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateControlIdentityTOTP: %w", err)
+	}
 	if q.updateControlPasskeyUsedStmt, err = db.PrepareContext(ctx, updateControlPasskeyUsed); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateControlPasskeyUsed: %w", err)
 	}
@@ -296,6 +314,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.allControlIdentitiesStmt != nil {
+		if cerr := q.allControlIdentitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allControlIdentitiesStmt: %w", cerr)
+		}
+	}
 	if q.allSiteIdentitiesStmt != nil {
 		if cerr := q.allSiteIdentitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allSiteIdentitiesStmt: %w", cerr)
@@ -384,6 +407,16 @@ func (q *Queries) Close() error {
 	if q.deleteConnectorStmt != nil {
 		if cerr := q.deleteConnectorStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteConnectorStmt: %w", cerr)
+		}
+	}
+	if q.deleteControlIdentityStmt != nil {
+		if cerr := q.deleteControlIdentityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteControlIdentityStmt: %w", cerr)
+		}
+	}
+	if q.deleteControlIdentityPasskeysStmt != nil {
+		if cerr := q.deleteControlIdentityPasskeysStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteControlIdentityPasskeysStmt: %w", cerr)
 		}
 	}
 	if q.deleteControlPasskeyStmt != nil {
@@ -676,6 +709,21 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateConnectorReportsSuccessStmt: %w", cerr)
 		}
 	}
+	if q.updateControlIdentityPasswordStmt != nil {
+		if cerr := q.updateControlIdentityPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateControlIdentityPasswordStmt: %w", cerr)
+		}
+	}
+	if q.updateControlIdentityRoleStmt != nil {
+		if cerr := q.updateControlIdentityRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateControlIdentityRoleStmt: %w", cerr)
+		}
+	}
+	if q.updateControlIdentityTOTPStmt != nil {
+		if cerr := q.updateControlIdentityTOTPStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateControlIdentityTOTPStmt: %w", cerr)
+		}
+	}
 	if q.updateControlPasskeyUsedStmt != nil {
 		if cerr := q.updateControlPasskeyUsedStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateControlPasskeyUsedStmt: %w", cerr)
@@ -780,6 +828,7 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                                      DBTX
 	tx                                      *sql.Tx
+	allControlIdentitiesStmt                *sql.Stmt
 	allSiteIdentitiesStmt                   *sql.Stmt
 	archiveSitesStmt                        *sql.Stmt
 	countActiveIdentitiesStmt               *sql.Stmt
@@ -798,6 +847,8 @@ type Queries struct {
 	createSiteIdentityPasskeyStmt           *sql.Stmt
 	deleteAllSiteIdentitiesStmt             *sql.Stmt
 	deleteConnectorStmt                     *sql.Stmt
+	deleteControlIdentityStmt               *sql.Stmt
+	deleteControlIdentityPasskeysStmt       *sql.Stmt
 	deleteControlPasskeyStmt                *sql.Stmt
 	deletePushCredentialStmt                *sql.Stmt
 	deletePushRegistrationStmt              *sql.Stmt
@@ -856,6 +907,9 @@ type Queries struct {
 	updateConnectorAttemptStmt              *sql.Stmt
 	updateConnectorReportsFailureStmt       *sql.Stmt
 	updateConnectorReportsSuccessStmt       *sql.Stmt
+	updateControlIdentityPasswordStmt       *sql.Stmt
+	updateControlIdentityRoleStmt           *sql.Stmt
+	updateControlIdentityTOTPStmt           *sql.Stmt
 	updateControlPasskeyUsedStmt            *sql.Stmt
 	updatePublicSiteCreationStmt            *sql.Stmt
 	updateRateLimitsStmt                    *sql.Stmt
@@ -875,6 +929,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                                      tx,
 		tx:                                      tx,
+		allControlIdentitiesStmt:                q.allControlIdentitiesStmt,
 		allSiteIdentitiesStmt:                   q.allSiteIdentitiesStmt,
 		archiveSitesStmt:                        q.archiveSitesStmt,
 		countActiveIdentitiesStmt:               q.countActiveIdentitiesStmt,
@@ -893,6 +948,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createSiteIdentityPasskeyStmt:           q.createSiteIdentityPasskeyStmt,
 		deleteAllSiteIdentitiesStmt:             q.deleteAllSiteIdentitiesStmt,
 		deleteConnectorStmt:                     q.deleteConnectorStmt,
+		deleteControlIdentityStmt:               q.deleteControlIdentityStmt,
+		deleteControlIdentityPasskeysStmt:       q.deleteControlIdentityPasskeysStmt,
 		deleteControlPasskeyStmt:                q.deleteControlPasskeyStmt,
 		deletePushCredentialStmt:                q.deletePushCredentialStmt,
 		deletePushRegistrationStmt:              q.deletePushRegistrationStmt,
@@ -951,6 +1008,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateConnectorAttemptStmt:              q.updateConnectorAttemptStmt,
 		updateConnectorReportsFailureStmt:       q.updateConnectorReportsFailureStmt,
 		updateConnectorReportsSuccessStmt:       q.updateConnectorReportsSuccessStmt,
+		updateControlIdentityPasswordStmt:       q.updateControlIdentityPasswordStmt,
+		updateControlIdentityRoleStmt:           q.updateControlIdentityRoleStmt,
+		updateControlIdentityTOTPStmt:           q.updateControlIdentityTOTPStmt,
 		updateControlPasskeyUsedStmt:            q.updateControlPasskeyUsedStmt,
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
 		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
