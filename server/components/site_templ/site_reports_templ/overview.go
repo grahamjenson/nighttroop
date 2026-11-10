@@ -47,6 +47,48 @@ func cgmActiveNote(p *sitemodels.SiteSummaryPeriod) string {
 	return fmt.Sprintf("Under %.0f%%, so these numbers may not be typical", cgmActiveGoal)
 }
 
+// previousOf is the report before, or an empty one when there is none, so its numbers are all missing
+func previousOf(previous *sitemodels.SiteSummaryPeriod) *sitemodels.SiteSummaryPeriod {
+	if previous == nil {
+		return &sitemodels.SiteSummaryPeriod{}
+	}
+	return previous
+}
+
+// previousName is what the report before p is, as the previous 7 days or the previous month
+func previousName(p *sitemodels.SiteSummaryPeriod) string {
+	if n, ok := sitemodels.ReportDays[p.Period]; ok {
+		return fmt.Sprintf("the previous %d days", n)
+	}
+	return map[string]string{"day": "the day before", "month": "the previous month"}[p.Period]
+}
+
+// change is how much a number of the report rose or fell from the one before, to decimals places, with what it is
+// in, as ▲ 0.3 mmol/L or ▼ 4%, "No change" when the same, or "" when either is missing
+func change(now, before *float64, decimals int, unit string) string {
+	if now == nil || before == nil {
+		return ""
+	}
+	difference := consts.Round(*now-*before, decimals)
+	switch {
+	case difference > 0:
+		return fmt.Sprintf("▲ %.*f%s", decimals, difference, unit)
+	case difference < 0:
+		return fmt.Sprintf("▼ %.*f%s", decimals, -difference, unit)
+	}
+	return "No change"
+}
+
+// glucoseChange is how much the average glucose rose or fell from the report before, in its units, mmol/L to one
+// decimal place and mg/dL whole
+func glucoseChange(p, previous *sitemodels.SiteSummaryPeriod) string {
+	decimals := 0
+	if *p.Units == consts.UnitsMMOLL {
+		decimals = 1
+	}
+	return change(p.Mean, previousOf(previous).Mean, decimals, " "+string(*p.Units))
+}
+
 // glucoseText is glucose in the units, mmol/L to one decimal place and mg/dL whole, or "–" for none
 func glucoseText(v *float64, units *consts.Units) string {
 	if v == nil {
