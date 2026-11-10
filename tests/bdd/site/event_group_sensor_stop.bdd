@@ -16,7 +16,13 @@ ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Sensor Stop
 // It has no events to pick, just its time, notes, and its sensor's code and transmitter
 ASSERT_VISIBLE #site--event-group--create--no-events
 ASSERT_NOT_VISIBLE #site--event-group--create--insulin-dose-id
+// A new time finds its events again, which lands before it is added
+HOLD /data/event-groups/choices
 INPUT #site--event-group--create--occurred-at 2026-01-02T08:00
+CLICK #site--event-group--create--reason
+ASSERT_HELD /data/event-groups/choices
+RELEASE /data/event-groups/choices
+ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--no-events
 INPUT #site--event-group--create--notes Sensor failed
 CLICK #site--event-group--create--submit
 ASSERT_STATUS 201
@@ -33,7 +39,13 @@ ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Sensor Change
 ASSERT_VISIBLE #site--event-group--create--no-events
 ASSERT_VISIBLE #site--event-group--create--sensor-code
 ASSERT_VISIBLE #site--event-group--create--transmitter-id
+// A new time finds its events again, which lands before it is added
+HOLD /data/event-groups/choices
 INPUT #site--event-group--create--occurred-at 2026-01-02T09:00
+CLICK #site--event-group--create--reason
+ASSERT_HELD /data/event-groups/choices
+RELEASE /data/event-groups/choices
+ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--no-events
 INPUT #site--event-group--create--sensor-code 1234
 INPUT #site--event-group--create--transmitter-id 8G1234
 INPUT #site--event-group--create--notes Left arm
