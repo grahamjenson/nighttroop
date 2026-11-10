@@ -168,9 +168,10 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	return summary, nil
 }
 
-// addMinutes works out the targets and basal in force each minute of the summary
+// addMinutes works out the targets and basal in force each minute of the summary. A profile sent without its own
+// timezone is read in the site's, as the daily summaries are, not the viewer's.
 func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) (herr *apiutils.HTTPError) {
-	summary.Minutes, herr = summaryMinutes(ctx, q, summary.Since, time.Now().UnixMilli(), summary.Units, siteContext.GetSettings().Location(), siteContext, summary.TempTargets, summary.TempBasals)
+	summary.Minutes, herr = summaryMinutes(ctx, q, summary.Since, time.Now().UnixMilli(), summary.Units, siteContext.GetSiteTimezone(), siteContext, summary.TempTargets, summary.TempBasals)
 	return herr
 }
 

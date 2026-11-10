@@ -14,20 +14,29 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
-	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // periods are what a report can be of
 var periods = []struct{ Period, Label string }{{"day", "Day"}, {"week", "Week"}, {"fortnight", "Fortnight"}, {"month", "Month"}}
 
+// reportLocation is the site's own timezone, whatever the viewer's: a report's days, weeks and months are built from
+// midnight in it, so its dates, days and links are the site's too
+func reportLocation(ctx context.Context) *time.Location {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.GetSiteTimezone()
+	}
+	return time.UTC
+}
+
 // days are a report's first and last days, the last no later than today, in the site's timezone
 func days(ctx context.Context, p *sitemodels.SiteSummaryPeriod) (time.Time, time.Time) {
-	location := site_data_templ.Location(ctx)
+	location := reportLocation(ctx)
 	last := time.UnixMilli(p.End).In(location).AddDate(0, 0, -1)
 	if now := time.Now().In(location); last.After(now) {
 		last = now
@@ -85,7 +94,7 @@ func periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) templ.Co
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 60, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 69, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -124,7 +133,7 @@ func periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) templ.Co
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(title(ctx, p))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 65, Col: 114}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 74, Col: 114}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -176,7 +185,7 @@ func periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) templ.Co
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(kind.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 74, Col: 17}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 83, Col: 17}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -258,7 +267,7 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(first.Format("Mon 2 Jan"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 97, Col: 126}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 106, Col: 126}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -271,7 +280,7 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(last.Format("Mon 2 Jan 2006"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 97, Col: 163}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 106, Col: 163}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -336,7 +345,7 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression(chart.ChartID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 114, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 123, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -497,7 +506,7 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 							var templ_7745c5c3_Var22 string
 							templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(date.Format("Mon 2 Jan 2006"))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 139, Col: 39}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 148, Col: 39}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 							if templ_7745c5c3_Err != nil {
@@ -524,7 +533,7 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 							var templ_7745c5c3_Var24 string
 							templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(display.Value(row.Dose, " U"))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 142, Col: 39}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 151, Col: 39}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 							if templ_7745c5c3_Err != nil {
@@ -693,7 +702,7 @@ func stat(id, label, text string) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 184, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 193, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -706,7 +715,7 @@ func stat(id, label, text string) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 185, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 194, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 		if templ_7745c5c3_Err != nil {
@@ -719,7 +728,7 @@ func stat(id, label, text string) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 185, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 194, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -768,7 +777,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--summaries--" + kind.Period).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 199, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 208, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -781,7 +790,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(kind.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 200, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 209, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -842,7 +851,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 							var templ_7745c5c3_Var40 string
 							templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(kind.Label)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 205, Col: 20}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 214, Col: 20}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 							if templ_7745c5c3_Err != nil {
@@ -870,7 +879,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 								var templ_7745c5c3_Var42 string
 								templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(column)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 209, Col: 17}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 218, Col: 17}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 								if templ_7745c5c3_Err != nil {
@@ -915,7 +924,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 						var templ_7745c5c3_Var44 string
 						templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(kind.Period)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 218, Col: 25}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 227, Col: 25}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 						if templ_7745c5c3_Err != nil {
@@ -951,7 +960,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								path := link("agp", p.Period, time.UnixMilli(p.Start).In(site_data_templ.Location(ctx)))
+								path := link("agp", p.Period, time.UnixMilli(p.Start).In(reportLocation(ctx)))
 								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<a class=\"text-primary underline\" href=\"")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
@@ -959,7 +968,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 								var templ_7745c5c3_Var47 string
 								templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(path)).ResolveURL(ctx)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 227, Col: 69}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 236, Col: 69}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 								if templ_7745c5c3_Err != nil {
@@ -972,7 +981,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 								var templ_7745c5c3_Var48 string
 								templ_7745c5c3_Var48, templ_7745c5c3_Err = templruntime.NewAttributeExpression(path).Resolve(ctx)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 227, Col: 85}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 236, Col: 85}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 								if templ_7745c5c3_Err != nil {
@@ -985,7 +994,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 								var templ_7745c5c3_Var49 string
 								templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(title(ctx, p))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 227, Col: 168}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 236, Col: 168}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 								if templ_7745c5c3_Err != nil {
@@ -1017,7 +1026,7 @@ func SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin
 									var templ_7745c5c3_Var51 string
 									templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 231, Col: 17}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 240, Col: 17}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 									if templ_7745c5c3_Err != nil {

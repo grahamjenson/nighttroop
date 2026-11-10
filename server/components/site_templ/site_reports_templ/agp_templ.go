@@ -1452,7 +1452,7 @@ func dailyProfiles(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSumm
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		weeks := profileWeeks(ctx, p, daily, site_data_templ.Location(ctx))
+		weeks := profileWeeks(ctx, p, daily, reportLocation(ctx))
 		g := graph{Width: 288, Height: 60, Left: 0, Right: 288, Top: 2, Bottom: 58, Min: p.Units.FromMGDL(40), Max: p.Units.FromMGDL(300), Units: p.Units}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<div class=\"grid grid-cols-7 border-l border-t border-gray-200 text-xs\">")
 		if templ_7745c5c3_Err != nil {

@@ -14,7 +14,7 @@ import (
 // coefficient of variation, its time in each range, how much of it the CGM read, its best day, a graph of its day from
 // midnight averaged over its days, and its daily dose and carbs
 templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily) {
-	{{ now, location := time.Now(), site_data_templ.Location(ctx) }}
+	{{ now, location := time.Now(), reportLocation(ctx) }}
 	{{ low, high := site_data_templ.RangeBounds(ctx) }}
 	@heading.Title("Overview")
 	<div id="site--reports" class="w-full space-y-4 py-4">

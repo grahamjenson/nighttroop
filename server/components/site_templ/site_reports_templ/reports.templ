@@ -7,20 +7,29 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
-	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // periods are what a report can be of
 var periods = []struct{ Period, Label string }{{"day", "Day"}, {"week", "Week"}, {"fortnight", "Fortnight"}, {"month", "Month"}}
 
+// reportLocation is the site's own timezone, whatever the viewer's: a report's days, weeks and months are built from
+// midnight in it, so its dates, days and links are the site's too
+func reportLocation(ctx context.Context) *time.Location {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.GetSiteTimezone()
+	}
+	return time.UTC
+}
+
 // days are a report's first and last days, the last no later than today, in the site's timezone
 func days(ctx context.Context, p *sitemodels.SiteSummaryPeriod) (time.Time, time.Time) {
-	location := site_data_templ.Location(ctx)
+	location := reportLocation(ctx)
 	last := time.UnixMilli(p.End).In(location).AddDate(0, 0, -1)
 	if now := time.Now().In(location); last.After(now) {
 		last = now
@@ -223,7 +232,7 @@ templ SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admi
 						for _, p := range summaries[kind.Period] {
 							@table.Row() {
 								@table.Cell() {
-									{{ path := link("agp", p.Period, time.UnixMilli(p.Start).In(site_data_templ.Location(ctx))) }}
+									{{ path := link("agp", p.Period, time.UnixMilli(p.Start).In(reportLocation(ctx))) }}
 									<a class="text-primary underline" href={ templ.SafeURL(path) } hx-get={ path } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ title(ctx, p) }</a>
 								}
 								for _, value := range []string{fmt.Sprint(p.Days), display.Value(p.TimeInRange, "%"), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {

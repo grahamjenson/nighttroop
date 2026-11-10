@@ -1,0 +1,24 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// The site is in Kiritimati (UTC+14) and the admin's own timezone is Pago Pago (UTC-11), so their dates always differ
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--site--timezone Pacific/Kiritimati
+CLICK #site--settings--site--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--timezone Pacific/Pago_Pago
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+
+// A report is of the site's days, as its summaries are built from midnight in the site's timezone: today's is dated
+// the site's today, and its day is that date, whatever the admin's own timezone
+GOTO /reports/agp/day-{{ now "Pacific/Kiritimati" "2006-01-02" }}
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--reports--title:text-is("{{ now "Pacific/Kiritimati" "Mon 2 Jan 2006" }}")
+ASSERT_VISIBLE #site--agp--day-{{ now "Pacific/Kiritimati" "2006-01-02" }}
+SCREENSHOT report_in_site_timezone
