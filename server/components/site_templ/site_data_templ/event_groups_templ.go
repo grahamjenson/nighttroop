@@ -953,6 +953,18 @@ func EventGroupModal(eventGroup *sitemodels.SiteEventGroup) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = readingDetail("Pump ID", orDash(eventGroup.PumpID)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = readingDetail("Pump Serial", orDash(eventGroup.PumpSerial)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = readingDetail("Pump Type", orDash(eventGroup.PumpType)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			templ_7745c5c3_Err = RecordDetails(Record{ID: eventGroup.ID, UtcOffset: eventGroup.UtcOffsetMinutes, App: eventGroup.CreatedByAppName, Device: eventGroup.CreatedByDeviceName, CreatedBy: eventGroup.CreatedByIdentityName, Created: eventGroup.CreatedAt, Updated: eventGroup.UpdatedAt, UpdatedBy: eventGroup.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

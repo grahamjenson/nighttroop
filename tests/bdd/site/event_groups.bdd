@@ -54,3 +54,18 @@ CLICK #site--nav--data
 CLICK #site--data--temp-basals-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--temp-basal--empty
+
+// AAPS names its pump on every treatment, which a group's details show
+HTTP
+NAME aaps_bolus
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"created_at": "{{ time 1 }}", "eventType": "Bolus", "insulin": 0.5, "pumpId": "4102", "pumpSerial": "AAPS1234", "pumpType": "DANA_I"}]
+ASSERT_STATUS 200
+BROWSE
+GOTO /data/event-groups
+ASSERT_STATUS 200
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Bolus"))
+ASSERT_VISIBLE #site--event-group--details
+ASSERT_TEXT_VISIBLE AAPS1234
+ASSERT_TEXT_VISIBLE DANA_I
+SCREENSHOT event_group_pump

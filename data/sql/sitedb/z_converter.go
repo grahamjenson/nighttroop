@@ -208,25 +208,13 @@ func ComponentEventFromView(source ComponentEventsVw) ComponentEvent {
 		xstring2 := *source.TransmitterID
 		sitedbComponentEvent.TransmitterID = &xstring2
 	}
-	if source.PumpID != nil {
-		xstring3 := *source.PumpID
-		sitedbComponentEvent.PumpID = &xstring3
-	}
-	if source.PumpSerial != nil {
-		xstring4 := *source.PumpSerial
-		sitedbComponentEvent.PumpSerial = &xstring4
-	}
-	if source.PumpType != nil {
-		xstring5 := *source.PumpType
-		sitedbComponentEvent.PumpType = &xstring5
-	}
 	if source.Notes != nil {
-		xstring6 := *source.Notes
-		sitedbComponentEvent.Notes = &xstring6
+		xstring3 := *source.Notes
+		sitedbComponentEvent.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring7 := *source.Reason
-		sitedbComponentEvent.Reason = &xstring7
+		xstring4 := *source.Reason
+		sitedbComponentEvent.Reason = &xstring4
 	}
 	if source.DeletedAt != nil {
 		xint64 := *source.DeletedAt
@@ -250,16 +238,16 @@ func ComponentEventFromView(source ComponentEventsVw) ComponentEvent {
 		sitedbComponentEvent.UpdatedByIdentityID = &xint643
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring8 := *source.UpdatedByIdentityName
-		sitedbComponentEvent.UpdatedByIdentityName = &xstring8
+		xstring5 := *source.UpdatedByIdentityName
+		sitedbComponentEvent.UpdatedByIdentityName = &xstring5
 	}
 	if source.CreatedByAppName != nil {
-		xstring9 := *source.CreatedByAppName
-		sitedbComponentEvent.CreatedByAppName = &xstring9
+		xstring6 := *source.CreatedByAppName
+		sitedbComponentEvent.CreatedByAppName = &xstring6
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring10 := *source.CreatedByDeviceName
-		sitedbComponentEvent.CreatedByDeviceName = &xstring10
+		xstring7 := *source.CreatedByDeviceName
+		sitedbComponentEvent.CreatedByDeviceName = &xstring7
 	}
 	if source.CreatedByIdentityID != nil {
 		xint644 := *source.CreatedByIdentityID
@@ -282,25 +270,13 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 		xstring2 := *source.TransmitterID
 		sitedbCreateComponentEventParams.TransmitterID = &xstring2
 	}
-	if source.PumpID != nil {
-		xstring3 := *source.PumpID
-		sitedbCreateComponentEventParams.PumpID = &xstring3
-	}
-	if source.PumpSerial != nil {
-		xstring4 := *source.PumpSerial
-		sitedbCreateComponentEventParams.PumpSerial = &xstring4
-	}
-	if source.PumpType != nil {
-		xstring5 := *source.PumpType
-		sitedbCreateComponentEventParams.PumpType = &xstring5
-	}
 	if source.Notes != nil {
-		xstring6 := *source.Notes
-		sitedbCreateComponentEventParams.Notes = &xstring6
+		xstring3 := *source.Notes
+		sitedbCreateComponentEventParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring7 := *source.Reason
-		sitedbCreateComponentEventParams.Reason = &xstring7
+		xstring4 := *source.Reason
+		sitedbCreateComponentEventParams.Reason = &xstring4
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -308,12 +284,12 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 	}
 	sitedbCreateComponentEventParams.OccurredAt = source.OccurredAt
 	if source.CreatedByAppName != nil {
-		xstring8 := *source.CreatedByAppName
-		sitedbCreateComponentEventParams.CreatedByAppName = &xstring8
+		xstring5 := *source.CreatedByAppName
+		sitedbCreateComponentEventParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring9 := *source.CreatedByDeviceName
-		sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring9
+		xstring6 := *source.CreatedByDeviceName
+		sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateComponentEventParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -334,33 +310,21 @@ func ComponentEventToUpdate(source ComponentEvent) UpdateComponentEventParams {
 		xstring2 := *source.TransmitterID
 		sitedbUpdateComponentEventParams.TransmitterID = &xstring2
 	}
-	if source.PumpID != nil {
-		xstring3 := *source.PumpID
-		sitedbUpdateComponentEventParams.PumpID = &xstring3
-	}
-	if source.PumpSerial != nil {
-		xstring4 := *source.PumpSerial
-		sitedbUpdateComponentEventParams.PumpSerial = &xstring4
-	}
-	if source.PumpType != nil {
-		xstring5 := *source.PumpType
-		sitedbUpdateComponentEventParams.PumpType = &xstring5
-	}
 	if source.Notes != nil {
-		xstring6 := *source.Notes
-		sitedbUpdateComponentEventParams.Notes = &xstring6
+		xstring3 := *source.Notes
+		sitedbUpdateComponentEventParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring7 := *source.Reason
-		sitedbUpdateComponentEventParams.Reason = &xstring7
+		xstring4 := *source.Reason
+		sitedbUpdateComponentEventParams.Reason = &xstring4
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint64 := *source.UpdatedByIdentityID
 		sitedbUpdateComponentEventParams.UpdatedByIdentityID = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring8 := *source.UpdatedByIdentityName
-		sitedbUpdateComponentEventParams.UpdatedByIdentityName = &xstring8
+		xstring5 := *source.UpdatedByIdentityName
+		sitedbUpdateComponentEventParams.UpdatedByIdentityName = &xstring5
 	}
 	sitedbUpdateComponentEventParams.ID = source.ID
 	return sitedbUpdateComponentEventParams
@@ -569,18 +533,30 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring17 := *source.SentHash
 		sitedbCreateEventGroupParams.SentHash = &xstring17
 	}
+	if source.PumpID != nil {
+		xstring18 := *source.PumpID
+		sitedbCreateEventGroupParams.PumpID = &xstring18
+	}
+	if source.PumpSerial != nil {
+		xstring19 := *source.PumpSerial
+		sitedbCreateEventGroupParams.PumpSerial = &xstring19
+	}
+	if source.PumpType != nil {
+		xstring20 := *source.PumpType
+		sitedbCreateEventGroupParams.PumpType = &xstring20
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint643 := *source.UtcOffsetMinutes
 		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint643
 	}
 	if source.CreatedByAppName != nil {
-		xstring18 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring18
+		xstring21 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring21
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring19 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring19
+		xstring22 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring22
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -672,13 +648,25 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		xstring17 := *source.SentHash
 		sitedbUpdateEventGroupParams.SentHash = &xstring17
 	}
+	if source.PumpID != nil {
+		xstring18 := *source.PumpID
+		sitedbUpdateEventGroupParams.PumpID = &xstring18
+	}
+	if source.PumpSerial != nil {
+		xstring19 := *source.PumpSerial
+		sitedbUpdateEventGroupParams.PumpSerial = &xstring19
+	}
+	if source.PumpType != nil {
+		xstring20 := *source.PumpType
+		sitedbUpdateEventGroupParams.PumpType = &xstring20
+	}
 	if source.UpdatedByIdentityID != nil {
 		xint642 := *source.UpdatedByIdentityID
 		sitedbUpdateEventGroupParams.UpdatedByIdentityID = &xint642
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring18 := *source.UpdatedByIdentityName
-		sitedbUpdateEventGroupParams.UpdatedByIdentityName = &xstring18
+		xstring21 := *source.UpdatedByIdentityName
+		sitedbUpdateEventGroupParams.UpdatedByIdentityName = &xstring21
 	}
 	sitedbUpdateEventGroupParams.ID = source.ID
 	return sitedbUpdateEventGroupParams
@@ -2370,25 +2358,13 @@ func sitedbComponentEventsVwToSitedbComponentEventsVw(source ComponentEventsVw) 
 		xstring4 := *source.TransmitterID
 		sitedbComponentEventsVw.TransmitterID = &xstring4
 	}
-	if source.PumpID != nil {
-		xstring5 := *source.PumpID
-		sitedbComponentEventsVw.PumpID = &xstring5
-	}
-	if source.PumpSerial != nil {
-		xstring6 := *source.PumpSerial
-		sitedbComponentEventsVw.PumpSerial = &xstring6
-	}
-	if source.PumpType != nil {
-		xstring7 := *source.PumpType
-		sitedbComponentEventsVw.PumpType = &xstring7
-	}
 	if source.Notes != nil {
-		xstring8 := *source.Notes
-		sitedbComponentEventsVw.Notes = &xstring8
+		xstring5 := *source.Notes
+		sitedbComponentEventsVw.Notes = &xstring5
 	}
 	if source.Reason != nil {
-		xstring9 := *source.Reason
-		sitedbComponentEventsVw.Reason = &xstring9
+		xstring6 := *source.Reason
+		sitedbComponentEventsVw.Reason = &xstring6
 	}
 	if source.DeletedAt != nil {
 		xint64 := *source.DeletedAt
@@ -2415,24 +2391,24 @@ func sitedbComponentEventsVwToSitedbComponentEventsVw(source ComponentEventsVw) 
 		sitedbComponentEventsVw.UpdatedByIdentityID = &xint646
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring10 := *source.UpdatedByIdentityName
-		sitedbComponentEventsVw.UpdatedByIdentityName = &xstring10
+		xstring7 := *source.UpdatedByIdentityName
+		sitedbComponentEventsVw.UpdatedByIdentityName = &xstring7
 	}
 	if source.CreatedByAppName != nil {
-		xstring11 := *source.CreatedByAppName
-		sitedbComponentEventsVw.CreatedByAppName = &xstring11
+		xstring8 := *source.CreatedByAppName
+		sitedbComponentEventsVw.CreatedByAppName = &xstring8
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring12 := *source.CreatedByDeviceName
-		sitedbComponentEventsVw.CreatedByDeviceName = &xstring12
+		xstring9 := *source.CreatedByDeviceName
+		sitedbComponentEventsVw.CreatedByDeviceName = &xstring9
 	}
 	if source.CreatedByIdentityID != nil {
 		xint647 := *source.CreatedByIdentityID
 		sitedbComponentEventsVw.CreatedByIdentityID = &xint647
 	}
 	if source.CreatedByIdentityName != nil {
-		xstring13 := *source.CreatedByIdentityName
-		sitedbComponentEventsVw.CreatedByIdentityName = &xstring13
+		xstring10 := *source.CreatedByIdentityName
+		sitedbComponentEventsVw.CreatedByIdentityName = &xstring10
 	}
 	return sitedbComponentEventsVw
 }
@@ -2508,13 +2484,25 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xstring15 := *source.SentHash
 		sitedbEventGroup.SentHash = &xstring15
 	}
+	if source.PumpID != nil {
+		xstring16 := *source.PumpID
+		sitedbEventGroup.PumpID = &xstring16
+	}
+	if source.PumpSerial != nil {
+		xstring17 := *source.PumpSerial
+		sitedbEventGroup.PumpSerial = &xstring17
+	}
+	if source.PumpType != nil {
+		xstring18 := *source.PumpType
+		sitedbEventGroup.PumpType = &xstring18
+	}
 	if source.Notes != nil {
-		xstring16 := *source.Notes
-		sitedbEventGroup.Notes = &xstring16
+		xstring19 := *source.Notes
+		sitedbEventGroup.Notes = &xstring19
 	}
 	if source.Reason != nil {
-		xstring17 := *source.Reason
-		sitedbEventGroup.Reason = &xstring17
+		xstring20 := *source.Reason
+		sitedbEventGroup.Reason = &xstring20
 	}
 	if source.DurationMinutes != nil {
 		xint642 := *source.DurationMinutes
@@ -2532,20 +2520,20 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 	sitedbEventGroup.CreatedAt = source.CreatedAt
 	sitedbEventGroup.UpdatedAt = source.UpdatedAt
 	if source.CreatedByAppName != nil {
-		xstring18 := *source.CreatedByAppName
-		sitedbEventGroup.CreatedByAppName = &xstring18
+		xstring21 := *source.CreatedByAppName
+		sitedbEventGroup.CreatedByAppName = &xstring21
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring19 := *source.CreatedByDeviceName
-		sitedbEventGroup.CreatedByDeviceName = &xstring19
+		xstring22 := *source.CreatedByDeviceName
+		sitedbEventGroup.CreatedByDeviceName = &xstring22
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint645 := *source.UpdatedByIdentityID
 		sitedbEventGroup.UpdatedByIdentityID = &xint645
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring20 := *source.UpdatedByIdentityName
-		sitedbEventGroup.UpdatedByIdentityName = &xstring20
+		xstring23 := *source.UpdatedByIdentityName
+		sitedbEventGroup.UpdatedByIdentityName = &xstring23
 	}
 	if source.CreatedByIdentityID != nil {
 		xint646 := *source.CreatedByIdentityID

@@ -59,9 +59,6 @@ type ComponentEvent struct {
 	EventType             string
 	SensorCode            *string
 	TransmitterID         *string
-	PumpID                *string
-	PumpSerial            *string
-	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -82,9 +79,6 @@ type ComponentEventsVw struct {
 	EventType             *string
 	SensorCode            *string
 	TransmitterID         *string
-	PumpID                *string
-	PumpSerial            *string
-	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -154,6 +148,9 @@ type EventGroup struct {
 	OriginalDurationMs    *int64
 	DurationType          *string
 	SentHash              *string
+	PumpID                *string
+	PumpSerial            *string
+	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	DurationMinutes       *int64
