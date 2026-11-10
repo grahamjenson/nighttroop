@@ -482,9 +482,6 @@ func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.TDDReport(last, days), true)
 }
 
-// summaryLimits are how many of each period's kept summaries, newest first, the summaries report shows
-var summaryLimits = map[string]int64{"day": 31, "week": 26, "fortnight": 13, "month": 12}
-
 // SummariesReportHandler is the report of the site's kept summaries as tables of their numbers, a page for people, so
 // it has no JSON
 func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
@@ -496,9 +493,15 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
 		return
 	}
+	first, ok := site_reports_templ.SummariesMonth(r.URL.Query().Get("month"), time.Now(), siteContext.GetSiteTimezone())
+	if !ok {
+		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "month is this month or one of the past year's, as 2026-01"})
+		return
+	}
 	summaries := map[string][]*sitemodels.SiteSummaryPeriod{}
-	for period, limit := range summaryLimits {
-		rows, err := siteContext.SiteDB.Queries().SearchSummaryPeriods(r.Context(), sitedb.SearchSummaryPeriodsParams{Period: period, Limit: limit})
+	for period, dates := range site_reports_templ.SummariesDates(first) {
+		rows, err := siteContext.SiteDB.Queries().SearchSummaryPeriods(r.Context(), sitedb.SearchSummaryPeriodsParams{Period: period,
+			DateGTE: &dates[0], DateLTE: &dates[1], Limit: 31})
 		models, herr := apiutils.Searched(rows, err, "summary_periods", apiutils.WithContext(sitemodels.SummaryPeriodFromDB, siteContext))
 		if herr != nil {
 			writeError(w, r, siteContext.AcceptType, herr)
@@ -507,7 +510,7 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 		summaries[period] = models
 	}
 	admin := siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
-	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.SummariesReport(summaries, admin), true)
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.SummariesReport(first, summaries, admin), true)
 }
 
 // RegenerateSummariesHandler asks for the site's summaries to be built again from its data, which a background job

@@ -186,18 +186,35 @@ templ stat(id, label, text string) {
 	</div>
 }
 
-// SummariesReport is the site's kept summaries as tables of their numbers, a table for each period, newest first, each
-// opening its AGP report. An admin can have them all regenerated from the site's data.
-templ SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) {
+// SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, a table for
+// each period, newest first, each opening its AGP report: the month's days, the weeks and fortnights with a day in it,
+// and the months of its year. Arrows beside the month go to the month before and after. An admin can have them all
+// regenerated from the site's data.
+templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) {
+	{{ previous, next := summariesLinks(first, time.Now()) }}
 	@heading.Title("Summaries")
 	<div id="site--summaries" class="w-full space-y-4 py-4">
 		<div>
 			<h1 class="text-2xl font-bold">Summaries</h1>
-			<span class="text-sm text-gray-500">Each day, week, fortnight and month kept, built from the site's data</span>
+			<div class="flex items-center gap-1">
+				@arrowButton("site--summaries--previous", previous, "Previous month") {
+					@icon.ChevronLeft()
+				}
+				<span id="site--summaries--month" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ first.Format("January 2006") }</span>
+				@arrowButton("site--summaries--next", next, "Next month") {
+					@icon.ChevronRight()
+				}
+			</div>
+			<span class="text-sm text-gray-500">The month's days, the weeks and fortnights with a day in it, and its year's months, built from the site's data</span>
 		</div>
 		for _, kind := range periods {
 			<section id={ "site--summaries--" + kind.Period } class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-				<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{ kind.Label }s</h2>
+				<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+					{ kind.Label }s
+					if kind.Period == "month" {
+						of { first.Format("2006") }
+					}
+				</h2>
 				@table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}) {
 					@table.Header() {
 						@table.Row() {
@@ -215,8 +232,12 @@ templ SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admi
 						if len(summaries[kind.Period]) == 0 {
 							<tr>
 								<td colspan="5" class="whitespace-normal p-4 text-gray-500">
-									No { kind.Period }s kept yet. Each is made from whole days, so the first shows the day after readings
-									arrive.
+									if next != "" {
+										No { kind.Period }s kept in { emptyIn(kind.Period, first) }.
+									} else {
+										No { kind.Period }s kept yet. Each is made from whole days, so the first shows the day after readings
+										arrive.
+									}
 								</td>
 							</tr>
 						}
