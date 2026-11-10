@@ -5,10 +5,10 @@ import (
 	"strconv"
 
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -122,6 +122,7 @@ templ RateSettings(settings []config.RateSetting, admin bool) {
 		hx-target="this"
 		hx-swap="outerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
 	>
 		@table.Table(table.Props{Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
@@ -172,8 +173,5 @@ templ RateSettings(settings []config.RateSetting, admin bool) {
 templ RateSettingsSaved(settings []config.RateSetting, stats []config.RateLimiterStats) {
 	@RateSettings(settings, true)
 	@RateLimitStats(stats, true)
-	<div hx-swap-oob="beforeend:#toaster">
-		@toast.Toast(toast.Props{Title: "Success", Description: "Rate limits saved", Variant: toast.VariantSuccess,
-			Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true})
-	</div>
+	@successtoast.OOB("Rate limits saved")
 }

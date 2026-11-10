@@ -6,20 +6,15 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
-	"nighttroop.t1d.nz/server/components/ui/inputotp"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 // Setup is a new server's first page, asking for the setup code it printed to its logs
 templ Setup() {
 	@control_templ.ControlBase() {
-		<div class="flex flex-col items-center px-6 py-12 bg-slate-50">
-			<div class="setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white">
+		@authenticator.Page() {
+			@authenticator.Card("setup-target", true) {
 				<form hx-post="/setup" hx-target="closest .setup-target" hx-swap="outerHTML" hx-status:4xx="target:#toaster swap:beforeend" hx-status:5xx="target:#toaster swap:beforeend" class="space-y-4">
-					<div class="text-center">
-						<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
-						<h2 class="font-bold text-2xl">Set up Nighttroop</h2>
-					</div>
+					@authenticator.Title("Set up Nighttroop")
 					<p class="text-sm text-slate-600">
 						Nothing can be used until the control admin is made. The server printed a setup code to its logs
 						when it started; with Docker, find it with <code class="font-mono">docker compose logs nighttroop</code>.
@@ -30,18 +25,18 @@ templ Setup() {
 						}
 						@input.Input(input.Props{ID: "control--setup--code", Name: "code", Required: true, Attributes: templ.Attributes{"autocomplete": "off", "autocapitalize": "none"}})
 					}
-					@button.Button(button.Props{ID: "control--setup--submit", Type: button.TypeSubmit, Class: "w-full py-3 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg"}) {
+					@button.Button(button.Props{ID: "control--setup--submit", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
 						Continue
 					}
 				</form>
-			</div>
-		</div>
+			}
+		}
 	}
 }
 
 // SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered
 templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
-	<div class="setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4">
+	@authenticator.Card("setup-target space-y-4", true) {
 		<h2 class="font-bold text-2xl">Save the control admin's login</h2>
 		<p class="text-sm text-slate-600">It is shown once. Add the TOTP secret to your authenticator app, then enter its code to finish.</p>
 		<dl class="divide-y divide-slate-100 rounded-lg border border-slate-200 font-mono text-sm">
@@ -62,38 +57,25 @@ templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
 				@form.Label(form.LabelProps{For: "control--setup--otp"}) {
 					Code from your authenticator app
 				}
-				@inputotp.InputOTP(inputotp.Props{ID: "control--setup--otp", Name: "totp"}) {
-					@inputotp.Group() {
-						@inputotp.Slot(inputotp.SlotProps{Index: 0, InputID: "control--setup--otp-1"})
-						@inputotp.Slot(inputotp.SlotProps{Index: 1})
-						@inputotp.Slot(inputotp.SlotProps{Index: 2})
-						@inputotp.Separator()
-						@inputotp.Slot(inputotp.SlotProps{Index: 3})
-						@inputotp.Slot(inputotp.SlotProps{Index: 4})
-						@inputotp.Slot(inputotp.SlotProps{Index: 5})
-					}
-				}
+				@authenticator.CodeInput("control--setup--otp", "", "totp", false)
 			}
-			@button.Button(button.Props{ID: "control--setup--confirm", Type: button.TypeSubmit, Class: "w-full py-3 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg"}) {
+			@button.Button(button.Props{ID: "control--setup--confirm", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
 				Finish setup
 			}
 		</form>
-	</div>
+	}
 }
 
 templ SetupComplete() {
-	<div id="control--setup--complete" class="setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4 text-center">
-		<h2 class="font-bold text-2xl">Nighttroop is set up</h2>
-		<p class="text-sm text-slate-600">Log in with the control admin's login to start creating sites.</p>
-		@button.Button(button.Props{ID: "control--setup--login", Href: "/login", Class: "py-3 px-8 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg"}) {
-			Log in
-		}
-	</div>
-}
-
-// SetupFailed is a refused setup code's toast, or a refused TOTP code's
-templ SetupFailed(message string) {
-	@toast.Toast(toast.Props{Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter, Dismissible: true, Icon: true})
+	@authenticator.Card("setup-target", true) {
+		<div id="control--setup--complete" class="space-y-4 text-center">
+			<h2 class="font-bold text-2xl">Nighttroop is set up</h2>
+			<p class="text-sm text-slate-600">Log in with the control admin's login to start creating sites.</p>
+			@button.Button(button.Props{ID: "control--setup--login", Href: "/login", Size: button.SizeXl, Class: "px-8"}) {
+				Log in
+			}
+		</div>
+	}
 }
 
 templ row(id, label, value string) {

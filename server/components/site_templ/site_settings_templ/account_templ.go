@@ -17,9 +17,9 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -333,7 +333,8 @@ func MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path 
 							})
 							templ_7745c5c3_Err = button.Button(button.Props{ID: fmt.Sprintf("site--account--remove-passkey-%d", passkey.ID), Variant: button.VariantOutline, Size: button.SizeSm,
 								Attributes: templ.Attributes{"hx-delete": fmt.Sprintf("%s/passkeys/%d", path, passkey.ID), "hx-target": "#site--account",
-									"hx-swap": "outerHTML", "hx-confirm": "Remove this passkey? It will no longer sign you in."}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+									"hx-swap": "outerHTML", "hx-confirm": "Remove this passkey? It will no longer sign you in.",
+									"data-confirm-delete": "Remove"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -435,7 +436,8 @@ func AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) t
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,
 			Attributes: templ.Attributes{"hx-post": "/settings/account/truncate", "hx-target": "#site--account--storage", "hx-swap": "outerHTML",
-				"hx-status:4xx": "target:#toaster swap:beforeend", "hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+				"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
+				"hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -465,16 +467,7 @@ func AccountTruncated(sizeKB *int64) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div hx-swap-oob=\"beforeend:#toaster\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = toast.Toast(toast.Props{Title: "Site Truncated", Description: truncatedSize(sizeKB), Variant: toast.VariantSuccess,
-			Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</div>")
+		templ_7745c5c3_Err = successtoast.TitledOOB("Site Truncated", truncatedSize(sizeKB), 5000).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

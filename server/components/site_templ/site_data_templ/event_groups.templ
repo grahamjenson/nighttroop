@@ -289,10 +289,8 @@ templ EventGroupCreated(eventGroup *sitemodels.SiteEventGroup) {
 // EventGroupUpdated replaces the group's row, closes its details and shows a toast
 templ EventGroupUpdated(eventGroup *sitemodels.SiteEventGroup) {
 	@eventGroupRow(eventGroup)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Event Group Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Event Group Updated")
 }
 
 // EventGroupModal is the group's details, and a form to change its type, time and events

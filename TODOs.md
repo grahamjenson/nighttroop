@@ -55,12 +55,13 @@
 1. Docs hosting
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
-1. P4: Tag each endpoint in `clients/nighttroop/openapi.json` (site, data, settings, Nightscout), so the API docs'
-   menu groups its 51 endpoints, and give each a summary, as those without one are listed by their operation ID
 1. Performance testing (cost estimate for running full node)
 1. Accessibility:
     1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes
        the focus too
+1. P5: Name the reports header's and TDD title's days with `display.DayLayout` and `display.ShortDayLayout`
+   (`reports.templ`'s `title` and `TDDReport`), and draw the AGP's regions and the overview's bands from one map of
+   the glucose colours, as the summary, readings and glucose days are
 1. P3: Build the details modals' edit forms from their `addmodal` fields, as `EventGroupModal` does, so they edit every
    field the add form has with the same labels and help, and delete the `*Inputs` templs
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each

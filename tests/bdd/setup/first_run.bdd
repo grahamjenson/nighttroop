@@ -3,6 +3,9 @@ GOTO {{ server_url }}/
 ASSERT_PATH /setup
 ASSERT_VISIBLE #control--setup--code
 ASSERT_VISIBLE .setup-target h2:text-is("Set up Nighttroop")
+// Its card is in the middle of a grey page filling the window above the footer, as the control login's is, with
+// nothing to scroll
+ASSERT_FITS
 SCREENSHOT setup
 
 // A wrong setup code is refused, in an error toast

@@ -1,12 +1,11 @@
 package site_login_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/authenticator"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
-	"nighttroop.t1d.nz/server/components/ui/inputotp"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 // Login signs in an identity by its name and password, then its TOTP code. A name the link gives, such as the new site's
@@ -14,8 +13,8 @@ import (
 templ Login(name string) {
 	@site_templ.Base() {
 		// It fills the window, so the form is in its middle with nothing to scroll
-		<div class="flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50">
-			<div class="p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96">
+		@authenticator.Page() {
+			@authenticator.Card("login-form-target", false) {
 				<!-- Form updated with POST method -->
 				<form
 					id="site--login--form"
@@ -25,10 +24,7 @@ templ Login(name string) {
 					hx-status:4xx="target:#toaster swap:beforeend"
 					hx-status:5xx="target:#toaster swap:beforeend"
 				>
-					<div class="text-center mb-6">
-						<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
-						<h2 class="font-bold text-2xl">Nighttroop Login</h2>
-					</div>
+					@authenticator.Title("Nighttroop Login")
 					<!-- Username -->
 					@form.Item(form.ItemProps{}) {
 						@form.Label(form.LabelProps{
@@ -68,134 +64,51 @@ templ Login(name string) {
 					}
 					<div class="mt-4"></div>
 					<!-- Submit Button -->
-					@button.Button(button.Props{
-						ID:    "site--login-button",
-						Type:  button.TypeSubmit,
-						Class: "w-full py-3 px-4 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
-					}) {
+					@button.Button(button.Props{ID: "site--login-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
 						Log in
 					}
 				</form>
 				@PasskeyLogin("site--login")
-				@invalidAfterError("site--login--form")
-			</div>
-		</div>
+				@authenticator.InvalidAfterError("site--login--form")
+			}
+		}
 	}
 }
 
 // LoginTOTP is the login's second step, which takes the place of its first's form, so it stays in the window's middle
 templ LoginTOTP() {
-	<div class="p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96">
-			<!-- Form updated with POST method -->
-			<form
-				id="otp"
-				hx-post="/login/totp"
-				hx-target="body"
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-				class="needs-validation"
-			>
-				<div class="text-center mb-6">
-					<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
-					<h2 class="font-bold text-2xl">Nighttroop Login</h2>
-				</div>
-				<!-- TOTP -->
-				@form.Item() {
-					@form.Label(form.LabelProps{
-						For: "otp-form",
-					}) {
-						Verification Code
-					}
-					@inputotp.InputOTP(inputotp.Props{
-						ID:   "otp-form",
-						Form: "otp",
-						Name: "totp",
-					}) {
-						@inputotp.Group() {
-							@inputotp.Slot(inputotp.SlotProps{
-								InputID: "site--login--otp-1",
-								Index:   0,
-								Focus:   true,
-							})
-							@inputotp.Slot(inputotp.SlotProps{
-								InputID: "otp-2",
-								Index:   1,
-							})
-							@inputotp.Slot(inputotp.SlotProps{
-								InputID: "otp-3",
-								Index:   2,
-							})
-							@inputotp.Separator()
-							@inputotp.Slot(inputotp.SlotProps{
-								InputID: "otp-4",
-								Index:   3,
-							})
-							@inputotp.Slot(inputotp.SlotProps{
-								InputID: "otp-5",
-								Index:   4,
-							})
-							@inputotp.Slot(inputotp.SlotProps{
-								InputID: "otp-6",
-								Index:   5,
-							})
-						}
-					}
-					@form.Description() {
-						Enter the 6-digit code from your authenticator app
-					}
-				}
-				<div class="mt-4"></div>
-				<!-- Submit Button -->
-				@button.Button(button.Props{
-					ID:    "site--login-totp-button",
-					Type:  button.TypeSubmit,
-					Class: "w-full py-3 px-4 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
+	@authenticator.Card("login-form-target", false) {
+		<!-- Form updated with POST method -->
+		<form
+			id="otp"
+			hx-post="/login/totp"
+			hx-target="body"
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+			class="needs-validation"
+		>
+			@authenticator.Title("Nighttroop Login")
+			<!-- TOTP -->
+			@form.Item() {
+				@form.Label(form.LabelProps{
+					For: "site--login--otp",
 				}) {
-					Log in
+					Verification Code
 				}
-			</form>
-			<script>
-				// Logs in as soon as the code's last digit is typed or pasted. It waits a tick for the code's slots to
-				// fill its value, and does not send the same code twice, so a wrong code is not sent again on its own.
-				(function () {
-					const form = document.getElementById("otp");
-					const code = document.getElementById("otp-form");
-					let sent = "";
-					const sendWhenFull = () => setTimeout(() => {
-						if (/^\d{6}$/.test(code.value) && code.value !== sent) {
-							sent = code.value;
-							form.requestSubmit();
-						}
-					}, 0);
-					form.addEventListener("input", sendWhenFull);
-					form.addEventListener("paste", sendWhenFull);
-				})();
-			</script>
-			@invalidAfterError("otp")
-	</div>
-}
-
-// invalidAfterError marks the form's inputs aria-invalid after a failed login, until it is sent again, so they are not
-// shown as wrong before anything has been tried
-templ invalidAfterError(formID string) {
-	<script type="text/javascript">
-		(function () {
-			const form = document.getElementById({{ formID }});
-			const invalid = (failed) => form.querySelectorAll("input:not([type=hidden])").forEach((input) =>
-				failed ? input.setAttribute("aria-invalid", "true") : input.removeAttribute("aria-invalid"));
-			form.addEventListener("htmx:response:error", () => invalid(true));
-			form.addEventListener("htmx:before:request", () => invalid(false));
-		})();
-	</script>
-}
-
-templ LoginError(err string) {
-	@toast.Toast(toast.Props{
-		Description: err,
-		Variant:     toast.VariantError,
-		Position:    toast.PositionTopCenter,
-		Dismissible: true,
-		Icon:        true,
-	})
+				@authenticator.CodeInput("site--login--otp", "otp", "totp", true)
+				@form.Description() {
+					Enter the 6-digit code from your authenticator app
+				}
+			}
+			<div class="mt-4"></div>
+			<!-- Submit Button -->
+			@button.Button(button.Props{ID: "site--login-totp-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
+				Log in
+			}
+		</form>
+		// Logs in as soon as the code's last digit is typed or pasted
+		@authenticator.AutoSubmit("otp", "site--login--otp")
+		@authenticator.InvalidAfterError("otp")
+	}
 }

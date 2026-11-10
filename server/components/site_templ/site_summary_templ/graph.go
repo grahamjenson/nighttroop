@@ -13,7 +13,6 @@ import (
 	"github.com/go-echarts/go-echarts/v2/types"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/css"
-	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -61,18 +60,6 @@ var legend = []map[string]any{
 	{"name": "Carbs", "icon": pointingUp},
 	{"name": "Basal", "icon": "rect", "itemStyle": map[string]any{"color": "transparent", "borderColor": brandNight, "borderWidth": 2}},
 	{"name": "Target", "icon": "path://M0,4L12,4L12,6L0,6Z", "itemStyle": map[string]any{"color": blue700}},
-}
-
-// glucoseRange is a reading in the summary's units below its low alarm, "Low", above its high alarm, "High", or
-// between them, ""
-func glucoseRange(s *sitemodels.Summary, reading float64) string {
-	switch {
-	case reading < s.RangeLow:
-		return "Low"
-	case reading > s.RangeHigh:
-		return "High"
-	}
-	return ""
 }
 
 // isSMB is whether a dose is a loop's small automatic bolus, which is drawn smaller and fainter than one given by hand
@@ -192,7 +179,7 @@ func glucosePoints(s *sitemodels.Summary, at localTime, glucoseTop float64) (low
 	drawn := func(reading float64) float64 { return min(reading, glucoseTop*(1+overflowShare)) }
 	for i, r := range s.GlucoseReadings {
 		point := opts.ScatterData{Value: []any{at(r.OccurredAt), drawn(r.Reading)}}
-		switch glucoseRange(s, r.Reading) {
+		switch display.GlucoseRange(r.Reading, s.RangeLow, s.RangeHigh) {
 		case "Low":
 			lows = append(lows, point)
 		case "High":
@@ -360,9 +347,9 @@ type hover struct {
 // hoverTooltip is the tooltip shown pointing at a time: the time, the reading nearest it within 5 minutes and when it
 // was, the basal and the targets in force then, and any treatment within 5 minutes
 func hoverTooltip(s *sitemodels.Summary, now int64, at localTime) string {
-	h := hover{Units: unitsText(s.Units), Readings: [][]any{}, Basal: [][]any{}, Target: [][]any{}, Treatments: [][]any{}}
+	h := hover{Units: display.Units(s.Units), Readings: [][]any{}, Basal: [][]any{}, Target: [][]any{}, Treatments: [][]any{}}
 	for _, r := range s.GlucoseReadings {
-		h.Readings = append(h.Readings, []any{at(r.OccurredAt), site_data_templ.FormatGlucose(r.Reading, s.Units)})
+		h.Readings = append(h.Readings, []any{at(r.OccurredAt), display.Glucose(r.Reading, s.Units)})
 	}
 	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.Basal} }) {
 		if r.values[0] != nil {
@@ -371,7 +358,7 @@ func hoverTooltip(s *sitemodels.Summary, now int64, at localTime) string {
 	}
 	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.LowTarget, m.HighTarget} }) {
 		if r.values[0] != nil && r.values[1] != nil {
-			h.Target = append(h.Target, []any{at(r.start), at(r.end), site_data_templ.FormatGlucose(*r.values[0], s.Units) + "–" + site_data_templ.FormatGlucose(*r.values[1], s.Units)})
+			h.Target = append(h.Target, []any{at(r.start), at(r.end), display.Glucose(*r.values[0], s.Units) + "–" + display.Glucose(*r.values[1], s.Units)})
 		}
 	}
 	for _, d := range s.InsulinDoses {

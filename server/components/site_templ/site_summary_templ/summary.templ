@@ -13,34 +13,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// directionArrows are the Nightscout trend directions as arrows
-var directionArrows = map[string]string{
-	"DoubleUp": "⇈", "SingleUp": "↑", "FortyFiveUp": "↗", "Flat": "→",
-	"FortyFiveDown": "↘", "SingleDown": "↓", "DoubleDown": "⇊",
-}
-
-func arrow(direction *string) string {
-	if direction == nil {
-		return ""
-	}
-	return directionArrows[*direction]
-}
-
-// rangeColours colour a reading below the low alarm, above the high alarm and between them with the theme's glucose
-// colours, as the graph colours its dots, but high in the darker amber that can be read as text
-var rangeColours = map[string]string{"Low": "text-glucose-low", "High": "text-glucose-high-text", "": "text-glucose-in-range"}
-
-func unitsText(units *consts.Units) string {
-	if units == nil {
-		return ""
-	}
-	return string(*units)
-}
 
 // loopValue is a value from the loop's latest status, or a dash when there is none
 func loopValue(loop *sitemodels.SiteDeviceStatus, get func(*sitemodels.SiteDeviceStatus) *float64, unit string) string {
@@ -63,7 +38,7 @@ type treatment struct {
 func otherTreatments(s *sitemodels.Summary) []treatment {
 	list := []treatment{}
 	for _, t := range s.TempTargets {
-		detail := fmt.Sprintf("%s–%s %s for %d min", site_data_templ.FormatGlucose(t.LowTarget, t.Units), site_data_templ.FormatGlucose(t.HighTarget, t.Units), unitsText(t.Units), t.DurationMinutes)
+		detail := fmt.Sprintf("%s–%s %s for %d min", display.Glucose(t.LowTarget, t.Units), display.Glucose(t.HighTarget, t.Units), display.Units(t.Units), t.DurationMinutes)
 		list = append(list, treatment{t.OccurredAt, "Temp Target", "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
@@ -194,11 +169,11 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@stat.Tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
 	</div>
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@stat.Tile("site--summary--time-in-range", "Time in range", display.Value(summary.Today.TimeInRange, "%"), icon.Target) {
-			@previous("site--summary--time-in-range--yesterday", "Yesterday", display.Value(summary.Yesterday.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-week", "Last week", display.Value(summary.LastWeek.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", display.Value(summary.LastFortnight.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-month", "Last month", display.Value(summary.LastMonth.TimeInRange, "%"))
+		@stat.Tile("site--summary--time-in-range", "Time in range", display.Percent(summary.Today.TimeInRange), icon.Target) {
+			@previous("site--summary--time-in-range--yesterday", "Yesterday", display.Percent(summary.Yesterday.TimeInRange))
+			@previous("site--summary--time-in-range--last-week", "Last week", display.Percent(summary.LastWeek.TimeInRange))
+			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", display.Percent(summary.LastFortnight.TimeInRange))
+			@previous("site--summary--time-in-range--last-month", "Last month", display.Percent(summary.LastMonth.TimeInRange))
 		}
 		@stat.Tile("site--summary--total-daily-dose", "Total daily dose", display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet) {
 			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", display.PerDay(summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U"))
@@ -251,7 +226,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 		if len(summary.GlucoseReadings) > 0 {
 			{{ latest := summary.GlucoseReadings[0] }}
-			{{ outOfRange, stale := glucoseRange(summary, latest.Reading), staleFor(ctx, latest.OccurredAt, time.Now()) }}
+			{{ outOfRange, stale := display.GlucoseRange(latest.Reading, summary.RangeLow, summary.RangeHigh), staleFor(ctx, latest.OccurredAt, time.Now()) }}
 			<div>
 				<div class="flex items-center gap-2">
 					<span class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</span>
@@ -261,11 +236,11 @@ templ glucoseHero(summary *sitemodels.Summary) {
 				</div>
 				<div class="flex items-baseline gap-2">
 					// An old reading is grey, as it may no longer be the glucose
-					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(rangeColours[outOfRange], stale == ""), templ.KV("text-gray-400", stale != "") }>{ site_data_templ.FormatGlucose(latest.Reading, latest.Units) }</span>
-					<span class="text-lg text-gray-500">{ unitsText(latest.Units) }</span>
-					<span class="ml-2 text-4xl text-gray-700">{ arrow(latest.Direction) }</span>
+					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseText[outOfRange], stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(latest.Reading, latest.Units) }</span>
+					<span class="text-lg text-gray-500">{ display.Units(latest.Units) }</span>
+					<span class="ml-2 text-4xl text-gray-700">{ display.Arrow(latest.Direction) }</span>
 					if outOfRange != "" {
-						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", rangeColours[outOfRange] }>{ outOfRange }</span>
+						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseText[outOfRange] }>{ outOfRange }</span>
 					}
 				</div>
 				<div class="mt-1 flex gap-3 text-sm">

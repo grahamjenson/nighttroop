@@ -369,8 +369,8 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 			hx-post="/settings/identities"
 			hx-target={ "#" + tableid + " tbody" }
 			hx-swap="beforeend"
-			hx-status:4xx="target:#toaster"
-			hx-status:5xx="target:#toaster"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			<div class="flex flex-wrap justify-end items-end gap-2">
 				@field.Field("name-"+formID, "Name", "w-24") {

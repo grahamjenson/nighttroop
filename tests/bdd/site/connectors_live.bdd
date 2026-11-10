@@ -20,11 +20,15 @@ ASSERT_VISIBLE #site--settings--virtual-connector--status--totals:has-text("1 wo
 ASSERT_VISIBLE #site--settings--virtual-connector--status--records >> text=/^[1-9][0-9]*$/
 ASSERT_VISIBLE #site--settings--virtual-connector--status--last-records >> text=/^[1-9][0-9]* records$/
 
-// A history that is open stays open as a backfill finishes, and shows it
-CLICK #site--settings--virtual-connector--history summary
+// A history opened while the page is being read again, before what it reads lands, stays open as a backfill finishes,
+// and shows it
 CLICK #site--settings--virtual-connector--backfill
 ASSERT_TEXT_VISIBLE Backfilling Virtual
+HOLD /settings/connectors
 RUN_BACKGROUND_JOBS
-ASSERT_VISIBLE #site--settings--virtual-connector--history[open]:has-text("Connector backfilled")
+ASSERT_HELD /settings/connectors
+CLICK #site--settings--virtual-connector--history summary
+RELEASE /settings/connectors
 ASSERT_VISIBLE #site--settings--virtual-connector--status--backfill:has-text("records in")
+ASSERT_VISIBLE #site--settings--virtual-connector--history[open]:has-text("Connector backfilled")
 SCREENSHOT connectors_live

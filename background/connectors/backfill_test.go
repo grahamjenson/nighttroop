@@ -278,13 +278,15 @@ func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
 		return &v
 	}
 	daysAgo := func(days int) int64 { return time.Now().Add(-time.Duration(days) * 24 * time.Hour).UnixMilli() }
+	// recent is taken once, as asking for it again can land in the next second
+	recent := daysAgo(3)
 	status := func(date int64) map[string]any {
 		return map[string]any{"device": "openaps://phone", "date": float64(date), "openaps": map[string]any{"iob": map[string]any{"iob": 1.5}},
 			"pump": map[string]any{"battery": map[string]any{"percent": 60}}}
 	}
 	nightscout_client.TestDocuments = map[string][]any{
 		"entries":      {map[string]any{"type": "sgv", "sgv": 140, "date": float64(daysAgo(40))}},
-		"devicestatus": {status(daysAgo(3)), status(daysAgo(40))},
+		"devicestatus": {status(recent), status(daysAgo(40))},
 	}
 	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
 	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
@@ -296,7 +298,7 @@ func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
 	reports, err := site.SiteDB.Queries().AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, reports, 1, "only the device status from the last 30 days is copied")
-	require.Equal(t, daysAgo(3)/1000, reports[0].OccurredAt/1000)
+	require.Equal(t, recent/1000, reports[0].OccurredAt/1000)
 	require.Nil(t, reports[0].LoopStatusJson, "without its loop status")
 	require.Nil(t, reports[0].PumpJson, "or its pump as sent")
 	require.Equal(t, 1.5, *reports[0].LoopIob, "but with its IOB")

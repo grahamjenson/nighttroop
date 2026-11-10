@@ -118,3 +118,41 @@ func TestVirtualDocumentsOnTheSlotGrid(t *testing.T) {
 		require.True(t, long[date], "the longer window has the shorter's readings at the same times")
 	}
 }
+
+// The first sync writes the same 6 readings whenever it runs, even in the half hour after a meter reading, which is
+// left for a backfill, so a new site's readings can be counted; a sync of the meter reading's slot writes it
+func TestVirtualSyncDocumentsReadings(t *testing.T) {
+	day := time.Date(2026, 11, 9, 0, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name      string
+		now       time.Time
+		firstSync bool
+		sensor    int
+		meter     int
+	}{
+		{name: "a first sync at midday", now: day.Add(12*time.Hour + 3*time.Minute), firstSync: true, sensor: 6},
+		{name: "a first sync just after midnight", now: day.Add(10 * time.Minute), firstSync: true, sensor: 6},
+		{name: "a first sync just after the 07:02 meter reading", now: day.Add(7*time.Hour + 10*time.Minute), firstSync: true, sensor: 6},
+		{name: "a first sync just before it", now: day.Add(7*time.Hour + time.Minute), firstSync: true, sensor: 6},
+		{name: "a first sync before the 19:02 meter reading's half hour ends", now: day.Add(19*time.Hour + 29*time.Minute), firstSync: true, sensor: 6},
+		{name: "a sync of the meter reading's slot", now: day.Add(7*time.Hour + 3*time.Minute), sensor: 1, meter: 1},
+		{name: "a sync of another slot", now: day.Add(7*time.Hour + 10*time.Minute), sensor: 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			counts, profiles := map[any]int{}, 0
+			for _, doc := range virtualSyncDocuments(tt.now, tt.firstSync) {
+				switch doc.collection {
+				case nsutils.Entries:
+					counts[doc.data["type"]]++
+				case nsutils.Profile:
+					profiles++
+				}
+			}
+			require.Equal(t, tt.sensor, counts["sgv"])
+			require.Equal(t, tt.meter, counts["mbg"])
+			// Only the first sync writes the profile
+			require.Equal(t, tt.firstSync, profiles == 1)
+		})
+	}
+}
