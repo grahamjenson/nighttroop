@@ -10,12 +10,10 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -399,7 +397,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, event.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 95, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 93, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -426,7 +424,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventType)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 98, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 96, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -453,7 +451,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(componentDetail(event))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 101, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 99, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -480,7 +478,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(event.Notes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 104, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 102, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -507,7 +505,7 @@ func componentEventRow(event *sitemodels.SiteComponentEvent) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(event.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 107, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 105, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -546,6 +544,8 @@ func ComponentEventModal(event *sitemodels.SiteComponentEvent) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
+		edit := addmodal.Props{ID: "site--component-event--edit", Path: "/data/component-events/" + event.ID, Target: "#site--component-event--" + event.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(componentEventFields, event, nil)}
 		templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -558,103 +558,11 @@ func ComponentEventModal(event *sitemodels.SiteComponentEvent) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<form id=\"site--component-event--edit\" class=\"mt-4 flex flex-wrap items-end gap-2\" hx-post=\"")
+			templ_7745c5c3_Err = addmodal.Form(edit).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var28 string
-			templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/data/component-events/" + event.ID).Resolve(ctx)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 117, Col: 49}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" hx-target=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var29 string
-			templ_7745c5c3_Var29, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#site--component-event--" + event.ID).Resolve(ctx)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/component_events.templ`, Line: 118, Col: 52}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Var30 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-				if !templ_7745c5c3_IsBuffer {
-					defer func() {
-						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err == nil {
-							templ_7745c5c3_Err = templ_7745c5c3_BufErr
-						}
-					}()
-				}
-				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = input.Input(input.Props{ID: "site--component-event--edit--sensor-code", Name: "sensor_code", Placeholder: "Sensor Code", Value: orEmpty(event.SensorCode), Attributes: templ.Attributes{"maxlength": "64"}}).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				return nil
-			})
-			templ_7745c5c3_Err = field.Field("site--component-event--edit--sensor-code", "Sensor code", "w-40").Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Var31 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-				if !templ_7745c5c3_IsBuffer {
-					defer func() {
-						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err == nil {
-							templ_7745c5c3_Err = templ_7745c5c3_BufErr
-						}
-					}()
-				}
-				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = input.Input(input.Props{ID: "site--component-event--edit--transmitter-id", Name: "transmitter_id", Placeholder: "Transmitter ID", Value: orEmpty(event.TransmitterID), Attributes: templ.Attributes{"maxlength": "64"}}).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				return nil
-			})
-			templ_7745c5c3_Err = field.Field("site--component-event--edit--transmitter-id", "Transmitter ID", "w-40").Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Var32 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-				if !templ_7745c5c3_IsBuffer {
-					defer func() {
-						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err == nil {
-							templ_7745c5c3_Err = templ_7745c5c3_BufErr
-						}
-					}()
-				}
-				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = input.Input(input.Props{ID: "site--component-event--edit--notes", Name: "notes", Placeholder: "Notes", Value: orEmpty(event.Notes)}).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				return nil
-			})
-			templ_7745c5c3_Err = field.Field("site--component-event--edit--notes", "Notes", "w-64").Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</form><dl class=\"mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<dl class=\"mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -722,13 +630,13 @@ func ComponentEventModal(event *sitemodels.SiteComponentEvent) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</dl>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</dl>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: modal.Submit("site--component-event--edit", "Save")}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

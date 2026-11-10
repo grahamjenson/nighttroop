@@ -62,8 +62,13 @@ ASSERT_VISIBLE #site--insulin--details dt:text-is("Given at once (%)")
 ASSERT_VISIBLE #site--insulin--details dd:text-is("70")
 ASSERT_VISIBLE #site--insulin--details dd:text-is("30")
 ASSERT_VISIBLE #site--insulin--edit label[for="site--insulin--edit--dose"]
+// It edits its split as the same percents, as it does its type
+ASSERT_VISIBLE #site--insulin--edit--split-now[value="70"]
+ASSERT_VISIBLE #site--insulin--edit--dose-type
 SCREENSHOT insulin_dose_edit
 INPUT #site--insulin--edit--dose 4.5
+INPUT #site--insulin--edit--split-now 60
+INPUT #site--insulin--edit--split-ext 40
 INPUT #site--insulin--edit--notes Big lunch
 CLICK #site--insulin--edit--submit
 ASSERT_STATUS 200
@@ -75,6 +80,8 @@ SCREENSHOT insulin_dose_updated
 // The edit is saved
 CLICK #insulinDosesTable tbody tr >> nth=0
 ASSERT_TEXT_VISIBLE 4.5 units
+ASSERT_VISIBLE #site--insulin--details dd:text-is("60")
+ASSERT_VISIBLE #site--insulin--edit--split-ext[value="40"]
 CLICK #site--insulin--details--close
 ASSERT_NOT_VISIBLE #site--insulin--details
 
