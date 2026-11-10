@@ -337,10 +337,8 @@ templ GlucoseReadingCreated(reading *sitemodels.SiteGlucoseReading) {
 // GlucoseReadingUpdated replaces the reading's row, closes its details and shows a toast
 templ GlucoseReadingUpdated(reading *sitemodels.SiteGlucoseReading) {
 	@glucoseReadingRow(reading)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
-	<div hx-swap-oob="beforeend:#toaster">
-		@successtoast.Toast("Glucose Reading Updated")
-	</div>
+	@modal.CloseOOB()
+	@successtoast.OOB("Glucose Reading Updated")
 }
 
 templ GlucoseReadingDeleted() {
