@@ -287,8 +287,9 @@ func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 					siteContext.Config.Usage.Seen(siteContext.SiteID, siteContext.IdentityModel.ID, r.ContentLength, time.Now())
 				}
 				wasWrite := siteContext.HTTPAction == HTTPActionWrite
-				// The response is sent, so a failure to record is only logged
-				if err := controlDB.UpdateSiteAndIdentityDateFlags(r.Context(), siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite); err != nil {
+				// The response is sent, so a failure to record is only logged. It is recorded even when the client has
+				// already gone, as htmx cancels a request a newer one replaces, as the identity was still seen.
+				if err := controlDB.UpdateSiteAndIdentityDateFlags(context.WithoutCancel(r.Context()), siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite); err != nil {
 					slog.ErrorContext(r.Context(), "Cannot update site and identity date flags", "error", err)
 				}
 			}
