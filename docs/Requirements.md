@@ -279,6 +279,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   gives no medical advice, and its data and alarms may be late, missing or wrong.
 - The create site page, its medical note and footer included, and the site and control login pages fit a laptop's or
   a phone's window, so none of them needs scrolling.
+- The site login, control login and control setup pages each show their white card in the middle of a grey page that
+  fills the window, above the control site's footer.
 - A TOTP code's six boxes fit inside their card on a phone, the last one included: they shrink to fit a card narrower
   than them, as the site and control login cards are on a phone.
 - A staging server (`MODE=staging`) says it is a test site in a large banner at the top of every page, public, site and

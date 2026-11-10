@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_logs_templ"
 	"nighttroop.t1d.nz/server/components/dbsize"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
@@ -241,8 +242,7 @@ templ SiteCreated(info publicmodels.NewSiteInfo) {
 
 // SiteNotCreated is a toast saying why a site could not be created, such as its ID being taken
 templ SiteNotCreated(message string) {
-	@toast.Toast(toast.Props{Title: "Site Not Created", Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter,
-		Dismissible: true, Icon: true})
+	@errortoast.Toast("Site Not Created", message)
 }
 
 templ siteRow(site *controlmodels.Site) {

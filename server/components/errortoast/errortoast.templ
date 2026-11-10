@@ -1,0 +1,9 @@
+package errortoast
+
+import "nighttroop.t1d.nz/server/components/ui/toast"
+
+// Toast says why an action failed, as every page says it: at the top, until it times out or is closed. Its title, when
+// given, goes above message.
+templ Toast(title, message string) {
+	@toast.Toast(toast.Props{Title: title, Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter, Dismissible: true, Icon: true})
+}

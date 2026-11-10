@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_logs_templ"
 	"nighttroop.t1d.nz/server/components/dbsize"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/heading"
@@ -419,7 +420,7 @@ func sitesPageButton(id string, label string, skip int64, limit int64, order str
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 146, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 147, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -566,7 +567,7 @@ func PublicSiteCreation(on bool) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatBool(!on)).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 198, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 199, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -749,8 +750,7 @@ func SiteNotCreated(message string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = toast.Toast(toast.Props{Title: "Site Not Created", Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter,
-			Dismissible: true, Icon: true}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = errortoast.Toast("Site Not Created", message).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
