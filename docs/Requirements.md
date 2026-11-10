@@ -445,9 +445,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the 7 days to yesterday at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), is of a month, this one unless it is
-  given as `?month=2026-10`, and has a table of each of its kept days, the weeks and fortnights with a day in it, and
-  the months of its year: each one's days with data, time in range, daily dose and daily carbs, newest first, each
-  opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
+  given as `?month=2026-10`, and has a table of each, the longest first: the kept months of its year, the fortnights
+  and weeks with a day in it, and its days: each one's days with data, time in range, daily dose and daily carbs,
+  newest first, each opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
   month outside those is refused. A past month's empty table says it has none in that month, or year for months.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is

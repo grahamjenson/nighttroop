@@ -3,6 +3,7 @@ package site_reports_templ
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -201,17 +202,17 @@ templ arrowButton(id, path, label string) {
 }
 
 // SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, a table for
-// each period, newest first, each opening its AGP report: the month's days, the weeks and fortnights with a day in it,
-// and the months of its year. Arrows beside the month go to the month before and after. An admin can have them all
+// each period, the longest first, each newest first and opening its AGP report: the months of its year, the
+// fortnights and weeks with a day in it, and the month's days. Arrows beside the month go to the month before and after. An admin can have them all
 // regenerated from the site's data.
 templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) {
 	{{ previous, next := summariesLinks(first, time.Now()) }}
 	@heading.Title("Summaries")
 	<div id="site--summaries" class="w-full space-y-4 py-4">
 		@periodNav("Summaries", "site--summaries", "site--summaries--month", first.Format("January 2006"), previous, next, "month") {
-			<span class="text-sm text-gray-500">The month's days, the weeks and fortnights with a day in it, and its year's months, built from the site's data</span>
+			<span class="text-sm text-gray-500">Its year's months, the fortnights and weeks with a day in it, and its days, built from the site's data</span>
 		}
-		for _, kind := range periods {
+		for _, kind := range slices.Backward(periods) {
 			@card.Card(card.Props{ID: "site--summaries--" + kind.Period, Title: summariesTitle(kind.Period, kind.Label, first)}) {
 				@table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}) {
 					@table.Header() {
