@@ -449,6 +449,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   and weeks with a day in it, and its days: each one's days with data, time in range, daily dose and daily carbs,
   newest first, each opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
   month outside those is refused. A past month's empty table says it has none in that month, or year for months.
+- Data written for a day before today, as a backfill or a late sync writes, or changed or deleted, builds that day's
+  summary again, and the whole weeks, fortnights and months with it in, without building the rest: once the site's
+  data has gone 2 minutes without more, or after 15 minutes of it at most, so a backfill's many records are built
+  once. Glucose, insulin, food, temp basals and targets, profile switches and device statuses count; today is built
+  as it is read.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.

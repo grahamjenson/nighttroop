@@ -28,7 +28,27 @@ type Builder struct {
 
 	builtLock sync.Mutex
 	built     map[string]built
+
+	// stale are, by site, the times of the data written since its summaries were built, waiting to be built again
+	staleLock sync.Mutex
+	stale     map[string]*staleData
 }
+
+// staleData are a site's 15 minute buckets, by when they start, of the data written to it, and when the first and
+// last were written. Buckets of 15 minutes are kept, as every timezone's midnight starts one.
+type staleData struct {
+	buckets     map[int64]bool
+	first, last time.Time
+}
+
+const (
+	staleBucket = 15 * time.Minute
+	// staleQuiet is how long a site's data must go unchanged before its days are built again, so the many records a
+	// backfill or sync writes are built once, from all of them, and staleWait the longest written data waits, so a
+	// long backfill's days are still built as it goes
+	staleQuiet = 2 * time.Minute
+	staleWait  = 15 * time.Minute
+)
 
 // built is a site's yesterday, in the timezone and week start day it was built in, with its last week and month
 type built struct {
@@ -38,7 +58,7 @@ type built struct {
 // NewBuilder is a builder of controlDB's sites that has built none of them yet, and forgets a site whose days are
 // changed through its API, such as its yesterday deleted, so the next run checks it again
 func NewBuilder(bus *events.SiteBus, controlDB *db.ControlDB) *Builder {
-	builder := &Builder{controlDB: controlDB, built: map[string]built{}, site: func(ctx context.Context, siteID string) (*httputils.SiteContext, error) {
+	builder := &Builder{controlDB: controlDB, built: map[string]built{}, stale: map[string]*staleData{}, site: func(ctx context.Context, siteID string) (*httputils.SiteContext, error) {
 		siteDB, model, err := controlDB.GetSite(ctx, siteID)
 		if err != nil {
 			return nil, err
@@ -49,6 +69,7 @@ func NewBuilder(bus *events.SiteBus, controlDB *db.ControlDB) *Builder {
 		if _, ok := event.Model.(*sitedb.SummaryPeriod); ok {
 			builder.remember(event.SiteID, nil)
 		}
+		builder.markStale(event, time.Now())
 	})
 	return builder
 }
@@ -58,6 +79,7 @@ func NewBuilder(bus *events.SiteBus, controlDB *db.ControlDB) *Builder {
 func SetupCron(c cron.CronScheduler, bus *events.SiteBus, controlDB *db.ControlDB) *Builder {
 	builder := NewBuilder(bus, controlDB)
 	c.AddFunc("BuildSummaryDaily", "@every 600s", func(ctx context.Context) error { return builder.Build(ctx, time.Now()) })
+	c.AddFunc("RebuildStaleSummaries", "@every 60s", func(ctx context.Context) error { return builder.RebuildStale(ctx, time.Now()) })
 	return builder
 }
 
@@ -174,4 +196,83 @@ func (b *Builder) buildYesterday(ctx context.Context, siteID string, now time.Ti
 	}
 	// Yesterday is built first, as it may be the last day of the week or month
 	return sitedata.BuildLastSummaryPeriods(ctx, q, siteContext, now)
+}
+
+// markStale keeps when the record a model change is of happened, for its day's summaries to be built again, when it is
+// one a day's summary is built from. It is called as each change is published, so it only keeps it.
+func (b *Builder) markStale(event events.Event, now time.Time) {
+	switch event.Model.(type) {
+	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempBasal, *sitedb.TempTarget,
+		*sitedb.ProfileSwitch, *sitedb.DeviceReport, *sitedb.EventGroupsBundle:
+	default:
+		return
+	}
+	model, ok := event.Model.(interface{ GetOccurredAt() int64 })
+	if !ok || event.SiteID == "" {
+		return
+	}
+	b.staleLock.Lock()
+	defer b.staleLock.Unlock()
+	data := b.stale[event.SiteID]
+	if data == nil {
+		data = &staleData{buckets: map[int64]bool{}, first: now}
+		b.stale[event.SiteID] = data
+	}
+	data.buckets[model.GetOccurredAt()/staleBucket.Milliseconds()] = true
+	data.last = now
+}
+
+// RebuildStale builds again the days, and their weeks, fortnights and months, of the data written to each site that
+// has gone staleQuiet without more, or waited staleWait, leaving out today, which is built as it is read. A site with
+// only today's data written is not opened.
+func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
+	b.staleLock.Lock()
+	due := map[string]*staleData{}
+	for siteID, data := range b.stale {
+		if now.Sub(data.last) >= staleQuiet || now.Sub(data.first) >= staleWait {
+			due[siteID] = data
+			delete(b.stale, siteID)
+		}
+	}
+	b.staleLock.Unlock()
+
+	var errs []error
+	for siteID, data := range due {
+		site, err := b.controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		today := sitedata.PeriodStart("day", now, (&httputils.SiteContext{SiteID: siteID, SiteModel: site}).GetSiteTimezone(), "monday")
+		var times []time.Time
+		for bucket := range data.buckets {
+			if at := time.UnixMilli(bucket * staleBucket.Milliseconds()); at.Before(today) {
+				times = append(times, at)
+			}
+		}
+		if len(times) == 0 || site.State != "live" {
+			continue
+		}
+		siteCtx := aslog.WithSite(ctx, siteID)
+		siteContext, err := b.site(siteCtx, siteID)
+		if err == nil {
+			err = sitedata.RebuildSummaryDays(siteCtx, siteContext.SiteDB.Queries(), siteContext, times, now)
+		}
+		if err != nil {
+			b.restale(siteID, data)
+		}
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
+}
+
+// restale keeps a site's data that could not be built to be built on a later run, with any written since
+func (b *Builder) restale(siteID string, data *staleData) {
+	b.staleLock.Lock()
+	defer b.staleLock.Unlock()
+	if since := b.stale[siteID]; since != nil {
+		maps.Copy(data.buckets, since.buckets)
+		data.last = since.last
+	}
+	b.stale[siteID] = data
 }
