@@ -64,7 +64,7 @@ func TestPushCredentialFor(t *testing.T) {
 	}
 }
 
-// A site's credentials are only its own, and a deleted one keeps no secret
+// A site's credentials are only its own, and deleting them deletes them for good
 func TestPushCredentialsBySite(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, siteID := controlDB.Queries, site.SiteDB.Subdomain
@@ -87,7 +87,7 @@ func TestPushCredentialsBySite(t *testing.T) {
 	require.NoError(t, err)
 	require.EqualValues(t, 1, count)
 
-	// Deleting a site's credentials removes their secrets
+	// Deleting a site's credentials deletes them
 	require.NoError(t, q.DeleteSitePushCredentials(t.Context(), controldb.DeleteSitePushCredentialsParams{SiteID: &siteID}))
 	_, err = q.GetPushCredential(t.Context(), controldb.GetPushCredentialParams{ID: credential.ID, SiteID: &siteID})
 	require.ErrorIs(t, err, sql.ErrNoRows)

@@ -134,7 +134,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
     does its newest, deletes its old loop settings no record refers to any more, then shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
-  TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
+  TOTP secrets and devices' push tokens, and its push credentials deleted; an archived site keeps them, as it
   can be hydrated.
 
 ### A site's identities
@@ -688,8 +688,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   service account (project ID and its JSON), the apps it pushes to (`loop`, `trio`, `loopfollow`, `t1dcarer`) ticked,
   and, optionally, the only bundle IDs it pushes to, separated by commas. A key that cannot be read, or an unknown
   app, is refused with the modal left open; its secret is kept encrypted and never shown or returned; a site has at
-  most 5; only the site's admins can see or delete them, and a delete asks first. Adding one deletes for good all but
-  the site's newest 5 deleted ones, so adding and deleting them again and again cannot grow the control DB.
+  most 5; only the site's admins can see or delete them, and a delete asks first, then deletes it for good, so adding
+  and deleting them again and again cannot grow the control DB.
 
 ### Logs
 

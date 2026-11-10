@@ -103,11 +103,7 @@ func (q *Queries) CreatePushCredential(ctx context.Context, arg CreatePushCreden
 }
 
 const deletePushCredential = `-- name: DeletePushCredential :execrows
-UPDATE push_credentials SET
-    secret_enc = NULL,
-    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE id = ?1 AND site_id IS ?2 AND deleted_at IS NULL
+DELETE FROM push_credentials WHERE id = ?1 AND site_id IS ?2
 `
 
 type DeletePushCredentialParams struct {
@@ -115,7 +111,7 @@ type DeletePushCredentialParams struct {
 	SiteID *string
 }
 
-// Soft deletes it, removing its secret
+// Deletes it for good, with its secret, so adding and deleting credentials again and again cannot grow the table
 func (q *Queries) DeletePushCredential(ctx context.Context, arg DeletePushCredentialParams) (int64, error) {
 	result, err := q.exec(ctx, q.deletePushCredentialStmt, deletePushCredential, arg.ID, arg.SiteID)
 	if err != nil {
@@ -161,18 +157,14 @@ func (q *Queries) DeletePushRegistrationByTokenHash(ctx context.Context, arg Del
 }
 
 const deleteSitePushCredentials = `-- name: DeleteSitePushCredentials :exec
-UPDATE push_credentials SET
-    secret_enc = NULL,
-    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE site_id = ?1 AND deleted_at IS NULL
+DELETE FROM push_credentials WHERE site_id = ?1
 `
 
 type DeleteSitePushCredentialsParams struct {
 	SiteID *string
 }
 
-// Soft deletes all a site's credentials, removing their secrets, as when it is deleted
+// Deletes all a site's credentials for good, with their secrets, as when it is deleted
 func (q *Queries) DeleteSitePushCredentials(ctx context.Context, arg DeleteSitePushCredentialsParams) error {
 	_, err := q.exec(ctx, q.deleteSitePushCredentialsStmt, deleteSitePushCredentials, arg.SiteID)
 	return err
@@ -301,28 +293,6 @@ func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrati
 		&i.LastError,
 	)
 	return &i, err
-}
-
-const pruneDeletedPushCredentials = `-- name: PruneDeletedPushCredentials :exec
-DELETE FROM push_credentials
-WHERE push_credentials.site_id IS ?1 AND push_credentials.deleted_at IS NOT NULL
-  AND push_credentials.id NOT IN (
-    SELECT kept.id FROM push_credentials AS kept
-    WHERE kept.site_id IS ?1 AND kept.deleted_at IS NOT NULL
-    ORDER BY kept.id DESC LIMIT CAST(?2 AS INTEGER)
-  )
-`
-
-type PruneDeletedPushCredentialsParams struct {
-	SiteID *string
-	Keep   int64
-}
-
-// Deletes for good a site's deleted credentials but its newest Keep, which have no secret, so deleting and adding
-// credentials again and again cannot grow the table
-func (q *Queries) PruneDeletedPushCredentials(ctx context.Context, arg PruneDeletedPushCredentialsParams) error {
-	_, err := q.exec(ctx, q.pruneDeletedPushCredentialsStmt, pruneDeletedPushCredentials, arg.SiteID, arg.Keep)
-	return err
 }
 
 const pushCredentialFor = `-- name: PushCredentialFor :one

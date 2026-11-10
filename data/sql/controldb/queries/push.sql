@@ -37,32 +37,13 @@ SELECT * FROM push_credentials WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 -- name: CountPushCredentials :one
 SELECT COUNT(*) FROM push_credentials WHERE site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL;
 
--- name: PruneDeletedPushCredentials :exec
--- Deletes for good a site's deleted credentials but its newest Keep, which have no secret, so deleting and adding
--- credentials again and again cannot grow the table
-DELETE FROM push_credentials
-WHERE push_credentials.site_id IS sqlc.narg('SiteID') AND push_credentials.deleted_at IS NOT NULL
-  AND push_credentials.id NOT IN (
-    SELECT kept.id FROM push_credentials AS kept
-    WHERE kept.site_id IS sqlc.narg('SiteID') AND kept.deleted_at IS NOT NULL
-    ORDER BY kept.id DESC LIMIT CAST(sqlc.arg('Keep') AS INTEGER)
-  );
-
 -- name: DeletePushCredential :execrows
--- Soft deletes it, removing its secret
-UPDATE push_credentials SET
-    secret_enc = NULL,
-    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE id = sqlc.arg('ID') AND site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL;
+-- Deletes it for good, with its secret, so adding and deleting credentials again and again cannot grow the table
+DELETE FROM push_credentials WHERE id = sqlc.arg('ID') AND site_id IS sqlc.narg('SiteID');
 
 -- name: DeleteSitePushCredentials :exec
--- Soft deletes all a site's credentials, removing their secrets, as when it is deleted
-UPDATE push_credentials SET
-    secret_enc = NULL,
-    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE site_id = sqlc.arg('SiteID') AND deleted_at IS NULL;
+-- Deletes all a site's credentials for good, with their secrets, as when it is deleted
+DELETE FROM push_credentials WHERE site_id = sqlc.arg('SiteID');
 
 -- name: PushCredentialFor :one
 -- The credential to push to an app on a site's device with: the site's own, else the newest for every site, that
