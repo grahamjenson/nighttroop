@@ -8,12 +8,10 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
-	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
@@ -202,23 +200,6 @@ func glucoseFields(ctx context.Context) []addmodal.Field {
 	}
 }
 
-templ glucoseInputs(id string, value string, notes string) {
-	@field.Field(id+"--reading", "Reading ("+string(*glucoseUnits(ctx))+")", "w-28") {
-		@input.Input(input.Props{
-			ID:          id + "--reading",
-			Type:        input.TypeNumber,
-			Name:        "reading",
-			Placeholder: string(*glucoseUnits(ctx)),
-			Value:       value,
-			Required:    true,
-			Attributes:  glucoseInputAttributes(ctx),
-		})
-	}
-	@field.Field(id+"--notes", "Notes", "w-64") {
-		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	}
-}
-
 // glucoseReadingRow opens the reading's details when clicked.
 templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 	@table.DataRow("site--glucose--"+reading.ID, "/data/glucose/"+reading.ID, "Delete this glucose reading?") {
@@ -242,18 +223,10 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 }
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
-	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: modal.Submit("site--glucose--edit", "Save")}) {
-		<form
-			id="site--glucose--edit"
-			class="mt-4 flex flex-wrap items-end gap-2"
-			hx-post={ "/data/glucose/" + reading.ID }
-			hx-target={ "#site--glucose--" + reading.ID }
-			hx-swap="outerHTML"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@glucoseInputs("site--glucose--edit", formatGlucose(reading.Reading, reading.Units), orEmpty(reading.Notes))
-		</form>
+	{{ edit := addmodal.Props{ID: "site--glucose--edit", Path: "/data/glucose/" + reading.ID, Target: "#site--glucose--" + reading.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": formatGlucose(reading.Reading, reading.Units)}, "reading_type", "measurement_method")} }}
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Type", display.ReadingType(reading.ReadingType))
 			@readingDetail("Original Units", orDash(reading.OriginalUnits))

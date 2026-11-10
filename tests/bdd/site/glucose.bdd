@@ -36,7 +36,7 @@ CLICK #glucoseReadingsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--glucose--details
 ASSERT_TEXT_VISIBLE virtual_connector
 // Its type and trend read as they do in the table
-ASSERT_VISIBLE #site--glucose--details >> text=Sensor
+ASSERT_VISIBLE #site--glucose--details dl >> text=Sensor
 ASSERT_NOT_VISIBLE #site--glucose--details >> text=sgv
 SCREENSHOT glucose_reading_details
 
@@ -89,18 +89,23 @@ CLICK "Meter"
 ASSERT_TEXT_VISIBLE 8.6 mmol/L
 ASSERT_TEXT_VISIBLE Rechecked
 
-// Notes longer than the database keeps are refused in its own words, which the toast leaves to the Errors page
-INPUT #site--glucose--edit--notes {{ repeat "a" 1100 }}
+// Its edit has every field adding one has that an update changes, with the same labels and help, as it is
+ASSERT_VISIBLE #site--glucose--edit label[for=site--glucose--edit--reason] >> text=Reason
+ASSERT_TEXT_VISIBLE Why it was measured, e.g. before a meal.
+ASSERT_VISIBLE #site--glucose--edit--notes[value="Rechecked"]
+// but not its time or type, which an update keeps
+ASSERT_NOT_VISIBLE #site--glucose--edit--occurred-at
+ASSERT_NOT_VISIBLE #site--glucose--edit--reading-type
+// A reason is saved, and emptying the notes clears them
+INPUT #site--glucose--edit--reason Before lunch
+INPUT #site--glucose--edit--notes {{ "" }}
 CLICK #site--glucose--edit--submit
-ASSERT_STATUS 400
-ASSERT_TEXT_VISIBLE Something went wrong.
-ASSERT_VISIBLE #toaster >> text=Errors page
-ASSERT_NOT_VISIBLE #toaster >> text=CHECK constraint failed
-SCREENSHOT glucose_reading_error_recorded
-CLICK #toaster >> text=Errors page
-ASSERT_PATH /logs/errors
-ASSERT_VISIBLE #siteErrorsTable >> text=CHECK constraint failed
-SCREENSHOT glucose_reading_error_on_errors_page
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--glucose--details
+CLICK "Meter"
+ASSERT_VISIBLE #site--glucose--edit--reason[value="Before lunch"]
+ASSERT_NOT_VISIBLE #site--glucose--details >> text=Rechecked
+CLICK #site--glucose--details--close
 
 // Choosing mg/dL shows the same reading in mg/dL
 CLICK #site--nav--settings

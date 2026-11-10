@@ -523,8 +523,11 @@ units, whether it is required, with its limits, and a dropdown or suggestions fo
 settings' timezone, and is now when left blank; other fields left blank are not set.
 
 A record's details, on a data or presets page, edit it in a form whose every input is labelled, which wraps onto more
-lines on a phone so each input can be seen and tapped. Its Save (Rename for a profile) is at the modal's foot beside
-Close, as an add modal's Add is, and Enter in an input saves too.
+lines on a phone so each input can be seen and tapped. It has every field its add modal has, with the same labels,
+help and limits, filled in with the record's, but its time and those an edit does not change (a reading's type and
+method, a temp target's insulin needs). Emptying its notes or reason clears them; a number left blank stays as
+it was. Its Save (Rename for a profile) is at the modal's foot beside Close, as an add modal's Add is, and Enter in
+an input saves too.
 
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
 opens its details; Enter on its delete button deletes it without opening them. A row's delete icon, here and in
