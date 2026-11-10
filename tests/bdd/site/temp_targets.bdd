@@ -69,7 +69,8 @@ SCREENSHOT temp_target_updated
 // The edit is saved
 CLICK #tempTargetsTable tbody tr >> nth=0
 ASSERT_TEXT_VISIBLE 7.5 to 9.5 mmol/L for 45 minutes
-ASSERT_TEXT_VISIBLE Run
+ASSERT_VISIBLE #site--temp-target--edit--notes[value="Run"]
+ASSERT_COUNT #site--temp-target--details :is(dt, label):has-text("Notes") 1
 CLICK #site--temp-target--details--close
 
 // A page of one temp target pages through them, newest first

@@ -334,26 +334,6 @@ func InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Type", orDash(insulinDose.DoseType)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Given at once (%)", percentOr(insulinDose.SplitNow, "-")).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Extended (%)", percentOr(insulinDose.SplitExt, "-")).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Notes", orDash(insulinDose.Notes)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = readingDetail("Reason", orDash(insulinDose.Reason)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
 			templ_7745c5c3_Err = RecordDetails(Record{ID: insulinDose.ID, UtcOffset: insulinDose.UtcOffsetMinutes, App: insulinDose.CreatedByAppName, Device: insulinDose.CreatedByDeviceName, CreatedBy: insulinDose.CreatedByIdentityName, Created: insulinDose.CreatedAt, Updated: insulinDose.UpdatedAt, UpdatedBy: insulinDose.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

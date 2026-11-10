@@ -87,12 +87,6 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Minutes", orDash(activity.DurationMinutes))
-			@readingDetail("Calories", orDash(activity.Calories))
-			@readingDetail("Steps", orDash(activity.Steps))
-			@readingDetail("Heart Rate", orDash(activity.HeartRate))
-			@readingDetail("Notes", orDash(activity.Notes))
-			@readingDetail("Reason", orDash(activity.Reason))
 			@RecordDetails(Record{ID: activity.ID, UtcOffset: activity.UtcOffsetMinutes, App: activity.CreatedByAppName, Device: activity.CreatedByDeviceName, CreatedBy: activity.CreatedByIdentityName, Created: activity.CreatedAt, Updated: activity.UpdatedAt, UpdatedBy: activity.UpdatedByIdentityName})
 		</dl>
 	}

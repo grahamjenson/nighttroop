@@ -218,17 +218,14 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Type", display.ReadingType(reading.ReadingType))
-			@readingDetail("Original Units", orDash(reading.OriginalUnits))
-			@readingDetail("Measurement Method", orDash(reading.MeasurementMethod))
-			@readingDetail("Direction", directionDetail(reading.Direction))
-			@readingDetail("Delta", orDash(reading.Delta))
-			@readingDetail("Noise", orDash(reading.Noise))
-			@readingDetail("Filtered", orDash(reading.Filtered))
-			@readingDetail("Unfiltered", orDash(reading.Unfiltered))
-			@readingDetail("RSSI", orDash(reading.Rssi))
-			@readingDetail("Notes", orDash(reading.Notes))
-			@readingDetail("Reason", orDash(reading.Reason))
+			@addmodal.Detail(edit, "reading_type", "Type", display.ReadingType(reading.ReadingType))
+			@addmodal.Detail(edit, "original_units", "Original Units", orDash(reading.OriginalUnits))
+			@addmodal.Detail(edit, "measurement_method", "Measurement Method", orDash(reading.MeasurementMethod))
+			@addmodal.Detail(edit, "delta", "Delta", orDash(reading.Delta))
+			@addmodal.Detail(edit, "noise", "Noise", orDash(reading.Noise))
+			@addmodal.Detail(edit, "filtered", "Filtered", orDash(reading.Filtered))
+			@addmodal.Detail(edit, "unfiltered", "Unfiltered", orDash(reading.Unfiltered))
+			@addmodal.Detail(edit, "rssi", "RSSI", orDash(reading.Rssi))
 			@RecordDetails(Record{ID: reading.ID, UtcOffset: reading.UtcOffsetMinutes, App: reading.CreatedByAppName, Device: reading.CreatedByDeviceName, CreatedBy: reading.CreatedByIdentityName, Created: reading.CreatedAt, Updated: reading.UpdatedAt, UpdatedBy: reading.UpdatedByIdentityName})
 		</dl>
 	}

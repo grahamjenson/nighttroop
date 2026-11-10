@@ -75,7 +75,11 @@ SCREENSHOT profile_switch_updated
 CLICK #profileSwitchesTable tbody tr >> nth=1
 ASSERT_VISIBLE #site--profile-switch--details
 ASSERT_TEXT_VISIBLE Virtual at 80%
-ASSERT_TEXT_VISIBLE Exercise
+ASSERT_VISIBLE #site--profile-switch--edit--notes[value="Exercise"]
+// What it edits is shown once, in its form, and what it does not, like its DIA, is listed below it
+ASSERT_COUNT #site--profile-switch--details :is(dt, label):has-text("Insulin (%)") 1
+ASSERT_COUNT #site--profile-switch--details :is(dt, label):has-text("Notes") 1
+ASSERT_VISIBLE #site--profile-switch--details dt:text-is("DIA (hours)")
 CLICK #site--profile-switch--details--close
 ASSERT_NOT_VISIBLE #site--profile-switch--details
 

@@ -38,6 +38,9 @@ ASSERT_TEXT_VISIBLE virtual_connector
 // Its type and trend read as they do in the table
 ASSERT_VISIBLE #site--glucose--details dl >> text=Sensor
 ASSERT_NOT_VISIBLE #site--glucose--details >> text=sgv
+// Its trend is shown once, chosen in its edit form, not again in the details listed below it
+ASSERT_VISIBLE #site--glucose--edit--direction:not(:has(option[value=""]:checked))
+ASSERT_NOT_VISIBLE #site--glucose--details dt:text-is("Direction")
 SCREENSHOT glucose_reading_details
 
 CLICK #site--glucose--details--close
@@ -73,7 +76,7 @@ SCREENSHOT glucose_reading_created
 // Its details can be edited, which updates its row
 CLICK "Meter"
 ASSERT_VISIBLE #site--glucose--details
-ASSERT_TEXT_VISIBLE Finger prick
+ASSERT_VISIBLE #site--glucose--edit--notes[value="Finger prick"]
 SCREENSHOT glucose_reading_edit
 INPUT #site--glucose--edit--reading 8.6
 INPUT #site--glucose--edit--notes Rechecked
@@ -87,7 +90,10 @@ SCREENSHOT glucose_reading_updated
 // The edit is saved
 CLICK "Meter"
 ASSERT_TEXT_VISIBLE 8.6 mmol/L
-ASSERT_TEXT_VISIBLE Rechecked
+// Its notes are shown once, in its edit form, not again in the details listed below it, which keep what an update
+// does not change, like its type
+ASSERT_COUNT #site--glucose--details :is(dt, label):has-text("Notes") 1
+ASSERT_VISIBLE #site--glucose--details dt:text-is("Type")
 
 // Its edit has every field adding one has that an update changes, with the same labels and help, as it is
 ASSERT_VISIBLE #site--glucose--edit label[for=site--glucose--edit--reason] >> text=Reason

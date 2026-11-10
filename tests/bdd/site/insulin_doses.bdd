@@ -57,15 +57,21 @@ CLICK #insulinDosesTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--insulin--details
 ASSERT_TEXT_VISIBLE 4 units
 ASSERT_TEXT_VISIBLE admin
-// Its split is shown as the percents it was typed in as
-ASSERT_VISIBLE #site--insulin--details dt:text-is("Given at once (%)")
-ASSERT_VISIBLE #site--insulin--details dd:text-is("70")
-ASSERT_VISIBLE #site--insulin--details dd:text-is("30")
 ASSERT_VISIBLE #site--insulin--edit label[for="site--insulin--edit--dose"]
-// It edits its split as the same percents, as it does its type
+// It edits its split as the percents it was typed in as, as it does its type
 ASSERT_VISIBLE #site--insulin--edit--split-now[value="70"]
+ASSERT_VISIBLE #site--insulin--edit--split-ext[value="30"]
 ASSERT_VISIBLE #site--insulin--edit--dose-type
+// Each field its edit form has is shown once, in the form, not again in the details listed below it
+ASSERT_COUNT #site--insulin--details :is(dt, label):has-text("Given at once (%)") 1
+ASSERT_COUNT #site--insulin--details :is(dt, label):has-text("Notes") 1
+ASSERT_NOT_VISIBLE #site--insulin--details dt:text-is("Type")
+ASSERT_NOT_VISIBLE #site--insulin--details dd:text-is("70")
 SCREENSHOT insulin_dose_edit
+// Scrolled to its foot, below the form are only the record's own details, which cannot be edited
+SCROLL 2000
+ASSERT_VISIBLE #site--insulin--details dt:text-is("Created By")
+SCREENSHOT insulin_dose_details_record
 INPUT #site--insulin--edit--dose 4.5
 INPUT #site--insulin--edit--split-now 60
 INPUT #site--insulin--edit--split-ext 40
@@ -80,8 +86,9 @@ SCREENSHOT insulin_dose_updated
 // The edit is saved
 CLICK #insulinDosesTable tbody tr >> nth=0
 ASSERT_TEXT_VISIBLE 4.5 units
-ASSERT_VISIBLE #site--insulin--details dd:text-is("60")
+ASSERT_VISIBLE #site--insulin--edit--split-now[value="60"]
 ASSERT_VISIBLE #site--insulin--edit--split-ext[value="40"]
+ASSERT_VISIBLE #site--insulin--edit--notes[value="Big lunch"]
 CLICK #site--insulin--details--close
 ASSERT_NOT_VISIBLE #site--insulin--details
 

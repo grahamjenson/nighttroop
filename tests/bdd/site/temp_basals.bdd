@@ -24,9 +24,9 @@ SCREENSHOT temp_basals
 CLICK #tempBasalsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-basal--details
 ASSERT_TEXT_VISIBLE virtual_connector
-// Only what it has is listed: virtual connector sets a rate, not a multiplier of the basal
+// Its record's details are listed, and what it edits, like its multiplier of the basal, is shown once, in its form
 ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
-ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Basal (%)")
+ASSERT_COUNT #site--temp-basal--details :is(dt, label):has-text("Basal (%)") 1
 SCREENSHOT temp_basal_details
 
 CLICK #site--temp-basal--details--close
@@ -72,7 +72,7 @@ SCREENSHOT temp_basal_updated
 // The edit is saved
 CLICK #tempBasalsTable tbody tr >> nth=0
 ASSERT_TEXT_VISIBLE 1.75 U/hr for 45 minutes
-ASSERT_TEXT_VISIBLE Exercise
+ASSERT_VISIBLE #site--temp-basal--edit--notes[value="Exercise"]
 CLICK #site--temp-basal--details--close
 
 // A page of one temp basal pages through them, newest first

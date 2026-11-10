@@ -310,42 +310,6 @@ func FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = presetDetail("Food Type", orDash(foodPreset.FoodType)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Category", orDash(foodPreset.Category)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Subcategory", orDash(foodPreset.Subcategory)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Fat (g)", orDash(foodPreset.Fat)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Protein (g)", orDash(foodPreset.Protein)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Fibre (g)", orDash(foodPreset.Fibre)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Energy", orDash(foodPreset.Energy)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Portions", orDash(foodPreset.Portions)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = presetDetail("Pre-bolus (minutes)", orDash(foodPreset.PreBolus)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
 			templ_7745c5c3_Err = site_data_templ.RecordDetails(site_data_templ.Record{ID: foodPreset.ID, App: foodPreset.CreatedByAppName, Device: foodPreset.CreatedByDeviceName, CreatedBy: foodPreset.CreatedByIdentityName, Created: foodPreset.CreatedAt, Updated: foodPreset.UpdatedAt, UpdatedBy: foodPreset.UpdatedByIdentityName}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

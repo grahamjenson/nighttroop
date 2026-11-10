@@ -574,9 +574,10 @@ lines on a phone so each input can be seen and tapped. It has every field its ad
 help and limits, filled in with the record's, but its time and those an edit does not change (a reading's type and
 method, a temp target's insulin needs). Emptying its notes or reason clears them; a number left blank stays as
 it was. Its Save (Rename for a profile) is at the modal's foot beside Close, as an add modal's Add is, and Enter in
-an input saves too. Its details are labelled as its add modal's fields are (e.g. Fat (g), Pre-bolus (minutes)), and
-end with the same Record section on every page: its ID, UTC offset, app, device, who created and last updated it and
-when, each left out when it is not set.
+an input saves too. Each field is shown once: one its form edits (e.g. an insulin dose's split, type, notes and
+reason, or a reading's trend) is not listed again in the details below the form, which keep only what it does not
+edit (e.g. a reading's type, a profile switch's DIA), and end with the same Record section on every page: its ID,
+UTC offset, app, device, who created and last updated it and when, each left out when it is not set.
 
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
 opens its details; Enter on its delete button deletes it without opening them. A row's delete icon, here and in

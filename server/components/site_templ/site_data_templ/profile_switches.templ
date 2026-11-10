@@ -96,16 +96,11 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			@ProfileSchedule("site--profile-switch--details--targets-high", "High Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsHighJson, siteContext), GlucoseValue(units))
 		</div>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Insulin (%)", percentOr(profileSwitch.Multiplier, "-"))
-			@readingDetail("Shift (minutes)", orDash(profileSwitch.Timeshift))
-			@readingDetail("Minutes", orDash(profileSwitch.DurationMinutes))
-			@readingDetail("DIA (hours)", orDash(profileSwitch.Dia))
-			@readingDetail("Profile Units", orDash(profileSwitch.Units))
-			@readingDetail("Timezone", orDash(profileSwitch.Timezone))
-			@readingDetail("Carbs per Hour", orDash(profileSwitch.CarbsHr))
-			@readingDetail("Delay", orDash(profileSwitch.Delay))
-			@readingDetail("Notes", orDash(profileSwitch.Notes))
-			@readingDetail("Reason", orDash(profileSwitch.Reason))
+			@addmodal.Detail(edit, "dia", "DIA (hours)", orDash(profileSwitch.Dia))
+			@addmodal.Detail(edit, "units", "Profile Units", orDash(profileSwitch.Units))
+			@addmodal.Detail(edit, "timezone", "Timezone", orDash(profileSwitch.Timezone))
+			@addmodal.Detail(edit, "carbs_hr", "Carbs per Hour", orDash(profileSwitch.CarbsHr))
+			@addmodal.Detail(edit, "delay", "Delay", orDash(profileSwitch.Delay))
 			@RecordDetails(Record{ID: profileSwitch.ID, UtcOffset: profileSwitch.UtcOffsetMinutes, App: profileSwitch.CreatedByAppName, Device: profileSwitch.CreatedByDeviceName, CreatedBy: profileSwitch.CreatedByIdentityName, Created: profileSwitch.CreatedAt, Updated: profileSwitch.UpdatedAt, UpdatedBy: profileSwitch.UpdatedByIdentityName})
 		</dl>
 	}
