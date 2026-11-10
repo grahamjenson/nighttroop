@@ -626,7 +626,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   the site refuses, such as a Nightscout treatment with an eventType it does not know, is skipped. The first of each
   sync is recorded as an error of the site's connector with the record (up to 8 KB) and sent to Sentry with it, to
   debug it by.
-- A working source can be backfilled with the days before its oldest reading. A Nightscout or virtual backfill also
+- A working source can be backfilled with the days before its oldest reading, from midnight in the site's timezone,
+  so its data starts at the start of a day. A Nightscout or virtual backfill also
   fetches the last 2 days again, to fill gaps the site missed while it was down, as for a deploy, and its toast says so;
   Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours. A Nightscout backfill keeps the
   device statuses it adds without their loop status (`openaps` or `loop`) or `pump` as sent, which are of no use once old

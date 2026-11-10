@@ -33,7 +33,7 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	backfill, err := connectors.BackfillRange(r.Context(), siteContext.SiteDB, connectorType, siteContext.Config.BackfillDays)
+	backfill, err := connectors.BackfillRange(r.Context(), siteContext.SiteDB, connectorType, siteContext.Config.BackfillDays, siteContext.GetSiteTimezone())
 	if err == nil {
 		err = connectors.QueueBackfill(r.Context(), siteContext.ControlDB, siteContext.SiteID, connectorType, backfill)
 	}
