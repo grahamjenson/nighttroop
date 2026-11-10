@@ -24,6 +24,29 @@ func percentText(v *float64) string {
 	return fmt.Sprintf("%.0f%%", math.Round(*v))
 }
 
+// gmiDays and cgmActiveGoal are the days with data a GMI needs, and the percent of the time the CGM must read, for a
+// report's numbers to be reliable, as the international consensus on CGM metrics has them
+const (
+	gmiDays       = 14
+	cgmActiveGoal = 70.0
+)
+
+// gmiNote cautions that a GMI of fewer than gmiDays days with data is less reliable
+func gmiNote(p *sitemodels.SiteSummaryPeriod) string {
+	if p.GMI == nil || p.Days >= gmiDays {
+		return ""
+	}
+	return fmt.Sprintf("Reliable from %d days of data", gmiDays)
+}
+
+// cgmActiveNote cautions that numbers from a CGM that read for less than cgmActiveGoal of the time may not be typical
+func cgmActiveNote(p *sitemodels.SiteSummaryPeriod) string {
+	if p.CGMActive == nil || *p.CGMActive >= cgmActiveGoal {
+		return ""
+	}
+	return fmt.Sprintf("Under %.0f%%, so these numbers may not be typical", cgmActiveGoal)
+}
+
 // glucoseText is glucose in the units, mmol/L to one decimal place and mg/dL whole, or "–" for none
 func glucoseText(v *float64, units *consts.Units) string {
 	if v == nil {

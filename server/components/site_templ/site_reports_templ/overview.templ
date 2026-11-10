@@ -23,12 +23,12 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			<h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</h2>
 			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 				<dl class="space-y-6">
-					@bigStat("site--overview--mean", "Average glucose", glucoseText(p.Mean, p.Units), string(*p.Units))
-					@bigStat("site--overview--sd", "Standard deviation", glucoseText(p.SD, p.Units), string(*p.Units))
+					@bigStat("site--overview--mean", "Average glucose", glucoseText(p.Mean, p.Units), string(*p.Units), "")
+					@bigStat("site--overview--sd", "Standard deviation", glucoseText(p.SD, p.Units), string(*p.Units), "")
 				</dl>
 				<dl class="space-y-6">
-					@bigStat("site--overview--gmi", "GMI", oneDecimal(p.GMI), "%")
-					@bigStat("site--overview--cv", "Coefficient of variation", oneDecimal(p.CV), "%")
+					@bigStat("site--overview--gmi", "GMI", oneDecimal(p.GMI), "%", gmiNote(p))
+					@bigStat("site--overview--cv", "Coefficient of variation", oneDecimal(p.CV), "%", "")
 				</dl>
 				<div>
 					<h3 class="text-sm font-medium text-gray-700">Time in range</h3>
@@ -40,24 +40,26 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				<div>
 					<h3 class="text-sm font-medium text-gray-700">Sensor usage</h3>
 					<dl class="mt-2 space-y-3">
-						@smallStat("site--overview--days", "Days with data", fmt.Sprintf("%d/%d", p.Days, periodDays(p, now, location)), "days")
-						@smallStat("site--overview--cgm-active", "Time CGM active", percentText(p.CGMActive), "")
-						@smallStat("site--overview--meter", "Meter readings a day", perDay(p.MeterReadings, periodDays(p, now, location)), "")
+						@smallStat("site--overview--days", "Days with data", fmt.Sprintf("%d/%d", p.Days, periodDays(p, now, location)), "days", "")
+						@smallStat("site--overview--cgm-active", "Time CGM active", percentText(p.CGMActive), "", cgmActiveNote(p))
+						@smallStat("site--overview--meter", "Meter readings a day", perDay(p.MeterReadings, periodDays(p, now, location)), "", "")
 					</dl>
 				</div>
 			</div>
 		</section>
 		if best := bestDay(daily, now); best != nil && p.Period != "day" {
 			{{ date, _ := time.ParseInLocation(time.DateOnly, best.Date, location) }}
-			<section id="site--overview--best-day" class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+			{{ low, high := site_data_templ.RangeBounds(ctx) }}
+			<section id="site--overview--best-day" class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 				<span class="h-10 w-1.5 shrink-0 rounded-full bg-glucose-in-range"></span>
-				<div>
+				<div class="min-w-0 flex-1">
 					<h2 class="font-semibold text-gray-900">
 						Best day:
 						<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } hx-get={ link("overview", "day", date) } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ date.Format("Monday 2 January 2006") }</a>
 					</h2>
 					<p class="text-sm text-gray-600">Glucose was in range about { percentText(best.TimeInRange) } of the day.</p>
 				</div>
+				@dayGlucose("site--overview--best-day--", "h-14 w-full sm:w-64", best.Glucose, p.Units, low, high)
 			</section>
 		}
 		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -85,15 +87,15 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				<a id="site--overview--tdd" class="text-sm text-primary underline" href={ templ.SafeURL(tddLink(last, now)) } hx-get={ tddLink(last, now) } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">Each day's dose</a>
 			</div>
 			<dl class="grid grid-cols-2 gap-6">
-				@bigStat("site--overview--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, ""), "U")
-				@bigStat("site--overview--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g")
+				@bigStat("site--overview--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "")
+				@bigStat("site--overview--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g", "")
 			</dl>
 		</section>
 	</div>
 }
 
-// bigStat is a number of the report in large type, with its units beside it
-templ bigStat(id, label, value, units string) {
+// bigStat is a number of the report in large type, with its units beside it, and a note under it if there is one
+templ bigStat(id, label, value, units, note string) {
 	<div>
 		<dt class="text-sm font-medium text-gray-700">{ label }</dt>
 		<dd class="mt-1 flex items-baseline gap-1.5">
@@ -102,11 +104,12 @@ templ bigStat(id, label, value, units string) {
 				<span class="text-sm text-gray-500">{ units }</span>
 			}
 		</dd>
+		@statNote(id, note)
 	</div>
 }
 
-// smallStat is a number of the report, with its units beside it
-templ smallStat(id, label, value, units string) {
+// smallStat is a number of the report, with its units beside it, and a note under it if there is one
+templ smallStat(id, label, value, units, note string) {
 	<div>
 		<dt class="text-xs text-gray-500">{ label }</dt>
 		<dd class="flex items-baseline gap-1">
@@ -115,7 +118,15 @@ templ smallStat(id, label, value, units string) {
 				<span class="text-sm text-gray-500">{ units }</span>
 			}
 		</dd>
+		@statNote(id, note)
 	</div>
+}
+
+// statNote is a caution under a number of the report, such as that it needs more data to be reliable
+templ statNote(id, note string) {
+	if note != "" {
+		<dd id={ id + "--note" } class="mt-0.5 text-xs text-glucose-high-text">{ note }</dd>
+	}
 }
 
 // timeInRanges is the period's time in each range as a bar of them stacked, very high at the top, each band beside it

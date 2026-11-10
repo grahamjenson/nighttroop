@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/display"
@@ -193,7 +194,6 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 // midnight over the range shaded, coloured above and below it, opening its report
 templ dailyProfiles(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, low, high float64) {
 	{{ weeks := profileWeeks(ctx, p, daily, reportLocation(ctx)) }}
-	{{ g := graph{Width: 288, Height: 60, Left: 0, Right: 288, Top: 2, Bottom: 58, Min: p.Units.FromMGDL(40), Max: p.Units.FromMGDL(300), Units: p.Units} }}
 	<div class="grid grid-cols-7 border-l border-t border-gray-200 text-xs">
 		if p.Period != "day" {
 			for _, day := range weeks[0] {
@@ -208,25 +208,35 @@ templ dailyProfiles(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSum
 					{{ path := link("agp", "day", day.Date) }}
 					<a id={ "site--agp--day-" + day.Date.Format(time.DateOnly) } class={ "block border-b border-r border-gray-200 p-1 hover:bg-gray-50", templ.KV("col-span-7", p.Period == "day") } href={ templ.SafeURL(path) } hx-get={ path } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">
 						<span class="font-semibold text-gray-900">{ day.Date.Format("2") }</span>
-						<svg class="h-12 w-full" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } preserveAspectRatio="none" aria-hidden="true">
-							<rect class="fill-gray-100" x="0" width={ f(g.Width) } y={ f(g.Y(high)) } height={ f(g.Y(low) - g.Y(high)) }></rect>
-							if day.Day != nil {
-								{{ id := "site--agp--day-" + day.Date.Format(time.DateOnly) + "--" }}
-								<defs>
-									for _, r := range regions {
-										<clipPath id={ id + r.Suffix }>
-											<rect x="0" width={ f(g.Width) } y={ f(r.Top(g, low, high)) } height={ f(max(r.Bottom(g, low, high)-r.Top(g, low, high), 0)) }></rect>
-										</clipPath>
-									}
-								</defs>
-								for _, r := range regions {
-									<path class={ "site--agp--glucose " + r.Stroke } clip-path={ "url(#" + id + r.Suffix + ")" } fill="none" stroke-width="1.5" vector-effect="non-scaling-stroke" d={ linePath(g, day.Day.Glucose) }></path>
-								}
-							}
-						</svg>
+						if day.Day != nil {
+							@dayGlucose("site--agp--day-"+day.Date.Format(time.DateOnly)+"--", "h-12 w-full", day.Day.Glucose, p.Units, low, high)
+						} else {
+							@dayGlucose("site--agp--day-"+day.Date.Format(time.DateOnly)+"--", "h-12 w-full", nil, p.Units, low, high)
+						}
 					</a>
 				}
 			}
 		}
 	</div>
+}
+
+// dayGlucose is a day's glucose from midnight, every 5 minutes, as a small graph over the range shaded, coloured above
+// and below it, its clip paths' IDs starting with id
+templ dayGlucose(id, class string, glucose []*float64, units *consts.Units, low, high float64) {
+	{{ g := graph{Width: 288, Height: 60, Left: 0, Right: 288, Top: 2, Bottom: 58, Min: units.FromMGDL(40), Max: units.FromMGDL(300), Units: units} }}
+	<svg class={ class } viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } preserveAspectRatio="none" aria-hidden="true">
+		<rect class="fill-gray-100" x="0" width={ f(g.Width) } y={ f(g.Y(high)) } height={ f(g.Y(low) - g.Y(high)) }></rect>
+		if len(glucose) > 0 {
+			<defs>
+				for _, r := range regions {
+					<clipPath id={ id + r.Suffix }>
+						<rect x="0" width={ f(g.Width) } y={ f(r.Top(g, low, high)) } height={ f(max(r.Bottom(g, low, high)-r.Top(g, low, high), 0)) }></rect>
+					</clipPath>
+				}
+			</defs>
+			for _, r := range regions {
+				<path class={ "site--agp--glucose " + r.Stroke } clip-path={ "url(#" + id + r.Suffix + ")" } fill="none" stroke-width="1.5" vector-effect="non-scaling-stroke" d={ linePath(g, glucose) }></path>
+			}
+		}
+	</svg>
 }
