@@ -67,6 +67,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   method and route are its transaction. Its stack trace ends at the code that logged it, without slog's frames.
 - The banner also says when the server has 90% or more of the sites `MAX_SITES` allows, and when it has them all.
 - Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
+- Every control page shows its dates and times in UTC, e.g. `2026-10-26 12:00:00`, and `-` for one not set.
 
 ### Sites
 
@@ -134,7 +135,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - The jobs page lists the background jobs, newest first, with their duration; clicking one shows its details and
   errors.
-- The job stats page summarises each day's jobs, newest day first, with its totals and errors.
+- The job stats page summarises each day's jobs, newest day first, with its totals and errors, and its jobs' mean and
+  spread of durations in the units that suit them, as the jobs page's are.
 - A failed job, and each day's job stats, link to the logs of its failed runs (the day's last 16), narrowed to the
   run's `job_id`, to see why it failed.
 - Every run of a cron or queued job logs its name and a `job_id` of its own (a queued one also its `queued_job_id`),
