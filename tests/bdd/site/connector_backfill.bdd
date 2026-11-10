@@ -1,7 +1,8 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/connectors
@@ -30,7 +31,8 @@ ASSERT_VISIBLE #glucoseReadingsTable
 ASSERT_NOT_VISIBLE #site--glucose--next
 
 // Backfilling says what it will fetch, and asking again before it has run starts nothing
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--backfill
@@ -49,7 +51,8 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--glucose--next
 
 // The Connectors page shows how the virtual connector has synced, how often and why, its backfill, and its recent events
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--virtual-connector--status

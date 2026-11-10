@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/sitenav"
+	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -19,13 +20,17 @@ func signedIn(ctx context.Context) *controldb.SiteIdentity {
 	return nil
 }
 
-// hubIcon is the icon of a hub's link in the header, all the link shows on a phone
+// hubIcon is the icon of a hub's link in the header, all the link shows on a phone, or in the account menu
 func hubIcon(hub sitenav.Hub) templ.Component {
 	switch hub {
 	case sitenav.Data:
 		return icon.Database(icon.Props{Class: "size-4"})
 	case sitenav.Reports:
 		return icon.ChartLine(icon.Props{Class: "size-4"})
+	case sitenav.Alarms:
+		return icon.BellRing(icon.Props{Class: "size-4"})
+	case sitenav.Logs:
+		return icon.ScrollText(icon.Props{Class: "size-4"})
 	}
 	return icon.Settings(icon.Props{Class: "size-4"})
 }
@@ -62,11 +67,11 @@ templ HeaderLinks(path string, oob bool) {
 		>
 			@icon.House(icon.Props{Class: "size-4"})
 		</a>
-		for _, hub := range sitenav.Hubs {
+		for _, hub := range sitenav.HeaderHubs {
 			if pages := sitenav.Visible(signedIn(ctx), hub); len(pages) > 0 {
 				{{ current := page != nil && page.Hub == hub }}
 				<a
-					id={ "site--nav--" + strings.ToLower(string(hub)) }
+					id={ "site--nav--" + hub.Slug() }
 					href={ templ.SafeURL(pages[0].Path) }
 					aria-label={ string(hub) }
 					class={ headerLinkClass(current) }
@@ -83,15 +88,67 @@ templ HeaderLinks(path string, oob bool) {
 	</nav>
 }
 
-// InHub is a page's content in its hub's tabs, when it is one of a hub's pages, and when it is opened in the main
-// content (oob), with the header's links marking its hub
+// MenuLinks are the account menu's links to each of its hubs the identity may open, under a separator, path's hub
+// marked. A page opened in the main content sends them out of band, as it does the header's links.
+templ MenuLinks(path string, oob bool) {
+	{{ page := sitenav.At(path) }}
+	<div
+		id="site--nav--menu"
+		if oob {
+			hx-swap-oob="true"
+		}
+	>
+		if len(sitenav.Visible(signedIn(ctx), sitenav.MenuHubs...)) > 0 {
+			@dropdown.Separator()
+			@dropdown.Group() {
+				for _, hub := range sitenav.MenuHubs {
+					if pages := sitenav.Visible(signedIn(ctx), hub); len(pages) > 0 {
+						{{ current := page != nil && page.Hub == hub }}
+						@dropdown.Item(dropdown.ItemProps{
+							ID:         "site--nav--menu--" + hub.Slug(),
+							Href:       "#",
+							Class:      menuLinkClass(current),
+							Attributes: menuLinkAttributes(pages[0].Path, current),
+						}) {
+							<span class="flex items-center gap-2">
+								@hubIcon(hub)
+								{ string(hub) }
+							</span>
+						}
+					}
+				}
+			}
+		}
+	</div>
+}
+
+func menuLinkClass(current bool) string {
+	if current {
+		return "bg-primary/10 font-semibold text-brand-night"
+	}
+	return ""
+}
+
+// menuLinkAttributes open path as a hub's tab does, marked when it is the hub shown
+func menuLinkAttributes(path string, current bool) templ.Attributes {
+	attributes := nav.Attributes(path)
+	if current {
+		attributes["aria-current"] = "page"
+	}
+	return attributes
+}
+
+// InHub is a page's content in its hub's tabs, when it is one of a hub's pages the identity may open with others, and
+// when it is opened in the main content (oob), with the header's links and the account menu marking its hub. A hub's
+// pages in groups are side tabs, and those in none a row of tabs.
 templ InHub(path string, content templ.Component, oob bool) {
 	if oob {
 		@HeaderLinks(path, true)
+		@MenuLinks(path, true)
 	}
-	if page := sitenav.At(path); page != nil {
+	if page := sitenav.At(path); page != nil && len(sitenav.Visible(signedIn(ctx), page.Hub)) > 1 {
 		{{ pages := sitenav.Visible(signedIn(ctx), page.Hub) }}
-		if page.Hub != sitenav.Reports {
+		if page.Group != "" {
 			@sideTabs(page, pages) {
 				@content
 			}
@@ -108,7 +165,7 @@ templ InHub(path string, content templ.Component, oob bool) {
 // topTabs are a row of a hub's pages over the page, wrapping in a narrow window, and on a phone scrolling sideways on
 // its own, so the page does not get wider
 templ topTabs(current *sitenav.Page, pages []sitenav.Page) {
-	<div id={ "site--hub--" + strings.ToLower(string(current.Hub)) }>
+	<div id={ "site--hub--" + current.Hub.Slug() }>
 		<nav aria-label={ string(current.Hub) + " pages" } class="-mx-4 overflow-x-auto border-b border-gray-200 px-4 pb-2 sm:mx-0 sm:px-0">
 			<ul class="flex gap-1 sm:flex-wrap">
 				for _, page := range pages {
@@ -125,7 +182,7 @@ templ topTabs(current *sitenav.Page, pages []sitenav.Page) {
 // sideTabs are a hub's pages in their groups beside the page, or above it on a phone, where they wrap without their
 // groups' names
 templ sideTabs(current *sitenav.Page, pages []sitenav.Page) {
-	<div id={ "site--hub--" + strings.ToLower(string(current.Hub)) } class="md:flex md:gap-6">
+	<div id={ "site--hub--" + current.Hub.Slug() } class="md:flex md:gap-6">
 		<nav aria-label={ string(current.Hub) + " pages" } class="mb-4 flex flex-wrap gap-1 pt-2 md:mb-0 md:block md:w-52 md:shrink-0 md:space-y-4 md:border-r md:border-gray-200 md:pr-4 md:pt-4">
 			for _, group := range sitenav.Groups(pages, false) {
 				<div class="contents md:block">

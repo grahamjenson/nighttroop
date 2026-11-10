@@ -331,21 +331,22 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Navigation
 
-- The header has the logo and a home icon, both opening the summary (`/`), and links to the Data, Reports and Settings
-  hubs, each opening its hub's first page; there is no Summary link. The hub of the page shown is marked, after a page
+- The header has the logo and a home icon, both opening the summary (`/`), and links to the Data and Reports hubs, each
+  opening its hub's first page; there is no Summary or Settings link. The hub of the page shown is marked, after a page
   opened from a link or tab as well as one loaded in full, and the home icon on the summary.
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
   Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
   Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
 - Reports has a tab for each report: Summaries, Overview, AGP and TDD, and opens on Summaries.
-- Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
-  Connections (Connectors, Push Notifications) and Troubleshooting (Events, Errors, Logs). Another identity's settings
-  count as Users & Devices.
+- Settings, from the user menu, has side tabs in groups: This site (General), People & devices (Users & Devices, Push
+  Devices) and Connections (Connectors, Push Notifications). Another identity's settings count as Users & Devices.
+- Alarms, from the user menu, is a page of its own (`/settings/alarms`), with no tabs.
+- Logs & Events, from the user menu, has a row of tabs, Events, Errors and Logs, and opens on Events.
 - A hub's tab for the page shown is marked; each tab keeps its page's own URL, so links, back and forward still work.
-- Only the tabs an identity may open are shown: someone who is not an admin has no Users & Devices, Connectors, Push
-  Notifications, Events, Errors or Logs.
+- Only the tabs and menu items an identity may open are shown: someone who is not an admin has no Users & Devices,
+  Connectors or Push Notifications tab, and no Logs & Events in the user menu.
 - The header's search finds a page by its name, group or hub as it is typed, whatever the case, listing them under
-  their hub, only those the identity may open, or "No pages match".
+  their hub (Data, Reports, Settings, Alarms, or Logs & Events), only those the identity may open, or "No pages match".
 - The search also finds a page by the headings and words on it, showing the one it was found by next to the page's
   name: Nightscout or Dexcom finds Connectors, low finds Alarms (Low Alarm), timezone finds General settings.
 - The search also finds a page by what people also call it: BGL or blood sugar finds Glucose Readings, bolus finds
@@ -353,8 +354,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - In the search, the arrow keys move through the results, Enter or a click opens one, Escape closes them, and Ctrl+K
   (⌘K on a Mac) goes to the search from anywhere.
 - On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Reports'
-  tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page gets wider.
-- The user menu has only who is signed in, My Account, Getting Started and Logout.
+  and Logs & Events' tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page
+  gets wider. The user menu is the same as on a computer.
+- The user menu has who is signed in, My Account, Getting Started, then Settings, Alarms, and Logs & Events, each with
+  its icon and marked when its page is shown, and Logout.
 - Every link and button opening a page in place of this one, as the tabs, pagers and filters do, keeps its URL, so back
   returns, and clicking several quickly shows the last one clicked.
 
@@ -504,6 +507,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   their settings and sets up alarms.
 - Someone who is not an admin is told the admin sets up the site's data and who can use it.
 - The guide is always in the user menu, as Getting Started, and on My Account, which says what it is and opens it.
+- The guide ends saying where the rest is: readings, treatments and presets under Data, reports under Reports, and the
+  site's settings, alarms, and logs and events in the user menu.
 
 ### Data
 

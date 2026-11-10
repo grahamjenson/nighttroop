@@ -30,7 +30,8 @@ GOTO /reports
 ASSERT_STATUS 200
 
 // The virtual connector fills its last 30 minutes, and a backfill the day before it (tests backfill a day)
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

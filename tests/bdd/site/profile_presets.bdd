@@ -11,7 +11,8 @@ ASSERT_VISIBLE #presets--profiles--empty
 SCREENSHOT profiles_empty
 
 // Virtual connector uploads a profile store, as a loop does
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

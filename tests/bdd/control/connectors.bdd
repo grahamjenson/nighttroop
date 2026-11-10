@@ -20,7 +20,8 @@ ASSERT_VISIBLE #site--login--otp-1
 TYPE #site--login--otp-1 123123
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

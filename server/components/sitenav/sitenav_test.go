@@ -27,6 +27,7 @@ func TestAt(t *testing.T) {
 		{"/settings/identities", "site--settings--identities-button"},
 		{"/settings/identity-settings/abc", "site--settings--identities-button"},
 		{"/settings/push-devices", "site--settings--push-devices-button"},
+		{"/settings/alarms", "site--settings--alarms-button"},
 		{"/logs/errors", "site--logs--errors-button"},
 		{"/presets/food/1", "site--presets--food-button"},
 		{"/", ""},
@@ -59,9 +60,15 @@ func TestVisible(t *testing.T) {
 	require.Len(t, Visible(admin), len(Pages))
 	require.Len(t, Visible(admin, Data), 14)
 	require.Len(t, Visible(admin, Reports), 4)
+	require.Len(t, Visible(admin, Settings), 5)
+	require.Equal(t, []string{"site--settings--alarms-button"}, ids(Visible(admin, Alarms)))
+	require.Equal(t, []string{"site--logs--events-button", "site--logs--errors-button", "site--logs--logs-button"}, ids(Visible(admin, Logs)))
+	require.Len(t, Visible(admin, MenuHubs...), 9)
 	for _, role := range []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead} {
 		settings := ids(Visible(&controldb.SiteIdentity{Role: role}, Settings))
-		require.Equal(t, []string{"site--settings--settings-button", "site--settings--alarms-button", "site--settings--push-devices-button"}, settings, role)
+		require.Equal(t, []string{"site--settings--settings-button", "site--settings--push-devices-button"}, settings, role)
+		require.Equal(t, []string{"site--settings--alarms-button"}, ids(Visible(&controldb.SiteIdentity{Role: role}, Alarms)), role)
+		require.Empty(t, Visible(&controldb.SiteIdentity{Role: role}, Logs), role)
 		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 14, role)
 	}
 	require.Empty(t, Visible(nil))
@@ -73,7 +80,7 @@ func TestGroups(t *testing.T) {
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Settings), false) {
 		names = append(names, group.Name)
 	}
-	require.Equal(t, []string{"This site", "People & devices", "Connections", "Troubleshooting"}, names)
+	require.Equal(t, []string{"This site", "People & devices", "Connections"}, names)
 	names = nil
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Data), false) {
 		names = append(names, group.Name)
@@ -86,8 +93,26 @@ func TestGroups(t *testing.T) {
 	for _, group := range Groups(Pages, true) {
 		names = append(names, group.Name)
 	}
-	require.Equal(t, []string{"Data", "Reports", "Settings"}, names)
+	require.Equal(t, []string{"Data", "Reports", "Settings", "Alarms", "Logs & Events"}, names)
 	require.Equal(t, "site--nav--search--settings--push-devices", At("/settings/push-devices").SearchID())
+	// Alarms and the logs and events are hubs of their own, out of Settings
+	require.Equal(t, Alarms, At("/settings/alarms").Hub)
+	require.Equal(t, Logs, At("/logs/errors").Hub)
+}
+
+// The header opens Data and Reports, and the account menu Settings, Alarms, and Logs & Events, every hub once, each
+// named in IDs by its first word
+func TestHubs(t *testing.T) {
+	var all []Hub
+	for _, group := range Groups(Pages, true) {
+		all = append(all, Hub(group.Name))
+	}
+	require.Equal(t, all, append(slices.Clone(HeaderHubs), MenuHubs...))
+	var slugs []string
+	for _, hub := range all {
+		slugs = append(slugs, hub.Slug())
+	}
+	require.Equal(t, []string{"data", "reports", "settings", "alarms", "logs"}, slugs)
 }
 
 // Search finds a page by the headings and words on it and by what people also call it, as the header's search

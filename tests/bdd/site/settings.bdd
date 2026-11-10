@@ -3,7 +3,8 @@ ASSERT_VISIBLE "Nighttroop"
 
 // One settings page, General in the Settings hub, shows an admin the site's settings, which start on the defaults,
 // beside their own. The site's time zone and language are those of the browser that created it
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 ASSERT_TEXT_EQUALS #site--settings--settings-button General
 SCREENSHOT settings_menu
 CLICK #site--settings--settings-button

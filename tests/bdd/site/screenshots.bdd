@@ -40,7 +40,8 @@ SCREENSHOT site_settings_menu
 PRESS Escape
 
 // The Settings hub has a tab for each settings page
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 ASSERT_VISIBLE #site--settings--identities-button
 ASSERT_VISIBLE #site--settings--connectors-button
 CLICK #site--settings--connectors-button
