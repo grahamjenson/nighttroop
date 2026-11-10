@@ -67,6 +67,25 @@ ASSERT_DRAWN #site--reports--next[disabled]
 ASSERT_COUNT #site--agp--daily a 1
 ASSERT_DRAWN #site--agp--day-{{ date 0 }} .site--agp--glucose >> nth=1
 SCREENSHOT report_day
+// Pointing at a time on the AGP, or the nearest with glucose, shows a tooltip of that time and each percentile's
+// glucose then in the site's units, and marks them on the graph
+ASSERT_NOT_VISIBLE #site--reports--agp--tooltip
+HOVER #site--reports--agp
+ASSERT_DRAWN #site--reports--agp--tooltip--time >> text=/^\d\d:\d\d$/
+ASSERT_DRAWN #site--reports--agp--tooltip >> text=mmol/L
+ASSERT_DRAWN #site--reports--agp--tooltip--95 >> text=/^\d+\.\d$/
+ASSERT_DRAWN #site--reports--agp--tooltip--50 >> text=/^\d+\.\d$/
+ASSERT_DRAWN #site--reports--agp--tooltip--5 >> text=/^\d+\.\d$/
+ASSERT_DRAWN #site--reports--agp--cursor circle >> nth=4
+SCREENSHOT report_day_tooltip
+// The graph takes focus, or a tap, and the arrow keys move the tooltip along its times; it goes as the graph loses focus
+CLICK #site--reports--agp
+PRESS Home
+ASSERT_DRAWN #site--reports--agp--tooltip--time >> text=/^\d\d:\d\d$/
+PRESS ArrowRight
+ASSERT_DRAWN #site--reports--agp--tooltip--25 >> text=/^\d+\.\d$/
+CLICK #site--agp--ranges
+ASSERT_NOT_VISIBLE #site--reports--agp--tooltip
 
 // The other periods ending on the same day have today so far in them, with no glucose line of their own, and their
 // days in the daily profiles, today's with its glucose

@@ -428,6 +428,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   apart when close), and hours in the settings' time format. A day's report draws the day's glucose over the AGP of the
   7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's
   readings show the day after; the summaries' empty tables say the same.
+- Pointing at or tapping a time on the AGP, or focusing it and moving with the arrow keys (Home and End go to its first
+  and last), shows a tooltip beside that time, or the nearest with glucose, of the time in the settings' time format and
+  each percentile's glucose then, named 95% to 5%, in the site's units, and marks them on the graph; it goes as the
+  pointer leaves or the graph loses focus. A note under the legend says so.
 - An AGP report's daily glucose profiles are its days as a calendar under their weekdays, a month's from the site's
   week start day and a week's or fortnight's from its first day, each with its glucose from midnight over the range shaded, coloured above and below it, opening that day's AGP
   report; a day's report has only its own.

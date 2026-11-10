@@ -44,6 +44,16 @@ func TestAGPGraph(t *testing.T) {
 	require.Nil(t, sum(nil, nil))
 }
 
+// The AGP's tooltip has each 5 minutes with percentiles, where it is drawn, its time, and each percentile in the units
+func TestAGPPoints(t *testing.T) {
+	mmol := consts.UnitsMMOLL
+	g := graph{Width: 288, Height: 100, Left: 0, Right: 288 * 5, Top: 0, Bottom: 100, Min: 0, Max: 20, Units: &mmol}
+	points := agpPoints(context.Background(), g, [][]float64{{}, {4, 5.55, 7, 9, 12.04}})
+	require.Equal(t, [][]any{{5.0, "00:05", []float64{80, 72.3, 65, 55, 39.8}, []string{"4.0", "5.5", "7.0", "9.0", "12.0"}}}, points)
+	require.Equal(t, [][]any{}, agpPoints(context.Background(), g, [][]float64{{}}))
+	require.Equal(t, "23:55", timeOfDay(context.Background(), 23*60+55))
+}
+
 // A period's daily profiles are its days in weeks from Monday, the first week's days before its first blank, each
 // with its summary if it has one
 func TestProfileWeeks(t *testing.T) {
