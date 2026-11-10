@@ -74,6 +74,79 @@ H Authorization: Bearer {{ .carol_login.token }}
 H Accept: application/json
 ASSERT_STATUS 403
 
+// Nor can it change the server or its sites, or download a DB, though it can see them
+NAME read_only_cannot_reset_totp
+POST http://control.localhost/admins/{{ .admin_id }}/totp
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_create_site
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_change_settings
+POST http://control.localhost/settings
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_update_site
+POST http://control.localhost/sites/abcdefgh
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_truncate_site
+POST http://control.localhost/sites/abcdefgh/truncate
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_download_site_db
+GET http://control.localhost/sites/abcdefgh/db
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_reset_site_password
+POST http://control.localhost/sites/abcdefgh/identities/1/password
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_reset_site_totp
+POST http://control.localhost/sites/abcdefgh/identities/1/totp
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_assume_site_identity
+POST http://control.localhost/sites/abcdefgh/identities/1/assume
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_set_rate_limits
+POST http://control.localhost/rate-limits
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_download_logs_db
+GET http://control.localhost/logs-db
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_can_see_rate_limits
+GET http://control.localhost/rate-limits
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+
 // An admin cannot delete, demote or reset themselves, so control always has an admin who can sign in
 NAME cannot_delete_yourself
 DELETE http://control.localhost/admins/{{ .admin_id }}

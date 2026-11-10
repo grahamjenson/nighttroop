@@ -150,9 +150,6 @@ func resetControlAdmin(w http.ResponseWriter, r *http.Request, reset func(*db.Co
 // an admin who can sign in
 func othersControlAdmin(r *http.Request) (*controldb.ControlIdentity, error) {
 	controlContext := httputils.GetControlContext(r.Context())
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		return nil, apiutils.ErrForbidden
-	}
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		return nil, apiutils.ErrNotFound
@@ -163,11 +160,8 @@ func othersControlAdmin(r *http.Request) (*controldb.ControlIdentity, error) {
 	return controlContext.ControlDB.Queries.GetControlIdentityByID(r.Context(), controldb.GetControlIdentityByIDParams{ID: id})
 }
 
-// adminForm is the admin to add, or the role to give one, from JSON or the page's form, for an admin only
+// adminForm is the admin to add, or the role to give one, from JSON or the page's form
 func adminForm(r *http.Request) (*controlAdminForm, error) {
-	if httputils.GetControlContext(r.Context()).IdentityModel.Role != consts.ControlRoleAdmin {
-		return nil, apiutils.ErrForbidden
-	}
 	form, herr := apiutils.ExtractModelFromRequest[controlAdminForm](httputils.GetContentType(r), r)
 	if herr != nil {
 		return nil, herr
