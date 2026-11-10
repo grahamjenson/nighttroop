@@ -534,7 +534,8 @@ func InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Edit("site--insulin", "/data/insulin", insulinDose.ID, insulinDoseFields, map[string]string{"dose": fmt.Sprint(insulinDose.Dose), "notes": orEmpty(insulinDose.Notes)})
+		edit := addmodal.Props{ID: "site--insulin--edit", Path: "/data/insulin/" + insulinDose.ID, Target: "#site--insulin--" + insulinDose.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(insulinDoseFields, insulinDose, nil)}
 		templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

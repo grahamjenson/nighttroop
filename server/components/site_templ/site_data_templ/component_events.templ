@@ -108,7 +108,8 @@ templ componentEventRow(event *sitemodels.SiteComponentEvent) {
 }
 
 templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
-	{{ edit := addmodal.Edit("site--component-event", "/data/component-events", event.ID, componentEventFields, map[string]string{"sensor_code": orEmpty(event.SensorCode), "transmitter_id": orEmpty(event.TransmitterID), "notes": orEmpty(event.Notes)}) }}
+	{{ edit := addmodal.Props{ID: "site--component-event--edit", Path: "/data/component-events/" + event.ID, Target: "#site--component-event--" + event.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(componentEventFields, event, nil)} }}
 	@modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

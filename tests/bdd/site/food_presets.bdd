@@ -48,6 +48,8 @@ SCREENSHOT food_preset_created
 CLICK #foodPresetsTable tbody tr >> nth=0
 ASSERT_VISIBLE #presets--food--details
 ASSERT_TEXT_VISIBLE admin
+// Its details, below its edit form, are labelled as the add form's fields are
+ASSERT_COUNT #presets--food--details dt:text-is("Fat (g)") 1
 SCREENSHOT food_preset_edit
 INPUT #presets--food--edit--name Brown toast
 INPUT #presets--food--edit--carbs 25

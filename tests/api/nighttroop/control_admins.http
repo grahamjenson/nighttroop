@@ -1,0 +1,210 @@
+INCLUDE steps/control_login.steps
+
+// An admin adds another, whose password and TOTP secret are shown this once
+NAME add_admin
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "api_carol", "role": "read"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "api_carol" "@result.name"
+ASSERT_EXISTS "@result.password"
+ASSERT_EXISTS "@result.totp_secret"
+
+// Names are unique, and an admin needs a name and a role control has
+NAME add_admin_again
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "api_carol", "role": "read"}
+ASSERT_STATUS 409
+
+NAME add_admin_unknown_role
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "api_dave", "role": "owner"}
+ASSERT_STATUS 400
+
+NAME add_admin_no_name
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "  ", "role": "read"}
+ASSERT_STATUS 400
+
+// The admins are listed newest first, with who made them, never their secrets
+NAME list_admins
+GET http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "api_carol" "@result.0.name"
+ASSERT_EQUALS "read" "@result.0.role"
+ASSERT_EQUALS "admin" "@result.0.created_by_identity_name"
+ASSERT_EQUALS null "@result.0.password_hash"
+ASSERT_EQUALS null "@result.0.totp_secret_enc"
+ASSERT_EQUALS "admin" "@result.1.name"
+SET carol_id {{ (index .list_admins.result 0).id }}
+SET admin_id {{ (index .list_admins.result 1).id }}
+
+// The new admin signs in, but read only it cannot manage the admins
+NAME carol_login
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "api_carol", "password": "{{ .add_admin.result.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+NAME read_only_cannot_add
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "api_dave", "role": "admin"}
+ASSERT_STATUS 403
+
+NAME read_only_cannot_delete
+DELETE http://control.localhost/admins/{{ .admin_id }}
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// An admin cannot delete, demote or reset themselves, so control always has an admin who can sign in
+NAME cannot_delete_yourself
+DELETE http://control.localhost/admins/{{ .admin_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME cannot_demote_yourself
+POST http://control.localhost/admins/{{ .admin_id }}/role
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"role": "read"}
+ASSERT_STATUS 403
+
+NAME cannot_reset_yourself
+POST http://control.localhost/admins/{{ .admin_id }}/password
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// Making another an admin signs them out, as their sign in was for their old role
+NAME make_carol_admin
+POST http://control.localhost/admins/{{ .carol_id }}/role
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"role": "admin"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@result.role"
+
+NAME carol_old_sign_in_refused
+GET http://control.localhost/admins
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME carol_login_as_admin
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "api_carol", "password": "{{ .add_admin.result.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+NAME list_admins_changed
+GET http://control.localhost/admins
+H Authorization: Bearer {{ .carol_login_as_admin.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@result.0.role"
+ASSERT_EQUALS "admin" "@result.0.updated_by_identity_name"
+
+// With two admins, either can make the other read only, and back
+NAME carol_demotes_admin
+POST http://control.localhost/admins/{{ .admin_id }}/role
+H Authorization: Bearer {{ .carol_login_as_admin.token }}
+H Accept: application/json
+H Content-Type: application/json
+B {"role": "read"}
+ASSERT_STATUS 200
+
+NAME carol_promotes_admin
+POST http://control.localhost/admins/{{ .admin_id }}/role
+H Authorization: Bearer {{ .carol_login_as_admin.token }}
+H Accept: application/json
+H Content-Type: application/json
+B {"role": "admin"}
+ASSERT_STATUS 200
+
+NAME admin_login_again
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "password", "totp": "123123"}
+ASSERT_STATUS 200
+SET control_jwt {{ .admin_login_again.token }}
+
+// Another's password and TOTP can be reset, each shown once
+NAME reset_carol_password
+POST http://control.localhost/admins/{{ .carol_id }}/password
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "api_carol" "@result.name"
+ASSERT_EXISTS "@result.password"
+ASSERT_EQUALS null "@result.totp_secret"
+
+NAME reset_carol_totp
+POST http://control.localhost/admins/{{ .carol_id }}/totp
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.totp_secret"
+ASSERT_EQUALS null "@result.password"
+
+// A role control does not have is refused
+NAME unknown_role
+POST http://control.localhost/admins/{{ .carol_id }}/role
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"role": "owner"}
+ASSERT_STATUS 400
+
+// Deleting another signs them out, and they are gone
+NAME delete_carol
+DELETE http://control.localhost/admins/{{ .carol_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "api_carol" "@result.name"
+
+NAME carol_signed_out
+GET http://control.localhost/admins
+H Authorization: Bearer {{ .carol_login_as_admin.token }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME list_admins_after_delete
+GET http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME delete_carol_again
+DELETE http://control.localhost/admins/{{ .carol_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME delete_not_an_id
+DELETE http://control.localhost/admins/notanid
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

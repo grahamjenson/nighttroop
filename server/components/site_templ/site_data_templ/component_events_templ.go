@@ -544,7 +544,8 @@ func ComponentEventModal(event *sitemodels.SiteComponentEvent) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Edit("site--component-event", "/data/component-events", event.ID, componentEventFields, map[string]string{"sensor_code": orEmpty(event.SensorCode), "transmitter_id": orEmpty(event.TransmitterID), "notes": orEmpty(event.Notes)})
+		edit := addmodal.Props{ID: "site--component-event--edit", Path: "/data/component-events/" + event.ID, Target: "#site--component-event--" + event.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(componentEventFields, event, nil)}
 		templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

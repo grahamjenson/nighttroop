@@ -485,7 +485,8 @@ func FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Edit("presets--food", "/presets/food", foodPreset.ID, foodPresetFields, map[string]string{"name": orEmpty(foodPreset.Name), "carbs": orEmpty(foodPreset.Carbs), "absorption_time_minutes": orEmpty(foodPreset.AbsorptionTimeMinutes)})
+		edit := addmodal.Props{ID: "presets--food--edit", Path: "/presets/food/" + foodPreset.ID, Target: "#presets--food--" + foodPreset.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(foodPresetFields, foodPreset, nil)}
 		templ_7745c5c3_Var24 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

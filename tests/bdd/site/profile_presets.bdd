@@ -37,6 +37,8 @@ ASSERT_TEXT_VISIBLE Low Target (mmol/L)
 ASSERT_VISIBLE #presets--profiles--details--close
 // Its name's input is labelled
 ASSERT_VISIBLE #presets--profiles--edit label[for=presets--profiles--edit--name] >> text=Name
+// It ends with the same Record section as every other details modal, including when it was created
+ASSERT_VISIBLE #presets--profiles--details >> text="Created"
 SCREENSHOT profile_details
 INPUT #presets--profiles--edit--name Everyday
 CLICK #presets--profiles--edit--submit

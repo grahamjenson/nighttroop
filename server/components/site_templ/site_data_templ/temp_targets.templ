@@ -109,8 +109,8 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 }
 
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
-	{{ edit := addmodal.Edit("site--temp-target", "/data/temp-targets", tempTarget.ID, tempTargetFields(ctx), map[string]string{"low_target": formatGlucose(tempTarget.LowTarget, tempTarget.Units),
-		"high_target": formatGlucose(tempTarget.HighTarget, tempTarget.Units), "duration_minutes": fmt.Sprint(tempTarget.DurationMinutes), "notes": orEmpty(tempTarget.Notes)}) }}
+	{{ edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "high_target": formatGlucose(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor")} }}
 	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

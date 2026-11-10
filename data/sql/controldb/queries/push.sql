@@ -23,6 +23,17 @@ WHERE site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
+-- name: SearchAllPushCredentials :many
+-- Every site's credentials and those for every site, newest first, for the control site
+SELECT * FROM push_credentials
+WHERE deleted_at IS NULL
+ORDER BY id DESC
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
+
+-- name: GetAnyPushCredential :one
+-- Any site's credential, or one for every site, for the control site
+SELECT * FROM push_credentials WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
+
 -- name: CountPushCredentials :one
 SELECT COUNT(*) FROM push_credentials WHERE site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL;
 

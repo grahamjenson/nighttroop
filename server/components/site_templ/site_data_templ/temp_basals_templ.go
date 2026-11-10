@@ -582,7 +582,8 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Edit("site--temp-basal", "/data/temp-basals", tempBasal.ID, tempBasalFields, map[string]string{"rate": orEmpty(tempBasal.Rate), "duration_minutes": fmt.Sprint(tempBasal.DurationMinutes), "notes": orEmpty(tempBasal.Notes)})
+		edit := addmodal.Props{ID: "site--temp-basal--edit", Path: "/data/temp-basals/" + tempBasal.ID, Target: "#site--temp-basal--" + tempBasal.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(tempBasalFields, tempBasal, nil)}
 		templ_7745c5c3_Var30 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

@@ -663,23 +663,22 @@ func eventGroupAdd() templ.Component {
 // eventGroupForm adds a group of groupType, or with a group changes it, its events picked from those near its time of
 // the kinds its type can have
 func eventGroupForm(ctx context.Context, group *sitemodels.SiteEventGroup, groupType string) addmodal.Props {
-	inputTime := func(t time.Time) string { return t.In(Location(ctx)).Format("2006-01-02T15:04") }
-	// A new group's type is fixed, so only a group being changed has a field for it
-	fields := []addmodal.Field{
-		{Name: "group_type", Label: "Type", Help: "What kind of treatment it is, as Nightscout calls it.", Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes},
-		{Name: "occurred_at", Label: "When", Help: "When it happened. Events within an hour of it can be picked.", Kind: addmodal.When, Value: inputTime(time.Now())},
-		{Name: "reason", Label: "Reason", Help: "Why, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024"},
-	}
 	p := addmodal.Props{ID: "site--event-group--create", Title: "Add " + groupType, Path: "/data/event-groups", Target: "#eventGroupsTable tbody",
-		Submit: "Add " + groupType, Fields: fields[1:]}
+		Submit: "Add " + groupType}
+	when, reason, notes := time.Now(), "", ""
 	choices := "/data/event-groups/choices"
 	if group != nil {
-		p = addmodal.Edit("site--event-group", "/data/event-groups", group.ID, fields, map[string]string{"group_type": groupType,
-			"occurred_at": inputTime(time.UnixMilli(group.OccurredAt)), "reason": orEmpty(group.Reason), "notes": orEmpty(group.Notes)})
+		p.ID, p.Path, p.Target, p.Swap, p.Submit = "site--event-group--edit", "/data/event-groups/"+group.ID, "#site--event-group--"+group.ID, "outerHTML", "Save"
+		when, reason, notes = time.UnixMilli(group.OccurredAt), orEmpty(group.Reason), orEmpty(group.Notes)
 		choices += "?group_id=" + group.ID
+		p.Fields = []addmodal.Field{{Name: "group_type", Label: "Type", Help: "What kind of treatment it is, as Nightscout calls it.", Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes, Value: groupType}}
 	}
 	p.Extra = eventGroupChoicesLoader(p.ID, choices, group == nil, groupType)
+	p.Fields = append(p.Fields, []addmodal.Field{
+		{Name: "occurred_at", Label: "When", Help: "When it happened. Events within an hour of it can be picked.", Kind: addmodal.When, Value: when.In(Location(ctx)).Format("2006-01-02T15:04")},
+		{Name: "reason", Label: "Reason", Help: "Why, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64", Value: reason},
+		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Value: notes},
+	}...)
 	return p
 }
 
@@ -710,7 +709,7 @@ func eventGroupChoicesLoader(formID string, path string, creating bool, groupTyp
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formID + "--group-type").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 173, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 172, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -723,7 +722,7 @@ func eventGroupChoicesLoader(formID string, path string, creating bool, groupTyp
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(groupType).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 173, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 172, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -741,7 +740,7 @@ func eventGroupChoicesLoader(formID string, path string, creating bool, groupTyp
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formID + "--events").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 176, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 175, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 		if templ_7745c5c3_Err != nil {
@@ -754,7 +753,7 @@ func eventGroupChoicesLoader(formID string, path string, creating bool, groupTyp
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(path).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 177, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 176, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -767,7 +766,7 @@ func eventGroupChoicesLoader(formID string, path string, creating bool, groupTyp
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templruntime.NewAttributeExpression("load, input delay:300ms from:#" + formID + "--occurred-at, change from:#" + formID + "--group-type").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 178, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 177, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 		if templ_7745c5c3_Err != nil {
@@ -780,7 +779,7 @@ func eventGroupChoicesLoader(formID string, path string, creating bool, groupTyp
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#" + formID + "--occurred-at, #" + formID + "--group-type").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 179, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 178, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 		if templ_7745c5c3_Err != nil {
@@ -855,7 +854,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formID + "--events-window").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 225, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 224, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 		if templ_7745c5c3_Err != nil {
@@ -868,7 +867,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " " + timeLayout(ctx)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 226, Col: 124}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 225, Col: 124}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -881,7 +880,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(to).In(Location(ctx)).Format(timeLayout(ctx)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 226, Col: 192}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 225, Col: 192}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -907,7 +906,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 236, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 235, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 			if templ_7745c5c3_Err != nil {
@@ -920,7 +919,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(kind.label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 236, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 235, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -933,7 +932,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 237, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 236, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 			if templ_7745c5c3_Err != nil {
@@ -946,7 +945,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templruntime.NewAttributeExpression(kind.field).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 237, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 236, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 			if templ_7745c5c3_Err != nil {
@@ -965,7 +964,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 					var templ_7745c5c3_Var47 string
 					templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(choice.ID).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 241, Col: 32}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 240, Col: 32}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 					if templ_7745c5c3_Err != nil {
@@ -988,7 +987,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 					var templ_7745c5c3_Var48 string
 					templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(eventChoiceLabel(ctx, choice))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 241, Col: 94}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 240, Col: 94}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 					if templ_7745c5c3_Err != nil {
@@ -1141,7 +1140,7 @@ func EventGroupModal(eventGroup *sitemodels.SiteEventGroup) templ.Component {
 				var templ_7745c5c3_Var54 string
 				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(event)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 272, Col: 15}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 271, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 				if templ_7745c5c3_Err != nil {

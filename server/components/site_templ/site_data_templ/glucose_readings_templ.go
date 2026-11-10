@@ -72,12 +72,18 @@ func glucoseInputAttributes(ctx context.Context) templ.Attributes {
 	return templ.Attributes{"step": "any", "min": "0.1", "max": fmt.Sprint(consts.Round(glucoseUnits(ctx).FromMGDL(1000), 1))}
 }
 
-// GlucoseText and GlucoseFill colour a reading "Low", "High" or in range, "", with the theme's glucose colours, as text
-// and on a graph, high text in the darker amber that can be read as text
-var (
-	GlucoseText = map[string]string{"Low": "text-glucose-low", "High": "text-glucose-high-text", "": "text-glucose-in-range"}
-	GlucoseFill = map[string]string{"Low": "fill-glucose-low", "High": "fill-glucose-high", "": "fill-glucose-in-range"}
-)
+// GlucoseColour is a range of glucose's theme colour as text, filled and stroked on a graph, and as a background
+type GlucoseColour struct{ Text, Fill, Stroke, Background string }
+
+// GlucoseColours colour glucose "Low", "High" or in range, "", as display.GlucoseRange names it, and "Very low" and
+// "Very high", with the theme's glucose colours, high text in the darker amber that can be read as text
+var GlucoseColours = map[string]GlucoseColour{
+	"Very low":  {Background: "bg-glucose-very-low"},
+	"Low":       {"text-glucose-low", "fill-glucose-low", "stroke-glucose-low", "bg-glucose-low"},
+	"":          {"text-glucose-in-range", "fill-glucose-in-range", "stroke-glucose-in-range", "bg-glucose-in-range"},
+	"High":      {"text-glucose-high-text", "fill-glucose-high", "stroke-glucose-high", "bg-glucose-high"},
+	"Very high": {Background: "bg-glucose-very-high"},
+}
 
 // RangeBounds are the range settings, low and high, in the settings' units, for this and other pages' graphs
 func RangeBounds(ctx context.Context) (float64, float64) {
@@ -95,7 +101,7 @@ func glucoseRange(ctx context.Context, reading float64) string {
 func glucoseReadingCell(ctx context.Context, reading float64) table.CellProps {
 	props := table.CellProps{Class: "text-right tabular-nums"}
 	if outOfRange := glucoseRange(ctx, reading); outOfRange != "" {
-		props.Class += " font-medium " + GlucoseText[outOfRange]
+		props.Class += " font-medium " + GlucoseColours[outOfRange].Text
 		props.Attributes = templ.Attributes{"title": outOfRange}
 	}
 	return props
@@ -127,7 +133,7 @@ func glucoseRangeMarker(outOfRange string) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(outOfRange[:1])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 100, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 106, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -140,7 +146,7 @@ func glucoseRangeMarker(outOfRange string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(outOfRange)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 101, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 107, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -313,7 +319,7 @@ func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64,
 						var templ_7745c5c3_Var11 string
 						templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(string(*glucoseUnits(ctx)))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 153, Col: 35}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 159, Col: 35}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 						if templ_7745c5c3_Err != nil {
@@ -565,7 +571,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, reading.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 207, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 213, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -592,7 +598,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(formatGlucose(reading.Reading, reading.Units))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 210, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 216, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -623,7 +629,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(display.ReadingType(reading.ReadingType))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 214, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 220, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -654,7 +660,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templruntime.NewAttributeExpression(orDash(reading.Direction)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 217, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 223, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 				if templ_7745c5c3_Err != nil {
@@ -667,7 +673,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(display.Direction(reading.Direction))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 217, Col: 83}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 223, Col: 83}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -698,7 +704,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(reading.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 220, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 226, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -737,7 +743,8 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Edit("site--glucose", "/data/glucose", reading.ID, glucoseFields(ctx), map[string]string{"reading": formatGlucose(reading.Reading, reading.Units), "notes": orEmpty(reading.Notes)})
+		edit := addmodal.Props{ID: "site--glucose--edit", Path: "/data/glucose/" + reading.ID, Target: "#site--glucose--" + reading.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": formatGlucose(reading.Reading, reading.Units)}, "reading_type", "measurement_method")}
 		templ_7745c5c3_Var32 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -822,12 +829,11 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 
 var readingDetail = modal.DetailIfSet
 
-// orEmpty is an optional value for an input, empty when it is not set
-func orEmpty[T any](value *T) string {
+func orEmpty(value *string) string {
 	if value == nil {
 		return ""
 	}
-	return fmt.Sprint(*value)
+	return *value
 }
 
 func GlucoseReadingCreated(reading *sitemodels.SiteGlucoseReading) templ.Component {

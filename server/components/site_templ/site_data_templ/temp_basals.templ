@@ -103,7 +103,8 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 }
 
 templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
-	{{ edit := addmodal.Edit("site--temp-basal", "/data/temp-basals", tempBasal.ID, tempBasalFields, map[string]string{"rate": orEmpty(tempBasal.Rate), "duration_minutes": fmt.Sprint(tempBasal.DurationMinutes), "notes": orEmpty(tempBasal.Notes)}) }}
+	{{ edit := addmodal.Props{ID: "site--temp-basal--edit", Path: "/data/temp-basals/" + tempBasal.ID, Target: "#site--temp-basal--" + tempBasal.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(tempBasalFields, tempBasal, nil)} }}
 	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

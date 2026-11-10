@@ -64,24 +64,6 @@ type Props struct {
 	Swap string
 	// Extra is more of the form after its fields, such as inputs loaded for what is typed in them
 	Extra templ.Component
-	// Editing changes a record rather than adding one: an input left blank is sent, so a text can be cleared (a blank
-	// select is still left out, and the server leaves out a blank number or time), and its answer closes the modal, with
-	// modal.CloseOOB, so the focus goes back to the record's row
-	Editing bool
-}
-
-// Edit is the form changing a record in its details modal, with those of its add modal's fields that have values,
-// starting at them, so they are checked and labelled as adding them is. Its ID is id's with "--edit", it posts to the
-// record at path, and replaces the record's row, whose ID is id's with "--" and the record's, as table.DataRow's is.
-func Edit(id string, path string, recordID string, fields []Field, values map[string]string) Props {
-	p := Props{ID: id + "--edit", Path: path + "/" + recordID, Target: "#" + id + "--" + recordID, Submit: "Save", Swap: "outerHTML", Editing: true}
-	for _, f := range fields {
-		if value, ok := values[f.Name]; ok {
-			f.Value = value
-			p.Fields = append(p.Fields, f)
-		}
-	}
-	return p
 }
 
 // Open is the button opening the add modal at path in #modal-container, beside its page's title
@@ -99,7 +81,8 @@ templ Modal(p Props) {
 	}
 }
 
-// Form is the modal's form on its own, such as an Edit's in a details modal beside its SubmitButton
+// Form is the modal's form on its own, to edit a record in its details modal, with its Edit fields, beside a
+// SubmitButton
 templ Form(p Props) {
 	<form
 		id={ p.ID }
@@ -129,23 +112,24 @@ func swap(p Props) string {
 	return p.Swap
 }
 
-// formHandlers leave out the fields left blank, so they are not set rather than empty, then once a record is added,
-// empty the modal container. Only the form's own request closes it, not one of an input's within it, like loading what
-// can be picked. A table's pager.Empty row hides itself once a row is added.
+// formHandlers leave out the fields left blank, so they are not set rather than empty, but for a text that started
+// with a value, so emptying it in an edit form clears it. Then once a record is added, empty the modal container; an
+// edit's answer closes its details itself, giving the focus back to its row. Only the form's own request closes it,
+// not one of an input's within it, like loading what can be picked. A table's pager.Empty row hides itself once a row
+// is added.
 func formHandlers(p Props) templ.Attributes {
-	if p.Editing {
-		return templ.Attributes{"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions +
-			"for (const [name, value] of [...ctx.request.body]) { if (value === '' && this.elements.namedItem(name)?.tagName !== 'INPUT') ctx.request.body.delete(name) }")}
+	handlers := templ.Attributes{
+		"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions + "for (const [name, value] of [...ctx.request.body]) { if (value === '' && !this.elements[name]?.defaultValue) ctx.request.body.delete(name) }"),
 	}
-	return templ.Attributes{
-		"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions + "for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
-		"hx-on::after:request":  templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }"),
+	if p.Swap == "" {
+		handlers["hx-on::after:request"] = templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }")
 	}
+	return handlers
 }
 
 // SubmitButton submits the form, from outside it, as in a modal's actions
 templ SubmitButton(p Props) {
-	@button.Button(button.Props{ID: p.ID + "--submit", Type: button.TypeSubmit, Form: p.ID}) {
+	@button.Button(button.Props{ID: p.ID + "--submit", Type: button.TypeSubmit, Attributes: templ.Attributes{"form": p.ID}}) {
 		{ p.Submit }
 	}
 }

@@ -51,6 +51,20 @@ func (q *Queries) CreateSiteIdentityPasskey(ctx context.Context, arg CreateSiteI
 	return err
 }
 
+const deleteControlIdentityPasskeys = `-- name: DeleteControlIdentityPasskeys :exec
+DELETE FROM passkeys WHERE control_identity_id = CAST(?1 AS INTEGER)
+`
+
+type DeleteControlIdentityPasskeysParams struct {
+	ControlIdentityID int64
+}
+
+// A control admin reset by another signs in only with its new password or TOTP, so a lost device's passkey works no more
+func (q *Queries) DeleteControlIdentityPasskeys(ctx context.Context, arg DeleteControlIdentityPasskeysParams) error {
+	_, err := q.exec(ctx, q.deleteControlIdentityPasskeysStmt, deleteControlIdentityPasskeys, arg.ControlIdentityID)
+	return err
+}
+
 const deleteControlPasskey = `-- name: DeleteControlPasskey :exec
 DELETE FROM passkeys WHERE control_identity_id = CAST(?1 AS INTEGER) AND id = ?2
 `

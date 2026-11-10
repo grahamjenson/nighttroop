@@ -585,7 +585,8 @@ func ActivityModal(activity *sitemodels.SiteActivity) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Edit("site--activity", "/data/activities", activity.ID, activityFields, map[string]string{"name": orEmpty(activity.Name), "duration_minutes": orEmpty(activity.DurationMinutes), "notes": orEmpty(activity.Notes)})
+		edit := addmodal.Props{ID: "site--activity--edit", Path: "/data/activities/" + activity.ID, Target: "#site--activity--" + activity.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(activityFields, activity, nil)}
 		templ_7745c5c3_Var30 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

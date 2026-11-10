@@ -69,6 +69,24 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
 - Every control page shows its dates and times in UTC, e.g. `2026-10-26 12:00:00`, and `-` for one not set.
 
+### Control admins
+
+- Admins, under Security in the control menu, lists every control admin, newest first, with its role (Admin or Read
+  only), when it was made and by whom; the admin signed in is marked "You". Secrets are never shown or returned.
+- An Admin adds another admin with a name (1 to 32 characters, unique) and a role, Read only unless chosen, and its
+  password and TOTP secret are shown once, in the same credentials dialog, with its "never shown again" warning on
+  Escape or pressing beside it, as a site's Users & Devices. Control has at most 20 admins.
+- An Admin changes another's role from its Role select, which says so in a toast; a refused change puts it back. The
+  admin changed is signed out, as its sign in was for its old role.
+- An Admin resets another's password or TOTP from its Manage menu, after confirming, and the new one is shown once in
+  the credentials dialog. The reset removes the admin's passkeys and is recorded as a credentials changed event; the
+  secret is never logged. Its sign in, if it has one, keeps working until it ends, within the hour.
+- An Admin deletes another from its Manage menu, after confirming in the confirm dialog, which removes its row and its
+  passkeys and signs it out.
+- Only an Admin can add, change, reset or delete admins; a Read only admin sees the list only. No admin can change,
+  reset or delete themselves here, and the last Admin can never be deleted or made Read only, checked as it is written
+  so two admins removing each other at once cannot leave none.
+
 ### Sites
 
 - The dashboard lists every site, newest first, with its state and DB size in MB, to two places, as do the archived
@@ -114,7 +132,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
-    does its newest, then shrinks its DB.
+    does its newest, deletes its old loop settings no record refers to any more, then shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
   TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
   can be hydrated.
@@ -157,6 +175,20 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A control admin can send any of them a test push with its Test button (`POST /push-devices/{id}/test`), within its
   site's push limit, seeing its new last push or why it failed; a read only control identity sees no Test buttons and
   is refused (403).
+
+### Push credentials
+
+- Push Credentials (`/push-credentials`, in the menu under Users) lists every site's push credentials and those for
+  every site ("Every site"), newest first: its site, name, service, team or project and key ID, apps, bundle IDs and
+  who added it, never its secret, in the page or the JSON API (`/push-credentials`, `/push-credentials/{id}`).
+- A control admin can add one to a live site with Add Push Credential (`POST /push-credentials`, with `site_id`),
+  checked and kept encrypted as the site's admin's is, within the site's 5, added by the control admin's name; the
+  site's admin sees it on their Push Notifications page. A site that is not live, or a key that cannot be read, is
+  refused with the modal left open.
+- One for every site, with no `site_id`, is refused (400) until the server uses it only for tokens its app registered
+  itself, requires its bundle IDs and limits pushes across the server.
+- A control admin can delete any of them, a site's or one for every site, after a confirmation, removing its secret
+  so pushes stop using it; a read only control identity is refused (403) adding or deleting one.
 
 ### Logs
 
@@ -250,15 +282,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   identity's credentials: the admin's, and the phone's and the read only device's Nightscout tokens. The phone's token
   is not shown as text, only in the copy and by its own copy button.
 - The credentials wait on the server, only in memory, for 10 minutes, under an ID after the welcome page's `#` that only
-  the browser that created the site has, so it is never in a request's address or a log. The page drops the ID from
-  its address, and opening it again, after that or on another site, says they have been shown and links to the recover
-  page.
+  the browser that created (or recovered) the site has, so it is never in a request's address or a log. The page drops
+  the ID from its address, and opening it again, after that or on another site, says they have been shown and links to
+  the recover page.
 - The new site's admin login is its own step: its username and password, its TOTP secret as a QR code and text, and a
   code check. The Log in button, which opens the login in a new tab with the admin's name filled in so the credentials stay open, is disabled until a code from the authenticator app matches, saying under it to check a code in step 2 first; a wrong code says so. Its buttons are the shape of its Copy all credentials, not round pills. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
-- Beside Log in, a new site's welcome page offers "Log in with a passkey", with no authenticator app: it adds the admin a
-  passkey on the site's own address, with the device's fingerprint, face or PIN, and signs the admin in with it. Only
+- Beside Log in, a new or recovered site's welcome page offers "Log in with a passkey", with no authenticator app: it
+  adds the admin a passkey on the site's own address, with the device's fingerprint, face or PIN, and signs the admin in with it. Only
   the browser the credentials were shown to can, for 15 minutes, once; after that the passkey is added on My Account.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
@@ -266,6 +298,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site, and creating one is refused.
 - The public **recover page** takes a site's ID and backup key and gives the admin a new password and TOTP and the
   site a new backup key, and removes the admin's passkeys, so a lost device's passkey signs in no more. The key works once; a wrong key is refused without saying why.
+- A recovery opens the site's own address, `/welcome`, which shows the new credentials once, as a new site's are, less
+  the phone's and the read only device's tokens, which are left as they were; the recover page never shows them.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service, the privacy policy and the API docs, and each footer link
   opens in a new tab, so the page the user was on stays open.
@@ -329,8 +363,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, the
   treatments, and each device's latest status.
 - Under the graph, an Insulin & Carbs table lists each dose and meal's carbs, newest first, with how long ago it was,
-  in an Insulin and a Carbs column; a loop's SMBs are marked SMB. Beside it, Other Treatments lists the temp targets
-  and temp basals.
+  in an Insulin and a Carbs column; a loop's SMBs, Trio's `SMB` doses and Loop's automatic boluses, are marked
+  SMB. Beside it, Other Treatments lists the temp targets and temp basals.
 - A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it. A
   site opens on the last 6 hours, and its range buttons choose 6 hours, 24 hours, 48 hours or a week:
   - The glucose axis is always 0 to 16 mmol/L (288 mg/dL), marked at each quarter, whatever the readings: a reading
@@ -342,7 +376,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - The basal in force along the bottom, its highest rate reaching 3 mmol/L up the glucose axis and labelled on the
     right. A profile sent without its own timezone has its schedules read in the site's timezone, whoever views it.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
-    labels overlap; a loop's SMBs are smaller, fainter and not labelled.
+    labels overlap; a loop's SMBs, Trio's `SMB` doses and Loop's automatic boluses, are smaller, fainter and not
+    labelled.
   - A legend of insulin and SMB (triangles pointing down), carbs (pointing up), basal (an outlined area) and target
     (a line), each drawn as on the graph.
   - Pointing anywhere on the graph shows what was then: the time, the reading nearest it within 5 minutes and when
@@ -359,6 +394,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
   long there has been no reading, as "No reading for 45 min".
+- An open summary greys its latest glucose and shows that badge when it turns old, without a change or a reload of
+  the page, reading the summary again once then rather than every few seconds.
 - The summary says how long ago things were in words, to the nearest hour once over an hour, as "45 minutes ago" or
   "2 days 1 hour ago", and its tiles and devices show units smaller and grey beside their numbers.
 - The summary's latest glucose links to the page of every reading, and each other treatment's kind (e.g. Temp Basal)
@@ -437,18 +474,22 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   year ago. Back and forward move between reports.
 - Clicking around the reports quickly, their tabs, periods and arrows, shows the last one clicked, logging no error for
   the pages it replaced.
-- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
-  as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and
-  ›) to the 30 days before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest
-  month, and the one before past a year ago. A last day after yesterday or more than a year ago is refused. Back and
-  forward move between them.
+- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days to today, today so far. It
+  says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and ›) to the 30 days
+  before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest month, and the one
+  before past a year ago. A last day after today or more than a year before yesterday is refused. Back and forward move
+  between them.
 - It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers, the bars a couple of
   pixels apart, its basal (in gold) under its boluses, with a legend of the two; a day with no insulin has no bar and is
-  not counted. Hovering a bar shows its date and its basal or boluses in U.
-- It shows how many of its days have insulin and their mean, lowest and highest daily dose, and says when none have
-  insulin.
+  not counted. Hovering a bar shows its date and its basal or boluses in U. Today's bar is paler, labelled "so far" to
+  its right, and its tooltip's date says so far.
+- It shows how many of its days before today have insulin and their mean, lowest and highest daily dose, today left
+  out as it is not over, and says when none have insulin.
 - Under the bars, a table lists every day it covers, newest first, with its basal, boluses and total daily dose in U,
-  or "–" for a day with no insulin.
+  or "–" for a day with no insulin; today's date is marked "so far", with insulin or not.
+- Under the bars, a note says basal is estimated from the basal rate in force each minute, the profile's scheduled
+  basal or a temp basal, the rest of the daily dose being boluses; and, when today is in it, that today, paler and
+  marked so far, is left out of the days with insulin and their daily dose, lowest and highest.
 
 ### Getting started
 
@@ -487,6 +528,8 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
     days", or Today on a new site's first day.
 - **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%, typed in
   and shown on the site as percents, 0 to 100
+  - A dose's `automatic` is whether a loop gave it, true or false as Loop uploaded it and null for apps that do not
+    say; the site API gives it but does not change it, ignoring it on a create or update.
 - **Food intakes**
 - **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp;
   the site types it in and shows it as a percent, from 1% to 1100%
@@ -522,11 +565,14 @@ Adding a record on a data page opens a modal of all the fields a person can type
 units, whether it is required, with its limits, and a dropdown or suggestions for its types. Its time is typed in the
 settings' timezone, and is now when left blank; other fields left blank are not set.
 
-A record's details, on a data or presets page, edit it in a form of the add modal's fields it can change, labelled,
-explained and limited as adding them is (e.g. notes of at most 1024 characters), in one column on a phone so each input
-can be seen and tapped; a text emptied in it is cleared. Its Save (Rename for a profile) is at the modal's foot beside
-Close, as an add modal's Add is, and Enter in an input saves too. The details end with the same Record section on every
-page: its ID, UTC offset, app, device, who created and last updated it and when, each left out when it is not set.
+A record's details, on a data or presets page, edit it in a form whose every input is labelled, which wraps onto more
+lines on a phone so each input can be seen and tapped. It has every field its add modal has, with the same labels,
+help and limits, filled in with the record's, but its time and those an edit does not change (a reading's type and
+method, a temp target's insulin needs). Emptying its notes or reason clears them; a number left blank stays as
+it was. Its Save (Rename for a profile) is at the modal's foot beside Close, as an add modal's Add is, and Enter in
+an input saves too. Its details are labelled as its add modal's fields are (e.g. Fat (g), Pre-bolus (minutes)), and
+end with the same Record section on every page: its ID, UTC offset, app, device, who created and last updated it and
+when, each left out when it is not set.
 
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
 opens its details; Enter on its delete button deletes it without opening them. A row's delete icon, here and in
@@ -545,6 +591,10 @@ Close or saving) gives the focus back to the row or button that opened it.
   its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses (an empty
   one is none sent). Each shows its app, what it came in, its device and when it was first and last seen, newest
   first; clicking one shows the settings as sent, indented to inspect.
+  - Clicking a set also shows what changed from the same app's set last seen before it: each setting changed, added
+    or removed, by its name (a preset's by the preset's name, as `overridePresets.Running.targetRange`), old then new
+    ("not sent" when it was not), glucose in the site's units; an app's first set says there is no set before it. The
+    API gives these as `changes`, with the set before's `previous_id` and the `units`.
   - Deleting a set keeps the profiles and device statuses sent with it; the Nightscout API reads them back without it.
   - The Nightscout API reads each profile and device status back with the settings it was sent with.
 
@@ -1012,7 +1062,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   control site's page of the site does. Others' My Account, and control's, do not.
 - Its Truncate, after asking, truncates the site as control's Truncate does: the loop's status and pump as sent are
   cleared from all but each device's newest report, device reports are thinned and those over 30 days old deleted,
-  and the DB is shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
+  loop settings no profile or device status refers to any more are deleted, but each app's last seen, and the DB is
+  shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
   the DB's new size, and records a "Site truncated" event with the admin. It shares the site's few downloads a minute.
 
 ### Own settings and alarms
@@ -1029,11 +1080,14 @@ Connectors are a site's third party integrations, each syncing from one service.
   Registering a token again updates it, and from another of the site's identities moves it there; another site
   registering the same token has its own, so no site can take or change another's. An APNs token is the same in upper
   or lower case. An identity has at most 10, even from profiles uploaded at once, though it can always register one
-  of them again, and sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own.
+  of them again, and sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own; an
+  admin can also get and delete any of the site's, but its search and stream are still only its own.
 - Settings, Push Devices (`/settings/push-devices`) lists the apps registered for pushes, with whose they are, the app
   and its service, its bundle ID, whether it is a development build, when it registered, and its last push and error;
   never its token. An admin sees every identity's on the site, and anyone else only their own. Each has a Test button,
-  which sends it a test push and shows its new last push, or a toast with why it failed.
+  which sends it a test push and shows its new last push, or a toast with why it failed, and a Delete button, which
+  after a confirmation removes its row with a "Push Device Deleted" toast, showing the table is empty again after the
+  last; pushes to it stop until its app registers again. Anyone but an admin is refused (404) another identity's.
 - An identity can send a test push to one of its registrations, and an admin to any of the site's
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
   Without one it is refused, saying to add one; a token Apple says is gone, or Firebase says is `UNREGISTERED`,

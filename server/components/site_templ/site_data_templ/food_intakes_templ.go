@@ -542,7 +542,8 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Edit("site--food", "/data/food", foodIntake.ID, foodIntakeFields, map[string]string{"carbs": orEmpty(foodIntake.Carbs), "name": orEmpty(foodIntake.Name), "notes": orEmpty(foodIntake.Notes)})
+		edit := addmodal.Props{ID: "site--food--edit", Path: "/data/food/" + foodIntake.ID, Target: "#site--food--" + foodIntake.ID, Swap: "outerHTML", Submit: "Save",
+			Fields: addmodal.Edit(foodIntakeFields, foodIntake, nil)}
 		templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
