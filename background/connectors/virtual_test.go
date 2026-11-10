@@ -8,8 +8,8 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 )
 
-// waveStart is a time in the first slot of the 2 hour glucose wave
-var waveStart = time.Unix(int64(len(virtualGlucose))*int64(virtualSlot.Seconds())*100000, 0).UTC()
+// waveStart is a time in the first slot of the 6 hour glucose wave
+var waveStart = time.Unix(virtualWaveSlots*int64(virtualSlot.Seconds())*100000, 0).UTC()
 
 func TestVirtualDocumentsMealsAndCorrections(t *testing.T) {
 	tests := []struct {
@@ -19,11 +19,11 @@ func TestVirtualDocumentsMealsAndCorrections(t *testing.T) {
 		meals       []time.Time
 		corrections []time.Time
 	}{
-		{name: "a whole wave has one meal then one correction", end: waveStart.Add(23 * virtualSlot), span: 2 * time.Hour,
-			meals: []time.Time{waveStart}, corrections: []time.Time{waveStart.Add(7 * virtualSlot)}},
+		{name: "a whole wave has one meal then one correction", end: waveStart.Add(71 * virtualSlot), span: 6 * time.Hour,
+			meals: []time.Time{waveStart}, corrections: []time.Time{waveStart.Add(18 * virtualSlot)}},
 		{name: "the meal slot alone", end: waveStart, span: virtualSlot, meals: []time.Time{waveStart}},
-		{name: "the correction slot alone", end: waveStart.Add(7 * virtualSlot), span: virtualSlot, corrections: []time.Time{waveStart.Add(7 * virtualSlot)}},
-		{name: "a 30 minute window after both has neither", end: waveStart.Add(20 * virtualSlot), span: 30 * time.Minute},
+		{name: "the correction slot alone", end: waveStart.Add(18 * virtualSlot), span: virtualSlot, corrections: []time.Time{waveStart.Add(18 * virtualSlot)}},
+		{name: "a 30 minute window after both has neither", end: waveStart.Add(30 * virtualSlot), span: 30 * time.Minute},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -47,4 +47,36 @@ func TestVirtualDocumentsMealsAndCorrections(t *testing.T) {
 			require.Equal(t, map[any]int{VirtualDevice: slots, VirtualCarerDevice: slots}, devices)
 		})
 	}
+}
+
+// Over a few days the virtual glucose reaches every range, from very low to very high, mostly in range or a little out,
+// is never below what a CGM reads, and no day is the same as the one before
+func TestVirtualGlucoseRanges(t *testing.T) {
+	const day = 288
+	counts := map[string]int{}
+	same := true
+	for slot := int64(0); slot < 4*day; slot++ {
+		mgdl := virtualGlucose(slot)
+		require.GreaterOrEqual(t, mgdl, 40.0)
+		switch {
+		case mgdl < 54:
+			counts["very low"]++
+		case mgdl < 70:
+			counts["low"]++
+		case mgdl <= 180:
+			counts["in range"]++
+		case mgdl <= 250:
+			counts["high"]++
+		default:
+			counts["very high"]++
+		}
+		if slot >= day && mgdl != virtualGlucose(slot-day) {
+			same = false
+		}
+	}
+	for _, band := range []string{"very low", "low", "in range", "high", "very high"} {
+		require.Positive(t, counts[band], band)
+	}
+	require.Greater(t, counts["in range"], 4*day/2, "most readings are in range")
+	require.False(t, same, "each day differs from the one before")
 }

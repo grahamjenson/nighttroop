@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math"
 	"slices"
 	"time"
 
@@ -27,14 +28,29 @@ const virtualIdentity = "virtual_connector"
 // VirtualCarerDevice is a second uploader, a carer's phone, so device statuses come from more than one device
 const VirtualCarerDevice = "virtual://carer-phone"
 
-// The slots of the glucose wave with a meal (as glucose starts to rise) and a correction (at its peak)
+// The virtual glucose is two waves added to 135 mg/dL, so it changes through the day and from one day to the next, as
+// real glucose does: a 6 hour wave, rising 90 mg/dL after a meal as it starts to rise, with a correction at its peak,
+// then dipping up to 50 mg/dL, sharply and briefly as a low does; and a slower 25 hour one of 40 mg/dL, so no two days
+// are the same. Over days about 2% of readings are very low (below 54 mg/dL), 4% low, 63% in range, 27% high and 4%
+// very high (above 250 mg/dL), so every range has readings.
 const (
+	virtualWaveSlots      = 72  // 6 hours of 5 minute slots
+	virtualDriftSlots     = 300 // 25 hours
 	virtualMealSlot       = 0
-	virtualCorrectionSlot = 7
+	virtualCorrectionSlot = virtualWaveSlots / 4
 )
 
-// A 2 hour glucose wave in mg/dL, one value per 5 minute slot.
-var virtualGlucose = []float64{118, 122, 127, 133, 139, 144, 148, 150, 149, 146, 141, 135, 129, 123, 117, 112, 108, 105, 104, 105, 108, 112, 115, 117}
+// virtualGlucose is the glucose in mg/dL in the 5 minute slot, counted from 1970, no lower than a CGM reads
+func virtualGlucose(slot int64) float64 {
+	wave := math.Sin(2 * math.Pi * float64(slot%virtualWaveSlots) / virtualWaveSlots)
+	if wave > 0 {
+		wave *= 90
+	} else {
+		wave = 50 * wave * wave * wave
+	}
+	drift := 40 * math.Sin(2*math.Pi*float64(slot%virtualDriftSlots)/virtualDriftSlots)
+	return max(40, math.Round(135+wave+drift))
+}
 
 type virtualDoc struct {
 	collection nsutils.Collection
@@ -67,9 +83,11 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 			"loopSettings": map[string]any{"dosingEnabled": true, "dosingStrategy": "automaticBolus", "maximumBasalRatePerHour": 3, "maximumBolus": 10, "minimumBGGuard": 80, "preMealTargetRange": []float64{80, 90}}}},
 	}
 	for t := start; !t.After(end); t = t.Add(virtualSlot) {
-		idx := int(t.Unix()/int64(virtualSlot.Seconds())) % len(virtualGlucose)
-		sgv := virtualGlucose[idx]
-		delta := sgv - virtualGlucose[(idx+len(virtualGlucose)-1)%len(virtualGlucose)]
+		slot := t.Unix() / int64(virtualSlot.Seconds())
+		// idx is the slot of the 6 hour wave, and the device's values cycle every 2 hours of it
+		idx := int(slot % virtualWaveSlots)
+		sgv := virtualGlucose(slot)
+		delta := sgv - virtualGlucose(slot-1)
 		direction := "Flat"
 		if delta > 3 {
 			direction = "FortyFiveUp"
@@ -80,13 +98,13 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 		docs = append(docs,
 			virtualDoc{nsutils.Entries, map[string]any{"type": "sgv", "sgv": sgv, "direction": direction, "date": t.UnixMilli(), "device": VirtualDevice}},
 			virtualDoc{nsutils.Devicestatus, map[string]any{"device": VirtualDevice, "date": t.UnixMilli(),
-				"uploader": map[string]any{"battery": 100 - idx, "name": "Virtual", "timestamp": iso},
-				"pump":     map[string]any{"reservoir": 150 - idx, "clock": iso, "battery": map[string]any{"percent": 90}},
+				"uploader": map[string]any{"battery": 100 - idx%24, "name": "Virtual", "timestamp": iso},
+				"pump":     map[string]any{"reservoir": 150 - idx%24, "clock": iso, "battery": map[string]any{"percent": 90}},
 				"loop": map[string]any{"name": "Virtual", "timestamp": iso,
-					"iob": map[string]any{"iob": 0.5 + float64(idx)*0.05, "timestamp": iso},
+					"iob": map[string]any{"iob": 0.5 + float64(idx%24)*0.05, "timestamp": iso},
 					"cob": map[string]any{"cob": 12 - idx%12, "timestamp": iso}},
 			}},
-			virtualDoc{nsutils.Devicestatus, map[string]any{"device": VirtualCarerDevice, "date": t.UnixMilli(), "uploaderBattery": 80 - idx}},
+			virtualDoc{nsutils.Devicestatus, map[string]any{"device": VirtualCarerDevice, "date": t.UnixMilli(), "uploaderBattery": 80 - idx%24}},
 		)
 		switch idx {
 		case virtualMealSlot:
