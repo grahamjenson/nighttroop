@@ -180,3 +180,30 @@ func TestStoppingAConsumerLogsNoError(t *testing.T) {
 	}
 	require.NotContains(t, buf.String(), "level=ERROR")
 }
+
+// A job still running when its consumer stops is recorded as completed when it finishes, or it would be fetched again
+// after its visibility timeout, on the next start, and run twice
+func TestJobFinishingAfterStopIsCompleted(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, queue := t.Context(), liteq.New(controlDB)
+	require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: "stopped-mid-job", Job: "fetch"}))
+
+	var queuedID int64
+	started, release := make(chan struct{}), make(chan struct{})
+	worker := func(ctx context.Context, job *jobsdb.Job) error {
+		queuedID = job.ID
+		close(started)
+		<-release
+		return nil
+	}
+	consumer := liteq.NewConsumerSupervisor(queue, "stopped-mid-job", 1, worker)
+	consumer.Start()
+	<-started
+	consumer.Stop()
+	close(release)
+	consumer.Wait()
+
+	job, err := controlDB.Jobs.Queries.FindJob(ctx, jobsdb.FindJobParams{ID: queuedID})
+	require.NoError(t, err)
+	require.Equal(t, "completed", job.JobStatus)
+}

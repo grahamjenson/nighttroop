@@ -111,12 +111,16 @@ type WorkerFunc func(context.Context, *jobsdb.Job) error
 // link to its logs.
 func runJob(ctx context.Context, q *jobsdb.Queries, worker WorkerFunc, job *jobsdb.Job) {
 	runCtx := jobContext(ctx, job)
-	if err := worker(runCtx, job); err != nil {
+	err := worker(runCtx, job)
+	// Stopping cancels ctx while a job may still be running: its outcome is still recorded, or the job would be
+	// fetched again after its visibility timeout and run twice
+	done := context.WithoutCancel(ctx)
+	if err != nil {
 		_, runID := aslog.IDs(runCtx)
-		q.FailJob(ctx, jobsdb.FailJobParams{Errors: job.Errors.Add(err.Error()), RunID: &runID, ID: job.ID})
+		q.FailJob(done, jobsdb.FailJobParams{Errors: job.Errors.Add(err.Error()), RunID: &runID, ID: job.ID})
 		return
 	}
-	q.CompleteJob(ctx, jobsdb.CompleteJobParams{ID: job.ID})
+	q.CompleteJob(done, jobsdb.CompleteJobParams{ID: job.ID})
 }
 
 func jobContext(ctx context.Context, job *jobsdb.Job) context.Context {
