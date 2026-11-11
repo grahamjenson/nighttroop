@@ -73,7 +73,9 @@ func TestDevelopmentOnlyOverHTTP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(string(tt.mode)+" "+tt.protocol, func(t *testing.T) {
-			cfg, err := readServerConfig(tt.mode, map[string]string{"HOST_PROTOCOL": tt.protocol})
+			// Production must name its operator to start
+			cfg, err := readServerConfig(tt.mode, map[string]string{"HOST_PROTOCOL": tt.protocol, "OPERATOR_NAME": "Example Health",
+				"SUPPORT_EMAIL": "help@example.org"})
 			require.NoError(t, err)
 			err = cfg.ValidateClean()
 			if tt.err == "" {

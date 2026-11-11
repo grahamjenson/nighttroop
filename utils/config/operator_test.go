@@ -32,6 +32,10 @@ func TestOperatorConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dotenv := map[string]string{"HOST_PROTOCOL": "https"}
+			// Development is only for local use, over http
+			if tt.mode == consts.Development {
+				dotenv["HOST_PROTOCOL"] = "http"
+			}
 			if tt.mode == consts.Staging {
 				dotenv = MergeMaps(dotenv, stagingAdmin)
 			}
