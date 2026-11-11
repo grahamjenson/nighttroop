@@ -206,8 +206,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   one of a site is recorded at most once a minute, and at most 20 of a site's a minute, so a client repeating bad
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - A request refused for what it sent, or that failed with a 5xx, keeps the first 8 KB of what it sent on its error, and
-  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON, or its text when it is not
-  JSON (such as JSON that did not parse), with credentials (tokens, secrets, passwords) `REDACTED`, to debug it by.
+  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON or form, with credentials
+  and connector logins (tokens, secrets, passwords, keys, TOTP codes, usernames, emails and URLs) `REDACTED`, to debug
+  it by. A body that is neither, or was cut off at 8 KB (such as JSON that did not parse), keeps only its size and
+  content type.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
 - A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
@@ -221,8 +223,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
 - A staging server with `CAPTURE_REQUESTS=true` keeps each request and its response as a `Captured <method> <path>`
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
-  64 KB, as text or, when it is not text, base64. Authorization, cookies, API secrets, tokens and passwords are
-  `REDACTED` in its headers, query, path and JSON or form bodies. A page's styles, scripts, images and fonts are not
+  64 KB. Authorization, cookies, API secrets, tokens, passwords, keys, TOTP codes, usernames, emails and URLs are
+  `REDACTED` in its headers, query, path and JSON or form bodies. Any other body, such as a page, text or one past
+  64 KB, keeps only its size and content type, so a page showing a new site's credentials is not kept. A page's
+  styles, scripts, images and fonts are not
   kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
   none.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server

@@ -26,7 +26,10 @@ func TestErrorsKeepTheRequestBody(t *testing.T) {
 	}{
 		{"a 400 keeps its JSON, its token redacted", http.StatusBadRequest, `{"sgv":"high","token":"bodytoken123"}`,
 			[]string{`"kind":"client"`, `\"sgv\":\"high\"`, `\"token\":\"REDACTED\"`}},
-		{"a 400 keeps JSON that did not parse as its text", http.StatusBadRequest, `{"sgv": 102,`, []string{`"text":"{\"sgv\": 102,"`}},
+		{"a 400 keeps a connector's login redacted", http.StatusBadRequest, `{"url_or_username":"bodytoken123","totp":"123456"}`,
+			[]string{`\"url_or_username\":\"REDACTED\"`, `\"totp\":\"REDACTED\"`}},
+		{"a 400 keeps only the size and type of JSON that did not parse", http.StatusBadRequest, `{"sgv": 102, "token": "bodytoken123",`,
+			[]string{`"omitted":true`, `"bytes":37`, `"content_type":"application/json"`}},
 		{"a 500 keeps its JSON", http.StatusInternalServerError, `{"eventType":"Note"}`, []string{`"kind":"server"`, `\"eventType\":\"Note\"`}},
 	}
 	for _, test := range tests {
@@ -54,7 +57,8 @@ func TestErrorsKeepTheRequestBody(t *testing.T) {
 	}
 }
 
-// What a request sent is kept only up to errorRequestBodyBytes, so a large one cannot fill an error
+// What a request sent is kept only up to errorRequestBodyBytes, so a large one cannot fill an error, and as it cannot be
+// redacted once cut off, only its size is
 func TestErrorRequestBodyIsCapped(t *testing.T) {
 	var kept map[string]any
 	handler := KeepErrorRequestBodies(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -62,8 +66,7 @@ func TestErrorRequestBodyIsCapped(t *testing.T) {
 		kept = ErrorRequestBody(r.Context())
 	}))
 	handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", strings.NewReader(strings.Repeat("a", 3*errorRequestBodyBytes))))
-	require.Equal(t, true, kept["truncated"])
-	require.Len(t, kept["text"], errorRequestBodyBytes)
+	require.Equal(t, map[string]any{"truncated": true, "omitted": true, "bytes": 3 * errorRequestBodyBytes, "content_type": ""}, kept)
 }
 
 // An error reported to Sentry while handling a request has what the request sent, its credentials redacted

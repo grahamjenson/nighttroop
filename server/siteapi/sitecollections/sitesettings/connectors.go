@@ -308,8 +308,9 @@ func cleanURLOrUsername(ctx context.Context, siteContext *httputils.SiteContext,
 	}
 	normalized, err := nsURLNormalizeValidate(&trimmed, siteContext.Config)
 	if err != nil {
-		slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err, "url", trimmed)
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", trimmed, err))
+		// Neither the log nor the error, which is recorded, has the URL, which can hold a login or token
+		slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err)
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL is not a valid URL. %s", err))
 	}
 	return normalized, nil
 }
@@ -358,7 +359,7 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 	problems := []string{}
 	nsURL, err := url.Parse(*rawUrl)
 	if err != nil {
-		return rawUrl, fmt.Errorf("Invalid URL: %w", err)
+		return rawUrl, fmt.Errorf("Nightscout URL cannot be read as a URL.")
 	}
 
 	scheme := strings.ToLower(nsURL.Scheme)
