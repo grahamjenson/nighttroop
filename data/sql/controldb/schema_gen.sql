@@ -25,8 +25,11 @@ CREATE TABLE control_identities (
     created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
-    deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
-, credentials_changed_at INTEGER NOT NULL DEFAULT 0) STRICT;
+    deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
+
+    -- credentials_changed_at is when its password or TOTP last changed, or it was made: JWTs issued before it are refused
+    credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;
 
 CREATE TABLE passkeys (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
