@@ -71,6 +71,30 @@ func periodID(id string, location *time.Location, now time.Time) (string, time.T
 	return period, at, nil
 }
 
+// SummariesCheckedOverlap is how far before a site's summaries_checked_at its data is looked through again, as a
+// write's updated_at is taken before it commits
+const SummariesCheckedOverlap = time.Minute
+
+// SummariesOutOfDate is whether a report's summaries, the period's and its days', before today, are to be built again:
+// marked stale, or with data in them written since the site's summaries were last checked
+func SummariesOutOfDate(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, rows []*sitedb.SummaryPeriod, now time.Time) (bool, error) {
+	today := PeriodStart("day", now, siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()).UnixMilli()
+	start, end := today, int64(0)
+	for _, row := range rows {
+		if row.StaleAt != nil {
+			return true, nil
+		}
+		start, end = min(start, row.StartAt), max(end, row.EndAt)
+	}
+	checked := siteContext.SiteModel.SummariesCheckedAt
+	if checked == nil || start >= today {
+		return false, nil
+	}
+	// Without the rebuild's overlap, as what was written just before it was checked has been built
+	written, err := q.SummaryDataWrittenSince(ctx, sitedb.SummaryDataWrittenSinceParams{Since: *checked, Before: min(end, today)})
+	return slices.ContainsFunc(written, func(at int64) bool { return at >= start }), err
+}
+
 // SummaryReport is the report the id names and its days, oldest first: a day, as GetRow reads it, and itself; a month,
 // as GetRow reads it, and its days kept and today so far while it is in it; and a week or fortnight, the ReportDays to
 // the id's date, built from its days kept and today so far when it is the last

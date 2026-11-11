@@ -444,6 +444,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The Reports hub has Overview, at `/reports/overview`, which shows the 7 days to yesterday at first, and the
   overview of any day, week, fortnight or month from today back a year is at `/reports/overview/{period}-{date}`, with
   the same buttons to other periods as the AGP report. Any other id is not found.
+- The Overview and AGP say, in a blue notice above the report, that it is being updated while data in its days before
+  today changed since they were worked out, as a backfill or late sync writes, or a record moves or is deleted, until
+  they are built again; refreshed once they are, it is gone.
 - An overview shows its glucose's average and standard deviation, in the settings' units, and its GMI and coefficient
   of variation, each "–" with no readings.
 - An overview's time in range is a bar of its very high (above 250 mg/dL), high, in range, low and very low (below
@@ -487,6 +490,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - What was written is found from the data's `updated_at` since the site was last checked, kept on the site as
   `summaries_checked_at`, so data written just before a server stopped, to a day built or never built, is built within
   a minute of it starting too.
+- A connector's finished backfill has the days it wrote built on the next run, within a minute, without waiting for the
+  site's data to go quiet; and data from the last 15 minutes, as a phone uploads as it goes, does not hold back the
+  building of older days written to, so a site with a looping phone has them built 2 minutes after they stop too.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.

@@ -448,7 +448,11 @@ func PeriodReportHandler(page func(p *sitemodels.SiteSummaryPeriod, days []*site
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
-		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(report.Period, report.Days, report.Previous), true)
+		component := page(report.Period, report.Days, report.Previous)
+		if report.OutOfDate {
+			component = templ.Join(site_reports_templ.OutOfDate(), component)
+		}
+		WriteResponse(w, r, siteContext, http.StatusOK, nil, component, true)
 	}
 }
 
@@ -462,7 +466,11 @@ func periodReport(r *http.Request, siteContext *httputils.SiteContext, id string
 	if herr != nil {
 		return nil, herr
 	}
-	report := &site_reports_templ.PeriodReport{Period: sitemodels.SummaryPeriodFromDB(row, siteContext), Days: days}
+	outOfDate, err := sitedata.SummariesOutOfDate(r.Context(), siteContext.SiteDB.Queries(), siteContext, append(rows, row), now)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "Cannot tell whether the report's summaries are out of date", "error", err)
+	}
+	report := &site_reports_templ.PeriodReport{Period: sitemodels.SummaryPeriodFromDB(row, siteContext), Days: days, OutOfDate: outOfDate}
 	before := row.Period + "-" + time.UnixMilli(row.StartAt).In(siteContext.GetSiteTimezone()).AddDate(0, 0, -1).Format(time.DateOnly)
 	// A period before with no data has nothing to compare with, though some of its numbers, as its time CGM active,
 	// are 0 rather than missing

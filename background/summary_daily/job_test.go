@@ -319,3 +319,31 @@ func TestRebuildStaleBuildsWhatWasWrittenBeforeARestart(t *testing.T) {
 	require.NotNil(t, site.SummariesCheckedAt)
 	require.GreaterOrEqual(t, *site.SummariesCheckedAt, started.UnixMilli())
 }
+
+// A finished backfill has the days it wrote built on the next run, without waiting for the site's data to go quiet
+func TestRebuildStaleBuildsAFinishedBackfillOnTheNextRun(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	require.NoError(t, r.builder.RebuildStale(ctx, now))
+	day := now.AddDate(0, 0, -3)
+	r.reading("backfilled", day, now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now))
+	require.False(t, r.built(day.Format(time.DateOnly)), "not while its data has not gone quiet")
+
+	r.bus.Publish(r.siteID, events.Event{Name: events.ConnectorBackfilled, SiteID: r.siteID})
+	require.NoError(t, r.builder.RebuildStale(ctx, now))
+	require.True(t, r.built(day.Format(time.DateOnly)))
+}
+
+// Data a phone uploads as it happens keeps coming, so it does not hold back the days older data was written to
+func TestRebuildStaleIsNotHeldBackByLiveData(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	require.NoError(t, r.builder.RebuildStale(ctx, now))
+	day := now.AddDate(0, 0, -3)
+	r.reading("late", day, now)
+	r.reading("live", now, now.Add(time.Minute))
+	r.reading("live-later", now.Add(90*time.Second), now.Add(90*time.Second))
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.True(t, r.built(day.Format(time.DateOnly)))
+}

@@ -43,10 +43,10 @@ type staleData struct {
 }
 
 const (
-	// checkedOverlap is how far before a site was last checked its data is looked through again, as a write's updated_at
-	// is taken before it commits; and restartSince, of a site never checked, how far before the server started
-	checkedOverlap = time.Minute
-	restartSince   = time.Hour
+	// restartSince is, of a site never checked, how far before the server started its data is looked through
+	restartSince = time.Hour
+	// liveWithin is how recent data a phone uploads as it happens is, which is in today, built as it is read
+	liveWithin = 15 * time.Minute
 	// staleQuiet is how long a site's data must go unchanged before its days are built again, so the many records a
 	// backfill or sync writes are built once, from all of them, and staleWait the longest written data waits, so a
 	// long backfill's days are still built as it goes
@@ -72,6 +72,9 @@ func NewBuilder(bus *events.SiteBus, controlDB *db.ControlDB) *Builder {
 	bus.SubscribeAll(func(event events.Event) {
 		if _, ok := event.Model.(*sitedb.SummaryPeriod); ok {
 			builder.remember(event.SiteID, nil)
+		}
+		if event.Name == events.ConnectorBackfilled {
+			builder.dueNow(event.SiteID)
 		}
 		builder.markStale(event, time.Now())
 	})
@@ -211,17 +214,28 @@ func (b *Builder) markStale(event events.Event, now time.Time) {
 	default:
 		return
 	}
-	if event.SiteID == "" {
+	model, ok := event.Model.(interface{ GetOccurredAt() int64 })
+	if !ok || event.SiteID == "" {
 		return
 	}
 	b.staleLock.Lock()
 	defer b.staleLock.Unlock()
-	data := b.stale[event.SiteID]
-	if data == nil {
-		data = &staleData{first: now}
-		b.stale[event.SiteID] = data
+	if data := b.stale[event.SiteID]; data == nil {
+		b.stale[event.SiteID] = &staleData{first: now, last: now}
+	} else if now.Sub(time.UnixMilli(model.GetOccurredAt())) >= liveWithin {
+		// Live data keeps coming as a phone uploads it, so only older data holds back a backfill's or late sync's days
+		data.last = now
 	}
-	data.last = now
+}
+
+// dueNow builds the site's days on the next run, as a backfill finished writing them
+func (b *Builder) dueNow(siteID string) {
+	b.staleLock.Lock()
+	defer b.staleLock.Unlock()
+	if b.stale[siteID] == nil {
+		b.stale[siteID] = &staleData{}
+	}
+	b.stale[siteID].first = time.Time{}
 }
 
 // RebuildStale builds again the days, and their weeks, fortnights and months, of each site's data written since it
@@ -263,7 +277,7 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 		siteDB, _, err := b.controlDB.GetSite(ctx, siteID)
 		since := began.Add(-restartSince).UnixMilli()
 		if site.SummariesCheckedAt != nil {
-			since = *site.SummariesCheckedAt - checkedOverlap.Milliseconds()
+			since = *site.SummariesCheckedAt - sitedata.SummariesCheckedOverlap.Milliseconds()
 		}
 		var stale, written []int64
 		if err == nil {

@@ -22,6 +22,8 @@ type PeriodReport struct {
 	Period   *sitemodels.SiteSummaryPeriod
 	Days     []*sitemodels.SiteSummaryDaily
 	Previous *sitemodels.SiteSummaryPeriod
+	// OutOfDate is whether its summaries are being built again, as data in them changed since they were built
+	OutOfDate bool
 }
 
 // Printable is the report to print of months, newest first: each month's overview and AGP on a page of its own, laid
