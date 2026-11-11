@@ -24,6 +24,7 @@ common:
     required: "Required"
     optional: "Optional"
     none: "None"
+    multiplier_help: "A percent above 0: 100% is as it is, 120% is 1.2 times."
   filter:
     search: "Search"
     type: "Type"

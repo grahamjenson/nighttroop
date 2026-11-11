@@ -31,8 +31,8 @@ const (
 	Percent
 )
 
-// MultiplierHelp is every percent multiplier's help, so they are all explained the same way
-const MultiplierHelp = "A percent above 0: 100% is as it is, 120% is 1.2 times."
+// MultiplierHelp is the message id of every percent multiplier's help, so they are all explained the same way
+const MultiplierHelp = "common.add_modal.multiplier_help"
 
 // percentsToFractions sends each Percent input's value as the fraction its model keeps, e.g. 120 as 1.2
 const percentsToFractions = "for (const input of this.querySelectorAll('[data-percent]')) { const value = ctx.request.body.get(input.name); " +

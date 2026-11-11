@@ -116,7 +116,7 @@ func profileSwitchFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
 		{Name: "name", Label: i18n.T(ctx, "site.data.profile_switches.profile"), Help: i18n.T(ctx, "site.data.profile_switches.profile_help"), Required: true, Kind: addmodal.Text, Max: "64"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.profile_switches.when_help"), Kind: addmodal.When},
-		{Name: "multiplier", Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
+		{Name: "multiplier", Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
 		{Name: "timeshift", Label: i18n.T(ctx, "site.data.profile_switches.shift_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.shift_help"), Min: "-1440", Max: "1440", Step: "1", Value: "0"},
 		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.duration_help"), Min: "0", Max: "10080", Step: "1"},
 		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.profile_switches.reason_help"), Kind: addmodal.Text, Max: "64"},

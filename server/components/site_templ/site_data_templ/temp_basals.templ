@@ -52,7 +52,7 @@ func tempBasalFields(ctx context.Context) []addmodal.Field {
 		{Name: "rate", Label: i18n.T(ctx, "site.data.temp_basals.rate"), Help: i18n.T(ctx, "site.data.temp_basals.rate_help"), Required: true, Min: "0", Max: "50", Step: "any"},
 		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_basals.duration_help"), Required: true, Min: "1", Max: "1440", Step: "1"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.temp_basals.when_help"), Kind: addmodal.When},
-		{Name: "multiplier", Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "1", Max: "1100"},
+		{Name: "multiplier", Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Kind: addmodal.Percent, Min: "1", Max: "1100"},
 		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_basals.reason_help"), Kind: addmodal.Text, Max: "64"},
 		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
 	}

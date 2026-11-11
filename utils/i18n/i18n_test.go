@@ -22,8 +22,8 @@ const root = "../.."
 var (
 	// A message id, as written in the code: words joined by dots, e.g. site.reports.title
 	idLiteral = regexp.MustCompile(`"([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)"`)
-	// The id each i18n.T and i18n.N call shows
-	shownID     = regexp.MustCompile(`i18n\.[TN]\([^"\n]*?"([^"]+)"`)
+	// The id each i18n.T and i18n.N call shows, where it is written in the call
+	shownID     = regexp.MustCompile(`i18n\.[TN]\([\w.]+(?:\(\))?,\s*"([^"]+)"`)
 	placeholder = regexp.MustCompile(`{{\s*\.(\w+)\s*}}`)
 	// Text with a word in it
 	words = regexp.MustCompile(`[A-Za-z]{2,}`)
@@ -39,7 +39,7 @@ var (
 	// Text that is the same in every language: names, units and symbols
 	untranslated = map[string]bool{
 		"Nighttroop": true, "Nighttroop Control": true, "Nightscout": true, "Dexcom": true, "LibreLinkUp": true, "Libre": true,
-		"Loop": true, "Trio": true, "Apple": true, "Firebase": true, "Google Authenticator": true,
+		"Loop": true, "Trio": true, "Nightguard": true, "Apple": true, "Firebase": true, "Apple (APNs)": true, "Firebase (FCM)": true, "Google Authenticator": true,
 		"Microsoft Authenticator": true, "mg/dL": true, "mmol/L": true, "MB": true,
 		// Values that are sent, stored or compared: a key's name, a Nightscout trend, a part of an element's id and the
 		// temp target reasons suggested, which are stored as they are
