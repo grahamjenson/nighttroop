@@ -283,7 +283,10 @@ func NewServerConfig() (*ServerConfig, error) {
 func readFlagsAndDotEnv() (consts.ServerMode, map[string]string, error) {
 	flagsnev := compileFlags()
 
-	mode := findMode(flagsnev)
+	mode, err := findMode(flagsnev, testing.Testing())
+	if err != nil {
+		return "", nil, err
+	}
 	dotenv, err := compileDotEnvFile(mode)
 	if err != nil {
 		return mode, nil, err
@@ -509,6 +512,11 @@ func (config *ServerConfig) ValidateClean() error {
 		return fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
 	}
 
+	// Development has known passwords and TOTP, so it only runs locally, over http
+	if config.HostProtocol == "https" && config.IsDev() {
+		return fmt.Errorf("development mode is only for local use: set HOST_PROTOCOL=http, or MODE=production")
+	}
+
 	if config.HostProtocol == "http" && !config.IsDev() && !config.IsTest() {
 		return fmt.Errorf("http is only allowed in development or test mode")
 	}
@@ -581,34 +589,29 @@ func configFloatSelect(dotenv map[string]string, envVar string, defaultValue flo
 	return configSelect(dotenv, envVar, defaultValue, func(raw string) (float64, error) { return strconv.ParseFloat(raw, 64) })
 }
 
-// 1. check explicit settings, the flag and envar
-// 2. Guess, if go is running test
-// 3. return default dev
-func findMode(flags map[string]string) consts.ServerMode {
-	if modeStr, ok := flags["MODE"]; ok {
-		mode, err := consts.ServerMode(modeStr).Normalize()
-		if err != nil {
-			slog.Error("Invalid mode in flags", "mode", modeStr, "error", err)
-			return consts.Development
+// findMode is the MODE flag, else the MODE environment variable, else test under go test. Any other MODE is a startup
+// error rather than a fallback, as development and test have known passwords, TOTP and keys: an unset or unknown
+// MODE, or test outside go test
+func findMode(flags map[string]string, underGoTest bool) (consts.ServerMode, error) {
+	modeStr, ok := flags["MODE"]
+	if !ok {
+		modeStr, ok = os.LookupEnv("MODE")
+	}
+	if !ok {
+		if underGoTest {
+			return consts.Test, nil
 		}
-		return mode
+		return "", fmt.Errorf("MODE is not set: set MODE=production to serve, or pass -MODE=development to run locally")
 	}
 
-	if modeStr, ok := os.LookupEnv("MODE"); ok {
-		mode, err := consts.ServerMode(modeStr).Normalize()
-		if err != nil {
-			slog.Error("Invalid mode in env", "mode", modeStr, "error", err)
-			return consts.Development
-		}
-		return mode
+	mode, err := consts.ServerMode(modeStr).Normalize()
+	if err != nil {
+		return "", fmt.Errorf("invalid MODE: %w", err)
 	}
-
-	// If go test is running then it is test mode
-	if testing.Testing() {
-		return consts.Test
+	if mode == consts.Test && !underGoTest {
+		return "", fmt.Errorf("MODE test is only for go test")
 	}
-
-	return consts.Development
+	return mode, nil
 }
 
 func compileFlags() map[string]string {

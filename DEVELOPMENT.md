@@ -52,6 +52,9 @@ server would restore the old databases from their backups when it starts.
 docker-compose restart && rm -rf .dbs && go generate ./... && sleep 2 && air | spretty
 ```
 
+`air` runs the server with `-MODE=development` (see `.air.toml`): it will not start without a `MODE`. To run it without
+`air`, use `go run main.go -MODE=development`.
+
 Then go to `localhost:8080` and create a user, `control.localhost:8080` and login as control.
 In Development all initial passwords are `password` and all TOTP is `123123`
 
