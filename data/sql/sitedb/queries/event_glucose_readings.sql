@@ -196,12 +196,20 @@ WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 DELETE FROM glucose_readings WHERE id = ?;
 
 
+-- SoftDeleteGlucoseReadingsByType deletes at most Limit of the type, the newest first
 -- name: SoftDeleteGlucoseReadingsByType :execresult
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_by_identity_name = ?
-WHERE reading_type = ? AND deleted_at IS NULL;
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE id IN (
+    SELECT g.id FROM glucose_readings g WHERE g.reading_type = sqlc.arg('ReadingType') AND g.deleted_at IS NULL
+    ORDER BY g.occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER)
+);
 
+-- HardDeleteGlucoseReadingsByType deletes at most Limit of the type, soft deleted or not, the newest first
 -- name: HardDeleteGlucoseReadingsByType :execresult
-DELETE FROM glucose_readings WHERE reading_type = ?;
+DELETE FROM glucose_readings WHERE id IN (
+    SELECT g.id FROM glucose_readings g WHERE g.reading_type = sqlc.arg('ReadingType')
+    ORDER BY g.occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER)
+);

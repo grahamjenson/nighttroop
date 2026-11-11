@@ -1049,8 +1049,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
   Nightscout API or its live updates. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one
   batch, each 100 past the first costing a write against the site's and identity's limits; a live update's upload
-  holds at most 100. Deleting a type of treatment through the
-  Nightscout API deletes at most 1000 each time, saying how many.
+  holds at most 100. Deleting a type of treatment or entry
+  through the Nightscout API deletes at most 1000 each time, the newest first, saying how many.
 - A DB serves many reads at once, so one slow read, such as a long search, does not hold up the others; writes to it
   take turns rather than fail. A busy DB keeps its connections open between reads, so requests at once do not each
   open a new one, while a quiet site's DB closes all of them.

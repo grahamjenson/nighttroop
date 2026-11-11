@@ -16,7 +16,7 @@ import (
 )
 
 // However many records are asked for, no endpoint returns more than a search's worth, so no request can read a whole
-// site at once, nor delete all of a type of treatment one at a time
+// site at once, nor delete all of a type of treatment or entry at once
 func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	handler := GetMainHandler(controlDB, config)
@@ -97,4 +97,12 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 	require.Equal(t, float64(apiquery.MaxQueryLimit), deleted.(map[string]any)["deletedCount"])
 	deleted = send("DELETE", ns+"/api/v1/treatments/Note?token="+site.PwdNSToken, "")
 	require.Equal(t, float64(records-apiquery.MaxQueryLimit), deleted.(map[string]any)["deletedCount"])
+
+	// So does deleting a type of entry, soft deleting or for good, which deletes those soft deleted too
+	for _, permanent := range []string{"", "&permanent=true"} {
+		deleted = send("DELETE", ns+"/api/v1/entries/sgv?token="+site.PwdNSToken+permanent, "")
+		require.Equal(t, float64(apiquery.MaxQueryLimit), deleted.(map[string]any)["deletedCount"], permanent)
+		deleted = send("DELETE", ns+"/api/v1/entries/sgv?token="+site.PwdNSToken+permanent, "")
+		require.Equal(t, float64(records-apiquery.MaxQueryLimit), deleted.(map[string]any)["deletedCount"], permanent)
+	}
 }

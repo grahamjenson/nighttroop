@@ -7836,6 +7836,16 @@ func (m *HardDeleteGlucoseReadingsByTypeParams) SetReadingType(v string) {
 	m.ReadingType = v
 }
 
+// GetLimit returns the Limit value.
+func (m HardDeleteGlucoseReadingsByTypeParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated HardDeleteGlucoseReadingsByTypeParams.
+func (m *HardDeleteGlucoseReadingsByTypeParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetDateGTE returns the DateGTE value.
 func (m SearchGlucoseReadingsParams) GetDateGTE() *int64 {
 	return m.DateGTE
@@ -8174,6 +8184,16 @@ func (m SoftDeleteGlucoseReadingsByTypeParams) GetReadingType() string {
 // SetReadingType sets the ReadingType value and returns the updated SoftDeleteGlucoseReadingsByTypeParams.
 func (m *SoftDeleteGlucoseReadingsByTypeParams) SetReadingType(v string) {
 	m.ReadingType = v
+}
+
+// GetLimit returns the Limit value.
+func (m SoftDeleteGlucoseReadingsByTypeParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SoftDeleteGlucoseReadingsByTypeParams.
+func (m *SoftDeleteGlucoseReadingsByTypeParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetMgdl returns the Mgdl value.
