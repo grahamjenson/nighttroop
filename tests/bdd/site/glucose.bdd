@@ -3,8 +3,7 @@ ASSERT_VISIBLE "Nighttroop"
 
 // Virtual connector writes the last 30 minutes of glucose readings, 6 of them, on its first run
 CLICK #site--settings-menu
-CLICK #site--nav--menu--settings
-CLICK #site--settings--connectors-button
+CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit

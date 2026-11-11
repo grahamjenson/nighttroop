@@ -12,8 +12,7 @@ SCREENSHOT event_groups_empty
 
 // Virtual connector sends treatments through the Nightscout API, each an event group
 CLICK #site--settings-menu
-CLICK #site--nav--menu--settings
-CLICK #site--settings--connectors-button
+CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit

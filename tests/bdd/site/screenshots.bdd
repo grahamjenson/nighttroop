@@ -39,12 +39,13 @@ ASSERT_VISIBLE #site--settings--logout-button
 SCREENSHOT site_settings_menu
 PRESS Escape
 
-// The Settings hub has a tab for each settings page
+// The Settings hub has a tab for each settings page, and Connectors is in the user menu
 CLICK #site--settings-menu
 CLICK #site--nav--menu--settings
 ASSERT_VISIBLE #site--settings--identities-button
-ASSERT_VISIBLE #site--settings--connectors-button
-CLICK #site--settings--connectors-button
+ASSERT_VISIBLE #site--settings--push-button
+CLICK #site--settings-menu
+CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /settings/connectors

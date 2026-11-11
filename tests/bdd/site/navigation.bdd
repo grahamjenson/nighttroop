@@ -13,22 +13,24 @@ ASSERT_NOT_VISIBLE #site--nav--links >> text=Settings
 ASSERT_VISIBLE #site--nav--search[aria-label="Search pages"]
 SCREENSHOT navigation_header
 
-// The user menu has who is signed in, their account, the guide, Settings, Alarms, Logs & Events, Usage and logout,
-// none marked on the summary
+// The user menu has who is signed in, their account, the guide, Settings, Connectors, Alarms, Logs & Events, Usage and
+// logout, none marked on the summary
 CLICK #site--settings-menu
 ASSERT_TEXT_VISIBLE Signed in as
 ASSERT_VISIBLE #site--settings--account-button
 ASSERT_VISIBLE #site--settings--getting-started-button
 ASSERT_TEXT_EQUALS #site--nav--menu--settings Settings
+ASSERT_TEXT_EQUALS #site--nav--menu--connectors Connectors
 ASSERT_TEXT_EQUALS #site--nav--menu--alarms Alarms
 ASSERT_TEXT_EQUALS #site--nav--menu--logs Logs & Events
 ASSERT_TEXT_EQUALS #site--nav--menu--usage Usage
 ASSERT_VISIBLE #site--nav--menu--settings
+ASSERT_VISIBLE #site--nav--menu--connectors
 ASSERT_VISIBLE #site--nav--menu--alarms
 ASSERT_VISIBLE #site--nav--menu--logs
 ASSERT_VISIBLE #site--nav--menu--usage
 ASSERT_VISIBLE #site--settings--logout-button
-ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 7
+ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 8
 ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
 SCREENSHOT navigation_account_menu
 PRESS Escape
@@ -87,8 +89,8 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
 ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
 
-// Settings, from the user menu, has side tabs in their groups, every one for an admin, and no alarms, events, errors or
-// logs; the menu marks it, and the header marks no hub
+// Settings, from the user menu, has side tabs in their groups, every one for an admin, Push Devices and Push
+// Certificates in Push, and no connectors, alarms, events, errors or logs; the menu marks it, and the header marks no hub
 CLICK #site--settings-menu
 CLICK #site--nav--menu--settings
 ASSERT_STATUS 200
@@ -98,14 +100,18 @@ ASSERT_COUNT #site--nav--links [aria-current="page"] 0
 ASSERT_VISIBLE #site--settings--settings-button[aria-current="page"]
 ASSERT_VISIBLE #site--hub--settings nav >> text="This site"
 ASSERT_VISIBLE #site--hub--settings nav >> text="People & devices"
-ASSERT_VISIBLE #site--hub--settings nav >> text="Connections"
+ASSERT_VISIBLE #site--hub--settings nav >> text="Push"
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="Push"] #site--settings--push-devices-button
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="Push"] #site--settings--push-button >> text=Push Certificates
+ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Connections"
+ASSERT_NOT_VISIBLE #site--settings--connectors-button
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Presets"
 ASSERT_NOT_VISIBLE #site--settings--alarms-button
 ASSERT_NOT_VISIBLE #site--logs--events-button
 ASSERT_NOT_VISIBLE #site--logs--errors-button
 ASSERT_NOT_VISIBLE #site--logs--logs-button
-ASSERT_COUNT #site--hub--settings nav a 5
+ASSERT_COUNT #site--hub--settings nav a 4
 SCREENSHOT navigation_settings_hub
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--settings[aria-current="page"]
@@ -133,6 +139,19 @@ CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--logs[aria-current="page"]
 ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
 
+// Connectors, from the user menu, is a page of its own, with no tabs, the menu marking it
+CLICK #site--nav--menu--connectors
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/connectors
+ASSERT_TITLE Connectors · Nighttroop
+ASSERT_NOT_VISIBLE #site--hub--connectors
+ASSERT_NOT_VISIBLE #site--settings--settings-button
+SCREENSHOT navigation_connectors
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--connectors[aria-current="page"]
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
+
 // Alarms, from the user menu, is a page of its own, with no tabs, the menu marking it
 CLICK #site--nav--menu--alarms
 ASSERT_STATUS 200
@@ -156,7 +175,7 @@ ASSERT_VISIBLE #site--logs--logs-button[aria-current="page"]
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--logs[aria-current="page"]
 PRESS Escape
-GOTO /settings/connectors
+GOTO /settings
 ASSERT_STATUS 200
 
 // Another identity's settings count as Users & Devices
@@ -351,6 +370,7 @@ ASSERT_VISIBLE #site--nav--menu--settings
 ASSERT_VISIBLE #site--nav--menu--alarms
 ASSERT_NOT_VISIBLE #site--nav--menu--logs
 ASSERT_NOT_VISIBLE #site--nav--menu--usage
+ASSERT_NOT_VISIBLE #site--nav--menu--connectors
 ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 5
 CLICK #site--nav--menu--settings
 ASSERT_STATUS 200

@@ -193,7 +193,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   who added it, never its secret, in the page or the JSON API (`/push-credentials`, `/push-credentials/{id}`).
 - A control admin can add one to a live site with Add Push Credential (`POST /push-credentials`, with `site_id`),
   checked and kept encrypted as the site's admin's is, within the site's 5, added by the control admin's name; the
-  site's admin sees it on their Push Notifications page. A site that is not live, or a key that cannot be read, is
+  site's admin sees it on their Push Certificates page. A site that is not live, or a key that cannot be read, is
   refused with the modal left open.
 - One for every site, with no `site_id`, is refused (400) until the server uses it only for tokens its app registered
   itself, requires its bundle IDs and limits pushes across the server.
@@ -359,15 +359,16 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   Temp Targets, Temp Basals, Profile Switches), Events (Activities, Notifications, Event Groups),
   Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
 - Reports has a tab for each report: Summaries, Overview, AGP and TDD, and opens on Summaries.
-- Settings, from the user menu, has side tabs in groups: This site (General), People & devices (Users & Devices, Push
-  Devices) and Connections (Connectors, Push Notifications). Another identity's settings count as Users & Devices.
+- Settings, from the user menu, has side tabs in groups: This site (General), People & devices (Users & Devices) and
+  Push (Push Devices, Push Certificates). Another identity's settings count as Users & Devices.
+- Connectors, from the user menu, is a page of its own (`/settings/connectors`), with no tabs.
 - Alarms, from the user menu, is a page of its own (`/settings/alarms`), with no tabs.
 - Logs & Events, from the user menu, has a row of tabs, Events, Errors and Logs, and opens on Events.
 - A hub's tab for the page shown is marked; each tab keeps its page's own URL, so links, back and forward still work.
-- Only the tabs and menu items an identity may open are shown: someone who is not an admin has no Users & Devices,
-  Connectors or Push Notifications tab, and no Logs & Events in the user menu.
+- Only the tabs and menu items an identity may open are shown: someone who is not an admin has no Users & Devices
+  or Push Certificates tab, and no Connectors, Logs & Events or Usage in the user menu.
 - The header's search finds a page by its name, group or hub as it is typed, whatever the case, listing them under
-  their hub (Data, Reports, Settings, Alarms, or Logs & Events), only those the identity may open, or "No pages match".
+  their hub (Data, Reports, Settings, Connectors, Alarms, Logs & Events, or Usage), only those the identity may open, or "No pages match".
 - The search also finds a page by the headings and words on it, showing the one it was found by next to the page's
   name: Nightscout or Dexcom finds Connectors, low finds Alarms (Low Alarm), timezone finds General settings.
 - The search also finds a page by what people also call it: BGL or blood sugar finds Glucose Readings, bolus finds
@@ -377,8 +378,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Reports'
   and Logs & Events' tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page
   gets wider. The user menu is the same as on a computer.
-- The user menu has who is signed in, My Account, Getting Started, then Settings, Alarms, Logs & Events, and Usage
-  (for admins), each with its icon and marked when its page is shown, and Logout.
+- The user menu has who is signed in, My Account, Getting Started, then Settings, Connectors (for admins), Alarms, Logs
+  & Events, and Usage (for admins), each with its icon and marked when its page is shown, and Logout, all shown without
+  scrolling on a computer.
 - Every link and button opening a page in place of this one, as the tabs, pagers and filters do, keeps its URL, so back
   returns, and clicking several quickly shows the last one clicked.
 
@@ -754,7 +756,7 @@ Connectors are a site's third party integrations, each syncing from one service.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
-- An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
+- An admin can add, list and delete the site's **push credentials** on Settings, Push Certificates
   (`/settings/push-credentials`): an Apple APNs key (team ID, key ID and the `.p8` file pasted in) or a Firebase
   service account (project ID and its JSON), the apps it pushes to (`loop`, `trio`, `loopfollow`, `t1dcarer`) ticked,
   and, optionally, the only bundle IDs it pushes to, separated by commas. A key that cannot be read, or an unknown
