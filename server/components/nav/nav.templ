@@ -1,0 +1,35 @@
+package nav
+
+import "nighttroop.t1d.nz/server/components/ui/button"
+
+// Attributes open path in the main content in place of the page, with its URL, so back returns, a quicker click
+// replacing one still loading, so the last one clicked is the page shown
+func Attributes(path string) templ.Attributes {
+	return templ.Attributes{"hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML", "hx-sync": "#main-content:replace"}
+}
+
+// Link opens another page in place of this one, so back returns here
+templ Link(id, path, class string) {
+	<a
+		if id != "" {
+			id={ id }
+		}
+		href={ templ.SafeURL(path) }
+		class={ class }
+		{ Attributes(path)... }
+	>
+		{ children... }
+	</a>
+}
+
+// Toggle opens path, filled when it is the one chosen of a row of them and outlined otherwise, or is disabled when
+// there is no path
+templ Toggle(id, path string, size button.Size, selected bool) {
+	{{ variant := button.VariantOutline }}
+	if selected {
+		{{ variant = button.VariantDefault }}
+	}
+	@button.Button(button.Props{ID: id, Variant: variant, Size: size, Disabled: path == "", Attributes: Attributes(path)}) {
+		{ children... }
+	}
+}

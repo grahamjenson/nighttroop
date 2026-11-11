@@ -1,0 +1,86 @@
+INCLUDE steps/new_site_admin.steps
+
+// A new site's last week, fortnight and month have no data
+NAME summary_empty_periods
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 0 "@result.items.0.last_week.total_daily_dose"
+ASSERT_EQUALS null "@result.items.0.last_fortnight.time_in_range"
+ASSERT_EQUALS null "@result.items.0.last_month.time_in_range"
+
+// A week ago, always in last week, in the site's default UTC: a reading in range at noon, one over the range high 5
+// minutes later, and a 2 U bolus
+NAME post_readings
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":120,"date":{{ dayms -7 720 }}},{"type":"sgv","sgv":250,"date":{{ dayms -7 725 }}}]
+ASSERT_STATUS 200
+
+NAME post_bolus
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Correction Bolus", "created_at": "{{ daytime -7 730 }}", "insulin": 2}
+ASSERT_STATUS 200
+
+NAME build_week_ago
+POST http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"date": "{{ date -7 }}"}
+ASSERT_STATUS 201
+ASSERT_EQUALS 50 "@result.time_in_range"
+
+// Last week is its one day with data, built from the days while the job has not built it
+NAME summary_last_week
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"
+
+// The background job builds and keeps last week, so it stays after its day is deleted
+RUN_BACKGROUND_JOBS
+
+NAME delete_week_ago
+DELETE http://{{ site }}/data/summary-daily/{{ date -7 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME summary_kept_last_week
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"
+
+
+// A new week start day deletes the weeks and fortnights, which no longer follow it, so once the jobs run the kept ones
+// are gone: back on Monday, they are built from their days again, and the day was deleted
+NAME week_start_sunday
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"week_start_day": "sunday"}
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME week_start_monday
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"week_start_day": "monday"}
+ASSERT_STATUS 200
+
+NAME summary_rebuilt_last_week
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 0 "@result.items.0.last_week.total_daily_dose"
+ASSERT_EQUALS null "@result.items.0.last_fortnight.time_in_range"

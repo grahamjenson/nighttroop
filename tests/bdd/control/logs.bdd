@@ -1,0 +1,124 @@
+// A new site, so there is a site_created event to see
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+RUN_BACKGROUND_JOBS
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #controlSitesTable
+
+// The menu is two columns, as the site's is: security and users on the left, and jobs, logs and logout on the right,
+// so every page in it shows without scrolling it
+CLICK #control--menu
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(1) #control--usage-button
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(1) #control--connectors-button
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--job-stats-button
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--events-button
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--errors-button
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--logs-button
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) >> text=Logout
+SCREENSHOT menu
+
+// The control site shows every site's and the server's events, newest first
+CLICK #control--events-button
+ASSERT_STATUS 200
+ASSERT_PATH /events
+// Durations read in the units that suit them: a quick one in ms
+ASSERT_VISIBLE #controlEventsTable td >> text=/^\d+ ms$/ >> nth=0
+ASSERT_VISIBLE #controlEventsTable
+// Events have names to read, not the names they are stored by
+ASSERT_TEXT_VISIBLE Site created
+ASSERT_NOT_VISIBLE #controlEventsTable >> text=site_created
+// The control admin signing in is an event, with where from by DB-IP's estimate, so the footer links to DB-IP
+ASSERT_VISIBLE #controlEventsTable >> text=Signed in >> nth=0
+ASSERT_VISIBLE #footer--dbip-link[target="_blank"]
+// Its pager is named by the page, as its filter is
+ASSERT_VISIBLE #control--events--showing >> text=Showing 1 to
+SCREENSHOT events
+
+// Clicking an event shows when it started and how long it took
+CLICK #controlEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--event--details
+ASSERT_TEXT_VISIBLE Started
+ASSERT_TEXT_VISIBLE Duration
+SCREENSHOT event_details
+CLICK #control--event--details--close
+ASSERT_NOT_VISIBLE #control--event--details
+
+// Events can be filtered to one type, with an option for all of them. A sync another scenario on this server made can
+// have been turned off, so the filter is shown by what it leaves out
+INPUT #control--events--filter--type connector_turned_off
+CLICK #control--events--filter--submit
+ASSERT_NOT_VISIBLE #controlEventsTable >> text=Site created
+INPUT #control--events--filter--type site_created
+CLICK #control--events--filter--submit
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_filtered
+ASSERT_TEXT_EQUALS #control--events--filter--type>option[value=""] All events
+
+// Events can be searched too, ignoring case, keeping the type chosen
+INPUT #control--events--filter--search CREATED
+CLICK #control--events--filter--submit
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_searched
+INPUT #control--events--filter--search nothing like this
+CLICK #control--events--filter--submit
+ASSERT_TEXT_VISIBLE No events here.
+
+// Clearing the type and search shows every event again
+CLICK #control--events--filter--clear
+ASSERT_PATH /events
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created >> nth=0
+ASSERT_NOT_VISIBLE #control--events--filter--clear
+
+// Errors and logs have pages of their own
+CLICK #control--menu
+CLICK #control--errors-button
+ASSERT_PATH /errors
+ASSERT_VISIBLE #controlErrorsTable
+SCREENSHOT errors
+
+CLICK #control--menu
+CLICK #control--logs-button
+ASSERT_PATH /logs
+ASSERT_VISIBLE #controlLogsTable
+
+// An event's details link to its request, which narrows the events to those made while answering it
+CLICK #control--menu
+CLICK #control--events-button
+INPUT #control--events--filter--type site_created
+CLICK #control--events--filter--submit
+// The sign in's event going shows the filtered events are in, so the click opens a site created one
+ASSERT_NOT_VISIBLE #controlEventsTable >> text=Signed in
+CLICK #controlEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--event--request-id
+SCREENSHOT event_request
+SAVE_TEXT #control--event--request-id request_id
+CLICK #control--event--request-id
+ASSERT_VISIBLE #control--events--filter--clear
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created
+SCREENSHOT events_by_request
+
+// Logs can be narrowed to a request too, by its ID, as well as to a site or background job run. Which logs are
+// this server's is not known, as every test server copies its logs from the one buffer.
+CLICK #control--menu
+CLICK #control--logs-button
+ASSERT_VISIBLE #control--logs--filter--site-id
+INPUT #control--logs--filter--request-id {{ .request_id }}
+CLICK #control--logs--filter--submit
+ASSERT_VISIBLE #control--logs--filter--clear
+SCREENSHOT logs_by_request
+INPUT #control--logs--filter--job-id no-such-job
+CLICK #control--logs--filter--submit
+ASSERT_TEXT_VISIBLE No logs here.
+CLICK #control--logs--filter--clear
+ASSERT_PATH /logs
+ASSERT_NOT_VISIBLE #control--logs--filter--clear

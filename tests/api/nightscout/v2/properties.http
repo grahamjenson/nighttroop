@@ -1,0 +1,119 @@
+INCLUDE steps/new_ns_site.steps
+
+NAME get_summary_v2
+GET http://{{ site }}/api/v2/summary?token={{ token }}
+ASSERT_STATUS 200
+
+
+//////
+// CREATE
+//////
+
+
+NAME create_devicestatus_v1
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "app": "AAPS",
+    "configuration": {},
+    "isCharging": true,
+    "openaps": {
+      "iob": {
+        "iob": 1.127,
+        "basaliob": -0.444,
+        "activity": 0.0109,
+        "time": "2026-08-16T09:34:46.679Z"
+      },
+      "suggested": {
+          "predBGs": {
+              "IOB": [ 150, 144, 138, 132, 126, 120, 115, 109, 104, 99, 94, 89, 85, 80, 76, 71, 67, 62, 58, 53, 49, 44, 40, 39]
+          },
+          "COB": 12.03
+      }
+    },
+    "pump": {
+      "battery": {},
+      "clock": "2026-08-16T09:35:04.092Z",
+      "reservoir": 46,
+      "status": {
+        "status": "normal"
+      }
+    },
+    "uploader": {},
+    "uploaderBattery": 90,
+    "utcOffset": 720,
+    "created_at": "{{ time 0 }}"
+  }
+ASSERT_STATUS 200
+
+NAME create_treatmentses_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [
+    {
+        "eventType": "Insulin Change",
+        "pumpSerial": "4241",
+        "pumpType": "OMNIPOD_DASH",
+        "created_at": "{{ time 1 }}",
+        "notes": "Profile Switch 1"
+    },
+    {
+        "eventType": "Sensor Change",
+        "created_at": "{{ time 1 }}"
+    }
+ ]
+ASSERT_STATUS 200
+
+
+NAME get_properties_v2
+GET http://{{ site }}/api/v2/properties?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 90 "@upbat.min.battery"
+ASSERT_EQUALS 1.127 "@iob.iob"
+ASSERT_EQUALS 1.571 "@iob.treatmentIob"
+ASSERT_EQUALS -0.444 "@iob.basaliob"
+ASSERT_EQUALS 12.03 "@cob.cob"
+ASSERT_EQUALS "1.13" "@iob.display"
+ASSERT_EQUALS "IOB: 1.13U" "@iob.displayLine"
+ASSERT_EQUALS "OpenAPS" "@iob.source"
+ASSERT_EQUALS "COB: 12g" "@cob.displayLine"
+ASSERT_EQUALS "90%" "@upbat.display"
+ASSERT_EQUALS 75 "@upbat.level"
+ASSERT_EQUALS true "@iage.found"
+ASSERT_EQUALS "0h" "@iage.display"
+ASSERT_EQUALS false "@cage.found"
+ASSERT_EQUALS "Sensor Change" "@sage.min"
+ASSERT_LENGTH 0 "@bgnow"
+
+NAME create_site_change_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Site Change", "created_at": "{{ time 1500 }}"}]
+ASSERT_STATUS 200
+
+NAME create_entries_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+    {"type": "sgv", "sgv": 120, "date": {{ itime 5 }}, "direction": "Flat", "device": "xDrip"},
+    {"type": "sgv", "sgv": 130, "date": {{ itime 0 }}, "direction": "FortyFiveUp", "device": "xDrip"}
+  ]
+ASSERT_STATUS 200
+
+NAME get_properties_subset_v2
+GET http://{{ site }}/api/v2/properties/bgnow,delta,direction,iob,cage?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 5 "@"
+ASSERT_EQUALS 130 "@bgnow.last"
+ASSERT_EQUALS 130 "@bgnow.sgvs.0.mgdl"
+ASSERT_EQUALS "xDrip" "@bgnow.sgvs.0.device"
+ASSERT_EQUALS 10 "@delta.mgdl"
+ASSERT_EQUALS "+10" "@delta.display"
+ASSERT_EQUALS 120 "@delta.previous.last"
+ASSERT_EQUALS "FortyFiveUp" "@direction.value"
+ASSERT_EQUALS "↗" "@direction.label"
+ASSERT_EQUALS "&#8599;" "@direction.entity"
+ASSERT_EQUALS 1.127 "@iob.iob"
+ASSERT_EQUALS 25 "@cage.age"
+ASSERT_EQUALS "1d1h" "@cage.display"
+
+NAME get_properties_unknown_v2
+GET http://{{ site }}/api/v2/properties/notaproperty?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"

@@ -1,0 +1,62 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// An admin opens another identity's settings from its row, such as a device's
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+CLICK #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--settings
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE pwd_phone's Settings
+// Its own settings and alarms, each following the site until set
+ASSERT_VISIBLE #site--identity-settings--identity--units
+ASSERT_VISIBLE #site--identity-settings--identity--alarm_low_enabled
+SCREENSHOT identity_settings
+
+// Its units are set to mg/dL, for a client that needs them, whatever the site's
+INPUT #site--identity-settings--identity--units mg/dL
+INPUT #site--identity-settings--identity--alarm_low_enabled true
+CLICK #site--identity-settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+SCREENSHOT identity_settings_saved
+
+// They are kept, and the admin's own settings still follow the site
+GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--settings
+ASSERT_TEXT_EQUALS #site--identity-settings--identity--units>option[selected] mg/dL
+
+// Its glucose settings are labelled, and follow the site's, in its own units, mg/dL, not the admin's mmol/L
+ASSERT_TEXT_VISIBLE Low Under (mg/dL)
+ASSERT_VISIBLE #site--identity-settings--identity--range_low[aria-label="Low Under (mg/dL) (pwd_phone)"]
+ASSERT_VISIBLE #site--identity-settings--identity--range_low[placeholder="Site setting (72)"]
+ASSERT_VISIBLE #site--identity-settings--identity--range_high[placeholder="Site setting (180)"]
+SCREENSHOT identity_settings_mgdl
+// and are typed in them
+INPUT #site--identity-settings--identity--range_low 80
+CLICK #site--identity-settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--settings
+ASSERT_VISIBLE #site--identity-settings--identity--range_low[value="80"]
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--settings--identity--units>option[selected] Site setting (mmol/L)
+
+// On a phone another identity's settings are one column under its name, and its save button fits
+WINDOW 390x3000
+// Opened by its address, as on a phone the toast from the last save is over the menu until it goes
+GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--settings
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--identity-settings--identity--units
+ASSERT_VISIBLE #site--identity-settings--identity--alarm_no_data_minutes
+ASSERT_VISIBLE #site--identity-settings--identity--save
+ASSERT_FITS
+SCREENSHOT identity_settings_phone

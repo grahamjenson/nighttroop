@@ -1,0 +1,357 @@
+package site_summary_templ
+
+import (
+	"context"
+	"fmt"
+	"sort"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/ui/badge"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// loopValue is a value from the loop's latest status, or a dash when there is none
+func loopValue(loop *sitemodels.SiteDeviceStatus, get func(*sitemodels.SiteDeviceStatus) *float64, unit string) string {
+	if loop == nil {
+		return "–"
+	}
+	return display.Value(get(loop), unit)
+}
+
+// treatment is one row of the summary's treatments, with Path the data page listing its kind
+type treatment struct {
+	At     int64
+	Kind   string
+	Path   string
+	Detail string
+}
+
+// otherTreatments are the summary's treatments besides insulin and carbs, its temp targets and temp basals, in one
+// list, newest first
+func otherTreatments(s *sitemodels.Summary) []treatment {
+	list := []treatment{}
+	for _, t := range s.TempTargets {
+		detail := fmt.Sprintf("%s–%s %s for %d min", display.Glucose(t.LowTarget, t.Units), display.Glucose(t.HighTarget, t.Units), display.Units(t.Units), t.DurationMinutes)
+		list = append(list, treatment{t.OccurredAt, "Temp Target", "/data/temp-targets", detail})
+	}
+	for _, b := range s.TempBasals {
+		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", display.Value(b.Rate, " U/hr"), b.DurationMinutes)})
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
+	return list
+}
+
+// intake is a dose of insulin or a meal's carbs, at a time in milliseconds, with SMB set for a loop's small bolus
+type intake struct {
+	At             int64
+	Insulin, Carbs string
+	SMB            bool
+}
+
+// insulinAndCarbs are the summary's doses and carbs in one list, newest first, each in its own column
+func insulinAndCarbs(s *sitemodels.Summary) []intake {
+	list := []intake{}
+	for _, d := range s.InsulinDoses {
+		list = append(list, intake{At: d.OccurredAt, Insulin: display.Value(&d.Dose, " U"), SMB: isSMB(d)})
+	}
+	for _, f := range s.FoodIntakes {
+		if f.Carbs != nil {
+			list = append(list, intake{At: f.OccurredAt, Carbs: display.Value(f.Carbs, " g")})
+		}
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
+	return list
+}
+
+// ago is how long ago ms was, or a dash when it is not set
+func ago(ms *int64) string {
+	if ms == nil {
+		return "–"
+	}
+	return display.RoundedAgo(*ms, time.Now())
+}
+
+func orDash(v *string) string {
+	if v == nil {
+		return "–"
+	}
+	return *v
+}
+
+// ranges are the time ranges the summary offers, up to the week it is capped at
+var ranges = []struct {
+	Hours int64
+	Label string
+}{{6, "6h"}, {24, "24h"}, {48, "48h"}, {7 * 24, "Week"}}
+
+// Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts.
+// It streams the summary's events, shown Live while connected, and reloads its content a second after changes stop
+// arriving, when the stream reconnects, as changes may have been missed while it was not, and once its latest reading
+// turns stale, so it greys then rather than at the next change. The header, with the stream, is not reloaded, so the
+// stream stays open.
+templ Summary(summary *sitemodels.Summary) {
+	@heading.Title("Summary")
+	<div id="site--summary" class="w-full space-y-4 py-4">
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			<div>
+				<div class="flex items-center gap-2">
+					<h1 class="text-2xl font-bold">Summary</h1>
+					@badge.Live("site--summary--live", "/data/summary/events")
+				</div>
+				<span id="site--summary--hours" class="text-sm text-gray-500">{ fmt.Sprintf("Last %d hours", summary.Hours) }</span>
+			</div>
+			<div class="flex gap-1">
+				for _, r := range ranges {
+					@nav.Toggle(fmt.Sprintf("site--summary--range-%d", r.Hours), fmt.Sprintf("/?hours=%d", r.Hours), button.SizeSm, summary.Hours == r.Hours) {
+						{ r.Label }
+					}
+				}
+			</div>
+		</div>
+		<div
+			id="site--summary--content"
+			class="space-y-4"
+			hx-get={ fmt.Sprintf("/?hours=%d", summary.Hours) }
+			hx-trigger={ "created from:#site--summary--live delay:1s, updated from:#site--summary--live delay:1s, deleted from:#site--summary--live delay:1s, reconnected from:#site--summary--live" + staleTrigger(ctx, summary, time.Now()) }
+			hx-select="#site--summary--content"
+			hx-target="this"
+			hx-swap="outerHTML"
+		>
+			if isNew(summary) {
+				@GettingStarted()
+			} else {
+				@summaryContent(summary)
+			}
+		</div>
+		<div id="modal-container"></div>
+	</div>
+}
+
+// summaryContent is everything in the summary below its header, which reloads as the summary's data changes
+templ summaryContent(summary *sitemodels.Summary) {
+	@glucoseHero(summary)
+	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+		@stat.Tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
+		@stat.Tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
+		@stat.Tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
+		@stat.Tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
+	</div>
+	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+		@stat.Tile("site--summary--time-in-range", "Time in range", display.Percent(summary.Today.TimeInRange), icon.Target) {
+			@previous("site--summary--time-in-range--yesterday", "Yesterday", display.Percent(summary.Yesterday.TimeInRange))
+			@previous("site--summary--time-in-range--last-week", "Last week", display.Percent(summary.LastWeek.TimeInRange))
+			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", display.Percent(summary.LastFortnight.TimeInRange))
+			@previous("site--summary--time-in-range--last-month", "Last month", display.Percent(summary.LastMonth.TimeInRange))
+		}
+		@stat.Tile("site--summary--total-daily-dose", "Total daily dose", display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet) {
+			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", display.PerDay(summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-week", "Last week", display.PerDay(summary.LastWeek.Days, summary.LastWeek.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-fortnight", "Last fortnight", display.PerDay(summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-month", "Last month", display.PerDay(summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U"))
+		}
+		@stat.Tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
+		@stat.Tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
+	</div>
+	@card.Card(card.Props{}) {
+		@Graph(summary)
+	}
+	<div class="grid gap-4 lg:grid-cols-2">
+		@stat.Section("Insulin & Carbs", "", "", "") {
+			@insulinCarbsTable(insulinAndCarbs(summary))
+		}
+		@stat.Section("Other Treatments", "", "", "") {
+			@treatmentsTable(otherTreatments(summary))
+		}
+	</div>
+	<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+		for _, status := range summary.DeviceStatuses {
+			@deviceCard(status)
+		}
+	</section>
+}
+
+// staleAfterMinutes is how old the latest reading can be before the summary says there is none: the no data alarm's
+// minutes, from the settings in effect, or 15 without them
+func staleAfterMinutes(ctx context.Context) int64 {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		if minutes := siteContext.GetSettings().GetAlarmNoDataMinutes(); minutes != nil {
+			return *minutes
+		}
+	}
+	return 15
+}
+
+// staleFor is how long ago, in whole minutes, a reading older than staleAfterMinutes was taken, and "" for one newer
+func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
+	age := now.Sub(time.UnixMilli(occurredAt)).Truncate(time.Minute)
+	if age < time.Duration(staleAfterMinutes(ctx))*time.Minute {
+		return ""
+	}
+	return display.Duration(age.Milliseconds())
+}
+
+// staleTrigger is the summary content's trigger to reload once its latest reading turns stale, a second after so the
+// reload finds it so, or "" when there is no reading or it already is. A reading from the future waits no longer than
+// the stale minutes, as a timer too long for the browser fires at once, which would reload again and again.
+func staleTrigger(ctx context.Context, summary *sitemodels.Summary, now time.Time) string {
+	if len(summary.GlucoseReadings) == 0 || staleFor(ctx, summary.GlucoseReadings[0].OccurredAt, now) != "" {
+		return ""
+	}
+	after := time.Duration(staleAfterMinutes(ctx)) * time.Minute
+	in := min(time.UnixMilli(summary.GlucoseReadings[0].OccurredAt).Add(after).Sub(now), after) + time.Second
+	return fmt.Sprintf(", load delay:%dms", in.Milliseconds())
+}
+
+templ glucoseHero(summary *sitemodels.Summary) {
+	<div id="site--summary--glucose" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+		if len(summary.GlucoseReadings) > 0 {
+			{{ latest := summary.GlucoseReadings[0] }}
+			{{ outOfRange, stale := display.GlucoseRange(latest.Reading, summary.RangeLow, summary.RangeHigh), staleFor(ctx, latest.OccurredAt, time.Now()) }}
+			<div>
+				<div class="flex items-center gap-2">
+					<span class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</span>
+					if stale != "" {
+						@badge.Badge(badge.Props{ID: "site--summary--glucose--stale", Variant: badge.VariantWarning}) {
+							No reading for { stale }
+						}
+					}
+				</div>
+				<div class="flex items-baseline gap-2">
+					// An old reading is grey, as it may no longer be the glucose
+					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseColours[outOfRange].Text, stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(latest.Reading, latest.Units) }</span>
+					<span class="text-lg text-gray-500">{ display.Units(latest.Units) }</span>
+					<span class="ml-2 text-4xl text-gray-700">{ display.Arrow(latest.Direction) }</span>
+					if outOfRange != "" {
+						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseColours[outOfRange].Text }>{ outOfRange }</span>
+					}
+				</div>
+				<div class="mt-1 flex gap-3 text-sm">
+					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</span>
+					@nav.Link("site--summary--all-readings", "/data/glucose", "text-primary underline") {
+						All readings
+					}
+				</div>
+			</div>
+		} else {
+			<div>
+				<div class="text-2xl font-bold text-gray-900">No glucose readings in this time</div>
+				<div class="mt-1 text-sm text-gray-500">
+					Upload from your phone, or connect a source in
+					<a id="site--summary--connectors-link" href="/settings/connectors" { nav.Attributes("/settings/connectors")... } class="text-primary underline">Connectors</a>.
+				</div>
+			</div>
+		}
+	</div>
+}
+
+// previous is a day tile's value for yesterday, or the mean day of last week or month, under today's
+templ previous(id, label, text string) {
+	<div id={ id } class="text-xs text-gray-500">{ label } { text }</div>
+}
+
+// deviceCard is a device's latest status; clicking it opens all its details
+templ deviceCard(status *sitemodels.SiteDeviceStatus) {
+	<button
+		id={ "site--summary--device--" + status.ID }
+		class="rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm hover:bg-gray-50"
+		hx-get={ "/data/device-status/" + status.ID }
+		hx-target="#modal-container"
+		hx-swap="innerHTML"
+	>
+		<div class="flex items-baseline justify-between gap-2">
+			<span class="truncate font-semibold text-brand-night">{ orDash(status.CreatedByDeviceName) }</span>
+			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(status.OccurredAt, time.Now()) }</span>
+		</div>
+		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
+			@detail("Phone", display.Value(status.DeviceBatteryPercent, "%"))
+			@detail("Reservoir", display.Value(status.PumpReservoir, " U"))
+			@detail("Pump", display.Value(status.PumpBatteryPercent, "%"))
+			@detail("IOB", display.Value(status.LoopIob, " U"))
+			@detail("COB", display.Value(status.LoopCob, " g"))
+		</dl>
+	</button>
+}
+
+templ detail(label, text string) {
+	<div>
+		<dt class="text-xs text-gray-500">{ label }</dt>
+		<dd class="font-medium tabular-nums">
+			@stat.Numbers(text, "text-xs font-normal text-gray-500")
+		</dd>
+	</div>
+}
+
+templ treatmentsTable(list []treatment) {
+	@table.Table(table.Props{ID: "site--summary--treatments"}) {
+		@table.Body() {
+			if len(list) == 0 {
+				<tr><td class="p-4 text-sm text-gray-500">No temp targets or temp basals in this time.</td></tr>
+			}
+			for _, t := range list {
+				@table.Row() {
+					@table.Cell() {
+						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
+					}
+					@table.Cell() {
+						@nav.Link("", t.Path, "font-medium text-primary underline") {
+							{ t.Kind }
+						}
+					}
+					@table.Cell(table.CellProps{Class: "whitespace-normal"}) {
+						{ t.Detail }
+					}
+				}
+			}
+		}
+	}
+}
+
+// insulinCarbsTable is each dose and meal's carbs, newest first, with how long ago it was; a loop's SMBs are marked
+templ insulinCarbsTable(list []intake) {
+	@table.Table(table.Props{ID: "site--summary--insulin-carbs"}) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					When
+				}
+				@table.Head(table.HeadProps{Class: "text-right"}) {
+					Insulin
+				}
+				@table.Head(table.HeadProps{Class: "text-right"}) {
+					Carbs
+				}
+			}
+		}
+		@table.Body() {
+			if len(list) == 0 {
+				<tr><td colspan="3" class="p-4 text-sm text-gray-500">No insulin or carbs in this time.</td></tr>
+			}
+			for _, i := range list {
+				@table.Row() {
+					@table.Cell() {
+						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(i.At, time.Now()) }</span>
+					}
+					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
+						if i.SMB {
+							<span class="mr-2 text-xs text-gray-500">SMB</span>
+						}
+						@stat.Numbers(i.Insulin, "text-xs font-normal text-gray-500")
+					}
+					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
+						@stat.Numbers(i.Carbs, "text-xs font-normal text-gray-500")
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,54 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A sync whose details do not work fails its job
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+INPUT #site--settings--nightscout-connector--url http://will_not_pass_the_test.test
+INPUT #site--settings--nightscout-connector--password not_a_token
+CLICK #site--settings--nightscout-connector--url
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable:checked
+CLICK #site--settings--nightscout-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #controlSitesTable
+
+// A failed job links to its run's logs, to see why it failed: the logs page narrowed to its run's job ID. Which logs
+// are this server's is not known, as every test server copies its logs from the one buffer, so the unit tests check
+// the logs have the ID.
+CLICK #control--menu
+CLICK #control--jobs-button
+ASSERT_STATUS 200
+CLICK #controlJobsTable tbody tr:has(td:text-is("connector_job")):has-text("failed") >> nth=0
+ASSERT_VISIBLE #control--job--details
+ASSERT_VISIBLE #control--job--logs
+SCREENSHOT job_logs_link
+CLICK #control--job--logs
+ASSERT_STATUS 200
+ASSERT_PATH /logs
+ASSERT_VISIBLE #control--logs--filter--job-id:not([value=""])
+ASSERT_VISIBLE #control--logs--filter--clear
+
+// Summarised into the day's stats, the day's failed runs still link to their logs
+RUN_BACKGROUND_JOBS
+CLICK #control--menu
+CLICK #control--job-stats-button
+ASSERT_STATUS 200
+CLICK #controlJobStatsTable tbody tr:has(td:text-is("connector_job")):has-text("nightscout") >> nth=0
+ASSERT_VISIBLE #control--job-stats--details
+ASSERT_VISIBLE #control--job-stats--failed-runs
+SCREENSHOT job_stats_failed_runs
+CLICK #control--job-stats--failed-run--0
+ASSERT_STATUS 200
+ASSERT_PATH /logs
+ASSERT_VISIBLE #control--logs--filter--job-id:not([value=""])
+ASSERT_VISIBLE #control--logs--filter--clear

@@ -1,0 +1,128 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no insulin doses
+CLICK #site--nav--data
+CLICK #site--data--insulin-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/insulin
+ASSERT_VISIBLE #insulinDosesTable
+ASSERT_TEXT_VISIBLE No insulin doses here.
+ASSERT_NOT_VISIBLE #site--insulin--next
+SCREENSHOT insulin_doses_empty
+
+// Adding opens a modal of all a dose's fields, each labelled with what it takes, in what units, and whether it is
+// required
+CLICK #site--insulin--add
+ASSERT_VISIBLE #site--insulin--create--modal
+ASSERT_VISIBLE #site--insulin--create label[for="site--insulin--create--dose"]
+ASSERT_TEXT_VISIBLE Dose (U)
+ASSERT_TEXT_VISIBLE Units of insulin given.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--insulin--create--occurred-at
+ASSERT_VISIBLE #site--insulin--create--split-now
+// A combo bolus's split is typed in as the percent of it given at once and over time
+ASSERT_TEXT_VISIBLE Given at once (%)
+ASSERT_TEXT_VISIBLE the percent of it given straight away, e.g. 70
+ASSERT_VISIBLE #site--insulin--create--split-now[min="0"][max="100"]
+SCREENSHOT insulin_dose_add
+
+// A dose added goes to the top of the table, at the time it was given, with its type and reason, and the modal closes
+INPUT #site--insulin--create--dose 2.5
+INPUT #site--insulin--create--occurred-at 2026-01-02T12:30
+INPUT #site--insulin--create--dose-type normal
+INPUT #site--insulin--create--reason correction
+INPUT #site--insulin--create--notes Correction
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--insulin--create--modal
+ASSERT_TEXT_VISIBLE Correction
+ASSERT_TEXT_VISIBLE 2026-01-02 12:30
+ASSERT_NOT_VISIBLE #site--insulin--empty
+
+// Left blank, it is given now, and fields left blank are not set; its split is typed in as percents
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose 4
+INPUT #site--insulin--create--split-now 70
+INPUT #site--insulin--create--split-ext 30
+INPUT #site--insulin--create--notes Lunch
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Lunch
+ASSERT_TEXT_EQUALS #insulinDosesTable>tbody>tr:first-child>td:nth-child(3) -
+
+// Clicking a dose shows all its details, and they can be edited, which updates its row
+CLICK #insulinDosesTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--insulin--details
+ASSERT_TEXT_VISIBLE 4 units
+ASSERT_TEXT_VISIBLE admin
+ASSERT_VISIBLE #site--insulin--edit label[for="site--insulin--edit--dose"]
+// It edits its split as the percents it was typed in as, as it does its type
+ASSERT_VISIBLE #site--insulin--edit--split-now[value="70"]
+ASSERT_VISIBLE #site--insulin--edit--split-ext[value="30"]
+ASSERT_VISIBLE #site--insulin--edit--dose-type
+// Each field its edit form has is shown once, in the form, not again in the details listed below it
+ASSERT_COUNT #site--insulin--details :is(dt, label):has-text("Given at once (%)") 1
+ASSERT_COUNT #site--insulin--details :is(dt, label):has-text("Notes") 1
+ASSERT_NOT_VISIBLE #site--insulin--details dt:text-is("Type")
+ASSERT_NOT_VISIBLE #site--insulin--details dd:text-is("70")
+SCREENSHOT insulin_dose_edit
+// Scrolled to its foot, below the form are only the record's own details, which cannot be edited
+SCROLL 2000
+ASSERT_VISIBLE #site--insulin--details dt:text-is("Created By")
+SCREENSHOT insulin_dose_details_record
+INPUT #site--insulin--edit--dose 4.5
+INPUT #site--insulin--edit--split-now 60
+INPUT #site--insulin--edit--split-ext 40
+INPUT #site--insulin--edit--notes Big lunch
+CLICK #site--insulin--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Insulin Dose Updated
+ASSERT_NOT_VISIBLE #site--insulin--details
+ASSERT_TEXT_VISIBLE Big lunch
+
+// The edit is saved
+CLICK #insulinDosesTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE 4.5 units
+ASSERT_VISIBLE #site--insulin--edit--split-now[value="60"]
+ASSERT_VISIBLE #site--insulin--edit--split-ext[value="40"]
+ASSERT_VISIBLE #site--insulin--edit--notes[value="Big lunch"]
+CLICK #site--insulin--details--close
+ASSERT_NOT_VISIBLE #site--insulin--details
+
+// A page of one dose pages through them, newest first
+GOTO /data/insulin?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Big lunch
+ASSERT_NOT_VISIBLE #site--insulin--previous
+
+CLICK #site--insulin--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Correction
+
+CLICK #site--insulin--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /data/insulin
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #insulinDosesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Insulin Dose Deleted
+ASSERT_NOT_VISIBLE #site--insulin--details
+
+// The deleted dose stays gone after a reload
+GOTO /data/insulin
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// A negative dose takes back insulin entered by mistake
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose -1.5
+INPUT #site--insulin--create--notes Entered twice
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Entered twice

@@ -1,0 +1,164 @@
+INCLUDE steps/new_site.steps
+
+NAME no_profiles
+GET http://{{ site }}/presets/profiles
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// A loop uploads a profile store of two profiles, in mg/dL
+NAME upload_profile_store
+POST http://{{ .ns_site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "units": "mg/dL",
+    "startDate": "{{ time 0 }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "dia": "5",
+            "units": "mg/dL",
+            "sens": [{"value": "90", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_low": [{"value": "90", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_high": [{"value": "126", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbratio": [{"value": "10", "time": "00:00", "timeAsSeconds": "0"}],
+            "basal": [{"value": "0.5", "time": "00:00", "timeAsSeconds": "0"}, {"value": "0.7", "time": "06:00", "timeAsSeconds": "21600"}]
+        },
+        "Work": {
+            "dia": "5",
+            "units": "mg/dL",
+            "sens": [{"value": "90", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_low": [{"value": "90", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_high": [{"value": "126", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbratio": [{"value": "10", "time": "00:00", "timeAsSeconds": "0"}],
+            "basal": [{"value": "0.5", "time": "00:00", "timeAsSeconds": "0"}, {"value": "0.7", "time": "06:00", "timeAsSeconds": "21600"}]
+        }
+    }
+  }
+ASSERT_STATUS 201
+SET store_id {{ dig "upload_profile_store.result.identifier" }}
+
+// Each profile in the store is listed, its sensitivities and targets in the settings' mmol/L
+NAME list_profiles
+GET http://{{ site }}/presets/profiles
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS ".store_id" "@result.items.0.profile_store_id"
+ASSERT_EQUALS "mmol/L" "@result.items.0.units"
+ASSERT_EQUALS 5 "@result.items.0.dia"
+ASSERT_EQUALS 10 "@result.items.0.carb_ratios.0.value"
+ASSERT_EQUALS 4.995 "@result.items.0.sensitivities.0.value"
+ASSERT_EQUALS 4.995 "@result.items.0.low_targets.0.value"
+ASSERT_EQUALS 6.993 "@result.items.0.high_targets.0.value"
+ASSERT_LENGTH 2 "@result.items.0.basal_rates"
+ASSERT_EQUALS 21600 "@result.items.0.basal_rates.1.seconds"
+ASSERT_EQUALS 0.7 "@result.items.0.basal_rates.1.value"
+SET first_id {{ dig "list_profiles.result.items.0.id" }}
+SET second_id {{ dig "list_profiles.result.items.1.id" }}
+SET second_name {{ dig "list_profiles.result.items.1.name" }}
+
+NAME get_profile
+GET http://{{ site }}/presets/profiles/{{ .first_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS ".store_id" "@result.profile_store_id"
+
+NAME get_unknown_profile
+GET http://{{ site }}/presets/profiles/not-a-profile
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Profiles come from loops, so the site does not make them
+NAME create_profile
+POST http://{{ site }}/presets/profiles
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Mine"}
+ASSERT_STATUS 405
+ASSERT_EQUALS "profiles cannot be created here" "@message"
+
+//////
+// RENAME
+//////
+
+NAME rename_profile
+POST http://{{ site }}/presets/profiles/{{ .first_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Weekend"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Weekend" "@result.name"
+ASSERT_EQUALS 10 "@result.carb_ratios.0.value"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+// The Nightscout API's profile store has the new name
+NAME ns_sees_rename
+GET http://{{ .ns_site }}/api/v3/profiles/{{ .store_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.store.Weekend"
+
+// Nightscout keys a store's profiles by name, so two cannot share one
+NAME rename_to_taken_name
+POST http://{{ site }}/presets/profiles/{{ .first_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "{{ .second_name }}"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "another profile in this store is called" "@message"
+
+NAME rename_to_empty
+POST http://{{ site }}/presets/profiles/{{ .first_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": ""}
+ASSERT_STATUS 400
+
+NAME rename_unknown_profile
+POST http://{{ site }}/presets/profiles/not-a-profile
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Nothing"}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+// Deleting a profile leaves the rest of its store
+NAME delete_profile
+DELETE http://{{ site }}/presets/profiles/{{ .second_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_profile_not_found
+GET http://{{ site }}/presets/profiles/{{ .second_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_profile_not_listed
+GET http://{{ site }}/presets/profiles
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Weekend" "@result.items.0.name"
+
+NAME ns_store_keeps_rest
+GET http://{{ .ns_site }}/api/v3/profiles/{{ .store_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.store.Weekend"
+
+NAME delete_unknown_profile
+DELETE http://{{ site }}/presets/profiles/not-a-profile
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

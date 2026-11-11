@@ -1,0 +1,54 @@
+INCLUDE steps/new_site.steps
+
+// Signing in with a passkey begins with a challenge for any of the site's passkeys, checked by the person, on the
+// site's own address
+NAME passkey_login_begin
+POST http://{{ site }}/login/passkey/begin
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@publicKey.challenge"
+ASSERT_EXISTS "@publicKey.rpId"
+ASSERT_EQUALS "required" "@publicKey.userVerification"
+
+// Finishing without the challenge's session, or without a passkey, does not sign in
+NAME passkey_login_finish_without_session
+POST http://{{ site }}/login/passkey/finish
+H Accept: application/json
+H Content-Type: application/json
+B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
+ASSERT_STATUS 401
+ASSERT_EQUALS "That passkey could not sign you in." "@error"
+
+// Only the browser a new site's credentials were shown to adds its admin a passkey from its welcome page: without that
+// page's cookie it is refused
+NAME welcome_passkey_begin_without_welcome
+POST http://{{ site }}/welcome/passkey/begin
+H Accept: application/json
+ASSERT_STATUS 403
+ASSERT_EQUALS "This page can no longer add a passkey; log in, then add one on My Account." "@error"
+
+NAME welcome_passkey_finish_without_welcome
+POST http://{{ site }}/welcome/passkey/finish
+H Accept: application/json
+H Content-Type: application/json
+B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
+ASSERT_STATUS 403
+
+// A device, which does not sign in to the website, has no account page and adds no passkey
+NAME account_device
+GET http://{{ site }}/settings/account
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME account_device_passkey
+POST http://{{ site }}/settings/account/passkeys/begin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// Without signing in there is no account page to add a passkey on
+NAME account_signed_out
+POST http://{{ site }}/settings/account/passkeys/begin
+H Accept: application/json
+ASSERT_STATUS 401

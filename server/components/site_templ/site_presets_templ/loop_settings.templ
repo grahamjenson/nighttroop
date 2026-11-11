@@ -1,0 +1,129 @@
+package site_presets_templ
+
+import (
+	"bytes"
+	"encoding/json"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// loopApps name the loop apps as their users know them
+var loopApps = map[string]string{"loop": "Loop", "trio": "Trio", "aaps": "AAPS"}
+
+// loopSources say what the settings came in
+var loopSources = map[string]string{"profile": "Profile", "devicestatus": "Device status"}
+
+// prettyJSON is the settings indented, to read, or as they are when they cannot be
+func prettyJSON(raw json.RawMessage) string {
+	var out bytes.Buffer
+	if json.Indent(&out, raw, "", "  ") != nil {
+		return string(raw)
+	}
+	return out.String()
+}
+
+// LoopSettingsTable shows one page of the loop apps' settings, the last seen first, with buttons to the pages either
+// side
+templ LoopSettingsTable(settings []*sitemodels.SiteLoopSettings, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "loop_settings_table",
+		Title:       "Loop Settings",
+		Description: "Each set of settings your loop app sent, kept once however often it was sent. Click one to inspect it.",
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "loopSettingsTable",
+			EmptyID: "presets--loop-settings--empty",
+			Empty:   "No loop settings here.",
+			Columns: []table.Column{
+				{Label: "App"}, {Label: "Sent In"}, {Label: "Device"}, {Label: "First Seen"}, {Label: "Last Seen"},
+				{Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "presets--loop-settings", Path: "/presets/loop-settings", Count: len(settings), Skip: skip, Limit: limit},
+	}) {
+		for _, s := range settings {
+			@loopSettingsRow(s)
+		}
+	}
+}
+
+// loopSettingsRow opens the settings when clicked.
+templ loopSettingsRow(s *sitemodels.SiteLoopSettings) {
+	@table.DataRow("presets--loop-settings--"+s.ID, "/presets/loop-settings/"+s.ID, "Delete these settings? The profiles and device statuses sent with them are kept, without them.") {
+		@table.Cell() {
+			{ loopApps[s.App] }
+		}
+		@table.Cell() {
+			{ loopSources[s.Source] }
+		}
+		@table.Cell() {
+			{ orDash(s.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			{ formatDate(ctx, s.FirstSeenAt) }
+		}
+		@table.Cell() {
+			{ formatDate(ctx, s.LastSeenAt) }
+		}
+	}
+}
+
+// LoopSettingsModal shows what changed from the app's set before, then the settings as they were sent, indented to
+// inspect, and when they were seen
+templ LoopSettingsModal(s *sitemodels.SiteLoopSettings) {
+	@modal.Modal(modal.Props{ID: "presets--loop-settings--details", Title: loopApps[s.App] + " Settings", Subtitle: "Last seen " + formatDate(ctx, s.LastSeenAt)}) {
+		@loopSettingsChanges(s)
+		<pre id="presets--loop-settings--json" class="mt-4 max-h-96 overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-xs text-gray-800">{ prettyJSON(s.Settings) }</pre>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@presetDetail("Sent In", loopSources[s.Source])
+			@presetDetail("Device", orDash(s.CreatedByDeviceName))
+			@presetDetail("First Seen", formatDate(ctx, s.FirstSeenAt))
+			@presetDetail("Last Seen", formatDate(ctx, s.LastSeenAt))
+			@modal.Section("Record")
+			@presetDetail("ID", s.ID)
+		</dl>
+	}
+}
+
+// loopSettingsChanges are the settings that differ from the app's set last seen before, old then new
+templ loopSettingsChanges(s *sitemodels.SiteLoopSettings) {
+	<section id="presets--loop-settings--changes" class="mt-4">
+		<h3 class="text-sm font-medium text-gray-900">Changed From the Set Before</h3>
+		if s.PreviousID == nil {
+			<p class="mt-1 text-sm text-gray-500">These are the first of { loopApps[s.App] }'s settings kept, so there is no set before them.</p>
+		} else if len(s.Changes) == 0 {
+			<p class="mt-1 text-sm text-gray-500">Nothing that shows here; they differ only in how they were written.</p>
+		} else {
+			<ul class="mt-2 max-h-64 divide-y divide-gray-200 overflow-auto rounded-lg border border-gray-200 text-sm">
+				for _, c := range s.Changes {
+					<li class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-3 py-2">
+						<span class="min-w-0 break-all font-mono text-xs text-gray-900">{ c.Field }</span>
+						<span class="ml-auto text-right">
+							@loopSettingValue(c.Old, "text-gray-500")
+							<span class="mx-1 text-gray-400">&rarr;</span>
+							@loopSettingValue(c.New, "font-medium text-brand-night")
+						</span>
+					</li>
+				}
+			</ul>
+		}
+	</section>
+}
+
+// loopSettingValue is a setting's value, or that it was not sent
+templ loopSettingValue(value *string, class string) {
+	if value == nil {
+		<span class="italic text-gray-400">not sent</span>
+	} else {
+		<span class={ "break-all", class }>{ *value }</span>
+	}
+}
+
+templ LoopSettingsDeleted() {
+	@successtoast.Toast("Loop Settings Deleted")
+}

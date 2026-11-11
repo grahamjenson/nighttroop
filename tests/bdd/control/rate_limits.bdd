@@ -1,0 +1,42 @@
+// Signing in spends the login limiters, so the page has some kept
+GOTO {{ .control_url }}/login
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #controlSitesTable
+
+// The control site shows each kind of rate limiter, how many are kept and how full the most used is
+CLICK #control--menu
+CLICK #control--rate-limits-button
+ASSERT_STATUS 200
+ASSERT_PATH /rate-limits
+ASSERT_VISIBLE #controlRateLimitsTable
+ASSERT_VISIBLE #control--rate-limits--global >> text=Every request
+ASSERT_VISIBLE #control--rate-limits--control >> text=signed out
+ASSERT_VISIBLE #control--rate-limits--login_name >> text=Logins to a name
+ASSERT_VISIBLE #control--rate-limits--login_ip >> text=Logins from an IP
+ASSERT_VISIBLE #control--rate-limits--site_download
+SCREENSHOT rate_limits
+
+// An admin sets a rate limit in place of its env variable's, and every limiter of its kind uses it at once
+ASSERT_VISIBLE #control--rate-settings--site_push >> text=SITE_PUSH_PER_MINUTE_LIMIT/_BURST
+INPUT #control--rate-settings--site_push--per_minute 20
+INPUT #control--rate-settings--site_push--burst 40
+CLICK #control--rate-settings--save
+ASSERT_TEXT_VISIBLE Rate limits saved
+// Its toast is a success toast like every page's, with a bar of the time it has left
+ASSERT_COUNT #toaster [data-tui-toast][data-variant="success"]:has-text("Rate limits saved") .toast-progress 1
+ASSERT_VISIBLE #control--rate-settings--site_push >> text=set here
+ASSERT_VISIBLE #control--rate-limits--site_push td:nth-child(4):has-text("40")
+SCREENSHOT rate_limits_set
+
+// A rate that would refuse every request is refused
+INPUT #control--rate-settings--site_push--burst 0
+CLICK #control--rate-settings--save
+ASSERT_TEXT_VISIBLE site_push needs a rate above 0
+
+// Setting it back to its env default uses the env's again
+INPUT #control--rate-settings--site_push--per_minute 10
+INPUT #control--rate-settings--site_push--burst 30
+CLICK #control--rate-settings--save
+ASSERT_NOT_VISIBLE #control--rate-settings--site_push >> text=set here

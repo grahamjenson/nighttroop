@@ -1,0 +1,105 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
+templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "temp_basals_table",
+		Title:       "Temp Basals",
+		Description: "Newest first. Click a temp basal to see all its details.",
+		Action:      addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal"),
+		Above:       searchTotals("site--temp-basal", "temp basal", "temp basals"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "tempBasalsTable",
+			EmptyID: "site--temp-basal--empty",
+			Empty:   "No temp basals here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "U/hr", Numeric: true}, {Label: "Basal (%)", Numeric: true},
+				{Label: "Minutes", Numeric: true}, {Label: "Reason"}, {Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit},
+	}) {
+		for _, tempBasal := range tempBasals {
+			@tempBasalRow(tempBasal)
+		}
+	}
+}
+
+// TempBasalNew adds a temp basal with all its fields, putting its row at the top of the table
+templ TempBasalNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--temp-basal--create", Title: "Add Temp Basal", Path: "/data/temp-basals", Target: "#tempBasalsTable tbody",
+		Submit: "Add Temp Basal", Fields: tempBasalFields})
+}
+
+// tempBasalFields are what a temp basal has that a person can type in
+var tempBasalFields = []addmodal.Field{
+	{Name: "rate", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
+	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it runs for.", Required: true, Min: "1", Max: "1440", Step: "1"},
+	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "multiplier", Label: "Basal (%)", Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "1", Max: "1100"},
+	{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. exercise.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+}
+
+// tempBasalRow opens the temp basal's details when clicked.
+templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
+	@table.DataRow("site--temp-basal--"+tempBasal.ID, "/data/temp-basals/"+tempBasal.ID, "Delete this temp basal?") {
+		@table.Cell() {
+			{ formatReadingDate(ctx, tempBasal.OccurredAt) }
+		}
+		@table.Cell(table.NumCell) {
+			{ orDash(tempBasal.Rate) }
+		}
+		@table.Cell(table.NumCell) {
+			{ percentOr(tempBasal.Multiplier, "-") }
+		}
+		@table.Cell(table.NumCell) {
+			{ fmt.Sprint(tempBasal.DurationMinutes) }
+		}
+		@table.Cell(notesCell) {
+			{ orDash(tempBasal.Reason) }
+		}
+		@table.Cell() {
+			{ orDash(tempBasal.CreatedByDeviceName) }
+		}
+	}
+}
+
+templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
+	{{ edit := addmodal.Props{ID: "site--temp-basal--edit", Path: "/data/temp-basals/" + tempBasal.ID, Target: "#site--temp-basal--" + tempBasal.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(tempBasalFields, tempBasal, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@RecordDetails(Record{ID: tempBasal.ID, UtcOffset: tempBasal.UtcOffsetMinutes, App: tempBasal.CreatedByAppName, Device: tempBasal.CreatedByDeviceName, CreatedBy: tempBasal.CreatedByIdentityName, Created: tempBasal.CreatedAt, Updated: tempBasal.UpdatedAt, UpdatedBy: tempBasal.UpdatedByIdentityName})
+		</dl>
+	}
+}
+
+templ TempBasalCreated(tempBasal *sitemodels.SiteTempBasal) {
+	@tempBasalRow(tempBasal)
+}
+
+// TempBasalUpdated replaces the temp basal's row, closes its details and shows a toast
+templ TempBasalUpdated(tempBasal *sitemodels.SiteTempBasal) {
+	@tempBasalRow(tempBasal)
+	@modal.CloseOOB()
+	@successtoast.OOB("Temp Basal Updated")
+}
+
+templ TempBasalDeleted() {
+	@successtoast.Toast("Temp Basal Deleted")
+}

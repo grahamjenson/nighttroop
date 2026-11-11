@@ -1,0 +1,957 @@
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+// We need to check that all return values satisfy the core/nssdk models
+
+// First AAPS will call status to check if logged in and other stats
+
+NAME get_status
+GET http://{{ site }}/api/v3/status 
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// Then call lastModified to see if it needs to download any new data
+NAME get_last_modified
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.collections"
+ASSERT_EXISTS "@result.collections.entries"
+ASSERT_EXISTS "@result.collections.treatments"
+ASSERT_EXISTS "@result.collections.food"
+ASSERT_EXISTS "@result.collections.devicestatus"
+ASSERT_EXISTS "@result.collections.devicestatus"
+
+// grabs the food
+NAME get_food
+GET http://{{ site }}/api/v3/food?limit=1000
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// The device statuses changed since a time, as AAPS asks for to catch up
+NAME get_devicestatus_history
+GET http://{{ site }}/api/v3/devicestatus/history/{{ itime 5 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// Adds all the entries
+NAME add_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787481585647,
+    "device": "Random",
+    "direction": "FortyFiveUp",
+    "filtered": 0.0,
+    "isReadOnly": false,
+    "isValid": true,
+    "sgv": 196.41645726265494,
+    "type": "sgv",
+    "unfiltered": 0.0,
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS 196.416 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+ASSERT_EQUALS 720 "@result.utcOffset"
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
+ASSERT_EQUALS "AAPS" "@result.app"
+ASSERT_EQUALS "Random" "@result.device"
+ASSERT_EQUALS "FortyFiveUp" "@result.direction"
+// AAPS sends no raw signal as 0, which is not stored
+ASSERT_EQUALS null "@result.filtered"
+ASSERT_EQUALS null "@result.unfiltered"
+ASSERT_EQUALS true "@result.isValid"
+ASSERT_EQUALS false "@result.isReadOnly"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME add_treatment_cc
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 5.0,
+    "date": 1787483317000,
+    "eventType": "Carb Correction",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 38.0,
+    "date": 1787501760000,
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "Random carbs",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_temp_basal
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "absolute": 0.0,
+    "app": "AAPS",
+    "date": 1787540162237,
+    "duration": 90,
+    "durationInMilliseconds": 5400000,
+    "eventType": "Temp Basal",
+    "isReadOnly": false,
+    "isValid": true,
+    "pumpId": 1787540162237,
+    "pumpSerial": "",
+    "pumpType": "GENERIC_AAPS",
+    "rate": 0.0,
+    "type": "NORMAL",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_temporary_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787624072000,
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "eventType": "Temporary Target",
+    "isReadOnly": false,
+    "isValid": true,
+    "reason": "Custom",
+    "targetBottom": 106.19999999999997,
+    "targetTop": 106.19999999999997,
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787623989000,
+    "duration": 0,
+    "eventType": "Profile Switch",
+    "isReadOnly": false,
+    "isValid": true,
+    "originalDuration": 0,
+    "originalProfileName": "FirstProfile",
+    "percentage": 120,
+    "profile": "FirstProfile(120%)",
+    "profileJson": "{\"units\":\"mmol\",\"dia\":5,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":10}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.6},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.54}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}]}",
+    "timeshift": 0,
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_profile_switch_note
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787623999595,
+    "eventType": "Note",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "FirstProfile(120%)",
+    "originalCustomizedName": "FirstProfile(120%)",
+    "originalDuration": 0,
+    "originalEnd": 1787623989000,
+    "originalPercentage": 120,
+    "originalProfileName": "FirstProfile",
+    "originalTimeshift": 0,
+    "profileJson": "{\"units\":\"mmol\",\"dia\":5,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":8.333333333333334}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":8.333333333333334}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.72},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.648}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}]}",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_combo_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655010040,
+    "duration": 30,
+    "durationInMilliseconds": 1800000,
+    "enteredinsulin": 0.15,
+    "eventType": "Combo Bolus",
+    "isEmulatingTempBasal": false,
+    "isReadOnly": false,
+    "isValid": true,
+    "pumpId": 1787655010040,
+    "pumpSerial": "eS86gLAHTCeGS1EgJF6X7D",
+    "pumpType": "GENERIC_AAPS",
+    "relative": 0.3,
+    "splitExt": 100,
+    "splitNow": 0,
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_note
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787480009190,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "eventType": "Note",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "AAPS started - Google sdk_gphone64_arm64",
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655169000,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "enteredBy": "AndroidAPS",
+    "eventType": "BG Check",
+    "glucose": 9.372222222222222,
+    "glucoseType": "Sensor",
+    "isReadOnly": false,
+    "isValid": true,
+    "units": "mmol",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_sensor_change
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655175000,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "enteredBy": "AndroidAPS",
+    "eventType": "Sensor Change",
+    "isReadOnly": false,
+    "isValid": true,
+    "units": "mmol",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_pump_battery_change
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655189000,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "enteredBy": "AndroidAPS",
+    "eventType": "Pump Battery Change",
+    "isReadOnly": false,
+    "isValid": true,
+    "units": "mmol",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+
+
+NAME add_treatment_site_change
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655314000,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "eventType": "Site Change",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "",
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_insulin_change
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655315000,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "eventType": "Insulin Change",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "",
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_note_has_duration
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655423000,
+    "duration": 20,
+    "durationInMilliseconds": 1200000,
+    "enteredBy": "AndroidAPS",
+    "eventType": "Note",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "This is a note",
+    "units": "mmol",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS 20 "@result.duration"
+
+NAME add_treatments_exercise
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655627000,
+    "duration": 40,
+    "durationInMilliseconds": 2400000,
+    "enteredBy": "AndroidAPS",
+    "eventType": "Exercise",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "Wow exercise",
+    "units": "mmol",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatments_announcements_have_glucose
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655692000,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "enteredBy": "AndroidAPS",
+    "eventType": "Announcement",
+    "glucose": 100,
+    "glucoseType": "Finger",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "Meter Announcement",
+    "units": "mgdl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS 100 "@result.glucose"
+
+
+NAME add_treatments_questions_have_glucose_too
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787655764000,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "enteredBy": "AndroidAPS",
+    "eventType": "Question",
+    "glucose": 7.533333333333332,
+    "glucoseType": "Sensor",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "Questions",
+    "units": "mmol",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+
+NAME add_treatments_bolus_wizard
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "bolusCalculatorResult": "{\"basalIOB\":0.0,\"bolusIOB\":1.039,\"carbs\":4.0,\"carbsInsulin\":0.4,\"cob\":18.777777777777786,\"cobInsulin\":1.8777777777777787,\"dateCreated\":1787656123535,\"glucoseDifference\":-4.5,\"glucoseInsulin\":-0.45,\"glucoseTrend\":-1.4361111111111111,\"glucoseValue\":99.0,\"ic\":10.0,\"id\":1,\"ids\":{},\"isValid\":true,\"isf\":180.0,\"note\":\"\",\"otherCorrection\":0.0,\"percentageCorrection\":155,\"profileName\":\"FirstProfile\",\"superbolusInsulin\":0.0,\"targetBGHigh\":180.0,\"targetBGLow\":180.0,\"timestamp\":1787656123523,\"totalInsulin\":0.6,\"trendInsulin\":-0.43083333333333335,\"utcOffset\":43200000,\"version\":0,\"wasBasalIOBUsed\":true,\"wasBolusIOBUsed\":true,\"wasCOBUsed\":true,\"wasGlucoseUsed\":true,\"wasSuperbolusUsed\":false,\"wasTempTargetUsed\":true,\"wasTrendUsed\":true,\"wereCarbsUsed\":true}",
+    "date": 1787656123523,
+    "eventType": "Bolus Wizard",
+    "glucose": 99.0,
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "",
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatments_meal_bolus_from_bolus_wizard
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787656123522,
+    "eventType": "Meal Bolus",
+    "insulin": 0.6,
+    "isBasalInsulin": false,
+    "isReadOnly": false,
+    "isValid": true,
+    "pumpId": 1787656126467,
+    "pumpSerial": "eS86gLAHTCeGS1EgJF6X7D",
+    "pumpType": "GENERIC_AAPS",
+    "type": "NORMAL",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatments_carb_correction_from_bolus_wizard
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 4.0,
+    "date": 1787656423522,
+    "eventType": "Carb Correction",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatments_openaps_offline
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787656259997,
+    "duration": 525600,
+    "durationInMilliseconds": 31536000000,
+    "eventType": "OpenAPS Offline",
+    "isReadOnly": false,
+    "isValid": true,
+    "reason": "DISABLE_LOOP",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME patch_renable_loop_treatments
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_treatments_openaps_offline.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "duration": 0,
+    "durationInMilliseconds": 38556,
+    "eventType": "OpenAPS Offline",
+    "identifier": "{{ .add_treatments_openaps_offline.identifier }}",
+    "isReadOnly": false,
+    "isValid": true,
+    "reason": "DISABLE_LOOP"
+ }
+ASSERT_STATUS 200
+
+
+//////////
+// Device Statueses
+//////////
+NAME add_device_status_with_configuration
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "configuration": {
+        "aps": "SMB",
+        "apsConfiguration": {
+            "use_dynamic_sensitivity": false,
+            "DynISFAdjust": 100
+        },
+        "insulin": 2,
+        "insulinConfiguration": {},
+        "overviewConfiguration": {
+            "units": "mmol",
+            "eatingsoon_duration": 45,
+            "eatingsoon_target": 90,
+            "activity_duration": 90,
+            "activity_target": 140,
+            "hypo_duration": 60,
+            "hypo_target": 160,
+            "low_mark": 4,
+            "high_mark": 10,
+            "statuslights_cage_warning": 48,
+            "statuslights_cage_critical": 72,
+            "statuslights_iage_warning": 72,
+            "statuslights_iage_critical": 144,
+            "statuslights_sage_warning": 216,
+            "statuslights_sage_critical": 240,
+            "statuslights_sbat_warning": 25,
+            "statuslights_sbat_critical": 5,
+            "statuslights_bage_warning": 216,
+            "statuslights_bage_critical": 240,
+            "statuslights_res_warning": 80,
+            "statuslights_res_critical": 10,
+            "statuslights_bat_warning": 51,
+            "statuslights_bat_critical": 26,
+            "boluswizard_percentage": 100,
+            "used_autosens_on_main_phone": false
+        },
+        "pump": "Generic AAPS",
+        "safetyConfiguration": {
+            "age": "teenage",
+            "treatmentssafety_maxbolus": 3,
+            "treatmentssafety_maxcarbs": 48
+        },
+        "sensitivity": 2,
+        "sensitivityConfiguration": {
+            "openaps_smb_min_5m_carbimpact": 8,
+            "absorption_cutoff": 6,
+            "autosens_min": 0.7,
+            "autosens_max": 1.2
+        },
+        "smoothing": "NoSmoothingPlugin",
+        "version": "3.3.1.0"
+    },
+    "date": 1787481213748,
+    "device": "openaps://Google sdk_gphone64_arm64",
+    "isCharging": false,
+    "openaps": {},
+    "pump": {
+        "battery": {},
+        "status": {}
+    },
+    "uploader": {},
+    "uploaderBattery": 100
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "SMB" "@result.configuration.aps"
+
+
+
+NAME add_device_status_with_openaps
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "configuration": {},
+    "date": 1787642185913,
+    "device": "openaps://Google sdk_gphone64_arm64",
+    "isCharging": false,
+    "openaps": {
+        "iob": {
+            "iob": 0,
+            "basaliob": 0,
+            "activity": 0,
+            "time": "2026-08-25T07:16:20.890Z"
+        },
+        "suggested": {
+            "algorithm": "SMB",
+            "runningDynamicIsf": false,
+            "timestamp": "2026-08-25T07:16:20.890Z",
+            "bg": 98.4,
+            "tick": "+19",
+            "eventualBG": 401,
+            "targetBG": 144,
+            "insulinReq": 0,
+            "deliverAt": "2026-08-25T07:16:20.824Z",
+            "sensitivityRatio": 1,
+            "reason": "COB: 63, Dev: -3.8, BGI: 0.0, ISF: 8.3, CR: 8.33, Target: 8.0, minPredBG 10.8, minGuardBG 5.4, IOBpredBG 5.4, COBpredBG 22.3, UAMpredBG 5.4; Eventual BG 22.3 > 6.0 but Min. Delta -0.34 < Exp. Delta 0.3; setting current basal of 0.65 as temp. . Setting neutral temp basal of 0.648U/hr",
+            "duration": 30,
+            "rate": 0.648,
+            "predBGs": {
+                "IOB": [
+                    98,
+                    98,
+                    98,
+                    98,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97
+                ],
+                "ZT": [
+                    98,
+                    98,
+                    98,
+                    98,
+                    99,
+                    99,
+                    99,
+                    100,
+                    101,
+                    102,
+                    103,
+                    104,
+                    106,
+                    108,
+                    110,
+                    112,
+                    115,
+                    118,
+                    121,
+                    124,
+                    128,
+                    132,
+                    136,
+                    140,
+                    144
+                ],
+                "COB": [
+                    98,
+                    99,
+                    100,
+                    101,
+                    103,
+                    106,
+                    109,
+                    113,
+                    118,
+                    123,
+                    128,
+                    135,
+                    142,
+                    149,
+                    157,
+                    166,
+                    175,
+                    185,
+                    195,
+                    206,
+                    218,
+                    230,
+                    242,
+                    255,
+                    269,
+                    284,
+                    299,
+                    314,
+                    330,
+                    347,
+                    364,
+                    382,
+                    400,
+                    401
+                ],
+                "UAM": [
+                    98,
+                    98,
+                    98,
+                    98,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97,
+                    97
+                ]
+            },
+            "COB": 62.98043465027242,
+            "IOB": 0,
+            "variable_sens": 0,
+            "consoleLog": [
+                "Autosens ratio: 1.0; ",
+                "Basal unchanged: 0.648; ",
+                "ISF unchanged: 150.0",
+                "EventualBG is 401.0 ;",
+                "minPredBG: 195.0 minIOBPredBG: 97.0 minZTGuardBG: 98.0",
+                " minCOBPredBG: 195.0",
+                " minUAMPredBG: 97.0"
+            ],
+            "consoleError": [
+                "CR:8.333333333333334",
+                "SMB disabled (!microBolusAllowed)",
+                "profile.sens: 150.0, sens: 150.0, CSF: 18.0",
+                "Last carbs 170minutes ago; remainingCATime:7.4hours;39% carbs absorbed",
+                "Carb Impact: -0.3 mg/dL per 5m; CI Duration: 0.0 hours; remaining CI (~2h peak): 25.5 mg/dL per 5m",
+                "predCIs (mg/dL/5m):0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
+                "remainingCIs:      1 1 2 2 3 3 4 5 5 6 6 7 7 8 9 9 10 10 11 12 12 13 13 14 14 15 16 16 17 17 18 18 19 20 20 21 21 22 22 23 24 24 25 25 25 25 24 23",
+                "UAM Impact: -0.3 mg/dL per 5m; UAM Duration: 0.0 hours",
+                " avgPredBG: 500.0 COB: 62.98043465027242 / 104.0",
+                "BG projected to remain above 6.0 for 0 minutes",
+                "BG projected to remain above 4.1 for 240 minutes",
+                "naive_eventualBG: 98.0 bgUndershoot: -24.0 zeroTempDuration 240 zeroTempEffect: 389 carbsReq: -60",
+                "Setting neutral temp basal of 0.648U/hr"
+            ],
+            "isfMgdlForCarbs": 150
+        }
+    },
+    "pump": {
+        "battery": {},
+        "status": {}
+    },
+    "uploader": {},
+    "uploaderBattery": 100
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "SMB" "@result.openaps.suggested.algorithm"
+
+////////
+// PROFILE
+////////
+
+NAME add_profile
+POST http://{{ site }}/api/v3/profile
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "FirstProfile",
+    "date": 1787480950196,
+    "created_at": "2026-08-23T10:29:10.1960000Z",
+    "startDate": "2026-08-23T10:29:10.1960000Z",
+    "store": {
+        "FirstProfile": {
+            "dia": 5,
+            "carbratio": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 10
+                }
+            ],
+            "sens": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 10
+                }
+            ],
+            "basal": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 0.6
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 0.54
+                }
+            ],
+            "target_low": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 6
+                }
+            ],
+            "target_high": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                }
+            ],
+            "units": "mmol",
+            "timezone": "Pacific/Auckland"
+        }
+    },
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME add_multiple_profiles
+POST http://{{ site }}/api/v3/profile
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "funny",
+    "date": 1787656840821,
+    "created_at": "2026-08-25T11:20:40.8210000Z",
+    "startDate": "2026-08-25T11:20:40.8210000Z",
+    "store": {
+        "FirstProfile": {
+            "dia": 5.2,
+            "carbratio": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 10
+                }
+            ],
+            "sens": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 10
+                }
+            ],
+            "basal": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 0.6
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 0.54
+                }
+            ],
+            "target_low": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 6
+                }
+            ],
+            "target_high": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                }
+            ],
+            "units": "mmol",
+            "timezone": "Pacific/Auckland"
+        },
+        "funny": {
+            "dia": 5,
+            "carbratio": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                }
+            ],
+            "sens": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                }
+            ],
+            "basal": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 0.01
+                }
+            ],
+            "target_low": [
+                {
+                    "time": "00:00",
+                    "value": 6
+                }
+            ],
+            "target_high": [
+                {
+                    "time": "00:00",
+                    "value": 6
+                }
+            ],
+            "units": "mmol",
+            "timezone": "Pacific/Auckland"
+        }
+    },
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+
+
+
+// This I think runs until there are no more treatments, as like a sync method
+// This should actually work
+NAME get_treatments_from_history_new
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+
+NAME get_treatments_from_history_old
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 30 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 21 "@result"
+
+
+/////
+// SYNC
+/////
+
+NAME get_entries_since
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt=1778970005948&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_treatments_since
+GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt=2026-05-16T22:20:07.238Z&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_profile_since
+GET http://{{ site }}/api/v3/profile?sort$desc=date&limit=1
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+
+////
+// Adding stuff
+////
+
+NAME delete_unknown_treatment
+DELETE http://{{ site }}/api/v3/treatments/NOT_REAL_ID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME create_carbs_meal_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 25.0,
+    "date": {{ itime 0 }},
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": false,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "Meal Bolus" "@result.eventType"
+ASSERT_EQUALS 25.0 "@result.carbs"

@@ -1,0 +1,120 @@
+package filter
+
+import (
+	"net/url"
+	"strings"
+
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+type Props struct {
+	// ID names the form, its type select ID--type, its search input ID--search, its button ID--submit and its clear button ID--clear
+	ID string
+	// Path is the page's URL, without a query
+	Path string
+	// All labels the option that shows every type
+	All string
+	// Types are the types to pick from, or none for no type select
+	Types    []string
+	Selected *string
+	Search   *string
+	// IDs narrow the rows to one site, request or job, each a text box named ID--Name, with dashes for underscores
+	IDs []ID
+}
+
+// ID is a text box keeping only the rows with that ID, sent as Name
+type ID struct {
+	Name  string
+	Label string
+	Value *string
+}
+
+// set is whether a type, search or ID is chosen, so there is something to clear
+func (p Props) set() bool {
+	for _, id := range p.IDs {
+		if id.Value != nil {
+			return true
+		}
+	}
+	return p.Selected != nil || p.Search != nil
+}
+
+// Filter picks one type of row to show, or every type, and text to search them for, and shows the first page of them
+templ Filter(p Props) {
+	<form
+		id={ p.ID }
+		{ nav.Attributes(p.Path)... }
+		class="mb-4 flex flex-wrap justify-end gap-2"
+	>
+		for _, id := range p.IDs {
+			<input
+				id={ p.ID + "--" + strings.ReplaceAll(id.Name, "_", "-") }
+				name={ id.Name }
+				type="search"
+				aria-label={ id.Label }
+				placeholder={ id.Label }
+				maxlength="64"
+				if id.Value != nil {
+					value={ *id.Value }
+				}
+				class="h-9 w-36 rounded-md border border-gray-200 bg-white px-3 text-sm"
+			/>
+		}
+		<input
+			id={ p.ID + "--search" }
+			name="search"
+			type="search"
+			aria-label="Search"
+			placeholder="Search"
+			maxlength="64"
+			if p.Search != nil {
+				value={ *p.Search }
+			}
+			class="h-9 w-64 rounded-md border border-gray-200 bg-white px-3 text-sm"
+		/>
+		if len(p.Types) > 0 {
+			<select id={ p.ID + "--type" } name="type" aria-label="Type" class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm">
+			<option value="" selected?={ p.Selected == nil }>{ p.All }</option>
+			for _, t := range p.Types {
+				<option value={ t } selected?={ p.Selected != nil && *p.Selected == t }>{ display.Name(t) }</option>
+			}
+		</select>
+		}
+		@button.Button(button.Props{ID: p.ID + "--submit", Type: "submit", Variant: button.VariantOutline}) {
+			Filter
+		}
+		// Once a type, search or ID is chosen, one click goes back to every row
+		if p.set() {
+			@button.Button(button.Props{
+				ID:      p.ID + "--clear",
+				Href:    p.Path,
+				Variant: button.VariantGhost,
+				Attributes: nav.Attributes(p.Path),
+			}) {
+				Clear
+			}
+		}
+	</form>
+}
+
+// PagePath is a page's URL keeping the type chosen, the search and the IDs, for the pages either side
+func PagePath(path string, selected *string, search *string, ids ...ID) string {
+	values := url.Values{}
+	if selected != nil {
+		values.Set("type", *selected)
+	}
+	if search != nil {
+		values.Set("search", *search)
+	}
+	for _, id := range ids {
+		if id.Value != nil {
+			values.Set(id.Name, *id.Value)
+		}
+	}
+	if len(values) == 0 {
+		return path
+	}
+	return path + "?" + values.Encode()
+}

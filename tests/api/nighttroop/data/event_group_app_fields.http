@@ -1,0 +1,53 @@
+INCLUDE steps/new_site.steps
+
+// What only some apps send of a treatment, xDrip+'s uuid and AAPS's running mode, is kept in its group's own columns
+// and given back
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "OpenAPS Offline", "created_at": "{{ time -5 }}", "duration": 60, "uuid": "6f1d0b9e-2c4a-4e8b-9a37-5c2d8e1f4a61", "mode": "CLOSED_LOOP_LGS", "autoForced": true, "reasons": "Low glucose suspend", "originalDuration": 3600000 }
+ASSERT_STATUS 200
+SET treatment_id {{ dig "create_treatment.0._id" }}
+
+NAME read_treatment
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "6f1d0b9e-2c4a-4e8b-9a37-5c2d8e1f4a61" "@0.uuid"
+ASSERT_EQUALS "CLOSED_LOOP_LGS" "@0.mode"
+ASSERT_EQUALS true "@0.autoForced"
+ASSERT_EQUALS "Low glucose suspend" "@0.reasons"
+ASSERT_EQUALS 3600000 "@0.originalDuration"
+
+// Updating one of them leaves the others as they were
+NAME update_mode
+PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+B { "mode": "DISCONNECTED_PUMP" }
+ASSERT_STATUS 200
+
+NAME read_updated
+GET http://{{ .ns_site }}/api/v1/treatments/{{ .treatment_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "DISCONNECTED_PUMP" "@0.mode"
+ASSERT_EQUALS "6f1d0b9e-2c4a-4e8b-9a37-5c2d8e1f4a61" "@0.uuid"
+ASSERT_EQUALS true "@0.autoForced"
+ASSERT_EQUALS "Low glucose suspend" "@0.reasons"
+ASSERT_EQUALS 3600000 "@0.originalDuration"
+
+// AAPS's autoForced is kept when false, and its reasons, empty, is not stored
+NAME create_not_forced
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "OpenAPS Offline", "created_at": "{{ time -10 }}", "duration": 30, "mode": "DISCONNECTED_PUMP", "autoForced": false, "reasons": "" }
+ASSERT_STATUS 200
+SET not_forced_id {{ dig "create_not_forced.0._id" }}
+
+NAME read_not_forced
+GET http://{{ .ns_site }}/api/v1/treatments/{{ .not_forced_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@0.autoForced"
+ASSERT_EQUALS null "@0.reasons"
+
+// How long it was to last is still refused past a year, as a column of its own was
+NAME original_duration_out_of_range
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "OpenAPS Offline", "created_at": "{{ time 10 }}", "duration": 30, "mode": "DISCONNECTED_PUMP", "originalDuration": 31536000001 }
+ASSERT_STATUS 400

@@ -1,0 +1,73 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Virtual connector writes its last 30 minutes, then a backfill the day before them (tests backfill a day)
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+
+// A new timezone, at the same midnight, builds the last 7 days again with the backfilled readings in them
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--site--timezone Etc/UTC
+CLICK #site--settings--site--save
+ASSERT_TEXT_VISIBLE Settings Saved
+RUN_BACKGROUND_JOBS
+
+// The readings page shows each day's glucose as a small graph, oldest first, ending with today so far from its
+// clean readings: the 7 days kept and today. The page is opened afresh, so no toasts cover them.
+GOTO /data/glucose?limit=10
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--days
+ASSERT_TEXT_VISIBLE Last 8 days
+ASSERT_VISIBLE #site--glucose--days li:last-child >> text=Today
+// Today and yesterday have readings drawn over the range, and their time in range
+ASSERT_DRAWN #site--glucose--days li:last-child svg rect >> nth=1
+ASSERT_DRAWN #site--glucose--days li >> nth=-2 >> svg rect >> nth=1
+ASSERT_VISIBLE #site--glucose--days li:last-child [title="Time in range"]
+SCREENSHOT glucose_days
+
+// The days are only on the first page of readings
+GOTO /data/glucose?skip=100
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable
+ASSERT_NOT_VISIBLE #site--glucose--days
+
+// Without a limit the readings are paged 50 at a time, under a box of how many there are over every page, and when
+// the earliest and latest of them were
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 50
+ASSERT_VISIBLE #site--glucose--next
+ASSERT_TEXT_VISIBLE glucose readings
+// The earliest and latest are days, without their times: the backfilled day before is days ago, Yesterday unless the
+// first 30 minutes began before midnight, when it is the day before that
+ASSERT_VISIBLE #site--glucose--earliest:text-matches("^(Yesterday|[A-Z][a-z]{2} \\d{1,2} [A-Z][a-z]{2})$")
+ASSERT_TEXT_EQUALS #site--glucose--latest Today
+ASSERT_VISIBLE #site--glucose--earliest--ago:has-text("day")
+ASSERT_VISIBLE #site--glucose--totals
+SCREENSHOT glucose_totals
+
+// The next page is the next 50, under the same totals
+CLICK #site--glucose--next
+ASSERT_TEXT_VISIBLE Showing 51 to 100
+ASSERT_VISIBLE #site--glucose--totals
+ASSERT_VISIBLE #site--glucose--previous
+
+// A page of a collection with nothing in it counts none, with no times
+GOTO /data/activities
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--activity--total 0
+ASSERT_TEXT_VISIBLE activities
+ASSERT_NOT_VISIBLE #site--activity--earliest
+ASSERT_NOT_VISIBLE #site--activity--latest
+SCREENSHOT activities_totals_empty

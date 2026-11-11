@@ -1,0 +1,118 @@
+INCLUDE steps/new_ns_site.steps
+
+######
+# CREATE
+# NightscoutService's uploadDosingDecisionData posts an array of DeviceStatus.dictionaryRepresentation: the loop,
+# pump, uploader and override objects. Loop needs a 200 and an array of as many objects as it sent.
+######
+NAME create_devicestatus_v1
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [{
+    "device": "loop://iPhone",
+    "created_at": "{{ time 60 }}",
+    "uploader": {
+        "battery": 80,
+        "isCharging": false,
+        "name": "iPhone",
+        "timestamp": "{{ time 60 }}"
+    },
+    "loop": {
+        "name": "Loop",
+        "version": "3.6.0",
+        "timestamp": "{{ time 60 }}",
+        "predicted": {
+            "startDate": "{{ time 60 }}",
+            "values": [ 114, 115.88, 120.29, 123.05, 123.98, 123.57, 122.9, 121.95, 120.71, 119.17, 117.34, 115.4]
+        },
+        "automaticDoseRecommendation": {
+            "bolusVolume": 0.05,
+            "timestamp": "{{ time 60 }}",
+            "tempBasalAdjustment": {"rate": 0.65, "duration": 30}
+        },
+        "iob": {
+            "iob": 1.0870623804830117,
+            "timestamp": "{{ time 60 }}"
+        },
+        "cob": {
+            "cob": 5.0947962907626785,
+            "timestamp": "{{ time 60 }}"
+        },
+        "recommendedBolus": 0.15,
+        "enacted": {
+            "timestamp": "{{ time 60 }}",
+            "rate": 0.65,
+            "received": true,
+            "duration": 30,
+            "bolusVolume": 0.05
+        },
+        "failureReason": "Pump communication error"
+    },
+    "override": {
+        "timestamp": "{{ time 60 }}",
+        "active": true,
+        "name": "🏃 Running",
+        "currentCorrectionRange": {"minValue": 140, "maxValue": 160},
+        "duration": 2700,
+        "multiplier": 0.8
+    },
+    "pump": {
+        "bolusing": false,
+        "secondsFromGMT": 28800,
+        "manufacturer": "Insulet",
+        "pumpID": "1F068529",
+        "clock": "{{ time 60 }}",
+        "model": "Dash",
+        "suspended": false,
+        "reservoir": 50,
+        "battery": {"percent": 75}
+    }
+ }]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
+ASSERT_EQUALS 50 "@0.pump.reservoir"
+# LoopFollow shows the phone's battery and whether it is charging
+ASSERT_EQUALS 80 "@0.uploader.battery"
+ASSERT_EQUALS false "@0.uploader.isCharging"
+ASSERT_EQUALS "iPhone" "@0.uploader.name"
+ASSERT_EXISTS "@0.uploader.timestamp"
+
+######
+# NightscoutKit's fetchDeviceStatus (not used by Loop itself): find[created_at] between two ISO dates, and count.
+# DeviceStatus(rawValue:) needs _id, created_at as an ISO date and device, then reads the loop object: name, version
+# and timestamp, and its iob, cob, predicted, automaticDoseRecommendation, enacted and failureReason.
+# created_at is when the status was, not when it was uploaded.
+######
+NAME nightscoutkit_fetch_devicestatus
+GET http://{{ site }}/api/v1/devicestatus?find[created_at][$gte]={{ time 90 }}&find[created_at][$lte]={{ time 30 }}&count=10
+H api-secret: {{ sha1 token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".create_devicestatus_v1.0._id" "@0._id"
+ASSERT_EQUALS ".create_devicestatus_v1.0.created_at" "@0.created_at"
+ASSERT_EQUALS "loop://iPhone" "@0.device"
+ASSERT_EQUALS "Loop" "@0.loop.name"
+ASSERT_EQUALS "3.6.0" "@0.loop.version"
+ASSERT_EQUALS ".create_devicestatus_v1.0.loop.timestamp" "@0.loop.timestamp"
+ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
+ASSERT_EQUALS ".create_devicestatus_v1.0.loop.iob.timestamp" "@0.loop.iob.timestamp"
+ASSERT_EQUALS 5.0947962907626785 "@0.loop.cob.cob"
+ASSERT_EQUALS 114 "@0.loop.predicted.values.0"
+ASSERT_EQUALS ".create_devicestatus_v1.0.loop.predicted.startDate" "@0.loop.predicted.startDate"
+ASSERT_EQUALS 0.65 "@0.loop.automaticDoseRecommendation.tempBasalAdjustment.rate"
+ASSERT_EQUALS 0.05 "@0.loop.automaticDoseRecommendation.bolusVolume"
+ASSERT_EQUALS 0.65 "@0.loop.enacted.rate"
+ASSERT_EQUALS 30 "@0.loop.enacted.duration"
+ASSERT_EQUALS true "@0.loop.enacted.received"
+ASSERT_EQUALS "Pump communication error" "@0.loop.failureReason"
+
+NAME nightscoutkit_fetch_devicestatus_none_uploaded_now
+GET http://{{ site }}/api/v1/devicestatus?find[created_at][$gte]={{ time 20 }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"

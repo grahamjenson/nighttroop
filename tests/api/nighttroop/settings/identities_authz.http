@@ -1,0 +1,133 @@
+INCLUDE steps/new_site_admin.steps
+
+// An admin cannot use the Nightscout API, so asking it for a Nightscout token with the admin's JWT is refused
+NAME admin_nightscout_token
+GET http://{{ .ns_site }}/api/v2/authorization/request/token
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 403
+
+NAME create_viewer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "viewer", "role": "user_readonly"}
+ASSERT_STATUS 201
+SET viewer_password {{ .create_viewer.result.password }}
+SET viewer_token {{ .create_viewer.result.ns_token }}
+
+NAME create_carer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "user"}
+ASSERT_STATUS 201
+SET carer_password {{ .create_carer.result.password }}
+
+NAME create_device
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "kitchen", "role": "device_read_write"}
+ASSERT_STATUS 201
+SET device_password {{ .create_device.result.password }}
+SET device_token {{ .create_device.result.ns_token }}
+
+// Only admins and users can sign in with a password; devices and read only users use their Nightscout token
+NAME login_device_refused
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "kitchen", "password": "{{ .device_password }}"}
+ASSERT_STATUS 401
+
+NAME login_viewer_refused
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "viewer", "password": "{{ .viewer_password }}"}
+ASSERT_STATUS 401
+
+NAME login_carer
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "carer", "password": "{{ .carer_password }}"}
+ASSERT_STATUS 200
+SET carer_jwt {{ .login_carer.token }}
+
+NAME viewer_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .viewer_token }}
+ASSERT_STATUS 200
+SET viewer_jwt {{ .viewer_jwt.token }}
+
+NAME device_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .device_token }}
+ASSERT_STATUS 200
+SET device_jwt {{ .device_jwt.token }}
+
+// Only admins manage identities and syncing
+NAME viewer_create_identity_forbidden
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+B {"name": "intruder", "role": "admin"}
+ASSERT_STATUS 403
+
+NAME viewer_list_identities_forbidden
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_create_identity_forbidden
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"name": "intruder", "role": "admin"}
+ASSERT_STATUS 403
+
+NAME device_create_sync_forbidden
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ .device_jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 403
+
+// Read only identities see data but cannot change it; read and write ones can
+NAME viewer_search_glucose
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME viewer_create_glucose_forbidden
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+B {"reading": 5.5, "notes": "Finger prick"}
+ASSERT_STATUS 403
+
+NAME device_create_glucose
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .device_jwt }}
+H Accept: application/json
+B {"reading": 5.5, "notes": "Finger prick"}
+ASSERT_STATUS 201
+
+NAME carer_create_glucose
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"reading": 6.1, "notes": "Finger prick"}
+ASSERT_STATUS 201
+
+// Only admins can have the site's summaries regenerated, which a background job does
+NAME carer_regenerate_summaries_forbidden
+POST http://{{ site }}/reports/summaries/regenerate
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME admin_regenerate_summaries
+POST http://{{ site }}/reports/summaries/regenerate
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 202
+ASSERT_EQUALS true "@result.regenerating"

@@ -1,0 +1,22 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// An admin's General settings end with Delete Site, which archives the site and signs everyone out
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+ASSERT_STATUS 200
+ASSERT_PATH /settings
+ASSERT_VISIBLE #site--settings--delete
+ASSERT_TEXT_VISIBLE Its data is archived
+SCREENSHOT delete_site
+
+// Deleting asks first, with a red Delete, as for deleting a record
+CLICK_ASKS #site--settings--delete-site
+ASSERT_TEXT_EQUALS #confirm--ok Delete
+ASSERT_VISIBLE #confirm--ok[data-delete]
+SCREENSHOT delete_site_confirm
+// Archiving needs S3, which the tests do not have, so the site is kept
+CLICK #confirm--ok
+ASSERT_TEXT_VISIBLE a site can only be deleted when its data can be archived to S3
+ASSERT_PATH /settings
+SCREENSHOT delete_site_refused

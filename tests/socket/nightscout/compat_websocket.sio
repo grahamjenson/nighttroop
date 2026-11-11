@@ -1,0 +1,233 @@
+# Nightscout's "/" namespace, ported from socket_v1_websocket.sio in
+# https://github.com/grahamjenson/nightscout_compatibility_test
+# Each assert is what Nightscout answered there, from its results/nightscout/socket_v1_websocket,
+# numbered as those files are. Where nighttroop differs it is left out:
+#   - enteredBy is the identity that wrote the treatment, not what the client sent
+#   - treatments are sent without the glucose at their time (mgdl), and sgvs without scaled
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME read_jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ read_token }}
+ASSERT_STATUS 200
+SET read_jwt {{ .read_jwtauth.token }}
+
+NAME ws_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+
+# 002.ws_authorize: authorize with a JWT acks the permissions
+NAME ws_authorize
+EMIT authorize
+B {"client": "web", "token": "{{ jwt }}", "history": 1}
+ACK
+ASSERT_EQUALS true "@read"
+ASSERT_EQUALS true "@write"
+ASSERT_EQUALS true "@write_treatment"
+ASSERT_LENGTH 3 "@"
+
+NAME ws_connected
+WAIT connected
+
+# 004.ws_initial_data_update: the full data, with every collection as a list
+NAME ws_initial_data_update
+WAIT dataUpdate
+ASSERT_LENGTH 0 "@sgvs"
+ASSERT_LENGTH 0 "@mbgs"
+ASSERT_LENGTH 0 "@cals"
+ASSERT_LENGTH 0 "@treatments"
+ASSERT_EXISTS "@devicestatus"
+ASSERT_EXISTS "@profiles"
+ASSERT_EXISTS "@food"
+
+# 005 and 006: loadRetro acks success, then the device statuses come as a retroUpdate
+NAME ws_load_retro
+EMIT loadRetro
+B {}
+ACK
+ASSERT_EQUALS "success" "@result"
+ASSERT_LENGTH 1 "@"
+
+NAME ws_retro_update
+WAIT retroUpdate
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@devicestatus"
+
+# 008.ws_data_update_after_create_entry: a REST entry is sent as a delta sgv
+NAME ws_create_entry_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 123, "date": {{ itime 0 }}, "device": "socket-test"}]
+ASSERT_STATUS 200
+SET entry_id {{ dig "ws_create_entry_v1.0._id" }}
+
+NAME ws_data_update_after_create_entry
+WAIT dataUpdate
+ASSERT_EQUALS true "@delta"
+ASSERT_EXISTS "@lastUpdated"
+ASSERT_LENGTH 1 "@sgvs"
+ASSERT_EQUALS ".entry_id" "@sgvs.0._id"
+ASSERT_EQUALS "socket-test" "@sgvs.0.device"
+ASSERT_EQUALS 123 "@sgvs.0.mgdl"
+ASSERT_EQUALS "sgv" "@sgvs.0.type"
+ASSERT_EXISTS "@sgvs.0.mills"
+
+# 009.ws_db_add_treatment: dbAdd acks with what was stored
+NAME ws_db_add_treatment
+EMIT dbAdd
+B {"collection": "treatments", "data": {"eventType": "Note", "notes": "added over socket.io", "created_at": "{{ time 0 }}", "enteredBy": "socket-test"}}
+ACK
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS "Note" "@0.eventType"
+ASSERT_EQUALS "added over socket.io" "@0.notes"
+ASSERT_EXISTS "@0.created_at"
+SET treatment_id {{ dig "ws_db_add_treatment.0._id" }}
+
+# 010.ws_data_update_after_db_add: only the new treatment is sent
+NAME ws_data_update_after_db_add
+WAIT dataUpdate
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS true "@delta"
+ASSERT_EXISTS "@lastUpdated"
+ASSERT_LENGTH 1 "@treatments"
+ASSERT_EQUALS ".treatment_id" "@treatments.0._id"
+ASSERT_EQUALS "Note" "@treatments.0.eventType"
+ASSERT_EQUALS "added over socket.io" "@treatments.0.notes"
+ASSERT_EXISTS "@treatments.0.created_at"
+ASSERT_EXISTS "@treatments.0.mills"
+
+# 011 and 012: dbUpdate acks success and the delta is marked update
+NAME ws_db_update_treatment
+EMIT dbUpdate
+B {"collection": "treatments", "_id": "{{ .treatment_id }}", "data": {"notes": "updated over socket.io"}}
+ACK
+ASSERT_EQUALS "success" "@result"
+ASSERT_LENGTH 1 "@"
+
+NAME ws_data_update_after_db_update
+WAIT dataUpdate
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@treatments"
+ASSERT_EQUALS "update" "@treatments.0.action"
+ASSERT_EQUALS ".treatment_id" "@treatments.0._id"
+ASSERT_EQUALS "updated over socket.io" "@treatments.0.notes"
+
+# 013 and 014: dbRemove acks success and the delta has only the id, action and time
+NAME ws_db_remove_treatment
+EMIT dbRemove
+B {"collection": "treatments", "_id": "{{ .treatment_id }}"}
+ACK
+ASSERT_EQUALS "success" "@result"
+ASSERT_LENGTH 1 "@"
+
+NAME ws_data_update_after_db_remove
+WAIT dataUpdate
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@treatments"
+ASSERT_EQUALS ".treatment_id" "@treatments.0._id"
+ASSERT_EQUALS "remove" "@treatments.0.action"
+ASSERT_LENGTH 3 "@treatments.0"
+ASSERT_EXISTS "@treatments.0.mills"
+
+NAME ws_disconnect
+DISCONNECT
+
+# 017 and 018: a read only JWT reads, and its writes are not permitted
+NAME ws_read_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+
+NAME ws_read_authorize
+EMIT authorize
+B {"client": "web", "token": "{{ read_jwt }}", "history": 1}
+ACK
+ASSERT_EQUALS true "@read"
+ASSERT_EQUALS false "@write"
+ASSERT_EQUALS false "@write_treatment"
+ASSERT_LENGTH 3 "@"
+
+NAME ws_read_db_add_treatment
+EMIT dbAdd
+B {"collection": "treatments", "data": {"eventType": "Note", "notes": "should not be added", "created_at": "{{ time 0 }}"}}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
+
+NAME ws_read_disconnect
+DISCONNECT
+
+# 020 to 025: dbUpdateUnset removes a field and keeps the rest
+NAME ws_unset_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+
+NAME ws_unset_authorize
+EMIT authorize
+B {"client": "web", "token": "{{ jwt }}", "history": 1}
+ACK
+ASSERT_EQUALS true "@write_treatment"
+
+NAME ws_unset_db_add_treatment
+EMIT dbAdd
+B {"collection": "treatments", "data": {"eventType": "Note", "notes": "unset over socket.io", "carbs": 5, "created_at": "{{ time 0 }}", "enteredBy": "socket-test-unset"}}
+ACK
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 5 "@0.carbs"
+SET unset_id {{ dig "ws_unset_db_add_treatment.0._id" }}
+
+NAME ws_db_update_unset_treatment
+EMIT dbUpdateUnset
+B {"collection": "treatments", "_id": "{{ .unset_id }}", "data": {"carbs": 1}}
+ACK
+ASSERT_EQUALS "success" "@result"
+ASSERT_LENGTH 1 "@"
+
+NAME ws_get_treatment_after_unset
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[_id]={{ .unset_id }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".unset_id" "@0._id"
+ASSERT_EQUALS null "@0.carbs"
+ASSERT_EQUALS "Note" "@0.eventType"
+ASSERT_EQUALS "unset over socket.io" "@0.notes"
+ASSERT_EXISTS "@0.created_at"
+
+NAME ws_db_remove_unset_treatment
+EMIT dbRemove
+B {"collection": "treatments", "_id": "{{ .unset_id }}"}
+ACK
+ASSERT_EQUALS "success" "@result"
+
+NAME ws_unset_disconnect
+DISCONNECT
+
+# 026 and 027: bad writes are answered with why
+NAME ws_bad_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+
+NAME ws_bad_authorize
+EMIT authorize
+B {"client": "web", "token": "{{ jwt }}", "history": 1}
+ACK
+ASSERT_EQUALS true "@write"
+
+NAME ws_db_add_unknown_collection
+EMIT dbAdd
+B {"collection": "notacollection", "data": {"a": 1}}
+ACK
+ASSERT_EQUALS "Wrong collection" "@result"
+
+NAME ws_db_remove_missing_id
+EMIT dbRemove
+B {"collection": "treatments"}
+ACK
+ASSERT_EQUALS "Missing or invalid _id" "@result"
+
+NAME ws_bad_disconnect
+DISCONNECT

@@ -1,0 +1,72 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no notifications
+CLICK #site--nav--data
+ASSERT_VISIBLE #site--data--notifications-button
+CLICK #site--data--notifications-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/notifications
+ASSERT_VISIBLE #site--notification--empty
+SCREENSHOT notification_events_empty
+
+// A notification typed in happens now, added to the top of the table
+CLICK #site--notification--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--notification--create--modal
+ASSERT_TEXT_VISIBLE What it is about, in a few words.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--notification--create--content
+SCREENSHOT notification_event_add
+INPUT #site--notification--create--title Sensor change
+INPUT #site--notification--create--severity 2
+INPUT #site--notification--create--notes New sensor tonight
+CLICK #site--notification--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Sensor change
+ASSERT_NOT_VISIBLE #site--notification--empty
+CLICK #site--notification--add
+INPUT #site--notification--create--title Swimming
+INPUT #site--notification--create--severity 1
+CLICK #site--notification--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Swimming
+SCREENSHOT notification_events
+
+// Clicking a notification shows all its details, which can be edited
+CLICK #notificationEventsTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--notification--details
+ASSERT_TEXT_VISIBLE announcement: Sensor change
+SCREENSHOT notification_event_details
+INPUT #site--notification--edit--title Sensor changed
+INPUT #site--notification--edit--severity 4
+CLICK #site--notification--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Notification Updated
+ASSERT_NOT_VISIBLE #site--notification--details
+ASSERT_TEXT_VISIBLE Sensor changed
+
+// A page of one notification pages through them, newest first
+GOTO /data/notifications?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Swimming
+CLICK #site--notification--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Sensor changed
+CLICK #site--notification--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /data/notifications
+ASSERT_STATUS 200
+CLICK #notificationEventsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Notification Deleted
+ASSERT_NOT_VISIBLE #site--notification--details
+
+// The deleted notification stays gone after a reload
+GOTO /data/notifications
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1

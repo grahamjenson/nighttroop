@@ -1,0 +1,252 @@
+// Trio's uploads, as NightscoutAPI.swift sends them, see docs/clients/trio.md
+// Trio sends its secret as the SHA1 hex of what the user typed in the api-secret header, so with the token as its
+// secret these send the token's SHA1 in api-secret
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// checkConnection posts a Note, and only needs a 2xx
+NAME trio_check_connection
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "eventType" : "Note",
+  "enteredBy" : "Trio",
+  "notes" : "Trio connected"
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Note" "@0.eventType"
+ASSERT_EQUALS "Trio connected" "@0.notes"
+
+// uploadGlucose posts readings in batches of 100; a CGM reading and a manual one (GlucoseStorage.swift)
+NAME trio_upload_glucose
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  {
+    "id" : "6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A11",
+    "sgv" : 120,
+    "direction" : "Flat",
+    "date" : {{ dayms -1 720 }},
+    "dateString" : "{{ date -1 }}T12:00:00.000Z",
+    "unfiltered" : 120,
+    "filtered" : 120,
+    "glucose" : 120,
+    "type" : "sgv"
+  },
+  {
+    "id" : "6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A12",
+    "mbg" : 130,
+    "date" : {{ dayms -1 725 }},
+    "dateString" : "{{ date -1 }}T12:05:00.000Z",
+    "type" : "mbg"
+  }
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 120 "@0.sgv"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS 130 "@1.mbg"
+
+// uploadPumpHistory posts boluses, SMBs, external insulin, temp basals, suspends, rewinds, site changes and pump
+// alarms (PumpHistoryStorage.swift) in one batch, so one type Nighttroop refuses loses them all
+NAME trio_upload_pump_history
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "SMB", "created_at" : "{{ date -1 }}T12:01:00.000Z", "enteredBy" : "Trio", "insulin" : 0.3, "id" : "A1B2C3D4-0000-0000-0000-000000000001" },
+  { "eventType" : "Bolus", "created_at" : "{{ date -1 }}T12:02:00.000Z", "enteredBy" : "Trio", "insulin" : 2.5, "id" : "A1B2C3D4-0000-0000-0000-000000000002" },
+  { "eventType" : "External Insulin", "created_at" : "{{ date -1 }}T12:03:00.000Z", "enteredBy" : "Trio", "insulin" : 1, "id" : "A1B2C3D4-0000-0000-0000-000000000003" },
+  { "duration" : 30, "absolute" : 1.2, "rate" : 1.2, "eventType" : "Temp Basal", "created_at" : "{{ date -1 }}T12:04:00.000Z", "enteredBy" : "Trio", "id" : "A1B2C3D4-0000-0000-0000-000000000004" },
+  { "eventType" : "Note", "created_at" : "{{ date -1 }}T12:08:00.000Z", "enteredBy" : "Trio", "notes" : "PumpSuspend" },
+  { "eventType" : "Insulin Change", "created_at" : "{{ date -1 }}T12:10:00.000Z", "enteredBy" : "Trio" },
+  { "eventType" : "Site Change", "created_at" : "{{ date -1 }}T12:11:00.000Z", "enteredBy" : "Trio" },
+  { "duration" : 30, "eventType" : "Announcement", "created_at" : "{{ date -1 }}T12:12:00.000Z", "enteredBy" : "Trio", "notes" : "Alarm Optional(\"occlusion\") PumpAlarm" }
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 8 "@"
+ASSERT_EQUALS "SMB" "@0.eventType"
+ASSERT_EQUALS 0.3 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@1.eventType"
+ASSERT_EQUALS 2.5 "@1.insulin"
+ASSERT_EQUALS "External Insulin" "@2.eventType"
+ASSERT_EQUALS 1 "@2.insulin"
+ASSERT_EQUALS "Temp Basal" "@3.eventType"
+ASSERT_EQUALS 1.2 "@3.absolute"
+ASSERT_EQUALS 30 "@3.duration"
+ASSERT_EQUALS "PumpSuspend" "@4.notes"
+ASSERT_EQUALS "Announcement" "@7.eventType"
+
+// The SMB is kept as one, and counts as insulin
+NAME trio_read_smb
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=SMB
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "SMB" "@0.eventType"
+ASSERT_EQUALS 0.3 "@0.insulin"
+ASSERT_CONTAINS "T12:01:00Z" "@0.created_at"
+
+// uploadCarbs posts carbs and fat and protein units (CarbsStorage.swift), and the CGM sensor start
+// (GlucoseStorage.swift) goes with the glucose
+NAME trio_upload_carbs_and_sensor
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "enteredBy" : "Trio", "notes" : "pasta", "carbs" : 45, "fat" : 10, "protein" : 20, "foodType" : "pasta", "id" : "A1B2C3D4-0000-0000-0000-000000000005" },
+  { "eventType" : "Sensor Start", "created_at" : "{{ date -1 }}T12:09:00.000Z", "enteredBy" : "Trio", "notes" : "8G1234 activated on 2026-10-25 08:00:00 +0000" }
+]
+ASSERT_STATUS 200
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS "Sensor Start" "@1.eventType"
+
+// uploadTempTargets posts a temp target, unlabeled, in mg/dL (TempTargetsStorage.swift)
+NAME trio_upload_temp_target
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [ { "duration" : 60, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:07:00.123Z", "enteredBy" : "Trio", "notes" : "Activity", "targetTop" : 140, "targetBottom" : 140 } ]
+ASSERT_STATUS 200
+ASSERT_EQUALS 140 "@0.targetTop"
+ASSERT_EQUALS 140 "@0.targetBottom"
+ASSERT_EQUALS 60 "@0.duration"
+ASSERT_CONTAINS "T13:07:00.123Z" "@0.created_at"
+
+// uploadOverrides posts an override as Exercise, 43200 minutes when it has no end (OverrideStorage.swift)
+NAME trio_upload_override
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [ { "duration" : 43200, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:13:00.000Z", "enteredBy" : "Trio", "notes" : "Sport" } ]
+ASSERT_STATUS 200
+ASSERT_EQUALS "Exercise" "@0.eventType"
+ASSERT_EQUALS 43200 "@0.duration"
+ASSERT_EQUALS "Sport" "@0.notes"
+
+// A temp target or override that ends is posted again with the same created_at and its real duration
+// (getTempTargetRunsNotYetUploadedToNightscout, uploadOverrideRuns), which, as in Nightscout, replaces the first
+NAME trio_upload_runs
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "duration" : 25, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:07:00.123Z", "enteredBy" : "Trio", "notes" : "Activity", "targetTop" : 140, "targetBottom" : 140 },
+  { "duration" : 50, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:13:00.000Z", "enteredBy" : "Trio", "notes" : "Sport" }
+]
+ASSERT_STATUS 200
+ASSERT_EQUALS 25 "@0.duration"
+ASSERT_EQUALS 50 "@1.duration"
+
+NAME trio_runs_replaced_not_duplicated
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ date -1 }}T12:13:00.000Z&find[duration][$exists]=true&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Temporary Target" "@0.eventType"
+ASSERT_EQUALS 25 "@0.duration"
+ASSERT_EQUALS 140 "@0.targetTop"
+ASSERT_EQUALS "Exercise" "@1.eventType"
+ASSERT_EQUALS 50 "@1.duration"
+
+// uploadDeviceStatus posts the loop's state, with no created_at (NightscoutManager.performUploadDeviceStatus)
+NAME trio_upload_devicestatus
+POST http://{{ site }}/api/v1/devicestatus.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "device" : "Trio",
+  "openaps" : {
+    "iob" : {
+      "iob" : 1.234, "activity" : 0.0123, "basaliob" : 0.5, "bolusiob" : 0.734, "netbasalinsulin" : 0.4, "bolusinsulin" : 2.5,
+      "iobWithZeroTemp" : { "iob" : 1.234, "activity" : 0.0123, "basaliob" : 0.5, "bolusiob" : 0.734, "netbasalinsulin" : 0.4, "bolusinsulin" : 2.5, "time" : "{{ date -1 }}T12:15:00.000Z" },
+      "lastBolusTime" : {{ dayms -1 722 }},
+      "lastTemp" : { "rate" : 1.2, "timestamp" : "{{ date -1 }}T12:04:00.000Z", "started_at" : "{{ date -1 }}T12:04:00.000Z", "date" : {{ dayms -1 724 }}, "duration" : 30 },
+      "time" : "{{ date -1 }}T12:15:00.000Z"
+    },
+    "suggested" : {
+      "id" : "0C8D2E57-5D0E-4C8A-9B3B-0B5E7C1D2F01",
+      "reason" : "COB: 30, Dev: 5, BGI: -1.2, ISF: 50, CR: 10, Target: 100, minPredBG 90, minGuardBG 85, IOBpredBG 95, COBpredBG 110, UAMpredBG 100, TDD: 30.5 U; Eventual BG 110 >= 100, temp 1.2 >= 1.2U/hr. ",
+      "units" : 0.2, "insulinReq" : 0.4, "eventualBG" : 110, "sensitivityRatio" : 1, "rate" : 1.2, "duration" : 30,
+      "IOB" : 1.234, "COB" : 30,
+      "predBGs" : { "IOB" : [120, 118, 116], "ZT" : [120, 115, 110], "COB" : [120, 125, 130], "UAM" : [120, 121, 122] },
+      "deliverAt" : "{{ date -1 }}T12:15:00.000Z", "carbsReq" : 0, "temp" : "absolute", "bg" : 120, "reservoir" : 150.5,
+      "timestamp" : "{{ date -1 }}T12:15:00.000Z", "ISF" : 50, "current_target" : 100, "TDD" : 30.5,
+      "minDelta" : 1, "expectedDelta" : -0.5, "minGuardBG" : 85, "minPredBG" : 90, "threshold" : 70, "CR" : 10, "received" : true
+    },
+    "enacted" : {
+      "id" : "0C8D2E57-5D0E-4C8A-9B3B-0B5E7C1D2F02",
+      "reason" : "COB: 30, Dev: 5",
+      "rate" : 1.2, "duration" : 30, "IOB" : 1.234, "COB" : 30, "deliverAt" : "{{ date -1 }}T12:15:00.000Z", "temp" : "absolute",
+      "bg" : 120, "timestamp" : "{{ date -1 }}T12:15:02.000Z", "received" : true
+    },
+    "version" : "0.6.0",
+    "recommendedBolus" : 0,
+    "dosingMode" : "closed"
+  },
+  "pump" : {
+    "clock" : "{{ date -1 }}T12:15:03.000Z",
+    "battery" : { "percent" : 75, "voltage" : 1.4, "string" : "normal", "display" : false },
+    "reservoir" : 150.5,
+    "status" : { "status" : "normal", "bolusing" : false, "suspended" : false, "timestamp" : "{{ date -1 }}T12:15:00.000Z" },
+    "bolusIncrement" : 0.05
+  },
+  "uploader" : { "battery" : 80, "isCharging" : false }
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Trio" "@0.device"
+ASSERT_EXISTS "@0.created_at"
+ASSERT_EQUALS 1.234 "@0.openaps.iob.iob"
+ASSERT_EQUALS 110 "@0.openaps.suggested.eventualBG"
+ASSERT_EQUALS 120 "@0.openaps.suggested.predBGs.IOB.0"
+ASSERT_EQUALS 30.5 "@0.openaps.suggested.TDD"
+ASSERT_EQUALS 1.2 "@0.openaps.enacted.rate"
+ASSERT_EQUALS true "@0.openaps.enacted.received"
+ASSERT_EQUALS "closed" "@0.openaps.dosingMode"
+ASSERT_EQUALS "0.6.0" "@0.openaps.version"
+ASSERT_EQUALS 150.5 "@0.pump.reservoir"
+ASSERT_EQUALS 75 "@0.pump.battery.percent"
+# Trio's followers read the pump's state and battery level, and whether the phone is charging
+ASSERT_EQUALS "normal" "@0.pump.battery.string"
+ASSERT_EQUALS false "@0.pump.battery.display"
+ASSERT_EQUALS false "@0.pump.status.bolusing"
+ASSERT_EQUALS false "@0.pump.status.suspended"
+ASSERT_EQUALS false "@0.uploader.isCharging"
+
+// uploadProfiles posts the default profile with Trio's own push notification fields, and needs exactly a 200
+NAME trio_upload_profile
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "defaultProfile" : "default",
+  "startDate" : "{{ date -1 }}T12:20:00.000Z",
+  "mills" : {{ dayms -1 740 }},
+  "units" : "mg/dl",
+  "enteredBy" : "Trio",
+  "store" : {
+    "default" : {
+      "dia" : 6, "carbs_hr" : 21, "delay" : 0, "timezone" : "Pacific/Auckland",
+      "target_low" : [ { "time" : "00:00", "value" : 100, "timeAsSeconds" : 0 } ],
+      "target_high" : [ { "time" : "00:00", "value" : 110, "timeAsSeconds" : 0 } ],
+      "sens" : [ { "time" : "00:00", "value" : 50, "timeAsSeconds" : 0 }, { "time" : "06:30", "value" : 45, "timeAsSeconds" : 23400 } ],
+      "basal" : [ { "time" : "00:00", "value" : 0.8, "timeAsSeconds" : 0 }, { "time" : "06:00", "value" : 1.05, "timeAsSeconds" : 21600 } ],
+      "carbratio" : [ { "time" : "00:00", "value" : 10, "timeAsSeconds" : 0 } ],
+      "units" : "mg/dl"
+    }
+  },
+  "bundleIdentifier" : "org.nightscout.ABC123.trio",
+  "deviceToken" : "a1b2c3",
+  "isAPNSProduction" : false,
+  "overridePresets" : [ { "name" : "Sport", "duration" : 60, "percentage" : 80, "target" : 140 } ],
+  "teamID" : "ABC123",
+  "expirationDate" : "2027-01-01T00:00:00.000Z"
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS "default" "@0.defaultProfile"
+ASSERT_EQUALS 0.8 "@0.store.default.basal.0.value"
+ASSERT_EQUALS 100 "@0.store.default.target_low.0.value"

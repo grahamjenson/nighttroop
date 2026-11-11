@@ -1,0 +1,149 @@
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+//////
+// CREATE
+//////
+
+
+NAME create_entry_v3
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 101, "type": "sgv" }
+ASSERT_STATUS 201
+ASSERT_EQUALS 101 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
+ASSERT_EXISTS "@result.subject"
+ASSERT_EXISTS "@result.utcOffset"
+ASSERT_EXISTS "@result.srvCreated"
+ASSERT_EXISTS "@result.srvModified"
+
+// A create still needs sgv or mbg
+NAME create_entry_without_glucose_v3
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "direction": "Flat" }
+ASSERT_STATUS 400
+
+
+//////
+// READ
+//////
+
+NAME get_entry_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 101 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+
+NAME search_gt_sgv_v3
+GET http://{{ site }}/api/v3/entries?sgv[gt]=100
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 101 "@result.0.sgv"
+ASSERT_EQUALS "sgv" "@result.0.type"
+
+NAME get_404_entry_v3
+GET http://{{ site }}/api/v3/entries/NonExistentID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+//////
+// UPDATE
+//////
+
+NAME put_entry_v3
+PUT http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 102, "type": "sgv" }
+ASSERT_STATUS 200
+ASSERT_EQUALS 102 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+
+NAME check_put_entry_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 102 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+
+NAME patch_entry_v3
+PATCH http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 103, "type": "sgv" }
+ASSERT_STATUS 200
+
+NAME check_patch_entry_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 103 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+
+// A patch without sgv or mbg leaves the reading as it is
+NAME patch_entry_direction_only_v3
+PATCH http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "direction": "Flat" }
+ASSERT_STATUS 200
+
+NAME check_patch_entry_direction_only_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 103 "@result.sgv"
+ASSERT_EQUALS "Flat" "@result.direction"
+
+NAME update_entries_force_create_v3
+PUT http://{{ site }}/api/v3/entries/AnotherFunID
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 104, "type": "sgv" }
+ASSERT_STATUS 201
+ASSERT_EQUALS 104 "@result.sgv"
+ASSERT_EQUALS "AnotherFunID" "@result.identifier"
+
+NAME update_put_entries_v3
+PUT http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+B {"sgv": 104, "app": "test-app", "date": {{ dig "put_entry_v3.result.date" }}}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+//////
+// DELETE
+//////
+
+NAME delete_soft_entry_v3
+DELETE http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+//////
+// RAW
+//////
+
+// raw is not a parameter: a document is always as Nighttroop keeps it, without fields Nightscout does not know, and raw
+// is not a filter, so a search with it finds what one without it does
+NAME create_raw_entry_v3
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 102, "type": "sgv", "customField": "dropped" }
+ASSERT_STATUS 201
+
+NAME get_raw_entry_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_raw_entry_v3.result.identifier" }}?raw=true
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 102 "@result.sgv"
+ASSERT_EQUALS null "@result.customField"
+ASSERT_EXISTS "@result.identifier"
+
+NAME search_raw_entry_v1
+GET http://{{ site }}/api/v1/entries?token={{ token }}&raw=true&find[_id]={{ dig "create_raw_entry_v3.result.identifier" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS null "@0.customField"
+ASSERT_EXISTS "@0._id"

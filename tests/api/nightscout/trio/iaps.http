@@ -1,0 +1,72 @@
+// iAPS, which Trio grew from, uploads as Trio does; these are the fetches it makes that Trio does not
+// (iAPS FreeAPS/Sources/Services/Network/NightscoutAPI.swift), see docs/clients/trio.md
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME iaps_upload_glucose
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "sgv" : 120, "direction" : "Flat", "date" : {{ dayms -1 720 }}, "dateString" : "{{ date -1 }}T12:00:00.000Z", "type" : "sgv" },
+  { "sgv" : 125, "direction" : "FortyFiveUp", "date" : {{ dayms -1 725 }}, "dateString" : "{{ date -1 }}T12:05:00.000Z", "type" : "sgv" }
+]
+ASSERT_STATUS 200
+
+// fetchLastGlucose asks for 500, newest first with sort$desc
+NAME iaps_fetch_glucose
+GET http://{{ site }}/api/v1/entries/sgv.json?count=500&sort$desc=dateString&find[dateString][$gte]={{ date -1 }}T11:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 125 "@0.sgv"
+ASSERT_EQUALS "FortyFiveUp" "@0.direction"
+ASSERT_CONTAINS "T12:05:00Z" "@0.dateString"
+ASSERT_EQUALS 120 "@1.sgv"
+
+// A remote command, as an announcement from Nightscout's careportal
+NAME iaps_remote_announcement
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B { "eventType" : "Announcement", "created_at" : "{{ date -1 }}T12:30:00.000Z", "enteredBy" : "remote", "notes" : "looping: false" }
+ASSERT_STATUS 200
+
+// A pump alarm iAPS uploads itself, which is not a command
+NAME iaps_own_announcement
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B { "eventType" : "Announcement", "created_at" : "{{ date -1 }}T12:40:00.000Z", "enteredBy" : "iAPS", "notes" : "Pump: occlusion" }
+ASSERT_STATUS 200
+
+// fetchAnnouncement: Announcement needs created_at, enteredBy and notes, the command
+NAME iaps_fetch_announcements
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[enteredBy]=remote&find[created_at][$gte]={{ date -1 }}T12:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_CONTAINS "T12:30:00Z" "@0.created_at"
+ASSERT_EXISTS "@0.enteredBy"
+ASSERT_EQUALS "looping: false" "@0.notes"
+ASSERT_EQUALS "remote" "@0.enteredBy"
+
+// Carbs others entered, and iAPS's own
+NAME iaps_upload_carbs
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "enteredBy" : "iAPS", "carbs" : 45 },
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:10:00.000Z", "enteredBy" : "careportal", "carbs" : 20 }
+]
+ASSERT_STATUS 200
+
+// fetchCarbs: iAPS sends find[enteredBy][$ne] once for each, rather than under $and
+NAME iaps_fetch_carbs
+GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&find[enteredBy][$ne]=iAPS&find[enteredBy][$ne]=AndroidAPS&find[enteredBy][$ne]=openaps://AndroidAPS&find[enteredBy][$ne]=iAPS%2520Watch&find[enteredBy][$ne]=loop://iPhone&find[created_at][$gt]={{ date -1 }}T11:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 20 "@0.carbs"
+ASSERT_EQUALS "careportal" "@0.enteredBy"

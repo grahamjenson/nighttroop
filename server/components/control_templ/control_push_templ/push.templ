@@ -1,0 +1,110 @@
+package control_push_templ
+
+import (
+	"strconv"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// columns are the table's columns, with one for the test buttons for an admin
+func columns(admin bool) []table.Column {
+	columns := []table.Column{{Label: "Site"}, {Label: "Identity"}, {Label: "App"}, {Label: "Bundle ID"}, {Label: "Registered"}, {Label: "Last Push"}}
+	if admin {
+		columns = append(columns, table.Column{Actions: true})
+	}
+	return columns
+}
+
+// PushDevices is every site's apps registered for pushes, newest first, with whose they are, and for an admin a button
+// to test each
+templ PushDevices(devices []*controlmodels.PushRegistration, admin bool) {
+	@listpage.Page(listpage.Props{
+		ID:          "control--push-devices",
+		Title:       "Push Devices",
+		Description: "The apps on every site's phones that pushes are sent to, newest first, never with their tokens. Times are UTC.",
+		Table: listpage.TableProps{
+			ID:      "control--push-devices--table",
+			Static:  true,
+			Rows:    len(devices),
+			EmptyID: "control--push-devices--empty",
+			Empty:   "No apps have registered for pushes yet.",
+			Columns: columns(admin),
+		},
+	}) {
+		for _, device := range devices {
+			@pushDeviceRow(device, admin)
+		}
+	}
+}
+
+templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
+	{{ id := "control--push-device--" + strconv.FormatInt(device.ID, 10) }}
+	@table.Row(table.RowProps{ID: id}) {
+		@table.Cell() {
+			{ device.SiteID }
+		}
+		@table.Cell() {
+			{ device.IdentityName }
+		}
+		@table.Cell() {
+			{ string(device.App) }
+			<span class="block text-xs text-gray-500">{ string(device.Provider) }</span>
+		}
+		@table.Cell() {
+			{ device.BundleID }
+			if !device.Production {
+				<span class="block text-xs text-gray-500">Development build</span>
+			}
+		}
+		@table.Cell() {
+			{ display.DateTime(&device.CreatedAt) }
+		}
+		@pushDeviceStatus(device.PushRegistration)
+		if admin {
+			@table.Cell() {
+				<div class="flex justify-end">
+					@button.Button(button.Props{
+						ID:      id + "--test",
+						Variant: button.VariantOutline,
+						Size:    button.SizeSm,
+						Attributes: templ.Attributes{
+							"hx-post":       "/push-devices/" + strconv.FormatInt(device.ID, 10) + "/test",
+							"hx-target":     "#" + id + "--status",
+							"hx-swap":       "outerHTML",
+							"hx-status:4xx": "target:#toaster swap:beforeend",
+							"hx-status:5xx": "target:#toaster swap:beforeend",
+						},
+					}) {
+						Test
+					}
+				</div>
+			}
+		}
+	}
+}
+
+// pushDeviceStatus is when the registration was last pushed to, and the push's error, if it had one
+templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
+	@table.Cell(table.CellProps{ID: "control--push-device--" + strconv.FormatInt(registration.ID, 10) + "--status"}) {
+		if registration.LastPushedAt == nil {
+			Never
+		} else {
+			{ display.DateTime(registration.LastPushedAt) }
+		}
+		if registration.LastError != nil {
+			<span class="block text-xs text-red-600">{ *registration.LastError }</span>
+		}
+	}
+}
+
+// PushDeviceTested is the registration's status after a test push reached its push service, and a toast saying so
+templ PushDeviceTested(registration *sitemodels.PushRegistration) {
+	@pushDeviceStatus(registration)
+	@successtoast.OOB("Test push sent to " + string(registration.App))
+}

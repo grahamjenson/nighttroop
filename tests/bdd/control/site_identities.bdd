@@ -1,0 +1,46 @@
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// A site's own page lists its details and identities: who they are, whether they log in with TOTP, and when each was
+// last seen. Resetting gives the same development password and TOTP secret in tests, so the shard's site is used.
+GOTO {{ .control_url }}/sites/{{ replace ".ns.localhost" "" .default_site }}
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--site--page
+ASSERT_VISIBLE #control--site--identities--table
+ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
+ASSERT_VISIBLE #control--site--identities--table td >> text=read_only
+SCREENSHOT site_identities
+
+// Each identity's actions are named and line up in columns: only an identity that logs in with TOTP can have it reset
+ASSERT_NOT_VISIBLE #control--site--identities--table tr:has-text("pwd_phone") [id$="--reset-totp"]
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--reset-password"]:text-is("Reset password")
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--reset-totp"]:text-is("Reset TOTP")
+
+// Resetting the admin's password asks first (the test accepts), then shows the new one, once
+CLICK #control--site--identities--table tr:has-text("admin") [id$="--reset-password"]
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--site--identity-reset
+ASSERT_TEXT_VISIBLE New credentials for admin
+ASSERT_VISIBLE #control--site--identity-reset dt >> text=Password
+SCREENSHOT site_identity_password_reset
+
+// Resetting its TOTP shows the new secret for its authenticator app
+CLICK #control--site--identities--table tr:has-text("admin") [id$="--reset-totp"]
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--site--identity-reset dt >> text=TOTP secret
+
+// An admin can sign in to the site as one of its identities: asked first (the test accepts), a new tab opens the site
+// signed in as it
+SCREENSHOT site_page
+CLICK #control--site--identities--table tr:has-text("admin") [id$="--assume"]
+ASSERT_NEW_PAGE
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary
+
+// The site's events show the control admin signed in as it
+GOTO /logs/events
+ASSERT_TEXT_VISIBLE Signed in by control

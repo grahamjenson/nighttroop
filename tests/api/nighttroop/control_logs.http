@@ -1,0 +1,105 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+INCLUDE steps/control_login.steps
+
+// Creating a site records an event, which the control API sees with when it started
+NAME list_events
+GET http://control.localhost/events
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0.id"
+ASSERT_EXISTS "@result.0.name"
+ASSERT_EXISTS "@result.0.started_at"
+SET event_id {{ dig "list_events.result.0.id" }}
+
+NAME list_events_paged
+GET http://control.localhost/events?limit=1
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME list_events_bad_limit
+GET http://control.localhost/events?limit=lots
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+NAME get_event
+GET http://control.localhost/events/{{ .event_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.name"
+ASSERT_EXISTS "@result.started_at"
+
+NAME get_unknown_event
+GET http://control.localhost/events/999999999
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_event_not_a_number
+GET http://control.localhost/events/not-an-event
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Errors and logs page the same way
+NAME list_errors
+GET http://control.localhost/errors?limit=5
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME get_unknown_error
+GET http://control.localhost/errors/999999999
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME list_logs
+GET http://control.localhost/logs?limit=5
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME get_unknown_log
+GET http://control.localhost/logs/999999999
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only signed in control identities can see the logs DB
+NAME list_events_without_login
+GET http://control.localhost/events
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME list_errors_without_login
+GET http://control.localhost/errors
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME list_logs_without_login
+GET http://control.localhost/logs
+H Accept: application/json
+ASSERT_STATUS 401
+
+// The control admin downloads the whole logs DB, as one SQLite file, to read its captured requests
+NAME download_logs_db
+GET http://control.localhost/logs-db
+H Authorization: Bearer {{ .control_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "application/vnd.sqlite3" "#Content-Type.0"
+ASSERT_CONTAINS "attachment; filename=\"logs-" "#Content-Disposition.0"
+ASSERT_CONTAINS "sqlite\"" "#Content-Disposition.0"
+
+// It holds every site's logs, so no one signed out can
+NAME download_logs_db_without_login
+GET http://control.localhost/logs-db
+H Accept: application/json
+ASSERT_STATUS 401

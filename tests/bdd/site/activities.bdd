@@ -1,0 +1,88 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no activities
+CLICK #site--nav--data
+ASSERT_VISIBLE #site--data--activities-button
+CLICK #site--data--activities-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/activities
+ASSERT_VISIBLE #site--activity--empty
+SCREENSHOT activities_empty
+
+// An activity typed in happens now, added to the top of the table
+CLICK #site--activity--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--activity--create--modal
+ASSERT_TEXT_VISIBLE What it was, e.g. a run.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--activity--create--heart-rate
+SCREENSHOT activity_add
+INPUT #site--activity--create--name Football
+INPUT #site--activity--create--duration-minutes 90
+INPUT #site--activity--create--notes Training
+CLICK #site--activity--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Football
+ASSERT_NOT_VISIBLE #site--activity--empty
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+CLICK #site--activity--add
+INPUT #site--activity--create--name Walk
+INPUT #site--activity--create--duration-minutes 30
+CLICK #site--activity--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Walk
+SCREENSHOT activities
+
+// Clicking an activity shows all its details, which can be edited
+CLICK #activitiesTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--activity--details
+ASSERT_TEXT_VISIBLE exercise: Football
+SCREENSHOT activity_details
+INPUT #site--activity--edit--duration-minutes 75
+INPUT #site--activity--edit--notes Match
+CLICK #site--activity--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Activity Updated
+ASSERT_NOT_VISIBLE #site--activity--details
+ASSERT_TEXT_VISIBLE Match
+
+// A page of one activity pages through them, newest first
+GOTO /data/activities?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Walk
+CLICK #site--activity--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Football
+CLICK #site--activity--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /data/activities
+ASSERT_STATUS 200
+CLICK #activitiesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Activity Deleted
+ASSERT_NOT_VISIBLE #site--activity--details
+
+// The deleted activity stays gone after a reload
+GOTO /data/activities
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting the last activity shows the table is empty again, with no count, without a reload
+CLICK #activitiesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Activity Deleted
+ASSERT_VISIBLE #site--activity--empty
+ASSERT_NOT_VISIBLE #site--activity--showing
+// Adding one again hides it and counts the new one
+CLICK #site--activity--add
+INPUT #site--activity--create--name Swim
+INPUT #site--activity--create--duration-minutes 45
+CLICK #site--activity--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Swim
+ASSERT_NOT_VISIBLE #site--activity--empty
+ASSERT_TEXT_VISIBLE Showing 1 to 1

@@ -1,0 +1,114 @@
+package site_login_templ
+
+import (
+	"nighttroop.t1d.nz/server/components/authenticator"
+	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/input"
+)
+
+// Login signs in an identity by its name and password, then its TOTP code. A name the link gives, such as the new site's
+// admin from its welcome page, is filled in, so only its password is typed.
+templ Login(name string) {
+	@site_templ.Base() {
+		// It fills the window, so the form is in its middle with nothing to scroll
+		@authenticator.Page() {
+			@authenticator.Card("login-form-target", false) {
+				<!-- Form updated with POST method -->
+				<form
+					id="site--login--form"
+					hx-post="/login"
+					hx-target="closest .login-form-target"
+					hx-swap="outerHTML"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
+				>
+					@authenticator.Title("Nighttroop Login")
+					<!-- Username -->
+					@form.Item(form.ItemProps{}) {
+						@form.Label(form.LabelProps{
+							For: "site--login--name",
+						}) {
+							Name
+						}
+						@input.Input(input.Props{
+							ID:       "site--login--name",
+							Type:     "text",
+							Name:     "name",
+							Value:    name,
+							Required: true,
+							Attributes: templ.Attributes{
+								"autocapitalize": "none",
+								"autocorrect":    "off",
+								"autofocus":      name == "",
+								"autocomplete":   "username",
+							},
+						})
+					}
+					<div class="mt-4"></div>
+					<!-- Password -->
+					@form.Item(form.ItemProps{}) {
+						@form.Label(form.LabelProps{
+							For: "site--login--password",
+						}) {
+							Password
+						}
+						@input.Input(input.Props{
+							ID:         "site--login--password",
+							Type:       "password",
+							Name:       "password",
+							Required:   true,
+							Attributes: templ.Attributes{"autocomplete": "current-password", "autofocus": name != ""},
+						})
+					}
+					<div class="mt-4"></div>
+					<!-- Submit Button -->
+					@button.Button(button.Props{ID: "site--login-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
+						Log in
+					}
+				</form>
+				@PasskeyLogin("site--login")
+				@authenticator.InvalidAfterError("site--login--form")
+			}
+		}
+	}
+}
+
+// LoginTOTP is the login's second step, which takes the place of its first's form, so it stays in the window's middle
+templ LoginTOTP() {
+	@authenticator.Card("login-form-target", false) {
+		<!-- Form updated with POST method -->
+		<form
+			id="otp"
+			hx-post="/login/totp"
+			hx-target="body"
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+			class="needs-validation"
+		>
+			@authenticator.Title("Nighttroop Login")
+			<!-- TOTP -->
+			@form.Item() {
+				@form.Label(form.LabelProps{
+					For: "site--login--otp",
+				}) {
+					Verification Code
+				}
+				@authenticator.CodeInput("site--login--otp", "otp", "totp", true)
+				@form.Description() {
+					Enter the 6-digit code from your authenticator app
+				}
+			}
+			<div class="mt-4"></div>
+			<!-- Submit Button -->
+			@button.Button(button.Props{ID: "site--login-totp-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
+				Log in
+			}
+		</form>
+		// Logs in as soon as the code's last digit is typed or pasted
+		@authenticator.AutoSubmit("otp", "site--login--otp")
+		@authenticator.InvalidAfterError("otp")
+	}
+}

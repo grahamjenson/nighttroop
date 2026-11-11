@@ -1,0 +1,78 @@
+// A new site's credentials say to keep the backup key safe, as it is what gets a new admin login on the recover page
+GOTO {{ server_url }}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+ASSERT_VISIBLE #public--site-info--recover-link
+SCREENSHOT created
+SAVE_TEXT #public--site-info--site-id site_id
+SAVE_TEXT #public--site-info--backup-key backup_key
+
+CLICK #public--site-info--recover-link
+ASSERT_PATH /recover
+ASSERT_VISIBLE #public--recover--form
+ASSERT_VISIBLE .text-3xl:text-is("Nighttroop")
+SCREENSHOT recover_form
+
+// A wrong key is refused, saying nothing of why
+INPUT #public--recover--site-id {{ .site_id }}
+INPUT #public--recover--backup-key {{ .site_id }}:notthekey123
+CLICK #public--recover--submit
+ASSERT_STATUS 401
+ASSERT_VISIBLE #public--recover--error
+SCREENSHOT refused
+
+// The site's ID and backup key give the admin a new password and TOTP, and the site a new backup key, shown on the
+// site's own address as a new site's credentials are, less the phone's, which are left as they were
+INPUT #public--recover--backup-key {{ .backup_key }}
+CLICK #public--recover--submit
+ASSERT_STATUS 200
+ASSERT_PATH /welcome
+ASSERT_TEXT_VISIBLE Save your credentials somewhere safe
+// The recovery removed the admin's passkeys, so this browser can add one here, as a new site's can
+ASSERT_VISIBLE #public--passkey-login-button
+ASSERT_VISIBLE #public--site-info--password
+ASSERT_VISIBLE #public--site-info--backup-key
+ASSERT_NOT_VISIBLE #public--site-info--ns-token
+// The new TOTP secret is shown as text too, and a code made from it is the one the check expects
+ASSERT_TEXT_EQUALS #public--site-info--totp-text Fake TOTP Secr etFo rDev Only
+SCREENSHOT recovered
+SAVE_TEXT #public--site-info--backup-key new_backup_key
+SAVE_VALUE #public--site-info--totp-value totp_secret
+SAVE_TEXT #public--site-info--url site_url
+
+// The admin logs in with them
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp {{ totp .totp_secret }}
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+
+// The key works once, so the old one is refused, and the new one works in its place
+GOTO {{ server_url }}/recover
+INPUT #public--recover--site-id {{ .site_id }}
+INPUT #public--recover--backup-key {{ .backup_key }}
+CLICK #public--recover--submit
+ASSERT_STATUS 401
+ASSERT_VISIBLE #public--recover--error
+INPUT #public--recover--backup-key {{ .new_backup_key }}
+CLICK #public--recover--submit
+ASSERT_STATUS 200
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--site-info--password
+
+// They are shown once, so opening the site's welcome page again says so
+GOTO {{ .site_url }}/welcome
+ASSERT_STATUS 200
+ASSERT_VISIBLE #public--welcome-gone
+ASSERT_NOT_VISIBLE #public--site-info--backup-key

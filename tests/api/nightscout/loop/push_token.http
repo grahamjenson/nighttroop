@@ -1,0 +1,82 @@
+INCLUDE steps/new_ns_site.steps
+
+// Loop's profile says where its pushes go, its device token and bundle ID in loopSettings, so the identity uploading it
+// has its APNs token registered, as the site's API shows it
+NAME loop_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B [{
+    "defaultProfile": "Default",
+    "startDate": "2026-03-01T00:00:00.000Z",
+    "units": "mg/dL",
+    "enteredBy": "Loop",
+    "isAPNSProduction": false,
+    "loopSettings": {
+        "dosingEnabled": true,
+        "deviceToken": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90",
+        "bundleIdentifier": "com.TEAM123456.loopkit.Loop"
+    },
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}],
+        "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}],
+        "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}]}}
+}]
+ASSERT_STATUS 200
+
+NAME loop_registered
+GET http://{{ .create_new_site.site_subdomain }}.localhost/settings/push-registrations
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "loop" "@result.items.0.app"
+ASSERT_EQUALS "apns" "@result.items.0.provider"
+ASSERT_EQUALS "com.TEAM123456.loopkit.Loop" "@result.items.0.bundle_id"
+ASSERT_EQUALS false "@result.items.0.production"
+ASSERT_EQUALS null "@result.items.0.token"
+
+// Trio has them at the top of its profile, where LoopFollow sends Trio's remote commands; a production build by default
+NAME trio_profile
+POST http://{{ site }}/api/v1/profile.json?token={{ token }}
+B {
+    "defaultProfile": "default",
+    "startDate": "2026-03-02T00:00:00.000Z",
+    "units": "mg/dl",
+    "enteredBy": "Trio",
+    "bundleIdentifier": "com.TEAM123456.Trio",
+    "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+    "teamID": "TEAM123456",
+    "store": {"default": {"dia": 6, "units": "mg/dl", "timezone": "UTC", "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}],
+        "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}],
+        "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}]}}
+}
+ASSERT_STATUS 200
+
+NAME trio_registered
+GET http://{{ .create_new_site.site_subdomain }}.localhost/settings/push-registrations
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "trio" "@result.items.0.app"
+ASSERT_EQUALS "com.TEAM123456.Trio" "@result.items.0.bundle_id"
+ASSERT_EQUALS true "@result.items.0.production"
+
+// A token that is not one is not registered, and the profile is still kept
+NAME bad_token_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B [{
+    "defaultProfile": "Default",
+    "startDate": "2026-03-03T00:00:00.000Z",
+    "units": "mg/dL",
+    "loopSettings": {"deviceToken": "asd", "bundleIdentifier": "com.TEAM123456.loopkit.Loop"},
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}],
+        "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}],
+        "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}]}}
+}]
+ASSERT_STATUS 200
+
+NAME still_two
+GET http://{{ .create_new_site.site_subdomain }}.localhost/settings/push-registrations
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"

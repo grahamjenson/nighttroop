@@ -1,0 +1,65 @@
+# xDrip+ and AAPS connect with Socket.IO v2 (EIO=3), authorize, then follow dataUpdate
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME earlier_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":100,"direction":"Flat","device":"xDrip-DexcomG6","date":{{ itime 5 }}}]
+ASSERT_STATUS 200
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=3
+
+NAME clients
+WAIT clients
+ASSERT_EQUALS 1 "@"
+
+NAME authorize
+EMIT authorize
+B {"client":"xDrip+","secret":"{{ token }}","history":48}
+ACK
+ASSERT_EQUALS true "@read"
+ASSERT_EQUALS true "@write"
+ASSERT_EQUALS true "@write_treatment"
+
+NAME connected
+WAIT connected
+
+# The first dataUpdate has what is already there, glucose in mg/dL as mgdl
+NAME first_data
+WAIT dataUpdate
+ASSERT_EXISTS "@lastUpdated"
+ASSERT_LENGTH 1 "@sgvs"
+ASSERT_EQUALS 100 "@sgvs.0.mgdl"
+ASSERT_EQUALS "Flat" "@sgvs.0.direction"
+ASSERT_EQUALS "xDrip-DexcomG6" "@sgvs.0.device"
+ASSERT_EXISTS "@sgvs.0.mills"
+ASSERT_EQUALS null "@delta"
+ASSERT_LENGTH 0 "@treatments"
+ASSERT_EXISTS "@mbgs"
+ASSERT_EXISTS "@cals"
+ASSERT_EXISTS "@devicestatus"
+ASSERT_EXISTS "@profiles"
+ASSERT_EXISTS "@food"
+
+NAME post_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":101,"direction":"FortyFiveUp","date":{{ itime 0 }}}]
+ASSERT_STATUS 200
+
+# Each write after that comes as one delta
+NAME updates
+COLLECT dataUpdate
+T 1s
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS true "@0.delta"
+ASSERT_LENGTH 1 "@0.sgvs"
+ASSERT_EQUALS 101 "@0.sgvs.0.mgdl"
+ASSERT_EQUALS "FortyFiveUp" "@0.sgvs.0.direction"
+
+NAME bye
+DISCONNECT

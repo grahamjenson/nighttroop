@@ -1,0 +1,26 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+// Juggluco sends up to 5000 readings at once after a backlog, and sends the same batch again until it is accepted
+NAME create_entries_batch_at_cap_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{{ range $i := 5000 }}{{ if $i }},{{ end }}{"type":"sgv","sgv":100,"date":{{ itime $i }}}{{ end }}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 5000 "@"
+
+// Loop sends up to 1000 treatments at once after a backlog
+NAME create_treatments_batch_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [{{ range $i := 1000 }}{{ if $i }},{{ end }}{"eventType":"Correction Bolus","insulin":0.1,"created_at":"{{ utctime $i }}Z"}{{ end }}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1000 "@"
+
+// One record over the cap is refused before anything is stored
+NAME create_entries_batch_over_cap_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{{ range $i := 5001 }}{{ if $i }},{{ end }}{"type":"sgv","sgv":100,"date":{{ itime $i }}}{{ end }}]
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 5000" "@message"

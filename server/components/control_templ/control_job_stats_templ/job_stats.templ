@@ -1,0 +1,133 @@
+package control_job_stats_templ
+
+import (
+	"fmt"
+	"math"
+	"strings"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/control_templ/control_jobs_templ"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// dayQueueJob splits the stats' YYYY-MM-DD::queue::job key into its parts
+func dayQueueJob(stats *controlmodels.JobStatsDaily) (string, string, string) {
+	parts := strings.SplitN(stats.DayQueueJob, "::", 3)
+	for len(parts) < 3 {
+		parts = append(parts, "-")
+	}
+	return parts[0], parts[1], parts[2]
+}
+
+// meanDuration is the jobs' mean time from being fetched to finishing
+func meanDuration(stats *controlmodels.JobStatsDaily) string {
+	if stats.TotalJobs == 0 {
+		return "-"
+	}
+	return display.Duration(int64(math.Round(stats.DurationSum / float64(stats.TotalJobs))))
+}
+
+// stdDevDuration is how much the jobs' durations spread around their mean
+func stdDevDuration(stats *controlmodels.JobStatsDaily) string {
+	if stats.TotalJobs == 0 {
+		return "-"
+	}
+	n := float64(stats.TotalJobs)
+	mean := stats.DurationSum / n
+	return display.Duration(int64(math.Round(math.Sqrt(max(stats.DurationSquaredSum/n-mean*mean, 0)))))
+}
+
+// JobStatsTable shows one page of daily job totals, newest day first, with buttons to the pages either side
+templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "job_stats_table",
+		Title:       "Job Stats",
+		Description: "Each day's totals for every queue's jobs, newest day first. Click a row to see its errors.",
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:     "controlJobStatsTable",
+			Static: true,
+			Rows:   len(stats),
+			Empty:  "No job stats here.",
+			Columns: []table.Column{
+				{Label: "Day"}, {Label: "Queue"}, {Label: "Job"}, {Label: "Jobs", Numeric: true},
+				{Label: "Succeeded", Numeric: true}, {Label: "Failed", Numeric: true},
+				{Label: "Mean Duration", Numeric: true},
+			},
+		},
+		Pager: &pager.Props{ID: "control--job-stats", Path: "/job-stats", Count: len(stats), Skip: skip, Limit: limit},
+	}) {
+		for _, s := range stats {
+			@jobStatsRow(s)
+		}
+	}
+}
+
+templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
+	{{ day, queue, job := dayQueueJob(stats) }}
+	@table.ModalRow("", "/job-stats/"+stats.DayQueueJob) {
+		@table.Cell() {
+			{ day }
+		}
+		@table.Cell() {
+			{ queue }
+		}
+		@table.Cell() {
+			{ job }
+		}
+		@table.Cell(table.NumCell) {
+			{ fmt.Sprint(stats.TotalJobs) }
+		}
+		@table.Cell(table.NumCell) {
+			{ fmt.Sprint(stats.TotalSuccess) }
+		}
+		@table.Cell(table.NumCell) {
+			{ fmt.Sprint(stats.TotalFailed) }
+		}
+		@table.Cell(table.NumCell) {
+			{ meanDuration(stats) }
+		}
+	}
+}
+
+// JobStatsModal shows a day's totals for a job, the distinct errors its failures had, and links to the logs of its last
+// failed runs
+templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
+	{{ day, queue, job := dayQueueJob(stats) }}
+	@modal.Modal(modal.Props{ID: "control--job-stats--details", Title: queue + " / " + job}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@modal.Detail("Day", day)
+			@modal.Detail("Jobs", fmt.Sprint(stats.TotalJobs))
+			@modal.Detail("Succeeded", fmt.Sprint(stats.TotalSuccess))
+			@modal.Detail("Failed", fmt.Sprint(stats.TotalFailed))
+			@modal.Detail("Mean Duration", meanDuration(stats))
+			@modal.Detail("Std Dev Duration", stdDevDuration(stats))
+			@modal.Detail("Updated", display.DateTime(&stats.UpdatedAt))
+		</dl>
+		<h3 class="mt-4 text-sm font-semibold">Errors</h3>
+		if len(stats.Errors) == 0 {
+			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+		} else {
+			<ul id="control--job-stats--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
+				for _, e := range stats.Errors {
+					<li class="break-all">{ e }</li>
+				}
+			</ul>
+		}
+		if len(stats.FailedRunIDs) > 0 {
+			<h3 class="mt-4 text-sm font-semibold">Failed Runs' Logs</h3>
+			<p class="mt-1 text-xs text-gray-500">The day's last failed runs, newest first. Old logs are trimmed, so the oldest runs may have none left.</p>
+			<ul id="control--job-stats--failed-runs" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm">
+				for i := range stats.FailedRunIDs {
+					<li>
+						@control_jobs_templ.RunLogsLink(fmt.Sprintf("control--job-stats--failed-run--%d", i), stats.FailedRunIDs[len(stats.FailedRunIDs)-1-i])
+					</li>
+				}
+			</ul>
+		}
+	}
+}

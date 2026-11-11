@@ -1,0 +1,143 @@
+// Signed in as the admin, as only admins manage identities
+INCLUDE steps/new_site_admin.steps
+
+// A new site has an admin, the PWD phone and a read only device, newest first
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "application/json" "#Content-Type.0"
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS "device_pwd_phone" "@result.items.1.role"
+ASSERT_EQUALS false "@result.items.1.current_identity"
+ASSERT_EQUALS "admin" "@result.items.2.role"
+ASSERT_EQUALS true "@result.items.2.current_identity"
+SET self_id {{ dig "list_identities.result.items.2.id" }}
+
+NAME create_device
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "kitchen", "role": "device_read"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "kitchen" "@result.name"
+ASSERT_EQUALS true "@result.enabled"
+ASSERT_EXISTS "@result.password"
+ASSERT_EXISTS "@result.ns_token"
+SET device_id {{ .create_device.result.id }}
+SET device_token {{ .create_device.result.ns_token }}
+
+NAME create_device_same_name
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "kitchen", "role": "device_read"}
+ASSERT_STATUS 409
+
+NAME create_device_unknown_role
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "lounge", "role": "superuser"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "application/json" "#Content-Type.0"
+ASSERT_CONTAINS "Unknown role" "@message"
+
+// Credentials are only shown when the identity is created
+NAME get_device
+GET http://{{ site }}/settings/identities/{{ .device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "kitchen" "@result.name"
+ASSERT_EQUALS "device_read" "@result.role"
+ASSERT_EQUALS false "@result.current_identity"
+ASSERT_EXISTS "@result.created_at"
+
+NAME device_token_works
+GET http://{{ .ns_site }}/api/v1/entries?token={{ .device_token }}
+ASSERT_STATUS 200
+
+NAME disable_device
+POST http://{{ site }}/settings/identities/{{ .device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+ASSERT_EQUALS "kitchen" "@result.name"
+ASSERT_EQUALS false "@result.enabled"
+
+NAME disabled_device_token_rejected
+GET http://{{ .ns_site }}/api/v1/entries?token={{ .device_token }}
+ASSERT_STATUS 401
+
+NAME enable_device
+POST http://{{ site }}/settings/identities/{{ .device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@result.enabled"
+
+NAME delete_device
+DELETE http://{{ site }}/settings/identities/{{ .device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_device_not_found
+GET http://{{ site }}/settings/identities/{{ .device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_device_token_rejected
+GET http://{{ .ns_site }}/api/v1/entries?token={{ .device_token }}
+ASSERT_STATUS 401
+
+// Delete is a hard delete, so the name can be used again
+NAME create_device_reuse_name
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "kitchen", "role": "device_read"}
+ASSERT_STATUS 201
+
+// Deleting from a page goes back to that page
+NAME create_device_to_delete_from_page
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "hallway", "role": "device_read"}
+ASSERT_STATUS 201
+SET page_device_id {{ .create_device_to_delete_from_page.result.id }}
+
+NAME delete_device_from_page
+DELETE http://{{ site }}/settings/identities/{{ .page_device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+H Referer: http://{{ site }}/settings/identities
+ASSERT_STATUS 303
+ASSERT_CONTAINS "/settings/identities" "#Location.0"
+
+NAME delete_unknown_identity
+DELETE http://{{ site }}/settings/identities/999999999
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// An identity cannot lock itself out
+NAME delete_self
+DELETE http://{{ site }}/settings/identities/{{ .self_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+ASSERT_CONTAINS "you cannot disable or delete yourself" "@message"
+
+NAME disable_self
+POST http://{{ site }}/settings/identities/{{ .self_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 400

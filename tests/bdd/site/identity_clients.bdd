@@ -1,0 +1,38 @@
+INCLUDE steps/new_site_admin_pages.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// The admin is listed with the browser it logged in from
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE 1 recent
+
+// A new device has no clients until something authenticates with its token
+INPUT #name-createIdentityFormdevicesTable kitchen
+CLICK "Add Device"
+ASSERT_STATUS 201
+SAVE_TEXT #site--identities--created--site site_url
+SAVE_TEXT #site--identities--created--ns-token kitchen_token
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_VISIBLE #site--identities--kitchen--clients >> text=None yet
+
+// The kitchen display and then another app both authenticate with its token
+USER_AGENT SugarPixel/1.2 (ESP32)
+GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status?token={{ .kitchen_token }}
+ASSERT_STATUS 200
+USER_AGENT xDrip+/2024.01 (Android 13)
+GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status?token={{ .kitchen_token }}
+ASSERT_STATUS 200
+
+// So the kitchen is marked as shared, listing both apps, newest first
+USER_AGENT
+GOTO {{ .site_url }}/settings/identities
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--identities--kitchen--clients >> text=Used by more than one app
+CLICK #site--identities--kitchen--clients summary
+ASSERT_VISIBLE #site--identities--kitchen--clients li >> nth=0 >> text=xDrip+/2024.01 (Android 13)
+ASSERT_VISIBLE #site--identities--kitchen--clients li >> nth=1 >> text=SugarPixel/1.2 (ESP32)
+ASSERT_TEXT_VISIBLE Give each device its own identity
+SCREENSHOT identity_clients_shared

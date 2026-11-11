@@ -1,0 +1,54 @@
+INCLUDE steps/new_site_admin.steps
+
+// Each create hashes a password with bcrypt, so a site can create 1 identity a minute with a burst of 5
+
+NAME create_device_1
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device1", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_2
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device2", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_3
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device3", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_4
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device4", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_5
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device5", "role": "device_read"}
+ASSERT_STATUS 201
+SET device_5_id {{ .create_device_5.result.id }}
+
+// Deleting an identity does not give its create back, so creates and deletes cannot be looped
+NAME delete_device_5
+DELETE http://{{ site }}/settings/identities/{{ .device_5_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME create_device_over_rate_limit
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device6", "role": "device_read"}
+ASSERT_STATUS 429
+ASSERT_CONTAINS "Too Many Requests" "@message"

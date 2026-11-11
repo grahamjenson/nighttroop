@@ -1,0 +1,259 @@
+package sitecollections
+
+import (
+	"bufio"
+	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
+	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/testutils"
+)
+
+type eventRow struct{ ID string }
+type eventModel struct {
+	ID string `json:"id"`
+}
+
+// eventsCollection is a collection of eventRows, named name for its permissions
+type eventsCollection struct{ name string }
+
+func (c eventsCollection) GetName() string { return c.name }
+func (eventsCollection) GetRoute() string  { return "things" }
+func (eventsCollection) ToModel(row *eventRow, _ *httputils.SiteContext) *eventModel {
+	return &eventModel{ID: row.ID}
+}
+func (eventsCollection) GetRow(context.Context, *siteapiutils.CollectionTx, string, *httputils.SiteContext) (*eventRow, error) {
+	return nil, nil
+}
+
+// watchAllCollection is an eventsCollection that also watches every other change, as the summary does
+type watchAllCollection struct{ eventsCollection }
+
+func (watchAllCollection) Watches(event events.Event, _ *httputils.SiteContext) bool {
+	return event.Model != nil
+}
+
+// streams are the events streamed, and the control DB whose live DB holds the open streams
+type streams struct {
+	bus       *events.SiteBus
+	controlDB *db.ControlDB
+}
+
+func newStreams(t *testing.T) streams {
+	_, controlDB := testutils.NewControlDB(t)
+	return streams{bus: events.NewSiteBus(), controlDB: controlDB}
+}
+
+// eventStream serves the handler for the site as role, and reads its stream
+func eventStream(t *testing.T, streams streams, site string, role consts.IdentityRole, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{Events: streams.bus}, streams.controlDB, nil, nil, site, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		handler(w, r.WithContext(httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Role: role})))
+	}))
+	t.Cleanup(server.Close)
+	resp, err := http.Get(server.URL)
+	require.NoError(t, err)
+	t.Cleanup(func() { resp.Body.Close() })
+	return resp, bufio.NewReader(resp.Body)
+}
+
+// nextEvent is the stream's next event, its lines up to the blank line ending it
+func nextEvent(t *testing.T, stream *bufio.Reader) string {
+	lines := []string{}
+	for {
+		line, err := stream.ReadString('\n')
+		require.NoError(t, err)
+		if line == "\n" {
+			return strings.Join(lines, "")
+		}
+		lines = append(lines, line)
+	}
+}
+
+func TestEventsHandlerStreamsTheCollectionsChanges(t *testing.T) {
+	tests := []struct {
+		name       string
+		collection CollectionBase[eventRow, eventModel]
+		// want is the events streamed for a change to an own row, a change to another model, then another own row
+		want []string
+	}{
+		{
+			"its own rows, as their models",
+			eventsCollection{name: "glucose_readings"},
+			[]string{"event: created\ndata: {\"id\":\"1\"}\n", "event: deleted\ndata: {\"id\":\"2\"}\n"},
+		},
+		{
+			"what it watches, with {} for other models",
+			watchAllCollection{eventsCollection{name: "summary"}},
+			[]string{"event: created\ndata: {\"id\":\"1\"}\n", "event: updated\ndata: {}\n", "event: deleted\ndata: {\"id\":\"2\"}\n"},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			streams := newStreams(t)
+			bus := streams.bus
+			resp, stream := eventStream(t, streams, "site-a", consts.IdentityRoleUserReadOnly, EventsHandler(test.collection))
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			require.Equal(t, "text/event-stream", resp.Header.Get("Content-Type"))
+
+			// Only the site's own model changes are streamed, not its other events
+			bus.Publish("site-b", events.Event{SiteID: "site-b", Action: events.Created, Model: &eventRow{ID: "other site"}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Name: events.SiteDisabled, Attributes: map[string]any{"by": "admin"}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Created, Model: &eventRow{ID: "1"}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: &struct{}{}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Deleted, Model: &eventRow{ID: "2"}})
+			for _, want := range test.want {
+				require.Equal(t, want, nextEvent(t, stream))
+			}
+		})
+	}
+}
+
+// An identity that may not search a collection cannot stream it, and a site can hold only so many streams open
+func TestEventsHandlerLimits(t *testing.T) {
+	streams := newStreams(t)
+	resp, _ := eventStream(t, streams, "site-a", consts.IdentityRoleUser, EventsHandler[eventRow, eventModel](eventsCollection{name: "site_logs"}))
+	require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+	handler := EventsHandler[eventRow, eventModel](eventsCollection{name: "glucose_readings"})
+	for range maxEventStreamsPerSite {
+		resp, _ := eventStream(t, streams, "site-a", consts.IdentityRoleUser, handler)
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+	}
+	resp, _ = eventStream(t, streams, "site-a", consts.IdentityRoleUser, handler)
+	require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+
+	// A stream that ends is closed, so another can open
+	open, _ := eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+	for range maxEventStreamsPerSite - 1 {
+		eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+	}
+	open.Body.Close()
+	require.Eventually(t, func() bool {
+		resp, _ := eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+		return resp.StatusCode == http.StatusOK
+	}, 5*time.Second, 50*time.Millisecond)
+
+	// Another site has its own streams
+	resp, _ = eventStream(t, streams, "site-b", consts.IdentityRoleUser, handler)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+// A stream ends at its next ping once its identity is disabled, as its requests would be refused
+func TestEventsHandlerEndsOnceItsIdentityIsRevoked(t *testing.T) {
+	ping := eventStreamPing
+	eventStreamPing = 20 * time.Millisecond
+	t.Cleanup(func() { eventStreamPing = ping })
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	siteID := site.SiteDB.Subdomain
+	identity, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_READ_ONLY_NAME})
+	require.NoError(t, err)
+
+	handler := EventsHandler[eventRow, eventModel](eventsCollection{name: "glucose_readings"})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{Events: cfg.Events}, controlDB, nil, nil, siteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		handler(w, r.WithContext(httputils.SetIdentityModelInSiteContext(ctx, identity)))
+	}))
+	t.Cleanup(server.Close)
+	resp, err := http.Get(server.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	stream := bufio.NewReader(resp.Body)
+	require.Equal(t, ": ping\n", nextEvent(t, stream))
+
+	require.NoError(t, controlDB.Queries.UpdateSiteIdentityEnabled(t.Context(), controldb.UpdateSiteIdentityEnabledParams{Enabled: false, SiteID: siteID, ID: identity.ID}))
+	ended := make(chan error, 1)
+	go func() {
+		_, err := io.Copy(io.Discard, stream)
+		ended <- err
+	}()
+	select {
+	case err := <-ended:
+		require.NoError(t, err)
+	case <-time.After(2 * time.Second):
+		t.Fatal("the stream of a disabled identity was not ended")
+	}
+}
+
+// ownedRow is a row an identity owns, as its alarms are
+type ownedRow struct{ IdentityID int64 }
+
+func (r ownedRow) GetIdentityID() int64 { return r.IdentityID }
+
+type ownedCollection struct{}
+
+func (ownedCollection) GetName() string  { return "alarms" }
+func (ownedCollection) GetRoute() string { return "alarms" }
+func (ownedCollection) ToModel(row *ownedRow, _ *httputils.SiteContext) *ownedRow {
+	return row
+}
+func (ownedCollection) GetRow(context.Context, *siteapiutils.CollectionTx, string, *httputils.SiteContext) (*ownedRow, error) {
+	return nil, nil
+}
+
+func TestEventsHandlerStreamsAnIdentitysOwnRowsToItAlone(t *testing.T) {
+	streams := newStreams(t)
+	bus := streams.bus
+	// The stream's identity has ID 0
+	_, stream := eventStream(t, streams, "site-a", consts.IdentityRoleUser, EventsHandler[ownedRow, ownedRow](ownedCollection{}))
+	bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Created, Model: &ownedRow{IdentityID: 7}})
+	bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: &ownedRow{IdentityID: 0}})
+	require.Equal(t, "event: updated\ndata: {\"IdentityID\":0}\n", nextEvent(t, stream))
+}
+
+// Settings changes are streamed only to whom they may be shown: an identity's own to it, the site's to an admin, and
+// any identity's to an admin's stream of other identities' settings
+func TestEventsHandlerStreamsSettingsToWhoseTheyAre(t *testing.T) {
+	// The stream's identity has ID 0
+	own, other := int64(0), int64(7)
+	changes := map[string]*sitemodels.Settings{
+		"site": {Units: new("site")}, "other": {Units: new("other"), OwnerID: &other}, "own": {Units: new("own"), OwnerID: &own},
+	}
+	tests := []struct {
+		name       string
+		collection *sitesettings.SettingsCollection
+		role       consts.IdentityRole
+		// published are the changes made, the last always streamed, and want those streamed, {} for one told of but
+		// not shown
+		published, want []string
+	}{
+		{"a user's own and that the site's changed", &sitesettings.SettingsCollection{}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"{}", "own"}},
+		{"a read only device's own and that the site's changed", &sitesettings.SettingsCollection{}, consts.IdentityRoleDeviceRead, []string{"other", "site", "own"}, []string{"{}", "own"}},
+		{"a user's alarms and that the site's changed", &sitesettings.SettingsCollection{Alarms: true}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"{}", "own"}},
+		{"an admin's own and the site's", &sitesettings.SettingsCollection{}, consts.IdentityRoleAdmin, []string{"other", "site", "own"}, []string{"site", "own"}},
+		{"an admin's alarms and the site's", &sitesettings.SettingsCollection{Alarms: true}, consts.IdentityRoleAdmin, []string{"other", "site", "own"}, []string{"site", "own"}},
+		{"the site's", &sitesettings.SettingsCollection{Site: true}, consts.IdentityRoleAdmin, []string{"other", "own", "site"}, []string{"site"}},
+		{"other identities'", &sitesettings.SettingsCollection{Other: true}, consts.IdentityRoleAdmin, []string{"site", "own", "other"}, []string{"own", "other"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			streams := newStreams(t)
+			resp, stream := eventStream(t, streams, "site-a", test.role, EventsHandler(test.collection))
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			for _, change := range test.published {
+				streams.bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: changes[change]})
+			}
+			for _, want := range test.want {
+				if want == "{}" {
+					require.True(t, strings.HasPrefix(nextEvent(t, stream), "event: updated\ndata: {}\n"), "want {}")
+					continue
+				}
+				require.True(t, strings.HasPrefix(nextEvent(t, stream), "event: updated\ndata: {\"units\":\""+want+"\""), "want %s", want)
+			}
+		})
+	}
+}

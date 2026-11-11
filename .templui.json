@@ -1,0 +1,7 @@
+{
+  "componentsDir": "server/components/ui",
+  "utilsDir": "utils/templui/utils",
+  "moduleName": "nighttroop.t1d.nz",
+  "jsDir": "server/assets/static",
+  "jsPublicPath": "/"
+}

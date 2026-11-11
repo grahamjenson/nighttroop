@@ -1,0 +1,30 @@
+// Static files have unversioned URLs, so browsers must revalidate them to see new deploys
+NAME get_style
+GET http://localhost/style_gen.css
+ASSERT_STATUS 200
+ASSERT_EQUALS "no-cache" "#Cache-Control.0"
+ASSERT_EXISTS "#Etag.0"
+SET etag {{ .get_style_headers.Get "Etag" }}
+
+// Sending back the ETag gets a 304 with no body, so unchanged files are not downloaded again
+NAME get_style_not_modified
+GET http://localhost/style_gen.css
+H If-None-Match: {{ .etag }}
+ASSERT_STATUS 304
+ASSERT_EQUALS "no-cache" "#Cache-Control.0"
+
+// The owl mark is served for the headers, the browser tab and home screens
+NAME get_logo_svg
+GET http://localhost/logo.svg
+ASSERT_STATUS 200
+ASSERT_EQUALS "image/svg+xml" "#Content-Type.0"
+
+NAME get_logo_png
+GET http://localhost/logo.png
+ASSERT_STATUS 200
+ASSERT_EQUALS "image/png" "#Content-Type.0"
+
+NAME get_favicon
+GET http://localhost/favicon.ico
+ASSERT_STATUS 200
+ASSERT_EQUALS "image/x-icon" "#Content-Type.0"

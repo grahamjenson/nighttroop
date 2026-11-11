@@ -1,0 +1,81 @@
+version: "2"
+sql:
+  - schema: "schema_gen.sql"
+    queries: "./queries"
+    engine: "sqlite"
+    gen:
+      go:
+        package: "sitedb"
+        out: "."
+        emit_prepared_queries: true
+        emit_pointers_for_null_types: true
+        emit_result_struct_pointers: true
+
+        query_parameter_limit: 0
+        
+        output_files_suffix: ".gen"
+        output_db_file_name: "z_db.go"
+        output_models_file_name: "z_models.go"
+        output_querier_file_name: "z_querier.go"
+        output_batch_file_name: "z_batch.go"
+        output_copyfrom_file_name: "z_copyfrom.go"
+
+overrides:
+  go:
+    overrides:
+      - column: "profile_presets.is_default"
+        go_type:
+          type: "bool"
+      - column: "glucose_readings.is_calibration"
+        go_type:
+          type: "*bool"
+      - column: "glucose_readings_vw.is_calibration"
+        go_type:
+          type: "*bool"
+      - column: "insulin_doses.automatic"
+        go_type:
+          type: "*bool"
+      - column: "insulin_doses_vw.automatic"
+        go_type:
+          type: "*bool"
+      - column: "event_groups.auto_forced"
+        go_type:
+          type: "*bool"
+      - column: "device_reports.is_device_charging"
+        go_type:
+          type: "*bool"
+
+      # units
+      - column: "glucose_readings.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "glucose_readings_vw.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+
+      - column: "profile_switches.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "profile_switches_vw.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+
+      - column: "profile_presets.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "profile_presets_vw.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+

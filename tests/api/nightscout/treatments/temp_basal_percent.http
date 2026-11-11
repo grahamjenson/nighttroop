@@ -1,0 +1,119 @@
+INCLUDE steps/new_ns_site.steps
+
+// A temp basal's percent is Nightscout's change from the basal, as AAPS, Nightscout's careportal and Nightguard have it:
+// -50 is half, 20 is 1.2 times and -100 a zero temp. Sent only as a percent, its rate is the profile's basal at its
+// start so changed: here 0.5 U/hr from midnight and 0.8 U/hr from 2am UTC. It is kept and returned as it was sent.
+
+// Before any profile there is no basal to take the percent of, so it has no rate
+NAME percent_before_profile_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temp Basal", "created_at": "2025-12-01T01:00:00.000Z", "percent": -50, "duration": 30}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@0.absolute"
+ASSERT_EQUALS -50 "@0.percent"
+
+NAME create_percent_profile_v1
+POST http://{{ site }}/api/v1/profiles?token={{ token }}
+B {
+    "units": "mg/dL",
+    "startDate": "2026-01-01T00:00:00.000Z",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "dia": "5",
+            "units": "mg/dL",
+            "sens": [{"value": "110", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_low": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_high": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbratio": [{"value": "33", "time": "00:00", "timeAsSeconds": "0"}],
+            "basal": [
+                {"value": "0.5", "time": "00:00", "timeAsSeconds": "0"},
+                {"value": "0.8", "time": "02:00", "timeAsSeconds": "7200"}
+            ],
+            "timezone": "UTC"
+        }
+    }
+  }
+ASSERT_STATUS 200
+
+NAME percent_temp_basal_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temp Basal", "created_at": "2026-03-01T01:00:00.000Z", "percent": -50, "duration": 30}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.25 "@0.absolute"
+ASSERT_EQUALS 0.25 "@0.rate"
+ASSERT_EQUALS -50 "@0.percent"
+
+NAME get_percent_temp_basal_v1
+GET http://{{ site }}/api/v1/treatments/{{ dig "percent_temp_basal_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.25 "@0.absolute"
+ASSERT_EQUALS -50 "@0.percent"
+
+// From the schedule's 2am its next rate
+NAME percent_temp_basal_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": 1772332200000, "percent": 50, "duration": 30}
+ASSERT_STATUS 201
+ASSERT_EQUALS 1.2 "@result.absolute"
+
+NAME get_percent_temp_basal_v3
+GET http://{{ site }}/api/v3/treatments/{{ dig "percent_temp_basal_v3.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 50 "@result.percent"
+
+// A rate sent with the percent is kept, rather than taken from the profile, as AAPS sends 70% of the basal
+NAME rate_and_percent_temp_basal_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": 1772334000000, "percent": -30, "rate": 0.56, "duration": 30}
+ASSERT_STATUS 201
+ASSERT_EQUALS 0.56 "@result.absolute"
+ASSERT_EQUALS -30 "@result.percent"
+
+// -100 is a zero temp
+NAME zero_temp_percent_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": 1772335800000, "percent": -100, "duration": 30}
+ASSERT_STATUS 201
+ASSERT_EQUALS 0 "@result.absolute"
+ASSERT_EQUALS -100 "@result.percent"
+
+// A basal cannot drop by more than all of it
+NAME under_minus_100_percent_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": 1772337600000, "percent": -101, "duration": 30}
+ASSERT_STATUS 400
+
+// A temp basal sent in U/hr gets its percent from the profile's basal at its start, 0.8 U/hr at 6am, and is returned
+// with its rate as both rate and absolute
+NAME rate_temp_basal_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": 1772344800000, "rate": 1.2, "duration": 30}
+ASSERT_STATUS 201
+ASSERT_EQUALS 1.2 "@result.rate"
+ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 50 "@result.percent"
+
+// Loop sends absolute
+NAME absolute_temp_basal_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temp Basal", "created_at": "2026-03-01T04:00:00.000Z", "absolute": 0.4, "duration": 30}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.4 "@0.rate"
+ASSERT_EQUALS 0.4 "@0.absolute"
+ASSERT_EQUALS -50 "@0.percent"
+
+// A rate over 11 times the basal, Nightscout's 1000 percent, is kept without a percent
+NAME far_over_basal_temp_basal_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temp Basal", "created_at": "2026-03-01T05:00:00.000Z", "absolute": 10, "duration": 30}
+ASSERT_STATUS 200
+ASSERT_EQUALS 10 "@0.absolute"
+ASSERT_EQUALS null "@0.percent"

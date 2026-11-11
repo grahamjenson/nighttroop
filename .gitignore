@@ -1,0 +1,16 @@
+*.sqlite*
+/.dbs
+.env
+tmp
+.tmp
+.test
+# Screenshots are shown on pull requests, not committed (see DEVELOPMENT.md)
+tests/screenshots
+master_key.bin
+bin
+coverage.out
+testdata
+
+*.pprof
+*.test
+*.tmp

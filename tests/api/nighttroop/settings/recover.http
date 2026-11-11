@@ -1,0 +1,87 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site {{ .create_new_site.site_subdomain }}.localhost
+
+// A wrong key, or another site's, is refused, saying nothing of why
+NAME recover_wrong_key
+POST http://{{ site }}/recover
+H Accept: application/json
+B {"backup_key": "{{ .create_new_site.site_subdomain }}:notthekey123"}
+ASSERT_STATUS 401
+
+NAME recover_other_sites_key
+POST http://{{ site }}/recover
+H Accept: application/json
+B {"backup_key": "othersite:notthekey123"}
+ASSERT_STATUS 401
+
+NAME recover_no_key
+POST http://{{ site }}/recover
+H Accept: application/json
+B {}
+ASSERT_STATUS 401
+
+// The backup key shown when the site was made gives its admin a new password and TOTP, and a new backup key
+NAME recover
+POST http://{{ site }}/recover
+H Accept: application/json
+B {"backup_key": "{{ .create_new_site.backup_key }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@name"
+ASSERT_EXISTS "@password"
+ASSERT_EXISTS "@totp_secret"
+ASSERT_EXISTS "@backup_key"
+
+// The admin signs in with them
+NAME login_recovered_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .recover.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .login_recovered_admin.token }}
+
+// The key works once, so using it again is refused, and the new one works in its place
+NAME recover_used_key
+POST http://{{ site }}/recover
+H Accept: application/json
+B {"backup_key": "{{ .create_new_site.backup_key }}"}
+ASSERT_STATUS 401
+
+NAME recover_new_key
+POST http://{{ site }}/recover
+H Accept: application/json
+B {"backup_key": "{{ .recover.backup_key }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@name"
+
+// The admin's JWT from before that recovery is refused, so whoever had the old credentials is signed out
+NAME jwt_before_recovery_refused
+GET http://{{ site }}/logs/events
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME login_after_recovery
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .recover_new_key.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .login_after_recovery.token }}
+
+// Each recovery is an event its admins can see, and so is the admin's credentials changing
+NAME recovered_events
+GET http://{{ site }}/logs/events?type=site_admin_recovered
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+
+NAME credentials_changed_events
+GET http://{{ site }}/logs/events?type=identity_credentials_changed
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "password_and_totp" "@result.items.0.attributes.credentials"
+ASSERT_EQUALS "backup key" "@result.items.0.attributes.by"

@@ -1,0 +1,78 @@
+package footer
+
+import (
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
+// its terms of service, privacy policy and API docs, and Nighttroop's year, spaced apart and wrapping on a narrow
+// screen. Each link opens in a new tab, so what the user was doing stays open.
+templ Footer() {
+	<footer id="footer" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
+		@NewTabLink("footer--contact", "mailto:"+httputils.SupportEmail(ctx), "hover:text-primary") {
+			contact
+		}
+		<span aria-hidden="true">·</span>
+		if url := httputils.FeedbackURL(ctx); url != "" {
+			@NewTabLink("footer--feedback", url, "hover:text-primary") {
+				feedback
+			}
+			<span aria-hidden="true">·</span>
+		}
+		@NewTabLink("footer--terms", "/terms", "hover:text-primary") {
+			terms of service
+		}
+		<span aria-hidden="true">·</span>
+		@NewTabLink("footer--privacy", "/privacy", "hover:text-primary") {
+			privacy policy
+		}
+		<span aria-hidden="true">·</span>
+		@NewTabLink("footer--api-docs", "/api-docs", "hover:text-primary") {
+			API docs
+		}
+		<span aria-hidden="true">·</span>
+		<span>Nighttroop 2026</span>
+		<span id="footer--dbip" class="contents">
+			if httputils.DBIPCredited(ctx) {
+				@dbipLink()
+			}
+		</span>
+	</footer>
+}
+
+// PublicFooter is a public page's footer, with the medical disclaimer above it
+templ PublicFooter() {
+	<div class="mb-3 px-4">
+		@alert.Alert(alert.Props{ID: "medical-disclaimer", Variant: alert.VariantWarning, Class: "mx-auto max-w-3xl text-center",
+			Attributes: templ.Attributes{"role": "note"}}) {
+			<strong>Not a medical device.</strong> Nighttroop does not provide medical advice and is not a replacement for
+			proper medical care. Its data and alarms may be late, missing or wrong.
+		}
+	</div>
+	@Footer()
+}
+
+// DBIPCredit is on each page that shows locations from DB-IP's database, as its licence asks for a link to DB-IP
+// there. The footer is drawn after the page, so it shows the link; a part of a page sends the link to its drawn footer.
+templ DBIPCredit() {
+	if httputils.CreditDBIP(ctx) {
+		<span hx-swap-oob="innerHTML:#footer--dbip">
+			@dbipLink()
+		</span>
+	}
+}
+
+templ dbipLink() {
+	<span aria-hidden="true">·</span>
+	@NewTabLink("footer--dbip-link", "https://db-ip.com", "hover:text-primary") {
+		IP Geolocation by DB-IP
+	}
+}
+
+// NewTabLink is a link that opens in a new tab
+templ NewTabLink(id string, url string, class string) {
+	<a id={ id } href={ templ.URL(url) } target="_blank" rel="noopener noreferrer" class={ class }>
+		{ children... }
+	</a>
+}

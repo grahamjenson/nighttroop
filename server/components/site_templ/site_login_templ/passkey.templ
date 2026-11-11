@@ -1,0 +1,57 @@
+package site_login_templ
+
+import "nighttroop.t1d.nz/server/components/ui/button"
+
+// PasskeyLogin signs in with any of the site's, or control's, passkeys the browser has, with no name or password
+// typed; its elements' IDs start with prefix. Its button is the login's own button's size, outlined so the password
+// login stays the first choice.
+templ PasskeyLogin(prefix string) {
+	<div class="mt-4"></div>
+	@button.Button(button.Props{
+		ID:         prefix + "--passkey",
+		Type:       button.TypeButton,
+		Variant:    button.VariantOutline,
+		Size:       button.SizeXl,
+		FullWidth:  true,
+		Class:      "text-primary",
+		Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": prefix + "--passkey-error"},
+	}) {
+		Log in with a passkey
+	}
+	<p id={ prefix + "--passkey-error" } class="mt-2 text-sm text-red-600"></p>
+	@PasskeyScript()
+}
+
+// PasskeyScript makes each button with data-passkey-begin ask the browser for a passkey with the options the server
+// begins with, then send what it made or signed to finish, going where finish says once done. WebAuthn's binary
+// fields travel as base64url.
+templ PasskeyScript() {
+	<script>
+		function passkey(begin, finish, headers, errorID) {
+			const decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+			const encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+			const fail = message => document.getElementById(errorID).textContent = message;
+			fetch(begin, {method: 'POST', headers}).then(r => r.json()).then(options => {
+				const o = options.publicKey;
+				if (!o) throw new Error(options.error);
+				o.challenge = decode(o.challenge);
+				(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));
+				if (o.user) o.user.id = decode(o.user.id);
+				return o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});
+			}).then(credential => {
+				const response = {};
+				for (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {
+					if (credential.response[key]) response[key] = encode(credential.response[key]);
+				}
+				const body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});
+				return fetch(finish, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json'}, body});
+			}).then(r => r.json()).then(done => {
+				if (!done.redirect) throw new Error(done.error);
+				window.location = done.redirect;
+			}).catch(e => fail(e.message || 'The passkey did not work.'));
+		}
+		document.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {
+			passkey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError);
+		}));
+	</script>
+}

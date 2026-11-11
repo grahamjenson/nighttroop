@@ -1,0 +1,45 @@
+// A new site's welcome page offers to log in with a passkey instead of an authenticator app, beside Log in
+GOTO {{ server_url }}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+ASSERT_VISIBLE #public--passkey-login-button
+ASSERT_DRAWN #public--login-button[disabled]
+// Until a code is checked it says why Log in cannot be clicked yet, and both buttons read Log in, the shape of Copy
+ASSERT_TEXT_VISIBLE Check a code from your app in step 2 first.
+ASSERT_TEXT_EQUALS #public--passkey-login-button Log in with a passkey
+SCROLL 2000
+SCREENSHOT welcome_passkey
+
+// Once a code is checked, Log in can be clicked and the hint goes
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+ASSERT_VISIBLE #public--login-button:not([disabled])
+ASSERT_NOT_VISIBLE #public--login-hint
+SCREENSHOT welcome_code_checked
+
+// The browser has a passkey authenticator, as a phone has, that verifies the person itself. The passkey is made on the
+// site's own address, for its admin, and logs the admin in with no password or code
+VIRTUAL_AUTHENTICATOR
+CLICK #public--passkey-login-button
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary
+
+// It is the admin's passkey, on My Account, and signs the admin back in once signed out
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE You are signed in as admin
+ASSERT_VISIBLE #site--account--passkeys >> text=Not used yet
+CLICK #site--settings-menu
+CLICK #site--settings--logout-button
+ASSERT_NEW_URL
+ASSERT_PATH /login
+CLICK #site--login--passkey
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary

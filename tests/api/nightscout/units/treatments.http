@@ -1,0 +1,233 @@
+INCLUDE steps/new_ns_site.steps
+
+NAME check_default_is_mmol
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mmol/L" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
+
+
+#########
+# Treatments
+#########
+
+# The Nightscout API gives treatments' glucose and profile targets in mg/dL, whatever the identity's units
+
+
+
+### Profile Switchs
+
+NAME create_mmol_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 0 }},
+    "eventType": "Profile Switch",
+    "originalProfileName": "SamDash-2025",
+    "percentage": 120,
+    "profile": "SamDash-2025(120%)",
+    "profileJson": "{\"units\":\"mmol\",\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":8}]}",
+    "timeshift": 0,
+    "utcOffset": 720,
+    "created_at": "{{ time 0 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
+
+NAME create_mgdl_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 1 }},
+    "eventType": "Profile Switch",
+    "originalProfileName": "SamDash-2025",
+    "percentage": 120,
+    "profile": "SamDash-2025(120%)",
+    "profileJson": "{\"units\":\"mgdl\",\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":70}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "timeshift": 0,
+    "utcOffset": 720,
+    "created_at": "{{ time 1 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
+
+NAME create_unlabeled_mmol_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 2 }},
+    "eventType": "Profile Switch",
+    "originalProfileName": "SamDash-2025",
+    "percentage": 120,
+    "profile": "SamDash-2025(120%)",
+    "profileJson": "{\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":8}]}",
+    "timeshift": 0,
+    "utcOffset": 720,
+    "created_at": "{{ time 2 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
+
+NAME create_unlabeled_mgdl_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 3 }},
+    "eventType": "Profile Switch",
+    "originalProfileName": "SamDash-2025",
+    "percentage": 120,
+    "profile": "SamDash-2025(120%)",
+    "profileJson": "{\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":70}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "timeshift": 0,
+    "utcOffset": 720,
+    "created_at": "{{ time 3 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
+
+### Glucose Settings
+
+NAME create_mmol_bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 1 }},
+    "eventType": "BG Check",
+    "glucose": 7,
+    "units": "mmol/L",
+    "created_at": "{{ time 1 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
+
+NAME create_mgdl_bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 2 }},
+    "eventType": "BG Check",
+    "glucose": 70,
+    "units": "mg/dL",
+    "created_at": "{{ time 2 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"
+
+NAME create_unlabeled_mmol_bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 3 }},
+    "eventType": "BG Check",
+    "glucose": 7,
+    "created_at": "{{ time 3 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
+
+NAME create_unlabeled_mgdl_bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 4 }},
+    "eventType": "BG Check",
+    "glucose": 70,
+    "created_at": "{{ time 4 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"
+
+# GET
+
+######
+# NOW CHANGE TO MGDL
+######
+
+INCLUDE steps/ns_units_mgdl.steps
+
+
+NAME get_profile_switch_mmol
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_profile_switch.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
+
+NAME get_profile_switch_mgdl
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_profile_switch.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
+
+
+NAME get_profile_switch_unlabeled_mmol
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mmol_profile_switch.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
+
+NAME get_profile_switch_unlabeled_mgdl
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mgdl_profile_switch.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
+
+
+# Glucose 
+
+NAME get_glucose_reading_mmol
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_bg_check.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
+
+NAME get_glucose_reading_mgdl
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_bg_check.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"
+
+NAME get_unlabeled_glucose_reading_mmol
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mmol_bg_check.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
+
+NAME get_unlabeled_glucose_reading_mgdl
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mgdl_bg_check.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"

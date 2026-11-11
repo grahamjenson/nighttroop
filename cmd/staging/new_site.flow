@@ -1,0 +1,46 @@
+// Makes a site with an hour of readings, a meal bolus and its phone's status, through the API as a phone uploading to
+// it would, and prints its credentials (create_site's RESPONSE), to sign in to its page with:
+//   go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root cmd/staging -test.v new_site.flow
+
+NAME create_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site {{ .create_site.site_subdomain }}.ns.localhost
+SET token {{ .create_site.pwd_nstoken }}
+
+// An hour of readings, rising after the meal
+NAME readings
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"type": "sgv", "sgv": 102, "direction": "Flat", "date": {{ itime 60 }}},
+  {"type": "sgv", "sgv": 104, "direction": "Flat", "date": {{ itime 55 }}},
+  {"type": "sgv", "sgv": 103, "direction": "Flat", "date": {{ itime 50 }}},
+  {"type": "sgv", "sgv": 106, "direction": "Flat", "date": {{ itime 45 }}},
+  {"type": "sgv", "sgv": 112, "direction": "Flat", "date": {{ itime 40 }}},
+  {"type": "sgv", "sgv": 121, "direction": "FortyFiveUp", "date": {{ itime 35 }}},
+  {"type": "sgv", "sgv": 133, "direction": "FortyFiveUp", "date": {{ itime 30 }}},
+  {"type": "sgv", "sgv": 146, "direction": "SingleUp", "date": {{ itime 25 }}},
+  {"type": "sgv", "sgv": 155, "direction": "FortyFiveUp", "date": {{ itime 20 }}},
+  {"type": "sgv", "sgv": 158, "direction": "Flat", "date": {{ itime 15 }}},
+  {"type": "sgv", "sgv": 152, "direction": "Flat", "date": {{ itime 10 }}},
+  {"type": "sgv", "sgv": 141, "direction": "FortyFiveDown", "date": {{ itime 5 }}}
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 12 "@"
+
+NAME meal
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Meal Bolus", "created_at": "{{ time 45 }}", "insulin": 4.5, "carbs": 45, "enteredBy": "nighttroop-script"}]
+ASSERT_STATUS 200
+
+NAME phone
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {"device": "nighttroop-script", "created_at": "{{ time 0 }}", "uploaderBattery": 82}
+ASSERT_STATUS 200
+
+// The readings are on the site, newest first, in its units
+NAME latest
+GET http://{{ site }}/api/v1/entries.json?count=12&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 12 "@"
+ASSERT_EQUALS "FortyFiveDown" "@0.direction"

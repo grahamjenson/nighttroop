@@ -1,0 +1,48 @@
+INCLUDE steps/new_site.steps
+
+// What only some apps send of a reading, such as xDrip+'s raw signal, is kept in its own columns and given back
+NAME create_entry
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"sgv": 123, "type": "sgv", "device": "xDrip", "filtered": 139.2, "unfiltered": 141.7, "rssi": -62, "noise": 1}
+ASSERT_STATUS 200
+SET reading_id {{ dig "create_entry.0._id" }}
+
+NAME read_entry
+GET http://{{ .ns_site }}/api/v1/entries.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 139.2 "@0.filtered"
+ASSERT_EQUALS 141.7 "@0.unfiltered"
+ASSERT_EQUALS -62 "@0.rssi"
+ASSERT_EQUALS 1 "@0.noise"
+
+// Updating one of them leaves the others as they were
+NAME update_noise
+POST http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"noise": 2}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.noise"
+ASSERT_EQUALS -62 "@result.rssi"
+ASSERT_EQUALS 139.2 "@result.filtered"
+
+NAME read_updated
+GET http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.noise"
+ASSERT_EQUALS 141.7 "@result.unfiltered"
+
+// Each is still refused far outside real use, as a column of its own was
+NAME noise_out_of_range
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"sgv": 124, "type": "sgv", "device": "xDrip", "noise": 5000}
+ASSERT_STATUS 400
+
+NAME rssi_out_of_range
+POST http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"rssi": -5000}
+ASSERT_STATUS 400

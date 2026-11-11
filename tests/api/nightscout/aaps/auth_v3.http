@@ -1,0 +1,101 @@
+// AAPS's NSClient v3 (core/nssdk networking/NsAuth.kt) sends every request with a Date header in milliseconds and
+// "Authorization: Bearer <jwt>", the JWT empty until it has one. On a 401 or 403 it gets a JWT from
+// /api/v2/authorization/request/<token>, built from the host only, and sends the request once more.
+// See docs/clients/aaps.md
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+// The first request has no JWT yet, so it must be refused with a 401 for AAPS to get one
+NAME status_without_jwt
+GET http://{{ site }}/api/v3/status
+H Date: 1787481585647
+H Authorization: Bearer
+ASSERT_STATUS 401
+
+// The refresh has no Authorization header. RemoteAuthResponse needs token, iat and exp, all three, iat and exp as numbers
+NAME refresh
+GET http://{{ site }}/api/v2/authorization/request/{{ token }}
+H Date: 1787481585647
+ASSERT_STATUS 200
+ASSERT_EQUALS "application/json" "#Content-Type.0"
+ASSERT_EXISTS "@token"
+ASSERT_EXISTS "@iat"
+ASSERT_EXISTS "@exp"
+SET jwt {{ .refresh.token }}
+
+// A token that is not the site's is a 401, which AAPS shows as an invalid access token rather than trying again
+NAME refresh_bad_token
+GET http://{{ site }}/api/v2/authorization/request/nope-0123456789abcdef
+H Date: 1787481585647
+ASSERT_STATUS 401
+
+// RemoteStatusResponse needs version, apiVersion, srvDate, storage and apiPermissions, with all six collections.
+// A master uploads only when every collection is "crud" (ApiPermissions.isFull)
+NAME status
+GET http://{{ site }}/api/v3/status
+H Date: 1787481585647
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.version"
+ASSERT_EXISTS "@result.apiVersion"
+ASSERT_EXISTS "@result.srvDate"
+ASSERT_EXISTS "@result.storage.storage"
+ASSERT_EXISTS "@result.storage.version"
+ASSERT_EQUALS "crud" "@result.apiPermissions.devicestatus"
+ASSERT_EQUALS "crud" "@result.apiPermissions.entries"
+ASSERT_EQUALS "crud" "@result.apiPermissions.food"
+ASSERT_EQUALS "crud" "@result.apiPermissions.profile"
+ASSERT_EQUALS "crud" "@result.apiPermissions.settings"
+ASSERT_EQUALS "crud" "@result.apiPermissions.treatments"
+
+// A read only token's status says it may only read, so AAPS does not upload with it
+NAME read_refresh
+GET http://{{ site }}/api/v2/authorization/request/{{ read_token }}
+ASSERT_STATUS 200
+SET read_jwt {{ .read_refresh.token }}
+
+NAME read_status
+GET http://{{ site }}/api/v3/status
+H Date: 1787481585647
+H Authorization: Bearer {{ read_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "r" "@result.apiPermissions.devicestatus"
+ASSERT_EQUALS "r" "@result.apiPermissions.entries"
+ASSERT_EQUALS "r" "@result.apiPermissions.food"
+ASSERT_EQUALS "r" "@result.apiPermissions.profile"
+ASSERT_EQUALS "r" "@result.apiPermissions.settings"
+ASSERT_EQUALS "r" "@result.apiPermissions.treatments"
+
+// Without every right AAPS asks for the settings ones (NSAndroidClientImpl.withSettingsRights): 200 is yes, a 401
+// or 403 no, and anything else fails the status
+NAME read_check_settings_create
+GET http://{{ site }}/api/v2/authorization/debug/check/api:settings:create
+H Authorization: Bearer {{ read_jwt }}
+ASSERT_STATUS 403
+
+NAME read_check_settings_read
+GET http://{{ site }}/api/v2/authorization/debug/check/api:settings:read
+H Authorization: Bearer {{ read_jwt }}
+ASSERT_STATUS 200
+
+NAME check_settings_update
+GET http://{{ site }}/api/v2/authorization/debug/check/api:settings:update
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// lastModified is read into LastModified.Collections, as numbers
+NAME last_modified
+GET http://{{ site }}/api/v3/lastModified
+H Date: 1787481585647
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.collections.devicestatus"
+ASSERT_EXISTS "@result.collections.entries"
+ASSERT_EXISTS "@result.collections.profile"
+ASSERT_EXISTS "@result.collections.treatments"
+ASSERT_EXISTS "@result.collections.settings"

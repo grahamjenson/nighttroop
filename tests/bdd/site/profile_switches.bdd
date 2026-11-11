@@ -1,0 +1,110 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no profile switches
+CLICK #site--nav--data
+ASSERT_VISIBLE #site--data--profile-switches-button
+CLICK #site--data--profile-switches-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/profile-switches
+ASSERT_VISIBLE #site--profile-switch--empty
+SCREENSHOT profile_switches_empty
+
+// Virtual connector writes a profile switch, with its profile, on its first run
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /data/profile-switches
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE virtual://nighttroop
+
+// A profile switch typed in happens now, added to the top of the table
+CLICK #site--profile-switch--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--profile-switch--create--modal
+ASSERT_TEXT_VISIBLE The name of the profile switched to.
+ASSERT_TEXT_VISIBLE Required
+// Its multiplier of the profile's insulin is typed in as a percent above 0, as it is by default
+ASSERT_VISIBLE #site--profile-switch--create--multiplier[value="100"][min="10"][max="500"]
+ASSERT_TEXT_VISIBLE Insulin (%)
+ASSERT_TEXT_VISIBLE A percent above 0: 100% is as it is, 120% is 1.2 times.
+SCREENSHOT profile_switch_add
+INPUT #site--profile-switch--create--name Sick Day
+INPUT #site--profile-switch--create--multiplier 120
+INPUT #site--profile-switch--create--notes Flu
+CLICK #site--profile-switch--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Sick Day
+ASSERT_VISIBLE #profileSwitchesTable td:text-is("120")
+SCREENSHOT profile_switches
+
+// Clicking the virtual profile switch shows all its details, its schedules only to read
+CLICK #profileSwitchesTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--profile-switch--details
+ASSERT_TEXT_VISIBLE Virtual at 100%
+// Its schedules are tables in the site's units, as profiles show them, so the virtual profile's 100 mg/dL low target is 5.5 mmol/L
+ASSERT_TEXT_VISIBLE Sensitivity (mmol/L/U)
+ASSERT_TEXT_VISIBLE Low Target (mmol/L)
+ASSERT_TEXT_EQUALS #site--profile-switch--details--basal-rates>dl>dd 0.8
+ASSERT_TEXT_EQUALS #site--profile-switch--details--carb-ratios>dl>dd 10
+ASSERT_TEXT_EQUALS #site--profile-switch--details--sensitivities>dl>dd 2.8
+ASSERT_TEXT_EQUALS #site--profile-switch--details--targets-low>dl>dd 5.5
+ASSERT_TEXT_EQUALS #site--profile-switch--details--targets-high>dl>dd 6.7
+ASSERT_TEXT_VISIBLE virtual_connector
+SCREENSHOT profile_switch_details
+
+// The name, multiplier, shift, minutes and notes can be edited
+ASSERT_VISIBLE #site--profile-switch--edit--multiplier[value="100"]
+INPUT #site--profile-switch--edit--multiplier 80
+INPUT #site--profile-switch--edit--timeshift 60
+INPUT #site--profile-switch--edit--duration-minutes 120
+INPUT #site--profile-switch--edit--notes Exercise
+CLICK #site--profile-switch--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Profile Switch Updated
+ASSERT_NOT_VISIBLE #site--profile-switch--details
+
+CLICK #profileSwitchesTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--profile-switch--details
+ASSERT_TEXT_VISIBLE Virtual at 80%
+ASSERT_VISIBLE #site--profile-switch--edit--notes[value="Exercise"]
+// What it edits is shown once, in its form, and what it does not, like its DIA, is listed below it
+ASSERT_COUNT #site--profile-switch--details :is(dt, label):has-text("Insulin (%)") 1
+ASSERT_COUNT #site--profile-switch--details :is(dt, label):has-text("Notes") 1
+ASSERT_VISIBLE #site--profile-switch--details dt:text-is("DIA (hours)")
+CLICK #site--profile-switch--details--close
+ASSERT_NOT_VISIBLE #site--profile-switch--details
+
+// A page of one profile switch pages through them, newest first
+GOTO /data/profile-switches?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Sick Day
+CLICK #site--profile-switch--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Virtual
+CLICK #site--profile-switch--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /data/profile-switches
+ASSERT_STATUS 200
+CLICK #profileSwitchesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Profile Switch Deleted
+ASSERT_NOT_VISIBLE #site--profile-switch--details
+
+// The deleted profile switch stays gone after a reload
+GOTO /data/profile-switches
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Virtual

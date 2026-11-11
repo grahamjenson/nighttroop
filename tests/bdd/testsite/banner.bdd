@@ -1,0 +1,28 @@
+// A test site says so in a large banner at the top of every page, so nobody takes it for a real one
+GOTO {{ server_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #test-site-banner
+ASSERT_TEXT_VISIBLE This is a test site
+ASSERT_TEXT_VISIBLE All data here is frequently wiped
+SCREENSHOT public
+
+// A new site's pages show it too
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+ASSERT_VISIBLE #site--login--name
+ASSERT_VISIBLE #test-site-banner
+SCREENSHOT site_login
+
+// And so do the control site's
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+ASSERT_VISIBLE #test-site-banner
+SCREENSHOT control_login

@@ -1,0 +1,373 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// The header has the logo, a home icon marking the summary, a link to Data and Reports only and the search, and no
+// Summary or Settings link
+ASSERT_VISIBLE #site--nav--home
+ASSERT_VISIBLE #site--nav--home-icon[aria-label="Home"][aria-current="page"]
+ASSERT_TEXT_EQUALS #site--nav--data Data
+ASSERT_TEXT_EQUALS #site--nav--reports Reports
+ASSERT_COUNT #site--nav--links a 3
+ASSERT_NOT_VISIBLE #site--nav--links >> text=Summary
+ASSERT_NOT_VISIBLE #site--nav--links >> text=Settings
+ASSERT_VISIBLE #site--nav--search[aria-label="Search pages"]
+SCREENSHOT navigation_header
+
+// The user menu has who is signed in, their account, the guide, Settings, Alarms, Logs & Events and logout, none
+// marked on the summary
+CLICK #site--settings-menu
+ASSERT_TEXT_VISIBLE Signed in as
+ASSERT_VISIBLE #site--settings--account-button
+ASSERT_VISIBLE #site--settings--getting-started-button
+ASSERT_TEXT_EQUALS #site--nav--menu--settings Settings
+ASSERT_TEXT_EQUALS #site--nav--menu--alarms Alarms
+ASSERT_TEXT_EQUALS #site--nav--menu--logs Logs & Events
+ASSERT_VISIBLE #site--nav--menu--settings
+ASSERT_VISIBLE #site--nav--menu--alarms
+ASSERT_VISIBLE #site--nav--menu--logs
+ASSERT_VISIBLE #site--settings--logout-button
+ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 6
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
+SCREENSHOT navigation_account_menu
+PRESS Escape
+
+// Data opens its first page, with a tab for each of its 12 pages, the page's marked, as is Data in the header
+CLICK #site--nav--data
+ASSERT_STATUS 200
+ASSERT_PATH /data/glucose
+ASSERT_TITLE Glucose Readings · Nighttroop
+ASSERT_VISIBLE #site--nav--data[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--nav--home-icon[aria-current="page"]
+ASSERT_VISIBLE #site--data--glucose-button[aria-current="page"]
+ASSERT_COUNT #site--hub--data nav a 13
+// Data's tabs are on the left, in groups, like Settings'
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Readings & treatments"] #site--data--glucose-button
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Events"] #site--data--activities-button
+// Sensor and site changes are event groups, so have no page of their own
+ASSERT_COUNT #site--hub--data ul[aria-label="Events"] a 3
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Events"] #site--data--event-groups-button
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Devices"] #site--data--device-status-button
+// Food presets and profiles are with the data they are used to enter
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Presets"] #site--presets--food-button
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Presets"] #site--presets--profiles-button
+SCREENSHOT navigation_data_hub
+
+// A tab opens its page, changing the URL and the content, and moves the mark
+CLICK #site--data--insulin-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /data/insulin
+ASSERT_TITLE Insulin Doses · Nighttroop
+ASSERT_VISIBLE #site--data--insulin-button[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--data--glucose-button[aria-current="page"]
+
+// Loaded in full, a page is in its hub too
+GOTO /data/insulin
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--data--insulin-button[aria-current="page"]
+ASSERT_VISIBLE #site--nav--data[aria-current="page"]
+
+// Reports has a tab for each report, opening on the summaries
+CLICK #site--nav--reports
+ASSERT_STATUS 200
+ASSERT_PATH /reports
+ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--nav--data[aria-current="page"]
+ASSERT_VISIBLE #site--reports--summaries-button[aria-current="page"]
+ASSERT_VISIBLE #site--summaries
+ASSERT_VISIBLE #site--reports--overview-button
+ASSERT_VISIBLE #site--reports--agp-button
+ASSERT_VISIBLE #site--reports--tdd-menu-button
+ASSERT_COUNT #site--hub--reports nav a 4
+SCREENSHOT navigation_reports_hub
+GOTO /reports/agp
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
+ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
+
+// Settings, from the user menu, has side tabs in their groups, every one for an admin, and no alarms, events, errors or
+// logs; the menu marks it, and the header marks no hub
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+ASSERT_STATUS 200
+ASSERT_PATH /settings
+ASSERT_TITLE Settings · Nighttroop
+ASSERT_COUNT #site--nav--links [aria-current="page"] 0
+ASSERT_VISIBLE #site--settings--settings-button[aria-current="page"]
+ASSERT_VISIBLE #site--hub--settings nav >> text="This site"
+ASSERT_VISIBLE #site--hub--settings nav >> text="People & devices"
+ASSERT_VISIBLE #site--hub--settings nav >> text="Connections"
+ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
+ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Presets"
+ASSERT_NOT_VISIBLE #site--settings--alarms-button
+ASSERT_NOT_VISIBLE #site--logs--events-button
+ASSERT_NOT_VISIBLE #site--logs--errors-button
+ASSERT_NOT_VISIBLE #site--logs--logs-button
+ASSERT_COUNT #site--hub--settings nav a 5
+SCREENSHOT navigation_settings_hub
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--settings[aria-current="page"]
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
+
+// Logs & Events, from the user menu, has a row of tabs, Events, Errors and Logs, opening on Events, and the menu marks
+// it instead
+CLICK #site--nav--menu--logs
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /logs/events
+ASSERT_VISIBLE #site--logs--events-button[aria-current="page"]
+ASSERT_VISIBLE #site--logs--errors-button
+ASSERT_VISIBLE #site--logs--logs-button
+ASSERT_COUNT #site--hub--logs nav a 3
+ASSERT_NOT_VISIBLE #site--settings--settings-button
+SCREENSHOT navigation_logs_hub
+CLICK #site--logs--errors-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /logs/errors
+ASSERT_VISIBLE #site--logs--errors-button[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--logs--events-button[aria-current="page"]
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--logs[aria-current="page"]
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
+
+// Alarms, from the user menu, is a page of its own, with no tabs, the menu marking it
+CLICK #site--nav--menu--alarms
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/alarms
+ASSERT_TITLE Alarms · Nighttroop
+ASSERT_VISIBLE #alarm_settings_page h1:text-is("Alarms")
+ASSERT_NOT_VISIBLE #site--hub--alarms
+ASSERT_NOT_VISIBLE #site--settings--settings-button
+ASSERT_NOT_VISIBLE #site--logs--events-button
+SCREENSHOT navigation_alarms
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--alarms[aria-current="page"]
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
+PRESS Escape
+
+// Loaded in full, the menu marks the page's hub too
+GOTO /logs/logs
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--logs--logs-button[aria-current="page"]
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--logs[aria-current="page"]
+PRESS Escape
+GOTO /settings/connectors
+ASSERT_STATUS 200
+
+// Another identity's settings count as Users & Devices
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+CLICK #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--settings
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE pwd_phone's Settings
+ASSERT_VISIBLE #site--settings--identities-button[aria-current="page"]
+
+// The home icon and the logo go home
+CLICK #site--nav--home-icon
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--nav--home-icon[aria-current="page"]
+CLICK #site--settings-menu
+ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
+CLICK #site--nav--menu--alarms
+ASSERT_STATUS 200
+ASSERT_PATH /settings/alarms
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+
+// Search lists the pages whose name, group or hub has what is typed, under their hub, with no hint by their name
+TYPE #site--nav--search errors
+ASSERT_VISIBLE #site--nav--search-results >> text="Logs & Events"
+ASSERT_VISIBLE #site--nav--search--logs--errors[aria-selected="true"]
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+TYPE #site--nav--search push
+ASSERT_VISIBLE #site--nav--search-results >> text="Settings"
+ASSERT_VISIBLE #site--nav--search--settings--push-devices[aria-selected="true"]
+ASSERT_VISIBLE #site--nav--search--settings--push
+ASSERT_COUNT #site--nav--search-results [role=option] 2
+ASSERT_NOT_VISIBLE #site--nav--search--settings--push>[data-hint]
+ASSERT_NOT_VISIBLE #site--nav--search-empty
+SCREENSHOT navigation_search
+
+// The arrow keys move through them, and Enter opens one as its tab does
+PRESS ArrowDown
+ASSERT_VISIBLE #site--nav--search--settings--push[aria-selected="true"]
+PRESS Enter
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/push-credentials
+ASSERT_VISIBLE #site--settings--push-button[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--nav--search-results
+
+// Nothing matching says so, and Escape closes the list
+TYPE #site--nav--search zzz
+ASSERT_TEXT_EQUALS #site--nav--search-empty No pages match
+ASSERT_COUNT #site--nav--search-results [role=option] 0
+PRESS Escape
+ASSERT_NOT_VISIBLE #site--nav--search-results
+
+// Search also finds a page by the headings and words on it, showing the one it was found by (Ctrl+K selects what was
+// searched, so what is typed replaces it)
+PRESS Control+k
+TYPE #site--nav--search nightscout
+ASSERT_VISIBLE #site--nav--search--settings--connectors[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--settings--connectors>[data-hint] Nightscout
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+TYPE #site--nav--search low
+ASSERT_VISIBLE #site--nav--search--settings--alarms[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--settings--alarms>[data-hint] Low Alarm
+ASSERT_VISIBLE #site--nav--search-results [role=group][aria-label="Alarms"] #site--nav--search--settings--alarms
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+SCREENSHOT navigation_search_keyword
+
+// and by what people also call it, such as BGL for glucose or bolus for an insulin dose
+PRESS Control+k
+TYPE #site--nav--search BGL
+ASSERT_VISIBLE #site--nav--search--data--glucose[aria-selected="true"]
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+TYPE #site--nav--search cannula
+ASSERT_VISIBLE #site--nav--search--data--event-groups[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--data--event-groups>[data-hint] Cannula
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+TYPE #site--nav--search bolus
+ASSERT_VISIBLE #site--nav--search--data--insulin[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--data--insulin>[data-hint] Bolus
+ASSERT_VISIBLE #site--nav--search--presets--food
+ASSERT_VISIBLE #site--nav--search--presets--loop-settings
+ASSERT_COUNT #site--nav--search-results [role=option] 3
+PRESS Enter
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /data/insulin
+ASSERT_VISIBLE #site--data--insulin-button[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--nav--search-results
+
+// Ctrl+K goes to the search from anywhere, and a click on a result opens it
+CLICK_CORNER #main-content
+PRESS Control+k
+PRESS t
+PRESS e
+PRESS m
+PRESS p
+ASSERT_VISIBLE #site--nav--search--data--temp-targets
+ASSERT_VISIBLE #site--nav--search--data--temp-basals
+ASSERT_COUNT #site--nav--search-results [role=option] 2
+CLICK #site--nav--search--data--temp-basals
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /data/temp-basals
+ASSERT_VISIBLE #site--data--temp-basals-button[aria-current="page"]
+ASSERT_NOT_VISIBLE #site--nav--search-results
+
+// On a phone the header fits, its hubs' links as icons, and each hub fits, its tabs scrolling on their own
+// (the window is tall enough for the whole page, as CI draws a little taller, so fitting checks only its width)
+WINDOW 390x2000
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--nav--reports
+ASSERT_VISIBLE #site--settings-menu button >> nth=0
+ASSERT_NOT_VISIBLE #site--nav--search
+ASSERT_FITS
+SCREENSHOT navigation_phone_header
+
+// The user menu there is the same, opening Settings, Alarms, and Logs & Events
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--settings
+ASSERT_VISIBLE #site--nav--menu--alarms
+ASSERT_VISIBLE #site--nav--menu--logs
+ASSERT_FITS
+SCREENSHOT navigation_phone_account_menu
+PRESS Escape
+
+// Search there is an icon opening a box across the page
+CLICK #site--nav--search-open
+ASSERT_VISIBLE #site--nav--search
+TYPE #site--nav--search device
+ASSERT_VISIBLE #site--nav--search--data--device-status
+ASSERT_VISIBLE #site--nav--search--settings--push-devices
+ASSERT_VISIBLE #site--nav--search-results
+ASSERT_FITS
+SCREENSHOT navigation_phone_search
+CLICK #site--nav--search--data--device-status
+ASSERT_STATUS 200
+ASSERT_PATH /data/device-status
+ASSERT_NOT_VISIBLE #site--nav--search
+ASSERT_VISIBLE #site--data--device-status-button[aria-current="page"]
+ASSERT_FITS
+SCREENSHOT navigation_phone_data
+
+GOTO /reports/agp
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
+ASSERT_FITS
+SCREENSHOT navigation_phone_reports
+
+GOTO /settings/push-devices
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--push-devices-button[aria-current="page"]
+ASSERT_VISIBLE #site--settings--push-button
+ASSERT_FITS
+SCREENSHOT navigation_phone_settings
+
+GOTO /logs/errors
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--logs--errors-button[aria-current="page"]
+ASSERT_FITS
+
+// A user who is not an admin has no tab, menu item or search result for an admin's pages
+WINDOW 1280x720
+GOTO /settings/identities
+ASSERT_STATUS 200
+INPUT #name-createIdentityFormusersTable carer
+CLICK #select-form-createIdentityFormusersTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="user"]
+CLICK "Add User"
+ASSERT_STATUS 201
+SAVE_TEXT #site--identities--created--password carer_password
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+CLICK #site--settings-menu
+CLICK #site--settings--logout-button
+ASSERT_NEW_URL
+ASSERT_PATH /login
+INPUT #site--login--name carer
+INPUT #site--login--password {{ .carer_password }}
+CLICK #site--login-button
+ASSERT_NEW_URL
+ASSERT_PATH /
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--settings
+ASSERT_VISIBLE #site--nav--menu--alarms
+ASSERT_NOT_VISIBLE #site--nav--menu--logs
+ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 5
+CLICK #site--nav--menu--settings
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--settings-button[aria-current="page"]
+ASSERT_VISIBLE #site--settings--push-devices-button
+ASSERT_NOT_VISIBLE #site--settings--identities-button
+ASSERT_NOT_VISIBLE #site--settings--connectors-button
+ASSERT_NOT_VISIBLE #site--settings--push-button
+ASSERT_NOT_VISIBLE #site--settings--alarms-button
+ASSERT_NOT_VISIBLE #site--logs--events-button
+ASSERT_NOT_VISIBLE #site--logs--errors-button
+ASSERT_NOT_VISIBLE #site--logs--logs-button
+ASSERT_COUNT #site--hub--settings nav a 2
+SCREENSHOT navigation_settings_user
+TYPE #site--nav--search push
+ASSERT_VISIBLE #site--nav--search--settings--push-devices
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+PRESS l
+PRESS o
+PRESS g
+PRESS s
+ASSERT_TEXT_EQUALS #site--nav--search-empty No pages match

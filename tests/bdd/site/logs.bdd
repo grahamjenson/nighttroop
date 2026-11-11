@@ -1,0 +1,102 @@
+// A new site, so it has a site_created event
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+RUN_BACKGROUND_JOBS
+
+// The site's admin sees its events, and its batch's backups when it has been backed up
+CLICK #site--settings-menu
+CLICK #site--nav--menu--logs
+CLICK #site--logs--events-button
+ASSERT_STATUS 200
+ASSERT_PATH /logs/events
+ASSERT_VISIBLE #siteEventsTable
+// Events have names to read, not the names they are stored by
+ASSERT_TEXT_VISIBLE Site created
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=site_created
+// The admin signing in is an event, with where from by DB-IP's estimate, so the footer links to DB-IP
+ASSERT_VISIBLE #siteEventsTable >> text=Signed in
+ASSERT_VISIBLE #footer--dbip-link[target="_blank"]
+ASSERT_TEXT_VISIBLE This site
+// A search looks through only the newest events, which the page says
+ASSERT_TEXT_VISIBLE A search looks through the newest 10,000.
+// With nothing filtered there is nothing to clear
+ASSERT_NOT_VISIBLE #site--events--filter--clear
+// Its pager is named by the page, as its filter is
+ASSERT_VISIBLE #site--events--showing >> text=Showing 1 to
+SCREENSHOT events
+
+// Clicking an event shows when it started and how long it took
+CLICK #siteEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--event--details
+ASSERT_TEXT_VISIBLE Duration
+SCREENSHOT event_details
+CLICK #site--event--details--close
+ASSERT_NOT_VISIBLE #site--event--details
+
+// Events can be filtered to one type, with an option for all of them
+INPUT #site--events--filter--type connector_turned_off
+CLICK #site--events--filter--submit
+ASSERT_TEXT_VISIBLE No events here.
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=Site created
+INPUT #site--events--filter--type site_created
+CLICK #site--events--filter--submit
+ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_filtered
+ASSERT_TEXT_EQUALS #site--events--filter--type>option[value=""] All events
+
+// An event shows the request it was made in, to find it by
+CLICK #siteEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--event--request-id
+SCREENSHOT event_request
+CLICK #site--event--details--close
+ASSERT_NOT_VISIBLE #site--event--details
+
+// Events can be searched too, ignoring case, keeping the type chosen
+INPUT #site--events--filter--search CREATED
+CLICK #site--events--filter--submit
+ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_searched
+INPUT #site--events--filter--search nothing like this
+CLICK #site--events--filter--submit
+ASSERT_TEXT_VISIBLE No events here.
+SCREENSHOT events_no_match
+
+// Clearing the type and search shows every event again
+CLICK #site--events--filter--clear
+ASSERT_PATH /logs/events
+ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
+ASSERT_VISIBLE #site--events--filter--search:not([value])
+ASSERT_NOT_VISIBLE #site--events--filter--clear
+
+// Errors and logs have pages of their own
+CLICK #site--settings-menu
+CLICK #site--nav--menu--logs
+CLICK #site--logs--errors-button
+ASSERT_PATH /logs/errors
+ASSERT_VISIBLE #siteErrorsTable
+SCREENSHOT errors
+
+CLICK #site--settings-menu
+CLICK #site--nav--menu--logs
+CLICK #site--logs--logs-button
+ASSERT_PATH /logs/logs
+ASSERT_VISIBLE #siteLogsTable

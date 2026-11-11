@@ -1,0 +1,102 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Virtual connector writes a temp basal on its first run
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /data/temp-basals
+ASSERT_STATUS 200
+ASSERT_PATH /data/temp-basals
+ASSERT_VISIBLE #tempBasalsTable
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--temp-basal--next
+ASSERT_NOT_VISIBLE #site--temp-basal--previous
+SCREENSHOT temp_basals
+
+// Clicking a temp basal shows all its details
+CLICK #tempBasalsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--temp-basal--details
+ASSERT_TEXT_VISIBLE virtual_connector
+// Its record's details are listed, and what it edits, like its multiplier of the basal, is shown once, in its form
+ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
+ASSERT_COUNT #site--temp-basal--details :is(dt, label):has-text("Basal (%)") 1
+SCREENSHOT temp_basal_details
+
+CLICK #site--temp-basal--details--close
+ASSERT_NOT_VISIBLE #site--temp-basal--details
+
+// A temp basal typed in starts now, added to the top of the table
+CLICK #site--temp-basal--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--temp-basal--create--modal
+ASSERT_TEXT_VISIBLE The basal rate given instead, 0 for a suspend.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--temp-basal--create--multiplier
+// Its multiplier of the scheduled basal is typed in as a percent above 0, so a temp basal under it is under 100%
+ASSERT_TEXT_VISIBLE Basal (%)
+ASSERT_TEXT_VISIBLE A percent above 0: 100% is as it is, 120% is 1.2 times.
+ASSERT_VISIBLE #site--temp-basal--create--multiplier[min="1"][max="1100"]
+INPUT #site--temp-basal--create--rate 1.25
+INPUT #site--temp-basal--create--duration-minutes 45
+INPUT #site--temp-basal--create--multiplier 70
+INPUT #site--temp-basal--create--notes Sick day
+CLICK #site--temp-basal--create--notes
+SCREENSHOT temp_basal_add
+CLICK #site--temp-basal--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE 1.25
+ASSERT_VISIBLE #tempBasalsTable td:text-is("70")
+
+// Its details can be edited, which updates its row
+CLICK #tempBasalsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--temp-basal--details
+ASSERT_TEXT_VISIBLE 1.25 U/hr for 45 minutes
+SCREENSHOT temp_basal_edit
+INPUT #site--temp-basal--edit--rate 1.75
+INPUT #site--temp-basal--edit--notes Exercise
+CLICK #site--temp-basal--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Temp Basal Updated
+ASSERT_NOT_VISIBLE #site--temp-basal--details
+ASSERT_TEXT_VISIBLE 1.75
+
+// The edit is saved
+CLICK #tempBasalsTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE 1.75 U/hr for 45 minutes
+ASSERT_VISIBLE #site--temp-basal--edit--notes[value="Exercise"]
+CLICK #site--temp-basal--details--close
+
+// A page of one temp basal pages through them, newest first
+GOTO /data/temp-basals?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--temp-basal--previous
+
+CLICK #site--temp-basal--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+
+CLICK #site--temp-basal--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /data/temp-basals
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #tempBasalsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Temp Basal Deleted
+ASSERT_NOT_VISIBLE #site--temp-basal--details
+
+// The deleted temp basal stays gone after a reload
+GOTO /data/temp-basals
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1

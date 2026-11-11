@@ -1,0 +1,8 @@
+INCLUDE steps/control_login.steps
+
+// A logged in control admin can load the dashboard
+NAME control_dashboard
+GET http://control.localhost/
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200

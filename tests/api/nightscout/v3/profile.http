@@ -1,0 +1,449 @@
+INCLUDE steps/new_ns_site.steps
+
+
+//////
+// CREATE
+//////
+
+NAME create_profile_v3
+POST http://{{ site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "units": "mg/dL",
+    "startDate": "{{ time 0 }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "dia": "5",
+            "units": "mg/dL",
+            "sens": [{"value": "110", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_low": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_high": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbratio": [{"value": "33", "time": "00:00", "timeAsSeconds": "0"}],
+            "basal": [
+                {"value": "0.35", "time": "00:00", "timeAsSeconds": "0"},
+                {"value": "0.36", "time": "03:00", "timeAsSeconds": "10800"},
+                {"value": "0.37", "time": "05:00", "timeAsSeconds": "18000"},
+                {"value": "0.38", "time": "07:00", "timeAsSeconds": "25200"},
+                {"value": "0.39", "time": "17:00", "timeAsSeconds": "61200"}
+            ],
+            "carbs_hr": "20",
+            "delay": "20",
+            "timezone": "US/Eastern",
+            "startDate": "1970-01-01T00:00:00.000Z"
+        },
+        "Work": {
+            "dia": "5",
+            "units": "mg/dL",
+            "sens": [
+                {"value": "10", "time": "00:00", "timeAsSeconds": "0"},
+                {"value": "11", "time": "03:00", "timeAsSeconds": "10800"},
+                {"value": "12", "time": "05:00", "timeAsSeconds": "18000"},
+                {"value": "13", "time": "07:00", "timeAsSeconds": "25200"},
+                {"value": "14", "time": "17:00", "timeAsSeconds": "61200"},
+                {"value": "15", "time": "19:00", "timeAsSeconds": "68400"}
+            ],
+            "target_low": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_high": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbratio": [{"value": "33", "time": "00:00", "timeAsSeconds": "0"}],
+            "basal": [{"value": "0.35", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbs_hr": "25",
+            "delay": "23",
+            "timezone": "Pacific/Honolulu",
+            "startDate": "1970-01-01T00:00:00.000Z"
+        }
+    }
+  }
+ASSERT_STATUS 201
+ASSERT_EQUALS "Default" "@result.defaultProfile"
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS "US/Eastern" "@result.store.Default.timezone"
+ASSERT_EQUALS 0.35 "@result.store.Default.basal.0.value"
+ASSERT_EQUALS "Pacific/Honolulu" "@result.store.Work.timezone"
+ASSERT_EQUALS 25 "@result.store.Work.carbs_hr"
+ASSERT_EQUALS 23 "@result.store.Work.delay"
+
+
+NAME create_profile_aaps_v3
+POST http://{{ site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "ArmDash-2025",
+    "date": 1786253633284,
+    "created_at": "2026-08-09T05:33:53.284Z",
+    "startDate": "2026-08-09T05:33:53.2840000Z",
+    "store": {
+      "ArmDash-2025": {
+        "dia": 6,
+        "carbratio": [
+          {
+            "time": "00:00",
+            "timeAsSeconds": 0,
+            "value": 16
+          },
+          {
+            "time": "02:00",
+            "timeAsSeconds": 7200,
+            "value": 16
+          },
+          {
+            "time": "05:00",
+            "timeAsSeconds": 18000,
+            "value": 7.5
+          },
+          {
+            "time": "08:00",
+            "timeAsSeconds": 28800,
+            "value": 11.5
+          },
+          {
+            "time": "15:00",
+            "timeAsSeconds": 54000,
+            "value": 12
+          },
+          {
+            "time": "20:00",
+            "timeAsSeconds": 72000,
+            "value": 14
+          }
+        ],
+        "sens": [
+          {
+            "time": "00:00",
+            "timeAsSeconds": 0,
+            "value": 12
+          },
+          {
+            "time": "03:00",
+            "timeAsSeconds": 10800,
+            "value": 12
+          },
+          {
+            "time": "06:00",
+            "timeAsSeconds": 21600,
+            "value": 8.5
+          },
+          {
+            "time": "08:00",
+            "timeAsSeconds": 28800,
+            "value": 11
+          },
+          {
+            "time": "10:00",
+            "timeAsSeconds": 36000,
+            "value": 12
+          },
+          {
+            "time": "13:00",
+            "timeAsSeconds": 46800,
+            "value": 11
+          },
+          {
+            "time": "15:00",
+            "timeAsSeconds": 54000,
+            "value": 12
+          },
+          {
+            "time": "17:00",
+            "timeAsSeconds": 61200,
+            "value": 8.5
+          },
+          {
+            "time": "23:00",
+            "timeAsSeconds": 82800,
+            "value": 10
+          }
+        ],
+        "basal": [
+          {
+            "time": "00:00",
+            "timeAsSeconds": 0,
+            "value": 0.25
+          },
+          {
+            "time": "01:00",
+            "timeAsSeconds": 3600,
+            "value": 0.25
+          },
+          {
+            "time": "02:00",
+            "timeAsSeconds": 7200,
+            "value": 0.25
+          },
+          {
+            "time": "03:00",
+            "timeAsSeconds": 10800,
+            "value": 0.25
+          },
+          {
+            "time": "04:00",
+            "timeAsSeconds": 14400,
+            "value": 0.35
+          },
+          {
+            "time": "05:00",
+            "timeAsSeconds": 18000,
+            "value": 0.35
+          },
+          {
+            "time": "06:00",
+            "timeAsSeconds": 21600,
+            "value": 0.5
+          },
+          {
+            "time": "07:00",
+            "timeAsSeconds": 25200,
+            "value": 0.55
+          },
+          {
+            "time": "08:00",
+            "timeAsSeconds": 28800,
+            "value": 0.4
+          },
+          {
+            "time": "09:00",
+            "timeAsSeconds": 32400,
+            "value": 0.35
+          },
+          {
+            "time": "10:00",
+            "timeAsSeconds": 36000,
+            "value": 0.35
+          },
+          {
+            "time": "11:00",
+            "timeAsSeconds": 39600,
+            "value": 0.4
+          },
+          {
+            "time": "12:00",
+            "timeAsSeconds": 43200,
+            "value": 0.4
+          },
+          {
+            "time": "13:00",
+            "timeAsSeconds": 46800,
+            "value": 0.3
+          },
+          {
+            "time": "14:00",
+            "timeAsSeconds": 50400,
+            "value": 0.3
+          },
+          {
+            "time": "15:00",
+            "timeAsSeconds": 54000,
+            "value": 0.35
+          },
+          {
+            "time": "16:00",
+            "timeAsSeconds": 57600,
+            "value": 0.45
+          },
+          {
+            "time": "17:00",
+            "timeAsSeconds": 61200,
+            "value": 0.45
+          },
+          {
+            "time": "18:00",
+            "timeAsSeconds": 64800,
+            "value": 0.45
+          },
+          {
+            "time": "19:00",
+            "timeAsSeconds": 68400,
+            "value": 0.55
+          },
+          {
+            "time": "20:00",
+            "timeAsSeconds": 72000,
+            "value": 0.5
+          },
+          {
+            "time": "21:00",
+            "timeAsSeconds": 75600,
+            "value": 0.5
+          },
+          {
+            "time": "22:00",
+            "timeAsSeconds": 79200,
+            "value": 0.4
+          },
+          {
+            "time": "23:00",
+            "timeAsSeconds": 82800,
+            "value": 0.3
+          }
+        ],
+        "target_low": [
+          {
+            "time": "00:00",
+            "timeAsSeconds": 0,
+            "value": 6
+          },
+          {
+            "time": "06:00",
+            "timeAsSeconds": 21600,
+            "value": 5
+          },
+          {
+            "time": "08:00",
+            "timeAsSeconds": 28800,
+            "value": 6.5
+          },
+          {
+            "time": "10:00",
+            "timeAsSeconds": 36000,
+            "value": 7.5
+          },
+          {
+            "time": "13:00",
+            "timeAsSeconds": 46800,
+            "value": 6.5
+          },
+          {
+            "time": "15:00",
+            "timeAsSeconds": 54000,
+            "value": 7
+          },
+          {
+            "time": "17:00",
+            "timeAsSeconds": 61200,
+            "value": 5
+          },
+          {
+            "time": "22:00",
+            "timeAsSeconds": 79200,
+            "value": 6
+          }
+        ],
+        "target_high": [
+          {
+            "time": "00:00",
+            "timeAsSeconds": 0,
+            "value": 6
+          },
+          {
+            "time": "06:00",
+            "timeAsSeconds": 21600,
+            "value": 5
+          },
+          {
+            "time": "08:00",
+            "timeAsSeconds": 28800,
+            "value": 6.5
+          },
+          {
+            "time": "10:00",
+            "timeAsSeconds": 36000,
+            "value": 7.6
+          },
+          {
+            "time": "13:00",
+            "timeAsSeconds": 46800,
+            "value": 6.5
+          },
+          {
+            "time": "15:00",
+            "timeAsSeconds": 54000,
+            "value": 7
+          },
+          {
+            "time": "17:00",
+            "timeAsSeconds": 61200,
+            "value": 5
+          },
+          {
+            "time": "22:00",
+            "timeAsSeconds": 79200,
+            "value": 6
+          }
+        ],
+        "units": "mmol",
+        "timezone": "Pacific/Auckland"
+      }
+    },
+    "app": "AAPS",
+    "utcOffset": 720
+  }
+ASSERT_STATUS 201
+ASSERT_EQUALS "ArmDash-2025" "@result.defaultProfile"
+ASSERT_EQUALS "mg/dL" "@result.store.ArmDash-2025.units"
+ASSERT_EQUALS "Pacific/Auckland" "@result.store.ArmDash-2025.timezone"
+
+
+
+///////
+// READ
+///////
+
+NAME get_profiles_type_v3
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Default" "@result.defaultProfile"
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS "US/Eastern" "@result.store.Default.timezone"
+ASSERT_EQUALS 0.35 "@result.store.Default.basal.0.value"
+ASSERT_EQUALS "Pacific/Honolulu" "@result.store.Work.timezone"
+
+
+NAME get_profiles_type_v3
+GET http://{{ site }}/api/v3/profiles/not_an_id
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+/////
+// UPDATE
+/////
+
+// A replace keeps the store's identifier, so it can still be read by it
+NAME replace_profile_v3
+PUT http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "units": "mg/dL",
+    "startDate": "{{ dig "create_profile_v3.result.startDate" }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "dia": "5",
+            "units": "mg/dL",
+            "timezone": "UTC",
+            "basal": [{"value": "0.45", "time": "00:00", "timeAsSeconds": "0"}]
+        }
+    }
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".create_profile_v3.result.identifier" "@result.identifier"
+
+NAME get_replaced_profile_v3
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".create_profile_v3.result.identifier" "@result.identifier"
+ASSERT_EQUALS 0.45 "@result.store.Default.basal.0.value"
+
+// A v1 replace by _id keeps it too
+NAME replace_profile_v1
+PUT http://{{ site }}/api/v1/profile?token={{ token }}
+B {"_id": "{{ dig "create_profile_v3.result.identifier" }}", "units": "mg/dL", "startDate": "{{ dig "create_profile_v3.result.startDate" }}", "defaultProfile": "Default", "store": {"Default": {"dia": "5", "units": "mg/dL", "timezone": "UTC", "basal": [{"value": "0.55", "time": "00:00", "timeAsSeconds": "0"}]}}}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".create_profile_v3.result.identifier" "@_id"
+
+NAME get_v1_replaced_profile_v3
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.55 "@result.store.Default.basal.0.value"
+
+
+///////
+// DELETE
+///////
+
+NAME delete_profile_v3
+DELETE http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200

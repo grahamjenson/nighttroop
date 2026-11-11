@@ -1,0 +1,30 @@
+// Running the jobs leaves the ones not yet summarised
+RUN_BACKGROUND_JOBS
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #controlSitesTable
+
+// The control site shows the jobs, newest first
+CLICK #control--menu
+CLICK #control--jobs-button
+ASSERT_STATUS 200
+ASSERT_PATH /jobs
+ASSERT_VISIBLE #controlJobsTable
+ASSERT_TEXT_VISIBLE Showing 1 to
+ASSERT_TEXT_VISIBLE completed
+// Durations read in the units that suit them: a quick one in ms
+ASSERT_VISIBLE #controlJobsTable td >> text=/^\d+ ms$/ >> nth=0
+SCREENSHOT jobs
+
+// Clicking a job shows its details and errors
+CLICK #controlJobsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--job--details
+ASSERT_TEXT_VISIBLE Remaining Attempts
+SCREENSHOT job_details
+
+CLICK #control--job--details--close
+ASSERT_NOT_VISIBLE #control--job--details

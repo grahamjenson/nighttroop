@@ -1,0 +1,50 @@
+INCLUDE steps/control_login.steps
+
+// Running the jobs twice finishes some, then summarises them into the day's stats
+RUN_BACKGROUND_JOBS
+
+RUN_BACKGROUND_JOBS
+
+// The control API sees each day's job stats, newest day first
+NAME list_job_stats
+GET http://control.localhost/job-stats
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0.day_queue_job"
+ASSERT_EXISTS "@result.0.total_jobs"
+ASSERT_EXISTS "@result.0.errors"
+SET day_queue_job {{ dig "list_job_stats.result.0.day_queue_job" }}
+
+NAME list_job_stats_paged
+GET http://control.localhost/job-stats?limit=1
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME list_job_stats_bad_limit
+GET http://control.localhost/job-stats?limit=lots
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+NAME get_job_stats
+GET http://control.localhost/job-stats/{{ .day_queue_job }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.total_jobs"
+ASSERT_EXISTS "@result.updated_at"
+
+NAME get_unknown_job_stats
+GET http://control.localhost/job-stats/2000-01-01::none::none
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only signed in control identities can see job stats
+NAME list_job_stats_without_login
+GET http://control.localhost/job-stats
+H Accept: application/json
+ASSERT_STATUS 401

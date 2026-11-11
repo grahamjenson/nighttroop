@@ -1,0 +1,128 @@
+@import "tailwindcss";
+/* Every colour, font and radius is in theme.css */
+@import "./theme.css";
+/* ECharts is a megabyte of minified code with no classes in it, so it is not scanned for them */
+@source not "../assets/static/echarts.min.js";
+
+@theme inline {
+    --breakpoint-3xl: 1600px;
+    --breakpoint-4xl: 2000px;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+
+@layer base {
+    * {
+        @apply border-border;
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-muted-foreground) transparent;
+    }
+
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background: var(--color-muted-foreground);
+        border-radius: 4px;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background: var(--color-foreground);
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+/* Toast stack. #toaster is the fixed, top-centre column and each toast in it
+   flows normally. Forms append toasts (swap:beforeend) and column-reverse
+   shows the last child first, so the newest is on top. A new toast grows from
+   zero height, which slides the older ones down; a dismissed one (toast.js
+   sets opacity 0 inline) collapses so the ones below slide back up. */
+#toaster {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    translate: -50% 0;
+    /* Above a modal, so an error from a form in one can be read and its link clicked */
+    z-index: 60;
+    display: flex;
+    flex-direction: column-reverse;
+    width: 100%;
+    max-width: 420px;
+    padding-top: 0.5rem;
+    pointer-events: none;
+}
+
+#toaster > [data-tui-toast] {
+    position: static;
+    translate: none;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    padding: 0.5rem 1rem;
+    overflow: hidden;
+    animation: toast-in 300ms ease-out;
+}
+
+#toaster > [data-tui-toast] > * {
+    min-height: 0;
+}
+
+/* At most three toasts take space. A fourth hides the oldest until it times out, so a new toast is still shown on
+   top rather than pushing the stack further down over the page. */
+#toaster > [data-tui-toast]:nth-last-child(n+4) {
+    display: none;
+}
+
+#toaster > [data-tui-toast][style*="opacity: 0"] {
+    grid-template-rows: minmax(0, 0fr);
+    padding-block: 0;
+    transition: grid-template-rows 300ms ease-in, padding 300ms ease-in, opacity 300ms, transform 300ms !important;
+}
+
+@keyframes toast-in {
+    from {
+        grid-template-rows: minmax(0, 0fr);
+        padding-block: 0;
+        opacity: 0;
+        transform: translateY(-0.5rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #toaster > [data-tui-toast] {
+        animation: none;
+        transition: none !important;
+    }
+}

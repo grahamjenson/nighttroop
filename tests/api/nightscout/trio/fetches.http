@@ -1,0 +1,162 @@
+// Trio's fetches, with NightscoutAPI.swift's queries, and the fields its models decode, see docs/clients/trio.md
+// Trio sends its secret as the SHA1 hex of what the user typed in the api-secret header, so with the token as its
+// secret these send the token's SHA1 in api-secret
+// Trio reads glucose and temp targets as mg/dL, so the site (or Trio's identity) must be in mg/dL
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME trio_upload_glucose
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "id" : "6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A11", "sgv" : 120, "direction" : "Flat", "date" : {{ dayms -1 720 }}, "dateString" : "{{ date -1 }}T12:00:00.000Z", "unfiltered" : 120, "filtered" : 120, "glucose" : 120, "type" : "sgv" },
+  { "id" : "6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A12", "mbg" : 130, "date" : {{ dayms -1 725 }}, "dateString" : "{{ date -1 }}T12:05:00.000Z", "type" : "mbg" }
+]
+ASSERT_STATUS 200
+
+// fetchLastGlucose, for Nightscout as Trio's CGM: BloodGlucose needs dateString as an ISO 8601 date with a zone,
+// sgv a number, and direction one of Nightscout's names or missing
+NAME trio_fetch_glucose
+GET http://{{ site }}/api/v1/entries/sgv.json?count=1600&find[dateString][$gte]={{ date -1 }}T11:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS 120 "@0.sgv"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS ".trio_upload_glucose.0.date" "@0.date"
+ASSERT_CONTAINS "T12:00:00Z" "@0.dateString"
+ASSERT_EQUALS 120 "@0.filtered"
+ASSERT_EQUALS 120 "@0.unfiltered"
+ASSERT_EQUALS "sgv" "@0.type"
+
+// Readings before find[dateString][$gte] are left out
+NAME trio_fetch_glucose_since
+GET http://{{ site }}/api/v1/entries/sgv.json?count=1600&find[dateString][$gte]={{ date -1 }}T12:00:00.001Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME trio_upload_carbs
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [ { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "enteredBy" : "Trio", "notes" : "pasta", "carbs" : 45, "fat" : 10, "protein" : 20, "foodType" : "pasta", "id" : "A1B2C3D4-0000-0000-0000-000000000005" } ]
+ASSERT_STATUS 200
+
+// Carbs a carer entered, and a note without carbs
+NAME careportal_carbs_and_note
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:10:00.000Z", "enteredBy" : "careportal", "notes" : "apple", "carbs" : 20, "fat" : 1, "protein" : 2 },
+  { "eventType" : "Note", "created_at" : "{{ date -1 }}T12:15:00.000Z", "enteredBy" : "careportal", "notes" : "walk" }
+]
+ASSERT_STATUS 200
+
+// fetchCarbs: CarbsEntry needs created_at and carbs, and reads _id, fat, protein, notes and enteredBy. A treatment
+// without carbs fails the whole list, and Trio would add its own carbs again, so it gets only others' carbs
+NAME trio_fetch_carbs
+GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&find[$and][0][enteredBy][$ne]=Trio&find[$and][1][enteredBy][$ne]=AndroidAPS&find[$and][2][enteredBy][$ne]=openaps://AndroidAPS&find[$and][3][enteredBy][$ne]=iAPS&find[$and][4][enteredBy][$ne]=loop://iPhone&find[created_at][$gt]={{ date -1 }}T11:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_CONTAINS "T12:10:00Z" "@0.created_at"
+ASSERT_EQUALS 20 "@0.carbs"
+ASSERT_EQUALS 1 "@0.fat"
+ASSERT_EQUALS 2 "@0.protein"
+ASSERT_EQUALS "apple" "@0.notes"
+ASSERT_EQUALS "careportal" "@0.enteredBy"
+
+// Without the enteredBy filters it gets its own carbs too, and still no note
+NAME trio_fetch_all_carbs
+GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&find[created_at][$gt]={{ date -1 }}T11:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 20 "@0.carbs"
+ASSERT_EQUALS 45 "@1.carbs"
+
+// $exists false is those without carbs
+NAME trio_fetch_without_carbs
+GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=false&find[created_at][$gt]={{ date -1 }}T11:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Note" "@0.eventType"
+
+NAME trio_upload_temp_target
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "duration" : 60, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:07:00.123Z", "enteredBy" : "Trio", "notes" : "Activity", "targetTop" : 140, "targetBottom" : 140 },
+  { "duration" : 30, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:30:00.456Z", "enteredBy" : "careportal", "reason" : "Eating Soon", "targetTop" : 90, "targetBottom" : 90 }
+]
+ASSERT_STATUS 200
+
+// fetchTempTargets: TempTarget needs _id, created_at and duration, and reads targetTop and targetBottom as mg/dL;
+// Trio skips one whose created_at it already has, so the milliseconds must come back as sent. Its own are left out
+NAME trio_fetch_temp_targets
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Temporary+Target&find[duration][$exists]=true&find[$and][0][enteredBy][$ne]=Trio&find[$and][1][enteredBy][$ne]=AndroidAPS&find[$and][2][enteredBy][$ne]=openaps://AndroidAPS&find[$and][3][enteredBy][$ne]=iAPS&find[$and][4][enteredBy][$ne]=loop://iPhone&find[created_at][$gt]={{ date -1 }}T11:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_CONTAINS "T13:30:00.456Z" "@0.created_at"
+ASSERT_EQUALS 30 "@0.duration"
+ASSERT_EQUALS 90 "@0.targetTop"
+ASSERT_EQUALS 90 "@0.targetBottom"
+ASSERT_EQUALS "careportal" "@0.enteredBy"
+
+NAME trio_upload_profile
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "defaultProfile" : "default", "startDate" : "{{ date -1 }}T12:20:00.000Z", "mills" : {{ dayms -1 740 }}, "units" : "mg/dl", "enteredBy" : "Trio",
+  "store" : { "default" : {
+    "dia" : 6, "carbs_hr" : 21, "delay" : 0, "timezone" : "Pacific/Auckland",
+    "target_low" : [ { "time" : "00:00", "value" : 100, "timeAsSeconds" : 0 } ],
+    "target_high" : [ { "time" : "00:00", "value" : 110, "timeAsSeconds" : 0 } ],
+    "sens" : [ { "time" : "00:00", "value" : 50, "timeAsSeconds" : 0 } ],
+    "basal" : [ { "time" : "00:00", "value" : 0.8, "timeAsSeconds" : 0 }, { "time" : "06:00", "value" : 1.05, "timeAsSeconds" : 21600 } ],
+    "carbratio" : [ { "time" : "00:00", "value" : 10, "timeAsSeconds" : 0 } ],
+    "units" : "mg/dl"
+  } },
+  "bundleIdentifier" : "org.nightscout.ABC123.trio", "deviceToken" : "a1b2c3", "isAPNSProduction" : false,
+  "overridePresets" : [ { "name" : "Sport", "duration" : 60, "percentage" : 80, "target" : 140 } ],
+  "teamID" : "ABC123", "expirationDate" : "2027-01-01T00:00:00.000Z"
+}
+ASSERT_STATUS 200
+
+// importSettings, in onboarding: needs a JSON Content-Type, and FetchedNightscoutProfileStore needs _id,
+// defaultProfile, startDate, mills, enteredBy, created_at and a store with default, whose dia, carbs_hr (a whole
+// number), delay, timezone, units and schedules of time and value it reads
+NAME trio_import_settings
+GET http://{{ site }}/api/v1/profile.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "application/json" "#Content-Type.0"
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS "default" "@0.defaultProfile"
+ASSERT_CONTAINS "T12:20:00Z" "@0.startDate"
+ASSERT_EQUALS ".trio_upload_profile.0.mills" "@0.mills"
+ASSERT_EQUALS "pwd_phone" "@0.enteredBy"
+ASSERT_EXISTS "@0.created_at"
+ASSERT_EQUALS 6 "@0.store.default.dia"
+ASSERT_EQUALS 21 "@0.store.default.carbs_hr"
+ASSERT_EQUALS 0 "@0.store.default.delay"
+ASSERT_EQUALS "Pacific/Auckland" "@0.store.default.timezone"
+ASSERT_EQUALS "mg/dL" "@0.store.default.units"
+ASSERT_EQUALS "00:00" "@0.store.default.target_low.0.time"
+ASSERT_EQUALS 100 "@0.store.default.target_low.0.value"
+ASSERT_EQUALS 110 "@0.store.default.target_high.0.value"
+ASSERT_EQUALS 50 "@0.store.default.sens.0.value"
+ASSERT_EQUALS "06:00" "@0.store.default.basal.1.time"
+ASSERT_EQUALS 1.05 "@0.store.default.basal.1.value"
+ASSERT_EQUALS 10 "@0.store.default.carbratio.0.value"

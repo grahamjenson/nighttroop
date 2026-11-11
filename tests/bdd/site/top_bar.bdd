@@ -1,0 +1,27 @@
+INCLUDE steps/new_site_admin.steps
+
+// The virtual connector fills the summary, so it is longer than the window
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--glucose--reading
+
+// Scrolled down the page, the top bar is still there to use, with its menu working
+SCROLL 500
+ASSERT_VISIBLE #site--nav--home
+ASSERT_VISIBLE #site--nav--data
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--account-button
+PRESS Escape
+
+// A screenshot of the scrolled page still shows the top bar at the top of the page, not part way down it
+SCROLL 100
+SCREENSHOT top_bar_scrolled

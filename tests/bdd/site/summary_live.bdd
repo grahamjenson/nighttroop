@@ -1,0 +1,29 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// Virtual connector is turned on, but has not run yet
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+
+// The summary has nothing in it yet, so shows the guide to setting up the site, and is Live, beside its title, once
+// its events stream
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--getting-started
+ASSERT_VISIBLE #site--summary h1 + #site--summary--live
+SCREENSHOT summary_live_empty
+
+// When the sync writes readings, the open summary updates itself in place of the guide, without reloading the page
+RUN_BACKGROUND_JOBS
+ASSERT_VISIBLE #site--summary--glucose--reading
+ASSERT_NOT_VISIBLE #site--getting-started
+ASSERT_VISIBLE #site--summary--live
+ASSERT_PATH /
+SCREENSHOT summary_live_updated

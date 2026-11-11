@@ -1,0 +1,193 @@
+# LoopFollow following a Trio user: Trio's uploads first, then each GET LoopFollow makes, asserting the fields it
+# decodes and their types. Trio's device status is OpenAPS shaped (DeviceStatusOpenAPS.swift), its overrides are
+# Exercise treatments with the name in notes, and its profile carries what Trio Remote Control needs.
+# See docs/clients/loopfollow.md.
+
+INCLUDE steps/new_ns_site.steps
+
+# LoopFollow reads sgv as mg/dL whatever the units, so its identity's units must be mg/dL
+NAME units_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value": "mg/dL"}
+ASSERT_STATUS 200
+
+######
+# Trio uploads
+######
+
+NAME trio_entries
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"type": "sgv", "sgv": 132, "date": {{ itime 1 }}, "dateString": "{{ time 1 }}", "direction": "FortyFiveUp", "device": "Trio", "noise": 1, "filtered": 132, "unfiltered": 132},
+  {"type": "sgv", "sgv": 129, "date": {{ itime 6 }}, "dateString": "{{ time 6 }}", "direction": "Flat", "device": "Trio", "noise": 1, "filtered": 129, "unfiltered": 129}
+]
+ASSERT_STATUS 200
+
+NAME trio_treatments
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [
+  {"eventType": "BG Check", "created_at": "{{ time 8 }}", "enteredBy": "Trio", "glucose": 135, "glucoseType": "Finger", "units": "mg/dl", "id": "c6c1e2a0-0001"},
+  {"eventType": "Exercise", "created_at": "{{ time 10 }}", "enteredBy": "Trio", "notes": "Walk", "duration": 60, "id": "c6c1e2a0-0002"},
+  {"eventType": "Temporary Target", "created_at": "{{ time 15 }}", "enteredBy": "Trio", "reason": "Activity", "targetTop": 140, "targetBottom": 140, "duration": 60, "units": "mg/dl", "id": "c6c1e2a0-0003"},
+  {"eventType": "Carb Correction", "created_at": "{{ time 20 }}", "enteredBy": "Trio", "carbs": 40, "fat": 10, "protein": 15, "id": "c6c1e2a0-0004"},
+  {"eventType": "Bolus", "created_at": "{{ time 21 }}", "enteredBy": "Trio", "insulin": 2, "isSMB": false, "type": "normal", "id": "c6c1e2a0-0005"},
+  {"eventType": "SMB", "created_at": "{{ time 25 }}", "enteredBy": "Trio", "insulin": 0.3, "isSMB": true, "type": "SMB", "id": "c6c1e2a0-0006"},
+  {"eventType": "Temp Basal", "created_at": "{{ time 30 }}", "enteredBy": "Trio", "duration": 30, "absolute": 1.2, "rate": 1.2, "id": "c6c1e2a0-0007"},
+  {"eventType": "Site Change", "created_at": "{{ time 2000 }}", "enteredBy": "Trio", "id": "c6c1e2a0-0008"}
+]
+ASSERT_STATUS 200
+
+NAME trio_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "Trio",
+    "created_at": "{{ time 1 }}",
+    "uploader": {"battery": 63},
+    "pump": {"clock": "{{ time 1 }}", "battery": {"percent": 75}, "reservoir": 120.5, "status": {"status": "normal", "bolusing": false, "suspended": false, "timestamp": "{{ time 1 }}"}, "bolusIncrement": 0.05},
+    "openaps": {
+        "version": "0.6.0",
+        "iob": {"iob": 2.31, "basaliob": 0.42, "bolusiob": 1.89, "activity": 0.0123, "time": "{{ time 1 }}"},
+        "suggested": {
+            "temp": "absolute", "bg": 132, "tick": "+3", "eventualBG": 118, "targetBG": 100, "insulinReq": 0.12,
+            "deliverAt": "{{ time 1 }}", "timestamp": "{{ time 1 }}", "sensitivityRatio": 1.1,
+            "reason": "COB: 24, Dev: 12, BGI: -2.1, ISF: 45, CR: 10, Target: 100, minPredBG 110",
+            "COB": 24, "IOB": 2.31, "ISF": 45, "CR": 10, "TDD": 38.6, "current_target": 100, "rate": 1.2, "duration": 30,
+            "predBGs": {"IOB": [132, 130, 128, 125], "ZT": [132, 129, 125, 120], "COB": [132, 135, 138, 140], "UAM": [132, 133, 134, 134]}
+        },
+        "enacted": {
+            "temp": "absolute", "bg": 132, "tick": "+3", "eventualBG": 118, "deliverAt": "{{ time 1 }}", "timestamp": "{{ time 1 }}",
+            "COB": 24, "IOB": 2.31, "TDD": 38.6, "reason": "COB: 24", "rate": 1.2, "duration": 30, "recieved": true
+        }
+    }
+}
+ASSERT_STATUS 200
+
+NAME trio_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {
+    "defaultProfile": "default", "startDate": "{{ time 60 }}", "mills": {{ itime 60 }}, "units": "mg/dl", "enteredBy": "Trio",
+    "store": {"default": {
+        "dia": 10, "carbs_hr": 0, "delay": 0, "timezone": "Pacific/Auckland", "units": "mg/dl",
+        "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}, {"time": "06:00", "value": 1.05, "timeAsSeconds": 21600}],
+        "sens": [{"time": "00:00", "value": 45, "timeAsSeconds": 0}],
+        "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}],
+        "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}],
+        "target_high": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}]
+    }},
+    "bundleIdentifier": "org.nightscout.ABCDE12345.trio",
+    "deviceToken": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "isAPNSProduction": true,
+    "teamID": "ABCDE12345",
+    "expirationDate": "2027-01-01T00:00:00Z",
+    "overridePresets": [{"name": "Exercise", "duration": 60, "percentage": 80, "target": 140}]
+}
+ASSERT_STATUS 200
+
+######
+# LoopFollow's reads
+######
+
+NAME bg
+GET http://{{ site }}/api/v1/entries.json?token={{ token }}&count=1152&find[date][$gte]={{ itime 1440 }}&find[type][$ne]=cal
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 132 "@0.sgv"
+ASSERT_EQUALS "FortyFiveUp" "@0.direction"
+ASSERT_EXISTS "@0.date"
+# Nighttroop keeps the BG Check's glucose as a meter reading, so it is an mbg entry too, unlike Nightscout
+ASSERT_EQUALS "mbg" "@2.type"
+ASSERT_EQUALS 135 "@2.mbg"
+
+NAME treatments
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[created_at][$gte]={{ utctime 1440 }}&find[created_at][$lte]={{ utctime -360 }}&count=5000
+ASSERT_STATUS 200
+ASSERT_LENGTH 7 "@"
+# BGCheck.swift: glucose as Double, in its units
+ASSERT_EQUALS "BG Check" "@0.eventType"
+ASSERT_EQUALS 135 "@0.glucose"
+ASSERT_EQUALS "mg/dL" "@0.units"
+# Overrides.swift: a Trio override's name is in notes
+ASSERT_EQUALS "Exercise" "@1.eventType"
+ASSERT_EQUALS "Walk" "@1.notes"
+ASSERT_EQUALS 60 "@1.duration"
+# TemporaryTarget.swift: targets as Double, duration, reason and enteredBy, which it needs
+ASSERT_EQUALS "Temporary Target" "@2.eventType"
+ASSERT_EQUALS 140 "@2.targetTop"
+ASSERT_EQUALS 140 "@2.targetBottom"
+ASSERT_EQUALS 60 "@2.duration"
+ASSERT_EQUALS "Activity" "@2.reason"
+ASSERT_EQUALS "Trio" "@2.enteredBy"
+ASSERT_EQUALS 40 "@3.carbs"
+ASSERT_EQUALS "Bolus" "@4.eventType"
+ASSERT_EQUALS 2 "@4.insulin"
+ASSERT_EQUALS "SMB" "@5.eventType"
+ASSERT_EQUALS 0.3 "@5.insulin"
+ASSERT_EQUALS "Temp Basal" "@6.eventType"
+ASSERT_EQUALS 1.2 "@6.absolute"
+ASSERT_LENGTH 20 "@6.created_at"
+ASSERT_LENGTH 20 "@6.timestamp"
+
+NAME cage
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Site%20Change&find[created_at][$lte]={{ utctime 0 }}&count=1
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 20 "@0.created_at"
+
+NAME devicestatus
+GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&count=1
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+# device sets the looping app, which decides how overrides and remote control work
+ASSERT_EQUALS "Trio" "@0.device"
+# pump.clock is Trio's last loop time, and the reservoir is only read with it
+ASSERT_LENGTH 20 "@0.pump.clock"
+ASSERT_EQUALS 120.5 "@0.pump.reservoir"
+ASSERT_EQUALS 75 "@0.pump.battery.percent"
+# pump.bolusIncrement is the remote bolus step
+ASSERT_EQUALS 0.05 "@0.pump.bolusIncrement"
+ASSERT_EQUALS 63 "@0.uploader.battery"
+ASSERT_EQUALS null "@0.loop"
+ASSERT_EQUALS null "@0.openaps.failureReason"
+ASSERT_EQUALS 2.31 "@0.openaps.iob.iob"
+# suggested, or enacted without it, as Doubles, and timestamps an ISO8601DateFormatter with no fractions reads
+ASSERT_LENGTH 20 "@0.openaps.suggested.deliverAt"
+ASSERT_LENGTH 20 "@0.openaps.suggested.timestamp"
+ASSERT_EQUALS 24 "@0.openaps.suggested.COB"
+ASSERT_EQUALS 45 "@0.openaps.suggested.ISF"
+ASSERT_EQUALS 10 "@0.openaps.suggested.CR"
+ASSERT_EQUALS 118 "@0.openaps.suggested.eventualBG"
+ASSERT_EQUALS 100 "@0.openaps.suggested.current_target"
+ASSERT_EQUALS 1.1 "@0.openaps.suggested.sensitivityRatio"
+ASSERT_EQUALS 38.6 "@0.openaps.suggested.TDD"
+ASSERT_CONTAINS "COB: 24" "@0.openaps.suggested.reason"
+ASSERT_EQUALS 132 "@0.openaps.suggested.predBGs.IOB.0"
+ASSERT_EQUALS 120 "@0.openaps.suggested.predBGs.ZT.3"
+ASSERT_EQUALS 140 "@0.openaps.suggested.predBGs.COB.3"
+ASSERT_EQUALS 134 "@0.openaps.suggested.predBGs.UAM.3"
+ASSERT_EQUALS 38.6 "@0.openaps.enacted.TDD"
+
+NAME profile
+GET http://{{ site }}/api/v1/profiles.json?token={{ token }}&count=1&find[startDate][$lte]={{ utctime -1 }}.000Z
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "default" "@0.defaultProfile"
+ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "Pacific/Auckland" "@0.store.default.timezone"
+ASSERT_EQUALS "mg/dL" "@0.store.default.units"
+ASSERT_EQUALS 1.05 "@0.store.default.basal.1.value"
+ASSERT_EQUALS 21600 "@0.store.default.basal.1.timeAsSeconds"
+ASSERT_EQUALS 45 "@0.store.default.sens.0.value"
+ASSERT_EQUALS 10 "@0.store.default.carbratio.0.value"
+ASSERT_EQUALS 100 "@0.store.default.target_low.0.value"
+# Trio Remote Control (ProfileManager.loadProfile) sends its pushes with these
+ASSERT_EQUALS "org.nightscout.ABCDE12345.trio" "@0.bundleIdentifier"
+ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@0.deviceToken"
+ASSERT_EQUALS true "@0.isAPNSProduction"
+ASSERT_EQUALS "ABCDE12345" "@0.teamID"
+ASSERT_EQUALS "2027-01-01T00:00:00Z" "@0.expirationDate"
+ASSERT_EQUALS "Exercise" "@0.overridePresets.0.name"
+ASSERT_EQUALS 60 "@0.overridePresets.0.duration"
+ASSERT_EQUALS 80 "@0.overridePresets.0.percentage"
+ASSERT_EQUALS 140 "@0.overridePresets.0.target"
+ASSERT_EQUALS null "@0.loopSettings"

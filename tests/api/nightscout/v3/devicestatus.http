@@ -1,0 +1,97 @@
+
+//////
+// CREATE
+//////
+
+
+NAME create_devicestatus_v1
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B { "device": "iphone" }
+ASSERT_STATUS 201
+ASSERT_EQUALS "iphone" "@result.device"
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
+ASSERT_EXISTS "@result.subject"
+ASSERT_EXISTS "@result.utcOffset"
+ASSERT_EXISTS "@result.srvCreated"
+ASSERT_EXISTS "@result.srvModified"
+
+
+//////
+// READ
+//////
+
+NAME get_devicestatus_v1
+GET http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "iphone" "@result.device"
+
+NAME search_device_v1
+GET http://{{ site }}/api/v3/devicestatus?device=iphone%
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "iphone" "@result.0.device"
+
+NAME get_404_devicestatus_v1
+GET http://{{ site }}/api/v3/devicestatus/NonExistentID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+//////
+// UPDATE
+//////
+
+NAME put_devicestatus_v1
+PUT http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "device": "iphone", "uploaderBattery": 10 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "iphone" "@result.device"
+// ASSERT_EQUALS 10 "@result.uploaderBattery"
+
+NAME check_put_devicestatus_v1
+GET http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "iphone" "@result.device"
+// ASSERT_EQUALS 10 "@result.uploaderBattery"
+
+NAME patch_devicestatus_v1
+PATCH http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "device": "iphone", "uploaderBattery": 20 }
+ASSERT_STATUS 200
+
+NAME check_patch_devicestatus_v1
+GET http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+B { "uploaderBattery": 25 }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "iphone" "@result.device"
+// ASSERT_EQUALS 20 "@result.uploaderBattery"
+
+NAME update_entries_force_create_v3
+PUT http://{{ site }}/api/v3/devicestatus/AnotherFunID
+H Authorization: Bearer {{ jwt }}
+B { "device": "iphone", "uploaderBattery": 30 }
+ASSERT_STATUS 201
+ASSERT_EQUALS "iphone" "@result.device"
+// ASSERT_EQUALS 30 "@result.uploaderBattery"
+
+//////
+// DELETE
+//////
+
+NAME delete_soft_devicestatus_v1
+DELETE http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// A deleted status is gone, so it cannot be patched
+NAME patch_deleted_devicestatus_v1
+PATCH http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "device": "iphone", "uploaderBattery": 10 }
+ASSERT_STATUS 410

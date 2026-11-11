@@ -1,0 +1,169 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A new site has nothing for its summary yet, so it shows the guide to setting it up instead
+ASSERT_VISIBLE #site--summary
+ASSERT_VISIBLE #site--getting-started
+ASSERT_NOT_VISIBLE #site--summary--glucose
+
+// The guide links to Connectors, where the virtual connector fills the last 30 minutes with readings, treatments and device
+// statuses
+CLICK #site--getting-started--connectors-link
+ASSERT_STATUS 200
+ASSERT_PATH /settings/connectors
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+// A snack and a dose given now, for the graph to mark
+GOTO /data/food
+ASSERT_STATUS 200
+CLICK #site--food--add
+INPUT #site--food--create--carbs 15
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--data
+CLICK #site--data--insulin-button
+ASSERT_STATUS 200
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose 2.5
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+// And a loop's small automatic bolus
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose 0.35
+INPUT #site--insulin--create--dose-type SMB
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+// And Loop's automatic bolus, which it sends as a bolus that is automatic, uploaded through the Nightscout API
+HTTP
+NAME loop_automatic_bolus
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"created_at": "{{ time 1 }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 0.45, "automatic": true}]
+ASSERT_STATUS 200
+BROWSE
+
+// A sensor started now, added as an event group
+CLICK #site--nav--data
+CLICK #site--data--event-groups-button
+ASSERT_STATUS 200
+CLICK #site--event-group--add
+CLICK #site--event-group--add--sensor-start
+CLICK #site--event-group--create--submit
+ASSERT_STATUS 201
+
+// The summary shows the latest glucose, the loop's IOB and COB, the insulin and carbs, the other treatments and each
+// device's latest status, over the last 6 hours unless a range is chosen
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary--glucose--reading
+ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+SCREENSHOT summary
+ASSERT_NOT_VISIBLE #site--summary--iob >> text="–"
+ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
+// Today's readings have a time in range, its insulin a total daily dose with the dose given, and the sensor was
+// started minutes ago, but the site has not been changed
+ASSERT_VISIBLE #site--summary--time-in-range >> text=/^(\d+%|<1%)$/
+ASSERT_VISIBLE #site--summary--total-daily-dose >> text=/^\d+(\.\d+)? U$/
+ASSERT_NOT_VISIBLE #site--summary--total-daily-dose >> text="0 U"
+// The weeks and months before a new site's have no data, so their daily dose is a dash, as their time in range is,
+// not a 0 U that reads as no insulin
+ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-week Last week –
+ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-month Last month –
+ASSERT_TEXT_EQUALS #site--summary--time-in-range--last-week Last week –
+// A tile's and a device's units are smaller and grey beside their numbers
+ASSERT_VISIBLE #site--summary--total-daily-dose span.text-gray-500 >> text="U"
+ASSERT_VISIBLE #site--summary--devices dd span.text-gray-500 >> text="%" >> nth=0
+ASSERT_VISIBLE #site--summary--sensor-started >> text=/^(just now|\d+ minutes? ago)$/
+ASSERT_TEXT_EQUALS #site--summary--site-changed –
+// The other treatments are virtual connector's temp basal and temp target, and no insulin or food
+ASSERT_VISIBLE #site--summary--treatments >> text=Temp Basal
+ASSERT_VISIBLE #site--summary--treatments >> text=Temp Target
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=Insulin
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=Food
+// The insulin and carbs table has the dose and snack given now, newest first, the newest the loop's SMB, marked so
+ASSERT_VISIBLE #site--summary--insulin-carbs tbody tr >> nth=0 >> text=SMB
+// Loop's automatic bolus is an SMB too
+ASSERT_VISIBLE #site--summary--insulin-carbs tbody tr:has-text("0.45") >> text=SMB
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*2\.5\sU$/
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*15\sg$/
+// The tables are just when and what they were, not the device they came from
+ASSERT_NOT_VISIBLE #site--summary--insulin-carbs >> text=virtual://nighttroop
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=virtual://nighttroop
+ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
+ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
+
+// The latest glucose, each dose and meal, and each other treatment say how long ago they were, in words, all within the last half
+// hour here
+ASSERT_VISIBLE #site--summary--glucose--ago >> text=/^(just now|\d+ minutes? ago)$/
+ASSERT_VISIBLE #site--summary--insulin-carbs tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
+
+// ECharts draws the graph as an SVG in the browser, on one grid as Carer draws it: carbs and insulin are labelled by their
+// markers above the readings, the basal's highest rate is marked on the right, and the legend names the treatments and
+// basal. These are checked as drawn, as labels can be drawn over each other (virtual connector's meal can be at nearly the
+// same time as the one added here), and the sticky header can cover them once the page scrolls. Drawn also checks each
+// is inside the graph, as the labels of a dose and a meal given just now are drawn right of markers at the graph's
+// right edge.
+ASSERT_DRAWN #site--summary--graph svg
+ASSERT_DRAWN #site--summary--graph >> text=15g
+ASSERT_DRAWN #site--summary--graph >> text=2.5U
+ASSERT_DRAWN #site--summary--graph >> text=/^[\d.]+ U\/hr$/
+ASSERT_DRAWN #site--summary--graph >> text=Carbs
+ASSERT_DRAWN #site--summary--graph >> text=Insulin
+ASSERT_DRAWN #site--summary--graph >> text=SMB
+ASSERT_DRAWN #site--summary--graph >> text=Basal
+// SMBs come every few minutes, so their markers are not labelled, Loop's automatic boluses as Trio's SMBs
+ASSERT_NOT_VISIBLE #site--summary--graph >> text=0.35U
+ASSERT_NOT_VISIBLE #site--summary--graph >> text=0.45U
+
+// The glucose axis is always 0 to 16 mmol/L, whatever the readings, and the targets in force are edged by darker lines,
+// in the legend as Target
+ASSERT_DRAWN #site--summary--graph >> text=/^16$/
+ASSERT_DRAWN #site--summary--graph >> text=Target
+
+// Pointing at a time shows what was then: the time, the nearest reading and when it was, and the basal and targets in
+// force. The virtual connector's temp basal and temp target cover its last 30 minutes, where 90% across the graph points
+HOVER 90% #site--summary--graph svg
+ASSERT_DRAWN #site--summary--graph >> text=/Glucose: [\d.]+ mmol\/L at \d\d:\d\d/
+ASSERT_DRAWN #site--summary--graph >> text=/Basal: 0\.85 U\/hr/
+ASSERT_DRAWN #site--summary--graph >> text=/Target: [\d.]+–[\d.]+ mmol\/L/
+SCREENSHOT summary_hover
+
+// The range buttons show the summary over 6 hours to a week, and back returns to the range before
+CLICK #site--summary--range-48
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
+ASSERT_VISIBLE #site--summary--graph >> text=2.5U
+SCREENSHOT summary_48_hours
+CLICK #site--summary--range-168
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 168 hours
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
+
+// The latest glucose links to the page of every reading, and each other treatment to the page of its kind, and back
+// returns to the summary
+CLICK #site--summary--all-readings
+ASSERT_STATUS 200
+ASSERT_PATH /data/glucose
+ASSERT_VISIBLE #glucoseReadingsTable
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
+CLICK #site--summary--treatments a >> text="Temp Basal" >> nth=0
+ASSERT_STATUS 200
+ASSERT_PATH /data/temp-basals
+ASSERT_VISIBLE #tempBasalsTable
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
+
+// A device opens its latest status's details
+CLICK #site--summary--devices >> text=virtual://nighttroop
+ASSERT_VISIBLE #site--device-status--details
+ASSERT_TEXT_VISIBLE Pump Reservoir

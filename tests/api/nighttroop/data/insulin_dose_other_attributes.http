@@ -1,0 +1,77 @@
+INCLUDE steps/new_site.steps
+
+// What only some apps send of a bolus, a combo bolus's split and whether a loop gave it, is kept in its dose's other
+// attributes and given back, by the site API too
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Combo Bolus", "created_at": "{{ time -5 }}", "insulin": 3, "splitNow": 70, "splitExt": 30, "duration": 60, "automatic": true }
+ASSERT_STATUS 200
+
+NAME read_treatment
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS true "@0.automatic"
+
+NAME read_dose
+GET http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.7 "@result.items.0.split_now"
+ASSERT_EQUALS 0.3 "@result.items.0.split_ext"
+ASSERT_EQUALS true "@result.items.0.automatic"
+SET dose_id {{ dig "read_dose.result.items.0.id" }}
+
+// Updating one of them leaves the others as they were, and only a loop's upload says whether a loop gave it, not the
+// site
+NAME update_split_ext
+POST http://{{ site }}/data/insulin/{{ .dose_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"split_ext": 0.5, "automatic": false}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.5 "@result.split_ext"
+ASSERT_EQUALS 0.7 "@result.split_now"
+ASSERT_EQUALS true "@result.automatic"
+
+NAME read_updated
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 50 "@0.splitExt"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS true "@0.automatic"
+
+// A loop's automatic is kept when false
+NAME create_manual_bolus
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Correction Bolus", "created_at": "{{ time -10 }}", "insulin": 1, "automatic": false }
+ASSERT_STATUS 200
+
+NAME read_manual_bolus
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@0.automatic"
+
+NAME read_manual_dose
+GET http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.items.0.automatic"
+
+// A dose added on the site does not say
+NAME create_site_dose
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 2, "automatic": true}
+ASSERT_STATUS 201
+ASSERT_EQUALS null "@result.automatic"
+
+// A split is still refused far outside real use, as a column of its own was
+NAME split_out_of_range
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Combo Bolus", "created_at": "{{ time 10 }}", "insulin": 3, "splitNow": 150, "splitExt": 30, "duration": 60 }
+ASSERT_STATUS 400

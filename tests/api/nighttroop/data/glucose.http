@@ -1,0 +1,260 @@
+INCLUDE steps/new_site.steps
+
+NAME no_readings
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+// A search without a limit is a page of 50, and counts none with no times
+ASSERT_EQUALS 0 "@result.skip"
+ASSERT_EQUALS 50 "@result.limit"
+ASSERT_EQUALS 0 "@result.total"
+ASSERT_EQUALS null "@result.earliest_at"
+ASSERT_EQUALS null "@result.latest_at"
+
+NAME create_entry
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B { "sgv": 123, "type": "sgv", "direction": "Flat", "device": "xDrip" }
+ASSERT_STATUS 200
+SET reading_id {{ dig "create_entry.0._id" }}
+
+NAME list_readings
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 6.8265 "@result.items.0.reading"
+ASSERT_EQUALS "mmol/L" "@result.items.0.units"
+ASSERT_EQUALS "sgv" "@result.items.0.reading_type"
+ASSERT_EQUALS "Flat" "@result.items.0.direction"
+ASSERT_EXISTS "@result.items.0.occurred_at"
+
+// Readings are in the identity's units, mmol/L by default, until it chooses mg/dL
+NAME use_mgdl
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME list_readings_mgdl
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 123 "@result.items.0.reading"
+ASSERT_EQUALS "mg/dL" "@result.items.0.units"
+
+// Two older readings, so the list can be paged
+NAME create_older_entries
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{ "sgv": 110, "type": "sgv", "dateString": "{{ time 1 }}" }, { "sgv": 100, "type": "sgv", "dateString": "{{ time 2 }}" }]
+ASSERT_STATUS 200
+
+NAME first_page
+GET http://{{ site }}/data/glucose?limit=2
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS 123 "@result.items.0.reading"
+ASSERT_EQUALS 110 "@result.items.1.reading"
+
+NAME second_page
+GET http://{{ site }}/data/glucose?limit=2&skip=2
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 100 "@result.items.0.reading"
+// The totals are of every page, not only this one's
+ASSERT_EQUALS 2 "@result.skip"
+ASSERT_EQUALS 2 "@result.limit"
+ASSERT_EQUALS 3 "@result.total"
+ASSERT_EXISTS "@result.earliest_at"
+ASSERT_EXISTS "@result.latest_at"
+
+NAME past_the_end
+GET http://{{ site }}/data/glucose?limit=2&skip=4
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+NAME bad_limit
+GET http://{{ site }}/data/glucose?limit=lots
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+NAME get_reading
+GET http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 123 "@result.reading"
+ASSERT_EQUALS "Flat" "@result.direction"
+
+NAME get_unknown_reading
+GET http://{{ site }}/data/glucose/not-a-reading
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME delete_reading
+DELETE http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_reading_not_found
+GET http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_reading_not_listed
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+
+// Deleted readings are also gone from the Nightscout API
+NAME deleted_entry_not_in_nightscout
+GET http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME delete_unknown_reading
+DELETE http://{{ site }}/data/glucose/not-a-reading
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+//////
+// CREATE AND UPDATE
+//////
+
+// A typed in reading defaults to a meter reading, taken now, by whoever is signed in
+NAME create_reading
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 95, "notes": "Finger prick", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS 95 "@result.reading"
+ASSERT_EQUALS "mbg" "@result.reading_type"
+ASSERT_EQUALS "Finger prick" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_reading.result.id }}
+
+NAME created_reading_has_new_id
+GET http://{{ site }}/data/glucose/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME create_reading_without_mgdl
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "no value"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "reading must be more than 0 and at most 1000 mg/dL" "@message"
+
+NAME create_reading_too_high
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 5000}
+ASSERT_STATUS 400
+
+NAME create_reading_unknown_type
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 100, "reading_type": "guess"}
+ASSERT_STATUS 400
+
+// Only the fields sent change
+NAME update_reading_notes
+POST http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "Rechecked"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 95 "@result.reading"
+ASSERT_EQUALS "Rechecked" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_reading_mgdl
+POST http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 99}
+ASSERT_STATUS 200
+ASSERT_EQUALS 99 "@result.reading"
+ASSERT_EQUALS "Rechecked" "@result.notes"
+
+NAME update_reading_too_high
+POST http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 5000}
+ASSERT_STATUS 400
+
+NAME update_unknown_reading
+POST http://{{ site }}/data/glucose/not-a-reading
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+// The site's reading is in the Nightscout API too
+NAME created_reading_in_nightscout
+GET http://{{ .ns_site }}/api/v1/entries?find[_id]={{ .created_id }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "mbg" "@0.type"
+
+// Back in mmol/L, a reading is typed in and shown in mmol/L, and saved as mg/dL
+NAME use_mmol
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mmol/L"}
+ASSERT_STATUS 200
+
+NAME updated_reading_in_mmol
+GET http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 5.4945 "@result.reading"
+ASSERT_EQUALS "mmol/L" "@result.units"
+
+NAME create_reading_mmol
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 7.5}
+ASSERT_STATUS 201
+ASSERT_EQUALS 7.5 "@result.reading"
+ASSERT_EQUALS "mmol/L" "@result.original_units"
+
+NAME create_reading_mmol_too_high
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 60}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 55.5" "@message"
+
+NAME created_reading_mmol_in_nightscout_as_mgdl
+GET http://{{ .ns_site }}/api/v1/entries?find[_id]={{ .create_reading_mmol.result.id }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"

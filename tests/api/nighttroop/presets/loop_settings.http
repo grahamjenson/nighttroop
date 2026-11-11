@@ -1,0 +1,101 @@
+INCLUDE steps/new_site.steps
+
+NAME no_loop_settings
+GET http://{{ site }}/presets/loop-settings
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// Loop uploads its profile with its settings, and again later with the same settings
+NAME loop_profile
+POST http://{{ .ns_site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 60 }}", "units": "mg/dL", "enteredBy": "Loop", "device": "phone", "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.7}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 7}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}, "loopSettings": {"dosingEnabled": true, "maximumBolus": 10, "maximumBasalRatePerHour": 3}}
+ASSERT_STATUS 200
+
+NAME loop_profile_again
+POST http://{{ .ns_site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 30 }}", "units": "mg/dL", "enteredBy": "Loop", "device": "phone", "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.7}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 7}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}, "loopSettings": {"dosingEnabled": true, "maximumBolus": 10, "maximumBasalRatePerHour": 3}}
+ASSERT_STATUS 200
+
+// The same settings are kept once, seen from the first upload to the last
+NAME list_loop_settings
+GET http://{{ site }}/presets/loop-settings
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "loop" "@result.items.0.app"
+ASSERT_EQUALS "profile" "@result.items.0.source"
+ASSERT_EQUALS "phone" "@result.items.0.created_by_device_name"
+ASSERT_EQUALS 10 "@result.items.0.settings.maximumBolus"
+ASSERT_EQUALS 3 "@result.items.0.settings.maximumBasalRatePerHour"
+ASSERT_EQUALS true "@result.items.0.settings.dosingEnabled"
+SET settings_id {{ dig "list_loop_settings.result.items.0.id" }}
+
+NAME get_loop_settings
+GET http://{{ site }}/presets/loop-settings/{{ .settings_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS ".settings_id" "@result.id"
+ASSERT_EQUALS 10 "@result.settings.maximumBolus"
+ASSERT_EQUALS null "@result.previous_id"
+
+// Each profile reads back with the settings it was sent with
+NAME profiles_with_settings
+GET http://{{ .ns_site }}/api/v1/profile.json?token={{ token }}&count=10
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 10 "@0.loopSettings.maximumBolus"
+ASSERT_EQUALS 10 "@1.loopSettings.maximumBolus"
+
+// Changed settings are another set
+NAME loop_profile_changed
+POST http://{{ .ns_site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 0 }}", "units": "mg/dL", "enteredBy": "Loop", "device": "phone", "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.7}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 7}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}, "loopSettings": {"dosingEnabled": true, "maximumBolus": 12, "maximumBasalRatePerHour": 3}}
+ASSERT_STATUS 200
+
+NAME list_changed_loop_settings
+GET http://{{ site }}/presets/loop-settings
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS 12 "@result.items.0.settings.maximumBolus"
+ASSERT_EQUALS 10 "@result.items.1.settings.maximumBolus"
+SET changed_id {{ dig "list_changed_loop_settings.result.items.0.id" }}
+
+// The changed settings say what changed from those before, by field, old then new
+NAME get_changed_loop_settings
+GET http://{{ site }}/presets/loop-settings/{{ .changed_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS ".settings_id" "@result.previous_id"
+ASSERT_LENGTH 1 "@result.changes"
+ASSERT_EQUALS "maximumBolus" "@result.changes.0.field"
+ASSERT_EQUALS "10" "@result.changes.0.old"
+ASSERT_EQUALS "12" "@result.changes.0.new"
+
+// Deleting the first settings keeps the profiles sent with them, which read back without them
+NAME delete_loop_settings
+DELETE http://{{ site }}/presets/loop-settings/{{ .settings_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME profiles_without_deleted_settings
+GET http://{{ .ns_site }}/api/v1/profile.json?token={{ token }}&count=10
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 12 "@0.loopSettings.maximumBolus"
+ASSERT_EQUALS null "@1.loopSettings"
+ASSERT_EQUALS null "@2.loopSettings"
+ASSERT_EQUALS 0.7 "@2.store.Default.basal.0.value"
+
+NAME deleted_loop_settings_gone
+GET http://{{ site }}/presets/loop-settings/{{ .settings_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

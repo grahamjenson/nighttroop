@@ -1,0 +1,29 @@
+// Creates a site from the home page, then logs in to it as its admin on its pages, on the page the login opens, for a
+// test of what signing in on the pages leaves, such as the browser it was from; new_site_admin.steps is quicker
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+// The login it opens has the admin's name filled in, so only its password is typed
+ASSERT_VISIBLE #site--login--name[value="admin"]
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL

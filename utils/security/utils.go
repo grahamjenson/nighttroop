@@ -1,0 +1,75 @@
+package security
+
+import (
+	"crypto/rand"
+	"log"
+	"log/slog"
+	"math/big"
+	badrand "math/rand"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	ChunkSize = 64 * 1024 // 64KB (tweakable)
+	KeyIDSize = 6
+)
+
+// //
+// Generating And checking API tokens
+// //
+const API_KEY_CHAR_SET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const API_KEY_CHAR_SET_LENGTH = len(API_KEY_CHAR_SET)
+
+func InsecureRandomString(length int, charset string) string {
+	bytes := make([]byte, length)
+	for i := 0; i < length; i++ {
+		num := badrand.Intn(len(charset))
+		bytes[i] = charset[num]
+	}
+
+	return string(bytes)
+}
+
+func SecureRandomString(length int, charset string) string {
+	bytes := make([]byte, length)
+	for i := 0; i < length; i++ {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			// Never fall back to a predictable generator: this makes credentials and keys
+			slog.Error("Error generating secure random number", "error", err)
+			panic("security: crypto/rand failed: " + err.Error())
+		}
+		bytes[i] = charset[num.Int64()]
+	}
+
+	return string(bytes)
+}
+
+func SecureCredentials(cost int) (password string, hashedPassword string, err error) {
+	return SecureCredentialsWithPrefix("", cost)
+}
+
+func SecureCredentialsWithPrefix(prefix string, cost int) (password string, hashedPassword string, err error) {
+	// 1. Generate a secure random string for the password
+	password = SecureRandomString(12, API_KEY_CHAR_SET)
+	password = prefix + password
+
+	// 2. Hash the password
+	// Bcrypt automatically generates a unique salt
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+	if err != nil {
+		return "", "", err
+	}
+
+	return password, string(hashedBytes), nil
+}
+
+// This is not used normally so we should be fine
+func HashPassword(password string, cost int) string {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+	if err != nil {
+		log.Fatal("Error hashing password: ", err)
+	}
+	return string(hashedBytes)
+}

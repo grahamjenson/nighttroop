@@ -1,0 +1,90 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no device statuses
+CLICK #site--nav--data
+ASSERT_VISIBLE #site--data--device-status-button
+CLICK #site--data--device-status-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/device-status
+ASSERT_VISIBLE #site--device-status--empty
+SCREENSHOT device_statuses_empty
+
+// Virtual connector writes a device status every 5 minutes, 6 of them on its first run
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+// Each device shows its latest 3 statuses
+GOTO /data/device-status
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE virtual://nighttroop
+ASSERT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=2
+ASSERT_NOT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=3
+// Values like IOB are shown to at most two decimal places, never with a sum's floating point noise. Each cell is
+// checked alone, as a row's text runs its cells' numbers together now that their units are in the headers.
+ASSERT_NOT_VISIBLE #main-content td >> text=/\d\.\d{3,}/
+SCREENSHOT device_statuses
+
+// Clicking a status shows all its details: the loop's phone (listed after the carer's, by name) reports the pump
+CLICK #deviceStatusTable-1 tbody tr >> nth=0
+ASSERT_VISIBLE #site--device-status--details
+ASSERT_TEXT_VISIBLE Pump Reservoir
+SCREENSHOT device_status_details
+CLICK #site--device-status--details--close
+ASSERT_NOT_VISIBLE #site--device-status--details
+
+// Escape closes them too
+CLICK #deviceStatusTable-0 tbody tr >> nth=0
+ASSERT_VISIBLE #site--device-status--details
+PRESS Escape
+ASSERT_NOT_VISIBLE #site--device-status--details
+
+// Show all pages through every status the device sent
+CLICK #site--device-status--show-all-0
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+ASSERT_NOT_VISIBLE #site--device-status--next
+SCREENSHOT device_status_history
+
+// The browser's back button returns to every device, inside the site's page, and forward to the history again
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_PATH /data/device-status
+ASSERT_VISIBLE #site--nav--logo
+ASSERT_VISIBLE #site--device-status--show-all-0
+CLICK_FORWARD
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--nav--logo
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Device Status Deleted
+ASSERT_NOT_VISIBLE #site--device-status--details
+
+// The deleted status stays gone after a reload
+CLICK #site--device-status--all-devices
+ASSERT_STATUS 200
+CLICK #site--device-status--show-all-0
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 5
+
+// Deleting the last status on the page says there are none, and nothing is shown
+ASSERT_NOT_VISIBLE #deviceStatusTable--empty
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_VISIBLE #deviceStatusTable--empty
+ASSERT_TEXT_VISIBLE No statuses here.
+ASSERT_NOT_VISIBLE #site--device-status--showing >> text=Showing
+SCREENSHOT device_status_history_empty

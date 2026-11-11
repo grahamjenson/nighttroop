@@ -1,0 +1,112 @@
+package site_settings_templ
+
+import (
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/dbsize"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// MyAccount is the signed in identity's, or control admin's, own page at path: who it is, and up to most passkeys it
+// adds, on its own address, and removes. A site identity's, with guide, also opens the guide to setting the site up,
+// and a site admin's has its site's storage (AccountStorage) under them; others' storage is nil.
+templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string, guide bool, storage templ.Component) {
+	<div id="site--account" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page("My Account") {
+			You are signed in as { name }, with the { role } role. A passkey signs you in with your fingerprint, face or device PIN, with
+			no password or code. It is named { name }, and nothing about you is asked for or kept.
+		}
+		if guide {
+			@card.Card(card.Props{ID: "site--account--getting-started", Title: "Getting Started",
+				Note: "The guide to setting up the site: getting glucose in, adding people and devices, settings and alarms.",
+				Action: labelled("Open the guide", button.Props{ID: "site--getting-started-button", Variant: button.VariantOutline, Size: button.SizeSm,
+					Attributes: nav.Attributes("/getting-started")})})
+		}
+		@card.Card(card.Props{Title: "Passkeys", Action: labelled("Add a passkey", button.Props{ID: "site--account--add-passkey", Type: button.TypeButton, Size: button.SizeSm,
+			Disabled: len(passkeys) >= most, Attributes: templ.Attributes{"data-passkey-begin": path + "/passkeys/begin", "data-passkey-finish": path + "/passkeys/finish",
+				"data-passkey-error": "site--account--passkey-error"}})}) {
+			<p id="site--account--passkey-error" class="text-sm text-red-600"></p>
+			@table.Table(table.Props{ID: "site--account--passkeys"}) {
+				@table.Body() {
+					if len(passkeys) == 0 {
+						<tr><td class="p-4 text-sm text-gray-500">No passkeys yet.</td></tr>
+					}
+					for _, passkey := range passkeys {
+						@table.Row() {
+							@table.Cell() {
+								Added <span title={ site_data_templ.FormatDate(ctx, passkey.CreatedAt) }>{ display.RoundedAgo(passkey.CreatedAt, time.Now()) }</span>
+							}
+							@table.Cell(table.CellProps{Class: "text-gray-500"}) {
+								if passkey.LastUsedAt != nil {
+									Last used { display.RoundedAgo(*passkey.LastUsedAt, time.Now()) }
+								} else {
+									Not used yet
+								}
+							}
+							@table.Cell(table.CellProps{Class: "text-right"}) {
+								@button.Button(button.Props{ID: fmt.Sprintf("site--account--remove-passkey-%d", passkey.ID), Variant: button.VariantOutline, Size: button.SizeSm,
+									Attributes: templ.Attributes{"hx-delete": fmt.Sprintf("%s/passkeys/%d", path, passkey.ID), "hx-target": "#site--account",
+										"hx-swap": "outerHTML", "hx-confirm": "Remove this passkey? It will no longer sign you in.",
+										"data-confirm-delete": "Remove"}}) {
+									Remove
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if storage != nil {
+			@storage
+		}
+		@site_login_templ.PasskeyScript()
+	</div>
+}
+
+// AccountStorage is the site's DB size against its limit and where its data builds up, by table, as the control site
+// shows it, with a button to truncate it, which says what truncating removes and keeps
+templ AccountStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) {
+	<section id="site--account--storage" class="space-y-3">
+		@dbsize.Panel("site--account", sizeKB, limitKB, tables)
+		@card.Card(card.Props{ID: "site--account--truncate-card", Title: "Truncate",
+			Note: "Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all " +
+				"but each device's newest report, and thins device reports to fewer the older they are, deleting those over " +
+				"30 days old, and deletes old loop settings no profile or device report refers to any more. Readings, " +
+				"treatments, profiles and everything else are kept. The DB is then shrunk.",
+			Action: labelled("Truncate", button.Props{ID: "site--account--truncate", Variant: button.VariantOutline,
+				Attributes: templ.Attributes{"hx-post": "/settings/account/truncate", "hx-target": "#site--account--storage", "hx-swap": "outerHTML",
+					"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
+					"hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}})})
+	</section>
+}
+
+// labelled is a button of a card's action, as its text
+templ labelled(text string, p button.Props) {
+	@button.Button(p) {
+		{ text }
+	}
+}
+
+// AccountTruncated is a toast saying the site was truncated, and its size now
+templ AccountTruncated(sizeKB *int64) {
+	@successtoast.TitledOOB("Site Truncated", truncatedSize(sizeKB), 5000)
+}
+
+// truncatedSize says the site's DB size after truncating, when it is known
+func truncatedSize(sizeKB *int64) string {
+	if sizeKB == nil {
+		return "Its device reports were truncated."
+	}
+	return fmt.Sprintf("Its DB is now %.2f MB.", float64(*sizeKB)/1024)
+}

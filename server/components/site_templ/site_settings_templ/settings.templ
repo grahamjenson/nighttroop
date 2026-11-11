@@ -1,0 +1,379 @@
+package site_settings_templ
+
+import (
+	"context"
+	"strconv"
+	"strings"
+
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
+)
+
+func settingValue(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
+// settingsColumn is one level of settings on the page, saved by its own form
+type settingsColumn struct {
+	Title     string
+	Save      string
+	Model     *sitemodels.Settings
+	IDPrefix  string
+	FormID    string
+	Path      string
+	Inherited string
+}
+
+type settingField struct {
+	Name    string
+	Label   string
+	Options []string
+	// Section is the heading shown above the field, starting a section of the page
+	Section string
+	// Glucose is shown and typed in the settings' units, which its label says
+	Glucose bool
+}
+
+// onOff are the options of an alarm, turned on or off
+var onOff = []string{"true", "false"}
+
+// settingsPage is a page of settings, the general ones or the alarms, its inputs' IDs starting with IDPrefix
+type settingsPage struct {
+	ID       string
+	Title    string
+	IDPrefix string
+	Fields   []settingField
+}
+
+var (
+	generalPage = settingsPage{ID: "settings_page", Title: "Settings", IDPrefix: "site--settings--", Fields: generalFields}
+	alarmsPage  = settingsPage{ID: "alarm_settings_page", Title: "Alarms", IDPrefix: "site--alarms--", Fields: alarmFields}
+	// identityPage is another identity's general settings and alarms, which an admin changes for it
+	identityPage = settingsPage{ID: "identity_settings_page", Title: "Settings", IDPrefix: "site--identity-settings--",
+		Fields: append(append([]settingField{}, generalFields...), alarmFields...)}
+)
+
+// generalFields and alarmFields are the settings each page shows, in order; one without options is typed in
+var generalFields = []settingField{
+	{Name: "units", Label: "Units", Options: []string{"mmol/L", "mg/dL"}},
+	{Name: "timezone", Label: "Timezone"},
+	{Name: "language", Label: "Language"},
+	{Name: "date_format", Label: "Date Format", Options: settings.DateFormats},
+	{Name: "time_format", Label: "Time Format", Options: settings.TimeFormats},
+	{Name: "week_start_day", Label: "Week Starts On", Options: settings.WeekStartDays},
+}
+
+var alarmFields = []settingField{
+	{Name: "alarm_urgent_low_enabled", Label: "Urgent Low Alarm", Options: onOff, Section: "Lows"},
+	{Name: "range_urgent_low", Label: "Urgent Low Under", Glucose: true},
+	{Name: "alarm_low_enabled", Label: "Low Alarm", Options: onOff},
+	{Name: "range_low", Label: "Low Under", Glucose: true},
+	{Name: "alarm_low_minutes", Label: "Low For Minutes"},
+	{Name: "alarm_low_prediction_enabled", Label: "Predicted Low Alarm", Options: onOff},
+	{Name: "alarm_low_prediction_minutes", Label: "Predicts Minutes Ahead"},
+	{Name: "alarm_high_enabled", Label: "High Alarm", Options: onOff, Section: "Highs"},
+	{Name: "range_high", Label: "High Over", Glucose: true},
+	{Name: "alarm_high_minutes", Label: "High For Minutes"},
+	{Name: "alarm_urgent_high_enabled", Label: "Urgent High Alarm", Options: onOff},
+	{Name: "range_urgent_high", Label: "Urgent High Over", Glucose: true},
+	{Name: "alarm_fast_rise_enabled", Label: "Fast Rise Alarm", Options: onOff, Section: "Fast Changes"},
+	{Name: "alarm_fast_rise", Label: "Rises By", Glucose: true},
+	{Name: "alarm_fast_rise_minutes", Label: "Rises Within Minutes"},
+	{Name: "alarm_fast_drop_enabled", Label: "Fast Drop Alarm", Options: onOff},
+	{Name: "alarm_fast_drop", Label: "Drops By", Glucose: true},
+	{Name: "alarm_fast_drop_minutes", Label: "Drops Within Minutes"},
+	{Name: "alarm_no_data_enabled", Label: "No Data Alarm", Options: onOff, Section: "No Data"},
+	{Name: "alarm_no_data_minutes", Label: "No Data For Minutes"},
+}
+
+// fieldLabel is a setting's label in a column, with the units of one that is a glucose
+func fieldLabel(ctx context.Context, column settingsColumn, field settingField) string {
+	if units := columnUnits(ctx, column); field.Glucose && units != "" {
+		return field.Label + " (" + units + ")"
+	}
+	return field.Label
+}
+
+// columnUnits are the units a column's glucose settings are in, as the server shows and reads them: another identity's
+// own, or the site's it follows, and otherwise the signed in identity's
+func columnUnits(ctx context.Context, column settingsColumn) string {
+	if column.Model.IdentityID != nil {
+		if own := column.value("units"); own != nil {
+			return *own
+		}
+		return column.Model.Inherited["units"]
+	}
+	return settingValue(httputils.GetSiteContext(ctx).GetSettings().GetUnits().Stringp())
+}
+
+// optionLabel is how a setting's option reads, the week's days capitalised as names are and an alarm On or Off,
+// its value unchanged
+func optionLabel(field settingField, option string) string {
+	switch {
+	case field.Name == "week_start_day" && option != "":
+		return strings.ToUpper(option[:1]) + option[1:]
+	case strings.HasSuffix(field.Name, "_enabled") && option != "":
+		return map[string]string{"true": "On", "false": "Off"}[option]
+	}
+	return option
+}
+
+func (c settingsColumn) value(name string) *string {
+	return *c.Model.Fields()[name]
+}
+
+// settingsColumns are the site's settings for an admin, then the signed in identity's own, or another identity's
+func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings, other *sitemodels.Settings) []settingsColumn {
+	columns := []settingsColumn{}
+	if site != nil {
+		columns = append(columns, settingsColumn{"Site", "Save Site Settings", site, page.IDPrefix + "site--", page.IDPrefix + "site-form", "/settings/site", "Default"})
+	}
+	if yours != nil {
+		columns = append(columns, settingsColumn{"Yours", "Save Your Settings", yours, page.IDPrefix + "identity--", page.IDPrefix + "identity-form", "/settings/identity", "Site setting"})
+	}
+	if other != nil {
+		columns = append(columns, settingsColumn{*other.IdentityName, "Save " + *other.IdentityName + "'s Settings", other, page.IDPrefix + "identity--",
+			page.IDPrefix + "identity-form", "/settings/identity-settings/" + strconv.FormatInt(*other.IdentityID, 10), "Site setting"})
+	}
+	return columns
+}
+
+// SettingsPage shows the site's settings beside an admin's own, or just the signed in identity's.
+// Each column saves with its own form. A setting left empty follows the level above:
+// the defaults for the site, the site's for an identity.
+// SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
+templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
+	@settingsPageOf(generalPage, site, yours, nil)
+	<div class="mx-auto mt-6 max-w-4xl space-y-6">
+		if identity := signedIn(ctx); identity != nil {
+			@resetYourCredentials(identity)
+		}
+		if site != nil {
+			@downloadData()
+			@deleteSite()
+		}
+	</div>
+}
+
+// signedIn is the identity signed in to the site, or nil
+func signedIn(ctx context.Context) *controldb.SiteIdentity {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.IdentityModel
+	}
+	return nil
+}
+
+// resetYourCredentials resets the signed in identity's password, or its TOTP if it has one, warning that either signs
+// it out, to sign in again with the new one
+templ resetYourCredentials(identity *controldb.SiteIdentity) {
+	@card.Card(card.Props{ID: "site--settings--credentials", Title: "Password & TOTP", Class: "space-y-3"}) {
+		@alert.Alert(alert.Props{ID: "site--settings--credentials-warning", Variant: alert.VariantWarning}) {
+			Resetting your password or TOTP signs you out. The new one is shown once, and you sign in again with it.
+		}
+		<div class="flex gap-2">
+			@resetButton(button.Props{ID: "site--settings--reset-password", Variant: button.VariantOutline}, identity.ID, "password",
+				"Reset your password", "Reset your password? You will be signed out, and must sign in again with the new one.") {
+				Reset Password
+			}
+			if identity.TotpSecretEnc != "" {
+				@resetButton(button.Props{ID: "site--settings--reset-totp", Variant: button.VariantOutline}, identity.ID, "totp",
+					"Reset your TOTP", "Reset your TOTP? You will be signed out, and must sign in again with a code from the new one.") {
+					Reset TOTP
+				}
+			}
+		</div>
+		<div id="modal-container"></div>
+	}
+}
+
+// downloadData lets an admin download a zip of the site's data, a snapshot of its DB, to look through all its data
+templ downloadData() {
+	@card.Card(card.Props{ID: "site--settings--download", Title: "Download Data", Class: "space-y-3"}) {
+		<p class="text-sm text-gray-600">
+			A copy of all the site's data, as it is now, in a zip of a SQLite file, which a SQLite browser can open to look through.
+		</p>
+		@button.Button(button.Props{
+			ID:      "site--settings--download-data",
+			Href:    "/settings/site/download",
+			Variant: button.VariantOutline,
+			Attributes: templ.Attributes{"download": ""},
+		}) {
+			Download Data
+		}
+	}
+}
+
+// deleteSite lets an admin delete the site, which archives it, after confirming
+templ deleteSite() {
+	@card.Card(card.Props{ID: "site--settings--delete", Title: "Delete Site", Danger: true, Class: "space-y-3"}) {
+		<p class="text-sm text-gray-600">
+			Deleting the site signs everyone out and stops it being served, to you, your devices and Nightscout apps. Its
+			data is archived, so the server's admins can still bring it back.
+		</p>
+		<form
+			hx-post="/settings/site/delete"
+			hx-confirm="Delete this site? Everyone is signed out and its data is archived."
+			data-confirm-delete
+			hx-target="#toaster"
+			hx-swap="beforeend"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@button.Button(button.Props{ID: "site--settings--delete-site", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+				Delete Site
+			}
+		</form>
+	}
+}
+
+templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
+	@settingsPageOf(alarmsPage, site, yours, nil)
+}
+
+// pageTitle is the page's title, with whose settings they are when they are another identity's
+func pageTitle(page settingsPage, other *sitemodels.Settings) string {
+	if other != nil {
+		return *other.IdentityName + "'s Settings"
+	}
+	return page.Title
+}
+
+// IdentitySettingsPage is another identity's own settings and alarms, which an admin changes for it, such as a
+// device's units for a client that needs mg/dL
+templ IdentitySettingsPage(other *sitemodels.Settings) {
+	@settingsPageOf(identityPage, nil, nil, other)
+}
+
+templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings, other *sitemodels.Settings) {
+	{{ columns := settingsColumns(page, site, yours, other) }}
+	<div id={ page.ID } class="mx-auto max-w-4xl space-y-6">
+		@heading.Page(pageTitle(page, other)) {
+			if other != nil {
+				{ *other.IdentityName }'s own settings and alarms, which only it uses, such as the units the Nightscout API gives it. Anything left on the site setting follows the site.
+			} else if site != nil {
+				The site's settings are for everyone on this site. Yours change it just for you; anything left on the site setting follows the site.
+			} else {
+				Your own settings. Anything left on the site setting follows the site.
+			}
+		}
+		for _, column := range columns {
+			<form
+				id={ column.FormID }
+				hx-post={ column.Path }
+				hx-target="#toaster"
+				hx-swap="beforeend"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			></form>
+		}
+		// On a phone each setting's label is above its controls, the site's and yours each named, and from sm up the
+		// columns are side by side under their titles
+		<div class={ "grid grid-cols-1 gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
+			<span class="hidden sm:block"></span>
+			for _, column := range columns {
+				<span class={ "text-sm font-semibold", templ.KV("hidden sm:block", len(columns) == 2) }>{ column.Title }</span>
+			}
+			for _, field := range page.Fields {
+				if field.Section != "" {
+					<h2 class="col-span-full mt-2 border-t border-gray-200 pt-4 text-sm font-semibold text-brand-night">{ field.Section }</h2>
+				}
+				// Every column has the same units, as another identity's, which has its own, is alone on its page
+				<span class="mt-2 text-sm font-medium sm:mt-0">{ fieldLabel(ctx, columns[0], field) }</span>
+				if field.Name == "timezone" {
+					@timezoneSuggestions()
+				}
+				for _, column := range columns {
+					<div class="flex items-start gap-2">
+						if len(columns) == 2 {
+							<span class="w-12 shrink-0 py-2.5 text-xs font-semibold text-gray-600 sm:hidden">{ column.Title }</span>
+						}
+						<div class="min-w-0 flex-1">
+							@settingControl(column, field)
+						</div>
+					</div>
+				}
+			}
+			<span class="hidden sm:block"></span>
+			for _, column := range columns {
+				<div class="mt-2 flex justify-end sm:mt-0">
+					@button.Button(button.Props{
+						ID:         column.IDPrefix + "save",
+						Type:       button.TypeSubmit,
+						Class:      "h-auto min-h-9 w-full whitespace-normal sm:w-auto",
+						Attributes: templ.Attributes{"form": column.FormID},
+					}) {
+						{ column.Save }
+					}
+				</div>
+			}
+		</div>
+	</div>
+}
+
+// settingControl is one setting in one column, a select or a text input, belonging to the column's form
+templ settingControl(column settingsColumn, field settingField) {
+	{{ value, placeholder := column.value(field.Name), column.Inherited + " (" + optionLabel(field, column.Model.Inherited[field.Name]) + ")" }}
+	{{ label := fieldLabel(ctx, column, field) + " (" + column.Title + ")" }}
+	if field.Options != nil {
+		<select id={ column.IDPrefix + field.Name } name={ field.Name } form={ column.FormID } aria-label={ label } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
+			<option value="" selected?={ value == nil }>{ placeholder }</option>
+			for _, option := range field.Options {
+				<option value={ option } selected?={ value != nil && *value == option }>{ optionLabel(field, option) }</option>
+			}
+		</select>
+	} else {
+		{{ attributes := templ.Attributes{"form": column.FormID, "aria-label": label} }}
+		if field.Name == "timezone" {
+			{{ attributes["list"] = timezonesID }}
+		}
+		<div class="space-y-1">
+			@input.Input(input.Props{
+				ID:          column.IDPrefix + field.Name,
+				Name:        field.Name,
+				Value:       settingValue(value),
+				Placeholder: placeholder,
+				Attributes:  attributes,
+			})
+			if field.Name == "timezone" {
+				@button.Button(button.Props{
+					ID:         column.IDPrefix + "timezone--browser",
+					Variant:    button.VariantLink,
+					Class:      "h-auto justify-start whitespace-normal p-0 text-left text-xs",
+					Attributes: templ.Attributes{"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.querySelector('input').value = Intl.DateTimeFormat().resolvedOptions().timeZone")},
+				}) {
+					Use this browser's timezone
+				}
+			}
+		</div>
+	}
+}
+
+// timezonesID is the list of timezones the timezone inputs suggest as they are typed
+const timezonesID = "site--settings--timezones"
+
+// timezoneSuggestions fills the timezones suggested with the browser's, its own first, as there are too many to pick from
+templ timezoneSuggestions() {
+	<datalist id={ timezonesID }></datalist>
+	<script type="text/javascript">
+		(() => {
+			const own = Intl.DateTimeFormat().resolvedOptions().timeZone
+			const zones = [own, ...Intl.supportedValuesOf("timeZone").filter((zone) => zone !== own)]
+			document.getElementById("site--settings--timezones").append(...zones.map((zone) => new Option(zone === own ? "This browser's timezone" : zone, zone)))
+		})()
+	</script>
+}
+
+templ SettingsSaved() {
+	@successtoast.Toast("Settings Saved")
+}

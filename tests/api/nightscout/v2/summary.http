@@ -1,0 +1,6 @@
+
+
+NAME get_summary_v2
+GET http://{{ site }}/api/v2/summary?token={{ token }}
+ASSERT_STATUS 200
+

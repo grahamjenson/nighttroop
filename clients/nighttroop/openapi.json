@@ -1,0 +1,813 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Nighttroop",
+    "version": "0.1.0",
+    "description": "Nighttroop's JSON API. Each endpoint gives the host it is on: POST /site is on the public host; /api/... is the Nightscout API, on a site's Nightscout host; everything else is on a site's host, with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings, except on the Nightscout API, which always gives it in mg/dL, as Nightscout does; a Nightscout document says its units in its units field."
+  },
+  "tags": [
+    { "name": "Site", "description": "Creating a site, signing in, and its summary, on the public host and a site's host" },
+    { "name": "Data", "description": "A site's records, loop settings and summaries, on a site's host" },
+    { "name": "Settings", "description": "The signed in identity's settings, on a site's host" },
+    { "name": "Nightscout", "description": "The Nightscout API, on a site's Nightscout host, for Nightscout's apps and devices" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "servers": [{ "url": "https://{site_id}.nighttroop.example", "description": "A site's host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+  "paths": {
+    "/site": {
+      "servers": [{ "url": "https://nighttroop.example", "description": "The public host" }],
+      "post": {
+        "operationId": "CreateSite", "tags": ["Site"],
+        "summary": "Creates a site, on the public host, and gives its credentials once",
+        "security": [],
+        "responses": {
+          "200": { "description": "The new site", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatedSite" } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/login/passkey/begin": {
+      "post": {
+        "operationId": "PasskeyLoginBegin", "tags": ["Site"],
+        "summary": "Begins signing in with any of the site's passkeys: the WebAuthn options for navigator.credentials.get, its challenge kept in a cookie for 5 minutes",
+        "security": [],
+        "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/login/passkey/finish": {
+      "post": {
+        "operationId": "PasskeyLoginFinish", "tags": ["Site"],
+        "summary": "Signs in the identity whose passkey signed the challenge, with no password or TOTP, setting the login cookie",
+        "security": [],
+        "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
+        "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/welcome/passkey/begin": {
+      "post": {
+        "operationId": "WelcomePasskeyBegin", "tags": ["Site"],
+        "summary": "Begins adding a new or recovered site's admin a passkey from its welcome page, only by the browser its credentials were shown to in the last 15 minutes: the WebAuthn options for navigator.credentials.create",
+        "security": [],
+        "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/welcome/passkey/finish": {
+      "post": {
+        "operationId": "WelcomePasskeyFinish", "tags": ["Site"],
+        "summary": "Keeps the new or recovered site's admin's passkey, without the authenticator's model or attestation, and signs the admin in with it, setting the login cookie",
+        "security": [],
+        "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
+        "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/settings/account/passkeys/begin": {
+      "post": {
+        "operationId": "AccountPasskeyBegin", "tags": ["Settings"],
+        "summary": "Begins adding a passkey to the signed in identity, one that signs in to the website, up to 10: the WebAuthn options for navigator.credentials.create, asking no attestation and excluding its passkeys",
+        "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/settings/account/passkeys/finish": {
+      "post": {
+        "operationId": "AccountPasskeyFinish", "tags": ["Settings"],
+        "summary": "Keeps the signed in identity's new passkey, without the authenticator's model or attestation, answering with My Account to go to",
+        "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
+        "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/login": {
+      "post": {
+        "operationId": "Login", "tags": ["Site"],
+        "summary": "Signs an admin (with TOTP) or user in, for a JWT",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "responses": {
+          "200": { "description": "Signed in", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginToken" } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/summary": {
+      "get": {
+        "operationId": "GetSummary", "tags": ["Site"],
+        "summary": "The site's summary over the last hours (6 by default, a week at most)",
+        "parameters": [{ "name": "hours", "in": "query", "schema": { "type": "integer", "format": "int64" } }],
+        "responses": {
+          "200": { "description": "The summary, as a list of one", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SummaryList" } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/data/glucose": {
+      "get": {
+        "operationId": "ListGlucoseReadings", "tags": ["Data"], "summary": "The site's glucose readings, newest first",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingList" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "CreateGlucoseReading", "tags": ["Data"], "summary": "Adds a glucose reading",
+        "requestBody": { "$ref": "#/components/requestBodies/GlucoseReadingBody" },
+        "responses": { "201": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/glucose/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetGlucoseReading", "tags": ["Data"], "summary": "The glucose reading with the ID",
+        "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "UpdateGlucoseReading", "tags": ["Data"], "summary": "Changes the glucose reading with the ID",
+        "requestBody": { "$ref": "#/components/requestBodies/GlucoseReadingBody" },
+        "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteGlucoseReading", "tags": ["Data"], "summary": "Deletes the glucose reading with the ID",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/insulin": {
+      "get": {
+        "operationId": "ListInsulinDoses", "tags": ["Data"], "summary": "The site's insulin doses, newest first",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/InsulinDoseList" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "CreateInsulinDose", "tags": ["Data"], "summary": "Adds an insulin dose",
+        "requestBody": { "$ref": "#/components/requestBodies/InsulinDoseBody" },
+        "responses": { "201": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/insulin/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetInsulinDose", "tags": ["Data"], "summary": "The insulin dose with the ID",
+        "responses": { "200": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "UpdateInsulinDose", "tags": ["Data"], "summary": "Changes the insulin dose with the ID",
+        "requestBody": { "$ref": "#/components/requestBodies/InsulinDoseBody" },
+        "responses": { "200": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteInsulinDose", "tags": ["Data"], "summary": "Deletes the insulin dose with the ID",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/food": {
+      "get": {
+        "operationId": "ListFoodIntakes", "tags": ["Data"], "summary": "The site's food intakes, newest first",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/FoodIntakeList" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "CreateFoodIntake", "tags": ["Data"], "summary": "Adds a food intake",
+        "requestBody": { "$ref": "#/components/requestBodies/FoodIntakeBody" },
+        "responses": { "201": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/food/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetFoodIntake", "tags": ["Data"], "summary": "The food intake with the ID",
+        "responses": { "200": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "UpdateFoodIntake", "tags": ["Data"], "summary": "Changes the food intake with the ID",
+        "requestBody": { "$ref": "#/components/requestBodies/FoodIntakeBody" },
+        "responses": { "200": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteFoodIntake", "tags": ["Data"], "summary": "Deletes the food intake with the ID",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/presets/loop-settings": {
+      "get": {
+        "operationId": "ListLoopSettings", "tags": ["Data"], "summary": "The sets of loop settings the site's records were made with, newest first",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/LoopSettingsList" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/presets/loop-settings/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetLoopSettings", "tags": ["Data"], "summary": "The set of loop settings with the ID",
+        "responses": { "200": { "$ref": "#/components/responses/LoopSettingsResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteLoopSettings", "tags": ["Data"], "summary": "Deletes the set of loop settings with the ID",
+        "description": "Deletes the settings for good. The profiles and device statuses sent with them are kept, and read back without them.",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/summary-periods/{id}": {
+      "get": {
+        "operationId": "GetSummaryPeriod", "tags": ["Data"],
+        "summary": "A day, week, fortnight or month of the site's data with its AGP, built from its kept days when not kept itself",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "description": "The period and a date in it, from today back a year, like week-2026-01-31", "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "The period", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/SummaryPeriod" } } } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/reports/summaries/regenerate": {
+      "post": {
+        "operationId": "RegenerateSummaries", "tags": ["Data"],
+        "summary": "Asks for the site's last year of summaries to be built again from its data, by a background job; admins only",
+        "responses": {
+          "202": { "description": "The regeneration is queued", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "object", "properties": { "regenerating": { "type": "boolean" } } } } } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/v2/authorization/request/{token}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsV2Authorize", "tags": ["Nightscout"],
+        "summary": "Exchanges a device's Nightscout token for a JWT",
+        "security": [],
+        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "A JWT", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NsAuthorization" } } } }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v3/authorization/request/{token}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsV3Authorize", "tags": ["Nightscout"],
+        "summary": "Exchanges a device's Nightscout token for a JWT",
+        "security": [],
+        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "A JWT", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NsAuthorization" } } } }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/status": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV1Status", "tags": ["Nightscout"], "summary": "The site's Nightscout status: its name, version, settings and the API's abilities", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
+    "/api/v1/versions": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV1Versions", "tags": ["Nightscout"], "summary": "The Nightscout API versions the site has", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" } } }
+    },
+    "/api/v1/verifyauth": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV1VerifyAuth", "tags": ["Nightscout"], "summary": "Whether the request's API secret, token or JWT is accepted, and what it can do", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
+    "/api/v1/experiments/test": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV1ExperimentsTest", "tags": ["Nightscout"], "summary": "How Loop checks its API secret: 200 when it can upload treatments", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v1/alexa": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "post": {
+        "operationId": "NsV1Alexa", "tags": ["Nightscout"],
+        "summary": "Answers Nightscout's Alexa skill: its glucose, delta, IOB, COB and uploader battery intents",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/googlehome": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "post": {
+        "operationId": "NsV1GoogleHome", "tags": ["Nightscout"],
+        "summary": "Answers Nightscout's Google Home action, through Dialogflow, with the same intents as Alexa",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/notifications/ack": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsV1AckNotifications", "tags": ["Nightscout"],
+        "summary": "Snoozes the identity's alarms in a group up to a level, as the /alarm socket's ack does",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "level", "in": "query", "schema": { "type": "integer" } }, { "name": "group", "in": "query", "schema": { "type": "string" } }, { "name": "time", "in": "query", "description": "How long to snooze for, in milliseconds", "schema": { "type": "integer", "format": "int64" } }],
+        "responses": { "200": { "description": "OK", "content": { "text/plain": { "schema": { "type": "string" } } } }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/adminnotifies": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV1AdminNotifies", "tags": ["Nightscout"], "summary": "Notices for the site's admin, of which there are none", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
+    "/pebble": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsPebble", "tags": ["Nightscout"],
+        "summary": "The newest readings for Pebble and other watch faces, as strings in the units asked for",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "count", "in": "query", "description": "How many readings, 1 by default", "schema": { "type": "integer", "minimum": 1, "maximum": 1000 } }, { "name": "units", "in": "query", "description": "mmol or mg/dl, the identity's own units by default", "schema": { "type": "string" } }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/{collection}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV1Search", "tags": ["Nightscout"], "summary": "Searches a collection, newest first, with Nightscout's find query",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "post": {
+        "operationId": "NsV1Create", "tags": ["Nightscout"],
+        "summary": "Creates one document or each in an array, and returns those created",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocuments" },
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "put": {
+        "operationId": "NsV1ReplaceByBody", "tags": ["Nightscout"],
+        "summary": "Replaces the document with the _id in the body",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "delete": {
+        "operationId": "NsV1DeleteByQuery", "tags": ["Nightscout"],
+        "summary": "Soft deletes the entries a search with the query finds, at most 1000, as xDrip4iOS deletes readings; only entries, and any other filter or one without a date is a 400",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsFindType" }, { "$ref": "#/components/parameters/NsFindDateGte" }, { "$ref": "#/components/parameters/NsFindDateLte" }, { "$ref": "#/components/parameters/NsFindDateIn" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/{collection}/current": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": { "operationId": "NsV1Current", "tags": ["Nightscout"], "summary": "The newest document, in a list of one; for profile, as in Nightscout, the profile set itself", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v1/{collection}/{identifier}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }, { "$ref": "#/components/parameters/NsIdentifier" }],
+      "get": {
+        "operationId": "NsV1Get", "tags": ["Nightscout"],
+        "summary": "The document with the identifier, or the documents of a type, such as sgv",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/NsFields" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "put": {
+        "operationId": "NsV1Replace", "tags": ["Nightscout"], "summary": "Replaces the document with the identifier",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "delete": {
+        "operationId": "NsV1Delete", "tags": ["Nightscout"],
+        "summary": "Deletes the document with the identifier, or the documents of a type",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsPermanent" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/slice/{collection}/{field}/{type}/{prefix}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV1Slice", "tags": ["Nightscout"], "summary": "The documents whose field starts with the prefix, in a collection's documents of a type",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "field", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "type", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "prefix", "in": "path", "required": true, "schema": { "type": "string" } }, { "$ref": "#/components/parameters/NsCount" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/count/{collection}/where": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV1Count", "tags": ["Nightscout"], "summary": "How many documents in a collection a search finds",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/times/{prefix}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsV1Times", "tags": ["Nightscout"],
+        "summary": "The entries whose dateString starts with the prefix, such as 2026-10",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "prefix", "in": "path", "required": true, "schema": { "type": "string" } }, { "$ref": "#/components/parameters/NsCount" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/echo/{collection}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": { "operationId": "NsV1Echo", "tags": ["Nightscout"], "summary": "How a search of the collection is understood, without running it", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
+    "/api/v2/properties": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV2Properties", "tags": ["Nightscout"], "summary": "The site's current values, such as its latest glucose, delta, IOB and COB", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v2/properties/{names}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsV2PropertiesNamed", "tags": ["Nightscout"], "summary": "The named current values only",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "names", "in": "path", "required": true, "description": "Comma separated, such as bgnow,delta", "schema": { "type": "string" } }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v2/summary": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV2Summary", "tags": ["Nightscout"], "summary": "The site's IOB and COB, and when its sensor and cannula were last changed", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v2/authorization/debug/check/{permission}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsV2CheckPermission", "tags": ["Nightscout"],
+        "summary": "Whether the token or JWT has a permission, such as api:settings:create: 200 when it has, 403 when not",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "permission", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v3/version": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV3Version", "tags": ["Nightscout"], "summary": "The site's Nightscout version and the API's", "security": [], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
+    },
+    "/api/v3/status": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV3Status", "tags": ["Nightscout"], "summary": "The site's Nightscout status and what the token or JWT can do in each collection", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v3/test": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV3Test", "tags": ["Nightscout"], "summary": "Whether the API is up", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v3/lastModified": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV3LastModified", "tags": ["Nightscout"], "summary": "When each collection last changed", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v3/{collection}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV3Search", "tags": ["Nightscout"], "summary": "Searches a collection, with API v3's filters, sort, limit and fields",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Documents" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "post": {
+        "operationId": "NsV3Create", "tags": ["Nightscout"], "summary": "Creates a document, or replaces the one it duplicates",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "201": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v3/{collection}/history/{since}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV3History", "tags": ["Nightscout"],
+        "summary": "The documents changed since a time, the oldest change first, including deletions",
+        "description": "The documents with a srvModified at or after since, the oldest srvModified first, then by date, deleted ones with isValid false. The ETag is the newest srvModified, which the next page starts from.",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "since", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }, { "$ref": "#/components/parameters/Limit" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Documents" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v3/{collection}/{identifier}": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }, { "$ref": "#/components/parameters/NsIdentifier" }],
+      "get": {
+        "operationId": "NsV3Read", "tags": ["Nightscout"], "summary": "The document with the identifier",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsFields" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "put": {
+        "operationId": "NsV3Replace", "tags": ["Nightscout"], "summary": "Replaces the document with the identifier, or creates it",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "201": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "patch": {
+        "operationId": "NsV3Patch", "tags": ["Nightscout"], "summary": "Changes the fields given of the document with the identifier",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "delete": {
+        "operationId": "NsV3Delete", "tags": ["Nightscout"], "summary": "Deletes the document with the identifier",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsPermanent" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" },
+      "nsToken": { "type": "apiKey", "in": "query", "name": "token", "description": "A device's Nightscout token" },
+      "nsApiSecret": { "type": "apiKey", "in": "header", "name": "api-secret", "description": "The SHA-1 hex of a device's Nightscout token" }
+    },
+    "parameters": {
+      "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+      "Limit": { "name": "limit", "in": "query", "description": "At most 1000", "schema": { "type": "integer", "format": "int64" } },
+      "Skip": { "name": "skip", "in": "query", "schema": { "type": "integer", "format": "int64" } },
+      "NsCollection": { "name": "collection", "in": "path", "required": true, "schema": { "type": "string", "enum": ["entries", "treatments", "devicestatus", "profile", "food", "settings", "activity"] } },
+      "NsIdentifier": { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" } },
+      "NsCount": { "name": "count", "in": "query", "description": "How many documents, at most 1000", "schema": { "type": "integer", "format": "int64" } },
+      "NsSort": { "name": "sort", "in": "query", "description": "A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first", "schema": { "type": "string" } },
+      "NsSortDesc": { "name": "sort$desc", "in": "query", "description": "A field to sort by, descending", "schema": { "type": "string" } },
+      "NsFields": { "name": "fields", "in": "query", "description": "Comma separated fields to return", "schema": { "type": "string" } },
+      "NsDateGte": { "name": "date$gte", "in": "query", "description": "Documents from this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsDateLte": { "name": "date$lte", "in": "query", "description": "Documents up to this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsFindType": { "name": "find[type]", "in": "query", "description": "Documents of this type, such as sgv", "schema": { "type": "string" } },
+      "NsFindDateGte": { "name": "find[date][$gte]", "in": "query", "description": "Documents from this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsFindDateLte": { "name": "find[date][$lte]", "in": "query", "description": "Documents up to this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsFindDateIn": { "name": "find[date][$in][]", "in": "query", "description": "Documents at exactly these times, in milliseconds", "schema": { "type": "array", "items": { "type": "integer", "format": "int64" } } },
+      "NsPermanent": { "name": "permanent", "in": "query", "description": "Deletes the row instead of marking it deleted", "schema": { "type": "boolean" } }
+    },
+    "requestBodies": {
+      "PasskeyCredential": { "required": true, "content": { "application/json": { "schema": { "type": "object", "description": "The PublicKeyCredential the browser made or signed with, its binary fields in base64url", "additionalProperties": true } } } },
+      "GlucoseReadingBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GlucoseReading" } } } },
+      "InsulinDoseBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InsulinDose" } } } },
+      "FoodIntakeBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FoodIntake" } } } },
+      "NsDocument": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NsDocument" } } } },
+      "NsDocuments": { "required": true, "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } }
+    },
+    "responses": {
+      "PasskeyOptions": { "description": "WebAuthn options, as publicKey, for the browser", "content": { "application/json": { "schema": { "type": "object", "properties": { "publicKey": { "type": "object", "additionalProperties": true } } } } } },
+      "PasskeySignedIn": { "description": "Done, with where to go", "content": { "application/json": { "schema": { "type": "object", "properties": { "redirect": { "type": "string" } } } } } },
+      "PasskeyError": { "description": "Why the passkey did not work", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+      "Error": { "description": "An error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Deleted": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "description": "deleted" } } } } } },
+      "GlucoseReadingResult": { "description": "A reading", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/GlucoseReading" } } } } } },
+      "GlucoseReadingList": { "description": "Readings, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/GlucoseReading" } } } }] } } } } } },
+      "InsulinDoseResult": { "description": "A dose", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/InsulinDose" } } } } } },
+      "InsulinDoseList": { "description": "Doses, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } } } }] } } } } } },
+      "FoodIntakeResult": { "description": "A food intake", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/FoodIntake" } } } } } },
+      "LoopSettingsResult": { "description": "A set of a loop app's settings", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/LoopSettings" } } } } } },
+      "LoopSettingsList": { "description": "Each set of the loop apps' settings, the last seen first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/LoopSettings" } } } }] } } } } } },
+      "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } }] } } } } } },
+      "NsError": { "description": "A Nightscout error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NsObject": { "description": "A Nightscout response", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
+      "NsDocuments": { "description": "Documents, newest first", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } },
+      "NsV3Result": { "description": "An API v3 result", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": {} } } } } },
+      "NsV3Document": { "description": "A document", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "identifier": { "type": "string" }, "lastModified": { "type": "integer", "format": "int64" }, "isDeduplication": { "type": "boolean" }, "result": { "$ref": "#/components/schemas/NsDocument" } } } } } },
+      "NsV3Documents": { "description": "Documents", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } } } }
+    },
+    "schemas": {
+      "SearchPage": {
+        "type": "object",
+        "description": "A page of a search, newest first. A data collection also counts what its search matches over every page, and when the earliest and latest occurred, in ms, null when it matches none.",
+        "properties": {
+          "skip": { "type": "integer", "format": "int64" },
+          "limit": { "type": "integer", "format": "int64", "description": "50 unless the request asks for another, at most 1000" },
+          "total": { "type": "integer", "format": "int64" },
+          "earliest_at": { "type": "integer", "format": "int64", "nullable": true },
+          "latest_at": { "type": "integer", "format": "int64", "nullable": true }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": { "status": { "type": "integer" }, "message": { "type": "string" } }
+      },
+      "CreatedSite": {
+        "type": "object",
+        "required": ["site_subdomain", "api_key", "totp_secret", "backup_key", "pwd_nstoken", "read_only_nstoken"],
+        "properties": {
+          "site_subdomain": { "type": "string" },
+          "api_key": { "type": "string", "description": "The admin's password" },
+          "totp_secret": { "type": "string", "description": "The admin's TOTP secret" },
+          "backup_key": { "type": "string", "description": "Gets a new admin login on the recover page; it works once" },
+          "pwd_nstoken": { "type": "string", "description": "The PWD phone's Nightscout token" },
+          "read_only_nstoken": { "type": "string", "description": "The read only device's Nightscout token" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["name", "password"],
+        "properties": {
+          "name": { "type": "string" },
+          "password": { "type": "string" },
+          "totp": { "type": "string", "description": "A code from the authenticator app, for an admin" }
+        }
+      },
+      "LoginToken": {
+        "type": "object",
+        "required": ["token", "expires_at"],
+        "properties": {
+          "token": { "type": "string", "description": "A JWT, sent as `Authorization: Bearer <token>`" },
+          "expires_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Units": { "type": "string", "enum": ["mg/dL", "mmol/L"] },
+      "Record": {
+        "type": "object",
+        "description": "What every record has. Read only fields are set by the server, which ignores them if sent.",
+        "properties": {
+          "id": { "type": "string", "readOnly": true },
+          "notes": { "type": "string" },
+          "reason": { "type": "string" },
+          "utc_offset_minutes": { "type": "integer", "format": "int64" },
+          "occurred_at": { "type": "integer", "format": "int64", "description": "Now, if not sent when creating" },
+          "created_at": { "type": "integer", "format": "int64", "readOnly": true },
+          "updated_at": { "type": "integer", "format": "int64", "readOnly": true },
+          "created_by_app_name": { "type": "string", "readOnly": true },
+          "created_by_device_name": { "type": "string", "readOnly": true },
+          "created_by_identity_name": { "type": "string", "readOnly": true },
+          "updated_by_identity_name": { "type": "string", "readOnly": true }
+        }
+      },
+      "GlucoseReading": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "reading": { "type": "number", "format": "double", "description": "In units" },
+              "units": { "$ref": "#/components/schemas/Units" },
+              "reading_type": { "type": "string", "description": "sgv from a sensor or mbg from a meter" },
+              "original_units": { "$ref": "#/components/schemas/Units" },
+              "measurement_method": { "type": "string" },
+              "delta": { "type": "number", "format": "double" },
+              "direction": { "type": "string" },
+              "noise": { "type": "number", "format": "double" },
+              "filtered": { "type": "number", "format": "double" },
+              "unfiltered": { "type": "number", "format": "double" },
+              "rssi": { "type": "number", "format": "double" }
+            }
+          }
+        ]
+      },
+      "InsulinDose": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "dose": { "type": "number", "format": "double", "description": "Units of insulin" },
+              "dose_type": { "type": "string" },
+              "split_now": { "type": "number", "format": "double" },
+              "split_ext": { "type": "number", "format": "double" },
+              "automatic": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site" }
+            }
+          }
+        ]
+      },
+      "LoopSettings": {
+        "type": "object",
+        "description": "A set of a loop app's settings, kept once however often it was sent: Loop's from its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses",
+        "required": ["id", "app", "source", "settings", "first_seen_at", "last_seen_at", "created_at"],
+        "properties": {
+          "id": { "type": "string", "description": "The SHA-256 of the app and the settings, in hex" },
+          "app": { "type": "string", "description": "loop, trio or aaps" },
+          "source": { "type": "string", "description": "What they were sent in: profile or devicestatus" },
+          "settings": { "type": "object", "additionalProperties": true, "description": "As the app sent them" },
+          "first_seen_at": { "type": "integer", "format": "int64" },
+          "last_seen_at": { "type": "integer", "format": "int64" },
+          "created_by_device_name": { "type": "string", "nullable": true },
+          "created_at": { "type": "integer", "format": "int64" },
+          "previous_id": { "type": "string", "nullable": true, "description": "The set of the same app last seen before this one; only on a set read alone, null for an app's first" },
+          "changes": { "type": "array", "nullable": true, "description": "The settings that differ from the previous set, glucose in units; only on a set read alone", "items": { "$ref": "#/components/schemas/LoopSettingsChange" } },
+          "units": { "$ref": "#/components/schemas/Units" }
+        }
+      },
+      "LoopSettingsChange": {
+        "type": "object",
+        "description": "A setting that differs from the set before, by its names joined by dots, a preset's by its name",
+        "required": ["field"],
+        "properties": {
+          "field": { "type": "string" },
+          "old": { "type": "string", "nullable": true, "description": "As it reads, null when it was not sent" },
+          "new": { "type": "string", "nullable": true, "description": "As it reads, null when it is not sent" }
+        }
+      },
+      "FoodIntake": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "food_type": { "type": "string" },
+              "category": { "type": "string" },
+              "subcategory": { "type": "string" },
+              "absorption_time_minutes": { "type": "integer", "format": "int64" },
+              "pre_bolus": { "type": "number", "format": "double" },
+              "carbs": { "type": "number", "format": "double", "description": "Grams" },
+              "fat": { "type": "number", "format": "double" },
+              "protein": { "type": "number", "format": "double" },
+              "fibre": { "type": "number", "format": "double" },
+              "energy": { "type": "number", "format": "double" },
+              "portions": { "type": "number", "format": "double" }
+            }
+          }
+        ]
+      },
+      "CleanGlucoseReading": {
+        "allOf": [
+          { "$ref": "#/components/schemas/GlucoseReading" },
+          {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string", "description": "direct, or the connector that wrote it: nightscout, dexcom, libre or virtual" },
+              "diff_per_5m": { "type": "number", "format": "double" }
+            }
+          }
+        ]
+      },
+      "SummaryPeriod": {
+        "type": "object",
+        "description": "A period from start until end, named by its first date. Its times in each range are of all its days' readings, so a day of few counts for little; its daily dose and daily carbs are the means of its days with data that are over, or of all of them when none is; and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 5 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose in the 15 minutes around it, empty when there was none; a day's is of the 7 days to it. Its glucose readings are all its days', with their mean, standard deviation, coefficient of variation and GMI, and its times very low (below 54 mg/dL), low, in range, high and very high (above 250 mg/dL) add up to 100.",
+        "properties": {
+          "period": { "type": "string", "enum": ["day", "week", "fortnight", "month"] },
+          "date": { "type": "string", "format": "date" },
+          "timezone": { "type": "string" },
+          "start": { "type": "integer", "format": "int64" },
+          "end": { "type": "integer", "format": "int64" },
+          "days": { "type": "integer", "format": "int64", "description": "How many of its days have data" },
+          "time_in_range": { "type": "number", "format": "double", "nullable": true },
+          "total_daily_dose": { "type": "number", "format": "double" },
+          "total_daily_basal": { "type": "number", "format": "double", "description": "The basal of its daily dose, in U; the rest is boluses" },
+          "total_daily_carbs": { "type": "number", "format": "double" },
+          "glucose": { "type": "array", "items": { "type": "number", "format": "double", "nullable": true } },
+          "agp": { "type": "array", "items": { "type": "array", "items": { "type": "number", "format": "double" } } },
+          "loop_iob": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "loop_iob_basal": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "loop_iob_treatment": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "loop_cob": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "glucose_readings": { "type": "integer", "format": "int64", "description": "Its glucose readings, a meter's and CGMs'" },
+          "meter_readings": { "type": "integer", "format": "int64", "description": "Its glucose readings from a meter" },
+          "mean": { "type": "number", "format": "double", "nullable": true, "description": "The mean of its glucose readings, in units" },
+          "sd": { "type": "number", "format": "double", "nullable": true, "description": "The standard deviation of its glucose readings, in units" },
+          "cv": { "type": "number", "format": "double", "nullable": true, "description": "The coefficient of variation, its standard deviation as a percent of its mean" },
+          "gmi": { "type": "number", "format": "double", "nullable": true, "description": "The glucose management indicator, the HbA1c percent its mean is estimated to give" },
+          "time_very_low": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings below 54 mg/dL" },
+          "time_low": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings from 54 mg/dL to below the range" },
+          "time_high": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings above the range up to 250 mg/dL" },
+          "time_very_high": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings above 250 mg/dL" },
+          "cgm_active": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its 5 minutes, up to now, with a CGM reading" },
+          "units": { "$ref": "#/components/schemas/Units" }
+        }
+      },
+      "SummaryLoopSlots": {
+        "type": "array",
+        "description": "The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals",
+        "items": { "type": "number", "format": "double", "nullable": true }
+      },
+      "Summary": {
+        "type": "object",
+        "description": "The parts of the summary described here; the rest is kept in AdditionalProperties",
+        "additionalProperties": true,
+        "properties": {
+          "hours": { "type": "integer", "format": "int64" },
+          "since": { "type": "integer", "format": "int64" },
+          "units": { "$ref": "#/components/schemas/Units" },
+          "range_low": { "type": "number", "format": "double" },
+          "range_high": { "type": "number", "format": "double" },
+          "range_urgent_low": { "type": "number", "format": "double" },
+          "range_urgent_high": { "type": "number", "format": "double" },
+          "glucose_readings": { "type": "array", "items": { "$ref": "#/components/schemas/CleanGlucoseReading" } },
+          "insulin_doses": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } },
+          "food_intakes": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } }
+        }
+      },
+      "NsAuthorization": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "description": "A JWT, sent as `Authorization: Bearer <token>`" },
+          "sub": { "type": "string" },
+          "permissionGroups": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } },
+          "iat": { "type": "integer", "format": "int64" },
+          "exp": { "type": "integer", "format": "int64" }
+        }
+      },
+      "NsDocument": {
+        "type": "object",
+        "description": "A Nightscout document, such as an entry or treatment; the fields named here are common to most, the rest are kept in AdditionalProperties",
+        "additionalProperties": true,
+        "properties": {
+          "_id": { "type": "string" },
+          "identifier": { "type": "string" },
+          "type": { "type": "string" },
+          "eventType": { "type": "string" },
+          "date": { "type": "integer", "format": "int64" },
+          "dateString": { "type": "string" },
+          "created_at": { "type": "string" },
+          "sgv": { "type": "number", "format": "double", "description": "In units" },
+          "mbg": { "type": "number", "format": "double", "description": "In units" },
+          "units": { "type": "string", "description": "The units of sgv and mbg, always mg/dL" },
+          "direction": { "type": "string" },
+          "insulin": { "type": "number", "format": "double" },
+          "carbs": { "type": "number", "format": "double" },
+          "notes": { "type": "string" },
+          "enteredBy": { "type": "string" },
+          "device": { "type": "string" },
+          "utcOffset": { "type": "integer", "format": "int64" },
+          "srvModified": { "type": "integer", "format": "int64" },
+          "srvCreated": { "type": "integer", "format": "int64" },
+          "isValid": { "type": "boolean" }
+        }
+      },
+      "SummaryList": {
+        "type": "object",
+        "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/Summary" } } } }] } }
+      }
+    }
+  }
+}

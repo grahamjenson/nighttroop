@@ -1,0 +1,138 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// One settings page, General in the Settings hub, shows an admin the site's settings, which start on the defaults,
+// beside their own. The site's time zone and language are those of the browser that created it
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+ASSERT_TEXT_EQUALS #site--settings--settings-button General
+SCREENSHOT settings_menu
+CLICK #site--settings--settings-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings
+ASSERT_TEXT_VISIBLE Settings
+ASSERT_VISIBLE #site--settings--site--units
+ASSERT_VISIBLE #site--settings--identity--units
+ASSERT_VISIBLE #site--settings--site--timezone[value="UTC"]
+ASSERT_VISIBLE #site--settings--site--language[value="en"]
+// The week's days read as names, capitalised, as does the default
+ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value="sunday"] Sunday
+ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value=""] Default (Monday)
+SCREENSHOT site_settings
+
+// The timezone suggests the browser's timezones as it is typed, the browser's own first, and a button fills it in
+ASSERT_VISIBLE #site--settings--site--timezone[list="site--settings--timezones"]
+ASSERT_VISIBLE #site--settings--identity--timezone[list="site--settings--timezones"]
+ASSERT_TEXT_EQUALS #site--settings--timezones>option:first-child This browser's timezone
+ASSERT_TEXT_EQUALS #site--settings--timezones>option[value="Pacific/Auckland"] Pacific/Auckland
+CLICK #site--settings--site--timezone--browser
+ASSERT_VISIBLE #site--settings--site--timezone:not(:placeholder-shown)
+ASSERT_VISIBLE #site--settings--identity--timezone:placeholder-shown
+SCREENSHOT browser_timezone
+
+INPUT #site--settings--site--units mg/dL
+INPUT #site--settings--site--date_format DD/MM/YYYY
+INPUT #site--settings--site--timezone Pacific/Auckland
+CLICK #site--settings--site--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+
+// The saved values are shown when the page is opened again, and the admin's own settings follow the site's
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--site--units:has(option[value="mg/dL"][selected])
+ASSERT_VISIBLE #site--settings--site--date_format:has(option[value="DD/MM/YYYY"][selected])
+ASSERT_VISIBLE #site--settings--identity--units:has(option[value=""][selected]:text-is("Site setting (mg/dL)"))
+SCREENSHOT site_settings_saved
+
+// Saving their own settings leaves the site's as they are
+INPUT #site--settings--identity--week_start_day sunday
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+SCREENSHOT identity_settings_saved
+
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--identity--week_start_day:has(option[value="sunday"][selected])
+ASSERT_VISIBLE #site--settings--site--week_start_day:has(option[value=""][selected])
+ASSERT_VISIBLE #site--settings--site--units:has(option[value="mg/dL"][selected])
+
+// A bad value is refused
+INPUT #site--settings--identity--timezone Mars/Olympus
+CLICK #site--settings--identity--save
+ASSERT_STATUS 400
+ASSERT_TEXT_VISIBLE invalid timezone
+
+// It is shown as an error toast, not as bare text
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("invalid timezone")
+SCREENSHOT invalid_timezone_toast
+
+// Times are shown in the site's timezone and date format, as the admin has none of their own
+GOTO /data/glucose
+ASSERT_STATUS 200
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 120
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE {{ now "Pacific/Auckland" "02/01/2006 15:" }}
+SCREENSHOT glucose_in_site_timezone
+
+// The admin's own timezone is used over the site's
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--timezone Asia/Kathmandu
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE {{ now "Asia/Kathmandu" "02/01/2006 15:" }}
+SCREENSHOT glucose_in_identity_timezone
+
+// The admin's own date format is used over the site's on every page: a data page, its details and the summary
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--date_format MM/DD/YYYY
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE {{ now "Asia/Kathmandu" "01/02/2006 15:" }}
+SCREENSHOT glucose_in_identity_date_format
+CLICK #glucoseReadingsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--glucose--details >> text={{ now "Asia/Kathmandu" "01/02/2006 15:" }} >> nth=0
+SCREENSHOT glucose_details_in_identity_date_format
+CLICK #site--glucose--details--close
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--glucose--ago[title^="{{ now "Asia/Kathmandu" "01/02/2006 15:" }}"]
+SCREENSHOT summary_in_identity_date_format
+
+// The admin's own time format is used over the default's: 12-hour without seconds, so a phone's table is narrower
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--time_format hh:mm a
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE {{ now "Asia/Kathmandu" "01/02/2006 03:" }}
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> td >> nth=0 >> text=/^\S+ \d\d:\d\d [AP]M$/
+SCREENSHOT glucose_in_identity_time_format
+
+// On a phone the settings are one column: each setting's label, then the site's control and the admin's own, each
+// named, and the save buttons fit. The window is tall enough for the whole page, so fitting it checks only its width.
+WINDOW 390x2150
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #settings_page>div>div:has(#site--settings--site--units)>span Site
+ASSERT_TEXT_EQUALS #settings_page>div>div:has(#site--settings--identity--units)>span Yours
+ASSERT_VISIBLE #site--settings--site--units
+ASSERT_VISIBLE #site--settings--identity--units
+ASSERT_VISIBLE #site--settings--site--save
+ASSERT_VISIBLE #site--settings--identity--save
+ASSERT_FITS
+SCREENSHOT settings_phone

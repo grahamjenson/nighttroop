@@ -1,0 +1,65 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A latest reading older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how long
+// there has been none
+CLICK #site--nav--data
+ASSERT_STATUS 200
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 6.4
+INPUT #site--glucose--create--occurred-at {{ slice (utctime 45) 0 16 }}
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary--glucose--stale:text-matches("^No reading for 4[56] min$")
+ASSERT_VISIBLE #site--summary--glucose--reading.text-gray-400
+SCREENSHOT summary_stale
+
+// A new reading under the low alarm (72 mg/dL by default) is coloured low and says Low, as the graph colours it
+CLICK #site--nav--data
+ASSERT_STATUS 200
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 3.2
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 3.2
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-low
+// A new reading is not stale
+ASSERT_NOT_VISIBLE #site--summary--glucose--stale
+ASSERT_TEXT_EQUALS #site--summary--glucose--range Low
+SCREENSHOT summary_low
+
+// One over the high alarm (180 mg/dL by default) is coloured high, in a darker amber than the graph's to read as text,
+// and says High
+CLICK #site--nav--data
+ASSERT_STATUS 200
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 12.5
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 12.5
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-high-text
+ASSERT_TEXT_EQUALS #site--summary--glucose--range High
+SCREENSHOT summary_high
+
+// One between them is coloured in range, with no word beside it
+CLICK #site--nav--data
+ASSERT_STATUS 200
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 6.4
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 6.4
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-in-range
+ASSERT_NOT_VISIBLE #site--summary--glucose--range

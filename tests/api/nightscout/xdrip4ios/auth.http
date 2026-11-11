@@ -1,0 +1,64 @@
+# xDrip4iOS (xdripswift) authentication and connection checks.
+# The settings take a URL, an API_SECRET and a token. Every request sends the token as ?token=, and the
+# API_SECRET as its lowercase hex SHA1 in an api-secret header (String.sha1()).
+# Nighttroop has no API secret, so a site's Nightscout token goes in the app's token setting, or its API_SECRET.
+# - SettingsViewNightscoutSettingsViewModel.testNightscoutCredentials (the Test button):
+#   GET /api/v1/experiments/test with api-secret: the SHA1 of the API_SECRET, or else the token itself.
+#   2xx is verified, 401 is "API_SECRET is not valid" or "Token is not valid"
+# - NightscoutSyncManager.testNightscoutCredentials, when the URL, secret or token change:
+#   GET /api/v1/experiments/test?token=<token>, needing a 2xx
+# - FollowerServiceStatusMonitor: GET /api/v1/status.json with no credentials, reading "status"
+
+INCLUDE steps/new_ns_site.steps
+
+NAME xdrip4ios_settings_test_token_as_api_secret
+GET http://{{ site }}/api/v1/experiments/test
+H Content-Type: application/json
+H Accept: application/json
+H api-secret: {{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ok" "@status"
+
+NAME xdrip4ios_sync_test_token_in_query
+GET http://{{ site }}/api/v1/experiments/test?token={{ token }}
+H Content-Type: application/json
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "ok" "@status"
+
+# With the token as the API_SECRET, its SHA1 finds the device
+NAME xdrip4ios_settings_test_token_as_api_secret
+GET http://{{ site }}/api/v1/experiments/test
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+
+# The SHA1 of any other API_SECRET is no device's token, so the app says the API_SECRET is not valid
+NAME xdrip4ios_settings_test_api_secret_sha1
+GET http://{{ site }}/api/v1/experiments/test
+H api-secret: 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed
+ASSERT_STATUS 401
+
+# A read only token cannot upload, so like a Nightscout token without admin it is not valid for uploading
+NAME xdrip4ios_settings_test_read_only_token
+GET http://{{ site }}/api/v1/experiments/test?token={{ dig "create_new_site.read_only_nstoken" }}
+ASSERT_STATUS 401
+
+# The token in the query is used even when an API_SECRET's SHA1 is sent with it
+NAME xdrip4ios_upload_token_and_api_secret
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+H api-secret: 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed
+B {"uploader": {"name": "transmitter", "battery": 90}}
+ASSERT_STATUS 200
+
+# The status the app shows is "status", where ok is operational
+NAME xdrip4ios_status
+GET http://{{ site }}/api/v1/status.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ok" "@status"
+
+# The follower service status asks with no credentials and shows a fetch error on anything but a 2xx. It stays a 401,
+# as from a Nightscout with AUTH_DEFAULT_ROLES=denied, where status needs api:status:read: LoopFollow's connect
+# check (verifyURLAndToken) reads a 401 without a token as "token required", and a 200 as connected
+NAME xdrip4ios_status_no_credentials
+GET http://{{ site }}/api/v1/status.json
+ASSERT_STATUS 401

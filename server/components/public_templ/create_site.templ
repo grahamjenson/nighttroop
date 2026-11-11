@@ -1,0 +1,340 @@
+package public_templ
+
+import (
+	"nighttroop.t1d.nz/models/publicmodels"
+	"nighttroop.t1d.nz/server/components/authenticator"
+	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/server/components/ui/badge"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/templui/utils"
+)
+
+// CreateSite is the home page, whose button creates a site when the public can, and opens the new site's welcome page
+templ CreateSite(open bool) {
+	@createPage() {
+		if !open {
+			<p id="public--create-site-off" class="rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
+				Creating new sites is turned off on this server for now.
+			</p>
+		} else {
+			@button.Button(button.Props{
+				ID:    "public--create-site-button",
+				Size:  button.SizeLg,
+				Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 hover:shadow-xl transition-all duration-200",
+				Attributes: templ.Attributes{
+					"hx-post":       "/site",
+					"hx-vals":       "js:{timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: navigator.language}",
+					"hx-status:4xx": "target:#error-container",
+					"hx-status:5xx": "target:#error-container",
+				},
+			}) {
+				Create Site
+			}
+			<div id="error-container" class="w-full mt-2 empty:hidden"></div>
+		}
+	}
+}
+
+// SiteWelcome is the page on a new or recovered site's own address that shows its credentials once. It asks for them
+// with the ID after its #, which only the browser that created or recovered the site has, then drops the ID from the
+// address and its history.
+templ SiteWelcome() {
+	@createPage() {
+		<form id="public--welcome" class="public--compact" hx-post="/welcome" hx-trigger="load" hx-target="#panel-content" hx-swap="innerHTML">
+			<input type="hidden" id="public--welcome--id" name="id"/>
+		</form>
+		<script type="text/javascript">
+			document.getElementById("public--welcome--id").value = location.hash.slice(1);
+			history.replaceState(null, "", location.pathname);
+		</script>
+	}
+}
+
+// WelcomeGone is a new or recovered site's welcome page whose credentials were already shown, or waited too long to be
+templ WelcomeGone(recoverURL string) {
+	<p id="public--welcome-gone" class="public--compact max-w-xl rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
+		These credentials have already been shown, or were not opened in time. The backup key gets a new admin login on the
+		<a id="public--welcome-gone--recover-link" href={ templ.SafeURL(recoverURL) } class="font-medium text-brand-night underline">recover page</a>.
+	</p>
+}
+
+// createPage is the home page's layout, with what its panel shows. Once a site's credentials are there, the panel is
+// the page: the header shrinks to the logo and name beside each other, and the rest of it is hidden.
+templ createPage() {
+	@PublicBase() {
+		<main class="group flex-1 flex flex-col items-center justify-center px-6 py-6 bg-gradient-to-b from-slate-100 via-slate-50 to-white has-[.public--compact]:justify-start has-[.public--compact]:py-6">
+			<div class="w-full max-w-3xl text-center">
+				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm group-has-[.public--compact]:hidden">
+					@icon.Rocket(icon.Props{Class: "size-3.5 text-brand-gold"})
+					Free hosting, Nightscout compatible
+					@badge.Badge(badge.Props{Variant: badge.VariantGold}) {
+					Alpha
+				}
+				</p>
+				<div class="flex flex-col items-center group-has-[.public--compact]:flex-row group-has-[.public--compact]:justify-center group-has-[.public--compact]:gap-3">
+					<img id="public--logo" src="/logo.svg" alt="" class="mt-4 size-16 sm:size-20 group-has-[.public--compact]:mt-0 group-has-[.public--compact]:size-10"/>
+					<h1 class="mt-2 text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 group-has-[.public--compact]:mt-0 group-has-[.public--compact]:text-3xl">Nighttroop</h1>
+				</div>
+				<p class="mt-3 text-base sm:text-lg text-slate-600 max-w-xl mx-auto group-has-[.public--compact]:hidden">
+					Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.
+				</p>
+				<div id="panel-content" class="mt-6 flex flex-col items-center group-has-[.public--compact]:mt-6">
+					{ children... }
+				</div>
+				<dl id="public--features" class="mt-6 grid gap-2 sm:gap-4 sm:grid-cols-3 text-left group-has-[.public--compact]:hidden">
+					@feature(icon.MousePointerClick, "One click", "No account to make. Your site and its credentials are generated instantly.")
+					@feature(icon.ShieldCheck, "Private by default", "Each site is isolated with its own admin login, TOTP and backup key.")
+					@feature(icon.RefreshCw, "Works with your apps", "Upload from AAPS or Trio like you would to Nightscout, or pull from Dexcom, Libre or a Nightscout site.")
+				</dl>
+				if url := httputils.FeedbackURL(ctx); url != "" {
+					<p id="public--feedback" class="mt-4 text-sm text-slate-600 group-has-[.public--compact]:hidden">
+						Nighttroop is in alpha, so tell us what works and what does not:
+						{ " " }
+						@footer.NewTabLink("public--feedback-link", url, "font-medium text-brand-night underline") {
+							give feedback
+						}
+					</p>
+				}
+			</div>
+		</main>
+	}
+}
+
+templ feature(ic func(...icon.Props) templ.Component, title, body string) {
+	// On a phone only its title shows, so the page still fits the window
+	<div class="rounded-xl border border-slate-200 bg-white px-4 py-2 sm:p-4 shadow-sm">
+		<dt class="flex items-center gap-2 font-semibold text-slate-900">
+			@ic(icon.Props{Class: "size-5 text-brand-night"})
+			{ title }
+		</dt>
+		<dd class="mt-2 hidden text-sm text-slate-600 sm:block">{ body }</dd>
+	</div>
+}
+
+templ CreateSiteRateLimited(seconds int) {
+	@alert.Alert(alert.Props{ID: "rate-limit-alert", Variant: alert.VariantWarning, Class: "mt-3", Attributes: templ.Attributes{"role": "alert"}}) {
+		<div class="flex items-center justify-center">
+			<!-- Animated Tailwind Spinner -->
+			<div class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-400" role="status"></div>
+			<span class="text-sm font-medium">
+				Please wait
+				<strong id="countdownNum" class="mx-1 font-bold text-rose-400">{ seconds }</strong>
+				seconds.
+			</span>
+		</div>
+	}
+	<script>
+    document.span = document.getElementById('countdownNum');
+
+    clearInterval(document._timer);
+
+    document._timer = setInterval(() => {
+        let count = parseInt(document.span.innerText);
+        if (count <= 1) {
+            clearInterval(document._timer);
+            document.getElementById('rate-limit-alert').remove();
+        } else {
+            document.span.innerText = count - 1;
+        }
+    }, 1000);
+</script>
+}
+
+templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
+	<div class="public--compact w-full max-w-2xl mx-auto text-left space-y-4">
+		@step("1", "Save your credentials somewhere safe", "They are shown once") {
+			<textarea id="public--site-info" hidden>{ newsite.AllInfo() }</textarea>
+			// Copying them all is the one thing to do here, so it is the step's main button
+			<div class="mx-5 mb-4 flex flex-col items-center gap-3 rounded-xl border border-brand-gold bg-brand-gold/10 p-4 sm:flex-row">
+				@copyButton("public--copy-button", "public--site-info", "Copy all credentials", "h-12 shrink-0 px-6 text-base font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30")
+				<p id="public--site-info--recover" class="text-sm text-slate-700">
+					<strong>Paste them into a password manager.</strong>
+					The backup key, with the site ID, is the only way back in on the
+					<a id="public--site-info--recover-link" href={ templ.SafeURL(newsite.RecoverURL) } class="font-medium text-brand-night underline">recover page</a>.
+				</p>
+			</div>
+			<div class="font-mono text-sm">
+				@group("Site")
+				<dl class="grid sm:grid-cols-2">
+					@row("url", "URL", newsite.URL, true)
+					@row("site-id", "Site ID", newsite.SiteID(), false)
+					@row("backup-key", "Backup key", newsite.BackupKey, false)
+				</dl>
+				// A recovery leaves the phone's credentials as they were, so there are none to show
+				if newsite.PwdNSToken != "" {
+					@group("Phone setup (AAPS / Trio)")
+					// The URL takes what the token's button leaves, so it fits on the line with it
+					<dl class="grid sm:grid-cols-[1fr_auto]">
+						@row("ns-url", "NS URL", newsite.PwdNSURL, false)
+						// The token is too long to read or type, so it is only copied
+						<div class="flex items-center px-4 py-1.5">
+							<dt class="sr-only">NS token</dt>
+							<dd>
+								<textarea id="public--site-info--ns-token" hidden>{ newsite.PwdNSToken }</textarea>
+								@copyButton("public--copy-ns-token", "public--site-info--ns-token", "Copy NS token", "h-7 px-2.5 font-sans text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100")
+							</dd>
+						</div>
+					</dl>
+				}
+			</div>
+		}
+		// The admin's login is with its TOTP, so it is clear whose the QR code is
+		@step("2", "Set up the admin login", "Scan the QR code with an authenticator app, then enter the code it shows") {
+			<dl class="mb-4 grid font-mono text-sm sm:grid-cols-2">
+				@row("username", "Username", "admin", false)
+				@row("password", "Password", newsite.AdminPassword, false)
+			</dl>
+			<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 px-5 pb-5">
+				@authenticator.Secret("public--site-info", security.TOTPURI(consts.FIRST_ADMIN_NAME, newsite.URL, newsite.AdminTotpSecret), newsite.AdminTotpSecret, 96)
+				<form
+					id="public--totp-check"
+					class="flex flex-wrap items-center justify-center gap-3"
+					hx-post="/site/totp"
+					hx-target="#public--totp-result"
+					hx-swap="innerHTML"
+				>
+					<input type="hidden" name="site" value={ newsite.SiteID() }/>
+					<input type="hidden" id="public--site-info--totp-secret" name="secret" value={ newsite.AdminTotpSecret }/>
+					<input
+						id="public--site-info--totp"
+						name="totp"
+						inputmode="numeric"
+						autocomplete="one-time-code"
+						maxlength="6"
+						placeholder="123456"
+						class="w-32 rounded-lg border border-slate-200 px-3 py-2 text-center font-mono text-lg tracking-widest"
+					/>
+					@button.Button(button.Props{ID: "public--totp-check-button", Type: button.TypeSubmit, Class: "bg-brand-night hover:bg-brand-night/90"}) {
+						Check code
+					}
+				</form>
+				<div id="public--totp-result" class="w-full text-center text-sm empty:hidden"></div>
+			</div>
+			<script type="text/javascript">
+				// A code is only digits, so a letter typed or pasted is dropped, and it is checked as soon as its sixth
+				// digit is in, without a click; the same code is not sent twice on its own, so a wrong one waits for another
+				(function () {
+					const code = document.getElementById("public--site-info--totp");
+					let sent = "";
+					code.addEventListener("input", () => {
+						code.value = code.value.replace(/\D/g, "");
+						if (code.value.length === 6 && code.value !== sent) {
+							sent = code.value;
+							document.getElementById("public--totp-check").requestSubmit();
+						}
+					});
+				})();
+			</script>
+		}
+		@step("3", "Log in to your site", "With the admin password and a code from the app") {
+			@loginButton("", false)
+			if newsite.Passkey {
+				@passkeyLogin()
+			}
+		}
+	</div>
+}
+
+// copyButton copies the text of the element with targetID, with a label beside the copybutton component's icons
+templ copyButton(id, targetID, label, class string) {
+	<div data-copy-button data-target-id={ targetID } class="inline-block">
+		@button.Button(button.Props{ID: id, Type: button.TypeButton, Class: "gap-2 rounded-lg " + class}) {
+			<span data-copy-icon-clipboard>
+				@icon.Clipboard(icon.Props{Class: "size-4"})
+			</span>
+			<span data-copy-icon-check class="hidden">
+				@icon.Check(icon.Props{Class: "size-4"})
+			</span>
+			{ label }
+		}
+	</div>
+}
+
+// loginButton opens the new site's login, disabled until the authenticator's code has been checked; oob swaps it into
+// the page, from a code's check
+templ loginButton(url string, oob bool) {
+	<div id="public--login" class="flex flex-col items-center gap-2 p-6" { utils.If(oob, templ.Attributes{"hx-swap-oob": "true"})... }>
+		@button.Button(button.Props{
+			ID:       "public--login-button",
+			Size:     button.SizeLg,
+			Class:    welcomeButtonClass + " text-white bg-brand-night hover:bg-brand-night/90",
+			Href:     url,
+			Target:   "_blank",
+			Disabled: url == "",
+		}) {
+			Log in
+			@icon.ExternalLink(icon.Props{Class: "size-4"})
+		}
+		if url == "" {
+			<p id="public--login-hint" class="text-sm text-slate-600">Check a code from your app in step 2 first.</p>
+		}
+	</div>
+}
+
+// welcomeButtonClass is the shape of the welcome page's buttons, the same as its Copy all credentials, rather than
+// round pills of their own
+const welcomeButtonClass = "h-11 px-6 rounded-lg text-base font-semibold"
+
+// passkeyLogin adds the new site's admin a passkey, this device's fingerprint, face or PIN, and logs in with it, with no
+// authenticator app; it is on the site's own address, which a passkey is made for
+templ passkeyLogin() {
+	<div id="public--passkey-login" class="flex flex-col items-center gap-2 px-6 pb-6">
+		<p class="text-sm text-slate-600">Or log in with a passkey, this device's fingerprint, face or PIN, with no authenticator app.</p>
+		@button.Button(button.Props{
+			ID:         "public--passkey-login-button",
+			Type:       button.TypeButton,
+			Variant:    button.VariantOutline,
+			Size:       button.SizeLg,
+			Class:      welcomeButtonClass + " text-brand-night border-brand-night",
+			Attributes: templ.Attributes{"data-passkey-begin": "/welcome/passkey/begin", "data-passkey-finish": "/welcome/passkey/finish", "data-passkey-error": "public--passkey-error"},
+		}) {
+			@icon.KeyRound(icon.Props{Class: "size-4"})
+			Log in with a passkey
+		}
+		<p id="public--passkey-error" class="text-sm text-red-700 empty:hidden"></p>
+		@site_login_templ.PasskeyScript()
+	</div>
+}
+
+// TOTPChecked is a code from the authenticator matching the new site's TOTP secret, and its login button enabled
+templ TOTPChecked(url string) {
+	<p id="public--totp-checked" class="font-medium text-green-700">That code matches: your authenticator app is set up.</p>
+	@loginButton(url, true)
+}
+
+// TOTPCheckFailed is a code not matching the new site's TOTP secret
+templ TOTPCheckFailed() {
+	<p id="public--totp-failed" class="font-medium text-red-700">That code does not match. Check the app scanned the QR code and your phone's time is right, then try its next code.</p>
+}
+
+// step is a numbered step, with its hint beside its title
+templ step(n, title, hint string) {
+	<section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+		<header class="flex items-center gap-3 px-5 py-3">
+			<span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-night text-sm font-bold text-white">{ n }</span>
+			<h2 class="font-semibold text-slate-900">
+				{ title }
+				<span class="text-sm font-normal text-slate-500">{ hint }</span>
+			</h2>
+		</header>
+		{ children... }
+	</section>
+}
+
+templ group(title string) {
+	<h3 class="border-y border-slate-100 bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500">{ title }</h3>
+}
+
+// row is a credential, with an ID of public--site-info--<id>; a wide one takes both columns
+templ row(id, label, value string, wide bool) {
+	<div class={ "flex min-w-0 gap-2 px-4 py-1.5", templ.KV("sm:col-span-2", wide) }>
+		<dt class="w-24 shrink-0 text-slate-400">{ label }</dt>
+		<dd id={ "public--site-info--" + id } class="min-w-0 break-all text-slate-800 select-all">{ value }</dd>
+	</div>
+}

@@ -1,0 +1,192 @@
+package site_templ
+
+import (
+	"nighttroop.t1d.nz/server/components/confirm"
+	"context"
+
+	"nighttroop.t1d.nz/server/components/errortoast"
+	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/testsite"
+	"nighttroop.t1d.nz/server/components/ui/badge"
+	"nighttroop.t1d.nz/server/components/ui/checkbox"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
+	"nighttroop.t1d.nz/server/components/ui/dropdown"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/label"
+	"nighttroop.t1d.nz/server/components/ui/selectbox"
+	"nighttroop.t1d.nz/server/components/ui/toast"
+)
+
+templ Base() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+			<link rel="apple-touch-icon" href="/logo.png"/>
+			<!-- Tailwind CSS -->
+			<link href="/style_gen.css" rel="stylesheet"/>
+			<script src="/htmx.js"></script>
+			<script src="/htmx_sse.js"></script>
+			<script>
+				// A live update stream refused as its sign in has ended goes to the login page, as htmx does for its own
+				// requests, rather than asking for the stream again and again
+				document.addEventListener("htmx:sse:error", (event) => { if (event.detail?.status === 401) window.location.href = "/login" });
+			</script>
+			@copybutton.Script()
+			@input.Script()
+			@label.Script()
+			@dropdown.Script()
+			@inputotp.Script()
+			@checkbox.Script()
+			@selectbox.Script()
+			@toast.Script()
+			@pager.Script()
+			<script src="/qrcode.js"></script>
+			<script src="/echarts.min.js"></script>
+		</head>
+		// As tall as the window, so a page that fills what is left, like the login, needs no scrolling
+		<body hx-ext="response-targets" class="flex min-h-dvh flex-col">
+			@testsite.Banner()
+			<div id="toaster" class="mb-3"></div>
+			@confirm.Dialog()
+			{ children... }
+			// After the page's own title, so it names the tab only when the page has none, see heading.Page
+			<title>Nighttroop</title>
+		</body>
+	</html>
+}
+
+// SiteBase is the page at path, with the header marking its hub
+templ SiteBase(path string) {
+	@Base() {
+		<div class="flex min-h-screen flex-col">
+			@Header(path)
+			if identityName(ctx) != "" {
+				@Alarms()
+			}
+			<main id="main-content" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+				{ children... }
+			</main>
+			@footer.Footer()
+		</div>
+	}
+}
+
+// identityName is who is signed in, or "" before login
+func identityName(ctx context.Context) string {
+	if identity := signedIn(ctx); identity != nil {
+		return identity.Name
+	}
+	return ""
+}
+
+templ menuItem(id string, path string, label string, itemIcon templ.Component) {
+	@dropdown.Item(dropdown.ItemProps{ID: id, Href: "#", Attributes: nav.Attributes(path)}) {
+		<span class="flex items-center">
+			@itemIcon
+			{ label }
+		</span>
+	}
+}
+
+// Header goes home from the logo and its home icon, opens the Data and Reports hubs and searches every hub's pages,
+// with a menu of the identity's own account and the hubs of the site's settings, alarms, and logs and events
+templ Header(path string) {
+	<header class="sticky top-0 z-40 border-b border-white/10 bg-brand-night text-white">
+		<div class="relative mx-auto flex h-14 max-w-7xl items-center gap-1 px-4 sm:gap-3 sm:px-6 lg:px-8">
+			<a id="site--nav--home" href="/" class="flex shrink-0 items-center gap-2 font-semibold tracking-wide">
+				<img id="site--nav--logo" src="/logo.svg" alt="" class="size-8"/>
+				Nighttroop
+				@badge.Badge(badge.Props{Variant: badge.VariantGold, Class: "hidden sm:inline"}) {
+					Alpha
+				}
+			</a>
+			@HeaderLinks(path, false)
+			<div class="ml-auto flex items-center gap-1 sm:gap-2">
+				@Search()
+				@dropdown.Dropdown(dropdown.Props{
+					ID: "site--settings-menu",
+				}) {
+					@dropdown.Trigger() {
+						<button class="flex items-center gap-2 rounded-full p-1 text-sm transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold sm:pr-2">
+							<span class="flex size-7 items-center justify-center rounded-full bg-gray-700">
+								@icon.User(icon.Props{Class: "size-4"})
+							</span>
+							<span class="hidden sm:inline">{ identityName(ctx) }</span>
+							@icon.ChevronDown(icon.Props{Class: "hidden size-4 text-gray-400 sm:block"})
+							<span class="sr-only">Open user menu</span>
+						</button>
+					}
+					@dropdown.Content(dropdown.ContentProps{Class: "w-56"}) {
+						if name := identityName(ctx); name != "" {
+							<div class="px-2 py-1.5 text-sm text-gray-500">
+								Signed in as <span class="font-semibold text-gray-900">{ name }</span>
+							</div>
+							@dropdown.Separator()
+						}
+						@dropdown.Group() {
+							@menuItem("site--settings--account-button", "/settings/account", "My Account", icon.User(icon.Props{Class: "size-4 mr-2"}))
+							@menuItem("site--settings--getting-started-button", "/getting-started", "Getting Started", icon.BookOpen(icon.Props{Class: "size-4 mr-2"}))
+						}
+						@MenuLinks(path, false)
+						@dropdown.Separator()
+						@dropdown.Item(dropdown.ItemProps{
+							ID:   "site--settings--logout-button",
+							Href: "#",
+							Attributes: templ.Attributes{
+								"hx-post":   "/logout",
+								"hx-target": "body",
+								"hx-swap":   "outerHTML",
+							},
+						}) {
+							<span class="flex items-center">
+								@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
+								Logout
+							</span>
+						}
+					}
+				}
+			</div>
+		</div>
+	</header>
+}
+
+templ SiteError(message string) {
+	@errortoast.Toast("", message)
+}
+
+// SiteErrorRecorded is the toast for an error not written for users, such as the server's: it says it is recorded,
+// with a link to the Errors page, which keeps what went wrong, for an admin, who can see it
+templ SiteErrorRecorded(admin bool) {
+	@toast.Toast(toast.Props{Variant: toast.VariantError, Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true}) {
+		<p class="text-sm opacity-90 mt-1">
+			if admin {
+				Something went wrong. It has been recorded on the <a href="/logs/errors" class="text-primary underline">Errors page</a>.
+			} else {
+				Something went wrong. It has been recorded for the site's admins.
+			}
+		</p>
+	}
+}
+
+// NotFound is the page for an address the site has nothing at, or for something a collection cannot do
+templ NotFound(message string) {
+	<div id="site--not-found" class="mx-auto max-w-xl space-y-4 py-16 text-center">
+		<h1 class="text-2xl font-semibold text-brand-night">Not found</h1>
+		<p id="site--not-found--message" class="text-gray-600">{ message }</p>
+		<a id="site--not-found--home" href="/" class="text-primary underline">Back to the summary</a>
+	</div>
+}
+
+// FullPage is the page at path in full, in its hub when it is one of a hub's pages
+templ FullPage(path string, content templ.Component) {
+	@SiteBase(path) {
+		@InHub(path, content, false)
+	}
+}

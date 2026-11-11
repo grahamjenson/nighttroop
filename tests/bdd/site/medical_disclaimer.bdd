@@ -1,0 +1,15 @@
+// The public pages say, above their footer, that Nighttroop is not a medical device
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #medical-disclaimer
+ASSERT_TEXT_VISIBLE Not a medical device.
+ASSERT_TEXT_VISIBLE Its data and alarms may be late, missing or wrong.
+SCREENSHOT public
+
+GOTO {{ server_url}}/recover
+ASSERT_STATUS 200
+ASSERT_VISIBLE #medical-disclaimer
+
+GOTO {{ server_url}}/terms
+ASSERT_STATUS 200
+ASSERT_VISIBLE #medical-disclaimer

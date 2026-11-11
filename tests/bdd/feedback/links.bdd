@@ -1,0 +1,29 @@
+// A server with a feedback link asks for feedback on its home page, opening the link in a new tab
+GOTO {{ server_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #public--feedback
+ASSERT_TEXT_VISIBLE tell us what works and what does not
+ASSERT_VISIBLE #public--feedback-link[href="https://github.com/grahamjenson/nighttroop/issues"][target="_blank"]
+// and in every page's footer
+ASSERT_VISIBLE #footer--feedback[href="https://github.com/grahamjenson/nighttroop/issues"][target="_blank"]
+SCREENSHOT public
+
+// Once a site is created the home page's ask goes, leaving the two steps, but the footer keeps the link
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+ASSERT_VISIBLE #public--site-info--totp
+ASSERT_NOT_VISIBLE #public--feedback
+ASSERT_VISIBLE #footer--feedback
+
+// The other public pages have it in their footer
+GOTO {{ server_url }}/recover
+ASSERT_STATUS 200
+ASSERT_VISIBLE #footer--feedback[href="https://github.com/grahamjenson/nighttroop/issues"]
+
+// as do the control site's
+GOTO {{ .control_url }}/login
+ASSERT_VISIBLE #footer--feedback[href="https://github.com/grahamjenson/nighttroop/issues"]
+SCREENSHOT control_login

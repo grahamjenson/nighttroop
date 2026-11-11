@@ -1,0 +1,322 @@
+// Package logview is the events, errors and logs pages a site and control both show, each with its own IDs, paths
+// and dates
+package logview
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
+	"nighttroop.t1d.nz/server/components/filter"
+	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// View is where rows are shown: a site's own pages, or control's
+type View struct {
+	// Prefix starts every element's ID: "site" or "control"
+	Prefix string
+	// Path is where the events, errors and logs pages are: "/logs" on a site and "" on control
+	Path string
+	// About heads the column, and labels the detail, of who each row was for, as "For" or "Site"; "" leaves it out
+	About string
+	// Links are a row's request and job, each linking to the rows with it; without them they are plain text
+	Links bool
+	// Date is how a time reads
+	Date func(ctx context.Context, ms int64) string
+}
+
+// Row is one event, error or log
+type Row struct {
+	ID int64
+	// Name is an event's name or a log's level
+	Name    string
+	Message string
+	// About is who the row was for, shown when the View has About
+	About string
+	// At is when an event started, or an error or log happened
+	At         int64
+	FinishedAt *int64
+	RequestID  *string
+	JobID      *string
+	Attributes json.RawMessage
+}
+
+// Rows are each item as a Row
+func Rows[T any](items []T, row func(T) Row) []Row {
+	rows := make([]Row, len(items))
+	for i, item := range items {
+		rows[i] = row(item)
+	}
+	return rows
+}
+
+// PageProps are a page of rows' title, description, pager and action
+type PageProps struct {
+	ID          string
+	Title       string
+	Description string
+	// Pager is the pager's ID and Path the page it pages
+	Pager  string
+	Path   string
+	Count  int
+	Skip   int64
+	Limit  int64
+	Action templ.Component
+}
+
+// Page heads a page of rows, its children, with its title, description and any action, and pages it
+templ Page(p PageProps) {
+	<div id={ p.ID } class="mx-auto max-w-5xl space-y-6">
+		if p.Action != nil {
+			<div class="flex flex-wrap items-start justify-between gap-4">
+				@heading.Page(p.Title) {
+					{ p.Description }
+				}
+				@p.Action
+			</div>
+		} else {
+			@heading.Page(p.Title) {
+				{ p.Description }
+			}
+		}
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			{ children... }
+			@pager.Pager(pager.Props{ID: p.Pager, Path: p.Path, Count: p.Count, Skip: p.Skip, Limit: p.Limit})
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+// Duration is how long an event took, or a dash when it happened at a moment
+func Duration(row Row) string {
+	if row.FinishedAt == nil {
+		return "-"
+	}
+	return display.Duration(*row.FinishedAt - row.At)
+}
+
+// Attributes are a row's attributes as JSON, indented to read
+func Attributes(raw json.RawMessage) string {
+	indented, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return string(raw)
+	}
+	return string(indented)
+}
+
+// AttributesDetail are a row's attributes, when it has them
+templ AttributesDetail(id string, raw json.RawMessage) {
+	if len(raw) > 0 {
+		<pre id={ id } class="mt-4 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ Attributes(raw) }</pre>
+	}
+}
+
+// Empty fills a table of no rows, of the number of columns, saying there are none
+templ Empty(columns int, what string) {
+	<tr><td colspan={ fmt.Sprint(columns) } class="p-4 text-sm text-gray-500">No { what } here.</td></tr>
+}
+
+// columns is how many columns a table has, with its About column when the View has one
+func (v View) columns(withAbout int) int {
+	if v.About == "" {
+		return withAbout - 1
+	}
+	return withAbout
+}
+
+templ head(label string) {
+	@table.Head() {
+		{ label }
+	}
+}
+
+templ aboutHead(v View) {
+	if v.About != "" {
+		@head(v.About)
+	}
+}
+
+templ aboutCell(v View, row Row) {
+	if v.About != "" {
+		@table.Cell() {
+			{ row.About }
+		}
+	}
+}
+
+templ aboutDetail(v View, row Row) {
+	if v.About != "" {
+		@modal.Detail(v.About, row.About)
+	}
+}
+
+templ when(v View, at int64) {
+	@table.Cell() {
+		<span title={ v.Date(ctx, at) }>{ display.Ago(&at, time.Now()) }</span>
+	}
+}
+
+// modalRow is a row of kind ("event", "error" or "log") opening its details
+templ modalRow(v View, kind string, row Row) {
+	@table.ModalRow(fmt.Sprintf("%s--%s--%d", v.Prefix, kind, row.ID), fmt.Sprintf("%s/%ss/%d", v.Path, kind, row.ID)) {
+		{ children... }
+	}
+}
+
+// idDetail is a row's request or job, when it has one, linking to the rows of kind with it when the View Links
+templ idDetail(v View, kind string, label string, name string, value *string) {
+	if value != nil {
+		{{ id := v.Prefix + "--" + kind + "--" + strings.ToLower(label) + "-id" }}
+		<dt class="text-gray-500">{ label }</dt>
+		if v.Links {
+			{{ link := filter.PagePath(v.Path+"/"+kind+"s", nil, nil, filter.ID{Name: name, Value: value}) }}
+			<dd class="break-all">
+				<a id={ id } href={ templ.SafeURL(link) } { nav.Attributes(link)... } class="text-primary underline">{ *value }</a>
+			</dd>
+		} else {
+			<dd id={ id } class="break-all">{ *value }</dd>
+		}
+	}
+}
+
+// details are a row's request and job, and its attributes after its details list
+templ details(v View, kind string, row Row) {
+	<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+		{ children... }
+		@idDetail(v, kind, "Request", "request_id", row.RequestID)
+		@idDetail(v, kind, "Job", "job_id", row.JobID)
+	</dl>
+	@AttributesDetail(v.Prefix+"--"+kind+"--attributes", row.Attributes)
+}
+
+// EventsTable is a table of events, newest first, each opening its details
+templ EventsTable(v View, id string, events []Row) {
+	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+		@table.Header() {
+			@table.Row() {
+				@head("Event")
+				@aboutHead(v)
+				@head("Started")
+				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+					Duration
+				}
+			}
+		}
+		@table.Body() {
+			if len(events) == 0 {
+				@Empty(v.columns(4), "events")
+			}
+			for _, event := range events {
+				@modalRow(v, "event", event) {
+					@table.Cell() {
+						{ display.Name(event.Name) }
+					}
+					@aboutCell(v, event)
+					@when(v, event.At)
+					@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+						{ Duration(event) }
+					}
+				}
+			}
+		}
+	}
+}
+
+templ EventModal(v View, event Row) {
+	// Sign ins are from where DB-IP estimates
+	@footer.DBIPCredit()
+	@modal.Modal(modal.Props{ID: v.Prefix + "--event--details", Title: display.Name(event.Name), Subtitle: v.Date(ctx, event.At)}) {
+		@details(v, "event", event) {
+			@aboutDetail(v, event)
+			@modal.Detail("Started", v.Date(ctx, event.At))
+			if event.FinishedAt != nil {
+				@modal.Detail("Finished", v.Date(ctx, *event.FinishedAt))
+			}
+			@modal.Detail("Duration", Duration(event))
+		}
+	}
+}
+
+// ErrorsTable is a table of errors, newest first, each opening its details
+templ ErrorsTable(v View, id string, errors []Row) {
+	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+		@table.Header() {
+			@table.Row() {
+				@head("Error")
+				@aboutHead(v)
+				@head("When")
+			}
+		}
+		@table.Body() {
+			if len(errors) == 0 {
+				@Empty(v.columns(3), "errors")
+			}
+			for _, e := range errors {
+				@modalRow(v, "error", e) {
+					@table.Cell() {
+						<span class="block max-w-md truncate text-red-700">{ e.Message }</span>
+					}
+					@aboutCell(v, e)
+					@when(v, e.At)
+				}
+			}
+		}
+	}
+}
+
+templ ErrorModal(v View, e Row) {
+	@modal.Modal(modal.Props{ID: v.Prefix + "--error--details", Title: "Error", Subtitle: v.Date(ctx, e.At)}) {
+		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
+		@details(v, "error", e) {
+			@aboutDetail(v, e)
+		}
+	}
+}
+
+// LogsTable is a table of logs, newest first, each opening its details
+templ LogsTable(v View, id string, logs []Row) {
+	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+		@table.Header() {
+			@table.Row() {
+				@head("Level")
+				@head("Message")
+				@aboutHead(v)
+				@head("When")
+			}
+		}
+		@table.Body() {
+			if len(logs) == 0 {
+				@Empty(v.columns(4), "logs")
+			}
+			for _, log := range logs {
+				@modalRow(v, "log", log) {
+					@table.Cell() {
+						{ log.Name }
+					}
+					@table.Cell() {
+						<span class="block max-w-md truncate">{ log.Message }</span>
+					}
+					@aboutCell(v, log)
+					@when(v, log.At)
+				}
+			}
+		}
+	}
+}
+
+templ LogModal(v View, log Row) {
+	@modal.Modal(modal.Props{ID: v.Prefix + "--log--details", Title: log.Name, Subtitle: v.Date(ctx, log.At)}) {
+		<p class="mt-2 break-all text-sm">{ log.Message }</p>
+		@details(v, "log", log) {
+			@aboutDetail(v, log)
+		}
+	}
+}

@@ -1,0 +1,65 @@
+INCLUDE steps/new_site.steps
+
+// The summary's minutes take the targets and basal in force each minute: a temp target's or temp basal's, over a profile
+// switch's, over the default profile's. The profile's are given wherever no temp target or temp basal is in force, and a
+// default profile or switch that started before the summary's 6 hours is still in force in it. Each minute is
+// since + its index in minutes, so index 0 is 6 hours ago and 360 now; each is checked well inside its stretch.
+NAME summary_minutes_units
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+// The default profile, uploaded two days ago: targets 100 to 120 and a basal of 0.5
+NAME summary_minutes_default_profile
+POST http://{{ .ns_site }}/api/v1/profiles?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 2880 }}", "created_at": "{{ time 2880 }}", "units": "mg/dL", "store": {"Default": {"dia": 5, "units": "mg/dL", "timezone": "UTC", "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 50}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}], "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.5}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 120}]}}}
+ASSERT_STATUS 200
+
+// A profile switch 8 hours ago for 5 hours, so from before the summary to 3 hours ago (index 180): targets 140 to 160
+// and a basal of 1
+NAME summary_minutes_profile_switch
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Profile Switch", "created_at": "{{ time 480 }}", "profile": "Sick", "percentage": 100, "timeshift": 0, "duration": 300, "profileJson": "{\"units\":\"mg/dL\",\"dia\":5,\"timezone\":\"UTC\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":50}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":140}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":160}]}"}
+ASSERT_STATUS 200
+
+// A temp basal of 2 U/hr 2 hours ago for 30 minutes (index 240 to 270)
+NAME summary_minutes_temp_basal
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temp Basal", "created_at": "{{ time 120 }}", "duration": 30, "absolute": 2, "rate": 2}
+ASSERT_STATUS 200
+
+// A temp target of 80 to 90 an hour ago for 20 minutes (index 300 to 320)
+NAME summary_minutes_temp_target
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temporary Target", "created_at": "{{ time 60 }}", "duration": 20, "targetBottom": 80, "targetTop": 90, "units": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME summary_minutes
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.items.0.units"
+ASSERT_LENGTH 361 "@result.items.0.minutes"
+// The switch from before the summary, over the default profile
+ASSERT_EQUALS 140 "@result.items.0.minutes.10.low_target"
+ASSERT_EQUALS 160 "@result.items.0.minutes.10.high_target"
+ASSERT_EQUALS 1 "@result.items.0.minutes.10.basal"
+// Once the switch ends, the default profile from two days ago
+ASSERT_EQUALS 100 "@result.items.0.minutes.200.low_target"
+ASSERT_EQUALS 120 "@result.items.0.minutes.200.high_target"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.200.basal"
+// The temp basal over the default's basal, with the default's targets
+ASSERT_EQUALS 2 "@result.items.0.minutes.255.basal"
+ASSERT_EQUALS 100 "@result.items.0.minutes.255.low_target"
+ASSERT_EQUALS 120 "@result.items.0.minutes.255.high_target"
+// The temp target over the default's targets, with the default's basal
+ASSERT_EQUALS 80 "@result.items.0.minutes.310.low_target"
+ASSERT_EQUALS 90 "@result.items.0.minutes.310.high_target"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.310.basal"
+// Once both have ended, the default profile again
+ASSERT_EQUALS 100 "@result.items.0.minutes.359.low_target"
+ASSERT_EQUALS 120 "@result.items.0.minutes.359.high_target"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.359.basal"

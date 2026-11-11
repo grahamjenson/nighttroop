@@ -1,0 +1,58 @@
+# A staging Nighttroop on Fly.io for alpha testing, open to everyone. Its data is kept between deploys and restarts, and
+# wiped only when a migration change means a database can no longer be migrated. See README.md.
+# Change HOST_NAME, and the health check's Host below with it, to your domain. The app is named when deploying.
+
+primary_region = "syd"
+
+# Swap on the machine's disk (not the volume), so a burst of testers that outgrows its 256 MB slows it rather than
+# getting it killed for running out of memory
+swap_size_mb = 512
+
+[env]
+  # Runs as production does, with the "this is a test site" banner on every page, and its control admin made from the
+  # STAGING_ADMIN_PASSWORD and STAGING_ADMIN_TOTP_SECRET secrets, so a wipe never needs it set up again
+  MODE = "staging"
+  # Its name in Sentry; a deploy names it after its Fly app (--env DEPLOYMENT=<app>), so each staging server has its own
+  DEPLOYMENT = "staging"
+  # Keeps every request and its response, credentials redacted, as a log in the logs DB, to see what clients send
+  CAPTURE_REQUESTS = "true"
+  HOST_NAME = "staging.nighttroop.nz"
+  HOST_PROTOCOL = "https"
+  # On the volume mounted below. No S3 is set, so nothing is backed up or restored.
+  DATA_DIR = "/data"
+  # Far fewer than a real server: enough for testers, little for anyone filling it
+  MAX_SITES = "500"
+  DELETE_AFTER_INACTIVITY_MINS = "1440"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # One machine, as a second would have its own volume and databases. Fly stops it once nothing has used it for a few
+  # minutes, and starts it on the next request, which waits the few seconds it takes to start; the databases stay on
+  # the volume. While stopped, nothing syncs and no background job runs.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # The server only answers its own host name, so the check sends it
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    timeout = "5s"
+    method = "GET"
+    path = "/health"
+    [http_service.checks.headers]
+      Host = "staging.nighttroop.nz"
+
+# The databases, kept between deploys. The image built with --build-target staging opens them with try_migrate_or_delete
+# at each start, and deletes them all if one cannot be migrated. A deploy makes the volume if there is none.
+[mounts]
+  source = "nighttroop_staging_data"
+  destination = "/data"
+  initial_size = "1gb"
+
+# Measured with 500 sites: about 50 MB with none in use, and 1.5 MB more for each site used in the last 30 seconds, so
+# 256 MB holds about 130 sites in use at once before it swaps
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

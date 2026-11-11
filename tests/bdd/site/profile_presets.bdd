@@ -1,0 +1,64 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Profiles are in the Data hub under Presets, and a new site has none
+CLICK #site--nav--data
+ASSERT_VISIBLE #site--presets--profiles-button
+CLICK #site--presets--profiles-button
+ASSERT_STATUS 200
+ASSERT_PATH /presets/profiles
+ASSERT_VISIBLE #presets--profiles--empty
+SCREENSHOT profiles_empty
+
+// Virtual connector uploads a profile store, as a loop does
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /presets/profiles
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Virtual
+ASSERT_TEXT_VISIBLE Default
+SCREENSHOT profiles
+
+// Clicking a profile shows its schedules, only to read, and it can be renamed
+CLICK #profilePresetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #presets--profiles--details
+ASSERT_VISIBLE #presets--profiles--schedules
+ASSERT_TEXT_VISIBLE Basal (U/h)
+ASSERT_TEXT_VISIBLE Low Target (mmol/L)
+// Its schedules make it the tallest details, which scroll leaving Close where it can be clicked
+ASSERT_VISIBLE #presets--profiles--details--close
+// Its name's input is labelled
+ASSERT_VISIBLE #presets--profiles--edit label[for=presets--profiles--edit--name] >> text=Name
+// It ends with the same Record section as every other details modal, including when it was created
+ASSERT_VISIBLE #presets--profiles--details >> text="Created"
+SCREENSHOT profile_details
+INPUT #presets--profiles--edit--name Everyday
+CLICK #presets--profiles--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Profile Renamed
+ASSERT_NOT_VISIBLE #presets--profiles--details
+ASSERT_TEXT_VISIBLE Everyday
+
+// The new name is saved
+GOTO /presets/profiles
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Everyday
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #profilePresetsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Profile Deleted
+ASSERT_NOT_VISIBLE #presets--profiles--details
+
+// The deleted profile stays gone after a reload
+GOTO /presets/profiles
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE No profiles here.

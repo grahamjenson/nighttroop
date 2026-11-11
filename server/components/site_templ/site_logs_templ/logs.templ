@@ -1,0 +1,77 @@
+package site_logs_templ
+
+import (
+	"nighttroop.t1d.nz/data/db"
+	dataevents "nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/server/components/filter"
+	"nighttroop.t1d.nz/server/components/footer"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/logview"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+)
+
+// view shows a site its own rows only: they have no site ID to show, and their request and job IDs are plain text,
+// never links to control
+var view = logview.View{Prefix: "site", Path: "/logs", Date: site_data_templ.FormatDate}
+
+// eventsView also shows who each event was for, this site or its batch
+var eventsView = logview.View{Prefix: "site", Path: "/logs", About: "For", Date: site_data_templ.FormatDate}
+
+// about is who an event was for: this site, or the batch of sites it is backed up with
+func about(event *sitemodels.SiteEvent) string {
+	if event.Batch != nil {
+		return "Batch " + *event.Batch
+	}
+	return "This site"
+}
+
+func eventRow(e *sitemodels.SiteEvent) logview.Row {
+	return logview.Row{ID: e.ID, Name: e.Name, About: about(e), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+}
+
+func errorRow(e *sitemodels.SiteError) logview.Row {
+	return logview.Row{ID: e.ID, Message: e.Message, At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+}
+
+func logRow(l *sitemodels.SiteLog) logview.Row {
+	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+}
+
+// EventsTable shows one page of the site's events and its batch's, the newest first
+templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) {
+	// Sign ins are from where DB-IP estimates
+	@footer.DBIPCredit()
+	@logview.Page(logview.PageProps{ID: "events_table", Title: "Events", Description: "What happened to this site and the batch of sites it is backed up with, newest first. A search looks through the newest 10,000.", Pager: "site--events", Path: filter.PagePath("/logs/events", eventType, search), Count: len(events), Skip: skip, Limit: limit}) {
+		@filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search})
+		@logview.EventsTable(eventsView, "siteEventsTable", logview.Rows(events, eventRow))
+	}
+}
+
+templ EventModal(event *sitemodels.SiteEvent) {
+	@logview.EventModal(eventsView, eventRow(event))
+}
+
+// ErrorsTable shows one page of the site's errors, the newest first
+templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *string, search *string) {
+	@logview.Page(logview.PageProps{ID: "errors_table", Title: "Errors", Description: "What failed for this site, newest first. A search or kind looks through the newest 10,000.", Pager: "site--errors", Path: filter.PagePath("/logs/errors", kind, search), Count: len(errors), Skip: skip, Limit: limit}) {
+		@filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search})
+		@logview.ErrorsTable(view, "siteErrorsTable", logview.Rows(errors, errorRow))
+	}
+}
+
+templ ErrorModal(e *sitemodels.SiteError) {
+	@logview.ErrorModal(view, errorRow(e))
+}
+
+// LogsTable shows one page of the site's logs, the newest first
+templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *string) {
+	@logview.Page(logview.PageProps{ID: "logs_table", Title: "Logs", Description: "Messages logged for this site, newest first. A search looks through the newest 10,000.", Pager: "site--logs", Path: filter.PagePath("/logs/logs", nil, search), Count: len(logs), Skip: skip, Limit: limit}) {
+		@filter.Filter(filter.Props{ID: "site--logs--filter", Path: "/logs/logs", Search: search})
+		@logview.LogsTable(view, "siteLogsTable", logview.Rows(logs, logRow))
+	}
+}
+
+templ LogModal(log *sitemodels.SiteLog) {
+	@logview.LogModal(view, logRow(log))
+}

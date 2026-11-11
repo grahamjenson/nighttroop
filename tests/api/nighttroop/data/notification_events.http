@@ -1,0 +1,152 @@
+INCLUDE steps/new_site.steps
+
+NAME no_notifications
+GET http://{{ site }}/data/notifications
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// An announcement from the Nightscout API is listed
+NAME create_ns_announcement
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Announcement", "created_at": "{{ time 5 }}", "notes": "School swimming lesson today." }
+ASSERT_STATUS 200
+
+NAME list_notifications
+GET http://{{ site }}/data/notifications
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "announcement" "@result.items.0.notification_type"
+ASSERT_EQUALS "Announcement" "@result.items.0.title"
+ASSERT_EQUALS "School swimming lesson today." "@result.items.0.notes"
+
+//////
+// CREATE AND UPDATE
+//////
+
+// A notification typed in happens now, is an announcement unless it says otherwise, and is by whoever is signed in
+NAME create_notification
+POST http://{{ site }}/data/notifications
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"title": "Sensor change", "severity": 2, "notes": "New sensor tonight", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "announcement" "@result.notification_type"
+ASSERT_EQUALS "Sensor change" "@result.title"
+ASSERT_EQUALS 2 "@result.severity"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_notification.result.id }}
+
+NAME created_notification_has_new_id
+GET http://{{ site }}/data/notifications/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_notification
+GET http://{{ site }}/data/notifications/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sensor change" "@result.title"
+
+// Newest first, so the one happening now is before the one from the Nightscout API
+NAME first_page
+GET http://{{ site }}/data/notifications?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Sensor change" "@result.items.0.title"
+
+NAME second_page
+GET http://{{ site }}/data/notifications?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Announcement" "@result.items.0.title"
+
+NAME create_notification_without_title
+POST http://{{ site }}/data/notifications
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "No title"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "title is required" "@message"
+
+NAME create_notification_bad_severity
+POST http://{{ site }}/data/notifications
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"title": "Too loud", "severity": 9}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "severity must be from 0 to 5" "@message"
+
+NAME create_notification_title_too_long
+POST http://{{ site }}/data/notifications
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"title": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "title must be at most 128 characters" "@message"
+
+// Only the fields sent change
+NAME update_notification_severity
+POST http://{{ site }}/data/notifications/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"severity": 4, "notification_type": "warning"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sensor change" "@result.title"
+ASSERT_EQUALS "warning" "@result.notification_type"
+ASSERT_EQUALS 4 "@result.severity"
+ASSERT_EQUALS "New sensor tonight" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_notification_bad_severity
+POST http://{{ site }}/data/notifications/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"severity": -1}
+ASSERT_STATUS 400
+
+NAME update_unknown_notification
+POST http://{{ site }}/data/notifications/not-a-notification
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_notification
+DELETE http://{{ site }}/data/notifications/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_notification_not_found
+GET http://{{ site }}/data/notifications/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_notification_not_listed
+GET http://{{ site }}/data/notifications
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+
+NAME delete_unknown_notification
+DELETE http://{{ site }}/data/notifications/not-a-notification
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

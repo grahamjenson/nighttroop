@@ -1,0 +1,74 @@
+package control_sites_templ
+
+import (
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// ArchivedSitesTable shows one page of the archived sites, the most recently archived first, each with a button to
+// hydrate it
+templ ArchivedSitesTable(sites []*controlmodels.Site, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "archived_sites_table",
+		Title:       "Archived Sites",
+		Description: "Sites whose data is only in their S3 archive. Hydrate one to bring it back live.",
+		Table: listpage.TableProps{
+			ID:     "controlArchivedSitesTable",
+			Static: true,
+			Rows:   len(sites),
+			Empty:  "No archived sites.",
+			Columns: []table.Column{
+				{Label: "Site"}, {Label: "Archived"}, {Label: "Last Seen"}, {Label: "DB Size (MB)", Numeric: true}, {},
+			},
+		},
+		Pager: &pager.Props{ID: "control--archived-sites", Path: "/archived-sites", Count: len(sites), Skip: skip, Limit: limit},
+	}) {
+		for _, site := range sites {
+			@archivedSiteRow(site)
+		}
+	}
+}
+
+templ archivedSiteRow(site *controlmodels.Site) {
+	@table.Row(table.RowProps{ID: "control--archived-site--" + site.ID}) {
+		@table.Cell() {
+			{ site.ID }
+		}
+		@table.Cell() {
+			{ display.DateTime(site.ArchivedAt) }
+		}
+		@table.Cell() {
+			<span title={ display.DateTime(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
+		}
+		@table.Cell(table.NumCell) {
+			{ sizeMB(site.EstimatedDbSizeKb) }
+		}
+		@table.Cell(table.CellProps{Class: "text-right"}) {
+			<form
+				hx-post={ "/archived-sites/" + site.ID }
+				hx-target={ "#control--archived-site--" + site.ID }
+				hx-swap="outerHTML"
+				hx-confirm="Hydrate this site? Its archive is downloaded from S3 and it is live again."
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				<input type="hidden" name="state" value="live"/>
+				@button.Button(button.Props{ID: "control--archived-site--" + site.ID + "--hydrate", Type: button.TypeSubmit}) {
+					Hydrate
+				}
+			</form>
+		}
+	}
+}
+
+// SiteHydrated takes the site out of the archived sites, and shows a toast saying it is live again
+templ SiteHydrated(site *controlmodels.Site) {
+	@successtoast.OOB("Site Hydrated: " + site.ID + " is live again")
+}

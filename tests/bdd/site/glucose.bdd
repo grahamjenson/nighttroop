@@ -1,0 +1,175 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Virtual connector writes the last 30 minutes of glucose readings, 6 of them, on its first run
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_PATH /data/glucose
+ASSERT_VISIBLE #glucoseReadingsTable
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+// Readings are in the settings' units, mmol/L by default
+ASSERT_TEXT_VISIBLE mmol/L
+ASSERT_NOT_VISIBLE #site--glucose--next
+ASSERT_NOT_VISIBLE #site--glucose--previous
+SCREENSHOT glucose_readings
+// The days above the readings are named in words, never as "Last 1 days"
+ASSERT_VISIBLE #site--glucose--days
+ASSERT_NOT_VISIBLE #site--glucose--days h2:text-is("Last 1 days")
+// Adding a reading is the page's main action, beside its title rather than alone in a row above the table
+ASSERT_VISIBLE #glucose_readings_table > div:has(h1) > #site--glucose--add
+// A row's delete icon is grey, so a table is not a column of red, and turns red as it is pointed at
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]:has(svg.text-gray-400)
+HOVER #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]
+SCREENSHOT glucose_reading_delete_pointed_at
+
+// Clicking a reading shows all its details
+CLICK #glucoseReadingsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--glucose--details
+ASSERT_TEXT_VISIBLE virtual_connector
+// Its type and trend read as they do in the table
+ASSERT_VISIBLE #site--glucose--details dl >> text=Sensor
+ASSERT_NOT_VISIBLE #site--glucose--details >> text=sgv
+// Its trend is shown once, chosen in its edit form, not again in the details listed below it
+ASSERT_VISIBLE #site--glucose--edit--direction:not(:has(option[value=""]:checked))
+ASSERT_NOT_VISIBLE #site--glucose--details dt:text-is("Direction")
+SCREENSHOT glucose_reading_details
+
+CLICK #site--glucose--details--close
+ASSERT_NOT_VISIBLE #site--glucose--details
+
+// A reading typed in is a meter reading in mmol/L, added to the top of the table
+CLICK #site--glucose--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--glucose--create--modal
+ASSERT_TEXT_VISIBLE The glucose measured, in your units.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--glucose--create--reading-type
+ASSERT_VISIBLE #site--glucose--create--direction
+// Its type and trend are offered as the table shows them, not as Nightscout's mbg and sgv
+ASSERT_TEXT_EQUALS #site--glucose--create--reading-type>option[value=mbg] Meter
+ASSERT_TEXT_EQUALS #site--glucose--create--reading-type>option[value=sgv] Sensor
+ASSERT_TEXT_EQUALS #site--glucose--create--direction>option[value=FortyFiveUp] ↗ FortyFiveUp
+SCREENSHOT glucose_reading_add
+// A type is picked by what it reads as
+INPUT #site--glucose--create--reading-type Meter
+INPUT #site--glucose--create--reading 7.9
+INPUT #site--glucose--create--notes Finger prick
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+// The count under the table counts it straight away, without a reload
+ASSERT_TEXT_VISIBLE Showing 1 to 7
+// It is shown as from a meter, beside the sensor's readings with their trend arrows
+ASSERT_TEXT_VISIBLE Meter
+ASSERT_TEXT_VISIBLE Sensor
+ASSERT_VISIBLE #glucoseReadingsTable span[title]:not([title="-"]) >> nth=0
+
+// Its details can be edited, which updates its row
+CLICK "Meter"
+ASSERT_VISIBLE #site--glucose--details
+ASSERT_VISIBLE #site--glucose--edit--notes[value="Finger prick"]
+SCREENSHOT glucose_reading_edit
+INPUT #site--glucose--edit--reading 8.6
+INPUT #site--glucose--edit--notes Rechecked
+CLICK #site--glucose--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Glucose Reading Updated
+ASSERT_NOT_VISIBLE #site--glucose--details
+ASSERT_TEXT_VISIBLE 8.6
+
+// The edit is saved
+CLICK "Meter"
+ASSERT_TEXT_VISIBLE 8.6 mmol/L
+// Its notes are shown once, in its edit form, not again in the details listed below it, which keep what an update
+// does not change, like its type
+ASSERT_COUNT #site--glucose--details :is(dt, label):has-text("Notes") 1
+ASSERT_VISIBLE #site--glucose--details dt:text-is("Type")
+
+// Its edit has every field adding one has that an update changes, with the same labels and help, as it is
+ASSERT_VISIBLE #site--glucose--edit label[for=site--glucose--edit--reason] >> text=Reason
+ASSERT_TEXT_VISIBLE Why it was measured, e.g. before a meal.
+ASSERT_VISIBLE #site--glucose--edit--notes[value="Rechecked"]
+// but not its time or type, which an update keeps
+ASSERT_NOT_VISIBLE #site--glucose--edit--occurred-at
+ASSERT_NOT_VISIBLE #site--glucose--edit--reading-type
+// A reason is saved, and emptying the notes clears them
+INPUT #site--glucose--edit--reason Before lunch
+INPUT #site--glucose--edit--notes {{ "" }}
+CLICK #site--glucose--edit--submit
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--glucose--details
+CLICK "Meter"
+ASSERT_VISIBLE #site--glucose--edit--reason[value="Before lunch"]
+ASSERT_NOT_VISIBLE #site--glucose--details >> text=Rechecked
+CLICK #site--glucose--details--close
+
+// Choosing mg/dL shows the same reading in mg/dL. Settings is opened directly, as the edit's toast covers the menu
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--units mg/dL
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE mg/dL
+ASSERT_TEXT_VISIBLE 155
+SCREENSHOT glucose_readings_mgdl
+// A new reading's label says which units to type it in
+CLICK #site--glucose--add
+ASSERT_TEXT_VISIBLE Reading (mg/dL)
+CLICK #site--glucose--create--modal--close
+ASSERT_NOT_VISIBLE #site--glucose--create--modal
+// Its details offer it to edit as it is shown, not with the decimals left from converting it from mmol/L
+CLICK "Meter"
+ASSERT_VISIBLE #site--glucose--edit--reading[value="155"]
+SCREENSHOT glucose_reading_edit_mgdl
+CLICK #site--glucose--details--close
+
+// A page of one reading pages through them, newest first
+GOTO /data/glucose?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--glucose--previous
+
+CLICK #site--glucose--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+
+CLICK #site--glucose--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first in the site's own dialog, not the browser's: its question, Cancel and a red Delete
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 7
+CLICK_ASKS #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_EQUALS #confirm--message Delete this glucose reading?
+ASSERT_TEXT_EQUALS #confirm--ok Delete
+ASSERT_VISIBLE #confirm--cancel
+SCREENSHOT glucose_reading_delete_confirm
+// Cancel keeps it
+CLICK #confirm--cancel
+ASSERT_NOT_VISIBLE #confirm
+ASSERT_TEXT_VISIBLE Showing 1 to 7
+// Confirming deletes it (a plain CLICK confirms), removing the row without opening its details
+CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Glucose Reading Deleted
+ASSERT_NOT_VISIBLE #site--glucose--details
+// The count under the table stops counting it straight away, without a reload
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+
+// The deleted reading stays gone after a reload
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 6

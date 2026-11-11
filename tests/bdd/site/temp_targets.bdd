@@ -1,0 +1,100 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Virtual connector writes a temp target on its first run
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /data/temp-targets
+ASSERT_STATUS 200
+ASSERT_PATH /data/temp-targets
+ASSERT_VISIBLE #tempTargetsTable
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--temp-target--next
+ASSERT_NOT_VISIBLE #site--temp-target--previous
+// Targets are in the settings' units, mmol/L by default
+ASSERT_TEXT_VISIBLE Low (mmol/L)
+ASSERT_TEXT_VISIBLE Duration (min)
+ASSERT_TEXT_VISIBLE 6.7
+SCREENSHOT temp_targets
+
+// Clicking a temp target shows all its details
+CLICK #tempTargetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--temp-target--details
+ASSERT_TEXT_VISIBLE virtual_connector
+SCREENSHOT temp_target_details
+
+CLICK #site--temp-target--details--close
+ASSERT_NOT_VISIBLE #site--temp-target--details
+
+// A temp target typed in mmol/L starts now, added to the top of the table
+CLICK #site--temp-target--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--temp-target--create--modal
+ASSERT_TEXT_VISIBLE The bottom of the range aimed for.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--temp-target--create--insulin-needs-scale-factor
+SCREENSHOT temp_target_add
+INPUT #site--temp-target--create--low-target 7.5
+INPUT #site--temp-target--create--high-target 9
+INPUT #site--temp-target--create--duration-minutes 45
+INPUT #site--temp-target--create--notes Walk
+CLICK #site--temp-target--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE 9.0
+
+// Its details can be edited, which updates its row
+CLICK #tempTargetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--temp-target--details
+ASSERT_TEXT_VISIBLE 7.5 to 9.0 mmol/L for 45 minutes
+// Save is at the modal's foot beside Close, as in the add modal, not in the middle of its details
+ASSERT_VISIBLE #site--temp-target--details div:has(> #site--temp-target--details--close) > #site--temp-target--edit--submit
+SCREENSHOT temp_target_edit
+INPUT #site--temp-target--edit--high-target 9.5
+INPUT #site--temp-target--edit--notes Run
+CLICK #site--temp-target--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Temp Target Updated
+ASSERT_NOT_VISIBLE #site--temp-target--details
+ASSERT_TEXT_VISIBLE 9.5
+
+// The edit is saved
+CLICK #tempTargetsTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE 7.5 to 9.5 mmol/L for 45 minutes
+ASSERT_VISIBLE #site--temp-target--edit--notes[value="Run"]
+ASSERT_COUNT #site--temp-target--details :is(dt, label):has-text("Notes") 1
+CLICK #site--temp-target--details--close
+
+// A page of one temp target pages through them, newest first
+GOTO /data/temp-targets?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--temp-target--previous
+
+CLICK #site--temp-target--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+
+CLICK #site--temp-target--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /data/temp-targets
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #tempTargetsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Temp Target Deleted
+ASSERT_NOT_VISIBLE #site--temp-target--details
+
+// The deleted temp target stays gone after a reload
+GOTO /data/temp-targets
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1

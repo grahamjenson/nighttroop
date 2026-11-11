@@ -1,0 +1,102 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no food intakes
+CLICK #site--nav--data
+CLICK #site--data--food-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/food
+ASSERT_VISIBLE #foodIntakesTable
+ASSERT_TEXT_VISIBLE No food intakes here.
+ASSERT_NOT_VISIBLE #site--food--next
+// Units are in brackets after the name
+ASSERT_TEXT_VISIBLE Carbs (g)
+SCREENSHOT food_intakes_empty
+
+// Adding opens a modal of all a food intake's fields, saying what each is and whether it is required
+CLICK #site--food--add
+ASSERT_VISIBLE #site--food--create--modal
+ASSERT_TEXT_VISIBLE Grams of carbohydrate eaten.
+ASSERT_VISIBLE #site--food--create--absorption-time-minutes
+ASSERT_VISIBLE #site--food--create--fat
+SCREENSHOT food_intake_add
+
+// Food added goes to the top of the table, at the time it was eaten, with its other nutrients, and the modal closes
+INPUT #site--food--create--carbs 15
+INPUT #site--food--create--occurred-at 2026-01-02T15:45
+INPUT #site--food--create--name Juice
+INPUT #site--food--create--fat 1
+INPUT #site--food--create--food-type hypo treatment
+INPUT #site--food--create--notes Correction
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--food--create--modal
+ASSERT_TEXT_VISIBLE Correction
+ASSERT_TEXT_VISIBLE 2026-01-02 15:45
+ASSERT_NOT_VISIBLE #site--food--empty
+
+// Left blank, it is eaten now
+CLICK #site--food--add
+INPUT #site--food--create--carbs 45
+INPUT #site--food--create--name Sandwich
+INPUT #site--food--create--notes Lunch
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Lunch
+
+// Clicking a food intake shows all its details, and they can be edited, which updates its row
+CLICK #foodIntakesTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--food--details
+ASSERT_TEXT_VISIBLE 45 g carbs
+ASSERT_TEXT_VISIBLE admin
+SCREENSHOT food_intake_edit
+INPUT #site--food--edit--carbs 50
+INPUT #site--food--edit--notes Big lunch
+CLICK #site--food--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Food Intake Updated
+ASSERT_NOT_VISIBLE #site--food--details
+ASSERT_TEXT_VISIBLE Big lunch
+
+// The edit is saved
+CLICK #foodIntakesTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE 50 g carbs
+CLICK #site--food--details--close
+ASSERT_NOT_VISIBLE #site--food--details
+
+// A page of one food intake pages through them, newest first
+GOTO /data/food?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Big lunch
+ASSERT_NOT_VISIBLE #site--food--previous
+
+CLICK #site--food--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Correction
+
+CLICK #site--food--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /data/food
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #foodIntakesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Food Intake Deleted
+ASSERT_NOT_VISIBLE #site--food--details
+
+// The deleted food intake stays gone after a reload
+GOTO /data/food
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Negative carbs take back food entered by mistake
+CLICK #site--food--add
+INPUT #site--food--create--carbs -20
+INPUT #site--food--create--notes Entered twice
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Entered twice

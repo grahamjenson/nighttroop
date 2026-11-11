@@ -1,0 +1,83 @@
+package control_login_templ
+
+import (
+	"nighttroop.t1d.nz/server/components/authenticator"
+	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/input"
+)
+
+templ Login() {
+	@control_templ.ControlBase() {
+		// It fills what the footer leaves of the window, so the form is in its middle with nothing to scroll
+		@authenticator.Page() {
+			@authenticator.Card("login-form-target", false) {
+				<!-- Form updated with POST method -->
+				<form
+					id="otp"
+					hx-post="/login"
+					hx-target="closest .login-form-target"
+					hx-swap="outerHTML"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
+				>
+					@authenticator.Title("Nighttroop Login")
+					<!-- Username -->
+					@form.Item(form.ItemProps{}) {
+						@form.Label(form.LabelProps{
+							For: "control--login--name",
+						}) {
+							Name
+						}
+						@input.Input(input.Props{
+							ID:         "control--login--name",
+							Type:       "text",
+							Name:       "name",
+							Required:   true,
+							Attributes: templ.Attributes{"autocomplete": "username", "autocapitalize": "none"},
+						})
+					}
+					<div class="mt-4"></div>
+					<!-- Password -->
+					@form.Item(form.ItemProps{}) {
+						@form.Label(form.LabelProps{
+							For: "control--login--password",
+						}) {
+							Password
+						}
+						@input.Input(input.Props{
+							ID:         "control--login--password",
+							Type:       "password",
+							Name:       "password",
+							Required:   true,
+							Attributes: templ.Attributes{"autocomplete": "current-password"},
+						})
+					}
+					<div class="mt-4"></div>
+					@form.Item() {
+						@form.Label(form.LabelProps{
+							For: "control--login--otp",
+						}) {
+							Verification Code
+						}
+						@authenticator.CodeInput("control--login--otp", "otp", "totp", false)
+						@form.Description() {
+							Enter the 6-digit TOTP code
+						}
+					}
+					<div class="mt-4"></div>
+					<!-- Submit Button -->
+					@button.Button(button.Props{ID: "control--login-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
+						Log in
+					}
+				</form>
+				@site_login_templ.PasskeyLogin("control--login")
+				// Logs in as soon as the code's last digit is in, once the name and password are
+				@authenticator.AutoSubmit("otp", "control--login--otp")
+				@authenticator.InvalidAfterError("otp")
+			}
+		}
+	}
+}

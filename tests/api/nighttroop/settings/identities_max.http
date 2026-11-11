@@ -1,0 +1,46 @@
+INCLUDE steps/new_site_admin.steps
+
+// A new site has 3 identities and the limit in these tests is 8, so 5 more can be made
+
+NAME create_device_1
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device1", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_2
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device2", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_3
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device3", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_4
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device4", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_5
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device5", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME create_device_over_limit
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "device6", "role": "device_read"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 8 users and devices" "@message"

@@ -1,0 +1,256 @@
+package site_data_templ
+
+import (
+	"context"
+	"fmt"
+	"math"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// Location is the timezone of the identity's, site's or default settings, which times are shown in
+func Location(ctx context.Context) *time.Location {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.GetSettings().Location()
+	}
+	return time.UTC
+}
+
+// dateLayout is the Go layout of the identity's, site's or default date format
+func dateLayout(ctx context.Context) string {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.GetSettings().DateLayout()
+	}
+	return time.DateOnly
+}
+
+// timeLayout is the Go layout of the identity's, site's or default time format
+func timeLayout(ctx context.Context) string {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.GetSettings().TimeLayout()
+	}
+	return time.TimeOnly
+}
+
+// formatReadingDate is a time in the settings' timezone, date format and time format
+func formatReadingDate(ctx context.Context, ms int64) string {
+	return time.UnixMilli(ms).In(Location(ctx)).Format(dateLayout(ctx) + " " + timeLayout(ctx))
+}
+
+// FormatDate shows times the same way on other pages
+var FormatDate = formatReadingDate
+
+// glucoseUnits are the units glucose is shown and typed in, from the identity's, site's or default settings
+func glucoseUnits(ctx context.Context) *consts.Units {
+	return sitemodels.ContextUnits(httputils.GetSiteContext(ctx))
+}
+
+// formatGlucose shows glucose on the data pages as every page does: mmol/L to one decimal place, mg/dL whole
+func formatGlucose(value float64, units *consts.Units) string {
+	return display.Glucose(value, units)
+}
+
+// glucoseInputAttributes keeps a typed in glucose value within what the store accepts, in the settings' units
+func glucoseInputAttributes(ctx context.Context) templ.Attributes {
+	return templ.Attributes{"step": "any", "min": "0.1", "max": fmt.Sprint(consts.Round(glucoseUnits(ctx).FromMGDL(1000), 1))}
+}
+
+// GlucoseColour is a range of glucose's theme colour as text, filled and stroked on a graph, and as a background
+type GlucoseColour struct{ Text, Fill, Stroke, Background string }
+
+// GlucoseColours colour glucose "Low", "High" or in range, "", as display.GlucoseRange names it, and "Very low" and
+// "Very high", with the theme's glucose colours, high text in the darker amber that can be read as text
+var GlucoseColours = map[string]GlucoseColour{
+	"Very low":  {Background: "bg-glucose-very-low"},
+	"Low":       {"text-glucose-low", "fill-glucose-low", "stroke-glucose-low", "bg-glucose-low"},
+	"":          {"text-glucose-in-range", "fill-glucose-in-range", "stroke-glucose-in-range", "bg-glucose-in-range"},
+	"High":      {"text-glucose-high-text", "fill-glucose-high", "stroke-glucose-high", "bg-glucose-high"},
+	"Very high": {Background: "bg-glucose-very-high"},
+}
+
+// RangeBounds are the range settings, low and high, in the settings' units, for this and other pages' graphs
+func RangeBounds(ctx context.Context) (float64, float64) {
+	settings, units := httputils.GetSiteContext(ctx).GetSettings(), glucoseUnits(ctx)
+	return units.FromMGDL(float64(*settings.GetRangeLowMgdl())), units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
+}
+
+// glucoseRange is "Low" or "High" for a reading, in the settings' units, below or above the range settings
+func glucoseRange(ctx context.Context, reading float64) string {
+	low, high := RangeBounds(ctx)
+	return display.GlucoseRange(reading, low, high)
+}
+
+// glucoseReadingCell colours an out of range reading's cell, with a title saying whether it is low or high
+func glucoseReadingCell(ctx context.Context, reading float64) table.CellProps {
+	props := table.NumCell
+	if outOfRange := glucoseRange(ctx, reading); outOfRange != "" {
+		props.Class += " font-medium " + GlucoseColours[outOfRange].Text
+		props.Attributes = templ.Attributes{"title": outOfRange}
+	}
+	return props
+}
+
+// glucoseRangeMarker marks an out of range reading in words, not only colour: H or L beside it, read out as High or Low
+templ glucoseRangeMarker(outOfRange string) {
+	if outOfRange != "" {
+		<span class="ml-1 text-xs font-semibold" aria-hidden="true">{ outOfRange[:1] }</span>
+		<span class="sr-only">{ outOfRange }</span>
+	}
+}
+
+// directionDetail is a reading's trend as its arrow and Nightscout's name for it, like "↗ FortyFiveUp"
+func directionDetail(direction *string) string {
+	if direction == nil {
+		return "-"
+	}
+	return display.Direction(direction) + " " + *direction
+}
+
+// orDash shows an optional value, or a dash when it is not set
+// notesCell is a table cell of free text, like notes, which wraps where every other cell keeps to one line
+var notesCell = table.CellProps{Class: "min-w-48 whitespace-normal"}
+
+func orDash[T any](value *T) string {
+	if value == nil {
+		return "-"
+	}
+	return fmt.Sprint(*value)
+}
+
+// percentOr is a fraction as the percent it is typed in as, e.g. 1.2 as 120, or unset when it has none
+func percentOr(fraction *float64, unset string) string {
+	if fraction == nil {
+		return unset
+	}
+	return fmt.Sprint(math.Round(*fraction*10000) / 100)
+}
+
+// GlucoseReadingsTable shows one page of readings, newest first, with buttons to the pages either side
+templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "glucose_readings_table",
+		Title:       "Glucose Readings",
+		Description: "Newest first. Click a reading to see all its details.",
+		Action:      addmodal.Open("site--glucose--add", "/data/glucose/new", "Add Reading"),
+		Above:       glucoseAbove(skip),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "glucoseReadingsTable",
+			EmptyID: "site--glucose--empty",
+			Empty:   "No glucose readings here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: string(*glucoseUnits(ctx)), Numeric: true}, {Label: "Type"},
+				{Label: "Direction"}, {Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--glucose", Path: "/data/glucose", Count: len(readings), Skip: skip, Limit: limit},
+	}) {
+		for _, reading := range readings {
+			@glucoseReadingRow(reading)
+		}
+	}
+}
+
+// glucoseAbove is the glucose readings' totals, then, on their first page, the last days' summaries
+templ glucoseAbove(skip int64) {
+	@searchTotals("site--glucose", "glucose reading", "glucose readings")
+	if skip == 0 {
+		<div id="site--glucose--days-loading" hx-get="/data/summary-daily?limit=10" hx-trigger="load" hx-swap="outerHTML"></div>
+	}
+}
+
+// GlucoseReadingNew adds a glucose reading with all its fields, putting its row at the top of the table
+templ GlucoseReadingNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--glucose--create", Title: "Add Reading", Path: "/data/glucose", Target: "#glucoseReadingsTable tbody",
+		Submit: "Add Reading", Fields: glucoseFields(ctx)})
+}
+
+// glucoseFields are what a glucose reading has that a person can type in
+func glucoseFields(ctx context.Context) []addmodal.Field {
+	attributes, units := glucoseInputAttributes(ctx), string(*glucoseUnits(ctx))
+	return []addmodal.Field{
+		{Name: "reading", Label: "Reading (" + units + ")", Help: "The glucose measured, in your units.", Required: true, Min: fmt.Sprint(attributes["min"]), Max: fmt.Sprint(attributes["max"]), Step: "any"},
+		{Name: "occurred_at", Label: "When", Help: "When it was measured, in your timezone. Blank is now.", Kind: addmodal.When},
+		{Name: "reading_type", Label: "Type", Help: "A finger prick meter or a sensor.", Required: true, Kind: addmodal.Select, Options: []string{"mbg", "sgv"}, OptionLabel: display.ReadingType},
+		{Name: "measurement_method", Label: "Method", Help: "How it was measured, e.g. a meter.", Kind: addmodal.Text, Max: "32", Options: []string{"meter", "cgm", "manual"}},
+		{Name: "direction", Label: "Trend", Help: "Which way it was heading, for a sensor reading.", Kind: addmodal.Select, Options: []string{"DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown", "DoubleDown"},
+			OptionLabel: func(direction string) string { return directionDetail(&direction) }},
+		{Name: "reason", Label: "Reason", Help: "Why it was measured, e.g. before a meal.", Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
+}
+
+// glucoseReadingRow opens the reading's details when clicked.
+templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
+	@table.DataRow("site--glucose--"+reading.ID, "/data/glucose/"+reading.ID, "Delete this glucose reading?") {
+		@table.Cell() {
+			{ formatReadingDate(ctx, reading.OccurredAt) }
+		}
+		@table.Cell(glucoseReadingCell(ctx, reading.Reading)) {
+			{ formatGlucose(reading.Reading, reading.Units) }
+			@glucoseRangeMarker(glucoseRange(ctx, reading.Reading))
+		}
+		@table.Cell() {
+			{ display.ReadingType(reading.ReadingType) }
+		}
+		@table.Cell() {
+			<span title={ orDash(reading.Direction) }>{ display.Direction(reading.Direction) }</span>
+		}
+		@table.Cell() {
+			{ orDash(reading.CreatedByDeviceName) }
+		}
+	}
+}
+
+templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
+	{{ edit := addmodal.Props{ID: "site--glucose--edit", Path: "/data/glucose/" + reading.ID, Target: "#site--glucose--" + reading.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": formatGlucose(reading.Reading, reading.Units)}, "reading_type", "measurement_method")} }}
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@addmodal.Detail(edit, "reading_type", "Type", display.ReadingType(reading.ReadingType))
+			@addmodal.Detail(edit, "original_units", "Original Units", orDash(reading.OriginalUnits))
+			@addmodal.Detail(edit, "measurement_method", "Measurement Method", orDash(reading.MeasurementMethod))
+			@addmodal.Detail(edit, "delta", "Delta", orDash(reading.Delta))
+			@addmodal.Detail(edit, "noise", "Noise", orDash(reading.Noise))
+			@addmodal.Detail(edit, "filtered", "Filtered", orDash(reading.Filtered))
+			@addmodal.Detail(edit, "unfiltered", "Unfiltered", orDash(reading.Unfiltered))
+			@addmodal.Detail(edit, "rssi", "RSSI", orDash(reading.Rssi))
+			@RecordDetails(Record{ID: reading.ID, UtcOffset: reading.UtcOffsetMinutes, App: reading.CreatedByAppName, Device: reading.CreatedByDeviceName, CreatedBy: reading.CreatedByIdentityName, Created: reading.CreatedAt, Updated: reading.UpdatedAt, UpdatedBy: reading.UpdatedByIdentityName})
+		</dl>
+	}
+}
+
+var readingDetail = modal.DetailIfSet
+
+func orEmpty(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
+templ GlucoseReadingCreated(reading *sitemodels.SiteGlucoseReading) {
+	@glucoseReadingRow(reading)
+}
+
+// GlucoseReadingUpdated replaces the reading's row, closes its details and shows a toast
+templ GlucoseReadingUpdated(reading *sitemodels.SiteGlucoseReading) {
+	@glucoseReadingRow(reading)
+	@modal.CloseOOB()
+	@successtoast.OOB("Glucose Reading Updated")
+}
+
+templ GlucoseReadingDeleted() {
+	@successtoast.Toast("Glucose Reading Deleted")
+}

@@ -1,0 +1,67 @@
+// Every page's footer links to contact, the support email, the terms of service, privacy policy and API docs, each
+// opening in a new tab
+GOTO {{ server_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #footer
+ASSERT_VISIBLE #footer--contact[href="mailto:nighttroop@t1d.nz"][target="_blank"]
+// This server has no feedback link, see feedback/links.bdd for one that has
+ASSERT_NOT_VISIBLE #footer--feedback
+ASSERT_NOT_VISIBLE #public--feedback
+ASSERT_TEXT_VISIBLE Nighttroop 2026
+SCREENSHOT footer
+
+// The terms and privacy policy are generated from their Markdown, with the support email in place
+CLICK #footer--terms
+ASSERT_NEW_PAGE
+ASSERT_PATH /terms
+ASSERT_TEXT_VISIBLE TERMS OF SERVICE
+ASSERT_VISIBLE #legal a[href="mailto:nighttroop@t1d.nz"] >> nth=0
+ASSERT_NOT_VISIBLE #legal >> text=SUPPORT_EMAIL
+SCREENSHOT terms
+
+CLICK #footer--privacy
+ASSERT_NEW_PAGE
+ASSERT_PATH /privacy
+ASSERT_TEXT_VISIBLE Consent by Sending Data
+ASSERT_VISIBLE #legal a[href="mailto:nighttroop@t1d.nz"] >> nth=0
+SCREENSHOT privacy
+
+// The API docs, Redoc's page of the OpenAPI schema, have a menu of each endpoint, in groups (site, data, settings and
+// Nightscout), that goes to it, with its body, responses and samples, and a link to download the schema
+CLICK #footer--api-docs
+ASSERT_NEW_PAGE
+ASSERT_PATH /api-docs
+ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop")
+ASSERT_VISIBLE #api-docs a[download][href$="/openapi.json"]
+ASSERT_VISIBLE #api-docs li[data-item-id="tag/Nightscout"]
+CLICK #api-docs li[data-item-id="tag/Site"] > label
+CLICK #api-docs li[data-item-id="tag/Site/operation/Login"] label
+ASSERT_VISIBLE #api-docs [id="tag/Site/operation/Login"] h2:has-text("Signs an admin")
+ASSERT_VISIBLE #api-docs [id="tag/Site/operation/Login"] :text("Request samples")
+ASSERT_VISIBLE #api-docs [id="tag/Site/operation/Login"] :text("expires_at") >> nth=0
+
+// Each endpoint shows the host it is on, on this server, with the site's ID for the reader to fill in: the Nightscout
+// API is on a site's Nightscout host
+CLICK #api-docs li[data-item-id="tag/Nightscout"] > label
+CLICK #api-docs li[data-item-id="tag/Nightscout/operation/NsV1Search"] label
+CLICK #api-docs [id="tag/Nightscout/operation/NsV1Search"] button:has-text("/api/v1/{collection}")
+ASSERT_VISIBLE #api-docs [id="tag/Nightscout/operation/NsV1Search"] span:has-text("://{site_id}.ns.localhost")
+SCREENSHOT api_docs
+
+// Its search finds endpoints, each listed by its summary
+CLICK .search-input
+INPUT .search-input Glucose
+CLICK .search-input
+ASSERT_VISIBLE #api-docs [data-role="search:results"] :text("The site's glucose readings, newest first")
+
+// A site's pages have the footer too, linking to the site's own copies
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE #footer
+CLICK #footer--privacy
+ASSERT_NEW_PAGE
+ASSERT_PATH /privacy
+ASSERT_TEXT_VISIBLE PRIVACY POLICY
+CLICK #footer--api-docs
+ASSERT_NEW_PAGE
+ASSERT_PATH /api-docs
+ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop")

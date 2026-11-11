@@ -1,0 +1,37 @@
+INCLUDE steps/new_ns_site.steps
+
+// Foods have no date, so a second, different food is not a duplicate of the first
+NAME create_first_food
+POST http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 27, "name": "Toast" }
+ASSERT_STATUS 201
+
+NAME create_second_food
+POST http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 10, "name": "Apple" }
+ASSERT_STATUS 201
+ASSERT_EQUALS 10 "@result.carbs"
+
+NAME both_foods_saved
+GET http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+
+// Entries sent without a date are not duplicates of each other
+NAME create_entry_without_date
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B { "sgv": 101, "type": "sgv" }
+ASSERT_STATUS 200
+
+NAME create_other_entry_without_date
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B { "sgv": 150, "type": "sgv" }
+ASSERT_STATUS 200
+
+NAME both_entries_saved
+GET http://{{ site }}/api/v1/entries?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"

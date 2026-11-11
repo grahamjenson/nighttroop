@@ -1,0 +1,73 @@
+INCLUDE steps/control_login.steps
+
+// Each rate limit is its env variable's until an admin sets it
+NAME get_rate_limits
+GET http://control.localhost/rate-limits
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "site_push" "@result.15.name"
+ASSERT_EQUALS 10 "@result.15.per_minute"
+ASSERT_EQUALS 30 "@result.15.burst"
+
+// Setting one uses it at once, and says it was set, its env default kept beside it
+NAME set_rate_limits
+POST http://control.localhost/rate-limits
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"site_push": {"per_minute": 2.5, "burst": 7}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "site_push" "@result.11.name"
+ASSERT_EQUALS true "@result.11.set"
+ASSERT_EQUALS 2.5 "@result.11.rate.per_minute"
+ASSERT_EQUALS 7 "@result.11.rate.burst"
+ASSERT_EQUALS 10 "@result.11.default.per_minute"
+ASSERT_EQUALS false "@result.0.set"
+
+NAME get_set_rate_limits
+GET http://control.localhost/rate-limits
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@result.15.per_minute"
+ASSERT_EQUALS 7 "@result.15.burst"
+
+// A rate that would refuse every request is refused, and changes nothing
+NAME set_zero_rate_limit
+POST http://control.localhost/rate-limits
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"site_push": {"per_minute": 0, "burst": 7}}
+ASSERT_STATUS 400
+
+NAME set_no_burst_rate_limit
+POST http://control.localhost/rate-limits
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"site_push": {"per_minute": 2, "burst": 0}}
+ASSERT_STATUS 400
+
+// One left out uses its env's again
+NAME reset_rate_limits
+POST http://control.localhost/rate-limits
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"global": {"per_minute": 100000, "burst": 100000}}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.0.set"
+ASSERT_EQUALS false "@result.11.set"
+ASSERT_EQUALS 10 "@result.11.rate.per_minute"
+
+// A site's identity cannot set them
+INCLUDE steps/new_site.steps
+NAME site_sets_rate_limits
+POST http://control.localhost/rate-limits
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"site_push": {"per_minute": 1000, "burst": 1000}}
+ASSERT_STATUS 401

@@ -1,0 +1,60 @@
+package controlmodels
+
+import (
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+)
+
+//go:generate go tool goverter gen .
+
+// goverter:converter
+// goverter:output:format function
+// goverter:output:file ./z_control_converters.go
+type ControlConverter interface {
+	SiteFromDB(source *controldb.Site) *Site
+	// goverter:enum no
+	// goverter:map TotpSecretEnc HasTotp | HasSecret
+	SiteIdentityFromDB(source *controldb.SiteIdentity) *SiteIdentity
+	// goverter:enum no
+	ControlAdminFromDB(source *controldb.ControlIdentity) *ControlAdmin
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams
+
+	// goverter:map FailedRunIdsJson FailedRunIDs
+	JobStatsDailyFromDB(source *jobsdb.JobStatsDaily) *JobStatsDaily
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchJobStatsDaily(source *apiquery.Query) jobsdb.SearchJobStatsDailyParams
+
+	JobFromDB(source *jobsdb.Job) *Job
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams
+
+	// goverter:enum no
+	ConnectorFromDB(source *controldb.SiteConnector) *Connector
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchConnectors(source *apiquery.Query) controldb.SearchConnectorsParams
+
+	// goverter:map Attributes | AttributesJSON
+	LogFromDB(source *logsdb.Log) *Log
+
+	// goverter:map Attributes | AttributesJSON
+	EventFromDB(source *logsdb.Event) *Event
+
+	// goverter:map Attributes | AttributesJSON
+	ErrorFromDB(source *logsdb.Error) *Error
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchLogs(source *apiquery.Query) logsdb.SearchLogsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchEvents(source *apiquery.Query) logsdb.SearchEventsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams
+}

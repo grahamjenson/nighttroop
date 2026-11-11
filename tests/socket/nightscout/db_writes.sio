@@ -1,0 +1,142 @@
+# AAPS's NSClient writes over the socket with dbAdd, dbUpdate and dbRemove, and every
+# connection that can read sees each change as a dataUpdate
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+SET bolus_at {{ time 5 }}
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=3
+
+NAME authorize
+EMIT authorize
+B {"client":"pump","secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@write_treatment"
+
+NAME first_data
+WAIT dataUpdate
+ASSERT_LENGTH 0 "@treatments"
+
+# dbAdd answers with what it stored
+NAME add_treatment
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Correction Bolus","insulin":1.2,"created_at":"{{ .bolus_at }}","enteredBy":"AAPS"}}
+ACK
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Correction Bolus" "@0.eventType"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EXISTS "@0._id"
+SET treatment_id {{ dig "add_treatment.0._id" }}
+
+NAME treatment_added
+WAIT dataUpdate
+ASSERT_EQUALS true "@delta"
+ASSERT_EQUALS ".treatment_id" "@treatments.0._id"
+ASSERT_EQUALS 1.2 "@treatments.0.insulin"
+ASSERT_EXISTS "@treatments.0.mills"
+
+NAME treatment_stored
+GET http://{{ site }}/api/v1/treatments?token={{ token }}&find[_id]={{ .treatment_id }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.2 "@0.insulin"
+
+# Sending it again is a duplicate: the stored one comes back and nothing is sent
+NAME add_duplicate
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Correction Bolus","insulin":1.2,"created_at":"{{ .bolus_at }}","enteredBy":"AAPS"}}
+ACK
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".treatment_id" "@0._id"
+
+NAME no_duplicate_update
+COLLECT dataUpdate
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+# dbUpdate sets fields, and the delta marks the treatment as updated
+NAME update_treatment
+EMIT dbUpdate
+B {"collection":"treatments","_id":"{{ .treatment_id }}","data":{"insulin":2}}
+ACK
+ASSERT_EQUALS "success" "@result"
+
+NAME treatment_updated
+WAIT dataUpdate
+ASSERT_EQUALS "update" "@treatments.0.action"
+ASSERT_EQUALS ".treatment_id" "@treatments.0._id"
+ASSERT_EQUALS 2 "@treatments.0.insulin"
+
+NAME treatment_changed
+GET http://{{ site }}/api/v1/treatments?token={{ token }}&find[_id]={{ .treatment_id }}
+ASSERT_EQUALS 2 "@0.insulin"
+
+# dbRemove deletes it, and the delta marks it removed
+NAME remove_treatment
+EMIT dbRemove
+B {"collection":"treatments","_id":"{{ .treatment_id }}"}
+ACK
+ASSERT_EQUALS "success" "@result"
+
+NAME treatment_removed
+WAIT dataUpdate
+ASSERT_LENGTH 1 "@treatments"
+ASSERT_EQUALS "remove" "@treatments.0.action"
+ASSERT_EQUALS ".treatment_id" "@treatments.0._id"
+ASSERT_EXISTS "@treatments.0.mills"
+
+NAME treatment_gone
+GET http://{{ site }}/api/v1/treatments?token={{ token }}&find[_id]={{ .treatment_id }}
+# A search that finds nothing, as in Nightscout
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+# dbAdd takes a list too, and each record is sent on
+NAME add_entries
+EMIT dbAdd
+B {"collection":"entries","data":[
+  {"type":"sgv","sgv":120,"direction":"Flat","date":{{ itime 10 }}},
+  {"type":"sgv","sgv":125,"direction":"FortyFiveUp","date":{{ itime 5 }}}
+]}
+ACK
+ASSERT_LENGTH 2 "@"
+
+NAME entries_added
+COLLECT dataUpdate
+T 1s
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 120 "@0.sgvs.0.mgdl"
+ASSERT_EQUALS 125 "@1.sgvs.0.mgdl"
+
+NAME add_devicestatus
+EMIT dbAdd
+B {"collection":"devicestatus","data":{"device":"openaps://AAPS","pump":{"reservoir":120}}}
+ACK
+ASSERT_EQUALS "openaps://AAPS" "@0.device"
+
+NAME devicestatus_added
+WAIT dataUpdate
+ASSERT_EQUALS "openaps://AAPS" "@devicestatus.0.device"
+
+# Deleting through the REST API is sent on the same way
+NAME add_carbs
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Carb Correction","carbs":15}}
+ACK
+SET carbs_id {{ dig "add_carbs.0._id" }}
+
+NAME carbs_added
+WAIT dataUpdate
+ASSERT_EQUALS 15 "@treatments.0.carbs"
+
+NAME delete_carbs
+DELETE http://{{ site }}/api/v1/treatments/{{ .carbs_id }}?token={{ token }}
+ASSERT_STATUS 200
+
+NAME carbs_removed
+WAIT dataUpdate
+ASSERT_EQUALS "remove" "@treatments.0.action"
+ASSERT_EQUALS ".carbs_id" "@treatments.0._id"

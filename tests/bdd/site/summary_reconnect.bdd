@@ -1,0 +1,54 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+ASSERT_PATH /
+
+// Virtual connector is turned on, but has not run yet
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_VISIBLE #site--getting-started
+ASSERT_VISIBLE #site--summary--live
+
+// In the background, the summary's stream is closed, so readings the sync writes are not shown
+BACKGROUND
+RUN_BACKGROUND_JOBS
+ASSERT_VISIBLE #site--getting-started
+
+// Back in the foreground, the stream reconnects, and the summary reloads to show what it missed
+FOREGROUND
+ASSERT_VISIBLE #site--summary--live
+ASSERT_VISIBLE #site--summary--glucose--reading
+ASSERT_NOT_VISIBLE #site--getting-started
+ASSERT_PATH /
+SCREENSHOT summary_reconnected

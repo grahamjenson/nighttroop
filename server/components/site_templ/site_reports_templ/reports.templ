@@ -1,0 +1,291 @@
+package site_reports_templ
+
+import (
+	"context"
+	"fmt"
+	"slices"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// periods are what a report can be of
+var periods = []struct{ Period, Label string }{{"day", "Day"}, {"week", "Week"}, {"fortnight", "Fortnight"}, {"month", "Month"}}
+
+// reportLocation is the site's own timezone, whatever the viewer's: a report's days, weeks and months are built from
+// midnight in it, so its dates, days and links are the site's too
+func reportLocation(ctx context.Context) *time.Location {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.GetSiteTimezone()
+	}
+	return time.UTC
+}
+
+// days are a report's first and last days, the last no later than today, in the site's timezone
+func days(ctx context.Context, p *sitemodels.SiteSummaryPeriod) (time.Time, time.Time) {
+	location := reportLocation(ctx)
+	last := time.UnixMilli(p.End).In(location).AddDate(0, 0, -1)
+	if now := time.Now().In(location); last.After(now) {
+		last = now
+	}
+	return time.UnixMilli(p.Start).In(location), last
+}
+
+// title names the report's day, as Fri 6 Nov 2026, its month, as October 2026, or its first and last days
+func title(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
+	first, _ := days(ctx, p)
+	last := time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)
+	switch p.Period {
+	case "day":
+		return first.Format(display.DayLayout)
+	case "month":
+		return first.Format("January 2006")
+	}
+	return first.Format("2 Jan") + " – " + last.Format("2 Jan 2006")
+}
+
+// next is the path of the report after p, whose last day is last: for a week or fortnight its ReportDays after, or to
+// today when fewer are over, and for a day or month the one after its end; "" after today's
+func next(report string, p *sitemodels.SiteSummaryPeriod, last time.Time) string {
+	end := last.AddDate(0, 0, 1)
+	today := time.Now().In(last.Location()).Format(time.DateOnly)
+	if n, ok := sitemodels.ReportDays[p.Period]; ok && last.Format(time.DateOnly) < today {
+		if end = last.AddDate(0, 0, n); end.Format(time.DateOnly) > today {
+			end = time.Now().In(last.Location())
+		}
+	}
+	return link(report, p.Period, end)
+}
+
+// link is the path of the report, as agp, of period with date in it, from today back a year, or "" for one out of that
+// range
+func link(report, period string, date time.Time) string {
+	now := time.Now().In(date.Location())
+	if day := date.Format(time.DateOnly); day <= now.Format(time.DateOnly) && day >= now.AddDate(0, 0, -366).Format(time.DateOnly) {
+		return "/reports/" + report + "/" + period + "-" + day
+	}
+	return ""
+}
+
+// periodHeader is the report's name, as AGP, over its dates, with arrow buttons either side to the period before and
+// after, and buttons to the report of each kind of period ending on its last day
+templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
+	{{ first, last := days(ctx, p) }}
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		@periodNav(name, "site--reports", "site--reports--title", title(ctx, p), link(report, p.Period, first.AddDate(0, 0, -1)),
+			next(report, p, time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)), p.Period)
+		<div class="flex flex-wrap gap-1">
+			for _, kind := range periods {
+				@nav.Toggle("site--reports--period-"+kind.Period, link(report, kind.Period, last), button.SizeSm, kind.Period == p.Period) {
+					{ kind.Label }
+				}
+			}
+		</div>
+	</div>
+}
+
+// periodNav is a report's name over the dates it is of, its title, with arrow buttons either side to the period, a
+// unit as month, before and after, then anything else about it
+templ periodNav(name, id, titleID, title, previous, next, unit string) {
+	<div>
+		<h1 class="text-2xl font-bold">{ name }</h1>
+		<div class="flex items-center gap-1">
+			@arrowButton(id+"--previous", previous, "Previous "+unit) {
+				@icon.ChevronLeft()
+			}
+			<span id={ titleID } class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title }</span>
+			@arrowButton(id+"--next", next, "Next "+unit) {
+				@icon.ChevronRight()
+			}
+		</div>
+		{ children... }
+	</div>
+}
+
+// TDDReport is the total daily dose of each day of the month ending on last: a bar of each day with insulin, how many
+// days before today had it and their mean, lowest and highest, and a table of every day's dose, newest first, today
+// marked so far, with arrows beside its dates to the month before and after
+templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
+	{{ first, today := last.AddDate(0, 0, 1-TDDDays), tddToday(time.Now(), last.Location()) }}
+	{{ previous, next := tddLinks(last, today) }}
+	{{ withInsulin := dosed(days) }}
+	{{ over := tddOver(withInsulin, today) }}
+	{{ mean, lowest, highest := tddStats(over) }}
+	@heading.Title("TDD")
+	<div id="site--reports" class="w-full space-y-4 py-4">
+		@periodNav("TDD", "site--reports--tdd", "site--reports--title", first.Format(display.ShortDayLayout)+" to "+last.Format(display.DayLayout), previous, next, "month")
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			@stat.Tile("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(over)), nil)
+			@stat.Tile("site--reports--tdd--mean", "Daily dose", display.Value(mean, " U"), nil)
+			@stat.Tile("site--reports--tdd--lowest", "Lowest", display.Value(lowest, " U"), nil)
+			@stat.Tile("site--reports--tdd--highest", "Highest", display.Value(highest, " U"), nil)
+		</div>
+		@card.Card(card.Props{Title: "Total daily dose"}) {
+			if len(withInsulin) > 0 {
+				{{ chart := tddChart(withInsulin, first, last, today) }}
+				<div id="site--reports--tdd--chart" class="h-90 w-full text-xs">
+					<div id={ chart.ChartID } class="h-full w-full"></div>
+					@templ.Raw(chart.RenderSnippet().Script)
+				</div>
+			} else {
+				<p id="site--reports--tdd--empty" class="text-sm text-gray-500">No insulin on these days.</p>
+			}
+			<p id="site--reports--tdd--help" class="mt-2 text-xs text-gray-500">
+				Basal is estimated from the basal rate in force each minute, the profile's scheduled basal or a temp basal;
+				the rest of the daily dose is boluses.
+				if last.Equal(today) {
+					Today, paler and marked so far, is not over, so it is left out of the days with insulin and their daily
+					dose, lowest and highest.
+				}
+			</p>
+		}
+		@card.Card(card.Props{Title: "Each day"}) {
+			@table.Table(table.Props{ID: "site--reports--tdd--table", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Day
+						}
+						for _, column := range []string{"Basal", "Bolus", "Total daily dose"} {
+							@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+								{ column }
+							}
+						}
+					}
+				}
+				@table.Body() {
+					for _, row := range tddRows(days, first, last, today) {
+						{{ date, _ := time.Parse(time.DateOnly, row.Date) }}
+						@table.Row(table.RowProps{ID: "site--reports--tdd--day-" + row.Date}) {
+							@table.Cell() {
+								{ date.Format(display.DayLayout) }
+								if row.SoFar {
+									<span id="site--reports--tdd--so-far" class="ml-1 text-xs font-medium text-gray-500">so far</span>
+								}
+							}
+							for _, value := range []*float64{row.Basal, row.Bolus, row.Dose} {
+								@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+									{ display.Value(value, " U") }
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	</div>
+}
+
+// arrowButton opens the report at path, as an icon named by label for a screen reader, or is disabled when there is none
+templ arrowButton(id, path, label string) {
+	{{ attributes := nav.Attributes(path) }}
+	{{ attributes["aria-label"], attributes["title"] = label, label }}
+	@button.Button(button.Props{
+		ID:         id,
+		Variant:    button.VariantGhost,
+		Size:       button.SizeIcon,
+		Disabled:   path == "",
+		Attributes: attributes,
+	}) {
+		{ children... }
+	}
+}
+
+// SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, a table for
+// each period, the longest first, each newest first and opening its AGP report: the months of its year, the
+// fortnights and weeks with a day in it, and the month's days. Arrows beside the month go to the month before and after. An admin can have them all
+// regenerated from the site's data.
+templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) {
+	{{ previous, next := summariesLinks(first, time.Now()) }}
+	@heading.Title("Summaries")
+	<div id="site--summaries" class="w-full space-y-4 py-4">
+		<div class="flex flex-wrap items-start justify-between gap-2">
+			@periodNav("Summaries", "site--summaries", "site--summaries--month", first.Format("January 2006"), previous, next, "month") {
+				<span class="text-sm text-gray-500">Its year's months, the fortnights and weeks with a day in it, and its days, built from the site's data</span>
+			}
+			// The printable report is a page of its own, without the site's header, so opens in a new tab
+			@button.Button(button.Props{ID: "site--summaries--print", Href: "/reports/print", Target: "_blank", Variant: button.VariantOutline, Size: button.SizeSm}) {
+				Printable report
+			}
+		</div>
+		for _, kind := range slices.Backward(periods) {
+			@card.Card(card.Props{ID: "site--summaries--" + kind.Period, Title: summariesTitle(kind.Period, kind.Label, first)}) {
+				@table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}) {
+					@table.Header() {
+						@table.Row() {
+							@table.Head() {
+								{ kind.Label }
+							}
+							for _, column := range []string{"Days with data", "Time in range", "Daily dose", "Daily carbs"} {
+								@table.Head(table.HeadProps{Class: "text-right"}) {
+									{ column }
+								}
+							}
+						}
+					}
+					@table.Body() {
+						if len(summaries[kind.Period]) == 0 {
+							<tr>
+								<td colspan="5" class="whitespace-normal p-4 text-gray-500">
+									if next != "" {
+										No { kind.Period }s kept in { emptyIn(kind.Period, first) }.
+									} else {
+										No { kind.Period }s kept yet. Each is made from whole days, so the first shows the day after readings
+										arrive.
+									}
+								</td>
+							</tr>
+						}
+						for _, p := range summaries[kind.Period] {
+							@table.Row() {
+								@table.Cell() {
+									{{ path := link("agp", p.Period, time.UnixMilli(p.End).In(reportLocation(ctx)).AddDate(0, 0, -1)) }}
+									@nav.Link("", path, "text-primary underline") {
+										{ title(ctx, p) }
+									}
+								}
+								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(p.TimeInRange), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
+									@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+										{ value }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if admin {
+			@regenerateSummaries()
+		}
+	</div>
+}
+
+// regenerateSummaries offers an admin, below the summaries rather than as the page's main action, to build them again
+// from the site's data, for when they look wrong, as after changing its timezone or uploading old readings
+templ regenerateSummaries() {
+	<section id="site--summaries--maintenance" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+		<p>Summaries look wrong, as after changing the site's timezone or uploading old readings? Build the last year of them again from the site's data.</p>
+		@button.Button(button.Props{ID: "site--summaries--regenerate", Variant: button.VariantOutline, Size: button.SizeSm,
+			Attributes: templ.Attributes{"hx-post": "/reports/summaries/regenerate", "hx-swap": "none", "hx-status:4xx": "target:#toaster swap:beforeend",
+				"hx-status:5xx": "target:#toaster swap:beforeend",
+				"hx-confirm": "Regenerate the last year of summaries from the site's data? It runs in the background and takes a minute."}}) {
+			Regenerate summaries
+		}
+	</section>
+}
+
+// SummariesRegenerating is a toast saying the summaries are being regenerated
+templ SummariesRegenerating() {
+	@successtoast.TitledOOB("Regenerating summaries", "The last year of summaries is being built again from the site's data.", 5000)
+}

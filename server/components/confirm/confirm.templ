@@ -1,0 +1,46 @@
+package confirm
+
+import "nighttroop.t1d.nz/server/components/ui/button"
+
+// Dialog asks to confirm a request with hx-confirm, such as a delete, in the site's own style rather than the browser's
+// plain one: its question, Cancel, and a button doing it, a red Delete for a delete and Continue for anything else.
+// What asks can say it deletes, though it is not an hx-delete, with data-confirm-delete, whose value, if any, names
+// the red button instead, e.g. data-confirm-delete="Remove". Cancel, Escape or pressing beside it drops the request.
+templ Dialog() {
+	<dialog id="confirm" aria-labelledby="confirm--message" class="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg bg-white p-6 shadow-lg backdrop:bg-black/50">
+		<p id="confirm--message" class="text-sm text-gray-900"></p>
+		<div class="mt-6 flex justify-end gap-2">
+			@button.Button(button.Props{ID: "confirm--cancel", Variant: button.VariantOutline}) {
+				Cancel
+			}
+			@button.Button(button.Props{ID: "confirm--ok", Class: "data-[delete]:bg-red-600 data-[delete]:hover:bg-red-700"}) {
+				Continue
+			}
+		</div>
+	</dialog>
+	<script>
+		document.addEventListener("htmx:confirm", (event) => {
+			const dialog = document.getElementById("confirm");
+			if (!dialog || dialog.open) return;
+			event.preventDefault();
+			const { ctx, issueRequest, dropRequest } = event.detail;
+			const ok = dialog.querySelector("#confirm--ok"), label = event.target.getAttribute("data-confirm-delete");
+			const isDelete = event.target.hasAttribute("hx-delete") || label !== null;
+			dialog.querySelector("#confirm--message").textContent = ctx.confirm;
+			ok.textContent = isDelete ? label || "Delete" : "Continue";
+			ok.toggleAttribute("data-delete", isDelete);
+			let answered = false;
+			const answer = (confirmed) => {
+				if (answered) return;
+				answered = true;
+				dialog.close();
+				confirmed ? issueRequest() : dropRequest();
+			};
+			ok.onclick = () => answer(true);
+			dialog.querySelector("#confirm--cancel").onclick = () => answer(false);
+			dialog.onclose = () => answer(false);
+			dialog.onclick = (click) => { if (click.target === dialog) answer(false); };
+			dialog.showModal();
+		});
+	</script>
+}

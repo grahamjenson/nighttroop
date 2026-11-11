@@ -1,0 +1,191 @@
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+//////
+// CREATE
+//////
+
+NAME create_entry_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B { "sgv": 101, "type": "sgv"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 101 "@0.sgv"
+ASSERT_EQUALS "sgv" "@0.type"
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
+
+// Dated a minute ago: entries with the same date are duplicates, and create_entry_v1 is dated now
+NAME create_full_entry_v1
+POST http://{{ site }}/api/v1/entries?token={{ token}}
+B {
+    "sgv": 100,
+    "type": "sgv",
+    "app": "test-app",
+    "direction": "Flat",
+    "trend": 3,
+    "dateString": "{{ time 1 }}",
+    "filtered": 139.2,
+    "unfiltered": 141.7, 
+    "rssi": -62, 
+    "noise": 1 
+ }
+ASSERT_STATUS 200
+ASSERT_EQUALS 100 "@0.sgv"
+ASSERT_EQUALS "sgv" "@0.type"
+ASSERT_EQUALS "test-app" "@0.app"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS 3 "@0.trend"
+ASSERT_EXISTS "@0.dateString"
+ASSERT_EQUALS 139.2 "@0.filtered"
+ASSERT_EQUALS 141.7 "@0.unfiltered"
+ASSERT_EQUALS -62 "@0.rssi"
+ASSERT_EQUALS 1 "@0.noise"
+
+
+
+///////
+// READ
+///////
+
+NAME get_entries_v1
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 101 "@0.sgv"
+ASSERT_EQUALS "sgv" "@0.type"
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
+
+NAME get_entries_type_v1
+GET http://{{ site }}/api/v1/entries/sgv?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 101 "@0.sgv"
+ASSERT_EQUALS "sgv" "@0.type"
+
+//////
+// OTHER
+//////
+
+NAME create_other_entry_v1
+POST http://{{ .site }}/api/v1/entries?token={{ token}}
+B {"sgv": 100, "date": 1767355994, "dateString": "2026-01-02T12:13:14Z", "type": "sgv" }
+ASSERT_STATUS 200
+ASSERT_EQUALS 100 "@0.sgv"
+
+
+NAME get_entries_current_v1
+GET http://{{ site }}/api/v1/entries/current?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@0._id"
+
+
+NAME get_entries_count_v1
+GET http://{{ site }}/api/v1/count/entries/where?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@count"
+
+NAME get_entries_times_v1
+GET http://{{ site }}/api/v1/times/2026-01-02?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME get_entries_slice_v1
+GET http://{{ site }}/api/v1/slice/entries/dateString/sgv/2026-01?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@0._id"
+
+
+
+NAME get_entries_echo_v1
+GET http://{{ .site }}/api/v1/echo/entries/sgv?token={{ token }}&find[sgv][$gte]=100
+ASSERT_STATUS 200
+ASSERT_EXISTS "@query"
+ASSERT_EQUALS "sgv" "@query.type_eq"
+
+NAME get_entries_echo_id_v1
+GET http://{{ .site }}/api/v1/echo/entries/abc123?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "abc123" "@query.id_eq"
+
+
+/////
+// UPDATE
+/////
+
+NAME update_entries_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_v1.0._id" }}", "sgv": 102, "type": "sgv" }
+ASSERT_STATUS 200
+ASSERT_EQUALS 102 "@sgv"
+
+NAME get_entries_after_put_v1
+GET http://{{ site }}/api/v1/entries/sgv?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 102 "@0.sgv"
+ASSERT_EQUALS "sgv" "@0.type"
+
+NAME update_entries_force_create_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "MyVeryOwnID", "sgv": 102, "type": "sgv" }
+ASSERT_STATUS 200
+ASSERT_EQUALS 102 "@sgv"
+
+///////
+// DELETE
+///////
+
+NAME delete_entries_v1
+DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME delete_entries_again_v1
+DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@deletedCount"
+
+NAME get_soft_deleted_entry_v1
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 404
+
+NAME get_soft_deleted_entry_with_allow_deleted_v1
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&includeDeleted=true
+ASSERT_STATUS 200
+ASSERT_EQUALS 102 "@0.sgv"
+
+
+NAME delete_entries_permanent_v1
+DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME delete_entries_permanent_again_v1
+DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@deletedCount"
+
+NAME get_soft_deleted_entry_with_allow_deleted_v1
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&includeDeleted=true
+ASSERT_STATUS 404
+
+NAME delete_entries_by_type_v1
+DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@deletedCount"
+
+
+NAME delete_entries_by_type_again_v1
+DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@deletedCount"
+
+
+NAME delete_entries_permanent_by_type_v1
+DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@deletedCount"
+
+NAME delete_entries_permanent_by_type_again_v1
+DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@deletedCount"

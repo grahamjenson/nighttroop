@@ -1,0 +1,40 @@
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// An admin can create a site at an ID they pick, such as a vanity one for a special user
+ASSERT_PATH /
+ASSERT_VISIBLE #control--sites--create--id
+SCREENSHOT create_site_form
+
+// The form only takes 8 lowercase letters, so the browser does not send anything else: "Vanity1" goes in as "vanity",
+// too short
+INPUT #control--sites--create--id Vanity1
+CLICK #control--sites--create--submit
+ASSERT_VISIBLE #control--sites--create--id:invalid
+ASSERT_NOT_VISIBLE #control--site--created
+
+// Typed capitals are lowered and anything but a to z is dropped as it goes in, so "VanIty B-D!" is the ID vanitybd,
+// which creates the site, and its credentials are shown, once
+// (filling in "1" clears the field, as the 1 is dropped, so the keys typed next start from nothing)
+INPUT #control--sites--create--id 1
+TYPE #control--sites--create--id VanIty B-D!
+// (its status is not checked here, as the list is read again with it; the API tests check it is 201)
+CLICK #control--sites--create--submit
+ASSERT_VISIBLE #control--site--created
+ASSERT_TEXT_VISIBLE Save your credentials somewhere safe
+ASSERT_TEXT_VISIBLE vanitybd.localhost
+SCREENSHOT create_site_created
+
+// The list behind it was read again, so once it is closed the new site is in it, without reloading the page
+CLICK #control--site--created--close
+ASSERT_NOT_VISIBLE #control--site--created
+ASSERT_VISIBLE #controlSitesTable td >> text=vanitybd
+
+// The same ID again is refused, as it is taken
+CLICK #control--sites--create--submit
+ASSERT_STATUS 409
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("that site ID is taken")

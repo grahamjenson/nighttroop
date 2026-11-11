@@ -1,0 +1,1 @@
+Based on, but substantially changed from https://github.com/glycoview/nightscout-api

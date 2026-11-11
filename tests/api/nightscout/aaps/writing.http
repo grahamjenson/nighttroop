@@ -1,0 +1,459 @@
+INCLUDE steps/ns_units_mgdl.steps
+
+######
+# CREATE
+######
+NAME create_devicestatus_v1
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "app": "AAPS",
+    "configuration": {},
+    "device": "openaps://CUBOT KINGKONG MINI 3",
+    "isCharging": false,
+    "openaps": {
+        "iob": {
+            "iob": 0.736,
+            "basaliob": -0.332,
+            "activity": 0.007,
+            "time": "2026-08-16T22:39:43.738Z"
+        },
+        "suggested": {
+            "algorithm": "SMB",
+            "runningDynamicIsf": true,
+            "timestamp": "2026-08-16T22:39:43.738Z",
+            "bg": 150,
+            "tick": "-6",
+            "eventualBG": 41,
+            "targetBG": 123,
+            "insulinReq": 0,
+            "deliverAt": "2026-08-16T22:39:41.740Z",
+            "sensitivityRatio": 1.2055221584632745,
+            "reason": "Dosing sensitivity: 330.0 using eventual BG;COB: 0, Dev: -0.6, BGI: -0.3, ISF: 7.5, CR: 11.5, Target: 6.8, minPredBG 3.3, minGuardBG -1.1, IOBpredBG 2.2; minGuardBG -1.1<4.5",
+            "duration": 120,
+            "rate": 0,
+            "predBGs": {
+                "IOB": [ 150, 144, 138, 132, 126, 120, 115, 109, 104, 99, 94, 89, 85, 80, 76, 71, 67, 62, 58, 53, 49, 44, 40, 39],
+                "ZT": [150,145,141,136,131,127,123,118,114,111,107,104,101,98,95,93,92,90,89,89,89,89,90,91,92,94,96,98,101,103,106,109,112,116,119,123]
+            },
+            "COB": 0,
+            "IOB": 0.736,
+            "variable_sens": 134.4,
+            "consoleLog": [
+                "Autosens ratio: 1.2055221584632745; ",
+                "Adjusting basal from 0.35 to 0.42193275546214604; ",
+                "target_bg from 135.9 to 123.0; ",
+                "EventualBG is 41.0 ;",
+                "Future state sensitivity is 330.0 based on eventual bg due to -ve delta",
+                "minPredBG: 59.0 minIOBPredBG: 39.0 minZTGuardBG: 89.0",
+                " minUAMPredBG: 39.0"
+            ],
+            "consoleError": [
+                "---------------------------------------------------------",
+                " Dynamic ISF version 2.0 ",
+                "---------------------------------------------------------",
+                "CR:11.5",
+                "SMB enabled due to enableSMB_always",
+                "profile.sens: 134.4, sens: 134.4, CSF: 11.68695652173913",
+                "Last carbs 143minutes ago; remainingCATime:6.1hours;100% carbs absorbed",
+                "Carb Impact: -1.6 mg/dL per 5m; CI Duration: 0.0 hours; remaining CI (~2h peak): 0.0 mg/dL per 5m",
+                "UAM Impact: -1.6 mg/dL per 5m; UAM Duration: 0.0 hours",
+                " avgPredBG: 89.0 COB: 0.0 / 26.0",
+                "minGuardBG -1.1 projected below 4.5 - disabling SMB",
+                "BG projected to remain above 6.8 for 25 minutes",
+                "BG projected to remain above 4.5 for 65 minutes",
+                "naive_eventualBG: 51.0 bgUndershoot: 30.0 zeroTempDuration 65 zeroTempEffect: 51 carbsReq: -2"
+            ],
+            "isfMgdlForCarbs": 137.59339622641514
+        }
+    },
+    "pump": {
+        "battery": {},
+        "clock": "2026-08-16T22:39:48.777Z",
+        "extended": {
+            "Version": "3.3.1.0-2ac634c908-2025.01.10",
+            "ActiveProfile": "Dash-2025",
+            "TempBasalAbsoluteRate": 0,
+            "TempBasalStart": "17/08/26 10:24am",
+            "TempBasalRemaining": 105,
+            "LastBolus": "17/08/26 10:22am",
+            "LastBolusAmount": 0.3,
+            "BaseBasalRate": 0.35
+        },
+        "reservoir": 38,
+        "status": {
+            "status": "normal",
+            "timestamp": "2026-08-16T22:24:50.892Z"
+        }
+    },
+    "uploader": {},
+    "uploaderBattery": 88,
+    "utcOffset": 720,
+    "created_at": "2026-08-16T22:39:48.777Z"
+ }
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@0.isCharging"
+
+NAME create_treatmentses_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [
+    {
+    "app": "AAPS",
+    "enteredBy": "AndroidAPS",
+    "eventType": "Sensor Change",
+    "units": "mmol",
+    "utcOffset": 720,
+    "created_at": "2026-08-15T20:45:43.000Z"
+  },
+  {
+    "app": "AAPS",
+    "enteredBy": "AndroidAPS",
+    "eventType": "Insulin Change",
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "created_at": "2026-08-14T07:24:07.699Z"
+  },
+  {
+    "absolute": 0,
+    "app": "AAPS",
+    "duration": 90,
+    "durationInMilliseconds": 5400000,
+    "eventType": "Temp Basal",
+    "pumpId": 1736455956352,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "rate": 0,
+    "type": "NORMAL",
+    "utcOffset": 720,
+    "created_at": "2026-08-18T02:14:54.696Z"    
+  },
+  {
+    "app": "AAPS",
+    "duration": 15,
+    "durationInMilliseconds": 900000,
+    "eventType": "Temporary Target",
+    "reason": "Automation",
+    "targetBottom": 144.00000000000003,
+    "targetTop": 144.00000000000003,
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "created_at": "2026-08-18T01:31:19.718Z"  
+  },
+  {  
+    "app": "AAPS",
+    "eventType": "Meal Bolus",
+    "insulin": 1,
+    "isBasalInsulin": false,
+    "pumpId": 1736455956313,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "NORMAL",
+    "utcOffset": 720,
+    "created_at": "2026-08-17T21:29:53.952Z"
+  },
+  {
+    "app": "AAPS",
+    "eventType": "Meal Bolus",
+    "insulin": 0.3,
+    "isBasalInsulin": false,
+    "pumpId": 1736455955308,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "NORMAL",
+    "utcOffset": 720,
+    "created_at": "2026-08-14T07:24:34.301Z"
+  },
+  {  
+    "app": "AAPS",
+    "eventType": "Correction Bolus",
+    "insulin": 0.4,
+    "isBasalInsulin": false,
+    "pumpId": 1736455956350,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "SMB",
+    "utcOffset": 720,
+    "created_at": "2026-08-18T02:10:00.787Z"
+  },
+  {
+    "app": "AAPS",
+    "duration": 0,
+    "eventType": "Profile Switch",
+    "originalDuration": 0,
+    "originalProfileName": "SamDash-2023-11SMB",
+    "percentage": 100,
+    "profile": "SamDash-2023-11SMB",
+    "profileJson": "{\"units\":\"mmol\",\"dia\":6,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":18},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":7},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":11.5},{\"time\":\"12:00\",\"timeAsSeconds\":43200,\"value\":12},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":15}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20},{\"time\":\"02:00\",\"timeAsSeconds\":7200,\"value\":20},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":8},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":11},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":13},{\"time\":\"19:00\",\"timeAsSeconds\":68400,\"value\":14}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.25},{\"time\":\"02:00\",\"timeAsSeconds\":7200,\"value\":0.23},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":0.25},{\"time\":\"04:00\",\"timeAsSeconds\":14400,\"value\":0.25},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":0.35},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":0.65},{\"time\":\"07:00\",\"timeAsSeconds\":25200,\"value\":0.65},{\"time\":\"08:00\",\"timeAsSeconds\":28800,\"value\":0.65},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":0.55},{\"time\":\"10:00\",\"timeAsSeconds\":36000,\"value\":0.3},{\"time\":\"11:00\",\"timeAsSeconds\":39600,\"value\":0.25},{\"time\":\"12:00\",\"timeAsSeconds\":43200,\"value\":0.25},{\"time\":\"13:00\",\"timeAsSeconds\":46800,\"value\":0.25},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":0.25},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":0.3},{\"time\":\"16:00\",\"timeAsSeconds\":57600,\"value\":0.25},{\"time\":\"17:00\",\"timeAsSeconds\":61200,\"value\":0.25},{\"time\":\"18:00\",\"timeAsSeconds\":64800,\"value\":0.4},{\"time\":\"19:00\",\"timeAsSeconds\":68400,\"value\":0.4},{\"time\":\"20:00\",\"timeAsSeconds\":72000,\"value\":0.3},{\"time\":\"21:00\",\"timeAsSeconds\":75600,\"value\":0.25},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":0.2},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":5.5},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":6},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":5.5},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":6},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":7},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":6.5},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":6.5}]}",
+    "timeshift": 0,
+    "created_at": "2026-08-18T02:10:00.787Z"
+  },
+  {
+    "eventType": "Correction Bolus",
+    "insulin": 0.05,
+    "created_at": "2100-12-09T19:21:48.649Z",
+    "type": "SMB",
+    "isSMB": true,
+    "pumpId": 1733613480316,
+    "pumpType": "OMNIPOD_DASH",
+    "pumpSerial": "4241"
+  },
+  {
+    "eventType": "Temporary Target",
+    "date": 99,
+    "duration": 360,
+    "durationInMilliseconds": 21600000,
+    "created_at": "2024-12-09T10:00:22.361Z",
+    "timestamp": 1733738422361,
+    "enteredBy": "AndroidAPS",
+    "reason": "Automation",
+    "targetBottom": 6,
+    "targetTop": 8,
+    "units": "mmol"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "date": 98,
+    "carbs": 20,
+    "created_at": "2024-12-09T02:37:03.538Z"
+  },
+  {
+    "date": 97,
+    "duration": 120,
+    "durationInMilliseconds": 7200000,
+    "eventType": "Temp Basal",
+    "isReadOnly": false,
+    "pumpId": 1714289927165,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "rate": 0,
+    "type": "NORMAL",
+    "created_at": "2024-07-15T06:41:17.050Z"
+  },
+  {
+    "app": "AAPS",
+    "date": 96,
+    "eventType": "Note",
+    "isReadOnly": false,
+    "notes": "SamDash-2023-11SMB",
+    "originalCustomizedName": "SamDash-2023-11SMB",
+    "originalDuration": 0,
+    "originalEnd": 1721025179000,
+    "originalPercentage": 100,
+    "originalProfileName": "SamDash-2023-11SMB",
+    "originalTimeshift": 0,
+    "profileJson": "{\"units\":\"mmol\",\"dia\":6,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":18},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":7},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":11.5},{\"time\":\"12:00\",\"timeAsSeconds\":43200,\"value\":12},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":15}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":8},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":11},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":13},{\"time\":\"19:00\",\"timeAsSeconds\":68400,\"value\":14}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.25},{\"time\":\"02:00\",\"timeAsSeconds\":7200,\"value\":0.23},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":0.25},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":0.35},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":0.65},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":0.55},{\"time\":\"10:00\",\"timeAsSeconds\":36000,\"value\":0.3},{\"time\":\"11:00\",\"timeAsSeconds\":39600,\"value\":0.25},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":0.3},{\"time\":\"16:00\",\"timeAsSeconds\":57600,\"value\":0.25},{\"time\":\"18:00\",\"timeAsSeconds\":64800,\"value\":0.4},{\"time\":\"20:00\",\"timeAsSeconds\":72000,\"value\":0.3},{\"time\":\"21:00\",\"timeAsSeconds\":75600,\"value\":0.25},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":5.5},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":6},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":5.5},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":6},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":7},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":6.5},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":6.5}]}",
+    "utcOffset": 720,
+    "created_at": "2024-07-15T06:33:06.944Z"
+  },
+  {
+    "app": "AAPS",
+    "date": 95,
+    "duration": 0,
+    "eventType": "Profile Switch",
+    "isReadOnly": false,
+    "originalDuration": 0,
+    "originalProfileName": "SamDash-2023-11SMB",
+    "percentage": 100,
+    "profile": "SamDash-2023-11SMB",
+    "profileJson": "{\"units\":\"mmol\",\"dia\":6,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":18},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":7},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":11.5},{\"time\":\"12:00\",\"timeAsSeconds\":43200,\"value\":12},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":15}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20},{\"time\":\"02:00\",\"timeAsSeconds\":7200,\"value\":20},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":8},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":11},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":13},{\"time\":\"19:00\",\"timeAsSeconds\":68400,\"value\":14}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.25},{\"time\":\"02:00\",\"timeAsSeconds\":7200,\"value\":0.23},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":0.25},{\"time\":\"04:00\",\"timeAsSeconds\":14400,\"value\":0.25},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":0.35},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":0.65},{\"time\":\"07:00\",\"timeAsSeconds\":25200,\"value\":0.65},{\"time\":\"08:00\",\"timeAsSeconds\":28800,\"value\":0.65},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":0.55},{\"time\":\"10:00\",\"timeAsSeconds\":36000,\"value\":0.3},{\"time\":\"11:00\",\"timeAsSeconds\":39600,\"value\":0.25},{\"time\":\"12:00\",\"timeAsSeconds\":43200,\"value\":0.25},{\"time\":\"13:00\",\"timeAsSeconds\":46800,\"value\":0.25},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":0.25},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":0.3},{\"time\":\"16:00\",\"timeAsSeconds\":57600,\"value\":0.25},{\"time\":\"17:00\",\"timeAsSeconds\":61200,\"value\":0.25},{\"time\":\"18:00\",\"timeAsSeconds\":64800,\"value\":0.4},{\"time\":\"19:00\",\"timeAsSeconds\":68400,\"value\":0.4},{\"time\":\"20:00\",\"timeAsSeconds\":72000,\"value\":0.3},{\"time\":\"21:00\",\"timeAsSeconds\":75600,\"value\":0.25},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":0.2},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":5.5},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":6},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":5.5},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":6},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":7},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":6.5},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":6.5}]}",
+    "timeshift": 0,
+    "utcOffset": 720,
+    "created_at": "2024-07-15T06:32:59.000Z"
+  },
+  {
+    "app": "AAPS",
+    "date": 94,
+    "eventType": "Meal Bolus",
+    "insulin": 1,
+    "isBasalInsulin": false,
+    "isReadOnly": false,
+    "pumpId": 1714289927153,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "NORMAL",
+    "utcOffset": 720,
+    "created_at": "2024-07-15T06:22:20.152Z"
+  },
+  {
+    "app": "AAPS",
+    "date": 93,
+    "eventType": "Correction Bolus",
+    "insulin": 0.3,
+    "isBasalInsulin": false,
+    "isReadOnly": false,
+    "pumpId": 1714289927152,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "SMB",
+    "utcOffset": 720,
+    "created_at": "2024-07-15T06:20:41.607Z"
+  },
+  {
+    "app": "AAPS",
+    "date": 92.0,
+    "duration": 45,
+    "durationInMilliseconds": 2700000,
+    "eventType": "Temporary Target",
+    "isReadOnly": false,
+    "reason": "Hypo",
+    "targetBottom": 144,
+    "targetTop": 144,
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "created_at": "2024-07-15T05:08:54.531Z"
+  },
+  {
+    "app": "AAPS",
+    "carbs": 10,
+    "date": 91,
+    "eventType": "Carb Correction",
+    "isReadOnly": false,
+    "utcOffset": 720,
+    "created_at": "2024-07-15T04:01:11.641Z"
+  },
+  {
+    "date": 90,
+    "created_at": "2024-12-09T20:31:43.662Z",
+    "enteredBy": "openaps://AndroidAPS",
+    "eventType": "Temp Basal",
+    "duration": 120,
+    "durationInMilliseconds": 7200000,
+    "type": "NORMAL",
+    "rate": 0,
+    "absolute": 0,
+    "pumpId": 1733613480322,
+    "pumpType": "OMNIPOD_DASH",
+    "pumpSerial": "4241"
+  },
+  {
+    "syncIdentifier": "74656d70426173616c20302e32373520323032352d30352d31345430323a30383a32345a",
+    "temp": "absolute",
+    "amount": 0,
+    "absolute": 1.55,
+    "date": 89,
+    "timestamp": "2023-05-14T02:08:24Z",
+    "automatic": true,
+    "created_at": "2023-05-14T02:08:24.000Z",
+    "insulinType": "Novolog",
+    "enteredBy": "loop://iPhone",
+    "eventType": "Temp Basal",
+    "duration": 4.1,
+    "rate": 1.55,
+    "utcOffset": 0
+  },
+  {
+    "eventType": "Carb Correction",
+    "date": 88,
+    "carbs": 15,
+    "mills": 1747183927099,
+    "app": "carer",
+    "utcOffset": 0,
+    "created_at": "2023-05-14T00:52:07.099Z"
+  },
+  {
+    "duration": 3,
+    "date": 87,
+    "insulinType": "Novolog",
+    "type": "normal",
+    "automatic": false,
+    "eventType": "Correction Bolus",
+    "syncIdentifier": "626f6c757320342e3520323032352d30352d31345430303a32353a35395a",
+    "created_at": "2023-05-14T00:25:59.000Z",
+    "timestamp": "2023-05-14T00:25:59Z",
+    "enteredBy": "loop://iPhone",
+    "insulin": 4.5,
+    "programmed": 4.5,
+    "unabsorbed": 0,
+    "utcOffset": 0
+  }
+  ]
+ASSERT_STATUS 200
+
+
+
+
+
+
+
+
+NAME create_profile_v3
+POST http://{{ site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "currentProfileName",
+    "date": 1720695970212,
+    "created_at": "2024-07-11T11:06:10.212Z",
+    "startDate": "2024-07-11T11:06:10.2120000Z",
+    "store": {
+        "NOTcurrentProfileName": {
+            "dia": 6,
+            "carbratio": [{"time": "00:00","timeAsSeconds": 0,"value": "20"}],
+            "sens": [{"time": "00:00","timeAsSeconds": 0,"value": 20}],
+            "basal": [{"time": "00:00","timeAsSeconds": 0,"value": 0.2}],
+            "target_low": [{"time": "00:00","timeAsSeconds": 0,"value": 5.5}],
+            "target_high": [{"time": "00:00","timeAsSeconds": 0,"value": 7}],
+            "units": "mmol",
+            "timezone": "Pacific/Auckland"
+        },
+        "currentProfileName": {
+            "dia": 6,
+            "carbratio": [{"time": "00:00","timeAsSeconds": 0,"value": "20"},{"time": "02:00","timeAsSeconds": 7200,"value": 20},{"time": "05:00","timeAsSeconds": 18000,"value": false},{"time": "09:00","timeAsSeconds": 32400},{"time": "14:00","timeAsSeconds": 50400,"value": null},{"time": "19:00","timeAsSeconds": 68400,"value": 14}],
+            "sens": [{"time": "00:00","timeAsSeconds": 0,"value": 20},{"time": "03:00","timeAsSeconds": 10800,"value": 20},{"time": "06:00","timeAsSeconds": 21600,"value": 7},{"time": "09:00","timeAsSeconds": 32400,"value": 11.5},{"time": "12:00","timeAsSeconds": 43200,"value": 12},{"time": "22:00","timeAsSeconds": 79200,"value": 15}],
+            "basal": [{"time": "00:00","timeAsSeconds": 0,"value": 0.2},{"time": "01:00","timeAsSeconds": 3600,"value": 0.25},{"time": "02:00","timeAsSeconds": 7200,"value": 0.23},{"time": "03:00","timeAsSeconds": 10800,"value": 0.25},{"time": "04:00","timeAsSeconds": 14400,"value": 0.25},{"time": "05:00","timeAsSeconds": 18000,"value": 0.35},{"time": "06:00","timeAsSeconds": 21600,"value": 0.65},{"time": "07:00","timeAsSeconds": 25200,"value": 0.65},{"time": "08:00","timeAsSeconds": 28800,"value": 0.65},{"time": "09:00","timeAsSeconds": 32400,"value": 0.55},{"time": "10:00","timeAsSeconds": 36000,"value": 0.3},{"time": "11:00","timeAsSeconds": 39600,"value": 0.25},{"time": "12:00","timeAsSeconds": 43200,"value": 0.25},{"time": "13:00","timeAsSeconds": 46800,"value": 0.25},{"time": "14:00","timeAsSeconds": 50400,"value": 0.25},{"time": "15:00","timeAsSeconds": 54000,"value": 0.3},{"time": "16:00","timeAsSeconds": 57600,"value": 0.25},{"time": "17:00","timeAsSeconds": 61200,"value": 0.25},{"time": "18:00","timeAsSeconds": 64800,"value": 0.4},{"time": "19:00","timeAsSeconds": 68400,"value": 0.4},{"time": "20:00","timeAsSeconds": 72000,"value": 0.3},{"time": "21:00","timeAsSeconds": 75600,"value": 0.25},{"time": "22:00","timeAsSeconds": 79200,"value": 0.2},{"time": "23:00","timeAsSeconds": 82800,"value": 0.2}],
+            "target_low": [{"time": "00:00","timeAsSeconds": 0,"value": 5.5},{"time": "05:00","timeAsSeconds": 18000,"value": 5.5},{"time": "09:00","timeAsSeconds": 32400,"value": 6},{"time": "14:00","timeAsSeconds": 50400,"value": 5.5},{"time": "23:00","timeAsSeconds": 82800,"value": 6}],
+            "target_high": [{"time": "00:00","timeAsSeconds": 0,"value": 7},{"time": "05:00","timeAsSeconds": 18000,"value": 6},{"time": "09:00","timeAsSeconds": 32400,"value": 7},{"time": "14:00","timeAsSeconds": 50400,"value": 6.5},{"time": "23:00","timeAsSeconds": 82800,"value": 6.5}],
+            "units": "mmol",
+            "timezone": "Pacific/Auckland"
+        }
+    },
+    "app": "AAPS",
+    "utcOffset": 720
+    }
+ASSERT_STATUS 201
+
+
+NAME create_aaps_entries_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {
+    "date": 1705525996000,
+    "sgv": 152,
+    "created_at": "2100-01-17T21:13:16.000Z"
+  },
+  {
+    "device": "AAPS-DexcomG6",
+    "date": 1733776878000,
+    "dateString": "2024-12-09T20:41:18.000Z",
+    "sgv": 56,
+    "direction": "FortyFiveDown",
+    "type": "sgv",
+    "created_at": "2024-12-09T20:41:45.284Z"
+  },
+  {
+    "app": "AAPS",
+    "date": 1705525695000,
+    "device": "AAPS-Dexcom",
+    "direction": "Flat",
+    "sgv": 157,
+    "type": "sgv",
+    "unfiltered": 0.2,
+    "units": "mg/dl",
+    "utcOffset": 780,
+    "created_at": "2024-01-17T21:08:15.000Z"
+  },
+  {
+    "direction": "Flat",
+    "filtered": 103,
+    "date": 1745689080000.0002,
+    "unfiltered": 103,
+    "type": "sgv",
+    "sgv": 103,
+    "dateString": "2025-04-26T17:38:00.000Z",
+    "glucose": 103,
+    "utcOffset": 0,
+    "sysTime": "2025-04-26T17:38:00.000Z",
+    "device": "unknown"
+  }
+  ]
+ASSERT_STATUS 200

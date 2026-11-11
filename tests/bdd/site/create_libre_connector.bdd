@@ -1,0 +1,96 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS           200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+ASSERT_VISIBLE #site--settings--connectors-button
+
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/connectors
+
+
+ASSERT_VISIBLE #site--settings--libre-connector--enable
+ASSERT_VISIBLE #site--settings--libre-connector--email
+ASSERT_VISIBLE #site--settings--libre-connector--password
+ASSERT_VISIBLE #site--settings--libre-connector--region
+// Not saved yet, it has nothing to delete or backfill
+ASSERT_NOT_VISIBLE #site--settings--libre-connector--delete
+ASSERT_NOT_VISIBLE #site--settings--libre-connector--backfill
+ASSERT_VISIBLE #site--settings--libre-connector--submit
+
+// Under go test only valid-libre-user@example.com logs in, and LibreLinkUp is never called
+INPUT #site--settings--libre-connector--email follower@example.com
+INPUT #site--settings--libre-connector--password libre-pass
+INPUT #site--settings--libre-connector--region EU
+// Typing a new source's details turns it on, as it is easy to forget
+CLICK #site--settings--libre-connector--email
+ASSERT_VISIBLE #site--settings--libre-connector--enable:checked
+CLICK #site--settings--libre-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+
+RUN_BACKGROUND_JOBS
+
+// The first sync fails, turns syncing off and says why, keeping the details to fix
+GOTO /settings/connectors
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--libre-connector--errors
+ASSERT_TEXT_VISIBLE libre authentication failed: invalid email or password
+ASSERT_VISIBLE #site--settings--libre-connector--email[value="follower@example.com"]
+ASSERT_VISIBLE #site--settings--libre-connector--region:has(option[value="EU"]:checked)
+ASSERT_VISIBLE #site--settings--libre-connector--enable:not(:checked)
+SCREENSHOT libre_connector_first_sync_failed
+
+// Saving working details clears the error and turns syncing back on
+INPUT #site--settings--libre-connector--email valid-libre-user@example.com
+CLICK #site--settings--libre-connector--enable
+CLICK #site--settings--libre-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+
+GOTO /settings/connectors
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--settings--libre-connector--errors
+ASSERT_VISIBLE #site--settings--libre-connector--email[value="valid-libre-user@example.com"]
+ASSERT_VISIBLE #site--settings--libre-connector--enable:checked
+SCREENSHOT libre_connector_saved
+
+// Backfill fetches the last 12 hours of readings, as far back as LibreLinkUp goes
+CLICK #site--settings--libre-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Libre
+ASSERT_TEXT_VISIBLE Fetching records from
+SCREENSHOT libre_backfill_started
+RUN_BACKGROUND_JOBS
+
+// Deleting leaves the page in place, with the Libre form rendered unset again
+CLICK #site--settings--libre-connector--delete
+ASSERT_TEXT_VISIBLE Connector Deleted
+ASSERT_PATH /settings/connectors
+ASSERT_VISIBLE #site--settings--libre-connector--email:not([value*="valid-libre"])
+ASSERT_VISIBLE #site--settings--libre-connector--region:has(option[value="GLOBAL"]:checked)

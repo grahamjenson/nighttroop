@@ -1,0 +1,103 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// NotificationEventsTable shows one page of notifications, newest first, with buttons to the pages either side
+templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "notification_events_table",
+		Title:       "Notifications",
+		Description: "Newest first. Click a notification to see all its details.",
+		Action:      addmodal.Open("site--notification--add", "/data/notifications/new", "Add Notification"),
+		Above:       searchTotals("site--notification", "notification", "notifications"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "notificationEventsTable",
+			EmptyID: "site--notification--empty",
+			Empty:   "No notifications here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Type"}, {Label: "Title"}, {Label: "Severity", Numeric: true},
+				{Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit},
+	}) {
+		for _, event := range events {
+			@notificationEventRow(event)
+		}
+	}
+}
+
+// NotificationEventNew adds a notification with all its fields, putting its row at the top of the table
+templ NotificationEventNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--notification--create", Title: "Add Notification", Path: "/data/notifications", Target: "#notificationEventsTable tbody",
+		Submit: "Add Notification", Fields: notificationEventFields})
+}
+
+// notificationEventFields are what a notification has that a person can type in
+var notificationEventFields = []addmodal.Field{
+	{Name: "title", Label: "Title", Help: "What it is about, in a few words.", Required: true, Kind: addmodal.Text, Max: "128"},
+	{Name: "occurred_at", Label: "When", Help: "When it happened, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "severity", Label: "Severity", Help: "How important it is, from 0, the lowest, to 5.", Min: "0", Max: "5", Step: "1"},
+	{Name: "notification_type", Label: "Type", Help: "The kind of notification, announcement when left blank.", Kind: addmodal.Text, Max: "32", Options: []string{"announcement", "question"}},
+	{Name: "content", Label: "Content", Help: "What it says in full.", Kind: addmodal.Text, Max: "1024", Wide: true},
+	{Name: "reason", Label: "Reason", Help: "Why it was sent.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+}
+
+// notificationEventRow opens the notification's details when clicked.
+templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
+	@table.DataRow("site--notification--"+event.ID, "/data/notifications/"+event.ID, "Delete this notification?") {
+		@table.Cell() {
+			{ formatReadingDate(ctx, event.OccurredAt) }
+		}
+		@table.Cell() {
+			{ event.NotificationType }
+		}
+		@table.Cell() {
+			{ event.Title }
+		}
+		@table.Cell(table.NumCell) {
+			{ fmt.Sprint(event.Severity) }
+		}
+		@table.Cell() {
+			{ orDash(event.CreatedByDeviceName) }
+		}
+	}
+}
+
+templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
+	{{ edit := addmodal.Props{ID: "site--notification--edit", Path: "/data/notifications/" + event.ID, Target: "#site--notification--" + event.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(notificationEventFields, event, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@RecordDetails(Record{ID: event.ID, UtcOffset: event.UtcOffsetMinutes, App: event.CreatedByAppName, Device: event.CreatedByDeviceName, CreatedBy: event.CreatedByIdentityName, Created: event.CreatedAt, Updated: event.UpdatedAt, UpdatedBy: event.UpdatedByIdentityName})
+		</dl>
+	}
+}
+
+templ NotificationEventCreated(event *sitemodels.SiteNotificationEvent) {
+	@notificationEventRow(event)
+}
+
+// NotificationEventUpdated replaces the notification's row, closes its details and shows a toast
+templ NotificationEventUpdated(event *sitemodels.SiteNotificationEvent) {
+	@notificationEventRow(event)
+	@modal.CloseOOB()
+	@successtoast.OOB("Notification Updated")
+}
+
+templ NotificationEventDeleted() {
+	@successtoast.Toast("Notification Deleted")
+}

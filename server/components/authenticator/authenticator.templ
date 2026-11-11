@@ -1,0 +1,70 @@
+package authenticator
+
+import (
+	"strings"
+
+	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
+)
+
+// apps are a few free authenticator apps, for iPhone and Android, that add an account from a TOTP QR code
+var apps = []struct{ id, name, url string }{
+	{"google", "Google Authenticator", "https://support.google.com/accounts/answer/1066447"},
+	{"microsoft", "Microsoft Authenticator", "https://www.microsoft.com/en-us/security/mobile-authenticator-app"},
+	{"2fas", "2FAS", "https://2fas.com"},
+}
+
+// before is what goes before the i-th app's name in the list: a comma, or "or" before the last
+func before(i int) string {
+	switch {
+	case i == 0:
+		return "Scan with an authenticator app, such as "
+	case i == len(apps)-1:
+		return " or "
+	default:
+		return ", "
+	}
+}
+
+// ScanHint is the caption under a TOTP QR code: scan it with an authenticator app, linking to a few in new tabs. Its
+// links are id--google, id--microsoft and id--2fas.
+templ ScanHint(id string) {
+	<p id={ id } class="max-w-xs text-center font-sans text-xs text-slate-500">
+		for i, app := range apps {
+			{ before(i) }
+			@footer.NewTabLink(id+"--"+app.id, app.url, "whitespace-nowrap text-primary underline hover:no-underline") {
+				{ app.name }
+			}
+		}
+	</p>
+}
+
+// inFours is a secret in groups of four characters, to read or type it more easily
+func inFours(secret string) string {
+	groups := []string{}
+	for len(secret) > 4 {
+		groups, secret = append(groups, secret[:4]), secret[4:]
+	}
+	return strings.Join(append(groups, secret), " ")
+}
+
+// Secret is a new TOTP secret for an authenticator app, shown only when it is made: its QR code of uri, which a phone
+// can also tap to open its authenticator app, the secret as text, in fours, with a button to copy it bare, for an app
+// that cannot scan, and the ScanHint. Its IDs start with id: id--totp-link, id--totp-text, id--totp-copy and
+// id--authenticator, and the QR code is #qrcode.
+templ Secret(id string, uri string, secret string, size int) {
+	<div class="flex flex-col items-center gap-2">
+		<a id={ id + "--totp-link" } href={ templ.SafeURL(uri) } aria-label="Add to an authenticator app" class="rounded-lg border border-slate-200 bg-white p-1.5">
+			<div id="qrcode"></div>
+		</a>
+		<div class="flex items-center gap-1 font-mono text-xs text-slate-700">
+			<span id={ id + "--totp-text" } class="tracking-wider">{ inFours(secret) }</span>
+			<textarea id={ id + "--totp-value" } hidden>{ secret }</textarea>
+			@copybutton.CopyButton(copybutton.Props{ID: id + "--totp-copy", TargetID: id + "--totp-value", Attrs: templ.Attributes{"aria-label": "Copy the TOTP secret"}})
+		</div>
+		@ScanHint(id + "--authenticator")
+		<script type="text/javascript">
+			new QRCode(document.getElementById("qrcode"), { text: {{ uri }}, width: {{ size }}, height: {{ size }}, correctLevel: QRCode.CorrectLevel.M });
+		</script>
+	</div>
+}

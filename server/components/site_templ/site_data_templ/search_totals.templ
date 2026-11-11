@@ -1,0 +1,82 @@
+package site_data_templ
+
+import (
+	"context"
+	"time"
+
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// searchTotals is the box at the top of a data page, for a collection that counts what its search matches: how many
+// there are over every page, as one or many of them, and the days of the earliest and latest
+templ searchTotals(id, one, many string) {
+	if totals := apiutils.TotalsFrom(ctx); totals != nil {
+		<section id={ id + "--totals" } aria-label="Totals" class="grid grid-cols-3 divide-x divide-gray-200 rounded-xl border border-gray-200 bg-white shadow-sm">
+			@totalsCell("Records", icon.Database) {
+				<p class="flex flex-wrap items-baseline gap-x-1.5">
+					<span id={ id + "--total" } class="text-lg font-bold tabular-nums text-gray-900 sm:text-2xl">
+						{ message.NewPrinter(language.English).Sprint(totals.Total) }
+					</span>
+					<span class="text-xs text-gray-500 sm:text-sm">{ countNoun(totals.Total, one, many) }</span>
+				</p>
+			}
+			@totalsCell("Earliest", icon.CalendarArrowDown) {
+				@totalsDay(id+"--earliest", totals.EarliestAt)
+			}
+			@totalsCell("Latest", icon.CalendarArrowUp) {
+				@totalsDay(id+"--latest", totals.LatestAt)
+			}
+		</section>
+	}
+}
+
+// totalsCell is one of the box's figures under its label and icon
+templ totalsCell(label string, ic func(...icon.Props) templ.Component) {
+	<div class="min-w-0 p-3 sm:p-4">
+		<p class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 sm:gap-2">
+			@ic(icon.Props{Class: "hidden size-4 sm:block"})
+			{ label }
+		</p>
+		<div class="mt-1">
+			{ children... }
+		</div>
+	</div>
+}
+
+// totalsDay is the day a record was, and how long ago, or a dash when there are none
+templ totalsDay(id string, ms *int64) {
+	if ms == nil {
+		<p class="text-lg font-bold text-gray-400 sm:text-2xl">–</p>
+	} else {
+		<p id={ id } class="text-lg font-bold text-gray-900 sm:text-2xl">{ totalsDate(ctx, *ms, time.Now()) }</p>
+		<p id={ id + "--ago" } class="text-xs text-gray-500">{ display.RoundedAgo(*ms, time.Now()) }</p>
+	}
+}
+
+// countNoun is the noun for count of them: one of them, or many
+func countNoun(count int64, one, many string) string {
+	if count == 1 {
+		return one
+	}
+	return many
+}
+
+// totalsDate is a day in the settings' timezone as a person says it: Today, Yesterday, its weekday and date this year,
+// as "Sun 8 Nov", or its date and year before, as "8 Nov 2025"
+func totalsDate(ctx context.Context, ms int64, now time.Time) string {
+	location := Location(ctx)
+	day, today := time.UnixMilli(ms).In(location), now.In(location)
+	switch {
+	case day.Format(time.DateOnly) == today.Format(time.DateOnly):
+		return "Today"
+	case day.Format(time.DateOnly) == today.AddDate(0, 0, -1).Format(time.DateOnly):
+		return "Yesterday"
+	case day.Year() == today.Year():
+		return day.Format(display.ShortDayLayout)
+	}
+	return day.Format("2 Jan 2006")
+}

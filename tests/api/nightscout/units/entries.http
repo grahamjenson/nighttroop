@@ -1,0 +1,136 @@
+INCLUDE steps/new_ns_site.steps
+
+# ensure settings is correct
+
+NAME check_default_is_mmol
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mmol/L" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
+
+#########
+# Glucose Readings
+#########
+
+# Rules of Units
+# Writing glucose readings will not be effected by the users settings: a reading's units are its own, or guessed
+# Reading glucose readings is always in mg/dL, as Nightscout's clients read them, whatever the users settings
+
+
+### WRITE
+
+# We Create 4 different Entries
+# Labeled and Unlabeled, MGDL and MMOL, each given back in mg/dL
+
+NAME create_unlabeled_mmol_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 4.2, "type": "sgv", "date": {{ itime 0 }}}
+ASSERT_STATUS 201
+ASSERT_EQUALS 75.676 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME create_unlabeled_mgdl_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 108, "type": "sgv", "date": {{ itime 1 }}}
+ASSERT_STATUS 201
+ASSERT_EQUALS 108 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME create_mgdl_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 180, "type": "sgv", "units": "mg/dL", "date": {{ itime 2 }}}
+ASSERT_STATUS 201
+ASSERT_EQUALS 180 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME create_mmoll_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 15.1, "type": "sgv", "units": "mmol/L", "date": {{ itime 3 }}}
+ASSERT_STATUS 201
+ASSERT_EQUALS 272.072 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+
+### READ
+
+# The identity's units, mmol/L or mg/dL, leave the readings in mg/dL
+
+NAME set_units_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value": "mg/dL"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.value"
+
+NAME get_create_unlabeled_mmol_entry_mgdl
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mmol_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 75.676 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME get_create_unlabeled_mgdl_entry_mgdl
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 108 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME get_create_mgdl_entry_mgdl
+GET http://{{ site }}/api/v3/entries/{{ dig "create_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 180 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME get_create_mmoll_entry_mgdl
+GET http://{{ site }}/api/v3/entries/{{ dig "create_mmoll_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 272.072 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME set_units_mmoll
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value": "mmol/L"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol/L" "@result.value"
+
+NAME get_create_unlabeled_mmol_entry_mmoll
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mmol_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 75.676 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME get_create_unlabeled_mgdl_entry_mmoll
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 108 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME get_create_mgdl_entry_mmoll
+GET http://{{ site }}/api/v3/entries/{{ dig "create_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 180 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME get_create_mmoll_entry_mmoll
+GET http://{{ site }}/api/v3/entries/{{ dig "create_mmoll_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 272.072 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"

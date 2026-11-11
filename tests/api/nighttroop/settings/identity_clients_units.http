@@ -1,0 +1,105 @@
+INCLUDE steps/new_site_admin.steps
+
+// A device added for a client that needs mg/dL has its own units set to mg/dL, whatever the site's
+NAME create_sugarpixel
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "pixel", "role": "device_read", "client": "sugarpixel"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "sugarpixel" "@result.client"
+SET pixel_token {{ .create_sugarpixel.result.ns_token }}
+
+NAME sugarpixel_status_mgdl
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .pixel_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
+// So does one for T1D Carer
+NAME create_t1dcarer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer_phone", "role": "device_read", "client": "t1dcarer"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "t1dcarer" "@result.client"
+SET carer_token {{ .create_t1dcarer.result.ns_token }}
+
+NAME t1dcarer_status_mgdl
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .carer_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
+// So does one for xDrip4iOS, whose follower reads `sgv` as mg/dL, and it is not a loop so it can be read only
+NAME create_xdrip4ios
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "iphone", "role": "device_read", "client": "xdrip4ios"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "xdrip4ios" "@result.client"
+ASSERT_EQUALS "device_read" "@result.role"
+SET xdrip4ios_token {{ .create_xdrip4ios.result.ns_token }}
+
+NAME xdrip4ios_status_mgdl
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .xdrip4ios_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
+// Another device follows the site, in mmol/L
+NAME create_other
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "display", "role": "device_read", "client": "other"}
+ASSERT_STATUS 201
+SET other_token {{ .create_other.result.ns_token }}
+
+NAME other_status_mmol
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .other_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@settings.units"
+
+// A client that is not one of them is refused, and nothing is made
+NAME create_unknown_client
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "toaster", "role": "device_read", "client": "toaster"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing request body: Unknown client: toaster" "@message"
+
+// The app each device was added for is kept, so its settings can later be changed for every device of an app
+NAME get_sugarpixel
+GET http://{{ site }}/settings/identities/{{ .create_sugarpixel.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "sugarpixel" "@result.client"
+
+NAME get_other
+GET http://{{ site }}/settings/identities/{{ .create_other.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "other" "@result.client"
+
+// A user and the site's first devices were added for no app; newest first, after the four devices above
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 7 "@result.items"
+ASSERT_EQUALS "xdrip4ios" "@result.items.1.client"
+ASSERT_EQUALS "t1dcarer" "@result.items.2.client"
+ASSERT_EQUALS "read_only" "@result.items.4.name"
+ASSERT_EQUALS null "@result.items.4.client"
+ASSERT_EQUALS "pwd_phone" "@result.items.5.name"
+ASSERT_EQUALS null "@result.items.5.client"
+ASSERT_EQUALS "admin" "@result.items.6.name"
+ASSERT_EQUALS null "@result.items.6.client"

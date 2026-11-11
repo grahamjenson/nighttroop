@@ -1,0 +1,78 @@
+INCLUDE steps/new_ns_site.steps
+
+// A delete moves lastModified forward, and a history since a client's last sync, after a document was made, has it
+// deleted, with isValid false, as AAPS syncs
+
+NAME create_since_treatment
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+  "eventType": "Note",
+  "created_at": "{{ time 0 }}",
+  "notes": "deleted after the sync"
+ }
+ASSERT_STATUS 201
+SET treatment_id {{ .create_since_treatment.result.identifier }}
+
+NAME create_since_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 123, "date": {{ itime 0 }} }
+ASSERT_STATUS 201
+SET entry_id {{ .create_since_entry.result.identifier }}
+
+// The client syncs, and asks for what changed after it from then on
+NAME last_modified_after_create
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".create_since_treatment.lastModified" "@result.collections.treatments"
+ASSERT_EQUALS ".create_since_entry.lastModified" "@result.collections.entries"
+SET treatments_since {{ addms (dig "last_modified_after_create.result.collections.treatments") 1 }}
+SET entries_since {{ addms (dig "last_modified_after_create.result.collections.entries") 1 }}
+
+NAME history_before_delete_treatment
+GET http://{{ site }}/api/v3/treatments/history/{{ .treatments_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME history_before_delete_entry
+GET http://{{ site }}/api/v3/entries/history/{{ .entries_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME delete_since_treatment
+DELETE http://{{ site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_since_entry
+DELETE http://{{ site }}/api/v3/entries/{{ .entry_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME history_since_has_deleted_treatment
+GET http://{{ site }}/api/v3/treatments/history/{{ .treatments_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "deleted after the sync" "@result.0.notes"
+ASSERT_EQUALS false "@result.0.isValid"
+
+NAME history_since_has_deleted_entry
+GET http://{{ site }}/api/v3/entries/history/{{ .entries_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".entry_id" "@result.0.identifier"
+ASSERT_EQUALS false "@result.0.isValid"
+
+// lastModified is when each was deleted, after the sync
+NAME last_modified_after_delete
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".history_since_has_deleted_treatment.result.0.srvModified" "@result.collections.treatments"
+ASSERT_EQUALS ".history_since_has_deleted_entry.result.0.srvModified" "@result.collections.entries"

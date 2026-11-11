@@ -1,0 +1,59 @@
+package heading
+
+import (
+	"context"
+
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// Page is a page's title, with what the page shows, given as its children, below it. The title also names the
+// browser's tab: htmx sets the tab's title from it as the page is opened from a menu, and on a full page load it is
+// the document's first title, before the base's own.
+templ Page(title string) {
+	@PageBeside(title, nil) {
+		{ children... }
+	}
+}
+
+// PageWith is a Page with its action, such as its Add button, at the right of its title, where a page's main action is
+// looked for
+templ PageWith(title string, action templ.Component) {
+	<div class="flex flex-wrap items-start justify-between gap-3">
+		@Page(title) {
+			{ children... }
+		}
+		@action
+	</div>
+}
+
+// PageBeside is a Page with something, such as a Live badge, shown beside its title
+templ PageBeside(title string, beside templ.Component) {
+	@Title(title)
+	<div>
+		if beside != nil {
+			<div class="flex items-center gap-2">
+				<h1 class="text-2xl font-bold">{ title }</h1>
+				@beside
+			</div>
+		} else {
+			<h1 class="text-2xl font-bold">{ title }</h1>
+		}
+		<p class="mt-1 text-gray-500">
+			{ children... }
+		</p>
+	</div>
+}
+
+// Title names the browser's tab for a page, e.g. Glucose Readings · Nighttroop, for a page with no heading.Page
+templ Title(title string) {
+	<title>{ title } · { Brand(ctx) }</title>
+}
+
+// Brand is what every tab's title ends with: Nighttroop Control on the control site, and Nighttroop elsewhere. A base's
+// own title, after the page's, is the brand alone, for pages with no title of their own.
+func Brand(ctx context.Context) string {
+	if httputils.GetControlContext(ctx) != nil {
+		return "Nighttroop Control"
+	}
+	return "Nighttroop"
+}

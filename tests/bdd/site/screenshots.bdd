@@ -1,0 +1,77 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS           200
+SCREENSHOT home
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+SCREENSHOT site_create
+
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+SCREENSHOT site_login
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+SCREENSHOT site_login_totp
+
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+SCREENSHOT site_home
+
+// The user menu says who is signed in, with the identity's own account, the guide and logout
+CLICK #site--settings-menu
+ASSERT_TEXT_VISIBLE Signed in as
+ASSERT_VISIBLE #site--settings--account-button
+ASSERT_VISIBLE #site--settings--getting-started-button
+ASSERT_VISIBLE #site--settings--logout-button
+SCREENSHOT site_settings_menu
+PRESS Escape
+
+// The Settings hub has a tab for each settings page
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+ASSERT_VISIBLE #site--settings--identities-button
+ASSERT_VISIBLE #site--settings--connectors-button
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/connectors
+
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable
+ASSERT_VISIBLE #site--settings--nightscout-connector--url
+ASSERT_VISIBLE #site--settings--nightscout-connector--password
+// Not saved yet, it has nothing to delete or backfill
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--delete
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--backfill
+ASSERT_VISIBLE #site--settings--nightscout-connector--submit
+
+INPUT #site--settings--nightscout-connector--url         http://will_not_pass_the_test.test
+INPUT #site--settings--nightscout-connector--password    not_a_token
+// Typing turned it on; it stays off here, as its details do not work
+CLICK #site--settings--nightscout-connector--enable
+
+CLICK #site--settings--nightscout-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE "Nighttroop"
+SCREENSHOT site_summary_virtual

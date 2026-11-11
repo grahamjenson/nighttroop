@@ -1,0 +1,58 @@
+package siteapiutils
+
+import (
+	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+)
+
+//go:generate go tool goverter gen .
+
+// goverter:converter
+// goverter:output:format function
+// goverter:output:file ./z_converter.go
+type QueryConverter interface {
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllGlucoseReadings(source *apiquery.Query) sitedb.AllGlucoseReadingsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllTempTargets(source *apiquery.Query) sitedb.AllTempTargetsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllTempBasals(source *apiquery.Query) sitedb.AllTempBasalsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllInsulinDoses(source *apiquery.Query) sitedb.AllInsulinDosesParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllFoodIntakes(source *apiquery.Query) sitedb.AllFoodIntakesParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToAllFoodPresets(source *apiquery.Query) sitedb.AllFoodPresetsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToAllProfilePresets(source *apiquery.Query) sitedb.AllProfilePresetsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllActivities(source *apiquery.Query) sitedb.AllActivitiesParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllNotificationEvents(source *apiquery.Query) sitedb.AllNotificationEventsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllProfileSwitches(source *apiquery.Query) sitedb.AllProfileSwitchesParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllEventGroups(source *apiquery.Query) sitedb.AllEventGroupsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToDeviceReportsForDevice(source *apiquery.Query) sitedb.DeviceReportsForDeviceParams
+}

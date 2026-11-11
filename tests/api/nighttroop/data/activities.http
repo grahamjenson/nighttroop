@@ -1,0 +1,151 @@
+INCLUDE steps/new_site.steps
+
+NAME no_activities
+GET http://{{ site }}/data/activities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// An activity from the Nightscout API is listed
+NAME create_ns_activity
+POST http://{{ .ns_site }}/api/v1/activity?token={{ token }}
+B { "activityType": "walking", "created_at": "{{ time 5 }}", "heartRate": 120, "steps": 1000 }
+ASSERT_STATUS 200
+
+NAME list_activities
+GET http://{{ site }}/data/activities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "walking" "@result.items.0.activity_type"
+ASSERT_EQUALS 1000 "@result.items.0.steps"
+ASSERT_EQUALS 120 "@result.items.0.heart_rate"
+
+//////
+// CREATE AND UPDATE
+//////
+
+// An activity typed in happens now, is exercise unless it says otherwise, and is by whoever is signed in
+NAME create_activity
+POST http://{{ site }}/data/activities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Football", "duration_minutes": 90, "notes": "Training", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "exercise" "@result.activity_type"
+ASSERT_EQUALS "Football" "@result.name"
+ASSERT_EQUALS 90 "@result.duration_minutes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_activity.result.id }}
+
+NAME created_activity_has_new_id
+GET http://{{ site }}/data/activities/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_activity
+GET http://{{ site }}/data/activities/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Football" "@result.name"
+
+// Newest first, so the one happening now is before the one from the Nightscout API
+NAME first_page
+GET http://{{ site }}/data/activities?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Football" "@result.items.0.name"
+
+NAME second_page
+GET http://{{ site }}/data/activities?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "walking" "@result.items.0.activity_type"
+
+NAME create_activity_too_long
+POST http://{{ site }}/data/activities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Forever", "duration_minutes": 2000}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "duration must be from 1 to 1440" "@message"
+
+NAME create_activity_bad_heart_rate
+POST http://{{ site }}/data/activities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Run", "heart_rate": 900}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "heart rate must be from 20 to 250" "@message"
+
+NAME create_activity_name_too_long
+POST http://{{ site }}/data/activities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+ASSERT_STATUS 400
+
+// Only the fields sent change
+NAME update_activity_steps
+POST http://{{ site }}/data/activities/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"steps": 9000, "activity_type": "football"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Football" "@result.name"
+ASSERT_EQUALS "football" "@result.activity_type"
+ASSERT_EQUALS 9000 "@result.steps"
+ASSERT_EQUALS 90 "@result.duration_minutes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_activity_too_many_steps
+POST http://{{ site }}/data/activities/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"steps": 9000000}
+ASSERT_STATUS 400
+
+NAME update_unknown_activity
+POST http://{{ site }}/data/activities/not-an-activity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_activity
+DELETE http://{{ site }}/data/activities/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_activity_not_found
+GET http://{{ site }}/data/activities/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_activity_not_listed
+GET http://{{ site }}/data/activities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+
+NAME delete_unknown_activity
+DELETE http://{{ site }}/data/activities/not-an-activity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

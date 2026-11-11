@@ -1,0 +1,118 @@
+package control_logs_templ
+
+import (
+	"context"
+
+	"nighttroop.t1d.nz/data/db"
+	dataevents "nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/server/components/filter"
+	"nighttroop.t1d.nz/server/components/footer"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/logview"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// view shows each row's site, and links its request and job to the rows with them
+var view = controlView(true)
+
+// controlView shows rows on control, with the site of each when withSite, as one site's own page does not need
+func controlView(withSite bool) logview.View {
+	v := logview.View{Prefix: "control", Links: true, Date: func(_ context.Context, ms int64) string { return display.DateTime(&ms) }}
+	if withSite {
+		v.About = "Site"
+	}
+	return v
+}
+
+// orServer is the row's site, or that it is the server's own
+func orServer(siteID *string) string {
+	if siteID == nil {
+		return "server"
+	}
+	return *siteID
+}
+
+func eventRow(e *controlmodels.Event) logview.Row {
+	return logview.Row{ID: e.ID, Name: e.Name, About: orServer(e.SiteID), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+}
+
+func errorRow(e *controlmodels.Error) logview.Row {
+	return logview.Row{ID: e.ID, Message: e.Message, About: orServer(e.SiteID), At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+}
+
+func logRow(l *controlmodels.Log) logview.Row {
+	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, About: orServer(l.SiteID), At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+}
+
+// download is, for an admin, a download of the whole logs DB
+templ download() {
+	if httputils.IsControlAdmin(ctx) {
+		@button.Button(button.Props{
+			ID:         "control--logs-db--download",
+			Href:       "/logs-db",
+			Variant:    button.VariantOutline,
+			Attributes: templ.Attributes{"download": "", "title": "A copy of the logs DB, with every site's events, errors and logs, as one SQLite file"},
+		}) {
+			Download Logs DB
+		}
+	}
+}
+
+// ids are the site, request and job a page's rows can be narrowed to
+func ids(q *apiquery.Query) []filter.ID {
+	return []filter.ID{{Name: "site_id", Label: "Site ID", Value: q.SiteID}, {Name: "request_id", Label: "Request ID", Value: q.RequestID}, {Name: "job_id", Label: "Job ID", Value: q.JobID}}
+}
+
+// EventsTable shows one page of events, the newest first
+templ EventsTable(events []*controlmodels.Event, q *apiquery.Query) {
+	// Sign ins are from where DB-IP estimates
+	@footer.DBIPCredit()
+	@logview.Page(logview.PageProps{ID: "events_table", Title: "Events", Description: "What happened to each site and the server, newest first. Click an event to see its details.", Pager: "control--events", Path: filter.PagePath("/events", q.Type, q.Search, ids(q)...), Count: len(events), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
+		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(q)})
+		@EventsList("controlEventsTable", events, true)
+	}
+}
+
+// EventsList is a table of events, newest first, each opening its details, with the site of each when withSite, as
+// one site's own page does not need
+templ EventsList(id string, events []*controlmodels.Event, withSite bool) {
+	@logview.EventsTable(controlView(withSite), id, logview.Rows(events, eventRow))
+}
+
+templ EventModal(event *controlmodels.Event) {
+	@logview.EventModal(view, eventRow(event))
+}
+
+// ErrorsTable shows one page of errors, the newest first
+templ ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) {
+	@logview.Page(logview.PageProps{ID: "errors_table", Title: "Errors", Description: "What failed for each site and the server, newest first. Click an error to see its details.", Pager: "control--errors", Path: filter.PagePath("/errors", q.Type, q.Search, ids(q)...), Count: len(errors), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
+		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(q)})
+		@ErrorsList("controlErrorsTable", errors, true)
+	}
+}
+
+// ErrorsList is a table of errors, newest first, each opening its details, with the site of each when withSite, as
+// one site's own page does not need
+templ ErrorsList(id string, errors []*controlmodels.Error, withSite bool) {
+	@logview.ErrorsTable(controlView(withSite), id, logview.Rows(errors, errorRow))
+}
+
+templ ErrorModal(e *controlmodels.Error) {
+	@logview.ErrorModal(view, errorRow(e))
+}
+
+// LogsTable shows one page of logs, the newest first
+templ LogsTable(logs []*controlmodels.Log, q *apiquery.Query) {
+	@logview.Page(logview.PageProps{ID: "logs_table", Title: "Logs", Description: "Messages logged for each site and the server, newest first. Click a log to see its details.", Pager: "control--logs", Path: filter.PagePath("/logs", nil, q.Search, ids(q)...), Count: len(logs), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
+		@filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: q.Search, IDs: ids(q)})
+		@logview.LogsTable(view, "controlLogsTable", logview.Rows(logs, logRow))
+	}
+}
+
+templ LogModal(log *controlmodels.Log) {
+	@logview.LogModal(view, logRow(log))
+}

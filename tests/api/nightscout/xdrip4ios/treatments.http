@@ -1,0 +1,133 @@
+# xDrip4iOS (xdripswift) treatment sync, from NightscoutSyncManager.syncWithNightscout:
+# 1. POST new treatments to /api/v1/treatments (no _id, time in eventTime), and match the response
+#    to local treatments by created_at (to the ms), type, value and notes to learn their _id
+# 2. PUT edited treatments to /api/v1/treatments, with _id in the body
+# 3. GET /api/v1/treatments?find[created_at][$gte]=<24h ago> to download new and changed treatments
+# 4. GET /api/v1/treatments?find[_id]=<id>&count=1 for a treatment missing from 3: [] means it was deleted
+# 5. DELETE /api/v1/treatments/<id> for treatments deleted in the app
+# Auth is the token in the query; the API secret goes as its SHA1 in an api-secret header, see auth.http
+# Bodies are TreatmentEntry.dictionaryRepresentationForNightscoutUpload
+
+INCLUDE steps/new_ns_site.steps
+
+#####
+# 1. Upload new treatments
+#####
+
+# A bolus, carbs, exercise, BG check, note and site change, as xDrip4iOS sends them in one batch.
+# The time is only in eventTime, with milliseconds, and the BG check is in mg/dL whatever the site's units
+NAME xdrip4ios_upload_treatments
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+H Content-Type: application/json
+H Accept: application/json
+B [
+  {"enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:01:00.123Z", "eventType": "Bolus", "insulin": 2.5},
+  {"enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:02:00.456Z", "eventType": "Carbs", "carbs": 30},
+  {"enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:03:00.789Z", "eventType": "Exercise", "duration": 45},
+  {"enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:04:00.000Z", "eventType": "BG Check", "glucose": 120, "glucoseType": "Finger: 6.7 mmol/L", "units": "mg/dl"},
+  {"enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:05:00.000Z", "eventType": "Note", "notes": "xdrip4ios note"},
+  {"enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:06:00.000Z", "eventType": "Site Change"}
+]
+ASSERT_STATUS 200
+# TreatmentNSResponse.arrayFromData needs an array, each with an _id and created_at
+ASSERT_LENGTH 6 "@"
+ASSERT_EXISTS "@0._id"
+# created_at is eventTime, to the ms, so checkIfUploaded can match it to the local treatment
+ASSERT_CONTAINS "T00:01:00.123" "@0.created_at"
+ASSERT_EQUALS "Bolus" "@0.eventType"
+ASSERT_EQUALS 2.5 "@0.insulin"
+# enteredBy is as sent, which the app keeps as the treatment's enteredBy, so it does not see it as changed
+ASSERT_EQUALS "xDrip4iOS" "@0.enteredBy"
+# A carbs or insulin field, even 0, adds a carbs or insulin treatment in the app, so a bolus has no carbs
+ASSERT_EQUALS null "@0.carbs"
+ASSERT_CONTAINS "T00:02:00.456" "@1.created_at"
+ASSERT_EQUALS 30 "@1.carbs"
+ASSERT_EQUALS null "@1.insulin"
+ASSERT_CONTAINS "T00:03:00.789" "@2.created_at"
+ASSERT_EQUALS "Exercise" "@2.eventType"
+ASSERT_EQUALS 45 "@2.duration"
+ASSERT_CONTAINS "T00:04:00" "@3.created_at"
+ASSERT_EQUALS "BG Check" "@3.eventType"
+# Glucose comes back in mg/dL, whatever the site's units, so the app's exact match on its 120 mg/dL finds it
+ASSERT_EQUALS 120 "@3.glucose"
+ASSERT_EQUALS "mg/dL" "@3.units"
+ASSERT_EQUALS "Note" "@4.eventType"
+ASSERT_EQUALS "xdrip4ios note" "@4.notes"
+ASSERT_EQUALS "Site Change" "@5.eventType"
+
+# A treatment in mg/dL, from a user who has xDrip4iOS in mg/dL, has a glucoseType of just Finger
+NAME xdrip4ios_upload_bg_check_mgdl_user
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [{"enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:07:00.000Z", "eventType": "BG Check", "glucose": 99, "glucoseType": "Finger", "units": "mg/dl"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "BG Check" "@0.eventType"
+ASSERT_CONTAINS "T00:07:00" "@0.created_at"
+
+# Sensor Start is uploaded on its own with its own _id and created_at (uploadActiveSensorToNightscout)
+NAME xdrip4ios_upload_sensor_start
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"_id": "aB3dE5fG7hI9jK1lM3nO5pQ7", "eventType": "Sensor Start", "created_at": "{{ date 0 }}T00:08:00.000Z", "enteredBy": "xDrip4iOS"}
+ASSERT_STATUS 200
+# Only a 2xx is needed; the treatment keeps the _id sent
+ASSERT_EQUALS "aB3dE5fG7hI9jK1lM3nO5pQ7" "@0._id"
+ASSERT_EQUALS "Sensor Start" "@0.eventType"
+
+# A retry of the same sensor start, when the response was lost, succeeds without a second one
+NAME xdrip4ios_upload_sensor_start_again
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"_id": "aB3dE5fG7hI9jK1lM3nO5pQ7", "eventType": "Sensor Start", "created_at": "{{ date 0 }}T00:08:00.000Z", "enteredBy": "xDrip4iOS"}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".xdrip4ios_upload_sensor_start.0._id" "@0._id"
+
+#####
+# 2. Update a treatment, with its _id in the body and no id in the path
+#####
+
+NAME xdrip4ios_update_bolus
+PUT http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"_id": "{{ dig "xdrip4ios_upload_treatments.0._id" }}", "enteredBy": "xDrip4iOS", "eventTime": "{{ date 0 }}T00:01:00.123Z", "eventType": "Bolus", "insulin": 3}
+ASSERT_STATUS 200
+
+#####
+# 3. Download the last 24 hours (no count is sent)
+#####
+
+NAME xdrip4ios_download_treatments
+GET http://{{ site }}/api/v1/treatments?find[created_at][$gte]={{ time 1440 }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "application/json" "#Content-Type.0"
+ASSERT_LENGTH 8 "@"
+# Newest first: sensor start, BG check, site change, note, BG check, exercise, carbs, bolus
+ASSERT_EQUALS "Sensor Start" "@0.eventType"
+ASSERT_EQUALS "Bolus" "@7.eventType"
+ASSERT_EQUALS ".xdrip4ios_upload_treatments.0._id" "@7._id"
+ASSERT_CONTAINS "T00:01:00.123" "@7.created_at"
+# The update is downloaded, so checkIfChangedAtNightscout keeps 3
+ASSERT_EQUALS 3 "@7.insulin"
+ASSERT_EQUALS 30 "@6.carbs"
+ASSERT_EQUALS 45 "@5.duration"
+
+#####
+# 5. Delete a treatment by its _id, then 4. find it gone
+#####
+
+NAME xdrip4ios_delete_carbs
+DELETE http://{{ site }}/api/v1/treatments/{{ dig "xdrip4ios_upload_treatments.1._id" }}?token={{ token }}
+ASSERT_STATUS 200
+
+# reconcileRemoteTreatmentDeletions only hides a local treatment when this is a 2xx with an empty array
+NAME xdrip4ios_lookup_deleted_carbs
+GET http://{{ site }}/api/v1/treatments?find[_id]={{ dig "xdrip4ios_upload_treatments.1._id" }}&count=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME xdrip4ios_lookup_present_bolus
+GET http://{{ site }}/api/v1/treatments?find[_id]={{ dig "xdrip4ios_upload_treatments.0._id" }}&count=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 3 "@0.insulin"
+
+NAME xdrip4ios_download_after_delete
+GET http://{{ site }}/api/v1/treatments?find[created_at][$gte]={{ time 1440 }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 7 "@"

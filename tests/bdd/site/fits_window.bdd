@@ -1,0 +1,76 @@
+// The create site page, its medical note and footer included, and the login pages fit in the window, on a laptop and
+// on a phone, so none of them needs scrolling
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #medical-disclaimer
+ASSERT_VISIBLE #footer
+ASSERT_FITS
+SCREENSHOT create_site_fits
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--login-button
+ASSERT_FITS
+SCREENSHOT control_login_fits
+
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+ASSERT_VISIBLE #site--login-button
+ASSERT_FITS
+SCREENSHOT site_login_fits
+
+// The code's step takes the place of the name and password, so it fits too
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_VISIBLE #site--login--otp-1
+ASSERT_FITS
+
+WINDOW 390x844
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #medical-disclaimer
+ASSERT_FITS
+SCREENSHOT create_site_fits_phone
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+ASSERT_FITS
+// Its code boxes fit inside its card on a phone, the last one included
+ASSERT_CONTAINED .login-form-target [data-tui-inputotp-index="5"]
+SCREENSHOT control_login_fits_phone
+
+// So do a site's, on the login's code step, on a narrower phone. The login opens in a new tab, which is made a
+// phone's size and loaded again
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+WINDOW 360x740
+GOTO /login
+ASSERT_STATUS 200
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_VISIBLE #site--login--otp-1
+ASSERT_FITS
+ASSERT_CONTAINED .login-form-target [data-tui-inputotp-index="5"]
+SCREENSHOT site_login_code_fits_phone

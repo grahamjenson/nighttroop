@@ -1,0 +1,25 @@
+package public_templ
+
+// APIDocs is the API's documentation, Redoc's page of its OpenAPI schema, /openapi.json: a menu of every endpoint
+// and a search beside them, each with its parameters, body, responses and an example, in the site's colours
+templ APIDocs() {
+	@PublicBase() {
+		<div id="api-docs" class="w-full flex-1"></div>
+		<script src="/redoc.standalone.js"></script>
+		<script>
+			Redoc.init("/openapi.json", {
+				expandResponses: "200",
+				theme: {
+					colors: { primary: { main: "#10203F" } },
+					typography: {
+						fontFamily: "ui-sans-serif, system-ui, sans-serif",
+						headings: { fontFamily: "ui-sans-serif, system-ui, sans-serif" },
+						code: { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" },
+					},
+					sidebar: { backgroundColor: "#f9fafb", activeTextColor: "#10203F" },
+					rightPanel: { backgroundColor: "#10203F" },
+				},
+			}, document.getElementById("api-docs"))
+		</script>
+	}
+}

@@ -1,0 +1,97 @@
+// Trio's deletes, by query (NightscoutAPI.swift deleteCarbs, deleteInsulin, deleteGlucose and
+// deleteNightscoutOverride), see docs/clients/trio.md. Each needs a 2xx.
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME trio_upload_treatments
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "enteredBy" : "Trio", "carbs" : 45, "id" : "A1B2C3D4-0000-0000-0000-000000000005" },
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:16:00.000Z", "enteredBy" : "Trio", "carbs" : 15, "id" : "A1B2C3D4-0000-0000-0000-000000000006" },
+  { "eventType" : "Bolus", "created_at" : "{{ date -1 }}T12:02:00.000Z", "enteredBy" : "Trio", "insulin" : 2.5, "id" : "A1B2C3D4-0000-0000-0000-000000000002" },
+  { "duration" : 60, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:13:00.000Z", "enteredBy" : "Trio", "notes" : "Sport" }
+]
+ASSERT_STATUS 200
+# Trio's id is the identifier, which it deletes by
+ASSERT_EQUALS "A1B2C3D4-0000-0000-0000-000000000005" "@0._id"
+
+NAME trio_upload_glucose
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "id" : "6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A11", "sgv" : 120, "date" : {{ dayms -1 720 }}, "dateString" : "{{ date -1 }}T12:00:00.000Z", "type" : "sgv" },
+  { "id" : "6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A12", "sgv" : 125, "date" : {{ dayms -1 725 }}, "dateString" : "{{ date -1 }}T12:05:00.000Z", "type" : "sgv" }
+]
+ASSERT_STATUS 200
+ASSERT_EQUALS "6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A11" "@0._id"
+
+// A delete with no filter, or one Nighttroop does not know, would delete more than was asked for, so it is refused
+NAME delete_without_filter
+DELETE http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+
+NAME delete_unknown_filter
+DELETE http://{{ site }}/api/v1/treatments.json?find[id][$eq]=A1B2C3D4-0000-0000-0000-000000000006&find[colour][$eq]=blue
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+
+NAME delete_unknown_or_filter
+DELETE http://{{ site }}/api/v1/entries.json?find[$or][0][id][$eq]=6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A12&find[$or][1][colour][$eq]=blue
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+
+NAME nothing_deleted
+GET http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@"
+
+// deleteCarbs and deleteInsulin
+NAME trio_delete_carbs
+DELETE http://{{ site }}/api/v1/treatments.json?find[id][$eq]=A1B2C3D4-0000-0000-0000-000000000005
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME trio_delete_insulin
+DELETE http://{{ site }}/api/v1/treatments.json?find[id][$eq]=A1B2C3D4-0000-0000-0000-000000000002
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+// deleteNightscoutOverride, before it uploads the override's run
+NAME trio_delete_override
+DELETE http://{{ site }}/api/v1/treatments.json?find[created_at][$eq]={{ date -1 }}T12:13:00.000Z&find[eventType][$eq]=Exercise
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME only_the_other_carbs_left
+GET http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "A1B2C3D4-0000-0000-0000-000000000006" "@0._id"
+
+// deleteGlucose: by its id or its dateString
+NAME trio_delete_glucose
+DELETE http://{{ site }}/api/v1/entries.json?find[$or][0][id][$eq]=6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A11&find[$or][1][dateString][$eq]={{ date -1 }}T12:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME only_the_other_glucose_left
+GET http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 125 "@0.sgv"
+
+// A read token cannot delete
+NAME read_token_cannot_delete
+DELETE http://{{ site }}/api/v1/treatments.json?find[id][$eq]=A1B2C3D4-0000-0000-0000-000000000006&token={{ .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 403

@@ -1,0 +1,91 @@
+# xDrip4iOS (xdripswift) as a master uploading to Nightscout, from NightscoutSyncManager:
+# - uploadBgReadingsToNightscout: POST /api/v1/entries, up to 300 readings oldest first (BgReading+Nightscout.swift)
+# - uploadCalibrationsToNightscout: POST /api/v1/entries, the cal records then the mbg records (Calibration+Nightscout.swift)
+# - uploadTransmitterBatteryInfoToNightscout: POST /api/v1/devicestatus with the uploader's battery
+# Each sends Content-Type and Accept application/json, and the token in the query.
+# A 2xx is a success, as is a 500 with description.code 66 (a duplicate _id); anything else is retried.
+
+INCLUDE steps/new_ns_site.steps
+# xDrip4iOS reads sgv and mbg as mg/dL, so its identity's units are set to mg/dL (see docs/clients/xdrip4ios.md)
+INCLUDE steps/ns_units_mgdl.steps
+
+#####
+# Readings
+#####
+
+# The reading sent twice keeps one time, as a time made again for the second request may be a second later,
+# and a reading's date cannot be changed
+SET rdg2_ms {{ itime 5 }}
+SET rdg2_at {{ time 5 }}
+
+NAME xdrip4ios_upload_readings
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+H Content-Type: application/json
+H Accept: application/json
+B [
+  {"_id": "Xd4iOSrdg01aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 10 }}, "dateString": "{{ time 10 }}", "type": "sgv", "sgv": 118, "direction": "Flat", "filtered": 118000, "unfiltered": 118000, "noise": 1, "sysTime": "{{ time 10 }}"},
+  {"_id": "Xd4iOSrdg02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ .rdg2_ms }}, "dateString": "{{ .rdg2_at }}", "type": "sgv", "sgv": 124, "direction": "FortyFiveUp", "filtered": 124512.5, "unfiltered": 124512.5, "noise": 1, "sysTime": "{{ .rdg2_at }}"}
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 118 "@0.sgv"
+ASSERT_EQUALS "FortyFiveUp" "@1.direction"
+
+# A batch that was uploaded but whose response was lost is sent again, with the same _ids, and must not fail
+NAME xdrip4ios_upload_readings_again
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"_id": "Xd4iOSrdg02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ .rdg2_ms }}, "dateString": "{{ .rdg2_at }}", "type": "sgv", "sgv": 124, "direction": "FortyFiveUp", "filtered": 124512.5, "unfiltered": 124512.5, "noise": 1, "sysTime": "{{ .rdg2_at }}"},
+  {"_id": "Xd4iOSrdg03aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 0 }}, "dateString": "{{ time 0 }}", "type": "sgv", "sgv": 130, "direction": "FortyFiveUp", "filtered": 130000, "unfiltered": 130000, "noise": 1, "sysTime": "{{ time 0 }}"}
+]
+ASSERT_STATUS 200
+
+NAME xdrip4ios_readings_stored_once
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 130 "@0.sgv"
+ASSERT_EQUALS 124 "@1.sgv"
+ASSERT_EQUALS 118 "@2.sgv"
+
+#####
+# Calibrations: the cal records then the mbg records, in one batch.
+# Nighttroop keeps the finger pricks but has no use for the sensor's slope and intercept
+#####
+
+NAME xdrip4ios_upload_calibration
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"_id": "Xd4iOScal01aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 3 }}, "dateString": "{{ time 3 }}", "type": "cal", "sysTime": "{{ time 3 }}", "slope": 1012.5, "intercept": -2034.1, "scale": 1},
+  {"_id": "Xd4iOSmbg01aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 3 }}, "dateString": "{{ time 3 }}", "type": "mbg", "mbg": 126, "sysTime": "{{ time 3 }}"}
+]
+ASSERT_STATUS 200
+
+NAME xdrip4ios_calibration_mbg_stored
+GET http://{{ site }}/api/v1/entries/mbg.json?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "mbg" "@0.type"
+
+#####
+# Uploader battery.
+# A Libre or MiaoMiao's battery goes as uploader.battery; for a Dexcom, battery is the phone's and the transmitter's has its own key
+#####
+
+NAME xdrip4ios_upload_battery
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {"uploader": {"name": "transmitter", "battery": 85}}
+ASSERT_STATUS 200
+# Kept as the uploader's battery, which the app reads back as uploader.battery or uploaderBattery
+ASSERT_EQUALS 85 "@0.uploaderBattery"
+
+NAME xdrip4ios_upload_dexcom_battery
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {"uploader": {"name": "transmitter", "battery": 64, "batteryVoltage": 301}}
+ASSERT_STATUS 200
+ASSERT_EQUALS 64 "@0.uploaderBattery"
+
+NAME xdrip4ios_get_battery
+GET http://{{ site }}/api/v1/devicestatus?count=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 64 "@0.uploaderBattery"

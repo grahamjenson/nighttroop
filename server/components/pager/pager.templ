@@ -1,0 +1,97 @@
+package pager
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/apiutils"
+)
+
+type Props struct {
+	// ID names the parts: ID--showing, ID--previous and ID--next
+	ID string
+	// Path is the page's URL without skip and limit, which may have a query of its own
+	Path  string
+	Count int
+	Skip  int64
+	Limit int64
+}
+
+// Pager is under a table of one page of rows: which rows it shows, and buttons to the pages either side
+templ Pager(p Props) {
+	<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+		<span id={ p.ID + "--showing" } data-pager-skip={ strconv.FormatInt(p.Skip, 10) }>
+			if p.Count > 0 {
+				{ fmt.Sprintf("Showing %d to %d", p.Skip+1, p.Skip+int64(p.Count)) }
+			}
+		</span>
+		<div class="flex gap-2">
+			if p.Skip > 0 {
+				@pageButton(p.ID+"--previous", "Previous", PageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
+			}
+			if hasNext(ctx, p) {
+				@pageButton(p.ID+"--next", "Next", PageURL(p.Path, p.Skip+p.Limit, p.Limit))
+			}
+		</div>
+	</div>
+}
+
+// Empty is the last row of a table's body, saying it has no rows. It is always there, shown only while it is the only
+// row, so it goes once a row is added and comes back once the last is deleted.
+templ Empty(id string, columns int, text string) {
+	<tr id={ id } data-empty class="hidden only:table-row"><td colspan={ strconv.Itoa(columns) } class="p-4 text-sm text-gray-500">{ text }</td></tr>
+}
+
+var scriptOnce = templ.NewOnceHandle()
+
+// Script keeps a pager's "Showing" to the rows of the table above it, one with an Empty row, as rows are added or
+// deleted without loading the page again
+templ Script() {
+	@scriptOnce.Once() {
+		<script>
+			(() => {
+				const count = () => document.querySelectorAll("[data-pager-skip]").forEach((showing) => {
+					const body = showing.closest("section")?.querySelector("tbody:has(> [data-empty])")
+					if (!body) return
+					const skip = Number(showing.dataset.pagerSkip), rows = body.querySelectorAll(":scope > tr:not([data-empty])").length
+					const text = rows > 0 ? "Showing " + (skip + 1) + " to " + (skip + rows) : ""
+					if (showing.textContent.trim() !== text) showing.textContent = text
+				})
+				// After the request's own handlers, such as one removing a deleted row
+				for (const name of ["htmx:after:settle", "htmx:after:request"]) document.addEventListener(name, () => setTimeout(count))
+			})()
+		</script>
+	}
+}
+
+templ pageButton(id string, label string, url string) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: nav.Attributes(url),
+	}) {
+		{ label }
+	}
+}
+
+// hasNext is whether there are rows after this page: before the total, for a search that counts its rows, or else
+// when the page is full
+func hasNext(ctx context.Context, p Props) bool {
+	if totals := apiutils.TotalsFrom(ctx); totals != nil {
+		return p.Skip+int64(p.Count) < totals.Total
+	}
+	return int64(p.Count) == p.Limit
+}
+
+// PageURL is path, which may have a query of its own, at the page of rows from skip
+func PageURL(path string, skip int64, limit int64) string {
+	separator := "?"
+	if strings.Contains(path, "?") {
+		separator = "&"
+	}
+	return fmt.Sprintf("%s%sskip=%d&limit=%d", path, separator, skip, limit)
+}

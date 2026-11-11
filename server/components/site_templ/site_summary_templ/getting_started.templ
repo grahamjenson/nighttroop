@@ -1,0 +1,118 @@
+package site_summary_templ
+
+import (
+	"context"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// isNew is a summary of a site with no glucose for over a month, or ever, so the summary would be empty and guides
+// setting the site up instead
+func isNew(summary *sitemodels.Summary) bool {
+	for _, day := range []sitemodels.SummaryDay{summary.Today, summary.Yesterday, summary.LastWeek, summary.LastFortnight, summary.LastMonth} {
+		if day.TimeInRange != nil {
+			return false
+		}
+	}
+	return len(summary.GlucoseReadings) == 0 && len(summary.DeviceStatuses) == 0
+}
+
+// isAdmin is whether the identity signed in may set up where the site's data comes from and who can use it
+func isAdmin(ctx context.Context) bool {
+	siteContext := httputils.GetSiteContext(ctx)
+	return siteContext != nil && siteContext.IdentityModel != nil && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+}
+
+// nsURL is the site's Nightscout URL, which phone apps upload to
+func nsURL(ctx context.Context) string {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && siteContext.SiteDB != nil {
+		return siteContext.SiteDB.NSURL()
+	}
+	return ""
+}
+
+// GettingStartedPage is the guide to setting up the site on a page of its own, from My Account
+templ GettingStartedPage() {
+	@heading.Title("Getting Started")
+	<div class="w-full py-4">
+		@GettingStarted()
+	</div>
+}
+
+// GettingStarted guides setting up the site: getting glucose in, adding people and devices, its settings and alarms.
+// An admin sees every step; others the ones they can do.
+templ GettingStarted() {
+	<div id="site--getting-started" class="space-y-6">
+		<section class="rounded-xl bg-brand-night p-6 text-white shadow-sm">
+			<h2 class="text-2xl font-bold">Welcome to your Nighttroop site</h2>
+			<p class="mt-2 max-w-2xl text-white/80">
+				Here is how to set it up. Once readings arrive the summary shows them here, and this guide is always in
+				the menu under your name, at the top right.
+			</p>
+		</section>
+		<ol class="grid gap-4 md:grid-cols-2">
+			if isAdmin(ctx) {
+				@step("site--getting-started--data", "1", icon.Droplet, "Get your glucose in") {
+					<p>
+						<strong>From your phone:</strong> in AAPS, Trio or xDrip+, set the Nightscout URL to
+						<code id="site--getting-started--ns-url" class="my-1 block break-all rounded bg-gray-100 px-2 py-1 text-gray-900">{ nsURL(ctx) }</code>
+						with a device's token from Users &amp; Devices.
+					</p>
+					<p class="mt-2"><strong>From the cloud:</strong> pull from Dexcom Share, LibreLinkUp or another Nightscout site.</p>
+					@stepLink("site--getting-started--connectors-link", "/settings/connectors", "Set up a connector")
+				}
+				@step("site--getting-started--identities", "2", icon.Users, "Add people and devices") {
+					<p>Give family and friends their own login, and each phone or watch its own token, so you can see and take away each one's access.</p>
+					@stepLink("site--getting-started--identities-link", "/settings/identities", "Open Users & Devices")
+				}
+			}
+			@step("site--getting-started--settings", "", icon.SlidersHorizontal, "Make it yours") {
+				<p>Choose your units, time zone, language, and date and time formats.</p>
+				@stepLink("site--getting-started--settings-link", "/settings", "Open Settings")
+			}
+			@step("site--getting-started--alarms", "", icon.BellRing, "Set up alarms") {
+				<p>Every alarm starts off. Turn on the ones you want, like lows, highs and no data, and set when each goes off.</p>
+				@stepLink("site--getting-started--alarms-link", "/settings/alarms", "Open Alarms")
+			}
+		</ol>
+		<p class="text-sm text-gray-600">
+			if !isAdmin(ctx) {
+				Your site's admin sets up where its data comes from and who can use it.
+			}
+			Your readings, treatments and presets are under Data at the top of every page, your reports under Reports, and
+			the site's settings, alarms, and logs and events in the menu under your name. Search there finds any page by name.
+		</p>
+	</div>
+}
+
+// step is one numbered card of the guide, or unnumbered when it can be done in any order
+templ step(id, number string, ic func(...icon.Props) templ.Component, title string) {
+	<li id={ id } class="flex flex-col rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-700 shadow-sm">
+		<div class="mb-3 flex items-center gap-3">
+			<span class="flex size-9 items-center justify-center rounded-full bg-brand-gold/20 text-brand-night">
+				@ic(icon.Props{Class: "size-5"})
+			</span>
+			<h3 class="text-base font-semibold text-gray-900">
+				if number != "" {
+					{ number + ". " }
+				}
+				{ title }
+			</h3>
+		</div>
+		{ children... }
+	</li>
+}
+
+// stepLink opens the page a step is done on, at the bottom of its card
+templ stepLink(id, path, text string) {
+	<div class="mt-auto pt-4">
+		@nav.Link(id, path, "inline-flex items-center rounded-lg bg-brand-night px-4 py-2 font-medium text-white hover:bg-brand-night/90") {
+			{ text }
+		}
+	</div>
+}

@@ -1,0 +1,74 @@
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// Admins, under Security in the menu, lists who can sign in to control. The admin signed in is marked, and cannot
+// change, reset or delete themselves here, so control always has an admin
+CLICK #control--menu
+CLICK #control--admins-button
+ASSERT_STATUS 200
+ASSERT_PATH /admins
+ASSERT_VISIBLE #control--admins--table tr:has-text("You")
+ASSERT_VISIBLE #control--admins--table tr:has-text("You") [id$="--role"]:text-is("Admin")
+ASSERT_NOT_VISIBLE #control--admins--table tr:has-text("You") select
+ASSERT_NOT_VISIBLE #control--admins--table tr:has-text("You") [id$="--manage"]
+
+// Adding an admin without choosing a role makes it read only, and shows its credentials once, in the dialog the
+// site's Users & Devices shows them in
+INPUT #control--admins--add--name bdd_erin
+CLICK #control--admins--add--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_EQUALS #site--identities--credentials--title Credentials for bdd_erin
+ASSERT_VISIBLE #site--identities--created--password
+ASSERT_VISIBLE #site--identities--created--totp-text
+SCREENSHOT admin_added
+
+// Escape, or pressing beside them, warns they are never shown again rather than closing them
+PRESS Escape
+ASSERT_VISIBLE #site--identities--saved-warning >> text=never shown again
+ASSERT_VISIBLE #site--identities--created--password
+CLICK #site--identities--close
+ASSERT_NOT_VISIBLE #site--identities--created--password
+ASSERT_VISIBLE #control--admins--table tr:has-text("bdd_erin") select[data-role="read"]
+SCREENSHOT admins
+
+// Choosing another role changes it at once
+INPUT #control--admins--table>tbody>tr>td>select[aria-label$=bdd_erin] admin
+CLICK #control--admins--table tr:has-text("bdd_erin") [id$="--manage"]
+ASSERT_TEXT_VISIBLE bdd_erin is now Admin
+ASSERT_VISIBLE #control--admins--table tr:has-text("bdd_erin") select[data-role="admin"]
+
+// Resetting their password asks first (the test accepts), then shows the new one once, with no TOTP secret
+CLICK #control--admins--table tr:has-text("bdd_erin") [id$="--reset-password"]
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--identities--credentials--title Credentials for bdd_erin
+ASSERT_VISIBLE #site--identities--created--password
+ASSERT_NOT_VISIBLE #site--identities--created--totp-text
+SCREENSHOT admin_password_reset
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+
+// Resetting their TOTP shows its new secret for an authenticator app
+CLICK #control--admins--table tr:has-text("bdd_erin") [id$="--manage"]
+CLICK #control--admins--table tr:has-text("bdd_erin") [id$="--reset-totp"]
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--identities--created--totp-text
+ASSERT_NOT_VISIBLE #site--identities--created--password
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+
+// Deleting asks in the confirm dialog first, then removes their row
+CLICK #control--admins--table tr:has-text("bdd_erin") [id$="--manage"]
+CLICK_ASKS #control--admins--table tr:has-text("bdd_erin") [id$="--delete"]
+ASSERT_TEXT_VISIBLE Delete bdd_erin? They can no longer sign in to control.
+SCREENSHOT admin_delete_confirm
+CLICK #confirm--ok
+ASSERT_TEXT_VISIBLE bdd_erin deleted
+ASSERT_NOT_VISIBLE #control--admins--table tr:has-text("bdd_erin")
+GOTO {{ .control_url }}/admins
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--admins--table tr:has-text("You")
+ASSERT_NOT_VISIBLE #control--admins--table tr:has-text("bdd_erin")

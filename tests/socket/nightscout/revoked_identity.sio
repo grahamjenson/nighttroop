@@ -1,0 +1,63 @@
+# A socket is only authenticated as it authorizes, so once the site's admin disables its identity, as for a lost
+# phone, its writes are refused, as its requests are
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .login_admin.token }}
+
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "device_pwd_phone" "@result.items.1.role"
+SET phone_id {{ dig "list_identities.result.items.1.id" }}
+
+NAME connect
+CONNECT http://{{ .ns_site }}/socket.io/?EIO=3
+
+NAME authorize
+EMIT authorize
+B {"client":"pump","secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@write_treatment"
+
+NAME first_data
+WAIT dataUpdate
+ASSERT_LENGTH 0 "@treatments"
+
+NAME add_before_disabled
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Note","notes":"before"}}
+ACK
+ASSERT_LENGTH 1 "@"
+
+NAME disable_phone
+POST http://{{ site }}/settings/identities/{{ .phone_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.enabled"
+
+NAME add_after_disabled
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Note","notes":"after"}}
+ACK
+ASSERT_EQUALS "Not authorized" "@result"
+
+NAME update_after_disabled
+EMIT dbUpdate
+B {"collection":"treatments","_id":"anything","data":{"notes":"changed"}}
+ACK
+ASSERT_EQUALS "Not authorized" "@result"

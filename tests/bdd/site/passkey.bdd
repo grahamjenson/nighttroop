@@ -1,0 +1,44 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// My Account, in the settings menu, says who is signed in, with no passkeys yet
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/account
+ASSERT_TITLE My Account · Nighttroop
+ASSERT_TEXT_VISIBLE You are signed in as admin
+ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.
+
+// The browser has a passkey authenticator, as a phone has, that verifies the person itself. Adding a passkey, on the
+// site's own address, lists it
+VIRTUAL_AUTHENTICATOR
+CLICK #site--account--add-passkey
+ASSERT_VISIBLE #site--account--passkeys >> text=Not used yet
+SCREENSHOT my_account
+
+// Signed out, the passkey signs the admin back in with no name, password or code
+CLICK #site--settings-menu
+CLICK #site--settings--logout-button
+ASSERT_NEW_URL
+ASSERT_PATH /login
+ASSERT_VISIBLE #site--login--passkey
+SCREENSHOT login_passkey
+CLICK #site--login--passkey
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary
+
+// The passkey says it was used, and removing it, as for a lost device (the test accepts the question), leaves none
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--account--passkeys >> text=/Last used/
+// It asks first, with a red Remove as its button says, not Delete
+CLICK_ASKS #site--account--passkeys button >> text=Remove
+ASSERT_TEXT_EQUALS #confirm--ok Remove
+ASSERT_VISIBLE #confirm--ok[data-delete]
+SCREENSHOT remove_passkey_confirm
+CLICK #confirm--ok
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.

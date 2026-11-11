@@ -1,0 +1,204 @@
+INCLUDE steps/new_site.steps
+
+NAME no_food_presets
+GET http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// Presets are not data, so food intakes stay at /data/food
+NAME food_intakes_not_presets
+GET http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// Food from the Nightscout API is listed
+NAME create_ns_food
+POST http://{{ .ns_site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B { "name": "Apple", "carbs": 15 }
+ASSERT_STATUS 201
+
+NAME list_food_presets
+GET http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Apple" "@result.items.0.name"
+ASSERT_EQUALS 15 "@result.items.0.carbs"
+
+//////
+// CREATE AND UPDATE
+//////
+
+// A food preset is made by whoever is signed in
+NAME create_food_preset
+POST http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Toast", "carbs": 20, "absorption_time_minutes": 90, "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "Toast" "@result.name"
+ASSERT_EQUALS 20 "@result.carbs"
+ASSERT_EQUALS 90 "@result.absorption_time_minutes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+SET created_id {{ .create_food_preset.result.id }}
+
+NAME created_food_preset_has_new_id
+GET http://{{ site }}/presets/food/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_food_preset
+GET http://{{ site }}/presets/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Toast" "@result.name"
+
+// The Nightscout API sees a preset made on the site
+NAME ns_sees_food_preset
+GET http://{{ .ns_site }}/api/v3/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 20 "@result.carbs"
+
+// Newest first, so the one made on the site is before the one from the Nightscout API
+NAME first_page
+GET http://{{ site }}/presets/food?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Toast" "@result.items.0.name"
+
+NAME second_page
+GET http://{{ site }}/presets/food?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Apple" "@result.items.0.name"
+
+NAME create_food_preset_without_name
+POST http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 10}
+ASSERT_STATUS 400
+
+NAME create_food_preset_too_high
+POST http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Feast", "carbs": 5000}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "must be from 0 to 1000 g" "@message"
+
+NAME create_food_preset_absorbs_too_long
+POST http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Slow", "absorption_time_minutes": 100000}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "absorption time must be from 0 to 1440 minutes" "@message"
+
+// Only the fields sent change
+NAME update_food_preset_carbs
+POST http://{{ site }}/presets/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 25, "protein": 4}
+ASSERT_STATUS 200
+ASSERT_EQUALS 25 "@result.carbs"
+ASSERT_EQUALS 4 "@result.protein"
+ASSERT_EQUALS "Toast" "@result.name"
+ASSERT_EQUALS 90 "@result.absorption_time_minutes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_food_preset_name
+POST http://{{ site }}/presets/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Brown toast"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Brown toast" "@result.name"
+ASSERT_EQUALS 25 "@result.carbs"
+
+NAME update_food_preset_empty_name
+POST http://{{ site }}/presets/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": ""}
+ASSERT_STATUS 400
+
+NAME update_food_preset_too_high
+POST http://{{ site }}/presets/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"fat": -1}
+ASSERT_STATUS 400
+
+NAME update_unknown_food_preset
+POST http://{{ site }}/presets/food/not-a-food-preset
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 1}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_food_preset
+DELETE http://{{ site }}/presets/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_food_preset_not_found
+GET http://{{ site }}/presets/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_food_preset_not_listed
+GET http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+
+NAME ns_deleted_food_preset
+GET http://{{ .ns_site }}/api/v3/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME delete_unknown_food_preset
+DELETE http://{{ site }}/presets/food/not-a-food-preset
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+//////
+// SECTIONS
+//////
+
+// Each section has its own collections, so connector settings are not data
+NAME sync_not_data
+GET http://{{ site }}/data/sync
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+ASSERT_EQUALS "There is no sync here" "@message"
+
+NAME glucose_not_presets
+GET http://{{ site }}/presets/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

@@ -1,0 +1,122 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// ProfileSwitchesTable shows one page of profile switches, newest first, with buttons to the pages either side
+templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "profile_switches_table",
+		Title:       "Profile Switches",
+		Description: "Newest first. Click a profile switch to see all its details.",
+		Action:      addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", "Add Profile Switch"),
+		Above:       searchTotals("site--profile-switch", "profile switch", "profile switches"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "profileSwitchesTable",
+			EmptyID: "site--profile-switch--empty",
+			Empty:   "No profile switches here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Name"}, {Label: "Insulin (%)", Numeric: true},
+				{Label: "Shift", Numeric: true}, {Label: "Minutes", Numeric: true}, {Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit},
+	}) {
+		for _, profileSwitch := range profileSwitches {
+			@profileSwitchRow(profileSwitch)
+		}
+	}
+}
+
+// ProfileSwitchNew adds a profile switch with all its fields, putting its row at the top of the table
+templ ProfileSwitchNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--profile-switch--create", Title: "Add Profile Switch", Path: "/data/profile-switches", Target: "#profileSwitchesTable tbody",
+		Submit: "Add Profile Switch", Fields: profileSwitchFields})
+}
+
+// profileSwitchFields are what a profile switch has that a person can type in
+var profileSwitchFields = []addmodal.Field{
+	{Name: "name", Label: "Profile", Help: "The name of the profile switched to.", Required: true, Kind: addmodal.Text, Max: "64"},
+	{Name: "occurred_at", Label: "When", Help: "When it was switched to, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "multiplier", Label: "Insulin (%)", Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
+	{Name: "timeshift", Label: "Shift (minutes)", Help: "Its schedule moved forward by this, e.g. 60 for an hour.", Min: "-1440", Max: "1440", Step: "1", Value: "0"},
+	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasts, 0 or blank until the next switch.", Min: "0", Max: "10080", Step: "1"},
+	{Name: "reason", Label: "Reason", Help: "Why it was switched to, e.g. illness.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+}
+
+// profileSwitchInputs always send a multiplier, shift and minutes, as an empty number is not one
+// profileSwitchRow opens the profile switch's details when clicked.
+templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
+	@table.DataRow("site--profile-switch--"+profileSwitch.ID, "/data/profile-switches/"+profileSwitch.ID, "Delete this profile switch?") {
+		@table.Cell() {
+			{ formatReadingDate(ctx, profileSwitch.OccurredAt) }
+		}
+		@table.Cell() {
+			{ profileSwitch.Name }
+		}
+		@table.Cell(table.NumCell) {
+			{ percentOr(profileSwitch.Multiplier, "-") }
+		}
+		@table.Cell(table.NumCell) {
+			{ orDash(profileSwitch.Timeshift) }
+		}
+		@table.Cell(table.NumCell) {
+			{ orDash(profileSwitch.DurationMinutes) }
+		}
+		@table.Cell() {
+			{ orDash(profileSwitch.CreatedByDeviceName) }
+		}
+	}
+}
+
+templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
+	{{ siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx) }}
+	{{ unitsLabel := orEmpty(units.Stringp()) }}
+	{{ edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(profileSwitchFields, profileSwitch, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "-")), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
+		<div id="site--profile-switch--details--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
+			@ProfileSchedule("site--profile-switch--details--basal-rates", "Basal (U/h)", sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue)
+			@ProfileSchedule("site--profile-switch--details--carb-ratios", "Carb Ratio (g/U)", sitemodels.ScheduleFromJSON(profileSwitch.CarbRatiosJson), ScheduleValue)
+			@ProfileSchedule("site--profile-switch--details--sensitivities", "Sensitivity ("+unitsLabel+"/U)", sitemodels.SensitivityScheduleFromJSON(profileSwitch.InsulinSensitivitiesJson, profileSwitch.Units, siteContext), GlucoseValue(units))
+			@ProfileSchedule("site--profile-switch--details--targets-low", "Low Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsLowJson, siteContext), GlucoseValue(units))
+			@ProfileSchedule("site--profile-switch--details--targets-high", "High Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsHighJson, siteContext), GlucoseValue(units))
+		</div>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@addmodal.Detail(edit, "dia", "DIA (hours)", orDash(profileSwitch.Dia))
+			@addmodal.Detail(edit, "units", "Profile Units", orDash(profileSwitch.Units))
+			@addmodal.Detail(edit, "timezone", "Timezone", orDash(profileSwitch.Timezone))
+			@addmodal.Detail(edit, "carbs_hr", "Carbs per Hour", orDash(profileSwitch.CarbsHr))
+			@addmodal.Detail(edit, "delay", "Delay", orDash(profileSwitch.Delay))
+			@RecordDetails(Record{ID: profileSwitch.ID, UtcOffset: profileSwitch.UtcOffsetMinutes, App: profileSwitch.CreatedByAppName, Device: profileSwitch.CreatedByDeviceName, CreatedBy: profileSwitch.CreatedByIdentityName, Created: profileSwitch.CreatedAt, Updated: profileSwitch.UpdatedAt, UpdatedBy: profileSwitch.UpdatedByIdentityName})
+		</dl>
+	}
+}
+
+templ ProfileSwitchCreated(profileSwitch *sitemodels.SiteProfileSwitch) {
+	@profileSwitchRow(profileSwitch)
+}
+
+// ProfileSwitchUpdated replaces the profile switch's row, closes its details and shows a toast
+templ ProfileSwitchUpdated(profileSwitch *sitemodels.SiteProfileSwitch) {
+	@profileSwitchRow(profileSwitch)
+	@modal.CloseOOB()
+	@successtoast.OOB("Profile Switch Updated")
+}
+
+templ ProfileSwitchDeleted() {
+	@successtoast.Toast("Profile Switch Deleted")
+}

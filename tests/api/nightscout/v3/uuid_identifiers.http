@@ -1,0 +1,23 @@
+INCLUDE steps/new_ns_site.steps
+SET date {{ itime 5 }}
+
+// A UUID identifier is 36 characters, so a PUT to a UUID creates a record with it whole
+NAME put_treatment_with_uuid
+PUT http://{{ site }}/api/v3/treatments/123e4567-e89b-12d3-a456-426614174000
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Note", "date": {{ .date }}, "notes": "first", "identifier": "123e4567-e89b-12d3-a456-426614174000" }
+ASSERT_STATUS 201
+
+NAME get_treatment_by_uuid
+GET http://{{ site }}/api/v3/treatments/123e4567-e89b-12d3-a456-426614174000
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "first" "@result.notes"
+ASSERT_EQUALS "123e4567-e89b-12d3-a456-426614174000" "@result.identifier"
+
+// Replacing it with the same identifier in the body is not changing the identifier
+NAME replace_treatment_by_uuid
+PUT http://{{ site }}/api/v3/treatments/123e4567-e89b-12d3-a456-426614174000
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Note", "date": {{ .date }}, "notes": "second", "identifier": "123e4567-e89b-12d3-a456-426614174000" }
+ASSERT_STATUS 200

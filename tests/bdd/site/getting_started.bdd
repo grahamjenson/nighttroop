@@ -1,0 +1,51 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A new site has no readings, so rather than an empty summary its admin is shown how to set it up
+ASSERT_VISIBLE #site--getting-started
+ASSERT_TEXT_VISIBLE Welcome to your Nighttroop site
+ASSERT_VISIBLE #site--getting-started--data
+ASSERT_VISIBLE #site--getting-started--ns-url
+ASSERT_VISIBLE #site--getting-started--identities
+ASSERT_VISIBLE #site--getting-started--settings
+ASSERT_VISIBLE #site--getting-started--alarms
+ASSERT_NOT_VISIBLE #site--summary--glucose
+SCREENSHOT getting_started
+
+// Each step opens the page it is done on, and the guide is always on My Account and in the menu, to come back to
+CLICK #site--getting-started--connectors-link
+ASSERT_PATH /settings/connectors
+ASSERT_VISIBLE #site--settings--virtual-connector--enable
+
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+CLICK #site--getting-started-button
+ASSERT_PATH /getting-started
+ASSERT_VISIBLE #site--getting-started
+CLICK #site--getting-started--identities-link
+ASSERT_PATH /settings/identities
+ASSERT_TEXT_VISIBLE Admins & Users
+
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+CLICK #site--getting-started-button
+CLICK #site--getting-started--settings-link
+ASSERT_PATH /settings
+ASSERT_VISIBLE #site--settings--delete
+
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+CLICK #site--getting-started-button
+CLICK #site--getting-started--alarms-link
+ASSERT_PATH /settings/alarms
+ASSERT_VISIBLE #alarm_settings_page h2:text-is("Lows")
+
+// The guide's own page, from My Account, which says what it is
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+ASSERT_VISIBLE #site--account--getting-started >> text=The guide to setting up the site
+SCREENSHOT account_getting_started
+CLICK #site--getting-started-button
+ASSERT_PATH /getting-started
+ASSERT_VISIBLE #site--getting-started--data
+SCREENSHOT getting_started_page

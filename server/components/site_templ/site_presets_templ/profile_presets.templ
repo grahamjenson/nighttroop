@@ -1,0 +1,108 @@
+package site_presets_templ
+
+import (
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/badge"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// ProfilePresetsTable shows one page of profiles, newest first, with buttons to the pages either side
+templ ProfilePresetsTable(profiles []*sitemodels.SiteProfilePreset, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "profile_presets_table",
+		Title:       "Profiles",
+		Description: "The profiles your loop uploaded, with their schedules. Click one to see it or rename it.",
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "profilePresetsTable",
+			EmptyID: "presets--profiles--empty",
+			Empty:   "No profiles here.",
+			Columns: []table.Column{
+				{Label: "Name"}, {Label: "Default"}, {Label: "DIA (hours)", Numeric: true}, {Label: "Device"},
+				{Label: "Uploaded"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "presets--profiles", Path: "/presets/profiles", Count: len(profiles), Skip: skip, Limit: limit},
+	}) {
+		for _, profile := range profiles {
+			@profilePresetRow(profile)
+		}
+	}
+}
+
+// profilePresetRow opens the profile's details when clicked.
+templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
+	@table.DataRow("presets--profiles--"+profile.ID, "/presets/profiles/"+profile.ID, "Delete this profile?") {
+		@table.Cell() {
+			{ orDash(profile.Name) }
+		}
+		@table.Cell() {
+			if profile.IsDefault {
+				@badge.Badge(badge.Props{Variant: badge.VariantGold}) {
+					Default
+				}
+			}
+		}
+		@table.Cell(table.NumCell) {
+			{ orDash(profile.Dia) }
+		}
+		@table.Cell() {
+			{ orDash(profile.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			{ formatDate(ctx, profile.OccurredAt) }
+		}
+	}
+}
+
+templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
+	{{ units := orEmpty(profile.Units) }}
+	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(ctx, profile.OccurredAt), Actions: modal.Submit("presets--profiles--edit", "Rename")}) {
+		<form
+			id="presets--profiles--edit"
+			class="mt-4 flex flex-wrap items-end gap-2"
+			hx-post={ "/presets/profiles/" + profile.ID }
+			hx-target={ "#presets--profiles--" + profile.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@field.Field("presets--profiles--edit--name", "Name", "w-64") {
+				@input.Input(input.Props{ID: "presets--profiles--edit--name", Name: "name", Placeholder: "Name", Value: orEmpty(profile.Name), Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
+			}
+		</form>
+		<div id="presets--profiles--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
+			@site_data_templ.ProfileSchedule("presets--profiles--basal-rates", "Basal (U/h)", profile.BasalRates, site_data_templ.ScheduleValue)
+			@site_data_templ.ProfileSchedule("presets--profiles--carb-ratios", "Carb Ratio (g/U)", profile.CarbRatios, site_data_templ.ScheduleValue)
+			@site_data_templ.ProfileSchedule("presets--profiles--sensitivities", "Sensitivity ("+units+"/U)", profile.Sensitivities, site_data_templ.GlucoseValue(profile.Units))
+			@site_data_templ.ProfileSchedule("presets--profiles--targets-low", "Low Target ("+units+")", profile.LowTargets, site_data_templ.GlucoseValue(profile.Units))
+			@site_data_templ.ProfileSchedule("presets--profiles--targets-high", "High Target ("+units+")", profile.HighTargets, site_data_templ.GlucoseValue(profile.Units))
+		</div>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@presetDetail("Profile Store", profile.ProfileStoreID)
+			@presetDetail("DIA (hours)", orDash(profile.Dia))
+			@presetDetail("Carbs per Hour", orDash(profile.CarbsHr))
+			@presetDetail("Delay", orDash(profile.Delay))
+			@presetDetail("Timezone", orDash(profile.Timezone))
+			@site_data_templ.RecordDetails(site_data_templ.Record{ID: profile.ID, UtcOffset: profile.UtcOffsetMinutes, App: profile.CreatedByAppName, Device: profile.CreatedByDeviceName, CreatedBy: profile.CreatedByIdentityName, Created: profile.CreatedAt, Updated: profile.UpdatedAt, UpdatedBy: profile.UpdatedByIdentityName})
+		</dl>
+	}
+}
+
+// ProfilePresetUpdated replaces the profile's row, closes its details and shows a toast
+templ ProfilePresetUpdated(profile *sitemodels.SiteProfilePreset) {
+	@profilePresetRow(profile)
+	@modal.CloseOOB()
+	@successtoast.OOB("Profile Renamed")
+}
+
+templ ProfilePresetDeleted() {
+	@successtoast.Toast("Profile Deleted")
+}

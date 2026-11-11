@@ -1,0 +1,36 @@
+package public_templ
+
+import (
+	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/testsite"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
+)
+
+templ PublicBase() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Nighttroop </title>
+			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+			<link rel="apple-touch-icon" href="/logo.png"/>
+			<!-- Tailwind CSS -->
+			<link href="/style_gen.css" rel="stylesheet"/>
+			<script src="/htmx.js"></script>
+			<script src="/qrcode.js"></script>
+			@copybutton.Script()
+		</head>
+		// As tall as the window, with the page's content filling what the footer leaves, so a page that fits needs no scrolling
+		<body class="flex min-h-dvh flex-col">
+			@testsite.Banner()
+			<div
+				id="main-content"
+				class="flex flex-1 flex-col"
+			>
+				{ children... }
+			</div>
+			@footer.PublicFooter()
+		</body>
+	</html>
+}

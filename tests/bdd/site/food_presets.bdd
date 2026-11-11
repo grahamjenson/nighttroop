@@ -1,0 +1,98 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Food presets are in the Data hub under Presets, with Profiles, and a new site has none
+CLICK #site--nav--data
+ASSERT_DRAWN #site--presets--food-button
+ASSERT_DRAWN #site--presets--profiles-button
+SCREENSHOT presets_menu
+CLICK #site--presets--food-button
+ASSERT_STATUS 200
+ASSERT_PATH /presets/food
+ASSERT_VISIBLE #foodPresetsTable
+ASSERT_TEXT_VISIBLE No food presets here.
+ASSERT_NOT_VISIBLE #presets--food--next
+// Units are in brackets after the name
+ASSERT_TEXT_VISIBLE Carbs (g)
+SCREENSHOT food_presets_empty
+
+// Adding opens a modal of all a food preset's fields, saying what each is and whether it is required
+CLICK #presets--food--add
+ASSERT_VISIBLE #presets--food--create--modal
+ASSERT_TEXT_VISIBLE What the food is, e.g. toast, to pick it by.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #presets--food--create--fat
+SCREENSHOT food_preset_add
+
+// A food preset added goes to the top of the table, and the modal closes
+INPUT #presets--food--create--name Apple
+INPUT #presets--food--create--carbs 15
+CLICK #presets--food--create--submit
+ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #presets--food--create--modal
+ASSERT_TEXT_VISIBLE Apple
+ASSERT_NOT_VISIBLE #presets--food--empty
+
+CLICK #presets--food--add
+INPUT #presets--food--create--name Toast
+INPUT #presets--food--create--carbs 20
+INPUT #presets--food--create--absorption-time-minutes 90
+INPUT #presets--food--create--fat 2
+INPUT #presets--food--create--food-type snack
+CLICK #presets--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Toast
+
+// Clicking a food preset shows all its details, and they can be edited, which updates its row
+CLICK #foodPresetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #presets--food--details
+ASSERT_TEXT_VISIBLE admin
+// Each field its edit form has is shown once, in the form, not again in the details listed below it
+ASSERT_COUNT #presets--food--details :is(dt, label):has-text("Fat (g)") 1
+SCREENSHOT food_preset_edit
+// Scrolled to its foot, below the form are only the record's own details
+SCROLL 2000
+ASSERT_VISIBLE #presets--food--details dt:text-is("ID")
+INPUT #presets--food--edit--name Brown toast
+INPUT #presets--food--edit--carbs 25
+CLICK #presets--food--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Food Preset Updated
+ASSERT_NOT_VISIBLE #presets--food--details
+ASSERT_TEXT_VISIBLE Brown toast
+
+// The edit is saved
+CLICK #foodPresetsTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE Brown toast
+CLICK #presets--food--details--close
+ASSERT_NOT_VISIBLE #presets--food--details
+
+// A page of one food preset pages through them, newest first
+GOTO /presets/food?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Brown toast
+ASSERT_NOT_VISIBLE #presets--food--previous
+
+CLICK #presets--food--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Apple
+
+CLICK #presets--food--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+GOTO /presets/food
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #foodPresetsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Food Preset Deleted
+ASSERT_NOT_VISIBLE #presets--food--details
+
+// The deleted food preset stays gone after a reload
+GOTO /presets/food
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Apple

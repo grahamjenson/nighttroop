@@ -1,0 +1,23 @@
+INCLUDE steps/new_ns_site.steps
+
+
+NAME create_profile_switch_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B   {
+    "date": 97,
+    "duration": 120,
+    "eventType": "Temp Basal",
+    "pumpId": 1714289927165,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "rate": 0,
+    "type": "NORMAL",
+    "created_at": "2024-07-15T06:41:17.050+12:00"
+  }
+ASSERT_STATUS 201
+ASSERT_EQUALS "Temp Basal" "@result.eventType"
+ASSERT_EQUALS 7200000 "@result.durationInMilliseconds"
+ASSERT_EQUALS 720 "@result.utcOffset"
+ASSERT_EQUALS 0 "@result.absolute"
+    

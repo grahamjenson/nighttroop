@@ -1,0 +1,183 @@
+INCLUDE steps/new_ns_site.steps
+
+////////
+// Create
+////////
+
+
+NAME create_bolus_wizard_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+  "eventType": "Bolus Wizard",
+  "created_at": "{{ time 0 }}",
+
+  "glucose": 15,
+  "glucoseType": "Sensor",
+
+  "carbs": 46,
+  "insulin":1.54,
+
+  "notes": "Here are some notes",
+  "reason": "lunch"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "Bolus Wizard" "@result.eventType"
+ASSERT_EXISTS "@result.created_at"
+ASSERT_EQUALS 270.27 "@result.glucose"
+ASSERT_EQUALS "Sensor" "@result.glucoseType"
+ASSERT_EQUALS 46 "@result.carbs"
+ASSERT_EQUALS 1.54 "@result.insulin"
+ASSERT_EQUALS "Here are some notes" "@result.notes"
+ASSERT_EQUALS "lunch" "@result.reason"
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
+ASSERT_EXISTS "@result.subject"
+ASSERT_EXISTS "@result.utcOffset"
+ASSERT_EXISTS "@result.srvCreated"
+ASSERT_EXISTS "@result.srvModified"
+
+NAME create_profile_switch_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 0 }},
+    "eventType": "Profile Switch",
+    "originalProfileName": "SamDash-2025",
+    "percentage": 120,
+    "profile": "SamDash-2025(120%)",
+    "profileJson": "{\"units\":\"mmol\",\"dia\":6,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":12},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":12},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":8.5},{\"time\":\"08:00\",\"timeAsSeconds\":28800,\"value\":11},{\"time\":\"10:00\",\"timeAsSeconds\":36000,\"value\":12},{\"time\":\"13:00\",\"timeAsSeconds\":46800,\"value\":11},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":12},{\"time\":\"17:00\",\"timeAsSeconds\":61200,\"value\":8.5},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":10}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":16},{\"time\":\"02:00\",\"timeAsSeconds\":7200,\"value\":16},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":7.5},{\"time\":\"08:00\",\"timeAsSeconds\":28800,\"value\":11.5},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":12},{\"time\":\"20:00\",\"timeAsSeconds\":72000,\"value\":14}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.25},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.25},{\"time\":\"02:00\",\"timeAsSeconds\":7200,\"value\":0.25},{\"time\":\"03:00\",\"timeAsSeconds\":10800,\"value\":0.25},{\"time\":\"04:00\",\"timeAsSeconds\":14400,\"value\":0.35},{\"time\":\"05:00\",\"timeAsSeconds\":18000,\"value\":0.35},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":0.5},{\"time\":\"07:00\",\"timeAsSeconds\":25200,\"value\":0.55},{\"time\":\"08:00\",\"timeAsSeconds\":28800,\"value\":0.4},{\"time\":\"09:00\",\"timeAsSeconds\":32400,\"value\":0.35},{\"time\":\"10:00\",\"timeAsSeconds\":36000,\"value\":0.35},{\"time\":\"11:00\",\"timeAsSeconds\":39600,\"value\":0.4},{\"time\":\"12:00\",\"timeAsSeconds\":43200,\"value\":0.4},{\"time\":\"13:00\",\"timeAsSeconds\":46800,\"value\":0.3},{\"time\":\"14:00\",\"timeAsSeconds\":50400,\"value\":0.3},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":0.35},{\"time\":\"16:00\",\"timeAsSeconds\":57600,\"value\":0.45},{\"time\":\"17:00\",\"timeAsSeconds\":61200,\"value\":0.45},{\"time\":\"18:00\",\"timeAsSeconds\":64800,\"value\":0.45},{\"time\":\"19:00\",\"timeAsSeconds\":68400,\"value\":0.5},{\"time\":\"20:00\",\"timeAsSeconds\":72000,\"value\":0.5},{\"time\":\"21:00\",\"timeAsSeconds\":75600,\"value\":0.5},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":0.4},{\"time\":\"23:00\",\"timeAsSeconds\":82800,\"value\":0.3}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":5},{\"time\":\"08:00\",\"timeAsSeconds\":28800,\"value\":6.5},{\"time\":\"10:00\",\"timeAsSeconds\":36000,\"value\":7.5},{\"time\":\"13:00\",\"timeAsSeconds\":46800,\"value\":6.5},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":7},{\"time\":\"17:00\",\"timeAsSeconds\":61200,\"value\":5},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6},{\"time\":\"06:00\",\"timeAsSeconds\":21600,\"value\":5},{\"time\":\"08:00\",\"timeAsSeconds\":28800,\"value\":6.5},{\"time\":\"10:00\",\"timeAsSeconds\":36000,\"value\":7.6},{\"time\":\"13:00\",\"timeAsSeconds\":46800,\"value\":6.5},{\"time\":\"15:00\",\"timeAsSeconds\":54000,\"value\":7},{\"time\":\"17:00\",\"timeAsSeconds\":61200,\"value\":5},{\"time\":\"22:00\",\"timeAsSeconds\":79200,\"value\":6}]}",
+    "timeshift": 0,
+    "utcOffset": 720,
+    "created_at": "2026-08-08T10:24:34.000Z"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "Profile Switch" "@result.eventType"
+
+////////
+// Update
+////////
+
+
+NAME create_patch_test_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "app": "AAPS", "date": 1786184674000, "eventType": "Meal Bolus", "insulin": 4.3}
+ASSERT_STATUS 201
+ASSERT_EQUALS "Meal Bolus" "@result.eventType"
+ASSERT_EQUALS 4.3 "@result.insulin"
+
+NAME patch_test_v3
+PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 45, "notes": "Updated notes from patch_test_v3" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "Updated notes from patch_test_v3" "@result.notes"
+ASSERT_EQUALS 45 "@result.carbs"
+ASSERT_EQUALS 4.3 "@result.insulin"
+
+NAME get_patched_test_v3
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Updated notes from patch_test_v3" "@result.notes"
+ASSERT_EQUALS 45 "@result.carbs"
+ASSERT_EQUALS 4.3 "@result.insulin"
+
+NAME patch_patched_again_note_v3
+PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "notes": "Updated by patch_patched_again_note_v3", "carbs": 20, "insulin": 1.2 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "Updated by patch_patched_again_note_v3" "@result.notes"
+ASSERT_EQUALS 20 "@result.carbs"
+ASSERT_EQUALS 1.2 "@result.insulin"
+
+
+NAME get_patched_test_v3_again
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Updated by patch_patched_again_note_v3" "@result.notes"
+ASSERT_EQUALS 20 "@result.carbs"
+ASSERT_EQUALS 1.2 "@result.insulin"
+
+NAME patch_test_v3_again_again
+PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 0 }
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@result.carbs"
+
+NAME get_patched_test_v3_again_again
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Updated by patch_patched_again_note_v3" "@result.notes"
+ASSERT_EQUALS 0 "@result.carbs"
+ASSERT_EQUALS 1.2 "@result.insulin"
+
+
+/////
+// History
+/////
+
+NAME get_lastmodified
+GET http://{{ site }}/api/v3/lastmodified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.collections"
+ASSERT_EXISTS "@result.collections.treatments"
+ASSERT_EQUALS  ".get_patched_test_v3_again_again.lastModified" "@result.collections.treatments"
+
+NAME get_history
+GET http://{{ site }}/api/v3/treatments/history/{{ dig "get_lastmodified.result.collections.treatments" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0"
+ASSERT_CONTAINS "@result.0.srvModified" "#Etag.0"
+
+NAME get_history
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+
+#######
+# DEDUPELICATION
+#######
+
+NAME create_first_identical_treatments_v3
+POST http://{{ .site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 25.0,
+    "date": 1787624277000,
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": false,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME create_second_identical_treatments_v3
+POST http://{{ .site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 25.0,
+    "date": 1787624277000,
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": false,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@isDeduplication"
+ASSERT_EQUALS ".create_first_identical_treatments_v3.identifier" "@deduplicatedIdentifier"
+ASSERT_EQUALS ".create_second_identical_treatments_v3.identifier" "@identifier"

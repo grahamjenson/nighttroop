@@ -1,0 +1,64 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+# NightscoutService's uploadGlucoseData posts GlucoseEntry.dictionaryRepresentation, in mg/dL. A nil value is left
+# out. date is a double of milliseconds, which can have a fraction. Loop needs a 200 and an array of as many objects
+# as it sent, or it uploads them again.
+
+# The second reading's time is made once, as the upload sent again below sends it again: one made again a second later
+# would be another reading
+SET second_ms {{ itime 5 }}
+SET second_at {{ time 5 }}
+
+NAME loop_upload_glucose
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [
+    {"date": {{ itime 10 }}.456, "dateString": "{{ time 10 }}", "device": "Dexcom G7 Dexcom 1A2B3C", "type": "sgv", "sgv": 114, "trend": 4, "direction": "Flat", "trendRate": 0.1, "isCalibration": false},
+    {"date": {{ .second_ms }}, "dateString": "{{ .second_at }}", "device": "loop://iPhone", "type": "sgv", "sgv": 39, "trend": 7, "direction": "DoubleDown", "trendRate": -3.5, "isCalibration": false},
+    {"date": {{ itime 4 }}, "dateString": "{{ time 4 }}", "device": "loop://iPhone", "type": "mbg", "mbg": 120.5, "isCalibration": false}
+  ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS 114 "@0.sgv"
+ASSERT_EQUALS 39 "@1.sgv"
+ASSERT_EQUALS 120.5 "@2.mbg"
+
+# An upload sent again, e.g. after a timeout, is still answered with as many objects
+NAME loop_upload_glucose_again
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"date": {{ .second_ms }}, "dateString": "{{ .second_at }}", "device": "loop://iPhone", "type": "sgv", "sgv": 39, "trend": 7, "direction": "DoubleDown", "trendRate": -3.5, "isCalibration": false}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".loop_upload_glucose.1._id" "@0._id"
+
+######
+# NightscoutKit's fetchGlucose (not used by Loop itself): find[dateString] between two ISO dates, and count
+# GlucoseEntry(rawValue:) needs _id a string, date a number of milliseconds, and sgv or mbg in mg/dL
+######
+
+NAME nightscoutkit_fetch_glucose
+GET http://{{ site }}/api/v1/entries?find[dateString][$gte]={{ time 15 }}&find[dateString][$lte]={{ time 0 }}&count=10
+H api-secret: {{ sha1 token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS ".loop_upload_glucose.2._id" "@0._id"
+ASSERT_EQUALS ".loop_upload_glucose.2.date" "@0.date"
+ASSERT_EQUALS 120.5 "@0.mbg"
+ASSERT_EQUALS ".loop_upload_glucose.1.date" "@1.date"
+ASSERT_EQUALS 39 "@1.sgv"
+ASSERT_EQUALS 7 "@1.trend"
+ASSERT_EQUALS "DoubleDown" "@1.direction"
+ASSERT_EQUALS 114 "@2.sgv"
+ASSERT_EQUALS "Flat" "@2.direction"
+
+NAME nightscoutkit_fetch_glucose_count
+GET http://{{ site }}/api/v1/entries?find[dateString][$gte]={{ time 15 }}&find[dateString][$lte]={{ time 0 }}&count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"

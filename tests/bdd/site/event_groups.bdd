@@ -1,0 +1,70 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no event groups
+CLICK #site--nav--data
+ASSERT_VISIBLE #site--data--event-groups-button
+CLICK #site--data--event-groups-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/event-groups
+ASSERT_VISIBLE #site--event-group--empty
+SCREENSHOT event_groups_empty
+
+// Virtual connector sends treatments through the Nightscout API, each an event group
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /data/event-groups
+ASSERT_STATUS 200
+ASSERT_VISIBLE #eventGroupsTable >> text="Temp Basal"
+ASSERT_VISIBLE #eventGroupsTable >> text=0.85 U/hr temp basal for 30 min
+// A temp target says its units, as glucose does
+ASSERT_VISIBLE #eventGroupsTable >> text=5.5–6.7 mmol/L temp target for 30 min
+ASSERT_VISIBLE #eventGroupsTable >> text="Profile Switch"
+SCREENSHOT event_groups
+
+// Clicking a group lists its events and all its details
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Temp Basal"))
+ASSERT_VISIBLE #site--event-group--details
+ASSERT_VISIBLE #site--event-group--events >> text=0.85 U/hr temp basal for 30 min
+ASSERT_TEXT_VISIBLE virtual_connector
+SCREENSHOT event_group_details
+CLICK #site--event-group--details--close
+ASSERT_NOT_VISIBLE #site--event-group--details
+
+// Deleting asks first (the test accepts), then removes the group and its events
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Temp Basal")) >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Event Group Deleted
+ASSERT_NOT_VISIBLE #site--event-group--details
+ASSERT_NOT_VISIBLE #eventGroupsTable >> text="Temp Basal"
+
+// The deleted group and its temp basal stay gone after a reload
+GOTO /data/event-groups
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #eventGroupsTable >> text="Temp Basal"
+CLICK #site--nav--data
+CLICK #site--data--temp-basals-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--temp-basal--empty
+
+// AAPS names its pump on every treatment, which a group's details show
+HTTP
+NAME aaps_bolus
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"created_at": "{{ time 1 }}", "eventType": "Bolus", "insulin": 0.5, "pumpId": "4102", "pumpSerial": "AAPS1234", "pumpType": "DANA_I"}]
+ASSERT_STATUS 200
+BROWSE
+GOTO /data/event-groups
+ASSERT_STATUS 200
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Bolus"))
+ASSERT_VISIBLE #site--event-group--details
+ASSERT_TEXT_VISIBLE AAPS1234
+ASSERT_TEXT_VISIBLE DANA_I
+SCREENSHOT event_group_pump

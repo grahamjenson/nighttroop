@@ -1,0 +1,138 @@
+INCLUDE steps/new_site_admin.steps
+
+NAME create_user
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "user"}
+ASSERT_STATUS 201
+SET user_id {{ .create_user.result.id }}
+
+NAME login_user
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "carer", "password": "{{ .create_user.result.password }}"}
+ASSERT_STATUS 200
+
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.items.2.name"
+ASSERT_EQUALS "admin" "@result.items.3.name"
+SET pwd_id {{ dig "list_identities.result.items.2.id" }}
+SET admin_id {{ dig "list_identities.result.items.3.id" }}
+
+// A user cannot reset another identity's credentials, only an admin can
+NAME user_resets_admin_refused
+POST http://{{ site }}/settings/identities/{{ .admin_id }}/password
+H Authorization: Bearer {{ .login_user.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// A user resets their own password, which signs out their JWT, and signs in with the new one
+NAME user_resets_own_password
+POST http://{{ site }}/settings/identities/{{ .user_id }}/password
+H Authorization: Bearer {{ .login_user.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "carer" "@result.name"
+ASSERT_EQUALS true "@result.current_identity"
+ASSERT_EXISTS "@result.password"
+
+NAME user_jwt_signed_out
+GET http://{{ site }}/settings
+H Authorization: Bearer {{ .login_user.token }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME user_login_with_new_password
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "carer", "password": "{{ .user_resets_own_password.result.password }}"}
+ASSERT_STATUS 200
+
+// The user has no TOTP to reset
+NAME user_resets_own_totp_refused
+POST http://{{ site }}/settings/identities/{{ .user_id }}/totp
+H Authorization: Bearer {{ .user_login_with_new_password.token }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+// An admin resets a device's password, which comes with its new Nightscout token, and the admin stays signed in
+NAME admin_resets_pwd_password
+POST http://{{ site }}/settings/identities/{{ .pwd_id }}/password
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.current_identity"
+ASSERT_EXISTS "@result.ns_token"
+
+NAME new_ns_token_works
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .admin_resets_pwd_password.result.ns_token }}
+ASSERT_STATUS 200
+
+// The SHA1 of the new token, as xDrip+ sends it, works, and of the old one does not
+NAME new_ns_token_sha1_works
+GET http://{{ .ns_site }}/api/v1/entries.json
+H api-secret: {{ sha1 .admin_resets_pwd_password.result.ns_token }}
+ASSERT_STATUS 200
+
+NAME old_ns_token_sha1_refused
+GET http://{{ .ns_site }}/api/v1/entries.json
+H api-secret: {{ sha1 .create_new_site.pwd_nstoken }}
+ASSERT_STATUS 401
+
+NAME admin_still_signed_in
+GET http://{{ site }}/settings
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+// An admin resets their own TOTP, which signs them out too
+NAME admin_resets_own_totp
+POST http://{{ site }}/settings/identities/{{ .admin_id }}/totp
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.totp_secret"
+
+NAME admin_jwt_signed_out
+GET http://{{ site }}/settings
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME admin_login_again
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .admin_login_again.token }}
+
+// Only the site's own identities can be reset
+NAME reset_unknown_identity
+POST http://{{ site }}/settings/identities/999999/password
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME reset_not_an_id
+POST http://{{ site }}/settings/identities/notanid/password
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Each reset is an event, newest first, recording who reset it
+NAME credentials_changed_events
+GET http://{{ site }}/logs/events?type=identity_credentials_changed
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS "totp" "@result.items.0.attributes.credentials"
+ASSERT_EQUALS "admin" "@result.items.0.attributes.by"
+ASSERT_EQUALS "pwd_phone" "@result.items.1.attributes.identity_name"
+ASSERT_EQUALS "carer" "@result.items.2.attributes.identity_name"
+ASSERT_EQUALS "carer" "@result.items.2.attributes.by"

@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Its own job beside test, so checking generated code adds no time to CI
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        id: go
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      # Only the downloaded module zips: a few hundred files restore far faster than the
+      # unpacked modules, and Go unpacks the ones it needs in seconds.
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod/cache/download
+          key: gomod-${{ runner.os }}-${{ hashFiles('go.sum') }}
+          restore-keys: gomod-${{ runner.os }}-
+
+      # Restores main's last build cache; only test's pushes to main save one (see its end).
+      - name: Restore Go build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/go-build
+          key: gobuild-${{ runner.os }}-${{ github.sha }}
+          restore-keys: gobuild-${{ runner.os }}-
+
+      # Keyed on Go too: generators built with an older Go cannot load packages needing a newer one
+      - name: Cache code generator binaries
+        id: tools
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin
+          key: tools-${{ runner.os }}-go${{ steps.go.outputs.go-version }}-sqlc1.31.1-tailwind4.3.0
+
+      - name: Install code generators
+        if: steps.tools.outputs.cache-hit != 'true'
+        run: |
+          go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
+          curl -sSL -o ~/go/bin/tailwindcss \
+            https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-linux-x64
+          chmod +x ~/go/bin/tailwindcss
+
+      - name: Check generated code is up to date
+        run: |
+          go generate ./...
+          git add -N .
+          git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
+
+  # A migration added must be numbered after the last on the base branch, as DBs past that number would never run it.
+  # Once the migrations are frozen, at the first production deploy, a migration on the base branch has run on DBs, so a
+  # change to it would only reach new ones; see docs/migrations.md
+  migrations:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check migrations are added after the last and none on the base branch changed
+        run: cmd/check_migrations.sh "origin/${{ github.base_ref }}"
+
+  test:
+    runs-on: ubuntu-latest
+    # pull-requests: write to show a pull request its screenshots in a comment
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      # Only the downloaded module zips: a few hundred files restore far faster than the
+      # unpacked modules, and Go unpacks the ones it needs in seconds.
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod/cache/download
+          key: gomod-${{ runner.os }}-${{ hashFiles('go.sum') }}
+          restore-keys: gomod-${{ runner.os }}-
+
+      # Restores main's last build cache; only pushes to main save one (see the end).
+      - name: Restore Go build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/go-build
+          key: gobuild-${{ runner.os }}-${{ github.sha }}
+          restore-keys: gobuild-${{ runner.os }}-
+
+      # The driver is cached with the browser, so a cache hit installs nothing
+      - name: Cache playwright
+        id: playwright
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/ms-playwright-go
+          key: playwright-${{ runner.os }}-v0.6201.1-driver
+
+      # The runner image has Chrome, so it already has the system libraries Chromium needs. --with-deps
+      # installs them again with apt, which took 18s a run and once over 10 minutes, so only a miss runs it.
+      - name: Install playwright browser
+        if: steps.playwright.outputs.cache-hit != 'true'
+        run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
+
+      # -count=1 so integration tests always run instead of replaying cached results.
+      # The browser suite in it saves its SCREENSHOT steps to .test/savedScreenshots.
+      - name: Test
+        run: go test -count=1 ./...
+
+      # Once the tests pass, a pull request is shown the screenshots its description lists under ## Screenshots, in a
+      # comment, from the pr-<number> branch of the screenshots repo. A pull request from a fork has no secrets to push
+      # them with, so it is not. The description goes in as an env, never into the script.
+      - name: Show the pull request its screenshots
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+          SCREENSHOTS_TOKEN: ${{ secrets.SCREENSHOTS_TOKEN }}
+        run: cmd/pr_screenshots.sh
+
+      # Every screenshot the tests took, to download
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: .test/savedScreenshots
+          include-hidden-files: true
+
+      # Go refreshes the mtime of an entry it uses that is over an hour old, so entries
+      # older than 90 minutes went unused by this run. Dropping them stops the cache growing.
+      - name: Trim Go build cache
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: find ~/.cache/go-build -type f -mmin +90 -delete
+
+      - name: Save Go build cache
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/go-build
+          key: gobuild-${{ runner.os }}-${{ github.sha }}

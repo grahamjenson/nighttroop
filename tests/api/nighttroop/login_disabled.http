@@ -1,0 +1,31 @@
+INCLUDE steps/new_site_admin.steps
+
+NAME create_user
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "user"}
+ASSERT_STATUS 201
+SET user_id {{ .create_user.result.id }}
+SET user_password {{ .create_user.result.password }}
+
+NAME login_user
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "carer", "password": "{{ .user_password }}"}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@token"
+
+NAME disable_user
+POST http://{{ site }}/settings/identities/{{ .user_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+
+// A disabled identity cannot log in, even with the right password
+NAME login_disabled_user
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "carer", "password": "{{ .user_password }}"}
+ASSERT_STATUS 401

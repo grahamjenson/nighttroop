@@ -1,0 +1,158 @@
+package control_sites_templ
+
+import (
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/ui/alert"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// SiteIdentities is a site's identities, with buttons for an admin to reset one's password, or its TOTP when it logs in
+// with one, or sign in to the site as it. The new credentials are shown above the table, once.
+templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
+	<div id="control--site--identities--reset"></div>
+	@table.Table(table.Props{ID: "control--site--identities--table", Class: "rounded-lg border border-gray-200 text-sm"}) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					Name
+				}
+				// On a phone only the name, with the rest under it, and the actions fit beside each other
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
+					Role
+				}
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
+					Enabled
+				}
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
+					TOTP
+				}
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
+					Last Seen
+				}
+				if httputils.IsControlAdmin(ctx) {
+					@table.Head() {
+						Actions
+					}
+				}
+			}
+		}
+		@table.Body() {
+			for _, identity := range identities {
+				@table.Row(table.RowProps{ID: fmt.Sprintf("control--site--identity--%d", identity.ID)}) {
+					@table.Cell() {
+						<span title={ "Created " + display.DateTime(&identity.CreatedAt) + " by " + identity.CreatedByIdentityName }>{ identity.Name }</span>
+						<div id={ fmt.Sprintf("control--site--identity--%d--summary", identity.ID) } class="mt-0.5 text-xs text-gray-500 sm:hidden">{ identitySummary(identity) }</div>
+					}
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
+						{ display.Name(string(identity.Role)) }
+					}
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
+						{ yesNo(identity.Enabled) }
+					}
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
+						{ yesNo(identity.HasTotp) }
+					}
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
+						<span title={ display.DateTime(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
+					}
+					if httputils.IsControlAdmin(ctx) {
+						@table.Cell() {
+							// Each action has its own column, so the same action lines up down the table; on a phone they stack
+							<div class="grid gap-1 sm:grid-cols-3">
+								@resetButton(siteID, identity, "password", "Reset password", "Give "+identity.Name+" a new random password? Their old one stops working.")
+								if identity.HasTotp {
+									@resetButton(siteID, identity, "totp", "Reset TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
+								} else {
+									<span></span>
+								}
+								@assumeButton(siteID, identity)
+							</div>
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func yesNo(yes bool) string {
+	if yes {
+		return "Yes"
+	}
+	return "No"
+}
+
+// resetButton resets what of an identity, its password or totp, after asking to confirm
+templ resetButton(siteID string, identity *controlmodels.SiteIdentity, what string, label string, confirm string) {
+	<form
+		hx-post={ fmt.Sprintf("/sites/%s/identities/%d/%s", siteID, identity.ID, what) }
+		hx-target="#control--site--identities--reset"
+		hx-swap="innerHTML"
+		hx-confirm={ confirm }
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--reset-%s", identity.ID, what), Type: button.TypeSubmit,
+			Variant: button.VariantOutline, Size: button.SizeSm, Class: "w-full"}) {
+			{ label }
+		}
+	</form>
+}
+
+// SiteIdentityReset shows an identity's new credentials after a reset, which are shown only this once
+templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
+	@alert.Alert(alert.Props{ID: "control--site--identity-reset", Variant: alert.VariantWarning, Class: "mt-2",
+		Title: "New credentials for " + credentials.Name + ". Save them now: they are shown only this once."}) {
+		<dl class="mt-2 grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 font-mono text-gray-900">
+			if credentials.Password != nil {
+				@modal.Detail("Password", *credentials.Password)
+			}
+			if credentials.NSToken != nil {
+				@modal.Detail("NS token", *credentials.NSToken)
+			}
+			if credentials.TotpSecret != nil {
+				@modal.Detail("TOTP secret", *credentials.TotpSecret)
+			}
+		</dl>
+	}
+}
+
+// assumeButton signs the admin in to the site as an identity, after asking to confirm, in a new tab: control sends the
+// tab on to a link to the site, good once and for a minute, which signs it in
+templ assumeButton(siteID string, identity *controlmodels.SiteIdentity) {
+	<form
+		method="post"
+		action={ templ.SafeURL(fmt.Sprintf("/sites/%s/identities/%d/assume", siteID, identity.ID)) }
+		target="_blank"
+		data-confirm={ "Sign in to the site as " + identity.Name + "? The site's events will show you did." }
+		onsubmit="return confirm(this.dataset.confirm);"
+	>
+		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--assume", identity.ID), Type: button.TypeSubmit,
+			Variant: button.VariantOutline, Size: button.SizeSm, Class: "w-full"}) {
+			Sign in as
+		}
+	</form>
+}
+
+// identitySummary is what a phone shows of an identity under its name, for the columns it has no room for: its role,
+// whether it is enabled and has TOTP, and when it was last seen
+func identitySummary(identity *controlmodels.SiteIdentity) string {
+	summary := display.Name(string(identity.Role))
+	if !identity.Enabled {
+		summary += " · disabled"
+	}
+	if identity.HasTotp {
+		summary += " · TOTP"
+	}
+	if seen := display.Ago(identity.LastSeenAt, time.Now()); seen != "Never" {
+		return summary + " · seen " + seen
+	}
+	return summary + " · never seen"
+}

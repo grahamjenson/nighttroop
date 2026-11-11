@@ -1,0 +1,105 @@
+INCLUDE steps/new_site.steps
+
+NAME no_device_statuses
+GET http://{{ site }}/data/device-status
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// Four statuses from a phone, one from a pump, and one from a device that stopped reporting 10 days ago
+NAME create_statuses
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{ "device": "phone-a", "created_at": "{{ time 5 }}", "uploaderBattery": 90 },
+   { "device": "phone-a", "created_at": "{{ time 10 }}", "uploaderBattery": 85 },
+   { "device": "phone-a", "created_at": "{{ time 15 }}", "uploaderBattery": 80 },
+   { "device": "phone-a", "created_at": "{{ time 20 }}", "uploaderBattery": 75 },
+   { "device": "pump-b", "created_at": "{{ time 3 }}", "pump": { "reservoir": 120 } },
+   { "device": "old-device", "created_at": "{{ time 14400 }}", "uploaderBattery": 50 }]
+ASSERT_STATUS 200
+
+// By default each device that reported in the last week shows its latest 3, grouped by device
+NAME grouped_statuses
+GET http://{{ site }}/data/device-status
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result.items"
+ASSERT_EQUALS "phone-a" "@result.items.0.created_by_device_name"
+ASSERT_EQUALS 90 "@result.items.0.device_battery_percent"
+ASSERT_EQUALS 80 "@result.items.2.device_battery_percent"
+ASSERT_EQUALS "pump-b" "@result.items.3.created_by_device_name"
+ASSERT_EQUALS 120 "@result.items.3.pump_reservoir"
+SET status_id {{ dig "grouped_statuses.result.items.0.id" }}
+
+// A device's history pages through all its statuses, however old
+NAME device_history
+GET http://{{ site }}/data/device-status?device=phone-a
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result.items"
+
+NAME device_history_second_page
+GET http://{{ site }}/data/device-status?device=phone-a&limit=2&skip=2
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS 80 "@result.items.0.device_battery_percent"
+ASSERT_EQUALS 75 "@result.items.1.device_battery_percent"
+// A device's history counts only that device's statuses
+ASSERT_EQUALS 4 "@result.total"
+
+NAME old_device_history
+GET http://{{ site }}/data/device-status?device=old-device
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+
+NAME get_status
+GET http://{{ site }}/data/device-status/{{ .status_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "phone-a" "@result.created_by_device_name"
+ASSERT_EQUALS 90 "@result.device_battery_percent"
+
+NAME get_unknown_status
+GET http://{{ site }}/data/device-status/not-a-status
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_status
+DELETE http://{{ site }}/data/device-status/{{ .status_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_status_not_found
+GET http://{{ site }}/data/device-status/{{ .status_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// The next newest status takes its place
+NAME grouped_statuses_after_delete
+GET http://{{ site }}/data/device-status
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result.items"
+ASSERT_EQUALS 85 "@result.items.0.device_battery_percent"
+ASSERT_EQUALS 75 "@result.items.2.device_battery_percent"
+
+NAME delete_unknown_status
+DELETE http://{{ site }}/data/device-status/not-a-status
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

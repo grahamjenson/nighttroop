@@ -1,0 +1,1220 @@
+INCLUDE steps/new_ns_site.steps
+
+
+
+# Returns all the settings
+NAME get_all_settings_v3
+GET http://{{ site }}/api/v3/settings
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_settings_unit_v3
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mmol/L" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
+
+# A body of JSON null is refused like any other bad body, by a replace and a patch
+NAME put_null_setting_v3
+PUT http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B null
+ASSERT_STATUS 400
+
+NAME patch_null_setting_v3
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B null
+ASSERT_STATUS 400
+
+# Returns all the 
+NAME create_settings_v3
+POST http://{{ site }}/api/v3/settings
+H Authorization: Bearer {{ jwt }}
+B {"identifier": "units", "type": "string", "value": "mg/dL" }
+ASSERT_STATUS 201
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
+
+NAME create_put_settings_v3
+PUT http://{{ site }}/api/v3/settings/bolus_onset_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 30 }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS 30 "@result.value"
+ASSERT_EQUALS "number" "@result.type"
+
+NAME create_patch_settings_v3
+PATCH http://{{ site }}/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS true "@result.value"
+ASSERT_EQUALS "boolean" "@result.type"
+
+
+#####
+# READ 
+#####
+
+NAME get_unit_settings_v3
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
+
+NAME get_timezone_settings_v3
+GET http://{{ site }}/api/v3/settings/timezone
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "UTC" "@result.value"
+
+NAME get_language_settings_v3
+GET http://{{ site }}/api/v3/settings/language
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "language" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "en-NZ" "@result.value"
+
+####
+# UPDATE
+####
+
+#patch
+NAME update_patch_settings_v3
+PATCH http://{{ site }}/api/v3/settings/timezone
+H Authorization: Bearer {{ jwt }}
+B {"value":  "Europe/London"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "Europe/London" "@result.value"
+
+####
+# Parsing different types
+####
+
+
+NAME put_with_parsing_types_alarm_low_enabled
+PUT http://{{ site }}/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "false" }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS false "@result.value"
+ASSERT_EQUALS "boolean" "@result.type"
+
+NAME put_with_parsing_types_units
+PUT http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B { "value": "mgdl" }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
+
+NAME put_with_parsing_types_bolus_onset_minutes
+PUT http://{{ site }}/api/v3/settings/bolus_onset_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": "15" }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS 15 "@result.value"
+
+#####
+# DELETE/CLEAN UP
+#####
+
+# DELETING A USER SETTING SHOULD REVERT TO THE DEFAULT VALUE WHEN GETTING
+NAME delete_settings_v3
+DELETE http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_settings_v3
+DELETE http://{{ site }}/api/v3/settings/timezone
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_settings_v3
+DELETE http://{{ site }}/api/v3/settings/bolus_onset_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_settings_v3
+DELETE http://{{ site }}/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+
+######
+# All DEFAULTS Settings Tests
+######
+
+# GET ALL
+NAME get_units_settings_v3
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "mmol/L" "@result.value"
+
+NAME get_timezone_settings_v3
+GET http://{{ site }}/api/v3/settings/timezone
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "UTC" "@result.value"
+
+NAME get_language_settings_v3
+GET http://{{ site }}/api/v3/settings/language
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "language" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "en-NZ" "@result.value"
+
+
+NAME get_date_format_settings_v3
+GET http://{{ site }}/api/v3/settings/date_format
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "date_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "YYYY-MM-DD" "@result.value"
+
+NAME get_time_format_settings_v3
+GET http://{{ site }}/api/v3/settings/time_format
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "time_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "HH:mm:ss" "@result.value"
+
+
+NAME get_week_start_day_settings_v3
+GET http://{{ site }}/api/v3/settings/week_start_day
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "week_start_day" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "monday" "@result.value"
+
+NAME get_bolus_dia_hours_settings_v3
+GET http://{{ site }}/api/v3/settings/bolus_dia_hours
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 6 "@result.value"
+
+NAME get_bolus_onset_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/bolus_onset_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
+
+NAME get_bolus_peak_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/bolus_peak_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 60 "@result.value"
+
+NAME get_basal_dia_hours_settings_v3
+GET http://{{ site }}/api/v3/settings/basal_dia_hours
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "basal_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 24 "@result.value"
+
+NAME get_basal_onset_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/basal_onset_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "basal_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 60 "@result.value"
+
+NAME get_basal_peak_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/basal_peak_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "basal_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 120 "@result.value"
+
+NAME get_default_insulin_sensitivity_settings_v3
+GET http://{{ site }}/api/v3/settings/default_insulin_sensitivity
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "default_insulin_sensitivity" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 10 "@result.value"
+
+NAME get_default_carb_ratio_settings_v3
+GET http://{{ site }}/api/v3/settings/default_carb_ratio
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "default_carb_ratio" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 10 "@result.value"
+
+NAME get_default_basal_rate_settings_v3
+GET http://{{ site }}/api/v3/settings/default_basal_rate
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "default_basal_rate" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 1 "@result.value"
+
+NAME get_carb_max_absorption_hours_settings_v3
+GET http://{{ site }}/api/v3/settings/carb_max_absorption_hours
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "carb_max_absorption_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 6 "@result.value"
+
+
+NAME get_carb_min_5m_impact_settings_v3
+GET http://{{ site }}/api/v3/settings/carb_min_5m_impact
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "carb_min_5m_impact" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 10 "@result.value"
+
+NAME get_alarm_urgent_low_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_urgent_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_urgent_low_settings_v3
+GET http://{{ site }}/api/v3/settings/range_urgent_low_mgdl
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_urgent_low_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 56 "@result.value"
+
+NAME get_alarm_low_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_low_settings_v3
+GET http://{{ site }}/api/v3/settings/range_low_mgdl
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_low_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 72 "@result.value"
+
+NAME get_alarm_low_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_low_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 5 "@result.value"
+
+NAME get_alarm_low_prediction_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_low_prediction_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_prediction_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_low_prediction_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_low_prediction_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_prediction_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
+
+NAME get_alarm_high_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_high_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_high_settings_v3
+GET http://{{ site }}/api/v3/settings/range_high_mgdl
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_high_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 180 "@result.value"
+
+NAME get_alarm_high_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_high_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_high_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 30 "@result.value"
+
+NAME get_alarm_urgent_high_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_urgent_high_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_urgent_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_urgent_high_settings_v3
+GET http://{{ site }}/api/v3/settings/range_urgent_high_mgdl
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_urgent_high_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 270 "@result.value"
+
+NAME get_alarm_fast_rise_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_fast_rise_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_rise_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_fast_rise_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_fast_rise_mgdl
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_rise_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 18 "@result.value"
+
+NAME get_alarm_fast_rise_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_fast_rise_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_rise_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 15 "@result.value"
+
+NAME get_alarm_fast_drop_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_fast_drop_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_drop_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_fast_drop_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_fast_drop_mgdl
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_drop_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 18 "@result.value"
+
+NAME get_alarm_fast_drop_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_fast_drop_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_drop_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 15 "@result.value"
+
+NAME get_alarm_no_data_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_no_data_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_no_data_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_no_data_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_no_data_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_no_data_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
+
+NAME get_alarm_device_battery_low_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_device_battery_low_percent_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_percent
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_percent" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
+
+NAME get_alarm_device_battery_low_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 30 "@result.value"
+
+// No devices are checked by default
+NAME get_alarm_device_battery_low_devices_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_devices" "@result.identifier"
+ASSERT_EQUALS "array" "@result.type"
+ASSERT_LENGTH 0 "@result.value"
+
+NAME get_alarm_low_reservoir_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_low_reservoir_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_reservoir_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+NAME get_alarm_low_reservoir_units_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_low_reservoir_units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_reservoir_units" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 25 "@result.value"
+
+NAME get_notifications_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/notifications_enabled
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "notifications_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
+
+
+#######
+# WRITING
+#######
+
+NAME put_units_settings_v3
+PUT http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B { "value": "mg/dL" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "mg/dL" "@result.value"
+
+NAME put_timezone_settings_v3
+PUT http://{{ site }}/api/v3/settings/timezone
+H Authorization: Bearer {{ jwt }}
+B { "value": "Europe/London" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "Europe/London" "@result.value"
+
+NAME put_language_settings_v3
+PUT http://{{ site }}/api/v3/settings/language
+H Authorization: Bearer {{ jwt }}
+B { "value": "en-AU" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "language" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "en-AU" "@result.value"
+
+
+NAME put_date_format_settings_v3
+PUT http://{{ site }}/api/v3/settings/date_format
+H Authorization: Bearer {{ jwt }}
+B { "value": "MM-DD-YYYY" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "date_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "MM-DD-YYYY" "@result.value"
+
+NAME put_time_format_settings_v3
+PUT http://{{ site }}/api/v3/settings/time_format
+H Authorization: Bearer {{ jwt }}
+B { "value": "HH:mm" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "time_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "HH:mm" "@result.value"
+
+
+NAME put_week_start_day_settings_v3
+PUT http://{{ site }}/api/v3/settings/week_start_day
+H Authorization: Bearer {{ jwt }}
+B { "value": "sunday" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "week_start_day" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "sunday" "@result.value"
+
+NAME put_bolus_dia_hours_settings_v3
+PUT http://{{ site }}/api/v3/settings/bolus_dia_hours
+H Authorization: Bearer {{ jwt }}
+B { "value": 8 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 8 "@result.value"
+
+NAME put_bolus_onset_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/bolus_onset_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_bolus_peak_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/bolus_peak_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 60 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "bolus_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 60 "@result.value"
+
+NAME put_basal_dia_hours_settings_v3
+PUT http://{{ site }}/api/v3/settings/basal_dia_hours
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "basal_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_basal_onset_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/basal_onset_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "basal_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_basal_peak_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/basal_peak_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 90 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "basal_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 90 "@result.value"
+
+NAME put_default_insulin_sensitivity_settings_v3
+PUT http://{{ site }}/api/v3/settings/default_insulin_sensitivity
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "default_insulin_sensitivity" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_default_carb_ratio_settings_v3
+PUT http://{{ site }}/api/v3/settings/default_carb_ratio
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "default_carb_ratio" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_default_basal_rate_settings_v3
+PUT http://{{ site }}/api/v3/settings/default_basal_rate
+H Authorization: Bearer {{ jwt }}
+B { "value": 8 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "default_basal_rate" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 8 "@result.value"
+
+NAME put_carb_max_absorption_hours_settings_v3
+PUT http://{{ site }}/api/v3/settings/carb_max_absorption_hours
+H Authorization: Bearer {{ jwt }}
+B { "value": 8 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "carb_max_absorption_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 8 "@result.value"
+
+
+NAME put_carb_min_5m_impact_settings_v3
+PUT http://{{ site }}/api/v3/settings/carb_min_5m_impact
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "carb_min_5m_impact" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_urgent_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_urgent_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_urgent_low_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_urgent_low_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 30 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_urgent_low_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 30 "@result.value"
+
+NAME put_alarm_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_low_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_low_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_low_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_low_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_low_prediction_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_prediction_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_prediction_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_low_prediction_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_prediction_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 30 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_prediction_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 30 "@result.value"
+
+NAME put_alarm_high_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_high_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_high_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_high_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 70 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_high_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 70 "@result.value"
+
+// A low alarm over the high alarm, or an urgent low over the low alarm, is refused
+NAME put_alarm_low_over_high_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_low_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 80 }
+ASSERT_STATUS 400
+
+NAME put_alarm_urgent_low_over_low_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_urgent_low_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 40 }
+ASSERT_STATUS 400
+
+NAME put_alarm_high_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_high_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_high_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_urgent_high_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_high_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_urgent_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_urgent_high_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_urgent_high_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 100 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "range_urgent_high_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 100 "@result.value"
+
+NAME put_alarm_fast_rise_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_rise_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_fast_rise_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_rise_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_fast_rise_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_rise_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_fast_drop_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_drop_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_fast_drop_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_drop_mgdl" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_fast_drop_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_fast_drop_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_no_data_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_no_data_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_no_data_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_no_data_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_no_data_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_no_data_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_device_battery_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_device_battery_low_percent_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_percent
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_percent" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_alarm_device_battery_low_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 45 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 45 "@result.value"
+
+NAME put_alarm_device_battery_low_devices_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+B { "value": ["openaps://pixel", "SugarPixel"] }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_devices" "@result.identifier"
+ASSERT_EQUALS "array" "@result.type"
+ASSERT_EQUALS "openaps://pixel" "@result.value.0"
+ASSERT_EQUALS "SugarPixel" "@result.value.1"
+
+// The devices are stored, so reading them again gives them back
+NAME get_alarm_device_battery_low_devices_saved_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.value"
+ASSERT_EQUALS "SugarPixel" "@result.value.1"
+
+NAME put_alarm_low_reservoir_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_reservoir_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_reservoir_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_low_reservoir_units_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_reservoir_units
+H Authorization: Bearer {{ jwt }}
+B { "value": 32 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_reservoir_units" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
+
+NAME put_notifications_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/notifications_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+ASSERT_EQUALS "notifications_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
+
+
+
+#######
+# Validations
+#######
+
+NAME fail_units_settings_v3
+PUT http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B { "value": "not a unit" }
+ASSERT_STATUS 400
+
+NAME fail_timezone_settings_v3
+PUT http://{{ site }}/api/v3/settings/timezone
+H Authorization: Bearer {{ jwt }}
+B { "value": "Not/A_Valid_Timezone" }
+ASSERT_STATUS 400
+
+NAME fail_language_settings_v3
+PUT http://{{ site }}/api/v3/settings/language
+H Authorization: Bearer {{ jwt }}
+B { "value": "en-MINE" }
+ASSERT_STATUS 400
+
+
+NAME fail_date_format_settings_v3
+PUT http://{{ site }}/api/v3/settings/date_format
+H Authorization: Bearer {{ jwt }}
+B { "value": "YDYDYD" }
+ASSERT_STATUS 400
+
+NAME fail_time_format_settings_v3
+PUT http://{{ site }}/api/v3/settings/time_format
+H Authorization: Bearer {{ jwt }}
+B { "value": "ss:mm" }
+ASSERT_STATUS 400
+
+
+NAME fail_week_start_day_settings_v3
+PUT http://{{ site }}/api/v3/settings/week_start_day
+H Authorization: Bearer {{ jwt }}
+B { "value": "funday" }
+ASSERT_STATUS 400
+
+NAME fail_bolus_dia_hours_settings_v3
+PUT http://{{ site }}/api/v3/settings/bolus_dia_hours
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_bolus_onset_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/bolus_onset_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_bolus_peak_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/bolus_peak_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_basal_dia_hours_settings_v3
+PUT http://{{ site }}/api/v3/settings/basal_dia_hours
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_basal_onset_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/basal_onset_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_basal_peak_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/basal_peak_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_default_insulin_sensitivity_settings_v3
+PUT http://{{ site }}/api/v3/settings/default_insulin_sensitivity
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_default_carb_ratio_settings_v3
+PUT http://{{ site }}/api/v3/settings/default_carb_ratio
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_default_basal_rate_settings_v3
+PUT http://{{ site }}/api/v3/settings/default_basal_rate
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_carb_max_absorption_hours_settings_v3
+PUT http://{{ site }}/api/v3/settings/carb_max_absorption_hours
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+
+NAME fail_carb_min_5m_impact_settings_v3
+PUT http://{{ site }}/api/v3/settings/carb_min_5m_impact
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_urgent_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_urgent_low_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_urgent_low_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_low_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_low_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_low_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": -1}
+ASSERT_STATUS 400
+
+NAME fail_alarm_low_prediction_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_prediction_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_high_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_high_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_high_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_high_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_high_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_high_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": -1 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_urgent_high_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_high_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_urgent_high_settings_v3
+PUT http://{{ site }}/api/v3/settings/range_urgent_high_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_fast_rise_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_fast_rise_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_fast_rise_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": -1 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_fast_drop_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_fast_drop_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_mgdl
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_fast_drop_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": -1 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_no_data_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_no_data_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_no_data_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_no_data_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": -1 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_device_battery_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_device_battery_low_percent_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_percent
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_device_battery_low_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 121 }
+ASSERT_STATUS 400
+
+NAME fail_alarm_device_battery_low_devices_not_a_list_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+B { "value": "openaps://pixel" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_device_battery_low_devices_too_many_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+B { "value": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"] }
+ASSERT_STATUS 400
+
+NAME fail_alarm_low_reservoir_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_reservoir_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_low_reservoir_units_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_reservoir_units
+H Authorization: Bearer {{ jwt }}
+B { "value": -1 }
+ASSERT_STATUS 400
+
+NAME fail_notifications_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/notifications_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": "nope" }
+ASSERT_STATUS 400

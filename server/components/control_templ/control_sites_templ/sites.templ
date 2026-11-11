@@ -1,0 +1,470 @@
+package control_sites_templ
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/models/publicmodels"
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/control_templ/control_logs_templ"
+	"nighttroop.t1d.nz/server/components/dbsize"
+	"nighttroop.t1d.nz/server/components/errortoast"
+	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/public_templ"
+	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/badge"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// inactive is whether a live site has not been written to or seen in the configured days, so it can be disabled
+func inactive(ctx context.Context, site *controlmodels.Site) bool {
+	controlContext := httputils.GetControlContext(ctx)
+	if site.State != "live" || controlContext == nil || controlContext.ControlDB == nil {
+		return false
+	}
+	return site.Inactive(controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays, time.Now())
+}
+
+// siteOrders are the ways the sites can be ordered, by their order query value
+var siteOrders = []struct{ order, label string }{
+	{"", "Newest"},
+	{"last_write", "Longest Since Written"},
+	{"db_size", "Largest DB"},
+}
+
+// SitesTable shows one page of sites in order, newest first by default, with buttons to reorder them and to the
+// pages either side
+templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order string) {
+	@listpage.Page(listpage.Props{
+		ID:          "sites_table",
+		Title:       "Sites",
+		Description: "Every site. Click a site to open its page.",
+		Above:       siteForms(),
+		SectionID:   "control--sites--list",
+		Toolbar:     siteOrderToggles(order, limit),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:     "controlSitesTable",
+			Static: true,
+			Rows:   len(sites),
+			Empty:  "No sites here.",
+			Columns: []table.Column{
+				{Label: "Site"}, {Label: "State"}, {Label: "Created"}, {Label: "Last Seen"}, {Label: "Last Write"},
+				{Label: "DB Size (MB)", Numeric: true},
+			},
+		},
+		Pager: &pager.Props{ID: "control--sites", Path: "/sites?order=" + order, Count: len(sites), Skip: skip, Limit: limit},
+	}) {
+		for _, site := range sites {
+			@siteRow(site)
+		}
+	}
+}
+
+// siteForms are, for an admin, the forms to create a site and to turn public site creation on or off
+templ siteForms() {
+	if httputils.IsControlAdmin(ctx) {
+		<div class="grid gap-4 md:grid-cols-2">
+			@createSiteForm()
+			@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
+		</div>
+	}
+}
+
+// siteOrderToggles reorder the sites, from their first page
+templ siteOrderToggles(order string, limit int64) {
+	<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
+		for _, siteOrder := range siteOrders {
+			@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL("/sites?order="+siteOrder.order, 0, limit), button.SizeDefault, siteOrder.order == order) {
+				{ siteOrder.label }
+			}
+		}
+	</div>
+}
+
+// orDefault names the default order, which has no order query value
+func orDefault(order string) string {
+	if order == "" {
+		return "created"
+	}
+	return order
+}
+
+// createSiteForm creates a site at an ID an admin picks, such as a vanity one for a special user: 8 lowercase
+// letters, like every site's
+templ createSiteForm() {
+	<form
+		id="control--sites--create"
+		class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+		hx-post="/sites"
+		hx-target="#modal-container"
+		hx-swap="innerHTML"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		@actionTitle("Create a site", icon.Plus, "At an ID you pick, such as a vanity one, shown with its credentials once.")
+		<div class="flex flex-wrap items-end gap-2">
+			@field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-full sm:w-64") {
+				@input.Input(input.Props{
+					ID:          "control--sites--create--id",
+					Name:        "id",
+					Placeholder: "mynewnts",
+					Required:    true,
+					Attributes: templ.Attributes{
+						"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
+						"title": fmt.Sprintf("%d lowercase letters, a to z", utils.SITE_ID_LENGTH), "autocomplete": "off", "spellcheck": "false",
+						"autocapitalize": "none",
+						// Capitals are lowered and anything but a to z is dropped as it is typed or pasted, so only letters
+						// a site ID can have ever go in
+						"oninput": templ.JSUnsafeFuncCall("this.value = this.value.toLowerCase().replace(/[^a-z]/g, '')"),
+					},
+				})
+			}
+			@button.Button(button.Props{ID: "control--sites--create--submit", Type: button.TypeSubmit}) {
+				Create Site
+			}
+		</div>
+	</form>
+}
+
+// PublicSiteCreation says whether the public can create sites from the home page, with a button to turn it the other
+// way. An admin can create sites here either way.
+templ PublicSiteCreation(on bool) {
+	<form
+		id="control--sites--public-creation"
+		class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+		hx-post="/settings"
+		hx-swap="outerHTML"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		<input type="hidden" name="public_site_creation" value={ strconv.FormatBool(!on) }/>
+		@actionTitle("Public site creation", icon.Globe, "")
+		<p id="control--sites--public-creation--state" class="flex-1 text-sm text-gray-500">
+			if on {
+				The public can create sites from the home page.
+			} else {
+				Public site creation is off: the home page cannot create sites, but an admin can create them here.
+			}
+		</p>
+		@button.Button(button.Props{ID: "control--sites--public-creation--toggle", Type: button.TypeSubmit, Variant: button.VariantOutline, Class: "w-fit"}) {
+			if on {
+				Turn Off Public Site Creation
+			} else {
+				Turn On Public Site Creation
+			}
+		}
+	</form>
+}
+
+// PublicSiteCreationChanged replaces the public site creation switch, with a toast saying which way it was turned
+templ PublicSiteCreationChanged(on bool) {
+	@PublicSiteCreation(on)
+	@successtoast.OOB(map[bool]string{true: "Public site creation turned on", false: "Public site creation turned off"}[on])
+}
+
+// SiteCreated shows a site an admin created, with its credentials, which are shown only this once, and reads the
+// sites again, newest first, so the list behind it has the new site
+templ SiteCreated(info publicmodels.NewSiteInfo) {
+	@modal.Modal(modal.Props{ID: "control--site--created", Title: "Site Created", Subtitle: info.URL}) {
+		@public_templ.CreateSiteInfo(info)
+	}
+	<div hx-get="/sites" hx-trigger="load" hx-select="#control--sites--list" hx-target="#control--sites--list" hx-swap="outerHTML"></div>
+}
+
+// SiteNotCreated is a toast saying why a site could not be created, such as its ID being taken
+templ SiteNotCreated(message string) {
+	@errortoast.Toast("Site Not Created", message)
+}
+
+templ siteRow(site *controlmodels.Site) {
+	@table.Row(table.RowProps{
+		ID:    "control--site--" + site.ID,
+		Class: "cursor-pointer",
+		Attributes: nav.Attributes("/sites/" + site.ID),
+	}) {
+		@table.Cell() {
+			{ site.ID }
+		}
+		@table.Cell() {
+			{ display.Name(site.State) }
+			if inactive(ctx, site) {
+				@badge.Badge(badge.Props{ID: "control--site--" + site.ID + "--inactive", Variant: badge.VariantWarning, Class: "ml-2"}) {
+					Inactive
+				}
+			}
+		}
+		@table.Cell() {
+			{ display.DateTime(&site.CreatedAt) }
+		}
+		@table.Cell() {
+			<span title={ display.DateTime(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
+		}
+		@table.Cell() {
+			<span title={ display.DateTime(site.LastWriteAt) }>{ display.Ago(site.LastWriteAt, time.Now()) }</span>
+		}
+		@table.Cell(table.NumCell) {
+			{ sizeMB(site.EstimatedDbSizeKb) }
+			if site.Oversized() {
+				@badge.Badge(badge.Props{Variant: badge.VariantError, Class: "ml-2"}) {
+					Over limit
+				}
+			}
+		}
+	}
+}
+
+// stateVariants colour a site's state badge: live in the theme's colour, disabled as a warning, and gone neutral grey
+var stateVariants = map[string]badge.Variant{"live": badge.VariantPrimary, "disabled": badge.VariantWarning}
+
+// lifecycle is when the site was made, its batch, and when it was disabled, archived or deleted, if it was
+func lifecycle(site *controlmodels.Site) string {
+	text := "Created " + display.DateTime(&site.CreatedAt) + " · Batch " + site.Batch
+	for _, at := range []struct {
+		what string
+		ms   *int64
+	}{{"Disabled", site.DisabledAt}, {"Archived", site.ArchivedAt}, {"Deleted", site.DeletedAt}} {
+		if at.ms != nil {
+			text += " · " + at.what + " " + display.DateTime(at.ms)
+		}
+	}
+	return text
+}
+
+// identityTypes are how many of the identities are people (admins and users) and how many devices
+func identityTypes(identities []*controlmodels.SiteIdentity) string {
+	devices := 0
+	for _, identity := range identities {
+		if identity.Role.GetType() == consts.IdentityTypeDevice {
+			devices++
+		}
+	}
+	people, peopleWord, devicesWord := len(identities)-devices, "people", "devices"
+	if people == 1 {
+		peopleWord = "person"
+	}
+	if devices == 1 {
+		devicesWord = "device"
+	}
+	return fmt.Sprintf("%d %s, %d %s", people, peopleWord, devices, devicesWord)
+}
+
+// lastError is how long ago the site's latest error was, or None
+func lastError(errors []*controlmodels.Error) string {
+	if len(errors) == 0 {
+		return "None"
+	}
+	return display.Ago(&errors[0].CreatedAt, time.Now())
+}
+
+// siteURL is the site's own address, to open it
+func siteURL(ctx context.Context, siteID string) string {
+	controlContext := httputils.GetControlContext(ctx)
+	if controlContext == nil || controlContext.ControlDB == nil {
+		return ""
+	}
+	return controlContext.ControlDB.ServerConfig.SiteURL(siteID)
+}
+
+// SitePage is a site's own page, laid out like a site's summary: its state and when it changed, a grid of what can be
+// done to it, its DB size against its limit, tiles of when it was last used, its identities and its last
+// error, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
+templ SitePage(page *controlmodels.SitePage) {
+	{{ site := page.Site }}
+	@heading.Title(site.ID)
+	<div id="control--site--page" class="mx-auto w-full max-w-5xl space-y-4 py-4">
+		<div>
+			<div class="flex flex-wrap items-center gap-2">
+				<h1 class="font-mono text-2xl font-bold">{ site.ID }</h1>
+				@badge.Badge(badge.Props{ID: "control--site--state", Variant: stateVariants[site.State]}) {
+					{ display.Name(site.State) }
+				}
+				if inactive(ctx, site) {
+					@badge.Badge(badge.Props{ID: "control--site--inactive", Variant: badge.VariantWarning}) {
+						Inactive
+					}
+				}
+				if site.Oversized() {
+					@badge.Badge(badge.Props{ID: "control--site--over-limit", Variant: badge.VariantError}) {
+						Over limit
+					}
+				}
+			</div>
+			<p id="control--site--lifecycle" class="mt-1 text-sm text-gray-500">{ lifecycle(site) }</p>
+		</div>
+		@siteActions(site)
+		@dbSize(site, page.Tables)
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			@stat.Tile("control--site--last-seen", "Last seen", display.Ago(site.LastSeenAt, time.Now()), icon.Eye)
+			@stat.Tile("control--site--last-write", "Last write", display.Ago(site.LastWriteAt, time.Now()), icon.PenLine)
+			@stat.Tile("control--site--identity-count", "Identities", fmt.Sprint(len(page.Identities)), icon.Users) {
+				<div id="control--site--identity-types" class="text-xs text-gray-500">{ identityTypes(page.Identities) }</div>
+			}
+			@stat.Tile("control--site--last-error", "Last error", lastError(page.Errors), icon.TriangleAlert)
+		</div>
+		@stat.Section("Identities", "", "", "") {
+			@SiteIdentities(site.ID, page.Identities)
+		}
+		<div class="grid gap-4 lg:grid-cols-2">
+			@stat.Section("Latest Events", "control--site--events--all", "See all", "/events?site_id="+site.ID) {
+				@control_logs_templ.EventsList("control--site--events--table", page.Events, false)
+			}
+			@stat.Section("Latest Errors", "control--site--errors--all", "See all", "/errors?site_id="+site.ID) {
+				@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors, false)
+			}
+		</div>
+		<div id="modal-container"></div>
+	</div>
+}
+
+// dbSize is the site's DB size panel, as its admins see it on My Account too
+templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
+	@dbsize.Panel("control--site", site.EstimatedDbSizeKb, site.MaxDbSizeKbLimit, tables)
+}
+
+// siteActions are a grid of what can be done to the site, each saying what it does: open it, and for an admin, download
+// a copy of its DB or truncate it while it is here, disable it once no one has used it for a while, and archive it once
+// it is disabled. One that cannot be done yet says when it can, in place of its button.
+templ siteActions(site *controlmodels.Site) {
+	@card.Card(card.Props{ID: "control--site--actions", Title: "Actions"}) {
+		<div class="grid gap-3 sm:grid-cols-2">
+			{{ url := siteURL(ctx, site.ID) }}
+			@actionCard("control--site--action-open", "Open Site", "Opens the site in a new tab.", unless(url != "" && site.State == "live", "Only a live site is served."), icon.ExternalLink) {
+				@footer.NewTabLink("control--site--open", url, "inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50") {
+					Open Site
+					@icon.ExternalLink(icon.Props{Class: "size-4"})
+				}
+			}
+			if httputils.IsControlAdmin(ctx) {
+				@actionCard("control--site--action-download-db", "Download DB", "Downloads the zip of its DB its admins get from Download Data. Its admins see that you did, in its events.",
+					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Download) {
+					@button.Button(button.Props{
+						ID:         "control--site--download-db",
+						Href:       "/sites/" + site.ID + "/db",
+						Variant:    button.VariantOutline,
+						Class:      "w-full",
+						Attributes: templ.Attributes{"download": ""},
+					}) {
+						Download DB
+					}
+				}
+				@actionCard("control--site--action-disable", "Disable", "Stops serving the site. Its data is kept.", unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
+					@siteActionForm("/sites/"+site.ID, "disabled", "Disable this site? It will stop being served.", "control--site--disable", "Disable")
+				}
+				@actionCard("control--site--action-truncate", "Truncate", "Does now what every 10 minutes does to its newest reports, to all of them: keeps the loop's status and pump only on each device's newest report, and one report every 10 minutes from before the last hour. It also deletes old loop settings no record refers to any more, then shrinks its DB.",
+					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Scissors) {
+					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses and pumps are cleared, keeping their IOB, COB and pump battery, its older reports thinned, then its DB is shrunk.", "control--site--truncate", "Truncate")
+				}
+				@actionCard("control--site--action-archive", "Archive", "Uploads its data to S3 and deletes it here.", unless(site.State == "disabled", "Offered once it is disabled."), icon.Archive) {
+					@siteActionForm("/sites/"+site.ID, "archived", "Archive this site? Its data is uploaded to S3 and deleted here.", "control--site--archive", "Archive")
+				}
+			}
+		</div>
+	}
+}
+
+// unless is why an action cannot be done, or nothing when it can
+func unless(can bool, why string) string {
+	if can {
+		return ""
+	}
+	return why
+}
+
+// disableWhen is when a site that is not inactive could be disabled
+func disableWhen(ctx context.Context, site *controlmodels.Site) string {
+	controlContext := httputils.GetControlContext(ctx)
+	if site.State == "disabled" {
+		return "It is already disabled."
+	}
+	if site.State != "live" || controlContext == nil || controlContext.ControlDB == nil {
+		return "Only a live site can be disabled."
+	}
+	return fmt.Sprintf("Offered once no one has used it for %d days.", controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays)
+}
+
+// actionCard is one action: its name, what it does, and its button, or when it cannot be done, why not
+templ actionCard(id, title, description, unavailable string, ic func(...icon.Props) templ.Component) {
+	<div id={ id } class="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+		<div class="flex-1">
+			@actionTitle(title, ic, description)
+		</div>
+		if unavailable != "" {
+			<p class="text-xs text-gray-500">{ unavailable }</p>
+		} else {
+			{ children... }
+		}
+	</div>
+}
+
+// actionTitle names an action with its icon, and says what it does when there is more to say
+templ actionTitle(title string, ic func(...icon.Props) templ.Component, description string) {
+	<div>
+		<div class="flex items-center gap-2 text-sm font-semibold text-gray-900">
+			@ic(icon.Props{Class: "size-4"})
+			{ title }
+		</div>
+		if description != "" {
+			<p class="mt-1 text-sm text-gray-500">{ description }</p>
+		}
+	</div>
+}
+
+// siteActionForm posts an action on the site, after asking to confirm, setting its state when there is one to set
+templ siteActionForm(path, state, confirm, id, label string) {
+	<form
+		hx-post={ path }
+		hx-target="#main-content"
+		hx-swap="innerHTML"
+		hx-confirm={ confirm }
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		if state != "" {
+			<input type="hidden" name="state" value={ state }/>
+		}
+		@button.Button(button.Props{ID: id, Type: button.TypeSubmit, Variant: button.VariantDestructive, Class: "w-full"}) {
+			{ label }
+		}
+	</form>
+}
+
+// sizeMB is a size kept in KB as MB, to two places so a small site's is not 0, or - if it is not known
+func sizeMB(kb *int64) string {
+	if kb == nil {
+		return "-"
+	}
+	return fmt.Sprintf("%.2f", float64(*kb)/1024)
+}
+
+// SiteUpdated shows the site's page again, with a toast saying it is disabled or archived
+templ SiteUpdated(site *controlmodels.Site) {
+	@siteChanged(site, map[string]string{"disabled": "Site Disabled", "archived": "Site Archived"}[site.State])
+}
+
+templ SiteTruncated(site *controlmodels.Site) {
+	@siteChanged(site, "Site Truncated")
+}
+
+// siteChanged loads the site's page again, as it changed, with a toast saying how
+templ siteChanged(site *controlmodels.Site, description string) {
+	<div hx-get={ "/sites/" + site.ID } hx-trigger="load" hx-target="#main-content" hx-swap="innerHTML"></div>
+	@successtoast.OOB(description)
+}

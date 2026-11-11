@@ -1,0 +1,172 @@
+INCLUDE steps/new_site.steps
+
+NAME no_food_intakes
+GET http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// Carbs from the Nightscout API are listed
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Carb Correction", "created_at": "{{ time 5 }}", "carbs": 15 }
+ASSERT_STATUS 200
+
+NAME list_food_intakes
+GET http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 15 "@result.items.0.carbs"
+
+//////
+// CREATE AND UPDATE
+//////
+
+// Food typed in is eaten now, by whoever is signed in
+NAME create_food_intake
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 45, "name": "Sandwich", "notes": "Lunch", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS 45 "@result.carbs"
+ASSERT_EQUALS "Sandwich" "@result.name"
+ASSERT_EQUALS "Lunch" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_food_intake.result.id }}
+
+NAME created_food_intake_has_new_id
+GET http://{{ site }}/data/food/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_food_intake
+GET http://{{ site }}/data/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 45 "@result.carbs"
+
+// Newest first, so the one eaten now is before the one from the Nightscout API
+NAME first_page
+GET http://{{ site }}/data/food?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 45 "@result.items.0.carbs"
+
+NAME second_page
+GET http://{{ site }}/data/food?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 15 "@result.items.0.carbs"
+
+NAME create_food_intake_without_carbs
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "no carbs"}
+ASSERT_STATUS 400
+
+NAME create_food_intake_too_high
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 5000}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "must be from -1000 to 1000 g" "@message"
+
+// A negative amount takes back food entered too many times, as far below 0 as above
+NAME create_food_intake_negative
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": -20, "fat": -1}
+ASSERT_STATUS 201
+ASSERT_EQUALS -20 "@result.carbs"
+
+NAME delete_negative_food_intake
+DELETE http://{{ site }}/data/food/{{ .create_food_intake_negative.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME create_food_intake_too_low
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": -5000}
+ASSERT_STATUS 400
+
+// Only the fields sent change
+NAME update_food_intake_notes
+POST http://{{ site }}/data/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "Dinner"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 45 "@result.carbs"
+ASSERT_EQUALS "Dinner" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_food_intake_carbs
+POST http://{{ site }}/data/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 0, "protein": 20}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@result.carbs"
+ASSERT_EQUALS 20 "@result.protein"
+ASSERT_EQUALS "Sandwich" "@result.name"
+ASSERT_EQUALS "Dinner" "@result.notes"
+
+NAME update_food_intake_too_high
+POST http://{{ site }}/data/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 5000}
+ASSERT_STATUS 400
+
+NAME update_unknown_food_intake
+POST http://{{ site }}/data/food/not-a-food-intake
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_food_intake
+DELETE http://{{ site }}/data/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_food_intake_not_found
+GET http://{{ site }}/data/food/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_food_intake_not_listed
+GET http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+
+NAME delete_unknown_food_intake
+DELETE http://{{ site }}/data/food/not-a-food-intake
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

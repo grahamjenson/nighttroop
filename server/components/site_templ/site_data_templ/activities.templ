@@ -1,0 +1,108 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// ActivitiesTable shows one page of activities, newest first, with buttons to the pages either side
+templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit int64) {
+	@listpage.Page(listpage.Props{
+		ID:          "activities_table",
+		Title:       "Activities",
+		Description: "Newest first. Click an activity to see all its details.",
+		Action:      addmodal.Open("site--activity--add", "/data/activities/new", "Add Activity"),
+		Above:       searchTotals("site--activity", "activity", "activities"),
+		Modal:       true,
+		Table: listpage.TableProps{
+			ID:      "activitiesTable",
+			EmptyID: "site--activity--empty",
+			Empty:   "No activities here.",
+			Columns: []table.Column{
+				{Label: "Time"}, {Label: "Type"}, {Label: "Name"}, {Label: "Minutes", Numeric: true}, {Label: "Notes"},
+				{Label: "Device"}, {Actions: true},
+			},
+		},
+		Pager: &pager.Props{ID: "site--activity", Path: "/data/activities", Count: len(activities), Skip: skip, Limit: limit},
+	}) {
+		for _, activity := range activities {
+			@activityRow(activity)
+		}
+	}
+}
+
+// ActivityNew adds an activity with all its fields, putting its row at the top of the table
+templ ActivityNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--activity--create", Title: "Add Activity", Path: "/data/activities", Target: "#activitiesTable tbody",
+		Submit: "Add Activity", Fields: activityFields})
+}
+
+// activityFields are what an activity has that a person can type in
+var activityFields = []addmodal.Field{
+	{Name: "name", Label: "Name", Help: "What it was, e.g. a run.", Required: true, Kind: addmodal.Text, Max: "64"},
+	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "activity_type", Label: "Type", Help: "The kind of activity, exercise when left blank.", Kind: addmodal.Text, Max: "32", Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
+	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasted.", Min: "1", Max: "1440", Step: "1"},
+	{Name: "calories", Label: "Calories", Help: "Energy it burned, in kcal.", Min: "0", Max: "20000", Step: "1"},
+	{Name: "steps", Label: "Steps", Help: "Steps taken during it.", Min: "0", Max: "200000", Step: "1"},
+	{Name: "heart_rate", Label: "Heart rate", Help: "Average beats per minute.", Min: "20", Max: "250", Step: "1"},
+	{Name: "reason", Label: "Reason", Help: "Why it was done, e.g. training.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+}
+
+// activityRow opens the activity's details when clicked.
+templ activityRow(activity *sitemodels.SiteActivity) {
+	@table.DataRow("site--activity--"+activity.ID, "/data/activities/"+activity.ID, "Delete this activity?") {
+		@table.Cell() {
+			{ formatReadingDate(ctx, activity.OccurredAt) }
+		}
+		@table.Cell() {
+			{ activity.ActivityType }
+		}
+		@table.Cell() {
+			{ orDash(activity.Name) }
+		}
+		@table.Cell(table.NumCell) {
+			{ orDash(activity.DurationMinutes) }
+		}
+		@table.Cell(notesCell) {
+			{ orDash(activity.Notes) }
+		}
+		@table.Cell() {
+			{ orDash(activity.CreatedByDeviceName) }
+		}
+	}
+}
+
+templ ActivityModal(activity *sitemodels.SiteActivity) {
+	{{ edit := addmodal.Props{ID: "site--activity--edit", Path: "/data/activities/" + activity.ID, Target: "#site--activity--" + activity.ID, Swap: "outerHTML", Submit: "Save",
+		Fields: addmodal.Edit(activityFields, activity, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		@addmodal.Form(edit)
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@RecordDetails(Record{ID: activity.ID, UtcOffset: activity.UtcOffsetMinutes, App: activity.CreatedByAppName, Device: activity.CreatedByDeviceName, CreatedBy: activity.CreatedByIdentityName, Created: activity.CreatedAt, Updated: activity.UpdatedAt, UpdatedBy: activity.UpdatedByIdentityName})
+		</dl>
+	}
+}
+
+templ ActivityCreated(activity *sitemodels.SiteActivity) {
+	@activityRow(activity)
+}
+
+// ActivityUpdated replaces the activity's row, closes its details and shows a toast
+templ ActivityUpdated(activity *sitemodels.SiteActivity) {
+	@activityRow(activity)
+	@modal.CloseOOB()
+	@successtoast.OOB("Activity Updated")
+}
+
+templ ActivityDeleted() {
+	@successtoast.Toast("Activity Deleted")
+}

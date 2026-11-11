@@ -1,0 +1,28 @@
+INCLUDE steps/new_ns_site.steps
+
+// Uploads have the same broad limits as everything else written to a site: values far outside real use are refused,
+// saying which limit
+NAME bolus_too_large
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Correction Bolus", "created_at": "{{ time 0 }}", "insulin": 1000 }
+ASSERT_STATUS 400
+ASSERT_CONTAINS "dose BETWEEN -500 AND 500" "@message"
+
+NAME carbs_too_many
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Carb Correction", "created_at": "{{ time 0 }}", "carbs": 10000 }
+ASSERT_STATUS 400
+ASSERT_CONTAINS "carbs BETWEEN -1000 AND 1000" "@message"
+
+// Negative insulin and carbs take back too much, so they are kept
+NAME negative_bolus
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Correction Bolus", "created_at": "{{ time 0 }}", "insulin": -2 }
+ASSERT_STATUS 200
+ASSERT_EQUALS -2 "@0.insulin"
+
+NAME negative_carbs
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Carb Correction", "created_at": "{{ time 0 }}", "carbs": -15 }
+ASSERT_STATUS 200
+ASSERT_EQUALS -15 "@0.carbs"

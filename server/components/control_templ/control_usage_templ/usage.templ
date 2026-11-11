@@ -1,0 +1,224 @@
+package control_usage_templ
+
+import (
+	"fmt"
+	"slices"
+	"maps"
+	"strings"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/usage"
+)
+
+// meanStd is a mean and standard deviation, shown with what to
+func meanStd(stats usage.Stats, show func(float64) string) string {
+	return fmt.Sprintf("%s ± %s", show(stats.Mean), show(stats.Std))
+}
+
+func count(value float64) string {
+	return fmt.Sprintf("%.1f", value)
+}
+
+// The resource graphs are drawn in a box graphW wide and graphH high, from 0% at its bottom to its top percent at its
+// top: 100% for memory and disk, and 100% for each core for the CPU, as htop shows it
+const graphW, graphH = 300.0, 60.0
+
+func graphY(percent float64, top float64) float64 {
+	return graphH - graphH*min(max(percent, 0), top)/top
+}
+
+// resourcePoints are a graph line's points: each check's value, placed by its time across the checks kept. A check
+// without the value, as memory on a Mac, is left out.
+func resourcePoints(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64, top float64) string {
+	points := []string{}
+	for _, reading := range model.ResourceReadings {
+		if v := value(reading); v != nil {
+			x := graphW * float64(reading.At-model.ResourcesSince) / float64(max(model.Now-model.ResourcesSince, 1))
+			points = append(points, fmt.Sprintf("%.1f,%.1f", x, graphY(*v, top)))
+		}
+	}
+	return strings.Join(points, " ")
+}
+
+// latestPercent is the newest check's value, or a dash when it has none
+func latestPercent(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64) string {
+	if len(model.ResourceReadings) == 0 || value(model.ResourceReadings[len(model.ResourceReadings)-1]) == nil {
+		return "-"
+	}
+	return fmt.Sprintf("%.0f%%", *value(model.ResourceReadings[len(model.ResourceReadings)-1]))
+}
+
+func cpuPercent(r controlmodels.ResourceReading) *float64 { return &r.CPUPercent }
+func memoryPercent(r controlmodels.ResourceReading) *float64 { return r.MemoryPercent }
+func diskPercent(r controlmodels.ResourceReading) *float64 { return r.DiskPercent }
+
+// Usage is how many use the server and how much, and its resources. It asks for itself again every 10 seconds, and
+// swaps in its new numbers.
+templ Usage(model controlmodels.Usage) {
+	<div
+		id="control--usage"
+		class="mx-auto max-w-5xl space-y-6"
+		hx-get="/usage"
+		hx-trigger="every 10s"
+		hx-select="#control--usage"
+		hx-target="this"
+		hx-swap="outerHTML"
+	>
+		@heading.Page("Usage") {
+			How many use the server and how much. Active sites and users are from the DB; the rest is counted since the server started { display.TimeAgo(model.SinceStart.Started, model.NowTime()) }. Updates every 10 seconds.
+		}
+		@card.Card(card.Props{Title: "Active", Class: tiles}) {
+			@stat.NoteTile("control--usage--sites-day", "Sites today", fmt.Sprint(model.ActiveSitesDay), "seen in the last 24 hours")
+			@stat.NoteTile("control--usage--sites-week", "Sites this week", fmt.Sprint(model.ActiveSitesWeek), "seen in the last 7 days")
+			@stat.NoteTile("control--usage--users-day", "Users today", fmt.Sprint(model.ActiveIdentitiesDay), "people and devices")
+			@stat.NoteTile("control--usage--users-week", "Users this week", fmt.Sprint(model.ActiveIdentitiesWeek), "people and devices")
+			for _, state := range slices.Sorted(maps.Keys(model.SitesByState)) {
+				@stat.NoteTile("control--usage--sites-"+state, display.Name(state)+" sites", fmt.Sprint(model.SitesByState[state]), "in all")
+			}
+		}
+		@card.Card(card.Props{Title: "Sites created", Class: tiles}) {
+			@stat.NoteTile("control--usage--created-today", "Today", fmt.Sprint(model.SitesCreatedToday), "since midnight UTC")
+			@stat.NoteTile("control--usage--created-week", "This week", fmt.Sprint(model.SitesCreatedWeek), "since Monday UTC")
+			@stat.NoteTile("control--usage--created-month", "This month", fmt.Sprint(model.SitesCreatedMonth), "since the 1st UTC")
+		}
+		@card.Card(card.Props{Title: "Use since start", Class: tiles}) {
+			@stat.NoteTile("control--usage--requests-today", "Requests today", fmt.Sprint(model.SinceStart.Today.Requests), fmt.Sprintf("%d this week", model.SinceStart.Week.Requests))
+			@stat.NoteTile("control--usage--ingested-today", "Ingested today", display.Bytes(float64(model.SinceStart.Today.Ingested)), display.Bytes(float64(model.SinceStart.Week.Ingested))+" this week")
+			@stat.NoteTile("control--usage--ingested-total", "Ingested in all", display.Bytes(float64(model.SinceStart.Ingested)), "since start")
+			@stat.NoteTile("control--usage--requests-per-site", "Requests per site day", meanStd(model.SinceStart.RequestsPerSiteDay, count), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.RequestsPerSiteDay.N))
+			@stat.NoteTile("control--usage--ingested-per-site", "Ingested per site day", meanStd(model.SinceStart.IngestedPerSiteDay, display.Bytes), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.IngestedPerSiteDay.N))
+		}
+		@card.Card(card.Props{Title: "Push notifications", Class: tiles}) {
+			@stat.NoteTile("control--usage--pushes-today", "Pushes today", fmt.Sprint(model.Pushes.Today.Sent), fmt.Sprintf("%d failed, since midnight UTC", model.Pushes.Today.Failed))
+			@stat.NoteTile("control--usage--pushes-week", "Pushes this week", fmt.Sprint(model.Pushes.Week.Sent), fmt.Sprintf("%d failed, since Monday UTC", model.Pushes.Week.Failed))
+		}
+		@card.Card(card.Props{Title: "Server", Class: tiles}) {
+			@stat.NoteTile("control--usage--cpu", "CPU", fmt.Sprintf("%.1f%%", model.Server.CPUPercent), fmt.Sprintf("of %d%% for %d cores, last 5 seconds", 100*model.Server.CPUs, model.Server.CPUs))
+			if model.Server.ResidentBytes > 0 {
+				// All the process's memory, as the OS counts it: SQLite's is outside Go's
+				@stat.NoteTile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.ResidentBytes)), display.Bytes(float64(model.Server.HeapBytes))+" in Go's heap, the rest mostly SQLite")
+			} else {
+				@stat.NoteTile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.HeapBytes)), display.Bytes(float64(model.Server.SysBytes))+" from the OS")
+			}
+			@stat.NoteTile("control--usage--goroutines", "Goroutines", fmt.Sprint(model.Server.Goroutines), fmt.Sprintf("%d GCs", model.Server.GCs))
+			@stat.NoteTile("control--usage--disk", "DB disk used", display.Bytes(float64(model.Server.DiskUsed)), display.Bytes(float64(model.Server.DiskFree))+" free on disk")
+			@stat.NoteTile("control--usage--uptime", "Uptime", display.Duration(model.Server.UptimeMs), "since start")
+		}
+		@card.Card(card.Props{Title: "Resources, checked every 5 minutes"}) {
+			if len(model.ResourceReadings) == 0 {
+				<p id="control--usage--resources-empty" class="text-sm text-gray-500">Not checked yet since the server started.</p>
+			} else {
+				<div class="grid gap-3 sm:grid-cols-3">
+					@resourceGraph(model, "cpu", "Mean CPU", cpuPercent, -1, 100*float64(max(model.Server.CPUs, 1)))
+					@resourceGraph(model, "memory", "Memory used", memoryPercent, model.MemoryAlertPercent, 100)
+					@resourceGraph(model, "disk", "DB disk used", diskPercent, model.DiskAlertPercent, 100)
+				</div>
+			}
+		}
+		@card.Card(card.Props{Title: "Most asked for routes"}) {
+			@table.Table(table.Props{ID: "control--usage--routes", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Route
+						}
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+							Requests
+						}
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+							Mean ms
+						}
+					}
+				}
+				@table.Body() {
+					if len(model.SinceStart.Routes) == 0 {
+						<tr><td colspan="3" class="p-4 text-sm text-gray-500">No requests yet.</td></tr>
+					}
+					for _, route := range model.SinceStart.Routes {
+						@table.Row() {
+							@table.Cell(table.CellProps{Class: "font-mono text-xs"}) {
+								{ route.Route }
+							}
+							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+								{ fmt.Sprint(route.Count) }
+							}
+							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+								{ fmt.Sprintf("%.1f", route.MeanMs) }
+							}
+						}
+					}
+				}
+			}
+		}
+		@slowestQueries(model)
+	</div>
+}
+
+// resourceGraph is a small graph of a resource's percent over the checks kept, with a dashed line at the level it
+// warns at, unless alertPercent is negative
+templ resourceGraph(model controlmodels.Usage, name string, label string, value func(controlmodels.ResourceReading) *float64, alertPercent int, top float64) {
+	<div class="rounded-lg border border-gray-200 p-3">
+		<div class="flex justify-between text-xs font-semibold uppercase tracking-wide text-gray-500">
+			<span>{ label }</span>
+			<span id={ "control--usage--resources-" + name + "-latest" } class="tabular-nums">{ latestPercent(model, value) }</span>
+		</div>
+		<svg id={ "control--usage--resources-" + name } viewBox={ fmt.Sprintf("0 0 %.0f %.0f", graphW, graphH) } preserveAspectRatio="none" class="mt-2 h-16 w-full overflow-visible" role="img" aria-label={ label + " over the checks kept" }>
+			<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphH) } y2={ fmt.Sprint(graphH) } class="stroke-gray-200" vector-effect="non-scaling-stroke"></line>
+			if alertPercent >= 0 {
+				<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(alertPercent), top)) } y2={ fmt.Sprint(graphY(float64(alertPercent), top)) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
+			}
+			<polyline points={ resourcePoints(model, value, top) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+		</svg>
+		<div class="text-xs text-gray-500">over the last 3 days, newest at the right</div>
+	</div>
+}
+
+// tiles lays out a card's tiles, five to a row on a wide screen
+const tiles = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+
+// numberClass right aligns a column of numbers
+func numberClass(number bool) string {
+	if number {
+		return "text-right tabular-nums"
+	}
+	return ""
+}
+
+// slowestQueries are the DB queries whose sampled runs took the longest in all, where speeding one up saves the most
+templ slowestQueries(model controlmodels.Usage) {
+	@card.Card(card.Props{Title: "Slowest queries", Note: fmt.Sprintf("By the total time of the %d%% of queries sampled since the server started", model.QuerySamplePercent)}) {
+		@table.Table(table.Props{ID: "control--usage--queries", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					for i, head := range []string{"Query", "Runs", "Mean ms", "p95 ms", "Max ms", "Total ms"} {
+						@table.Head(table.HeadProps{Class: numberClass(i > 0)}) {
+							{ head }
+						}
+					}
+				}
+			}
+			@table.Body() {
+				if len(model.SlowestQueries) == 0 {
+					<tr><td colspan="6" class="p-4 text-sm text-gray-500">No queries sampled yet.</td></tr>
+				}
+				for _, q := range model.SlowestQueries {
+					@table.Row() {
+						@table.Cell(table.CellProps{Class: "font-mono text-xs"}) {
+							{ q.DB + "." + q.Query }
+						}
+						for _, value := range []string{fmt.Sprint(q.Count), fmt.Sprintf("%.1f", q.MeanMs), fmt.Sprintf("%.1f", q.P95Ms), fmt.Sprintf("%.1f", q.MaxMs), fmt.Sprintf("%.0f", q.TotalMs)} {
+							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+								{ value }
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

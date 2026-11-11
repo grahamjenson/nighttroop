@@ -1,0 +1,304 @@
+package site_reports_templ
+
+import (
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// Report is the AGP report of a day, week, fortnight or month, as the international consensus lays one out: its time
+// in each range against its goals, its glucose metrics against theirs, its ambulatory glucose profile, and each of its
+// days' glucose from midnight, with its daily dose and carbs as well
+templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod) {
+	@heading.Title("AGP")
+	<div id="site--reports" class="w-full space-y-4 py-4">
+		@periodHeader("agp", "AGP", p)
+		@agpCards(p, daily, previous, true)
+	</div>
+}
+
+// agpCards are the AGP report's cards, its days opening their own reports when links
+templ agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod, links bool) {
+	{{ low, high := site_data_templ.RangeBounds(ctx) }}
+		<div class="grid gap-4 lg:grid-cols-2 print:grid-cols-2">
+			@card.Card(card.Props{ID: "site--agp--ranges", Title: "Time in ranges", Note: "Goals for type 1 and type 2 diabetes"}) {
+				@rangesWithGoals(p, previous)
+				<ul class="mt-3 space-y-0.5 text-xs text-gray-600">
+					<li id="site--agp--target"><span class="font-semibold">{ "Target range: " }</span>{ display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }</li>
+					<li><span class="font-semibold">{ "Very high: " }</span>above { display.Glucose(p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units) } { display.Units(p.Units) }</li>
+					<li><span class="font-semibold">{ "Very low: " }</span>below { display.Glucose(p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units) } { display.Units(p.Units) }</li>
+				</ul>
+				<p class="mt-2 text-xs text-gray-500">Each 5% more time in range is clinically beneficial. Each 1% is about 15 minutes a day.</p>
+			}
+			@card.Card(card.Props{ID: "site--agp--metrics", Title: "Glucose metrics"}) {
+				<dl class="divide-y divide-gray-200">
+					@metric("site--reports--mean", "Average glucose", "Goal: "+goalGlucose(p.Units), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units)) {
+						@statChange("site--reports--mean", p, glucoseChange(p, previous))
+					}
+					@metric("site--reports--gmi", "Glucose management indicator (GMI)", "Goal: <7%", oneDecimal(p.GMI), "%") {
+						@statChange("site--reports--gmi", p, change(p.GMI, previousOf(previous).GMI, 1, "%"))
+					}
+					@metric("site--reports--cv", "Coefficient of variation", "Goal: ≤36%", oneDecimal(p.CV), "%") {
+						@statChange("site--reports--cv", p, change(p.CV, previousOf(previous).CV, 1, "%"))
+					}
+					@metric("site--reports--cgm-active", "Time CGM active", "Goal: >70%", display.Percent(p.CGMActive), "") {
+						@statChange("site--reports--cgm-active", p, change(p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
+					}
+					@metric("site--reports--days", "Days with data", "", fmt.Sprint(p.Days), "")
+					@metric("site--reports--daily-dose", "Daily dose", "", display.PerDay(p.Days, p.TotalDailyDose, ""), "U")
+					@metric("site--reports--daily-carbs", "Daily carbs", "", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g")
+				</dl>
+			}
+		</div>
+		@card.Card(card.Props{Title: "Ambulatory glucose profile"}) {
+			<p class="mb-2 text-sm text-gray-600">
+				The median (50%) and other percentiles of
+				if p.Period == "day" {
+					the 7 days to this one, as if they were one day, with this day's own glucose over them.
+				} else {
+					these { fmt.Sprint(periodDays(p, time.Now(), reportLocation(ctx))) } days' glucose, as if they were one day.
+				}
+			</p>
+			if hasGlucose(p) {
+				@agpGraph(p, low, high)
+			} else {
+				@noGlucose("site--reports--no-glucose", p.Period)
+			}
+		}
+		{{ note := "Each runs from midnight to midnight." }}
+		if links {
+			{{ note = "Each runs from midnight to midnight, and opens that day's report." }}
+		}
+		@card.Card(card.Props{ID: "site--agp--daily", Title: "Daily glucose profiles", Note: note}) {
+			@dailyProfiles(p, daily, low, high, links)
+		}
+}
+
+// metric is one of the report's glucose metrics, with its goal under its name and its value large on the right
+templ metric(id, label, goal, value, units string) {
+	<div class="flex items-center justify-between gap-3 py-2">
+		<dt>
+			<span class="text-sm font-medium text-gray-900">{ label }</span>
+			if goal != "" {
+				<span class="block text-xs text-gray-500">{ goal }</span>
+			}
+			{ children... }
+		</dt>
+		<dd class="flex items-baseline gap-1">
+			<span id={ id } class="text-2xl font-semibold tabular-nums text-gray-900">{ value }</span>
+			if value != "–" && units != "" {
+				<span class="text-sm text-gray-500">{ units }</span>
+			}
+		</dd>
+	</div>
+}
+
+// rangesWithGoals is the period's time in each range as a stacked bar, beside each its percent, with the high and very
+// high, and the low and very low, bracketed with their total, each against its goal
+templ rangesWithGoals(p, previous *sitemodels.SiteSummaryPeriod) {
+	{{ all := bands(p) }}
+	<div id="site--reports--ranges" class="flex gap-4">
+		@rangeBar("w-10", all)
+		<div class="flex min-w-0 flex-1 flex-col gap-3 text-sm">
+			@rangeGroup("site--reports--above", all[0], all[1], "<5%", sum(p.TimeHigh, p.TimeVeryHigh), "<25%")
+			<div id={ "site--reports--range-" + all[2].ID }>
+				<span class="text-2xl font-semibold tabular-nums">{ display.Percent(all[2].Percent) }</span>
+				<span class="text-lg font-semibold">{ all[2].Label }</span>
+				<span class="block text-xs text-gray-500">Goal: >70%</span>
+				@statChange("site--reports--in-range", p, change(p.TimeInRange, previousOf(previous).TimeInRange, 0, "%"))
+			</div>
+			@rangeGroup("site--reports--below", all[3], all[4], "<1%", sum(p.TimeLow, p.TimeVeryLow), "<4%")
+		</div>
+	</div>
+}
+
+// rangeGroup is two bands, the very high or very low with its own goal, bracketed with their total against its goal
+templ rangeGroup(id string, top, bottom band, outerGoal string, total *float64, goal string) {
+	<div class="flex items-stretch gap-2">
+		<ul class="flex-1 space-y-1">
+			for _, b := range []band{top, bottom} {
+				<li id={ "site--reports--range-" + b.ID }>
+					<span class="tabular-nums">{ display.Percent(b.Percent) }</span> { b.Label }
+					if (b.ID == "very-high" || b.ID == "very-low") {
+						<span class="block text-xs text-gray-500">Goal: { outerGoal }</span>
+					}
+				</li>
+			}
+		</ul>
+		<div class="w-3 shrink-0 rounded-r-md border-y border-r border-gray-400"></div>
+		<div class="flex w-20 shrink-0 flex-col justify-center">
+			<span id={ id } class="text-xl font-semibold tabular-nums">{ display.Percent(total) }</span>
+			<span class="text-xs text-gray-500">Goal: { goal }</span>
+		</div>
+	</div>
+}
+
+// agpGraph is the period's AGP over a day from midnight: the 5th to 95th and 25th to 75th percentiles shaded, the
+// median as a line, each coloured above the range high and below the range low, with the very low, low, high, very
+// high and top glucose marked, and each percentile named at its end. A day's own glucose is drawn over it. Pointing at
+// or tapping a time, or moving to it with the arrow keys, shows a tooltip of each percentile's glucose then.
+templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
+	{{ g := newAGPGraph(p) }}
+	{{ lastSlot, last := lastPercentiles(p.AGP) }}
+	<div class="relative overflow-x-auto">
+		<svg id="site--reports--agp" class="h-auto w-full min-w-[40rem] text-[11px] print:max-h-72" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label="Ambulatory glucose profile: the left and right arrow keys move along its times" aria-describedby="site--reports--agp--tooltip" tabindex="0">
+			<defs>
+				for _, r := range regions {
+					<clipPath id={ "site--reports--agp--" + r.Suffix }>
+						<rect x="0" width={ f(g.Width) } y={ f(r.Top(g, low, high)) } height={ f(max(r.Bottom(g, low, high)-r.Top(g, low, high), 0)) }></rect>
+					</clipPath>
+				}
+			</defs>
+			for _, hour := range []int{6, 12, 18} {
+				<line class={ templ.KV("stroke-gray-200", hour != 12), templ.KV("stroke-gray-400", hour == 12) } x1={ f(g.X(float64(hour) * 3_600_000)) } x2={ f(g.X(float64(hour) * 3_600_000)) } y1={ f(g.Top) } y2={ f(g.Bottom) }></line>
+			}
+			for i, mark := range agpMarks(g, low, high) {
+				<line class={ templ.KV("stroke-gray-300", i != 1 && i != 2), templ.KV(site_data_templ.GlucoseColours["Low"].Stroke, i == 1), templ.KV(site_data_templ.GlucoseColours["High"].Stroke, i == 2) } stroke-width={ map[bool]string{true: "2", false: "1"}[i == 1 || i == 2] } x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(mark)) } y2={ f(g.Y(mark)) }></line>
+				<text class="fill-gray-600" x={ f(g.Left - 6) } y={ f(g.Y(mark) + 4) } text-anchor="end">{ display.Glucose(mark, p.Units) }</text>
+			}
+			<text class="fill-gray-500" x={ f(g.Left - 6) } y="12" text-anchor="end">{ display.Units(p.Units) }</text>
+			for _, r := range regions {
+				<g clip-path={ "url(#site--reports--agp--" + r.Suffix + ")" }>
+					<path class={ "site--reports--agp--outer " + r.Colour.Fill } fill-opacity="0.18" d={ bandPath(g, p.AGP, 0, 4) }></path>
+					<path class={ "site--reports--agp--inner " + r.Colour.Fill } fill-opacity="0.4" d={ bandPath(g, p.AGP, 1, 3) }></path>
+					<path class={ "site--reports--agp--median " + r.Colour.Stroke } fill="none" stroke-width="3" stroke-linejoin="round" d={ linePath(g, percentile(p.AGP, 2)) }></path>
+				</g>
+			}
+			if p.Period == "day" {
+				<path id="site--reports--agp--glucose" class="stroke-brand-gold" fill="none" stroke-width="2" stroke-linejoin="round" d={ linePath(g, p.Glucose) }></path>
+			}
+			if lastSlot >= 0 {
+				{{ ys := percentileLabelYs(g, last) }}
+				for i, percent := range sitemodels.AGPPercentiles {
+					<text class={ "fill-gray-700", templ.KV("font-semibold", i == 2) } x={ f(g.Right + 6) } y={ f(ys[i]) }>{ fmt.Sprintf("%.0f%%", percent) }</text>
+				}
+			}
+			@hourAxis(g, false)
+			<g id="site--reports--agp--cursor" class="hidden" aria-hidden="true">
+				<line class="stroke-brand-night" stroke-width="1.5" y1={ f(g.Top) } y2={ f(g.Bottom) }></line>
+				for range sitemodels.AGPPercentiles {
+					<circle class="fill-white stroke-brand-night" r="4" stroke-width="2"></circle>
+				}
+			</g>
+		</svg>
+		// The tooltip goes beside the time it is of, its percentiles top to bottom as the graph draws them
+		<div id="site--reports--agp--tooltip" class="pointer-events-none absolute top-0 z-10 mt-1 hidden whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-md" aria-live="polite">
+			<div class="flex justify-between gap-3"><span id="site--reports--agp--tooltip--time" class="font-semibold"></span><span class="text-gray-500">{ display.Units(p.Units) }</span></div>
+			for i := len(sitemodels.AGPPercentiles) - 1; i >= 0; i-- {
+				<div class={ "flex justify-between gap-3", templ.KV("font-semibold", i == 2) }>
+					<span>{ fmt.Sprintf("%.0f%%", sitemodels.AGPPercentiles[i]) }</span>
+					<span id={ fmt.Sprintf("site--reports--agp--tooltip--%.0f", sitemodels.AGPPercentiles[i]) } class="tabular-nums" data-percentile={ fmt.Sprint(i) }></span>
+				</div>
+			}
+		</div>
+	</div>
+	@legend(agpLegend(p))
+	<p class="mt-1 text-xs text-gray-500 print:hidden">Point at or tap a time, or move along them with the arrow keys, to see each percentile's glucose then.</p>
+	@templ.JSONScript("site--reports--agp--points", agpPoints(ctx, g, p.AGP))
+	<script>
+		(() => {
+			const svg = document.getElementById("site--reports--agp"), cursor = document.getElementById("site--reports--agp--cursor")
+			const tip = document.getElementById("site--reports--agp--tooltip"), width = svg.viewBox.baseVal.width
+			const points = JSON.parse(document.getElementById("site--reports--agp--points").textContent)
+			let at = -1
+			// show is the cursor and tooltip at the ith 5 minutes with percentiles, the tooltip on its left past half way
+			const show = (i) => {
+				at = Math.max(0, Math.min(points.length - 1, i))
+				const [x, time, ys, values] = points[at], across = x * svg.getBoundingClientRect().width / width
+				for (const end of ["x1", "x2"]) cursor.querySelector("line").setAttribute(end, x)
+				cursor.querySelectorAll("circle").forEach((dot, j) => { dot.setAttribute("cx", x); dot.setAttribute("cy", ys[j]) })
+				document.getElementById("site--reports--agp--tooltip--time").textContent = time
+				tip.querySelectorAll("[data-percentile]").forEach((value) => { value.textContent = values[value.dataset.percentile] })
+				cursor.classList.remove("hidden")
+				tip.classList.remove("hidden")
+				tip.style.left = (x < width / 2 ? across + 12 : across - 12 - tip.offsetWidth) + "px"
+			}
+			const hide = () => { cursor.classList.add("hidden"); tip.classList.add("hidden") }
+			// nearest is the 5 minutes with percentiles nearest the time pointed at
+			const nearest = (event) => {
+				const x = (event.clientX - svg.getBoundingClientRect().left) * width / svg.getBoundingClientRect().width
+				return points.reduce((best, point, i) => Math.abs(point[0] - x) < Math.abs(points[best][0] - x) ? i : best, 0)
+			}
+			for (const name of ["pointermove", "pointerdown"]) svg.addEventListener(name, (event) => show(nearest(event)))
+			// A tap leaves it shown until the graph loses focus, as the pointer leaves on lifting
+			svg.addEventListener("pointerleave", (event) => { if (event.pointerType === "mouse") hide() })
+			svg.addEventListener("focus", () => show(Math.max(at, 0)))
+			svg.addEventListener("focusout", hide)
+			svg.addEventListener("keydown", (event) => {
+				const step = { ArrowLeft: -1, ArrowRight: 1, PageUp: -12, PageDown: 12, Home: -points.length, End: points.length }[event.key]
+				if (step === undefined) return
+				event.preventDefault()
+				show(at + step)
+			})
+		})()
+	</script>
+}
+
+// dailyProfiles are the period's days as a calendar from the site's week start day, each with its glucose from
+// midnight over the range shaded, coloured above and below it, opening its report
+templ dailyProfiles(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, low, high float64, links bool) {
+	{{ weeks := profileWeeks(ctx, p, daily, reportLocation(ctx)) }}
+	<div class="grid grid-cols-7 border-l border-t border-gray-200 text-xs">
+		if p.Period != "day" {
+			for _, day := range weeks[0] {
+				<div class="border-b border-r border-gray-200 bg-gray-50 px-1 py-0.5 text-center font-medium text-gray-700">{ day.Date.Format("Mon") }</div>
+			}
+		}
+		for _, week := range weeks {
+			for _, day := range week {
+				if !day.InPeriod {
+					<div class="border-b border-r border-gray-200 bg-gray-50"></div>
+				} else {
+					{{ path, id := link("agp", "day", day.Date), "site--agp--day-" + day.Date.Format(time.DateOnly) }}
+					if links {
+						<a id={ id } class={ "block border-b border-r border-gray-200 p-1 hover:bg-gray-50", templ.KV("col-span-7", p.Period == "day") } href={ templ.SafeURL(path) } { nav.Attributes(path)... }>
+							@dayProfile(id, day.Date, day.Day, p.Units, low, high)
+						</a>
+					} else {
+						<div id={ id } class={ "border-b border-r border-gray-200 p-1", templ.KV("col-span-7", p.Period == "day") }>
+							@dayProfile(id, day.Date, day.Day, p.Units, low, high)
+						</div>
+					}
+				}
+			}
+		}
+	</div>
+}
+
+// dayProfile is a day's date over its glucose from midnight, with no glucose when it has no summary
+templ dayProfile(id string, date time.Time, day *sitemodels.SiteSummaryDaily, units *consts.Units, low, high float64) {
+	<span class="font-semibold text-gray-900">{ date.Format("2") }</span>
+	if day != nil {
+		@dayGlucose(id+"--", "h-12 w-full print:h-8", day.Glucose, units, low, high)
+	} else {
+		@dayGlucose(id+"--", "h-12 w-full print:h-8", nil, units, low, high)
+	}
+}
+
+// dayGlucose is a day's glucose from midnight, every 5 minutes, as a small graph over the range shaded, coloured above
+// and below it, its clip paths' IDs starting with id
+templ dayGlucose(id, class string, glucose []*float64, units *consts.Units, low, high float64) {
+	{{ g := graph{Width: 288, Height: 60, Left: 0, Right: 288, Top: 2, Bottom: 58, Min: units.FromMGDL(40), Max: units.FromMGDL(300), Units: units} }}
+	<svg class={ class } viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } preserveAspectRatio="none" aria-hidden="true">
+		<rect class="fill-gray-100" x="0" width={ f(g.Width) } y={ f(g.Y(high)) } height={ f(g.Y(low) - g.Y(high)) }></rect>
+		if len(glucose) > 0 {
+			<defs>
+				for _, r := range regions {
+					<clipPath id={ id + r.Suffix }>
+						<rect x="0" width={ f(g.Width) } y={ f(r.Top(g, low, high)) } height={ f(max(r.Bottom(g, low, high)-r.Top(g, low, high), 0)) }></rect>
+					</clipPath>
+				}
+			</defs>
+			for _, r := range regions {
+				<path class={ "site--agp--glucose " + r.Colour.Stroke } clip-path={ "url(#" + id + r.Suffix + ")" } fill="none" stroke-width="1.5" vector-effect="non-scaling-stroke" d={ linePath(g, glucose) }></path>
+			}
+		}
+	</svg>
+}

@@ -1,0 +1,79 @@
+package stat
+
+import (
+	"regexp"
+	"strings"
+
+	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+)
+
+// The boxes of figures a summary is made of, such as a site's summary and a site's page in control: tiles of one
+// figure each, and titled sections of a list
+
+// numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago"
+var numbersAndUnits = regexp.MustCompile(`[\d.–]+|[^\d.–]+`)
+
+// isUnit is whether a part of a tile's text is words, not a number or a dash
+func isUnit(part string) bool {
+	return strings.Trim(part, "0123456789.–") != ""
+}
+
+// Tile is one figure, under its label and its icon, when it has one, with anything else about it, such as earlier
+// figures, below
+templ Tile(id, label, text string, ic func(...icon.Props) templ.Component) {
+	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+		<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+			if ic != nil {
+				@ic(icon.Props{Class: "size-4"})
+			}
+			{ label }
+		</div>
+		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
+			@Numbers(text, "text-sm font-medium text-gray-500")
+		</div>
+		{ children... }
+	</div>
+}
+
+// Numbers shows a value's numbers as they are and its units, as in "0.7 U" or "2 days 1 hour ago", smaller and grey;
+// text with no number, as "just now", is shown as it is
+templ Numbers(text, unitClass string) {
+	{{ parts := numbersAndUnits.FindAllString(text, -1) }}
+	for _, part := range parts {
+		if len(parts) > 1 && isUnit(part) {
+			<span class={ unitClass }>{ part }</span>
+		} else {
+			{ part }
+		}
+	}
+}
+
+// NoteTile is a Tile with no icon, with a note about its figure, such as what it counts, below it
+templ NoteTile(id, label, text, note string) {
+	@Tile(id, label, text, nil) {
+		<div class="text-xs text-gray-500">{ note }</div>
+	}
+}
+
+// Section is a titled list, scrolling when it is long, with a link to the page of all its records when it has one
+templ Section(title, linkID, linkText, path string) {
+	@card.Card(card.Props{Title: title, Scroll: true, Action: allLink(linkID, linkText, path)}) {
+		{ children... }
+	}
+}
+
+// allLink is a section's link to the page of all its records, or nil when it has none
+func allLink(id, text, path string) templ.Component {
+	if path == "" {
+		return nil
+	}
+	return link(id, text, path)
+}
+
+templ link(id, text, path string) {
+	@nav.Link(id, path, "text-sm text-primary underline") {
+		{ text }
+	}
+}

@@ -1,0 +1,154 @@
+INCLUDE steps/new_site.steps
+
+// The identity's alarms are a collection held as the alarm checker last sent them; there are none before one is on
+NAME no_alarms
+GET http://{{ site }}/data/alarms
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// The PWD phone turns on its urgent low, and a reading under it starts it
+NAME urgent_low_on
+PATCH http://{{ .ns_site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+
+NAME post_low
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":50,"date":{{ itime 0 }}}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME urgent_low_alerting
+GET http://{{ site }}/data/alarms
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "urgent_low" "@result.items.0.id"
+ASSERT_EQUALS true "@result.items.0.urgent"
+ASSERT_EQUALS true "@result.items.0.alerting"
+
+// The summary has the identity's alarms too
+NAME summary_urgent_low_alerting
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items.0.alarms"
+ASSERT_EQUALS "urgent_low" "@result.items.0.alarms.0.id"
+ASSERT_EQUALS true "@result.items.0.alarms.0.active"
+ASSERT_EQUALS true "@result.items.0.alarms.0.alerting"
+ASSERT_EQUALS null "@result.items.0.alarms.0.snoozed_until"
+
+// Another identity has its own alarms, and so none
+NAME read_only_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 200
+SET ro_jwt {{ .read_only_jwt.token }}
+
+NAME read_only_has_none
+GET http://{{ site }}/data/alarms
+H Authorization: Bearer {{ .ro_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// Deleting the alarm snoozes it: it stays active, but stops alerting, and stays so as the readings are checked again
+NAME snooze
+DELETE http://{{ site }}/data/alarms/urgent_low
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+// The site's events say when the alarm was created and snoozed, which its admin can read
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET admin_jwt {{ .login_admin.token }}
+
+NAME alarm_created_event
+GET http://{{ site }}/logs/events?type=alarm_created
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "urgent_low" "@result.items.0.attributes.type"
+
+NAME alarm_snoozed_event
+GET http://{{ site }}/logs/events?type=alarm_snoozed
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "urgent_low" "@result.items.0.attributes.types.0"
+ASSERT_EQUALS "site" "@result.items.0.attributes.by"
+ASSERT_EXISTS "@result.items.0.attributes.snoozed_until"
+
+NAME urgent_low_snoozed
+GET http://{{ site }}/data/alarms
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "urgent_low" "@result.items.0.id"
+ASSERT_EQUALS false "@result.items.0.alerting"
+
+NAME summary_urgent_low_snoozed
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items.0.alarms"
+ASSERT_EQUALS true "@result.items.0.alarms.0.active"
+ASSERT_EQUALS false "@result.items.0.alarms.0.alerting"
+ASSERT_EXISTS "@result.items.0.alarms.0.snoozed_until"
+
+// A reading over it clears it, so it is no longer one of the identity's active alarms, but the summary still has it
+// while it is snoozed, as it would not alert if it started again
+NAME post_in_range
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":100,"date":{{ itime -1 }}}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME urgent_low_cleared
+GET http://{{ site }}/data/alarms
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+NAME alarm_deleted_event
+GET http://{{ site }}/logs/events?type=alarm_deleted
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "urgent_low" "@result.items.0.attributes.type"
+
+NAME summary_urgent_low_cleared_and_snoozed
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items.0.alarms"
+ASSERT_EQUALS "urgent_low" "@result.items.0.alarms.0.id"
+ASSERT_EQUALS false "@result.items.0.alarms.0.active"
+ASSERT_EQUALS false "@result.items.0.alarms.0.alerting"
+ASSERT_EXISTS "@result.items.0.alarms.0.snoozed_until"
+
+// An alarm that is not active cannot be snoozed
+NAME snooze_inactive
+DELETE http://{{ site }}/data/alarms/high
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

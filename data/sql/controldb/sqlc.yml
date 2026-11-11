@@ -1,0 +1,177 @@
+version: "2"
+sql:
+  - schema: "schema_gen.sql"
+    queries: "./queries"
+    engine: "sqlite"
+    gen:
+      go:
+        package: "controldb"
+        out: "."
+
+        emit_prepared_queries: true
+        emit_pointers_for_null_types: true
+        emit_result_struct_pointers: true
+
+        query_parameter_limit: 0
+        
+        output_files_suffix: ".gen"
+        output_db_file_name: "z_db.go"
+        output_models_file_name: "z_models.go"
+        output_querier_file_name: "z_querier.go"
+        output_batch_file_name: "z_batch.go"
+        output_copyfrom_file_name: "z_copyfrom.go"
+
+overrides:
+  go:
+    overrides:   
+
+      # Connectors
+      - column: "site_connectors.previous_sync_errors"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/errors"
+          type: "ErrorList"
+
+      - column: "site_connectors.properties"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "ConnectorProperties"
+
+      - column: "site_connectors.type"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "ConnectorType"
+      - column: "site_connectors.enabled"
+        go_type:
+          type: "bool"
+
+      # site
+
+      # Server Settings
+      - column: "server_settings.public_site_creation"
+        go_type:
+          type: "bool"
+
+      # Control Identities
+      - column: "control_identities.role"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "ControlRole"
+      
+      # Push
+      - column: "push_credentials.provider"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "PushProvider"
+      - column: "push_registrations.provider"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "PushProvider"
+      - column: "push_registrations.app"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "PushApp"
+      - column: "push_registrations.production"
+        go_type:
+          type: "bool"
+
+      # Site Identities
+      - column: "site_identities.enabled"
+        go_type:
+          type: "bool"
+
+      - column: "site_identities.role"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "IdentityRole"
+
+
+      # Settings
+
+      - column: "sites.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "sites.alarm_urgent_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_urgent_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_fast_rise_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_fast_drop_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_no_data_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_device_battery_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_device_battery_low_devices_json"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "DeviceNames"
+          pointer: true
+      - column: "sites.alarm_low_reservoir_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.notifications_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_prediction_enabled"
+        go_type:
+          type: "*bool"
+
+      - column: "site_identities.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "site_identities.alarm_urgent_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_urgent_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_fast_rise_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_fast_drop_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_no_data_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_device_battery_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_device_battery_low_devices_json"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "DeviceNames"
+          pointer: true
+      - column: "site_identities.alarm_low_reservoir_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.notifications_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_low_prediction_enabled"
+        go_type:
+          type: "*bool"
+          
