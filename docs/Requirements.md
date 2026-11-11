@@ -307,7 +307,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   credentials are checked the same way.
 - Beside Log in, a new or recovered site's welcome page offers "Log in with a passkey", with no authenticator app: it
   adds the admin a passkey on the site's own address, with the device's fingerprint, face or PIN, and signs the admin in with it. Only
-  the browser the credentials were shown to can, for 15 minutes, once; after that the passkey is added on My Account.
+  the browser the credentials were shown to can, for 15 minutes, once: sending its cookie again adds nothing once the admin
+  has a passkey. After that the passkey is added on My Account.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
 - While a control admin has turned public site creation off, the home page says so instead of offering to create a

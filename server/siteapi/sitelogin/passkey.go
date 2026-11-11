@@ -155,7 +155,8 @@ func POSTAccountPasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig)
 }
 
 // welcomeAdmin is the new or recovered site's admin, with its passkeys, when this browser was shown the site's
-// credentials on its welcome page in the last 15 minutes
+// credentials on its welcome page in the last 15 minutes, and the admin has no passkey yet. The welcome adds only the
+// one: its cookie lasts the 15 minutes however often it is sent, so would otherwise add any number, each signing in.
 func welcomeAdmin(r *http.Request, controlDB *db.ControlDB, cfg *config.ServerConfig) (passkeyUser, error) {
 	siteID := httputils.GetSiteContext(r.Context()).SiteID
 	welcomed, err := cfg.Security.WelcomePasskeySite(r)
@@ -169,7 +170,11 @@ func welcomeAdmin(r *http.Request, controlDB *db.ControlDB, cfg *config.ServerCo
 	if err != nil {
 		return passkeyUser{}, err
 	}
-	return passkeyUserFor(r, controlDB, identity)
+	user, err := passkeyUserFor(r, controlDB, identity)
+	if err == nil && len(user.credentials) > 0 {
+		err = fmt.Errorf("the admin already has a passkey, which the welcome adds only one of")
+	}
+	return user, err
 }
 
 // POSTWelcomePasskeyBegin starts adding the new site's admin a passkey from its welcome page, by the browser it showed

@@ -61,6 +61,31 @@ func TestPasskeyKeepsNothingAboutThePerson(t *testing.T) {
 	require.NotNil(t, kept.LastUsedAt)
 }
 
+// The browser a site's credentials were shown to adds its admin one passkey from the welcome, once: its cookie still
+// lasts 15 minutes, but sent again once the admin has a passkey it adds no more, past the most an identity may have
+func TestWelcomeAddsOnePasskey(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	siteID := site.SiteDB.Subdomain
+	admin, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
+	require.NoError(t, err)
+	shown := httptest.NewRecorder()
+	require.NoError(t, cfg.Security.SetWelcomePasskeyCookie(shown, siteID))
+	r := httptest.NewRequest("POST", "/welcome/passkey/finish", nil)
+	for _, cookie := range shown.Result().Cookies() {
+		r.AddCookie(cookie)
+	}
+	r = r.WithContext(httputils.CreateSiteContext(r.Context(), cfg, controlDB, site.SiteDB, nil, siteID, "203.0.113.9", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON))
+
+	user, err := welcomeAdmin(r, controlDB, cfg)
+	require.NoError(t, err)
+	require.Equal(t, admin.ID, user.identity.ID)
+	require.NoError(t, savePasskey(r, controlDB, &webauthn.Credential{ID: []byte("welcome"), PublicKey: []byte("key")}, admin.ID, true))
+
+	// The same cookie sent again, within its 15 minutes, adds the admin no more
+	_, err = welcomeAdmin(r, controlDB, cfg)
+	require.Error(t, err)
+}
+
 // An identity removes only its own passkeys
 func TestPasskeyRemovedByItsIdentityOnly(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
