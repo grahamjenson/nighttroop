@@ -441,6 +441,9 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 	return err
 }
 
+// createFile is os.Create, which tests can stand in for to fail a file's close
+var createFile = func(name string) (io.WriteCloser, error) { return os.Create(name) }
+
 // ExtractTarLZ4 decrypts, decompresses and untars a backup from reader into outputDir, refusing an entry that would be
 // written outside it
 func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
@@ -498,18 +501,22 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 				return fmt.Errorf("creating parent dir: %w", err)
 			}
 
-			outFile, err := os.Create(targetPath)
+			outFile, err := createFile(targetPath)
 			if err != nil {
 				return fmt.Errorf("creating file: %w", err)
 			}
 
+			// Closed here rather than deferred, as this loops over every file; the write's error is the one returned
 			if _, err := io.Copy(outFile, tarReader); err != nil {
 				outFile.Close()
 				return fmt.Errorf("writing file: %w", err)
 			}
 
+			// Close can be the first to report a failed write, such as a full disk, leaving the file cut short.
 			// Not logged, as a restore extracts every site's DB; an error is returned instead
-			outFile.Close()
+			if err := outFile.Close(); err != nil {
+				return fmt.Errorf("closing file: %w", err)
+			}
 
 			// Restore original file permissions
 			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
