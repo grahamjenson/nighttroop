@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 func GETRecoverSitePageHandler() http.HandlerFunc {
@@ -29,7 +30,7 @@ func POSTRecoverSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		// Each attempt is a bcrypt check, so it is limited as the site's own recover is, by the site and the IP
 		if allowed, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteID, ":backup_key"); !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			public_templ.RecoverSiteFailed("Too many attempts, wait a bit and try again.").Render(r.Context(), w)
+			public_templ.RecoverSiteFailed(i18n.T(r.Context(), "public.recover_site.too_many_attempts")).Render(r.Context(), w)
 			return
 		}
 
@@ -42,7 +43,7 @@ func POSTRecoverSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		if err != nil {
 			slog.InfoContext(r.Context(), "Site recovery failed", "error", err)
 			w.WriteHeader(http.StatusUnauthorized)
-			public_templ.RecoverSiteFailed("That site ID and backup key do not match a site.").Render(r.Context(), w)
+			public_templ.RecoverSiteFailed(i18n.T(r.Context(), "public.recover_site.no_match")).Render(r.Context(), w)
 			return
 		}
 

@@ -27,15 +27,23 @@ var (
 	placeholder = regexp.MustCompile(`{{\s*\.(\w+)\s*}}`)
 	// Text with a word in it
 	words = regexp.MustCompile(`[A-Za-z]{2,}`)
-	// A Go string literal in a component that reads as English: a capitalised word and any after it, e.g. "Not found"
-	sentence = regexp.MustCompile(`"[A-Z][a-z]+(?: [A-Za-z0-9,.'’:;!?()/%-]+)*"`)
+	// A Go string literal in a component that reads as English: a capitalised word and any after it, e.g. "Not found",
+	// but not a map's key, such as a message's placeholder in i18n.Data{"Name": name}
+	sentence = regexp.MustCompile(`"([A-Z][a-z]+(?: [A-Za-z0-9,.'’:;!?()/%-]+)*)"(?:[^:]|$)`)
+	// A Go comment to the end of the line
+	comment = regexp.MustCompile(`(?:^|\s)//.*$`)
 	// Go lines whose English is for logs and errors, not people
 	logged = regexp.MustCompile(`slog\.|Errorf\(|errors\.New\(`)
 	// Attributes people read or hear
 	readAttributes = []string{"placeholder", "title", "aria-label", "alt", "hx-confirm"}
 	// Text that is the same in every language: names, units and symbols
 	untranslated = map[string]bool{
-		"Nighttroop": true, "mg/dL": true, "mmol/L": true, "Nightscout": true, "Dexcom": true, "LibreLinkUp": true,
+		"Nighttroop": true, "Nighttroop Control": true, "Nightscout": true, "Dexcom": true, "LibreLinkUp": true, "Libre": true,
+		"Loop": true, "Trio": true, "Apple": true, "Firebase": true, "Google Authenticator": true,
+		"Microsoft Authenticator": true, "mg/dL": true, "mmol/L": true, "MB": true,
+		// Values that are sent, stored or compared: a key's name, a Nightscout trend, a part of an element's id and the
+		// temp target reasons suggested, which are stored as they are
+		"Enter": true, "Escape": true, "Flat": true, "Other": true, "Activity": true, "Eating Soon": true, "Hypo": true,
 	}
 )
 
@@ -184,10 +192,11 @@ func TestTemplatesHaveNoTextOutsideTheLocales(t *testing.T) {
 			continue
 		}
 		for i, line := range strings.Split(source, "\n") {
-			for _, literal := range sentence.FindAllString(line, -1) {
-				if !logged.MatchString(line) {
-					report(path, uint32(i), strings.Trim(literal, `"`))
-				}
+			if logged.MatchString(line) {
+				continue
+			}
+			for _, match := range sentence.FindAllStringSubmatch(comment.ReplaceAllString(line, ""), -1) {
+				report(path, uint32(i), match[1])
 			}
 		}
 		if !strings.HasSuffix(path, ".templ") {
@@ -216,7 +225,7 @@ func TestTemplatesHaveNoTextOutsideTheLocales(t *testing.T) {
 
 func TestMessagesFallBackToEnglish(t *testing.T) {
 	ctx := i18n.WithLanguages(context.Background(), "xx-YY", "fr;q=0.9")
-	if got := i18n.T(ctx, "common.nighttroop"); got != "Nighttroop" {
+	if got := i18n.T(ctx, "common.confirm.cancel"); got != "Cancel" {
 		t.Errorf("T = %q, want the English", got)
 	}
 	if got := i18n.T(ctx, "missing.message"); got != "missing.message" {

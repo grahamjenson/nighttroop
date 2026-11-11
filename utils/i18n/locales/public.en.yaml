@@ -54,3 +54,5 @@ public:
     site_id: "Site ID"
     backup_key: "Backup key"
     submit: "Recover"
+    too_many_attempts: "Too many attempts, wait a bit and try again."
+    no_match: "That site ID and backup key do not match a site."

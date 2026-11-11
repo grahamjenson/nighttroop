@@ -1,6 +1,5 @@
 # English text of the components every page shares, by component. Edit the wording here; the code only has the ids.
 common:
-  nighttroop: Nighttroop
   test_site:
     title: "This is a test site"
     warning: "All data here is frequently wiped, at least every time a new version is deployed. Do not use it to manage your diabetes, and do not put anything here you want to keep."
