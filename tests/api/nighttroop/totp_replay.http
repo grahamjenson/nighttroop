@@ -1,0 +1,51 @@
+INCLUDE steps/control_login.steps
+INCLUDE steps/new_site_admin.steps
+
+// A TOTP code signs an identity in once: seen as it was typed, it cannot sign in again while it is still valid. A code
+// made from the dev secret is one time, like a real one; the fixed dev code 123123 is not
+SET code {{ totp "FakeTOTPSecretForDevOnly" }}
+
+NAME site_login_code
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "{{ .code }}"}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@token"
+
+NAME site_login_code_again_refused
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "{{ .code }}"}
+ASSERT_STATUS 401
+
+// Another site's admin, with the same secret, signs in with the same code
+NAME create_other_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+NAME other_site_login_code
+POST http://{{ .create_other_site.site_subdomain }}.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_other_site.api_key }}", "totp": "{{ .code }}"}
+ASSERT_STATUS 200
+
+// A control admin's code is one time too
+NAME add_admin
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "api_totp_replay", "role": "read"}
+ASSERT_STATUS 201
+
+NAME control_login_code
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "api_totp_replay", "password": "{{ .add_admin.result.password }}", "totp": "{{ .code }}"}
+ASSERT_STATUS 200
+
+NAME control_login_code_again_refused
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "api_totp_replay", "password": "{{ .add_admin.result.password }}", "totp": "{{ .code }}"}
+ASSERT_STATUS 401
