@@ -656,6 +656,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
+- A site's saves of its connectors, adding a source as well as changing one, share one rate limit
+  (`SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT`); one past it is refused (429).
 - Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Connector box, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
 - A failing source syncs less often, and says when it failed and why. Why, as stored, logged and sent to Sentry, never
