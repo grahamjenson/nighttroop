@@ -696,8 +696,8 @@ func arrowButton(id, path, label string) templ.Component {
 	})
 }
 
-// SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, a table for
-// each period, the longest first, each newest first and opening its AGP report: the months of its year, the
+// SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, their time below,
+// in and above range among them, a table for each period, the longest first, each newest first and opening its AGP report: the months of its year, the
 // fortnights and weeks with a day in it, and the month's days. Arrows beside the month go to the month before and after. An admin can have them all
 // regenerated from the site's data.
 func SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) templ.Component {
@@ -850,7 +850,7 @@ func SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSum
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							for _, column := range []string{"Days with data", "Time in range", "Daily dose", "Daily carbs"} {
+							for _, column := range []string{"Days with data", "Below range", "Time in range", "Above range", "Daily dose", "Daily carbs"} {
 								templ_7745c5c3_Var37 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -904,7 +904,7 @@ func SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSum
 						}
 						ctx = templ.InitializeContext(ctx)
 						if len(summaries[kind.Period]) == 0 {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<tr><td colspan=\"5\" class=\"whitespace-normal p-4 text-gray-500\">")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<tr><td colspan=\"7\" class=\"whitespace-normal p-4 text-gray-500\">")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1022,7 +1022,8 @@ func SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSum
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(p.TimeInRange), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
+								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(sum(p.TimeLow, p.TimeVeryLow)), display.Percent(p.TimeInRange),
+									display.Percent(sum(p.TimeHigh, p.TimeVeryHigh)), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
 									templ_7745c5c3_Var47 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1038,7 +1039,7 @@ func SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSum
 										var templ_7745c5c3_Var48 string
 										templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 259, Col: 17}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 260, Col: 17}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 										if templ_7745c5c3_Err != nil {
