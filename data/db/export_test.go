@@ -14,3 +14,6 @@ func (db *ControlDB) OpenSite(site *SiteDB) { db.sites.add(site) }
 
 // TruncateSiteSince truncates site as the job does, looking at its device reports written since since
 func TruncateSiteSince(ctx context.Context, site *SiteDB, since int64) error { return truncateSite(ctx, site, since) }
+
+// StartSetupIfNoAdmin checks again, as the server does as it starts, whether it has an admin or is to be set up
+func (db *ControlDB) StartSetupIfNoAdmin(ctx context.Context) error { return db.startSetupIfNoAdmin(ctx) }

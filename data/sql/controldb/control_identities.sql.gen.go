@@ -54,6 +54,18 @@ func (q *Queries) AllControlIdentities(ctx context.Context) ([]*ControlIdentity,
 	return items, nil
 }
 
+const countControlAdmins = `-- name: CountControlAdmins :one
+SELECT COUNT(*) FROM control_identities WHERE role = 'admin'
+`
+
+// A server without an admin is set up, whatever its admins are named, see control_setup.go
+func (q *Queries) CountControlAdmins(ctx context.Context) (int64, error) {
+	row := q.queryRow(ctx, q.countControlAdminsStmt, countControlAdmins)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createControlIdentity = `-- name: CreateControlIdentity :exec
 INSERT INTO control_identities (
     name,
