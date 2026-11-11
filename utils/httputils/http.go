@@ -137,7 +137,8 @@ func GetHTTPAction(r *http.Request) HTTPAction {
 // Writer
 //////
 
-// THIS IS SO STUPID THAT I HAVE TO DO THIS TO CHECK THE STATUS OF THE RETURNED RESPONSE.
+// StatusResponseWriter records the status code a handler writes, as http.ResponseWriter has no way to read it back,
+// and the middleware that marks an identity seen acts only on a successful response.
 type StatusResponseWriter struct {
 	http.ResponseWriter
 	Status int

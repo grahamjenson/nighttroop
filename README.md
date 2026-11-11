@@ -14,6 +14,14 @@ Its core goals are to be:
 
 To run your own Nighttroop look at the `docs/deploy` folder.
 
+**Nighttroop is not a medical device.** It does not provide medical advice and is not a replacement for proper medical
+care. Its data and alarms may be late, missing or wrong, so do not make treatment decisions from it; see the
+[Terms of Service](server/assets/docs/TERMS_OF_SERVICE.md).
+
+The Dexcom Share and LibreLinkUp syncs (`clients/dexcom_client`, `clients/libre_client`) use unofficial, undocumented
+APIs, the ones other open-source followers use. They may break without warning, and using them may be against those
+services' terms.
+
 # GoTHSS Framework. (Go + Templ + HTMx + SQLite + SQLc + Tailwind)
 
 The "framework" that Nighttroop uses uses Go and SQLc, relying heavily on generated code build by tools like SQLc, Templ and Tailwind.
