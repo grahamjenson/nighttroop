@@ -60,14 +60,14 @@ on reading the body, so it counts as a failure.
 (`uploader.cpp:155`):
 
 ```json
-{"type":"sgv","device":"3MH0058XKP","dateString":"2026-11-01T23:00:00.000+13:00","date":1793527200000,"sgv":123,
+{"type":"sgv","device":"3MH000TEST","dateString":"2026-11-01T23:00:00.000+13:00","date":1793527200000,"sgv":123,
  "delta":-1.500,"direction":"FortyFiveDown","noise":1,"filtered":123000,"unfiltered":123000,"rssi":100}
 ```
 
 | Field | Type | Value |
 |---|---|---|
 | `type` | string | always `sgv` |
-| `device` | string | the sensor's short name, e.g. `3MH0058XKP` |
+| `device` | string | the sensor's short name, e.g. `3MH000TEST` |
 | `dateString` | string | local time with its offset, from `Tdatestring` (`datestring.hpp:5`), always `.000` milliseconds |
 | `date` | integer | ms since the epoch, whole seconds |
 | `sgv` | integer | mg/dL, calibrated if the user calibrated in Juggluco. No `units` field |
@@ -85,8 +85,8 @@ There is no `sysTime`, `utcOffset`, `_id` or `identifier` in v1.
 (`common.cpp:46`). A **200 or 201** counts as sent; anything else stops the upload at that reading.
 
 ```json
-{"app":"Juggluco","device":"3MH0058XKP","date":1793527200000,"sgv":123,"delta":-1.500,"direction":"FortyFiveDown",
- "type":"sgv","utcOffset":0,"identifier":"504b5838-3530-3048-50ee-1234eeeeeeee","_id":"504b583835303048501234ee"}
+{"app":"Juggluco","device":"3MH000TEST","date":1793527200000,"sgv":123,"delta":-1.500,"direction":"FortyFiveDown",
+ "type":"sgv","utcOffset":0,"identifier":"54534554-3030-3048-50ee-1234eeeeeeee","_id":"5453455430303048501234ee"}
 ```
 
 `date`, `sgv`, `delta`, `direction` and `device` are as in v1. `utcOffset` is always 0. `identifier` is a UUID-shaped

@@ -1,7 +1,7 @@
 # Juggluco's Nightscout uploader with "test V3" ticked, see docs/clients/juggluco.md. In this mode it sends no
 # api-secret: NightPost.gettoken swaps the secret it was given for a JWT, sent as a Bearer token on every call.
 # The bodies are copied from writev3entry (Common/src/main/cpp/net/watchserver/common.cpp) and writetreatmentV3
-# (uploadtreatment.cpp), for a Libre sensor named 3MH0058XKP. Juggluco reads nothing back but the status code.
+# (uploadtreatment.cpp), for a Libre sensor named 3MH000TEST. Juggluco reads nothing back but the status code.
 
 INCLUDE steps/new_ns_site.steps
 
@@ -25,16 +25,16 @@ NAME juggluco_post_entry_v3
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ .juggluco_jwt }}
 H Content-Type: application/json
-B {"app":"Juggluco","device":"3MH0058XKP","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","type":"sgv","utcOffset":0,"identifier":"504b5838-3530-3048-50ee-1234eeeeeeee","_id":"504b583835303048501234ee"}
+B {"app":"Juggluco","device":"3MH000TEST","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","type":"sgv","utcOffset":0,"identifier":"54534554-3030-3048-50ee-1234eeeeeeee","_id":"5453455430303048501234ee"}
 ASSERT_STATUS 201
-ASSERT_EQUALS "504b5838-3530-3048-50ee-1234eeeeeeee" "@identifier"
+ASSERT_EQUALS "54534554-3030-3048-50ee-1234eeeeeeee" "@identifier"
 
 // A reading with no trend (getdeltaname of NaN) has an empty direction and a delta of 0
 NAME juggluco_post_entry_v3_no_direction
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ .juggluco_jwt }}
 H Content-Type: application/json
-B {"app":"Juggluco","device":"3MH0058XKP","date":{{ dayms -1 601 }},"sgv":125,"delta":0.000,"direction":"","type":"sgv","utcOffset":0,"identifier":"504b5838-3530-3048-50ee-1235eeeeeeee","_id":"504b583835303048501235ee"}
+B {"app":"Juggluco","device":"3MH000TEST","date":{{ dayms -1 601 }},"sgv":125,"delta":0.000,"direction":"","type":"sgv","utcOffset":0,"identifier":"54534554-3030-3048-50ee-1235eeeeeeee","_id":"5453455430303048501235ee"}
 ASSERT_STATUS 201
 
 // "Resend data" (Natives.resetuploader) sends every reading again, which must still be a 200 or 201
@@ -42,7 +42,7 @@ NAME juggluco_post_entry_v3_again
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ .juggluco_jwt }}
 H Content-Type: application/json
-B {"app":"Juggluco","device":"3MH0058XKP","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","type":"sgv","utcOffset":0,"identifier":"504b5838-3530-3048-50ee-1234eeeeeeee","_id":"504b583835303048501234ee"}
+B {"app":"Juggluco","device":"3MH000TEST","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","type":"sgv","utcOffset":0,"identifier":"54534554-3030-3048-50ee-1234eeeeeeee","_id":"5453455430303048501234ee"}
 ASSERT_STATUS 200
 
 NAME juggluco_entries_stored_once
@@ -54,9 +54,9 @@ ASSERT_EQUALS 125 "@result.0.sgv"
 ASSERT_EQUALS "" "@result.0.direction"
 ASSERT_EQUALS 123 "@result.1.sgv"
 ASSERT_EQUALS "FortyFiveDown" "@result.1.direction"
-ASSERT_EQUALS "3MH0058XKP" "@result.1.device"
+ASSERT_EQUALS "3MH000TEST" "@result.1.device"
 ASSERT_EQUALS "Juggluco" "@result.1.app"
-ASSERT_EQUALS "504b5838-3530-3048-50ee-1234eeeeeeee" "@result.1.identifier"
+ASSERT_EQUALS "54534554-3030-3048-50ee-1234eeeeeeee" "@result.1.identifier"
 
 ######
 # Amounts: uploadtreatments sends each new or changed amount by deleting it by its identifier, ignoring the answer,
