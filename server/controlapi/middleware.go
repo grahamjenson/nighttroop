@@ -46,12 +46,14 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 
 // SignedIn is whether the request has a control admin's valid sign in token, before the control site checks the admin
 func SignedIn(config *config.ServerConfig, r *http.Request) bool {
-	_, _, err := verifyControlJWTToken(nil, config, r)
+	_, _, _, err := verifyControlJWTToken(nil, config, r)
 	return err == nil
 }
 
+// tryLoginWithJWTToken is the control admin a JWT is for. A JWT issued before the admin's password or TOTP last
+// changed is refused, so a reset signs out whoever had the old ones.
 func tryLoginWithJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request) (*controldb.ControlIdentity, error) {
-	userName, role, err := verifyControlJWTToken(controlDB, config, r)
+	userName, role, issuedAtMs, err := verifyControlJWTToken(controlDB, config, r)
 
 	if err != nil {
 		return nil, err
@@ -69,6 +71,10 @@ func tryLoginWithJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, 
 		return nil, fmt.Errorf("Role mismatch: expected %s, got %s", controlIdentity.Role, role)
 	}
 
+	if err := httputils.CheckIssuedAfterCredentialsChanged(controlIdentity, issuedAtMs); err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get control identity: %w", err)
 	}
@@ -76,32 +82,33 @@ func tryLoginWithJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, 
 	return controlIdentity, nil
 }
 
-func verifyControlJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request) (string, consts.ControlRole, error) {
+// verifyControlJWTToken is the control admin name and role of the request's JWT, and when it was issued in milliseconds
+func verifyControlJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request) (string, consts.ControlRole, int64, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		adminName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
+		adminName, role, issuedAtMs, err := config.Security.VerifyControlJWTToken(jwttokenStr)
 		if err != nil {
-			return "", consts.ControlRole(""), fmt.Errorf("bad JWT token: %w", err)
+			return "", consts.ControlRole(""), 0, fmt.Errorf("bad JWT token: %w", err)
 		}
 
-		return adminName, consts.ControlRole(role), nil
+		return adminName, consts.ControlRole(role), issuedAtMs, nil
 	}
 
 	if authHeader != "" {
-		return "", consts.ControlRole(""), fmt.Errorf("Auth Header exists but is not Bearer token")
+		return "", consts.ControlRole(""), 0, fmt.Errorf("Auth Header exists but is not Bearer token")
 	}
 
 	// Check for Cookie
 	cookieToken, err := security.GetControlTokenFromRequest(r)
 	if err == nil {
 		jwttokenStr := cookieToken
-		adminName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
+		adminName, role, issuedAtMs, err := config.Security.VerifyControlJWTToken(jwttokenStr)
 		if err != nil {
-			return "", consts.ControlRole(""), fmt.Errorf("Bad Cookie JWT token: %w", err)
+			return "", consts.ControlRole(""), 0, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		return adminName, consts.ControlRole(role), nil
+		return adminName, consts.ControlRole(role), issuedAtMs, nil
 	}
 
-	return "", consts.ControlRole(""), fmt.Errorf("No JWT token found")
+	return "", consts.ControlRole(""), 0, fmt.Errorf("No JWT token found")
 }
