@@ -16,6 +16,8 @@ CREATE INDEX event_groups_updated_at_idx ON event_groups(updated_at);
 
 CREATE INDEX food_intakes_occurred_at_idx ON food_intakes(occurred_at);
 
+CREATE INDEX food_intakes_updated_at_idx ON food_intakes(updated_at);
+
 CREATE INDEX food_presets_created_at_idx ON food_presets(created_at);
 
 CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
@@ -27,6 +29,8 @@ CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(r
 CREATE INDEX glucose_readings_updated_at_idx ON glucose_readings(updated_at);
 
 CREATE INDEX insulin_doses_occurred_at_idx ON insulin_doses(occurred_at);
+
+CREATE INDEX insulin_doses_updated_at_idx ON insulin_doses(updated_at);
 
 CREATE INDEX loop_settings_app_last_seen_at_idx ON loop_settings(app, last_seen_at);
 
@@ -40,13 +44,19 @@ CREATE INDEX profile_presets_updated_at_idx ON profile_presets(updated_at);
 
 CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at);
 
+CREATE INDEX profile_switches_updated_at_idx ON profile_switches(updated_at);
+
 CREATE INDEX summary_period_end_at_idx ON summary_period(end_at);
 
 CREATE INDEX summary_period_stale_idx ON summary_period(period, start_at) WHERE stale_at IS NOT NULL;
 
 CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);
 
+CREATE INDEX temp_basals_updated_at_idx ON temp_basals(updated_at);
+
 CREATE INDEX temp_targets_occurred_at_idx ON temp_targets(occurred_at);
+
+CREATE INDEX temp_targets_updated_at_idx ON temp_targets(updated_at);
 
 CREATE TABLE activities (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),

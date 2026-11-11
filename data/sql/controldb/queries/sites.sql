@@ -201,3 +201,6 @@ SELECT * FROM sites WHERE
 
 -- name: UpdateSiteTableSizes :exec
 UPDATE sites SET table_sizes_json = sqlc.arg('TableSizesJson') WHERE id = sqlc.arg('ID');
+
+-- name: UpdateSiteSummariesCheckedAt :exec
+UPDATE sites SET summaries_checked_at = sqlc.arg('SummariesCheckedAt') WHERE id = sqlc.arg('ID');

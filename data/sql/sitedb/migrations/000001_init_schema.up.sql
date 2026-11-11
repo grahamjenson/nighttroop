@@ -596,6 +596,12 @@ CREATE INDEX food_presets_created_at_idx ON food_presets(created_at);
 
 -- LastModifiedCollections takes the newest updated_at of each collection
 CREATE INDEX glucose_readings_updated_at_idx ON glucose_readings(updated_at);
+-- The stale rebuild finds the summary data written since it last checked
+CREATE INDEX insulin_doses_updated_at_idx ON insulin_doses(updated_at);
+CREATE INDEX food_intakes_updated_at_idx ON food_intakes(updated_at);
+CREATE INDEX temp_basals_updated_at_idx ON temp_basals(updated_at);
+CREATE INDEX temp_targets_updated_at_idx ON temp_targets(updated_at);
+CREATE INDEX profile_switches_updated_at_idx ON profile_switches(updated_at);
 CREATE INDEX activities_updated_at_idx ON activities(updated_at);
 CREATE INDEX event_groups_updated_at_idx ON event_groups(updated_at);
 CREATE INDEX device_reports_updated_at_idx ON device_reports(updated_at);

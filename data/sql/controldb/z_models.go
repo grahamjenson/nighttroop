@@ -87,6 +87,7 @@ type Site struct {
 	TableSizesJson                   types.TableSizes
 	LastSeenAt                       *int64
 	LastWriteAt                      *int64
+	SummariesCheckedAt               *int64
 	State                            string
 	DisabledAt                       *int64
 	ArchivedAt                       *int64

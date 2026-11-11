@@ -29,22 +29,24 @@ type Builder struct {
 	builtLock sync.Mutex
 	built     map[string]built
 
-	// stale are, by site, the times of the data written since its summaries were built, waiting to be built again
+	// stale are, by site, when its data was first and last written since its summaries were built again, for when to
+	// build them; what was written is found from its data's updated_at
 	staleLock sync.Mutex
 	stale     map[string]*staleData
 	// checked is whether every site's days marked stale in its DB were built since the server started
 	checked bool
 }
 
-// staleData are a site's 15 minute buckets, by when they start, of the data written to it, and when the first and
-// last were written. Buckets of 15 minutes are kept, as every timezone's midnight starts one.
+// staleData is when a site's data was first and last written since its summaries were built again
 type staleData struct {
-	buckets     map[int64]bool
 	first, last time.Time
 }
 
 const (
-	staleBucket = 15 * time.Minute
+	// checkedOverlap is how far before a site was last checked its data is looked through again, as a write's updated_at
+	// is taken before it commits; and restartSince, of a site never checked, how far before the server started
+	checkedOverlap = time.Minute
+	restartSince   = time.Hour
 	// staleQuiet is how long a site's data must go unchanged before its days are built again, so the many records a
 	// backfill or sync writes are built once, from all of them, and staleWait the longest written data waits, so a
 	// long backfill's days are still built as it goes
@@ -200,8 +202,8 @@ func (b *Builder) buildYesterday(ctx context.Context, siteID string, now time.Ti
 	return sitedata.BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
-// markStale keeps when the record a model change is of happened, for its day's summary to be built again, when it is
-// one a day's summary is built from. It is called as each change is published, so it only keeps it.
+// markStale keeps when a site's data a day's summary is built from was written, for when to build its days again. It
+// is called as each change is published, so it only keeps it.
 func (b *Builder) markStale(event events.Event, now time.Time) {
 	switch event.Model.(type) {
 	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempBasal, *sitedb.TempTarget,
@@ -209,25 +211,23 @@ func (b *Builder) markStale(event events.Event, now time.Time) {
 	default:
 		return
 	}
-	model, ok := event.Model.(interface{ GetOccurredAt() int64 })
-	if !ok || event.SiteID == "" {
+	if event.SiteID == "" {
 		return
 	}
 	b.staleLock.Lock()
 	defer b.staleLock.Unlock()
 	data := b.stale[event.SiteID]
 	if data == nil {
-		data = &staleData{buckets: map[int64]bool{}, first: now}
+		data = &staleData{first: now}
 		b.stale[event.SiteID] = data
 	}
-	data.buckets[model.GetOccurredAt()/staleBucket.Milliseconds()] = true
 	data.last = now
 }
 
-// RebuildStale builds again the days, and their weeks, fortnights and months, of the data written to each site that
-// has gone staleQuiet without more, or waited staleWait, and its days marked stale in its DB, and on the first run
-// since the server started every site's days marked stale, leaving out today, which is built as it is read. A site
-// with only today's data written is not opened.
+// RebuildStale builds again the days, and their weeks, fortnights and months, of each site's data written since it
+// was last checked, by its updated_at, and those marked stale in its DB, once its data has gone staleQuiet without
+// more, or waited staleWait, and every site's on the first run since the server started, leaving out today, which is
+// built as it is read. A site with only today's data written is not opened.
 func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 	b.staleLock.Lock()
 	due := map[string]*staleData{}
@@ -240,7 +240,7 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 	if !b.checked {
 		for _, site := range b.controlDB.AllSites() {
 			if due[site.Subdomain] == nil {
-				due[site.Subdomain] = &staleData{buckets: map[int64]bool{}}
+				due[site.Subdomain] = &staleData{}
 			}
 		}
 		b.checked = true
@@ -261,34 +261,40 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 		// Taken before its stale days are read, so one marked as they are built is not cleared unbuilt
 		began := time.Now()
 		siteDB, _, err := b.controlDB.GetSite(ctx, siteID)
-		var stale []int64
+		since := began.Add(-restartSince).UnixMilli()
+		if site.SummariesCheckedAt != nil {
+			since = *site.SummariesCheckedAt - checkedOverlap.Milliseconds()
+		}
+		var stale, written []int64
 		if err == nil {
 			stale, err = siteDB.Queries().StaleSummaryDays(ctx)
+		}
+		if err == nil {
+			written, err = siteDB.Queries().SummaryDataWrittenSince(ctx, sitedb.SummaryDataWrittenSinceParams{Since: since, Before: today.UnixMilli()})
 		}
 		if err != nil {
 			b.restale(siteID, data)
 			errs = append(errs, err)
 			continue
 		}
-		for bucket := range data.buckets {
-			stale = append(stale, bucket*staleBucket.Milliseconds())
-		}
 		var times []time.Time
-		for _, at := range stale {
+		for _, at := range append(stale, written...) {
 			if at := time.UnixMilli(at); at.Before(today) {
 				times = append(times, at)
 			}
 		}
-		if len(times) == 0 {
-			continue
+		if len(times) > 0 {
+			siteCtx := aslog.WithSite(ctx, siteID)
+			var siteContext *httputils.SiteContext
+			if siteContext, err = b.site(siteCtx, siteID); err == nil {
+				err = sitedata.RebuildSummaryDays(siteCtx, siteContext.SiteDB.Queries(), siteContext, times, now)
+			}
+			if err == nil {
+				err = siteDB.Queries().ClearStaleSummaries(siteCtx, sitedb.ClearStaleSummariesParams{Before: new(began.UnixMilli())})
+			}
 		}
-		siteCtx := aslog.WithSite(ctx, siteID)
-		siteContext, err := b.site(siteCtx, siteID)
 		if err == nil {
-			err = sitedata.RebuildSummaryDays(siteCtx, siteContext.SiteDB.Queries(), siteContext, times, now)
-		}
-		if err == nil {
-			err = siteContext.SiteDB.Queries().ClearStaleSummaries(siteCtx, sitedb.ClearStaleSummariesParams{Before: new(began.UnixMilli())})
+			err = b.controlDB.Queries.UpdateSiteSummariesCheckedAt(ctx, controldb.UpdateSiteSummariesCheckedAtParams{SummariesCheckedAt: new(began.UnixMilli()), ID: siteID})
 		}
 		if err != nil {
 			b.restale(siteID, data)
@@ -298,12 +304,11 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 	return errors.Join(errs...)
 }
 
-// restale keeps a site's data that could not be built to be built on a later run, with any written since
+// restale keeps a site whose summaries could not be built to be built on a later run, with any written since
 func (b *Builder) restale(siteID string, data *staleData) {
 	b.staleLock.Lock()
 	defer b.staleLock.Unlock()
 	if since := b.stale[siteID]; since != nil {
-		maps.Copy(data.buckets, since.buckets)
 		data.last = since.last
 	}
 	b.stale[siteID] = data
