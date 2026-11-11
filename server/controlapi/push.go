@@ -50,10 +50,6 @@ func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
 // registration as it is after. Only admins can.
 func PushTestHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		apiutils.ErrNotFound.Write(acceptType, w)

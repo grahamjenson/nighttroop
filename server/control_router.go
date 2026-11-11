@@ -35,7 +35,8 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 		// The control plane's collections, each at its route: sites, jobs, job stats and connectors
 		store.Routes(r)
-		// Only an admin can change the server, its sites and its admins, or download a DB, not a read only identity
+		// Only an admin can change the server, its sites, its push credentials and its admins, send a test push, or
+		// download a DB, not a read only identity
 		admin := r.With(controlcollections.AdminOnly)
 		admin.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		admin.Post("/settings", (&controlcollections.SitesCollection{}).SettingsHandler)
@@ -54,10 +55,10 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		admin.Post("/rate-limits", controlapi.SetRateLimitsHandler)
 		r.Get("/push-devices", controlapi.PushDevicesHandler)
 		admin.Get(httputils.ControlLogsDBPath, controlapi.LogsDBHandler)
-		r.Post("/push-devices/{id}/test", controlapi.PushTestHandler)
-		r.Get("/push-credentials/new", (&controlcollections.PushCredentialsCollection{}).NewHandler)
-		r.Post("/push-credentials", (&controlcollections.PushCredentialsCollection{}).CreateHandler)
-		r.Delete("/push-credentials/{id}", (&controlcollections.PushCredentialsCollection{}).DeleteHandler)
+		admin.Post("/push-devices/{id}/test", controlapi.PushTestHandler)
+		admin.Get("/push-credentials/new", (&controlcollections.PushCredentialsCollection{}).NewHandler)
+		admin.Post("/push-credentials", (&controlcollections.PushCredentialsCollection{}).CreateHandler)
+		admin.Delete("/push-credentials/{id}", (&controlcollections.PushCredentialsCollection{}).DeleteHandler)
 		// Control's admins, which an admin manages, never itself
 		r.Get("/admins", controlapi.ControlAdminsHandler)
 		admin.Post("/admins", controlapi.CreateControlAdminHandler)
