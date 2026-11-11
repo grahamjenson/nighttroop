@@ -65,6 +65,24 @@ func (config *SecurityConfig) createJWTPrimitives() error {
 	return nil
 }
 
+// signJWT is a JWT of subject from issuer for audience, with claims and when it was issued in milliseconds, and when
+// it expires, after lifetime
+func (config *SecurityConfig) signJWT(subject, issuer, audience string, lifetime time.Duration, claims map[string]any) (string, time.Time, error) {
+	now := time.Now()
+	expiresAt := now.Add(lifetime)
+	claims[IssuedAtMsClaim] = now.UnixMilli()
+	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{Subject: &subject, Issuer: &issuer, Audience: &audience,
+		ExpiresAt: &expiresAt, IssuedAt: &now, CustomClaims: claims})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	tokenString, err := config.jwtMac.ComputeMACAndEncode(rawJWT)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return tokenString, expiresAt, nil
+}
+
 ////
 // CONTROL JWT
 ////
@@ -72,31 +90,7 @@ func (config *SecurityConfig) createJWTPrimitives() error {
 var ControlIssuer = "control"
 
 func (config *SecurityConfig) GenerateControlJWTToken(userName string, role string) (string, time.Time, error) {
-
-	now := time.Now()
-	expiresAt := now.Add(time.Hour * 1)
-
-	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{
-		Subject:   &userName,
-		Audience:  &ControlAudience,
-		ExpiresAt: &expiresAt,
-		Issuer:    &ControlIssuer,
-		IssuedAt:  &now,
-		CustomClaims: map[string]any{
-			"role":          role,
-			IssuedAtMsClaim: now.UnixMilli(),
-		},
-	})
-	if err != nil {
-		return "", time.Time{}, err
-	}
-
-	// 3. Sign and return
-	tokenString, err := config.jwtMac.ComputeMACAndEncode(rawJWT)
-	if err != nil {
-		return "", time.Time{}, err
-	}
-	return tokenString, expiresAt, nil
+	return config.signJWT(userName, ControlIssuer, ControlAudience, time.Hour, map[string]any{"role": role})
 }
 
 // VerifyControlJWTToken is the control admin name and role a control JWT is for, and when it was issued in milliseconds
@@ -138,31 +132,7 @@ func (config *SecurityConfig) VerifyControlJWTToken(tokenStr string) (string, st
 ////
 
 func (config *SecurityConfig) GenerateUserJWTToken(subdomain string, identityName string, role string) (string, time.Time, error) {
-
-	now := time.Now()
-	expiresAt := now.Add(time.Hour * 1)
-
-	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{
-		Subject:   &identityName,
-		Audience:  &UserAudience,
-		Issuer:    &subdomain,
-		ExpiresAt: &expiresAt,
-		IssuedAt:  &now,
-		CustomClaims: map[string]any{
-			"role":          role,
-			IssuedAtMsClaim: now.UnixMilli(),
-		},
-	})
-	if err != nil {
-		return "", time.Time{}, err
-	}
-
-	// 3. Sign and return
-	tokenString, err := config.jwtMac.ComputeMACAndEncode(rawJWT)
-	if err != nil {
-		return "", time.Time{}, err
-	}
-	return tokenString, expiresAt, nil
+	return config.signJWT(identityName, subdomain, UserAudience, time.Hour, map[string]any{"role": role})
 }
 
 // VerifyUserJWTToken is the site, identity name and role a user JWT is for, and when it was issued in milliseconds
@@ -202,30 +172,8 @@ func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, strin
 ///
 
 func (config *SecurityConfig) GeneratePreAuthJWTToken(subdomain string, deviceName string) (string, time.Time, error) {
-
-	now := time.Now()
-
-	expiresAt := now.Add(time.Minute * 5)
-
-	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{
-		Subject:   &deviceName,
-		Issuer:    &subdomain, // binds the password step to this site
-		Audience:  &PreAuthAudience,
-		ExpiresAt: &expiresAt,
-		IssuedAt:  &now,
-		CustomClaims: map[string]any{
-			IssuedAtMsClaim: now.UnixMilli(),
-		},
-	})
-	if err != nil {
-		return "", time.Time{}, err
-	}
-
-	tokenString, err := config.jwtMac.ComputeMACAndEncode(rawJWT)
-	if err != nil {
-		return "", time.Time{}, err
-	}
-	return tokenString, expiresAt, nil
+	// Issued by the site, which binds the password step to it
+	return config.signJWT(deviceName, subdomain, PreAuthAudience, 5*time.Minute, map[string]any{})
 }
 
 // VerifyPreAuthJWTToken is the identity name a pre-auth JWT for the site is for, and when it was issued in milliseconds
