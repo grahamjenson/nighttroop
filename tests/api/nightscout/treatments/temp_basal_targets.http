@@ -9,7 +9,7 @@ B   {
     "duration": 120,
     "eventType": "Temp Basal",
     "pumpId": 1714289927165,
-    "pumpSerial": "4241",
+    "pumpSerial": "1234",
     "pumpType": "OMNIPOD_DASH",
     "rate": 0,
     "type": "NORMAL",

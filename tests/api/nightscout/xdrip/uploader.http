@@ -65,14 +65,14 @@ ASSERT_LENGTH 2 "@"
 NAME xdrip_devicestatus_phone
 POST http://{{ site }}/api/v1/devicestatus
 H api-secret: {{ sha1 token }}
-B {"device": "Google Pixel 7", "uploader": {"battery": 87, "type": "PHONE"}}
+B {"device": "Test Phone", "uploader": {"battery": 87, "type": "PHONE"}}
 ASSERT_STATUS 200
 
 NAME xdrip_devicestatus_phone_battery
 GET http://{{ site }}/api/v1/devicestatus.json?count=1
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "Google Pixel 7" "@0.device"
+ASSERT_EQUALS "Test Phone" "@0.device"
 ASSERT_EQUALS 87 "@0.uploaderBattery"
 
 NAME xdrip_devicestatus_bridge

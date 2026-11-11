@@ -20,7 +20,7 @@ ASSERT_STATUS 200
 NAME seed_devicestatus_v1
 POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
 B {
-    "device": "openaps://samsung SM-G970F",
+    "device": "openaps://Test Phone",
     "created_at": "{{ time 1 }}",
     "openaps": {
         "iob": { "iob": 1.25, "basaliob": 0.4, "activity": 0.01, "time": "{{ time 1 }}" },

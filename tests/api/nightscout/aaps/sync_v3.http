@@ -688,7 +688,7 @@ B {
     "date": {{ itime 5 }},
     "uploaderBattery": 87,
     "isCharging": false,
-    "device": "openaps://samsung SM-G970F",
+    "device": "openaps://Test Phone",
     "uploader": {},
     "pump": {
         "clock": "{{ time 5 }}",
