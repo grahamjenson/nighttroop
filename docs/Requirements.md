@@ -194,7 +194,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - One for every site, with no `site_id`, is refused (400) until the server uses it only for tokens its app registered
   itself, requires its bundle IDs and limits pushes across the server.
 - A control admin can delete any of them, a site's or one for every site, after a confirmation, removing its secret
-  so pushes stop using it; a read only control identity is refused (403) adding or deleting one.
+  so pushes stop using it.
+- A read only control identity sees them, but no Add Push Credential or Delete buttons, and is refused (403) opening
+  the form to add one (`/push-credentials/new`), adding one or deleting one.
 
 ### Logs
 

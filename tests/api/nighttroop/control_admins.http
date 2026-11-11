@@ -141,6 +141,45 @@ H Authorization: Bearer {{ .carol_login.token }}
 H Accept: application/json
 ASSERT_STATUS 403
 
+// Nor can it add or delete push credentials, or open the form to add one, or send a test push, though it can see them
+NAME read_only_cannot_open_push_credential_form
+GET http://control.localhost/push-credentials/new
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_add_push_credential
+POST http://control.localhost/push-credentials
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+H Content-Type: application/json
+B {"site_id": "abcdefgh", "name": "My Loop", "provider": "apns", "team_or_project_id": "TEAM123456", "key_id": "ABC123DEFG", "apps": ["loop"], "secret": "not a key"}
+ASSERT_STATUS 403
+
+NAME read_only_cannot_delete_push_credential
+DELETE http://control.localhost/push-credentials/1
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_cannot_send_test_push
+POST http://control.localhost/push-devices/1/test
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME read_only_can_see_push_credentials
+GET http://control.localhost/push-credentials
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME read_only_can_see_push_devices
+GET http://control.localhost/push-devices
+H Authorization: Bearer {{ .carol_login.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+
 NAME read_only_can_see_rate_limits
 GET http://control.localhost/rate-limits
 H Authorization: Bearer {{ .carol_login.token }}

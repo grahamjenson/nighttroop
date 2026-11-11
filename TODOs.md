@@ -83,7 +83,6 @@
        until then
     1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
        identities that can change the site's data are given them back, and push registrations keep them encrypted
-    1. P5: Put the control site's push routes (`/push-devices/{id}/test`, `/push-credentials`) behind
        `controlcollections.AdminOnly` in `server/control_router.go`, as its other admin only routes are, and drop
        their handlers' own admin checks
 1. Nightscout API:
