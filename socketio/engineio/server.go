@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/time/rate"
@@ -26,6 +27,10 @@ type Config struct {
 	MaxPacketRate    float64       // how many packets a second a client may send, averaged, 20 by default; it may burst 5 seconds' worth
 	// CheckOrigin decides which browser origins may open a websocket; nil allows only the server's own origin, and clients that send none
 	CheckOrigin func(*http.Request) bool
+	// ClientKey is who a handshake is from, such as its IP. A client may have at most MaxUnauthorized sessions open that
+	// are not yet authorized (see Session.Authorize), MaxSessions by default, so it cannot take every session.
+	ClientKey       func(*http.Request) string
+	MaxUnauthorized int
 }
 
 func (c Config) withDefaults() Config {
@@ -40,6 +45,9 @@ func (c Config) withDefaults() Config {
 	}
 	if c.MaxSessions <= 0 {
 		c.MaxSessions = 10_000
+	}
+	if c.MaxUnauthorized <= 0 {
+		c.MaxUnauthorized = c.MaxSessions
 	}
 	if c.MaxBuffered <= 0 {
 		c.MaxBuffered = 1_000
@@ -145,12 +153,23 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // open starts a session and makes its open packet; a polling session can upgrade to a websocket
 func (s *Server) open(r *http.Request, version int, upgrades []string) (*Session, Packet, bool) {
+	client := ""
+	if s.config.ClientKey != nil {
+		client = s.config.ClientKey(r)
+	}
 	s.mu.Lock()
-	if len(s.sessions) >= s.config.MaxSessions {
+	unauthorized := 0
+	for _, session := range s.sessions {
+		if client != "" && session.client == client && !session.authorized.Load() {
+			unauthorized++
+		}
+	}
+	if len(s.sessions) >= s.config.MaxSessions || unauthorized >= s.config.MaxUnauthorized {
 		s.mu.Unlock()
 		return nil, Packet{}, false
 	}
 	session := newSession(s, r, version)
+	session.client = client
 	s.sessions[session.id] = session
 	s.mu.Unlock()
 
@@ -267,6 +286,9 @@ type Session struct {
 	version int
 	server  *Server
 	request *http.Request
+	client  string // the Config's ClientKey of the handshake
+	// authorized is set once the session is authorized, so it no longer counts against its client
+	authorized atomic.Bool
 
 	limiter  *rate.Limiter // paces the client's packets
 	handling sync.Mutex    // handles one packet at a time, even from a POST in flight as the session upgrades
@@ -309,6 +331,9 @@ func (s *Session) Version() int { return s.version }
 
 // Request is the handshake request, for its headers, query, remote address and context values (without its cancel)
 func (s *Session) Request() *http.Request { return s.request }
+
+// Authorize marks the session as given access, so it no longer counts against its client's Config.MaxUnauthorized
+func (s *Session) Authorize() { s.authorized.Store(true) }
 
 // OnMessage sets the handler for the client's messages; it runs in order, one at a time, so must not block
 func (s *Session) OnMessage(handler func(data string)) {

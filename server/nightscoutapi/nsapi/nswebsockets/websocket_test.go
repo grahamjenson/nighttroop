@@ -33,8 +33,9 @@ func TestMain(m *testing.M) {
 	os.Setenv("SITE_GET_PER_MINUTE_LIMIT", "1")
 	os.Setenv("SITE_GET_PER_MINUTE_BURST", "3")
 	os.Setenv("SITE_UNAUTH_PER_MINUTE_LIMIT", "1")
-	os.Setenv("SITE_UNAUTH_PER_MINUTE_BURST", "2")
-	os.Setenv("SOCKET_MAX_SESSIONS_PER_SITE", "2")
+	os.Setenv("SITE_UNAUTH_PER_MINUTE_BURST", "4")
+	os.Setenv("SOCKET_MAX_SESSIONS_PER_SITE", "4")
+	os.Setenv("SOCKET_MAX_UNAUTH_SESSIONS_PER_IP", "2")
 	cfg, err := config.NewServerConfig()
 	if err != nil {
 		panic(err)
@@ -155,10 +156,15 @@ func siteSocketServer(t *testing.T, cfg *config.ServerConfig, siteCtx context.Co
 	return ts
 }
 
-// The session limits come from the server config: here two sessions a site
+// The session limits come from the server config: here four sessions a site, two of them an IP's before they are
+// given access, the IP keyed as its limits are
 func TestSocketLimitsComeFromConfig(t *testing.T) {
 	cfg := testConfig
-	require.Equal(t, engineio.Config{PingInterval: 25 * time.Second, PingTimeout: 20 * time.Second, MaxPayload: 100000, MaxSessions: 2, MaxBuffered: 1000, MaxBufferedBytes: 2000000, MaxPacketRate: 20}, (&Websocket{config: cfg}).engineConfig())
+	engineConfig := (&Websocket{config: cfg}).engineConfig()
+	ipv6 := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, "site", "2001:db8::1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+	require.Equal(t, "2001:db8::/64", engineConfig.ClientKey(httptest.NewRequestWithContext(ipv6, http.MethodGet, "/", nil)))
+	engineConfig.ClientKey = nil
+	require.Equal(t, engineio.Config{PingInterval: 25 * time.Second, PingTimeout: 20 * time.Second, MaxPayload: 100000, MaxSessions: 4, MaxBuffered: 1000, MaxBufferedBytes: 2000000, MaxPacketRate: 20, MaxUnauthorized: 2}, engineConfig)
 
 	run := runs.Add(1)
 	siteCtx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
@@ -171,64 +177,125 @@ func TestSocketLimitsComeFromConfig(t *testing.T) {
 	}
 }
 
-// An authorize checks a token then reads the recent data, so the site's GET limit counts them, however many sockets
-// a client spreads them over; the per-socket attempt limit alone starts again on each reconnect
-func TestSocketAuthorizeIsRateLimited(t *testing.T) {
-	cfg := testConfig
-	run := runs.Add(1)
-	siteCtx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+// ipSocketServer serves a site's Socket.IO server, as the router would, with each request in the site's context from
+// the IP in its ip query, so a test can connect from many IPs; found finds each token's identity
+func ipSocketServer(t *testing.T, controlDB *db.ControlDB, siteID string, found IdentityFinder) *httptest.Server {
+	ws := NewWebsocket(controlDB, testConfig, nil, found, found)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := httputils.CreateSiteContext(r.Context(), testConfig, controlDB, nil, nil, siteID, r.URL.Query().Get("ip"), httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		ws.ServeHTTP(w, r.WithContext(ctx))
+	}))
+	t.Cleanup(func() {
+		ws.siteServer(siteID, false).Close()
+		ts.Close()
+	})
+	return ts
+}
 
-	ts := siteSocketServer(t, cfg, siteCtx)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+// An authorize before a socket is given access spends its IP's budget on the site, as a request that fails auth does,
+// not the site's GET limit, so one IP's failed authorizes, however many sockets it spreads them over, cannot leave the
+// site's own pages and followers with 429s
+func TestSocketFailedAuthorizesSpendTheIPsBudgetNotTheSites(t *testing.T) {
+	siteID := fmt.Sprint("site", runs.Add(1))
+	ts := ipSocketServer(t, nil, siteID, noIdentity)
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
-	first, err := socketio.Dial(ctx, ts.URL+"/socket.io/", engineio.V4, nil)
-	require.NoError(t, err)
-	second, err := socketio.Dial(ctx, ts.URL+"/socket.io/", engineio.V4, nil)
-	require.NoError(t, err)
-	for _, client := range []*socketio.Client{first, second} {
-		require.NoError(t, client.Connect(ctx, socketio.DefaultNamespace, nil))
-	}
-	// Two authorizes each are within both the per-socket attempts and the site's burst of 3, until the fourth
-	for _, client := range []*socketio.Client{first, second, first} {
-		reply, err := client.EmitWithAck(ctx, socketio.DefaultNamespace, "authorize", map[string]any{})
+	authorize := func(ip string) error {
+		client, err := socketio.Dial(ctx, ts.URL+"/socket.io/?ip="+ip, engineio.V4, nil)
 		require.NoError(t, err)
-		require.JSONEq(t, `{"read":false,"write":false,"write_treatment":false}`, string(reply[0]))
+		defer client.Close()
+		require.NoError(t, client.Connect(ctx, socketio.DefaultNamespace, nil))
+		short, cancelShort := context.WithTimeout(ctx, 500*time.Millisecond)
+		defer cancelShort()
+		reply, err := client.EmitWithAck(short, socketio.DefaultNamespace, "authorize", map[string]any{"secret": "not the secret"})
+		if err == nil {
+			require.JSONEq(t, `{"read":false,"write":false,"write_treatment":false}`, string(reply[0]))
+		}
+		return err
 	}
-	short, cancelShort := context.WithTimeout(ctx, 500*time.Millisecond)
-	defer cancelShort()
-	_, err = second.EmitWithAck(short, socketio.DefaultNamespace, "authorize", map[string]any{})
-	require.ErrorIs(t, err, context.DeadlineExceeded)
-	require.False(t, second.Connected(socketio.DefaultNamespace))
-	require.True(t, first.Connected(socketio.DefaultNamespace))
+	// More failed authorizes than the site's GET burst of 3, within the IP's burst of 4
+	for range 4 {
+		require.NoError(t, authorize("10.0.0.1"))
+	}
+	require.InDelta(t, 3, testConfig.RateLimiters.SiteGETLimiter(siteID).Tokens(), 0.5, "the site's GET budget is untouched")
+	require.Error(t, authorize("10.0.0.1"), "past its burst the IP's authorize is unanswered")
+	require.NoError(t, authorize("10.0.0.2"), "another IP has its own budget")
 }
 
 // As in Nightscout, an authorize with a token that is no one's is disconnected unanswered, while one with a wrong
-// API secret, or none, is answered that it can do nothing
+// API secret, or none, is answered that it can do nothing. Either way, once a socket has been refused, a token at
+// once and otherwise maxAuthorizeAttempts times, its session is closed, rather than held until authorizeWithin.
 func TestSocketAuthorizeWithABadTokenDisconnects(t *testing.T) {
-	run := runs.Add(1)
-	siteCtx := httputils.CreateSiteContext(context.Background(), testConfig, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
-	ts := siteSocketServer(t, testConfig, siteCtx)
-
+	ts := ipSocketServer(t, nil, fmt.Sprint("site", runs.Add(1)), noIdentity)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	for _, message := range []map[string]any{{"secret": "not the secret"}, {"token": "not-a-real-token"}} {
-		client, err := socketio.Dial(ctx, ts.URL+"/socket.io/", engineio.V4, nil)
+	for i, message := range []map[string]any{{"secret": "not the secret"}, {}, {"token": "not-a-real-token"}} {
+		client, err := socketio.Dial(ctx, fmt.Sprintf("%s/socket.io/?ip=10.0.0.%d", ts.URL, i), engineio.V4, nil)
 		require.NoError(t, err)
 		require.NoError(t, client.Connect(ctx, socketio.DefaultNamespace, nil))
-		short, cancelShort := context.WithTimeout(ctx, 500*time.Millisecond)
-		reply, err := client.EmitWithAck(short, socketio.DefaultNamespace, "authorize", message)
-		cancelShort()
-		if message["token"] == nil {
-			require.NoError(t, err)
-			require.JSONEq(t, `{"read":false,"write":false,"write_treatment":false}`, string(reply[0]))
-			require.True(t, client.Connected(socketio.DefaultNamespace))
-		} else {
-			require.ErrorIs(t, err, context.DeadlineExceeded)
-			require.False(t, client.Connected(socketio.DefaultNamespace))
+		attempts := maxAuthorizeAttempts
+		if message["token"] != nil {
+			attempts = 1
+		}
+		for range attempts {
+			short, cancelShort := context.WithTimeout(ctx, 500*time.Millisecond)
+			reply, err := client.EmitWithAck(short, socketio.DefaultNamespace, "authorize", message)
+			cancelShort()
+			if message["token"] == nil {
+				require.NoError(t, err)
+				require.JSONEq(t, `{"read":false,"write":false,"write_treatment":false}`, string(reply[0]))
+			} else {
+				require.ErrorIs(t, err, context.DeadlineExceeded)
+				require.False(t, client.Connected(socketio.DefaultNamespace))
+			}
+		}
+		select {
+		case <-client.Done():
+		case <-time.After(3 * time.Second):
+			t.Fatalf("the session of a socket refused with %v stayed open", message)
 		}
 		client.Close()
 	}
+}
+
+// A site's sessions are shared by its followers, so one IP, or one IPv6 /64, may hold only
+// SocketMaxUnauthorizedSessionsPerIP of them before they are given access, and cannot take every one
+func TestSocketOneIPCannotTakeEverySession(t *testing.T) {
+	controlDB, identity := siteIdentity(t)
+	found := func(_ *config.ServerConfig, _ context.Context, token string) (*controldb.SiteIdentity, error) {
+		if token == "token" {
+			return identity, nil
+		}
+		return nil, errors.New("no identity")
+	}
+	ts := ipSocketServer(t, controlDB, identity.SiteID, found)
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	defer cancel()
+	dial := func(ip string) (*socketio.Client, error) {
+		client, err := socketio.Dial(ctx, ts.URL+"/socket.io/?ip="+ip, engineio.V4, nil)
+		if err == nil {
+			t.Cleanup(func() { client.Close() })
+		}
+		return client, err
+	}
+
+	first, err := dial("2001:db8::1")
+	require.NoError(t, err)
+	_, err = dial("2001:db8::2")
+	require.NoError(t, err)
+	_, err = dial("2001:db8::3")
+	require.ErrorContains(t, err, "429", "a third session from the same /64 is refused")
+	_, err = dial("10.0.0.1")
+	require.NoError(t, err, "another IP still connects")
+
+	// A session given access no longer counts against its IP
+	require.NoError(t, first.Connect(ctx, "/alarm", nil))
+	_, err = first.EmitWithAck(ctx, "/alarm", "subscribe", map[string]any{"accessToken": "token"})
+	require.NoError(t, err)
+	_, err = dial("2001:db8::3")
+	require.NoError(t, err)
+	_, err = dial("10.0.0.2")
+	require.ErrorContains(t, err, "429", "the site's own cap of 4 still holds")
 }
 
 // A site has SocketMaxSessionsPerSite sessions, so a socket not given access within authorizeWithin is closed, rather

@@ -784,10 +784,16 @@ Connectors are a site's third party integrations, each syncing from one service.
   `/alarm` socket that can read as a `notification`, titled with its event type and saying who entered it and its
   notes, as Nightscout's treatment notify does.
 - A Socket.IO `authorize` with a token that is no one's is disconnected unanswered, as Nightscout does; a wrong API
-  secret is answered that it can do nothing.
+  secret is answered that it can do nothing. Either way, once a socket has been refused, at once for a token and on the
+  third refusal otherwise, its connection is closed a second later.
+- A Socket.IO `authorize` or `subscribe` before its socket is given access spends its IP's budget on the site
+  (`SITE_UNAUTH_PER_MINUTE_LIMIT`), as a request that fails auth does, not the site's own, so one IP's failed sign ins
+  cannot leave the site's pages and followers with 429s.
 - A Socket.IO connection that joins no namespace within 45 seconds is closed, and a socket not given access within 30
   seconds (by an `authorize` that can read or write, or a `/storage` or `/alarm` `subscribe` that succeeds) is closed
-  with its connection, so connections that never sign in cannot hold a site's live sessions from its followers.
+  with its connection, so connections that never sign in cannot hold a site's live sessions from its followers. One IP
+  (an IPv6 /64) may hold at most 10 of a site's live sessions not yet given access
+  (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`); its next is refused with 429, so it cannot take them all.
 - Glucose is stored in mg/dL and always returned in mg/dL, whatever the identity's or site's units, as Nightscout's
   clients read `sgv`, `mbg`, a treatment's `glucose` and a profile's targets as mg/dL: entries, treatments, profiles
   and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
