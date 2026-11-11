@@ -46,6 +46,11 @@ func (s *ConnectorSettingsCollection) Upserts() {}
 // CREATE
 // ////
 func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.Connector) (*sitemodels.Connector, error) {
+	// Creating spends the same limit as updating, so a site cannot save new sources to sync from any faster
+	if allowed, seconds := httputils.UserUpdateConnectorsWithinRateLimit(siteContext); !allowed {
+		return nil, apiutils.ErrRateLimitExceeded(seconds)
+	}
+
 	var err error
 	params := sitemodels.ConnectorToCreate(model)
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
