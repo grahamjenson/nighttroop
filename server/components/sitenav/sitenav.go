@@ -21,13 +21,14 @@ const (
 	Settings Hub = "Settings"
 	Alarms   Hub = "Alarms"
 	Logs     Hub = "Logs & Events"
+	Usage    Hub = "Usage"
 )
 
 // HeaderHubs are the hubs the header links to, in its order
 var HeaderHubs = []Hub{Data, Reports}
 
 // MenuHubs are the hubs the account menu opens, in its order
-var MenuHubs = []Hub{Settings, Alarms, Logs}
+var MenuHubs = []Hub{Settings, Alarms, Logs, Usage}
 
 // Slug is the hub's first word in lower case, naming it in IDs, e.g. site--nav--menu--logs
 func (h Hub) Slug() string {
@@ -88,6 +89,9 @@ var Pages = []Page{
 	{Hub: Logs, Label: "Events", Path: "/logs/events", ID: "site--logs--events-button", Icon: icon.Activity, Store: "site_events"},
 	{Hub: Logs, Label: "Errors", Path: "/logs/errors", ID: "site--logs--errors-button", Icon: icon.TriangleAlert, Store: "site_errors"},
 	{Hub: Logs, Label: "Logs", Path: "/logs/logs", ID: "site--logs--logs-button", Icon: icon.ScrollText, Store: "site_logs"},
+
+	// Usage is a hub of its own page, the site's DB size and a download of it, for its admins
+	{Hub: Usage, Label: "Usage", Path: "/usage", ID: "site--usage-button", Icon: icon.HardDrive, Store: "site_settings"},
 }
 
 // keywords are the headings and words on a page, by its path, that the search also finds it by, showing the one found
@@ -106,7 +110,8 @@ var keywords = map[string][]string{
 	"/reports/overview":          {"Average Glucose", "GMI", "Standard Deviation", "Coefficient of Variation", "Sensor Usage", "Best Day"},
 	"/reports/agp":               {"Ambulatory Glucose Profile", "Time in Range"},
 	"/reports/tdd":               {"Total Daily Dose"},
-	"/settings":                  {"Units", "mmol/L", "mg/dL", "Timezone", "Language", "Date Format", "Time Format", "Week Starts On", "Password & TOTP", "Download Data", "Delete Site"},
+	"/settings":                  {"Units", "mmol/L", "mg/dL", "Timezone", "Language", "Date Format", "Time Format", "Week Starts On", "Password & TOTP", "Delete Site"},
+	"/usage":                     {"DB Size", "Storage", "Truncate", "Download Data"},
 	"/settings/alarms":           {"Low Alarm", "Urgent Low Alarm", "Predicted Low Alarm", "High Alarm", "Urgent High Alarm", "Fast Drop Alarm", "Fast Rise Alarm", "No Data Alarm"},
 	"/settings/identities":       {"Admins", "Read Only", "PWD Phone"},
 	"/settings/push-devices":     {"Phones"},

@@ -32,7 +32,7 @@ func TestDownloadData(t *testing.T) {
 		ctx := httputils.CreateSiteContext(context.Background(), cfg, controlDB, site.SiteDB, nil, siteID, "", httputils.HTTPActionRead, httputils.AcceptTypeHTML, httputils.ContentTypeForm)
 		ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "someone", Role: role})
 		w := httptest.NewRecorder()
-		DownloadDataHandler(w, httptest.NewRequest(http.MethodGet, "/settings/site/download", nil).WithContext(ctx))
+		DownloadDataHandler(w, httptest.NewRequest(http.MethodGet, "/usage/download", nil).WithContext(ctx))
 		return w
 	}
 

@@ -1,7 +1,6 @@
 package sitecollections
 
 import (
-	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -16,34 +15,38 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A site's admin sees its DB's size and tables on My Account and truncates it there, recorded as the control site's
-// Truncate is; a user sees neither and cannot
-func TestAccountStorageAndTruncate(t *testing.T) {
+// A site's admin sees its DB's size and tables on its Usage page and truncates it there, recorded as the control
+// site's Truncate is; a user sees neither and cannot
+func TestUsageAndTruncate(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	siteID := site.SiteDB.Subdomain
 	_, err := site.SiteDB.Queries().CreateGlucoseReading(t.Context(), sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
-	request := func(role consts.IdentityRole, method string) *http.Request {
+	request := func(role consts.IdentityRole, method, path string) *http.Request {
 		ctx := httputils.CreateSiteContext(context.Background(), cfg, controlDB, site.SiteDB, nil, siteID, "", httputils.HTTPActionWrite, httputils.AcceptTypeHTMX, httputils.ContentTypeForm)
 		ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "someone", Role: role})
-		return httptest.NewRequest(method, "/settings/account/truncate", nil).WithContext(ctx)
+		return httptest.NewRequest(method, path, nil).WithContext(ctx)
 	}
 
-	require.Nil(t, AccountStorage(request(consts.IdentityRoleUser, http.MethodGet)))
-	var page bytes.Buffer
-	require.NoError(t, AccountStorage(request(consts.IdentityRoleAdmin, http.MethodGet)).Render(t.Context(), &page))
-	require.Contains(t, page.String(), `id="site--account--db-size"`)
-	require.Contains(t, page.String(), `id="site--account--db-table--glucose_readings"`)
-	require.Contains(t, page.String(), `id="site--account--truncate"`)
-
 	w := httptest.NewRecorder()
-	TruncateHandler(w, request(consts.IdentityRoleUser, http.MethodPost))
+	UsageHandler(w, request(consts.IdentityRoleUser, http.MethodGet, "/usage"))
+	require.Equal(t, http.StatusForbidden, w.Code)
+	w = httptest.NewRecorder()
+	UsageHandler(w, request(consts.IdentityRoleAdmin, http.MethodGet, "/usage"))
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	require.Contains(t, w.Body.String(), `id="site--usage--db-size"`)
+	require.Contains(t, w.Body.String(), `id="site--usage--db-table--glucose_readings"`)
+	require.Contains(t, w.Body.String(), `id="site--usage--truncate"`)
+	require.Contains(t, w.Body.String(), `href="/usage/download"`)
+
+	w = httptest.NewRecorder()
+	TruncateHandler(w, request(consts.IdentityRoleUser, http.MethodPost, "/usage/truncate"))
 	require.Equal(t, http.StatusForbidden, w.Code)
 
 	w = httptest.NewRecorder()
-	TruncateHandler(w, request(consts.IdentityRoleAdmin, http.MethodPost))
+	TruncateHandler(w, request(consts.IdentityRoleAdmin, http.MethodPost, "/usage/truncate"))
 	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
-	require.Contains(t, w.Body.String(), `id="site--account--storage"`)
+	require.Contains(t, w.Body.String(), `id="site--usage--storage"`)
 	require.Contains(t, w.Body.String(), "Site Truncated")
 	events, err := controlDB.Logs.Queries.SearchEvents(t.Context(), logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)

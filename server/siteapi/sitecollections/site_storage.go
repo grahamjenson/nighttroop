@@ -12,19 +12,25 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// AccountStorage is the site's storage on its admin's My Account, measured now: its DB's size against its limit and
-// each table's share, as the control site shows it, with Truncate. Anyone else gets nil. What cannot be measured is
-// left out, as the page is still shown without it.
-func AccountStorage(r *http.Request) templ.Component {
-	siteContext := httputils.GetSiteContext(r.Context())
-	if siteContext.IdentityModel == nil || siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
-		return nil
+// UsageHandler is the site's Usage page, for its admins: its storage (usageStorage) and Download Data, or as JSON its
+// DB's size and limit
+func UsageHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), siteapiutils.ActionGet)
+	if siteContext == nil {
+		return
 	}
 	sizeKB, limitKB := siteSize(r)
+	WriteResponse(w, r, siteContext, http.StatusOK, map[string]*int64{"size_kb": sizeKB, "limit_kb": limitKB},
+		site_settings_templ.Usage(usageStorage(r, sizeKB, limitKB)), true)
+}
+
+// usageStorage is the site's storage on its Usage page, its DB's size against its limit and each table's share, as
+// the control site shows it, with Truncate. What cannot be measured is left out, as the page is still shown without it.
+func usageStorage(r *http.Request, sizeKB, limitKB *int64) templ.Component {
+	siteContext := httputils.GetSiteContext(r.Context())
 	sizes, err := siteContext.ControlDB.SiteTableSizes(r.Context(), siteContext.SiteID)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Cannot measure the site's DB tables", "error", err)
@@ -33,7 +39,7 @@ func AccountStorage(r *http.Request) templ.Component {
 	for _, size := range sizes {
 		tables = append(tables, &controlmodels.SiteTable{Name: size.Name, Bytes: size.Bytes, Records: size.Records})
 	}
-	return site_settings_templ.AccountStorage(sizeKB, limitKB, tables)
+	return site_settings_templ.UsageStorage(sizeKB, limitKB, tables)
 }
 
 // siteSize is the site's DB size measured now, or as last measured when it cannot be now, and its limit
@@ -50,7 +56,7 @@ func siteSize(r *http.Request) (*int64, *int64) {
 	return site.EstimatedDbSizeKb, site.MaxDbSizeKbLimit
 }
 
-// TruncateHandler truncates the site for its admin from My Account, as the control site's Truncate does, recorded as
+// TruncateHandler truncates the site for its admin from its Usage page, as the control site's Truncate does, recorded as
 // the same event, then shows its storage again with a toast of its new size. It rewrites the whole DB, so it shares
 // the site's few downloads a minute.
 func TruncateHandler(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +69,7 @@ func TruncateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	started := time.Now()
-	beforeKB, _ := siteSize(r)
+	beforeKB, limitKB := siteSize(r)
 	afterKB, err := siteContext.ControlDB.TruncateSite(r.Context(), siteContext.SiteID)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Cannot truncate the site", "error", err)
@@ -72,5 +78,5 @@ func TruncateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	siteContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), siteContext.SiteID, siteContext.IdentityModel.Name, started, beforeKB, afterKB)
 	WriteResponse(w, r, siteContext, http.StatusOK, map[string]*int64{"size_kb": afterKB},
-		templ.Join(AccountStorage(r), site_settings_templ.AccountTruncated(afterKB)), false)
+		templ.Join(usageStorage(r, afterKB, limitKB), site_settings_templ.UsageTruncated(afterKB)), false)
 }

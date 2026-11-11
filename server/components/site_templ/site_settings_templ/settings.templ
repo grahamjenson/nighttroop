@@ -160,7 +160,6 @@ templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 			@resetYourCredentials(identity)
 		}
 		if site != nil {
-			@downloadData()
 			@deleteSite()
 		}
 	</div>
@@ -194,23 +193,6 @@ templ resetYourCredentials(identity *controldb.SiteIdentity) {
 			}
 		</div>
 		<div id="modal-container"></div>
-	}
-}
-
-// downloadData lets an admin download a zip of the site's data, a snapshot of its DB, to look through all its data
-templ downloadData() {
-	@card.Card(card.Props{ID: "site--settings--download", Title: "Download Data", Class: "space-y-3"}) {
-		<p class="text-sm text-gray-600">
-			A copy of all the site's data, as it is now, in a zip of a SQLite file, which a SQLite browser can open to look through.
-		</p>
-		@button.Button(button.Props{
-			ID:      "site--settings--download-data",
-			Href:    "/settings/site/download",
-			Variant: button.VariantOutline,
-			Attributes: templ.Attributes{"download": ""},
-		}) {
-			Download Data
-		}
 	}
 }
 
