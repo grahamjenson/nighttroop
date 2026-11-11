@@ -10,6 +10,10 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+// DevKeySets are the keys test mode always uses, and .env.dev and .env.test set. They are public, so anyone could
+// sign control logins, and decrypt secrets and backups, made with them: only development and test may use them
+const DevKeySets = "CPrKm7wMEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2NtS2V5EiIaIEPeianjuFWmWBX0ZPsUWPIcG7VwyKUko2WSzyPDZEPNGAEQARj6ypu8DCAB,COC0mZcNEnoKbgo9dHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2NtSGtkZlN0cmVhbWluZ0tleRIrEgcIgCAQIBgDGiBAAlF6GIXYVKqNpOzDqeCHAAuQ2P2uUnlpHWdajhjzBBgBEAEY4LSZlw0gAw,CN2im5oDEmcKWwoxdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuSnd0SG1hY0tleRIkEAEaIAL9oiEoyOMBd/tk4joXYbELpOdygdRSg+5u+/VbertXGAEQARjdopuaAyAB,CP7I64IGEmgKXAoudHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuSG1hY0tleRIoEgQIAxAgGiBaXWmgBYmmFu7Jn0GtCF1OlU5MrZuWEGdPwyzf6kjddBgBEAEY/sjrggYgAQ"
+
 type SecurityConfig struct {
 	Mode     consts.ServerMode
 	HTTPS    bool
@@ -54,7 +58,7 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 
 	if cfg.IsTest() {
 		// Hard code dev and tests key sets for now
-		keysRaw = "CPrKm7wMEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2NtS2V5EiIaIEPeianjuFWmWBX0ZPsUWPIcG7VwyKUko2WSzyPDZEPNGAEQARj6ypu8DCAB,COC0mZcNEnoKbgo9dHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2NtSGtkZlN0cmVhbWluZ0tleRIrEgcIgCAQIBgDGiBAAlF6GIXYVKqNpOzDqeCHAAuQ2P2uUnlpHWdajhjzBBgBEAEY4LSZlw0gAw,CN2im5oDEmcKWwoxdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuSnd0SG1hY0tleRIkEAEaIAL9oiEoyOMBd/tk4joXYbELpOdygdRSg+5u+/VbertXGAEQARjdopuaAyAB,CP7I64IGEmgKXAoudHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuSG1hY0tleRIoEgQIAxAgGiBaXWmgBYmmFu7Jn0GtCF1OlU5MrZuWEGdPwyzf6kjddBgBEAEY/sjrggYgAQ"
+		keysRaw = DevKeySets
 	}
 
 	err := cfg.ConfigCreateEncryptionKeys(keysRaw)

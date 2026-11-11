@@ -27,6 +27,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
+- A production or staging server will not start with `KEY_SETS` holding any of the public keys from `.env.dev` and
+  `.env.test`, saying to make new ones with `cmd/keysets/create_keysets.go`.
 - A staging deploy wipes every DB, and their backups, when one cannot be migrated and prepared, or its schema is not
   the one the migrations make on a new DB, as after a migration's `CHECK` was edited, and keeps them otherwise.
 
@@ -942,6 +944,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - S3 is off without `S3_URL`, with nothing restored on start or backed up. With it, the server tests uploading to S3
   at startup, again over about half a minute, and does not start if it never works, so a server that cannot reach
   its backups never starts empty and backs that up over them.
+- A production or staging server with `S3_URL` will not start unless `S3_ACCESS_KEY` and `S3_SECRET_KEY` are set, and
+  not to the development MinIO's `minioadmin`.
 - Every site's DB is backed up to S3 in batches, and the control DB on its own, with old versions kept for a
   retention period.
 - A site not written to since its last backup is not copied again, so its DB is not opened, and a batch with the same

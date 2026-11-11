@@ -513,10 +513,34 @@ func (config *ServerConfig) ValidateClean() error {
 		return fmt.Errorf("http is only allowed in development or test mode")
 	}
 
+	if !config.IsDevOrTest() {
+		if err := validateSecrets(config.RawKeySets, config.S3URL, config.S3AccessKeyID, config.S3AccessSecretKey); err != nil {
+			return err
+		}
+	}
+
 	if config.IsStaging() {
 		return validateStagingAdmin(config.StagingAdminPassword, config.StagingAdminTOTPSecret)
 	}
 
+	return nil
+}
+
+// validateSecrets refuses the public keys and S3 credentials of .env.dev, .env.test and the docker-compose MinIO, which
+// anyone could use to sign control logins, and read secrets and backups, on a server outside development and test
+func validateSecrets(keySets, s3URL, s3AccessKey, s3SecretKey string) error {
+	if security.UsesDevKeySets(keySets) {
+		return fmt.Errorf("KEY_SETS has the public development and test keys: make new ones with cmd/keysets/create_keysets.go")
+	}
+	if s3URL == "" {
+		return nil
+	}
+	if s3AccessKey == "" || s3AccessKey == "minioadmin" {
+		return fmt.Errorf("S3_URL is set, so S3_ACCESS_KEY must be set, and not to the development MinIO's minioadmin")
+	}
+	if s3SecretKey == "" || s3SecretKey == "minioadmin" {
+		return fmt.Errorf("S3_URL is set, so S3_SECRET_KEY must be set, and not to the development MinIO's minioadmin")
+	}
 	return nil
 }
 
