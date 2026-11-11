@@ -11,7 +11,8 @@ import (
 )
 
 // ClientIP sets each request's client IP, which GetIPFromHTTPContext reads, with chi's middlewares: the TCP peer;
-// from a trusted proxy, the X-Forwarded-For hop before the trusted ones; and on Fly.io its Fly-Client-IP header
+// from a trusted proxy, the X-Forwarded-For hop before the trusted ones; and on Fly.io, also only from a trusted proxy,
+// its Fly-Client-IP header, which anything else reaching the machine, such as another on Fly's private network, can set
 func ClientIP(trustedProxies []netip.Prefix) func(http.Handler) http.Handler {
 	chain := chi.Chain(middleware.ClientIPFromRemoteAddr)
 	if len(trustedProxies) > 0 {
@@ -20,9 +21,10 @@ func ClientIP(trustedProxies []netip.Prefix) func(http.Handler) http.Handler {
 			prefixes[i] = prefix.String()
 		}
 		chain = append(chain, middleware.ClientIPFromXFF(prefixes...))
-	}
-	if os.Getenv("FLY_APP_NAME") != "" {
-		chain = append(chain, middleware.ClientIPFromHeader("Fly-Client-IP"))
+		// chi believes the header from every peer when given no prefixes, so it is only read with some
+		if os.Getenv("FLY_APP_NAME") != "" {
+			chain = append(chain, middleware.ClientIPFromHeader("Fly-Client-IP", prefixes...))
+		}
 	}
 	return chain.Handler
 }
