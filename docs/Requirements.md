@@ -85,7 +85,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   admin changed is signed out, as its sign in was for its old role.
 - An Admin resets another's password or TOTP from its Manage menu, after confirming, and the new one is shown once in
   the credentials dialog. The reset removes the admin's passkeys and is recorded as a credentials changed event; the
-  secret is never logged. Its sign in, if it has one, keeps working until it ends, within the hour.
+  secret is never logged. The reset signs it out, refusing (401) its sign ins from before; the Admin who reset it stays
+  signed in, and it signs in again with its new password or TOTP.
 - An Admin deletes another from its Manage menu, after confirming in the confirm dialog, which removes its row and its
   passkeys and signs it out.
 - Only an Admin can add, change, reset or delete admins; a Read only admin sees the list only. No admin can change,

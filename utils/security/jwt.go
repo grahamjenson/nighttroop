@@ -8,7 +8,7 @@ import (
 	"github.com/tink-crypto/tink-go/v2/jwt"
 )
 
-// IssuedAtMsClaim is when a user or pre-auth JWT was issued, in milliseconds, as iat only has seconds and a JWT
+// IssuedAtMsClaim is when a control, user or pre-auth JWT was issued, in milliseconds, as iat only has seconds and a JWT
 // issued before its identity's credentials changed is refused
 const IssuedAtMsClaim = "iat_ms"
 
@@ -83,7 +83,8 @@ func (config *SecurityConfig) GenerateControlJWTToken(userName string, role stri
 		Issuer:    &ControlIssuer,
 		IssuedAt:  &now,
 		CustomClaims: map[string]any{
-			"role": role,
+			"role":          role,
+			IssuedAtMsClaim: now.UnixMilli(),
 		},
 	})
 	if err != nil {
@@ -98,32 +99,38 @@ func (config *SecurityConfig) GenerateControlJWTToken(userName string, role stri
 	return tokenString, expiresAt, nil
 }
 
-func (config *SecurityConfig) VerifyControlJWTToken(tokenStr string) (string, string, error) {
+// VerifyControlJWTToken is the control admin name and role a control JWT is for, and when it was issued in milliseconds
+func (config *SecurityConfig) VerifyControlJWTToken(tokenStr string) (string, string, int64, error) {
 	// Verify and parse in one step
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtControlValidator)
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
 
 	subject, err := verifiedJWT.Subject()
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
 
 	role, err := verifiedJWT.StringClaim("role")
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
 
 	issuer, err := verifiedJWT.Issuer()
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
 
 	if issuer != ControlIssuer {
-		return "", "", fmt.Errorf("invalid issuer: expected %s, got %s", ControlIssuer, issuer)
+		return "", "", 0, fmt.Errorf("invalid issuer: expected %s, got %s", ControlIssuer, issuer)
 	}
-	return subject, string(role), nil
+
+	issuedAtMs, err := verifiedJWT.NumberClaim(IssuedAtMsClaim)
+	if err != nil {
+		return "", "", 0, err
+	}
+	return subject, string(role), int64(issuedAtMs), nil
 }
 
 ////
