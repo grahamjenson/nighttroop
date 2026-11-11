@@ -43,14 +43,17 @@ func (s *LoopSettingsCollection) GetRow(ctx context.Context, collectionTx *sitea
 		return nil, err
 	default:
 		model.PreviousID = &previous.ID
-		model.Changes = sitemodels.LoopSettingsChanges(row.App, json.RawMessage(previous.SettingsJson), model.Settings, model.Units)
+		before := sitemodels.LoopSettingsFor(siteContext.IdentityModel, json.RawMessage(previous.SettingsJson))
+		model.Changes = sitemodels.LoopSettingsChanges(row.App, before, model.Settings, model.Units)
 	}
 	return model, nil
 }
 
-// fromDB is the model of the settings, with the site's units, which glucose in their changes is in
+// fromDB is the model of the settings as the identity may see them, with the site's units, which glucose in their
+// changes is in
 func (s *LoopSettingsCollection) fromDB(row *sitedb.LoopSetting, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
 	model := sitemodels.LoopSettingsFromDB(row)
+	model.Settings = sitemodels.LoopSettingsFor(siteContext.IdentityModel, model.Settings)
 	model.Units = siteContext.GetSettings().GetUnits()
 	return model
 }

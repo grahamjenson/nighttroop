@@ -3,7 +3,6 @@ package config
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"math"
 	"net/netip"
 	"slices"
 	"strconv"
@@ -180,18 +179,23 @@ func (r *RateLimiters) SiteUnauthLimiter(subdomain string, ip string) *rate.Limi
 	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ipKey(ip), "site_unauth")
 }
 
-func (r *RateLimiters) SiteLoginAllow(subdomain string, ip string) (bool, int) {
-	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, subdomain, "login")
+// SiteLoginAllow spends a login attempt from the IP's limiter and from the name's, kept for a name on a site (a login
+// name, or a fixed one as passkeys, recovery and setup use). The IP's is the tight one, against guessing; the name's is
+// shared by every IP, so it is far more generous, only capping guessing spread over many IPs, and an IP using up its
+// own attempts cannot lock anyone else out of a name. The name's is not spent unless the IP's allows the attempt, nor
+// the IP's unless the name's does. Remaining is how many attempts both had before this one.
+func (r *RateLimiters) SiteLoginAllow(name string, ip string) (bool, int) {
 	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ipKey(ip), "login")
+	nameLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, name, "login_name")
 
-	// Calculate tokens remaining
-	userTokens := userLimiter.Tokens()
-	ipTokens := ipLimiter.Tokens()
-
-	// The effective remaining attempts is the minimum of user and IP limits
-	remaining := int(math.Min(userTokens, ipTokens))
-
-	return userLimiter.Allow() && ipLimiter.Allow(), remaining
+	now := time.Now()
+	remaining := max(0, int(min(ipLimiter.TokensAt(now), nameLimiter.TokensAt(now))))
+	attempt := ipLimiter.ReserveN(now, 1)
+	if attempt.OK() && attempt.DelayFrom(now) == 0 && nameLimiter.AllowN(now, 1) {
+		return true, remaining
+	}
+	attempt.CancelAt(now)
+	return false, remaining
 }
 
 // RateLimiterStats is how close one kind of rate limiter is to refusing. One is kept for each Per: the server, an IP, a
@@ -253,6 +257,7 @@ func rateDefaults(c ServerConfig) []RateSetting {
 		{Name: "site_download", Env: "SITE_DOWNLOAD_PER_MINUTE", Default: Rate{float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst}},
 		{Name: "site_push", Env: "SITE_PUSH_PER_MINUTE", Default: Rate{float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst}},
 		{Name: "site_report_print", Env: "SITE_REPORT_PRINT_PER_MINUTE", Default: Rate{float64(c.SiteReportPrintPerMinuteLimit), c.SiteReportPrintPerMinuteBurst}},
+		{Name: "login_name", Env: "SITE_LOGIN_NAME_PER_MINUTE", Default: Rate{float64(c.SiteLoginNamePerMinuteLimit), c.SiteLoginNamePerMinuteBurst}},
 	}
 	for i := range settings {
 		settings[i].Rate = settings[i].Default
@@ -312,7 +317,7 @@ func (r *RateLimiters) kinds() []limiterKind {
 		{"global_ip", "ip", "global_ip", r.globalIPRateLimiters.Values()},
 		{"site_create", "server", "site_create", []*rate.Limiter{r.SiteCreateLimiter}},
 		{"site_create_ip", "ip", "site_create_ip", r.siteCreateIpLimiter.Values()},
-		{"login_name", "login", "login", r.userLoginRateLimiters.Values()},
+		{"login_name", "login", "login_name", r.userLoginRateLimiters.Values()},
 		{"login_ip", "ip", "login", r.ipLoginRateLimiters.Values()},
 		{"site_unauth", "site_ip", "site_unauth", r.siteUnauthRateLimiters.Values()},
 		{"site_get", "site", "site_get", r.siteGETRateLimiters.Values()},

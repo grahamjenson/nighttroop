@@ -15,7 +15,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
@@ -285,6 +287,82 @@ func TestSocketNotGivenAccessIsClosed(t *testing.T) {
 				require.False(t, test.closed, "the socket's session stayed open")
 				require.True(t, client.Connected(test.namespace))
 			}
+		})
+	}
+}
+
+// A site's Socket.IO server and its event subscription are freed once it has no sessions, or once the site is deleted
+// or disabled, rather than kept for every site ever connected to until restart, and a client connecting after gets a
+// new server that works
+func TestSocketServerIsFreedOnceItHasNoSessions(t *testing.T) {
+	sweep := idleServerSweep
+	idleServerSweep = 20 * time.Millisecond
+	t.Cleanup(func() { idleServerSweep = sweep })
+	tests := map[string]func(siteID string, client *socketio.Client){
+		"its last session closing": func(_ string, client *socketio.Client) { client.Close() },
+		"its site deleted": func(siteID string, _ *socketio.Client) {
+			testConfig.Events.Publish(siteID, events.Event{Name: events.SiteDeleted, SiteID: siteID})
+		},
+		"its site disabled": func(siteID string, _ *socketio.Client) {
+			testConfig.Events.Publish(siteID, events.Event{Name: events.SiteDisabled, SiteID: siteID})
+		},
+	}
+	for name, end := range tests {
+		t.Run(name, func(t *testing.T) {
+			controlDB, identity := siteIdentity(t)
+			siteCtx := httputils.CreateSiteContext(context.Background(), testConfig, controlDB, nil, nil, identity.SiteID, "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+			found := func(*config.ServerConfig, context.Context, string) (*controldb.SiteIdentity, error) { return identity, nil }
+			ws := NewWebsocket(controlDB, testConfig, nil, found, found)
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ws.ServeHTTP(w, r.WithContext(siteCtx)) }))
+			t.Cleanup(ts.Close)
+
+			// subscribe connects a client to /alarm, where it is sent the site's announcements
+			subscribe := func() (*socketio.Client, chan struct{}) {
+				ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+				defer cancel()
+				client, err := socketio.Dial(ctx, ts.URL+"/socket.io/", engineio.V4, nil)
+				require.NoError(t, err)
+				t.Cleanup(func() { client.Close() })
+				announced := make(chan struct{}, 10)
+				client.On("/alarm", "announcement", func([]json.RawMessage) { announced <- struct{}{} })
+				require.NoError(t, client.Connect(ctx, "/alarm", nil))
+				_, err = client.EmitWithAck(ctx, "/alarm", "subscribe", map[string]any{"accessToken": "token"})
+				require.NoError(t, err)
+				return client, announced
+			}
+			announce := func(announced chan struct{}) {
+				testConfig.Events.Publish(identity.SiteID, events.Event{SiteID: identity.SiteID, Action: events.Created,
+					Model: &sitedb.EventGroupsBundle{NotificationEvent: &sitedb.NotificationEvent{NotificationType: "announcement", Title: "Hello"}}})
+				select {
+				case <-announced:
+				case <-time.After(2 * time.Second):
+					require.Fail(t, "the client was not sent the announcement")
+				}
+			}
+
+			client, announced := subscribe()
+			announce(announced)
+			ws.mu.Lock()
+			first := ws.servers[identity.SiteID]
+			var unsubscribed atomic.Bool
+			unsubscribe := first.unsubscribe
+			first.unsubscribe = func() { unsubscribe(); unsubscribed.Store(true) }
+			ws.mu.Unlock()
+			time.Sleep(5 * idleServerSweep)
+			require.Same(t, first, ws.siteServer(identity.SiteID, false), "a server with a session is kept")
+
+			end(identity.SiteID, client)
+			select {
+			case <-client.Done():
+			case <-time.After(2 * time.Second):
+				require.Fail(t, "the client's session was not closed")
+			}
+			require.Eventually(t, func() bool { return ws.siteServer(identity.SiteID, false) == nil && unsubscribed.Load() }, 2*time.Second, 10*time.Millisecond,
+				"the server is freed and unsubscribed")
+
+			_, announced = subscribe()
+			require.NotSame(t, first, ws.siteServer(identity.SiteID, false), "a new client gets a new server")
+			announce(announced)
 		})
 	}
 }

@@ -15,7 +15,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A new server has no control admin, so every page goes to `control.<host>/setup` and the APIs answer that it is not
   set up, until the admin is made. Only the health check works.
 - The server prints a one-time setup code to its logs; the setup page asks for it, so only whoever runs the server can
-  set it up. Wrong codes are rate limited. A wrong setup or TOTP code is said to be wrong in an error toast.
+  set it up. Wrong codes are rate limited per IP, and from every IP at a far higher rate. A wrong setup or TOTP code
+  is said to be wrong in an error toast.
 - The setup page shows the control admin's username, password and TOTP secret (with a QR code) once, and saves the
   admin only when a code from that TOTP secret is entered.
 - Every TOTP QR code (the setup page, a new site's admin, a new or reset identity) scans into an authenticator app as an
@@ -42,8 +43,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
 - "Log in with a passkey" on the control login signs in the control admin whose passkey the browser has, with no
-  name, password or code, as a site's login does. Control passkey sign ins are rate limited per IP, and are sign in
-  events, as a failed one is.
+  name, password or code, as a site's login does. Control passkey sign ins are rate limited per IP, and from every IP
+  at a far higher rate, and are sign in events, as a failed one is.
 - Account, under Security in the control menu, says which control admin is signed in, and adds and removes its
   passkeys as a site's My Account does: on the control site's own address, so each works only there, at most 10, none
   the browser already has, and named for the admin, with no name, email or device of the person kept. Control admins'
@@ -129,7 +130,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The new site ID field only lets letters a to z in: capitals typed or pasted are lowered and anything else is dropped.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
-  - **disabled**, after a confirmation, so it is no longer served;
+  - **disabled**, after a confirmation, so it is no longer served and its open Socket.IO connections are closed;
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
@@ -206,8 +207,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   one of a site is recorded at most once a minute, and at most 20 of a site's a minute, so a client repeating bad
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - A request refused for what it sent, or that failed with a 5xx, keeps the first 8 KB of what it sent on its error, and
-  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON, or its text when it is not
-  JSON (such as JSON that did not parse), with credentials (tokens, secrets, passwords) `REDACTED`, to debug it by.
+  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON or form, with credentials
+  and connector logins (tokens, secrets, passwords, keys, TOTP codes, usernames, emails and URLs) `REDACTED`, to debug
+  it by. A body that is neither, or was cut off at 8 KB (such as JSON that did not parse), keeps only its size and
+  content type.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
 - A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
@@ -221,8 +224,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
 - A staging server with `CAPTURE_REQUESTS=true` keeps each request and its response as a `Captured <method> <path>`
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
-  64 KB, as text or, when it is not text, base64. Authorization, cookies, API secrets, tokens and passwords are
-  `REDACTED` in its headers, query, path and JSON or form bodies. A page's styles, scripts, images and fonts are not
+  64 KB. Authorization, cookies, API secrets, tokens, passwords, keys, TOTP codes, usernames, emails and URLs are
+  `REDACTED` in its headers, query, path and JSON or form bodies. Any other body, such as a page, text or one past
+  64 KB, keeps only its size and content type, so a page showing a new site's credentials is not kept. A page's
+  styles, scripts, images and fonts are not
   kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
   none.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
@@ -298,7 +303,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - While a control admin has turned public site creation off, the home page says so instead of offering to create a
   site, and creating one is refused.
 - The public **recover page** takes a site's ID and backup key and gives the admin a new password and TOTP and the
-  site a new backup key, and removes the admin's passkeys, so a lost device's passkey signs in no more. The key works once; a wrong key is refused without saying why.
+  site a new backup key, and removes the admin's passkeys, so a lost device's passkey signs in no more. The key works once; a wrong key is refused without saying why. Attempts are rate limited per IP, and a site's from every IP at a far higher rate.
 - A recovery opens the site's own address, `/welcome`, which shows the new credentials once, as a new site's are, less
   the phone's and the read only device's tokens, which are left as they were; the recover page never shows them.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
@@ -626,6 +631,8 @@ Close or saving) gives the focus back to the row or button that opened it.
   its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses (an empty
   one is none sent). Each shows its app, what it came in, its device and when it was first and last seen, newest
   first; clicking one shows the settings as sent, indented to inspect.
+  - A read only identity reading them from the site's API gets them without Loop's or Trio's `deviceToken`, and no
+    change to one.
   - Clicking a set also shows what changed from the same app's set last seen before it: each setting changed, added
     or removed, by its name (a preset's by the preset's name, as `overridePresets.Running.targetRange`), old then new
     ("not sent" when it was not), glucose in the site's units; an app's first set says there is no set before it. The
@@ -650,13 +657,16 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
+- A site's saves of its connectors, adding a source as well as changing one, share one rate limit
+  (`SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT`); one past it is refused (429).
 - Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Connector box, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
-- A failing source syncs less often, and says when it failed and why.
+- A failing source syncs less often, and says when it failed and why. Why, as stored, logged and sent to Sentry, never
+  has the Nightscout's URL or host, the Dexcom session, or the followed LibreLinkUp patient's ID, as a timeout's would.
 - A record a sync or backfill cannot read, such as a Dexcom or LibreLinkUp reading in a shape it does not know, or that
   the site refuses, such as a Nightscout treatment with an eventType it does not know, is skipped. The first of each
-  sync is recorded as an error of the site's connector with the record (up to 8 KB) and sent to Sentry with it, to
-  debug it by.
+  sync is recorded as an error of the site's connector with the record (up to 8 KB), to debug it by. It is logged and
+  sent to Sentry with only the names and types of the record's fields, never their values.
 - A working source can be backfilled with the days before its oldest reading, from midnight in the site's timezone,
   so its data starts at the start of a day. A Nightscout or virtual backfill also
   fetches the last 2 days again, to fill gaps the site missed while it was down, as for a deploy, and its toast says so;
@@ -685,6 +695,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   new one is added beside it.
 - A Nightscout connector on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
+- A Nightscout connector on this server's host written with a trailing dot or capitals, such as
+  `https://abcdefgh.ns.HOST./`, is refused, and a URL with a trailing dot is saved without it.
+- A Nightscout connector on a multicast, reserved, broadcast, benchmarking or `0.x.x.x` address, or on an IPv4-mapped,
+  NAT64 or 6to4 IPv6 address that reaches a private or local IPv4 one, is refused when saved and as it connects.
 - Pasting a Nightscout link with its token, such as `https://site/api/v1?token=...`, `?api_secret=...` or
   `https://secret@site/api/v1`, into the Nightscout connector's URL splits it into the base URL and the API Secret or
   Token box.
@@ -816,6 +830,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
+- A profile's Loop `loopSettings.deviceToken` and Trio `deviceToken` are only given back, in v1, v3 and the socket's
+  storage, to an identity that can change the site's data, as LoopFollow sending remote commands is; a read only
+  user or device gets the profile without them, and the socket's `dataUpdate`, sent to every reader, has none.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
 - A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
   from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
@@ -993,8 +1010,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Past the requests the server can work on at once (`REQUESTS_IN_FLIGHT_PER_CPU`) and a short queue
   (`REQUESTS_BACKLOG_PER_CPU`, waiting up to 5 seconds), a request is refused at once with 503 and `Retry-After`, so a
   server that falls behind answers what it can rather than every request timing out. The health check, live updates
-  and Socket.IO connections are never refused this way. A quarter of each is kept for uploads to the Nightscout API,
-  so glucose keeps arriving while page loads and reads fill the rest.
+  and Socket.IO connections are never refused this way. They are known by their route (`/health`, `/socket.io/`, a
+  collection's `/<section>/<collection>/events`), so any other request sent with `Accept: text/event-stream` is still
+  refused when the server is busy and still times out after 30 seconds. A quarter of each is kept for uploads to the
+  Nightscout API, so glucose keeps arriving while page loads and reads fill the rest.
 - A request for a site there is not is 404, but one whose site cannot be looked up, as when the server is too busy to
   answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
@@ -1040,13 +1059,19 @@ Connectors are a site's third party integrations, each syncing from one service.
   password or TOTP code: a passkey is two factors, the device and the person's fingerprint, face or PIN. A passkey only
   works on its own site's address. It keeps only what checking a sign in needs: its ID, public key, flags and sign
   count, never the authenticator's model or attestation. A disabled identity's passkey does not sign in, and passkey
-  sign ins are rate limited per IP.
+  sign ins are rate limited per IP, and a site's from every IP at a far higher rate.
 - The TOTP step only accepts the pre-auth token from this site's own password step.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
-- Sign-in attempts are rate limited per identity and IP, and one refused says "Too many login attempts. Wait a minute,
-  then try again."; a disabled identity cannot sign in.
+- A TOTP code signs an identity in once, on the site (page or API) or in control: the same code, or an earlier one,
+  is refused like a wrong one while it would still be valid, even after its owner signed in with it, though another
+  identity with the same secret signs in with it. Checking a new site's code, or the setup page's, does not use it up.
+  A dev or test server's fixed code `123123` is not one time.
+- Sign-in attempts are rate limited per IP, and per name from every IP at a far higher rate
+  (`SITE_LOGIN_NAME_PER_MINUTE_*`), so one IP sending wrong passwords for a name, or wrong passkeys or backup keys to
+  a site, uses up only its own attempts and cannot lock anyone else out; an attempt one limit refuses spends none of the
+  other's. One refused says "Too many login attempts. Wait a minute, then try again."; a disabled identity cannot sign in.
 - The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions, and an admin's reset of it, on the site or in

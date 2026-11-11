@@ -105,15 +105,17 @@ func (c *Client) do(ctx context.Context, method, path string, body any, out any)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return err
+		// Its URL has the followed patient's ID
+		return httputils.WithoutURL(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusUnauthorized {
 		c.token = "" // log in again next time
 	}
 	if resp.StatusCode != http.StatusOK {
-		// The error is stored and shown as a sync error, so only the status is given
-		return fmt.Errorf("libre %s failed: status=%d", path, resp.StatusCode)
+		// The error is stored and shown as a sync error, so only the status is given, and the path's last part, as the
+		// graph's path has the followed patient's ID
+		return fmt.Errorf("libre %s failed: status=%d", path[strings.LastIndex(path, "/")+1:], resp.StatusCode)
 	}
 	data, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
 	if err == nil {
