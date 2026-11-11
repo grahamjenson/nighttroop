@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"slices"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -12,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_presets_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -58,9 +60,20 @@ func (s *LoopSettingsCollection) fromDB(row *sitedb.LoopSetting, siteContext *ht
 	return model
 }
 
-// ToModel is the settings as read, which are already the model
+// ToModel is the settings as the identity may see them. A row read for another identity, as a deleted one streamed to
+// every identity watching is, can have the deviceToken this one may not see, in its settings and its changes.
 func (s *LoopSettingsCollection) ToModel(row *sitemodels.SiteLoopSettings, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
-	return row
+	if row == nil || can.SeeDeviceTokens(siteContext.IdentityModel) {
+		return row
+	}
+	model := *row
+	model.Settings = sitemodels.LoopSettingsFor(siteContext.IdentityModel, row.Settings)
+	if row.Changes != nil {
+		model.Changes = slices.DeleteFunc(slices.Clone(row.Changes), func(change *sitemodels.LoopSettingsChange) bool {
+			return change.Field == "deviceToken"
+		})
+	}
+	return &model
 }
 
 // GetHTMXResponse is the settings, to inspect, in a modal

@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitepresets"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -254,6 +255,33 @@ func TestEventsHandlerStreamsSettingsToWhoseTheyAre(t *testing.T) {
 				}
 				require.True(t, strings.HasPrefix(nextEvent(t, stream), "event: updated\ndata: {\"units\":\""+want+"\""), "want %s", want)
 			}
+		})
+	}
+}
+
+// Loop settings are read as the identity that changed them, so one deleted by an identity that may see Loop's and
+// Trio's device tokens has them; they are streamed without them to an identity that may not see them
+func TestEventsHandlerStreamsLoopSettingsWithoutDeviceTokensToReadOnly(t *testing.T) {
+	tests := []struct {
+		role  consts.IdentityRole
+		shown bool
+	}{
+		{consts.IdentityRoleUserReadOnly, false},
+		{consts.IdentityRoleDeviceRead, false},
+		{consts.IdentityRoleUser, true},
+	}
+	for _, test := range tests {
+		t.Run(string(test.role), func(t *testing.T) {
+			streams := newStreams(t)
+			_, stream := eventStream(t, streams, "site-a", test.role, EventsHandler(&sitepresets.LoopSettingsCollection{}))
+			token := "secret-apns-token"
+			deleted := &sitemodels.SiteLoopSettings{ID: "1", App: "loop", Settings: []byte(`{"deviceToken":"` + token + `","bundleIdentifier":"loop"}`),
+				Changes: []*sitemodels.LoopSettingsChange{{Field: "deviceToken", New: &token}, {Field: "bundleIdentifier", New: new("loop")}}}
+			streams.bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Deleted, Model: deleted})
+			event := nextEvent(t, stream)
+			require.Contains(t, event, "bundleIdentifier")
+			require.Equal(t, test.shown, strings.Contains(event, token), event)
+			require.Contains(t, string(deleted.Settings), token, "the published row is left as it was")
 		})
 	}
 }
