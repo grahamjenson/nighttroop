@@ -1,6 +1,7 @@
 package sitenav
 
 import (
+	"context"
 	"slices"
 	"strings"
 	"testing"
@@ -8,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // A path is of the page whose path matches most of it: its own path, the paths under it, and the paths it counts as
@@ -78,14 +80,15 @@ func TestVisible(t *testing.T) {
 
 // Side tabs are in their groups, and search results under their hubs, in order
 func TestGroups(t *testing.T) {
+	ctx := context.Background()
 	var names []string
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Settings), false) {
-		names = append(names, group.Name)
+		names = append(names, i18n.T(ctx, group.Name))
 	}
 	require.Equal(t, []string{"This site", "People & devices", "Connections"}, names)
 	names = nil
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Data), false) {
-		names = append(names, group.Name)
+		names = append(names, i18n.T(ctx, group.Name))
 	}
 	require.Equal(t, []string{"Readings & treatments", "Events", "Devices", "Presets"}, names)
 	// Food presets and profiles are with the data they are used to enter, not the site's settings
@@ -93,7 +96,7 @@ func TestGroups(t *testing.T) {
 	require.Equal(t, Data, At("/presets/profiles").Hub)
 	names = nil
 	for _, group := range Groups(Pages, true) {
-		names = append(names, group.Name)
+		names = append(names, i18n.T(ctx, group.Name))
 	}
 	require.Equal(t, []string{"Data", "Reports", "Settings", "Alarms", "Logs & Events", "Usage"}, names)
 	require.Equal(t, "site--nav--search--settings--push-devices", At("/settings/push-devices").SearchID())
@@ -143,7 +146,7 @@ func TestSearchText(t *testing.T) {
 		t.Run(test.query, func(t *testing.T) {
 			var got []string
 			for _, page := range Pages {
-				text := page.SearchText()
+				text := page.SearchText(context.Background())
 				if !slices.ContainsFunc(strings.Fields(test.query), func(word string) bool { return !strings.Contains(text, word) }) {
 					got = append(got, page.ID)
 				}
@@ -153,12 +156,12 @@ func TestSearchText(t *testing.T) {
 	}
 	// A user who is not an admin finds none of the logs, as no page they may open mentions them
 	for _, page := range Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleUser}) {
-		require.NotContains(t, page.SearchText(), "logs", page.ID)
+		require.NotContains(t, page.SearchText(context.Background()), "logs", page.ID)
 	}
 }
 
 // A page's hints are its keywords, and a page with none has none
 func TestHints(t *testing.T) {
-	require.Equal(t, "Nightscout|Dexcom|Libre|LibreLinkUp|Virtual|Backfilling", Page{Path: "/settings/connectors"}.Hints())
-	require.Empty(t, Page{Path: "/logs/errors"}.Hints())
+	require.Equal(t, "Nightscout|Dexcom|Libre|LibreLinkUp|Virtual|Backfilling", Page{Path: "/settings/connectors"}.Hints(context.Background()))
+	require.Empty(t, Page{Path: "/logs/errors"}.Hints(context.Background()))
 }

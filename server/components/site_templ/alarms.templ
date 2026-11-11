@@ -1,15 +1,27 @@
 package site_templ
 
 import (
+	"context"
 	"slices"
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
-// alarmNames are how the site's pages name each alarm
+// alarmNames are the ids of the messages the site's pages name each alarm by
 var alarmNames = map[string]string{
-	"urgent_low": "Urgent low", "low": "Low", "predicted_low": "Low predicted", "urgent_high": "Urgent high", "high": "High", "fast_rise": "Rising fast", "fast_drop": "Dropping fast", "no_data": "No data", "device_battery": "Device battery",
+	"urgent_low": "site.alarms.urgent_low", "low": "site.alarms.low", "predicted_low": "site.alarms.predicted_low", "urgent_high": "site.alarms.urgent_high",
+	"high": "site.alarms.high", "fast_rise": "site.alarms.fast_rise", "fast_drop": "site.alarms.fast_drop", "no_data": "site.alarms.no_data",
+	"device_battery": "site.alarms.device_battery",
+}
+
+// alarmName is how the site's pages name the alarm, in the context's language, or "" for one they do not name
+func alarmName(ctx context.Context, id string) string {
+	if name, ok := alarmNames[id]; ok {
+		return i18n.T(ctx, name)
+	}
+	return ""
 }
 
 // Alarms holds the signed in identity's alarm banner under the header on every page. The alarms collection's stream
@@ -47,7 +59,7 @@ templ AlarmRow(alarm *sitemodels.SiteAlarm) {
 			class={ "flex items-center justify-between gap-4 px-4 py-3 text-sm font-semibold shadow-sm sm:px-6 lg:px-8",
 				templ.KV("bg-red-600 text-white", alarm.Urgent), templ.KV("bg-amber-400 text-gray-900", !alarm.Urgent) }
 		>
-			<span>Alarm: { alarmNames[alarm.ID] }</span>
+			<span>{ i18n.T(ctx, "site.alarms.alarm", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}) }</span>
 			@button.Button(button.Props{
 				ID:      "site--alarms--snooze-" + alarm.ID,
 				Variant: button.VariantSecondary,
@@ -60,12 +72,12 @@ templ AlarmRow(alarm *sitemodels.SiteAlarm) {
 					"hx-status:5xx": "target:#toaster swap:beforeend",
 				},
 			}) {
-				Snooze 30 min
+				{ i18n.T(ctx, "site.alarms.snooze") }
 			}
 		</div>
 	} else {
 		<div id={ "site--alarms--alarm-" + alarm.ID } class="bg-gray-100 px-4 py-1 text-xs text-gray-600 sm:px-6 lg:px-8">
-			Snoozed: { alarmNames[alarm.ID] }
+			{ i18n.T(ctx, "site.alarms.snoozed", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}) }
 		</div>
 	}
 }
