@@ -443,25 +443,64 @@ func PeriodReportHandler(page func(p *sitemodels.SiteSummaryPeriod, days []*site
 		}
 		now := time.Now()
 		id := cmp.Or(chi.URLParam(r, "id"), "week-"+sitedata.LocalDate(now, siteContext.GetSiteTimezone(), -1))
-		row, rows, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, id, now)
-		if notFound := (*apiutils.HTTPError)(nil); errors.As(err, &notFound) {
-			writeError(w, r, siteContext.AcceptType, notFound)
-			return
-		}
-		days, herr := apiutils.Searched(rows, err, "summary_periods", apiutils.WithContext(sitemodels.SummaryDailyFromDB, siteContext))
+		report, herr := periodReport(r, siteContext, id, now)
 		if herr != nil {
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
-		var previous *sitemodels.SiteSummaryPeriod
-		before := row.Period + "-" + time.UnixMilli(row.StartAt).In(siteContext.GetSiteTimezone()).AddDate(0, 0, -1).Format(time.DateOnly)
-		// A period before with no data has nothing to compare with, though some of its numbers, as its time CGM active,
-		// are 0 rather than missing
-		if previousRow, _, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, before, now); err == nil && previousRow.Days > 0 {
-			previous = sitemodels.SummaryPeriodFromDB(previousRow, siteContext)
-		}
-		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(sitemodels.SummaryPeriodFromDB(row, siteContext), days, previous), true)
+		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(report.Period, report.Days, report.Previous), true)
 	}
+}
+
+// periodReport is the period its id names, its days and the period before it, to compare with, nil when it has no data
+func periodReport(r *http.Request, siteContext *httputils.SiteContext, id string, now time.Time) (*site_reports_templ.PeriodReport, *apiutils.HTTPError) {
+	row, rows, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, id, now)
+	if notFound := (*apiutils.HTTPError)(nil); errors.As(err, &notFound) {
+		return nil, notFound
+	}
+	days, herr := apiutils.Searched(rows, err, "summary_periods", apiutils.WithContext(sitemodels.SummaryDailyFromDB, siteContext))
+	if herr != nil {
+		return nil, herr
+	}
+	report := &site_reports_templ.PeriodReport{Period: sitemodels.SummaryPeriodFromDB(row, siteContext), Days: days}
+	before := row.Period + "-" + time.UnixMilli(row.StartAt).In(siteContext.GetSiteTimezone()).AddDate(0, 0, -1).Format(time.DateOnly)
+	// A period before with no data has nothing to compare with, though some of its numbers, as its time CGM active,
+	// are 0 rather than missing
+	if previousRow, _, err := sitedata.SummaryReport(r.Context(), siteContext.SiteDB.Queries(), siteContext, before, now); err == nil && previousRow.Days > 0 {
+		report.Previous = sitemodels.SummaryPeriodFromDB(previousRow, siteContext)
+	}
+	return report, nil
+}
+
+// PrintReportHandler is the printable report of this month so far and the 3 months before it, each its overview and
+// AGP on pages of their own; a page for people, so it has no JSON. Each builds four months, so a site has only a few a
+// minute.
+func PrintReportHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionGet)
+	if siteContext == nil {
+		return
+	}
+	if siteContext.AcceptType != httputils.AcceptTypeHTML {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
+		return
+	}
+	if allowed, wait := httputils.WithinRateLimitAll(siteContext.Config.RateLimiters.SiteReportPrintLimiter(siteContext.SiteID)); !allowed {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(wait))
+		return
+	}
+	now := time.Now()
+	local := now.In(siteContext.GetSiteTimezone())
+	first := time.Date(local.Year(), local.Month(), 1, 0, 0, 0, 0, local.Location())
+	var months []*site_reports_templ.PeriodReport
+	for i := range site_reports_templ.PrintMonths {
+		report, herr := periodReport(r, siteContext, "month-"+first.AddDate(0, -i, 0).Format(time.DateOnly), now)
+		if herr != nil {
+			writeError(w, r, siteContext.AcceptType, herr)
+			return
+		}
+		months = append(months, report)
+	}
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.Printable(now, months), false)
 }
 
 // TDDReportHandler is the TDD report of the month ending on the day its end query names, today so far without one; a

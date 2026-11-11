@@ -34,6 +34,7 @@ type RateLimiters struct {
 	siteUpdateConnectorsRateLimiters *lru.Cache[string, *rate.Limiter]
 	siteIdentityCreateRateLimiters   *lru.Cache[string, *rate.Limiter]
 	siteDownloadRateLimiters         *lru.Cache[string, *rate.Limiter]
+	siteReportPrintRateLimiters      *lru.Cache[string, *rate.Limiter]
 	sitePushRateLimiters             *lru.Cache[string, *rate.Limiter]
 
 	SiteCreateLimiter   *rate.Limiter
@@ -72,6 +73,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		siteUpdateConnectorsRateLimiters: lruMust(maxSites * wiggle),
 		siteIdentityCreateRateLimiters:   lruMust(maxSites * wiggle),
 		siteDownloadRateLimiters:         lruMust(maxSites * wiggle),
+		siteReportPrintRateLimiters:      lruMust(maxSites * wiggle),
 		sitePushRateLimiters:             lruMust(maxSites * wiggle),
 
 		SiteCreateLimiter:   defaultRate("site_create").limiter(),
@@ -156,6 +158,11 @@ func (r *RateLimiters) SiteUpdateConnectorsLimiter(subdomain string) *rate.Limit
 
 func (r *RateLimiters) SiteIdentityCreateLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteIdentityCreateRateLimiters, subdomain, "site_identity_create")
+}
+
+// SiteReportPrintLimiter is a site's budget of printable reports, each building four months of its reports
+func (r *RateLimiters) SiteReportPrintLimiter(subdomain string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.siteReportPrintRateLimiters, subdomain, "site_report_print")
 }
 
 func (r *RateLimiters) SiteDownloadLimiter(subdomain string) *rate.Limiter {
@@ -245,6 +252,7 @@ func rateDefaults(c ServerConfig) []RateSetting {
 		{Name: "site_identity_create", Env: "SITE_IDENTITY_CREATE_PER_MINUTE", Default: Rate{float64(c.SiteIdentityCreatePerMinuteLimit), c.SiteIdentityCreatePerMinuteBurst}},
 		{Name: "site_download", Env: "SITE_DOWNLOAD_PER_MINUTE", Default: Rate{float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst}},
 		{Name: "site_push", Env: "SITE_PUSH_PER_MINUTE", Default: Rate{float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst}},
+		{Name: "site_report_print", Env: "SITE_REPORT_PRINT_PER_MINUTE", Default: Rate{float64(c.SiteReportPrintPerMinuteLimit), c.SiteReportPrintPerMinuteBurst}},
 	}
 	for i := range settings {
 		settings[i].Rate = settings[i].Default
@@ -315,6 +323,7 @@ func (r *RateLimiters) kinds() []limiterKind {
 		{"site_identity_create", "site", "site_identity_create", r.siteIdentityCreateRateLimiters.Values()},
 		{"site_download", "site", "site_download", r.siteDownloadRateLimiters.Values()},
 		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values()},
+		{"site_report_print", "site", "site_report_print", r.siteReportPrintRateLimiters.Values()},
 	}
 }
 

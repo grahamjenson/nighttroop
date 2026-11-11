@@ -791,6 +791,49 @@ func (r *Window) Execute(t *testing.T, page playwright.Page, ctx map[string]any)
 	return page, page.SetViewportSize(r.Width, r.Height)
 }
 
+// Media shows the page as it prints or as a screen shows it, for its print styles
+type Media struct {
+	Media string
+
+	Asserts []BrowserAssert
+
+	TestPath string
+	TestLine int
+}
+
+func (r *Media) ToFlatString() string {
+	return "MEDIA " + r.Media
+}
+
+func (r *Media) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *Media) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *Media) AddAssert(assert BrowserAssert) {
+	r.Asserts = append(r.Asserts, assert)
+}
+
+// Execute shows the page as the media does, then runs its asserts, which check the page as it shows
+func (r *Media) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	media := playwright.MediaScreen
+	if r.Media == "print" {
+		media = playwright.MediaPrint
+	}
+	if err := page.EmulateMedia(playwright.PageEmulateMediaOptions{Media: media}); err != nil {
+		return nil, err
+	}
+	for _, assert := range r.Asserts {
+		if err := assert.Execute(t, ctx, page, nil); err != nil {
+			t.Fatalf("\n\n ASSERT FAILED \n %s: %v \n\n", r.ToErrorLine("Error with ASSERT"), err)
+		}
+	}
+	return page, nil
+}
+
 // UserAgent sends the page's requests with a User-Agent, or the browser's own when it is empty
 type UserAgent struct {
 	Value string

@@ -160,6 +160,13 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				return nil, fmt.Errorf("%s:%d: WINDOW needs a size like 390x844: %q", path, lineNumber, second)
 			}
 			current = &Window{TestPath: path, TestLine: lineNumber, Width: width, Height: height}
+		case "MEDIA":
+			// MEDIA print shows the pages after it as they print, and MEDIA screen as a screen shows them again
+			flush()
+			if second != "print" && second != "screen" {
+				return nil, fmt.Errorf("%s:%d: MEDIA needs print or screen: %q", path, lineNumber, second)
+			}
+			current = &Media{TestPath: path, TestLine: lineNumber, Media: second}
 		case "VIRTUAL_AUTHENTICATOR":
 			// VIRTUAL_AUTHENTICATOR gives the page a passkey authenticator, as a phone's, that verifies the person itself
 			flush()

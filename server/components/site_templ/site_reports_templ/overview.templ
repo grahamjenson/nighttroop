@@ -16,13 +16,19 @@ import (
 // coefficient of variation, its time in each range, how much of it the CGM read, its best day, a graph of its day from
 // midnight averaged over its days, and its daily dose and carbs
 templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod) {
-	{{ now, location := time.Now(), reportLocation(ctx) }}
-	{{ low, high := site_data_templ.RangeBounds(ctx) }}
 	@heading.Title("Overview")
 	<div id="site--reports" class="w-full space-y-4 py-4">
 		@periodHeader("overview", "Overview", p)
+		@overviewCards(p, daily, previous, true)
+	</div>
+}
+
+// overviewCards are the overview's cards, with links to the reports of its best day and its days' doses when links
+templ overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod, links bool) {
+	{{ now, location := time.Now(), reportLocation(ctx) }}
+	{{ low, high := site_data_templ.RangeBounds(ctx) }}
 		@card.Card(card.Props{ID: "site--overview--glucose", Title: "Glucose"}) {
-			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-4">
 				<dl class="space-y-6">
 					@bigStat("site--overview--mean", "Average glucose", display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units), "") {
 						@statChange("site--overview--mean", p, glucoseChange(p, previous))
@@ -65,7 +71,11 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				<div class="min-w-0 flex-1">
 					<h2 class="font-semibold text-gray-900">
 						Best day:
-						<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } { nav.Attributes(link("overview", "day", date))... }>{ date.Format(display.LongDayLayout) }</a>
+						if links {
+							<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } { nav.Attributes(link("overview", "day", date))... }>{ date.Format(display.LongDayLayout) }</a>
+						} else {
+							{ date.Format(display.LongDayLayout) }
+						}
 					</h2>
 					<p class="text-sm text-gray-600">Glucose was in range about { display.Percent(best.TimeInRange) } of the day.</p>
 				</div>
@@ -87,14 +97,17 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			}
 		}
 		{{ _, last := days(ctx, p) }}
-		@card.Card(card.Props{ID: "site--overview--insulin", Title: "Insulin and carbs", Action: tddAction(tddLink(last, now))}) {
+		{{ action := templ.Component(nil) }}
+		if links {
+			{{ action = tddAction(tddLink(last, now)) }}
+		}
+		@card.Card(card.Props{ID: "site--overview--insulin", Title: "Insulin and carbs", Action: action}) {
 			<dl class="grid grid-cols-2 gap-6">
 				@bigStat("site--overview--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "")
 				@bigStat("site--overview--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g", "")
 			</dl>
 			@insulinSplit(p)
 		}
-	</div>
 }
 
 // tddAction opens the TDD report of each day's dose to the overview's last day, at path

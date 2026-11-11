@@ -70,6 +70,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/reports/overview/{id}", sitecollections.PeriodReportHandler(site_reports_templ.Overview))
 		// The daily dose report is its own page
 		r.Get("/reports/tdd", sitecollections.TDDReportHandler)
+		// The printable report is the last 3 months and this one so far, a page of its own to print
+		r.Get("/reports/print", sitecollections.PrintReportHandler)
 
 		// The settings and alarms pages show the identity's own settings, and the site's to an admin. Both save to
 		// /settings/site and /settings/identity.

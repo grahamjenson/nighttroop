@@ -158,6 +158,9 @@ type ServerConfig struct {
 	// Each download of a site's data copies its whole DB
 	SiteDownloadPerMinuteLimit int
 	SiteDownloadPerMinuteBurst int
+	// Each printable report builds four months of the site's reports
+	SiteReportPrintPerMinuteLimit int
+	SiteReportPrintPerMinuteBurst int
 	// SitePushPerMinuteLimit and Burst cap the pushes a site sends, each a request to Apple or Firebase
 	SitePushPerMinuteLimit int
 	SitePushPerMinuteBurst int
@@ -367,10 +370,12 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteIdentityCreatePerMinuteLimit: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT", 1), // Stop creating and deleting identities using up the CPU with bcrypt
 		SiteIdentityCreatePerMinuteBurst: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_BURST", 5),
 
-		SiteDownloadPerMinuteLimit: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_LIMIT", 1),
-		SiteDownloadPerMinuteBurst: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_BURST", 3),
-		SitePushPerMinuteLimit:     configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_LIMIT", 10),
-		SitePushPerMinuteBurst:     configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_BURST", 30),
+		SiteDownloadPerMinuteLimit:    configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_LIMIT", 1),
+		SiteDownloadPerMinuteBurst:    configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_BURST", 3),
+		SiteReportPrintPerMinuteLimit: configIntSelect(dotenv, "SITE_REPORT_PRINT_PER_MINUTE_LIMIT", 5),
+		SiteReportPrintPerMinuteBurst: configIntSelect(dotenv, "SITE_REPORT_PRINT_PER_MINUTE_BURST", 10),
+		SitePushPerMinuteLimit:        configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_LIMIT", 10),
+		SitePushPerMinuteBurst:        configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_BURST", 30),
 
 		//
 		// Site Limits

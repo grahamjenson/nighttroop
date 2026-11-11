@@ -97,6 +97,7 @@ control DB's server settings and used in place of the env's from then on, until 
 | `SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's changes to its connector settings |
 | `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities and its credential resets, each of which hashes a password with bcrypt or makes a TOTP secret |
 | `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, each of which copies its whole DB |
+| `SITE_REPORT_PRINT_PER_MINUTE_LIMIT` / `_BURST` | `5` / `10` | A site's printable reports, each of which builds four months of its reports |
 | `SITE_PUSH_PER_MINUTE_LIMIT` / `_BURST` | `10` / `30` | A site's pushes to its devices' apps, each a request to Apple or Firebase |
 
 ## Socket.IO live updates

@@ -1,0 +1,86 @@
+INCLUDE steps/new_site_admin.steps
+
+// The printable report is a page for people, so has no JSON
+NAME print_json
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Each builds four months of the site's reports, so a site can print 5 a minute with a burst of 10
+
+NAME print_1
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_2
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_3
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_4
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_5
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_6
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_7
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_8
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_9
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_10
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html" "#Content-Type.0"
+
+NAME print_over_rate_limit
+GET http://{{ site }}/reports/print
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+ASSERT_STATUS 429

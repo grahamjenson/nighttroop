@@ -209,9 +209,15 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 	{{ previous, next := summariesLinks(first, time.Now()) }}
 	@heading.Title("Summaries")
 	<div id="site--summaries" class="w-full space-y-4 py-4">
-		@periodNav("Summaries", "site--summaries", "site--summaries--month", first.Format("January 2006"), previous, next, "month") {
-			<span class="text-sm text-gray-500">Its year's months, the fortnights and weeks with a day in it, and its days, built from the site's data</span>
-		}
+		<div class="flex flex-wrap items-start justify-between gap-2">
+			@periodNav("Summaries", "site--summaries", "site--summaries--month", first.Format("January 2006"), previous, next, "month") {
+				<span class="text-sm text-gray-500">Its year's months, the fortnights and weeks with a day in it, and its days, built from the site's data</span>
+			}
+			// The printable report is a page of its own, without the site's header, so opens in a new tab
+			@button.Button(button.Props{ID: "site--summaries--print", Href: "/reports/print", Target: "_blank", Variant: button.VariantOutline, Size: button.SizeSm}) {
+				Printable report
+			}
+		</div>
 		for _, kind := range slices.Backward(periods) {
 			@card.Card(card.Props{ID: "site--summaries--" + kind.Period, Title: summariesTitle(kind.Period, kind.Label, first)}) {
 				@table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}) {
