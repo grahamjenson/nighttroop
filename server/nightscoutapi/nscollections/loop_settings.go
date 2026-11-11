@@ -10,6 +10,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -47,8 +48,8 @@ func recordLoopSettings(q *sitedb.Queries, ctx context.Context, app, source stri
 	return &id, nil
 }
 
-// loopSettingsJSON are the settings a record refers to, or none when it refers to none or they were deleted, as a
-// record is kept when its settings are deleted
+// loopSettingsJSON are the settings a record refers to, as the request's identity may see them, or none when it refers
+// to none or they were deleted, as a record is kept when its settings are deleted
 func loopSettingsJSON(ctx context.Context, siteContext *httputils.SiteContext, id *string) json.RawMessage {
 	if id == nil || siteContext == nil || siteContext.SiteDB == nil {
 		return nil
@@ -60,5 +61,5 @@ func loopSettingsJSON(ctx context.Context, siteContext *httputils.SiteContext, i
 		}
 		return nil
 	}
-	return json.RawMessage(row.SettingsJson)
+	return sitemodels.LoopSettingsFor(siteContext.IdentityModel, json.RawMessage(row.SettingsJson))
 }

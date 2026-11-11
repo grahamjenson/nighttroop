@@ -88,7 +88,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		}
 
 		// The site's collections, each at its route in its section: data, settings, presets or logs
-		for _, section := range []string{"data", "settings", "presets", "logs"} {
+		for _, section := range httputils.SiteSections {
 			routes := store.Section(section)
 			r.Get("/"+section+"/{collection}", routes.Search)
 			r.Get("/"+section+"/{collection}/events", routes.Events)

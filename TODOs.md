@@ -43,6 +43,12 @@
        messages
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
+    1. P2: Stop many sites making the server poll one third party Nightscout, as only each site's connector saves are
+       rate limited and its credentials' ciphertexts differ: keep a keyed HMAC (`SecurityConfig.mac`, the MAC key set
+       in `KEY_SETS`) of the normalised Nightscout host in a new `site_connectors` column with a partial unique index,
+       set on create and update and cleared on delete, and refuse a second site syncing that host with a 409 saying it
+       is synced by another site. First decide how a caregiver's own site may still follow a Nightscout another site
+       syncs, which this would refuse
 
 ## Before First Release:
 
@@ -75,8 +81,10 @@
        require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token. Then
        let the control site's Push Credentials (`POST /push-credentials`) add one with no `site_id`, which it refuses
        until then
-    1. P2: Decide whether Loop's and Trio's device tokens stay in plaintext in their profiles, which every reader of
-       the site gets from the Nightscout profile API, as LoopFollow needs them
+    1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
+       identities that can change the site's data are given them back, and push registrations keep them encrypted
+       `controlcollections.AdminOnly` in `server/control_router.go`, as its other admin only routes are, and drop
+       their handlers' own admin checks
 1. Nightscout API:
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor

@@ -18,7 +18,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// testConfig allows one login attempt an IP and name; a config can only be made once per process
+// testConfig allows one login attempt an IP; a config can only be made once per process
 var testConfig *config.ServerConfig
 
 func TestMain(m *testing.M) {

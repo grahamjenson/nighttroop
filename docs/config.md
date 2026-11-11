@@ -23,13 +23,13 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `REQUESTS_BACKLOG_PER_CPU` | `64` | Requests for each CPU that wait, up to 5 seconds, for one in flight to finish, once `REQUESTS_IN_FLIGHT_PER_CPU` are being worked on. One that waits longer, or arrives with the backlog full, is refused at once with 503 and `Retry-After` |
 | `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
 | `DATA_DIR` | `./.dbs` | Where the SQLite DBs (`db/`) and backups waiting to upload (`backup/`) are kept |
-| `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP: the client is the last hop before these proxies |
-| `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header, unless it is not an IP |
+| `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP: the client is the last hop before these proxies. On Fly.io, also the only peers whose `Fly-Client-IP` is believed: set it to where Fly's proxy connects from, as the staging `fly.toml` does |
+| `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header, but only on a request whose TCP peer is in `TRUSTED_PROXIES`, and unless it is not an IP. Any other peer, such as another machine on Fly's private network, could set it to anything |
 | `SUPPORT_EMAIL` | `nighttroop@t1d.nz` | Where users contact the server's operator, in every page's footer and in the terms of service and privacy policy |
 | `FEEDBACK_URL` | | Where users give feedback, e.g. a Google Form or GitHub issues; when set, linked from every page's footer and the home page |
 | `STAGING_ADMIN_PASSWORD` | empty | Required in staging, and only used there: the control admin's password, at least 16 characters. Keep it a secret, never in a committed file |
 | `STAGING_ADMIN_TOTP_SECRET` | empty | Required in staging, and only used there: the control admin's TOTP secret, at least 16 base32 characters, the same in your authenticator app. The admin is made when the server starts without one, so changing these does not change an admin it already has |
-| `CAPTURE_REQUESTS` | empty | `true` in staging, and only used there: every request and its response are kept as a `Captured <method> <path>` log in the logs DB, with the site, identity, IP, headers and bodies (each up to 64 KB, as text or base64), to see what clients such as Loop, AAPS and Trio send. Credentials in headers, the query, the path and JSON or form bodies are `REDACTED`, and styles, scripts, images and fonts are not kept. Each log can be up to 256 KB, so lower `LOGS_DB_MAX_ROWS_PER_TABLE` if the logs DB grows too large. The control admin can download the logs DB, with Download Logs DB on the control logs page, to read them |
+| `CAPTURE_REQUESTS` | empty | `true` in staging, and only used there: every request and its response are kept as a `Captured <method> <path>` log in the logs DB, with the site, identity, IP, headers and bodies (each up to 64 KB), to see what clients such as Loop, AAPS and Trio send. Credentials and connector logins (such as keys, TOTP codes, usernames and URLs) in headers, the query, the path and JSON or form bodies are `REDACTED`, any other body (a page, text, or one past 64 KB) keeps only its size and content type, and styles, scripts, images and fonts are not kept. Each log can be up to 256 KB, so lower `LOGS_DB_MAX_ROWS_PER_TABLE` if the logs DB grows too large. The control admin can download the logs DB, with Download Logs DB on the control logs page, to read them |
 | `SENTRY_DSN` | empty | Where errors are reported. Empty turns Sentry off |
 | `DEPLOYMENT` | `development` | The name of this server among those running Nighttroop, e.g. `staging-nz` or `prod-voyager`, which its errors are reported to Sentry under as their environment, and its startup log shows. Unlike `MODE`, which is how the server behaves, each server gets its own |
 | `GEOIP_DB_PATH` | empty; the Docker image sets it to its DB-IP IP to City Lite database | A DB-IP IP to City Lite `.mmdb` file, for the city sign ins come from. Without one, or if it cannot be opened, the built in IP to Country Lite gives only the country |
@@ -88,13 +88,14 @@ control DB's server settings and used in place of the env's from then on, until 
 | --- | --- | --- |
 | `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `100000` / `100000` | Requests to the whole server, to stop a DDoS. The control site has a limit of its own at the same rate, so it can still be signed in to, and a control admin signed in is not limited by either |
 | `GLOBAL_IP_PER_MINUTE_LIMIT` / `_BURST` | `720` / `1440` | Requests from one IP, enough to manage 4 sites |
-| `SITE_LOGIN_PER_MINUTE_LIMIT` / `_BURST` | `1` / `10` | Logins to a site, to stop credential stuffing |
+| `SITE_LOGIN_PER_MINUTE_LIMIT` / `_BURST` | `1` / `10` | Logins, passkey sign ins, recoveries and setup codes from one IP, to stop credential stuffing |
+| `SITE_LOGIN_NAME_PER_MINUTE_LIMIT` / `_BURST` | `30` / `60` | Logins to one name on a site (or a site's passkey sign ins, or its recoveries, or the setup code) from every IP, far above one IP's, so one IP cannot lock others out, while guessing spread over many IPs is capped |
 | `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `120` | Requests from one IP to a site that fail auth or need none, so bad tokens cannot spend the site's limit |
 | `SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT` / `_BURST` | `7` / `20` | Sites created on the whole server |
 | `SITE_CREATE_IP_PER_MINUTE_LIMIT` / `_BURST` | `0.1` / `1` | Sites created from one IP, one every 10 minutes |
 | `SITE_GET_PER_MINUTE_LIMIT` / `_BURST` | `180` / `360` | A site's authenticated reads |
 | `SITE_POST_PER_MINUTE_LIMIT` / `_BURST` | `60` / `240` | A site's authenticated writes |
-| `SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's changes to its connector settings |
+| `SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's saves of its connector settings, adding one as well as changing it |
 | `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities and its credential resets, each of which hashes a password with bcrypt or makes a TOTP secret |
 | `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, each of which copies its whole DB |
 | `SITE_REPORT_PRINT_PER_MINUTE_LIMIT` / `_BURST` | `5` / `10` | A site's printable reports, each of which builds four months of its reports |
@@ -108,6 +109,7 @@ control DB's server settings and used in place of the env's from then on, until 
 | `SOCKET_PING_TIMEOUT_IN_SECONDS` | `20` | How long a ping waits for its pong before the client is closed |
 | `SOCKET_MAX_PAYLOAD_BYTES` | `100000` | The largest POST body or websocket message |
 | `SOCKET_MAX_SESSIONS_PER_SITE` | `100` | The most live sessions one site may hold |
+| `SOCKET_MAX_UNAUTH_SESSIONS_PER_IP` | `10` | The most of a site's live sessions one IP (an IPv6 /64) may hold before they are given access, so it cannot take them all from the site's followers |
 | `SOCKET_MAX_BUFFERED_PACKETS` | `1000` | Packets waiting for a client before it is closed as too slow |
 | `SOCKET_MAX_BUFFERED_BYTES` | `2000000` | Bytes waiting for a client before it is closed as too slow |
 | `SOCKET_MAX_PACKETS_PER_SECOND` | `20` | Packets a client may send a second, after a burst of 5 seconds' worth, before it is closed |

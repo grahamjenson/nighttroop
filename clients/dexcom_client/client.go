@@ -173,7 +173,8 @@ func (c *Client) post(ctx context.Context, what, path string, reqBody any) ([]by
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error sending Dexcom request: %w", err)
+		// Its URL has the session, which reads the account's glucose, in its query
+		return nil, fmt.Errorf("error sending Dexcom request: %w", httputils.WithoutURL(err))
 	}
 	defer resp.Body.Close()
 

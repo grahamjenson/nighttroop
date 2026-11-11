@@ -219,6 +219,37 @@ func TestUnauthorizedLogsInAgainNextTime(t *testing.T) {
 	require.Equal(t, 2, logins)
 }
 
+// A failed request is a sync error, stored, logged and sent to Sentry, so it never has the followed patient's ID in its
+// path
+func TestFetchReadingsErrorsHideThePatient(t *testing.T) {
+	for _, status := range []int{http.StatusInternalServerError, 0} {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/llu/auth/login":
+				_, _ = w.Write([]byte(loginOK("u")))
+			case "/llu/connections":
+				_, _ = w.Write([]byte(`{"status":0,"data":[{"patientId":"patient-1"}]}`))
+			default:
+				if status == 0 {
+					<-r.Context().Done() // times out
+					return
+				}
+				w.WriteHeader(status)
+			}
+		}))
+		c, err := NewClient("a@example.com", "p", "EU")
+		require.NoError(t, err)
+		c.offline, c.baseURL = false, srv.URL
+		c.httpClient.Timeout = 100 * time.Millisecond
+
+		_, err = c.FetchReadings(context.Background())
+		srv.Close()
+		require.Error(t, err)
+		require.NotContains(t, err.Error(), "patient-1")
+		require.NotContains(t, err.Error(), srv.URL)
+	}
+}
+
 func TestFetchReadingsRefusesRedirect(t *testing.T) {
 	secretHits := 0
 	secret := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { secretHits++ }))

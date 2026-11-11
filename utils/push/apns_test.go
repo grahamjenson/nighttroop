@@ -130,5 +130,6 @@ func TestAPNsUnreachableHidesToken(t *testing.T) {
 	err = apns.Send(t.Context(), Signer{ID: 1, TeamID: "TEAM123456", KeyID: "ABC123DEFG", Key: key}, token,
 		"com.TEAM123456.loopkit.Loop", true, []byte(`{}`))
 	require.ErrorContains(t, err, "cannot reach Apple's push service")
+	require.ErrorContains(t, err, "connection refused")
 	require.NotContains(t, err.Error(), token)
 }
