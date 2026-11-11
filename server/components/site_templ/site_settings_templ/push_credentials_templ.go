@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // PushProviders are the services a credential sends pushes through, as people know them
@@ -62,19 +64,18 @@ func PushCredentialsTable(credentials []*sitemodels.PushCredential) templ.Compon
 			return nil
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
-			ID:    "push_credentials_table",
-			Title: "Push Notifications",
-			Modal: true,
-			Description: "The keys pushes are sent to your own builds of apps with, such as an Apple push key (.p8) for the Loop you build " +
-				"with your Apple developer account. Only your site uses them, and a key is never shown again once added.",
-			Action: addmodal.Open("site--push-credential--add", "/settings/push-credentials/new", "Add Push Credential"),
+			ID:          "push_credentials_table",
+			Title:       i18n.T(ctx, "site.settings.push_credentials.title"),
+			Modal:       true,
+			Description: i18n.T(ctx, "site.settings.push_credentials.about"),
+			Action:      addmodal.Open("site--push-credential--add", "/settings/push-credentials/new", i18n.T(ctx, "site.settings.push_credentials.add")),
 			Table: listpage.TableProps{
 				ID:      "pushCredentialsTable",
 				EmptyID: "site--push-credential--empty",
-				Empty:   "No push credentials yet.",
+				Empty:   i18n.T(ctx, "site.settings.push_credentials.empty"),
 				Columns: []table.Column{
-					{Label: "Name"}, {Label: "Service"}, {Label: "Team or Project"}, {Label: "Apps"}, {Label: "Bundle IDs"},
-					{Label: "Added By"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.settings.push_credentials.name")}, {Label: i18n.T(ctx, "site.settings.push_credentials.service")}, {Label: i18n.T(ctx, "site.settings.push_credentials.team_or_project")}, {Label: i18n.T(ctx, "site.settings.push_credentials.apps")},
+					{Label: i18n.T(ctx, "site.settings.push_credentials.bundle_ids")}, {Label: i18n.T(ctx, "site.settings.push_credentials.added_by")}, {Actions: true},
 				},
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
@@ -131,7 +132,7 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(credential.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 49, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 50, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -158,7 +159,7 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(PushProviders[string(credential.Provider)])
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 52, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 53, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -185,7 +186,7 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(credential.TeamOrProjectID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 55, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 56, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -196,14 +197,14 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if credential.KeyID != nil {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<span class=\"block text-xs text-gray-500\">Key ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<span class=\"block text-xs text-gray-500\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var11 string
-					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(*credential.KeyID)
+					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_credentials.key_id_value", i18n.Data{"KeyID": *credential.KeyID}))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 57, Col: 69}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 58, Col: 145}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
@@ -235,7 +236,7 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(credential.Apps, ", "))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 61, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 62, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -260,17 +261,22 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				if len(credential.BundleIDs) == 0 {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "Any")
+					var templ_7745c5c3_Var15 string
+					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_credentials.any"))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 66, Col: 55}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					var templ_7745c5c3_Var15 string
-					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(credential.BundleIDs, ", "))
+					var templ_7745c5c3_Var16 string
+					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(credential.BundleIDs, ", "))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 67, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 68, Col: 46}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -281,7 +287,7 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Var16 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 				if !templ_7745c5c3_IsBuffer {
@@ -293,22 +299,22 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				var templ_7745c5c3_Var17 string
-				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(credential.CreatedByIdentityName)
+				var templ_7745c5c3_Var18 string
+				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(credential.CreatedByIdentityName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 71, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 72, Col: 37}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = table.DeleteCell(id+"--delete", "/settings/push-credentials/"+strconv.FormatInt(credential.ID, 10), "Delete this push credential? Pushes sent with it will stop.").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = table.DeleteCell(id+"--delete", "/settings/push-credentials/"+strconv.FormatInt(credential.ID, 10), i18n.T(ctx, "site.settings.push_credentials.delete_confirm")).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -322,20 +328,25 @@ func PushCredentialRow(credential *sitemodels.PushCredential) templ.Component {
 	})
 }
 
-// PushCredentialForm adds a credential: its fields, then the apps it pushes to and its secret
-var PushCredentialForm = addmodal.Props{
-	ID: "site--push-credential--create", Title: "Add Push Credential", Path: "/settings/push-credentials",
-	Target: "#pushCredentialsTable tbody", Submit: "Add Push Credential",
-	Fields: []addmodal.Field{
-		{Name: "name", Label: "Name", Help: "What it is for, e.g. My Loop.", Required: true, Kind: addmodal.Text, Max: "64"},
-		{Name: "provider", Label: "Service", Help: "Apple for iPhone apps, Firebase for Android apps.", Required: true, Kind: addmodal.Select,
-			Options: []string{string(consts.PushProviderAPNs), string(consts.PushProviderFCM)}, Value: string(consts.PushProviderAPNs),
-			OptionLabel: func(p string) string { return PushProviders[p] }},
-		{Name: "team_or_project_id", Label: "Team or Project ID", Help: "Your Apple developer team ID, or your Firebase project ID.", Required: true, Kind: addmodal.Text, Max: "64"},
-		{Name: "key_id", Label: "Key ID", Help: "The Apple push key's 10 character ID; none for Firebase.", Kind: addmodal.Text, Max: "10"},
-		{Name: "bundle_ids", Label: "Bundle IDs", Help: "The only apps it pushes to, separated by commas; blank for any of yours.", Kind: addmodal.Text, Max: "2048", Wide: true},
-	},
-	Extra: PushCredentialExtra("site--push-credential--create"),
+// PushCredentialForm is PushCredentialFormIn in English
+var PushCredentialForm = PushCredentialFormIn(context.Background())
+
+// PushCredentialFormIn adds a credential, in the context's language: its fields, then the apps it pushes to and its secret
+func PushCredentialFormIn(ctx context.Context) addmodal.Props {
+	return addmodal.Props{
+		ID: "site--push-credential--create", Title: i18n.T(ctx, "site.settings.push_credentials.add"), Path: "/settings/push-credentials",
+		Target: "#pushCredentialsTable tbody", Submit: i18n.T(ctx, "site.settings.push_credentials.add"),
+		Fields: []addmodal.Field{
+			{Name: "name", Label: i18n.T(ctx, "site.settings.push_credentials.name"), Help: i18n.T(ctx, "site.settings.push_credentials.name_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+			{Name: "provider", Label: i18n.T(ctx, "site.settings.push_credentials.service"), Help: i18n.T(ctx, "site.settings.push_credentials.service_help"), Required: true, Kind: addmodal.Select,
+				Options: []string{string(consts.PushProviderAPNs), string(consts.PushProviderFCM)}, Value: string(consts.PushProviderAPNs),
+				OptionLabel: func(p string) string { return PushProviders[p] }},
+			{Name: "team_or_project_id", Label: i18n.T(ctx, "site.settings.push_credentials.team_or_project_id"), Help: i18n.T(ctx, "site.settings.push_credentials.team_or_project_id_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+			{Name: "key_id", Label: i18n.T(ctx, "site.settings.push_credentials.key_id"), Help: i18n.T(ctx, "site.settings.push_credentials.key_id_help"), Kind: addmodal.Text, Max: "10"},
+			{Name: "bundle_ids", Label: i18n.T(ctx, "site.settings.push_credentials.bundle_ids"), Help: i18n.T(ctx, "site.settings.push_credentials.bundle_ids_help"), Kind: addmodal.Text, Max: "2048", Wide: true},
+		},
+		Extra: PushCredentialExtra("site--push-credential--create"),
+	}
 }
 
 // PushCredentialExtra are a checkbox for each app it can push to, and its secret, pasted in
@@ -356,7 +367,20 @@ func PushCredentialExtra(formID string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<fieldset class=\"mb-3\"><legend class=\"mb-1 text-sm font-medium text-gray-700\">Apps</legend><div class=\"flex flex-wrap gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<fieldset class=\"mb-3\"><legend class=\"mb-1 text-sm font-medium text-gray-700\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var20 string
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_credentials.apps"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 102, Col: 109}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</legend><div class=\"flex flex-wrap gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -373,12 +397,12 @@ func PushCredentialExtra(formID string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(string(app))
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(string(app))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 101, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 107, Col: 18}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -387,33 +411,85 @@ func PushCredentialExtra(formID string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><p class=\"mt-1 text-xs text-gray-500\">The apps it sends pushes to.</p></fieldset><label for=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><p class=\"mt-1 text-xs text-gray-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formID + "--secret").Resolve(ctx)
+		var templ_7745c5c3_Var22 string
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_credentials.apps_help"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 107, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 111, Col: 97}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" class=\"mb-1 flex items-baseline justify-between text-sm font-medium text-gray-700\">Key <span class=\"text-xs font-semibold text-primary\">Required</span></label> <textarea id=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formID + "--secret").Resolve(ctx)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 111, Col: 35}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p></fieldset><label for=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" name=\"secret\" required rows=\"6\" maxlength=\"4096\" class=\"w-full rounded-md border border-gray-200 p-2 font-mono text-xs\"></textarea><p class=\"mt-1 text-xs text-gray-500\">Paste the whole .p8 file, or the Firebase service account's JSON. It is kept encrypted and never shown again.</p>")
+		var templ_7745c5c3_Var23 string
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formID + "--secret").Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 113, Col: 33}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" class=\"mb-1 flex items-baseline justify-between text-sm font-medium text-gray-700\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var24 string
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_credentials.key"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 114, Col: 53}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, " <span class=\"text-xs font-semibold text-primary\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var25 string
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_credentials.required"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 115, Col: 107}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></label> <textarea id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var26 string
+		templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formID + "--secret").Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 117, Col: 35}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" name=\"secret\" required rows=\"6\" maxlength=\"4096\" class=\"w-full rounded-md border border-gray-200 p-2 font-mono text-xs\"></textarea><p class=\"mt-1 text-xs text-gray-500\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var27 string
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_credentials.key_help"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_credentials.templ`, Line: 118, Col: 95}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -439,7 +515,7 @@ func PushCredentialNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(PushCredentialForm).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(PushCredentialFormIn(ctx)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -464,7 +540,7 @@ func PushCredentialDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Push Credential Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.settings.push_credentials.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
