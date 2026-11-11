@@ -70,9 +70,14 @@ go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.0 install chrom
 
 # Screenshots
 
-`SCREENSHOT` steps in `tests/bdd` write `tests/screenshots`, which is committed
-and rendered on Linux. On macOS they go to `.test/screenshots` instead; to
-update the committed set run `cmd/screenshots.sh` (needs Docker).
+`SCREENSHOT` steps in `tests/bdd` write `.test/savedScreenshots`, which is not
+committed. A pull request lists the ones it changes under `## Screenshots` in
+its description, as `- site/summaries/summaries`, and once its tests pass CI
+pushes them to the `pr-<number>` branch of
+[nighttroop-screenshots](https://github.com/grahamjenson/nighttroop-screenshots)
+and shows them in a comment (`cmd/pr_screenshots.sh`). Every run's screenshots
+are also its `screenshots` artifact. CI needs a `SCREENSHOTS_TOKEN` secret that
+can push to that repo.
 
 # Coverage
 

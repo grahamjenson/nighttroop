@@ -71,6 +71,10 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    # pull-requests: write to show a pull request its screenshots in a comment
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -116,23 +120,27 @@ jobs:
       - name: Test
         run: go test -count=1 ./...
 
-      # Replaces tests/screenshots with the ones the tests just took. Differences from
-      # the committed files are reported as a warning, never a failure.
-      - name: Collect screenshots
-        if: always()
-        run: |
-          rm -rf tests/screenshots
-          mkdir -p tests/screenshots
-          cp -R .test/savedScreenshots/. tests/screenshots/ || true
-          git add -N tests/screenshots
-          git diff --quiet -- tests/screenshots || echo "::warning::screenshots differ from the committed ones; see the screenshots artifact"
+      # Once the tests pass, a pull request is shown the screenshots its description lists under ## Screenshots, in a
+      # comment, from the pr-<number> branch of the screenshots repo. A pull request from a fork has no secrets to push
+      # them with, so it is not. The description goes in as an env, never into the script.
+      - name: Show the pull request its screenshots
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+          SCREENSHOTS_TOKEN: ${{ secrets.SCREENSHOTS_TOKEN }}
+        run: cmd/pr_screenshots.sh
 
+      # Every screenshot the tests took, to download
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
-          path: tests/screenshots
+          path: .test/savedScreenshots
+          include-hidden-files: true
 
       # Go refreshes the mtime of an entry it uses that is over an hour old, so entries
       # older than 90 minutes went unused by this run. Dropping them stops the cache growing.
