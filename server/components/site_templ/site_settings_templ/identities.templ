@@ -64,11 +64,15 @@ var deviceClients = []deviceClient{
 	{"t1dcarer", "T1D Carer", []string{"In T1D Carer, add a *Nightscout* site.", "Set *Nightscout URL* to {url}", "Set its *token* to {token}"}, true},
 }
 
-// stepPart is a piece of a step: text, in bold when it names a menu or field, or a value to copy
+// valueNames name the values in the steps, for their copy buttons
+var valueNames = map[string]string{"url": "Nightscout URL", "token": "Nightscout token", "xdrip": "xDrip+ URL", "nightguard": "Nightguard URL"}
+
+// stepPart is a piece of a step: text, in bold when it names a menu or field, or a value to copy, with its name
 type stepPart struct {
 	Text  string
 	Bold  bool
 	Value bool
+	Name  string
 }
 
 // stepParts splits a step into its text, bold names and values, filling the values in
@@ -89,7 +93,7 @@ func stepParts(step string, values map[string]string) []stepPart {
 			continue
 		}
 		name, rest, _ := strings.Cut(step[at+1:], "}")
-		parts = append(parts, stepPart{Text: values[name], Value: true})
+		parts = append(parts, stepPart{Text: values[name], Value: true, Name: valueNames[name]})
 		step = rest
 	}
 	return parts
@@ -466,7 +470,7 @@ templ clientGuide(identity *sitemodels.UserIdentity) {
 					<li>
 						for j, part := range step {
 							if part.Value {
-								@copyValue(fmt.Sprintf("site--identities--created--guide-%d-%d", i, j), part.Text)
+								@copyValue(fmt.Sprintf("site--identities--created--guide-%d-%d", i, j), part.Name, part.Text)
 							} else if part.Bold {
 								<span class="font-semibold">{ part.Text }</span>
 							} else {
@@ -483,11 +487,11 @@ templ clientGuide(identity *sitemodels.UserIdentity) {
 	}
 }
 
-// copyValue is a value to enter in a client, in a box with a button to copy it
-templ copyValue(id string, value string) {
+// copyValue is a value to enter in a client, in a box with a button to copy it, named for the value's name
+templ copyValue(id string, name string, value string) {
 	<div class="mt-1 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1">
 		<code id={ id } class="flex-1 break-all font-mono text-xs text-slate-800">{ value }</code>
-		@copybutton.CopyButton(copybutton.Props{TargetID: id})
+		@copybutton.CopyButton(copybutton.Props{TargetID: id, Label: "Copy " + name})
 	</div>
 }
 
@@ -598,9 +602,13 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 				<!-- Clear, High-Visibility Copy Button -->
 				<div class="inline-flex shadow-sm rounded-lg">
 					@copybutton.CopyButton(copybutton.Props{
+						ID:       "site--identities--created--copy-all",
 						TargetID: "textToCopy",
-						Class:    "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20",
-					})
+						Label:    "Copy all credentials",
+						Class:    "h-auto w-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20",
+					}) {
+						Copy all
+					}
 				</div>
 			</div>
 			<!-- Monospace Content Area -->
@@ -629,7 +637,7 @@ templ credentialRow(label string, id string, value string) {
 	<div class="flex items-start">
 		<span class="w-28 shrink-0 font-medium text-slate-400 select-none">{ label }</span>
 		<span id={ id } class="flex-1 break-all">{ value }</span>
-		@copybutton.CopyButton(copybutton.Props{TargetID: id})
+		@copybutton.CopyButton(copybutton.Props{TargetID: id, Label: "Copy " + strings.TrimSuffix(label, ":")})
 	</div>
 }
 

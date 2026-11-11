@@ -12,6 +12,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"maps"
+
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/templui/utils"
@@ -22,6 +24,9 @@ type Props struct {
 	Class    string           // Custom CSS classes
 	Attrs    templ.Attributes // Additional HTML attributes
 	TargetID string           // Required - ID of element to copy from
+	// Label is required: what it does, such as "Copy the password", as its accessible name and tooltip, since it may
+	// show only an icon. Its children, such as "Copy all", are shown beside the icon.
+	Label string
 }
 
 func CopyButton(props Props) templ.Component {
@@ -40,11 +45,14 @@ func CopyButton(props Props) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var1 := templ.GetChildren(ctx)
 		ctx = templ.ClearChildren(ctx)
 		var p = props
 		if p.ID == "" {
 			p.ID = "copybutton-" + utils.RandomID()
 		}
+		attributes := templ.Attributes{"aria-label": p.Label, "title": p.Label}
+		maps.Copy(attributes, p.Attrs)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div data-copy-button data-target-id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -52,7 +60,7 @@ func CopyButton(props Props) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.TargetID).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/copybutton/copybutton.templ`, Line: 25, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/copybutton/copybutton.templ`, Line: 32, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -94,12 +102,16 @@ func CopyButton(props Props) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = templ_7745c5c3_Var1.Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
 			ID:         p.ID,
 			Class:      utils.TwMerge("h-7 w-7 text-muted-foreground hover:text-accent-foreground", p.Class),
-			Attributes: p.Attrs,
+			Attributes: attributes,
 			Size:       button.SizeIcon,
 			Variant:    button.VariantGhost,
 			Type:       button.TypeButton,

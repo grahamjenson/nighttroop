@@ -1126,8 +1126,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 ### Users & Devices
 
-- An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
-  them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
+- An admin adds users and devices, whose credentials are shown once, each with its own copy button and one, Copy all,
+  to copy them all. Each copy button, and those in a device's setup steps, is named for what it copies, such as Copy
+  Password, for a screen reader and as its tooltip, as it shows only an icon. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
   Go Back keeps them open. They are a dialog named for the identity that takes the focus, and Escape or pressing beside
   it shows that same warning rather than closing them; once a reset has signed you out, neither closes them, leaving
   Sign In Again.

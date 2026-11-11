@@ -227,7 +227,7 @@ func Secret(id string, uri string, secret string, size int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = copybutton.CopyButton(copybutton.Props{ID: id + "--totp-copy", TargetID: id + "--totp-value", Attrs: templ.Attributes{"aria-label": "Copy the TOTP secret"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = copybutton.CopyButton(copybutton.Props{ID: id + "--totp-copy", TargetID: id + "--totp-value", Label: "Copy the TOTP secret"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

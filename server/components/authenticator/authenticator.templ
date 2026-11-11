@@ -60,7 +60,7 @@ templ Secret(id string, uri string, secret string, size int) {
 		<div class="flex items-center gap-1 font-mono text-xs text-slate-700">
 			<span id={ id + "--totp-text" } class="tracking-wider">{ inFours(secret) }</span>
 			<textarea id={ id + "--totp-value" } hidden>{ secret }</textarea>
-			@copybutton.CopyButton(copybutton.Props{ID: id + "--totp-copy", TargetID: id + "--totp-value", Attrs: templ.Attributes{"aria-label": "Copy the TOTP secret"}})
+			@copybutton.CopyButton(copybutton.Props{ID: id + "--totp-copy", TargetID: id + "--totp-value", Label: "Copy the TOTP secret"})
 		</div>
 		@ScanHint(id + "--authenticator")
 		<script type="text/javascript">
