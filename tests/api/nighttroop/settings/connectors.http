@@ -128,6 +128,7 @@ GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 6 "@"
 ASSERT_EQUALS "virtual://nighttroop" "@0.device"
+SET virtual_newest {{ dig "virtual_entries_seeded.0.date" }}
 
 // Two devices report every 5 minutes
 NAME virtual_devicestatus_seeded
@@ -167,8 +168,10 @@ ASSERT_STATUS 200
 
 RUN_BACKGROUND_JOBS
 
+// Run again, it adds none of the readings it already has; one past the next 5 minutes, if the clock has crossed one
+// since, is new, so is left out of the count
 NAME virtual_entries_not_duplicated
-GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}
+GET http://{{ .ns_site }}/api/v1/entries?count=50&find[date][$lte]={{ .virtual_newest }}&token={{ token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 6 "@"
 

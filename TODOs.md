@@ -43,6 +43,8 @@
        messages
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
+    1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
+       htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
     1. P2: Stop many sites making the server poll one third party Nightscout, as only each site's connector saves are
        rate limited and its credentials' ciphertexts differ: keep a keyed HMAC (`SecurityConfig.mac`, the MAC key set
        in `KEY_SETS`) of the normalised Nightscout host in a new `site_connectors` column with a partial unique index,

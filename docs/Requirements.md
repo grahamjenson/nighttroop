@@ -1050,6 +1050,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   stops being read there and is refused as a bad body.
 - A request whose headers hold more than 64 KiB, far above a browser's cookies or an uploader's token, is refused with
   431, so no connection holds more of them.
+- Every response, from every host, has `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, a
+  `Content-Security-Policy` with `frame-ancestors 'none'`, so no page, another site's among them, can frame it, and
+  `Referrer-Policy: same-origin`, so no other origin is sent its URL; with `HOST_PROTOCOL=https` it also has
+  `Strict-Transport-Security: max-age=31536000; includeSubDomains`.
 
 ## Identity
 
