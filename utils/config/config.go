@@ -228,6 +228,7 @@ type ServerConfig struct {
 	SocketPingTimeoutInSeconds  int
 	SocketMaxPayloadBytes       int
 	SocketMaxSessionsPerSite    int
+	SocketMaxUnauthPerIP        int // of a site's sessions, how many one IP may hold before they are given access
 	SocketMaxBufferedPackets    int
 	SocketMaxBufferedBytes      int
 	SocketMaxPacketsPerSecond   float64
@@ -436,6 +437,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SocketMaxBufferedPackets:    configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_PACKETS", 1000), // A client too slow to collect its packets is closed
 		SocketMaxBufferedBytes:      configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_BYTES", 2000000),
 		SocketMaxPacketsPerSecond:   configFloatSelect(dotenv, "SOCKET_MAX_PACKETS_PER_SECOND", 20), // A client sending faster, past a burst of 5 seconds' worth, is closed
+		// Stop one IP holding all of a site's sessions before they are given access, keeping its followers out
+		SocketMaxUnauthPerIP: configIntSelect(dotenv, "SOCKET_MAX_UNAUTH_SESSIONS_PER_IP", 10),
 	}
 
 	var err error
@@ -742,6 +745,7 @@ func printServerConfig(config ServerConfig) {
 		"SiteBackupRetentionDays", config.SiteBackupRetentionDays,
 		"ControlBackupRetentionDays", config.ControlBackupRetentionDays,
 		"SocketMaxSessionsPerSite", config.SocketMaxSessionsPerSite,
+		"SocketMaxUnauthPerIP", config.SocketMaxUnauthPerIP,
 		"SocketMaxBufferedBytes", config.SocketMaxBufferedBytes,
 		"SocketMaxPacketsPerSecond", config.SocketMaxPacketsPerSecond,
 	)

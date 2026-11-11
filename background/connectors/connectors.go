@@ -35,7 +35,8 @@ import (
 // To deal with these issues:
 // 1. Cant point URL at Nighttroop (or any subdomain of Nighttroop)
 // 2. If a users sync is taking too long or failing decrease the rate at which they sync (until they are disabled)
-// 3. Only sync once from a source:password combination (prevents multiple users pointing at the same URL and causing a DDOS)
+// 3. A site saves (creates or updates) its connectors only as often as SITE_UPDATE_CONNECTORS_PER_MINUTE allows, and
+//    sites are only made as fast as SITE_CREATE_* allows. Nothing yet stops many sites syncing from the same source; see TODOs.md
 // 4. Agressive timeouts for jobs as well as logging
 // 5. Blocked hostnames and private networks are never synced from (httputils.IsNightscoutURLBlocked)
 // 6. We only Sync users that have called a read endpoint recently.

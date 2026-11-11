@@ -21,6 +21,10 @@ swap_size_mb = 512
   # Who runs this server and how its users contact them, named in its terms and privacy policy: change both to yours
   OPERATOR_NAME = "T1DNZ"
   SUPPORT_EMAIL = "nighttroop@t1d.nz"
+  # Where Fly's proxy connects from, so its Fly-Client-IP header is believed for the visitor's IP. Fly does not document
+  # this, but its proxy reaches the machine from 172.16.x.x, while other machines on its private network use fdaa::
+  # addresses. Any other peer's Fly-Client-IP is ignored. See README.md to check it.
+  TRUSTED_PROXIES = "172.16.0.0/16"
   # On the volume mounted below. No S3 is set, so nothing is backed up or restored.
   DATA_DIR = "/data"
   # Far fewer than a real server: enough for testers, little for anyone filling it
