@@ -27,6 +27,8 @@ ASSERT_TITLE Report · Nighttroop
 ASSERT_NOT_VISIBLE #site--nav--reports
 ASSERT_NOT_VISIBLE #site--settings-menu
 // Each of this month so far and the 3 months before it is an overview and an AGP report, on a sheet of its own
+// The report is long, so its last page is waited for before its pages are counted
+ASSERT_VISIBLE #site--print>section:nth-of-type(8)>footer
 ASSERT_COUNT #site--print > section 8
 // Each page is laid out as Dexcom Clarity's: its report's name, over how many days it is of and its first and last,
 // this month's to today
