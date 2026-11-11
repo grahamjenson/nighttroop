@@ -3,6 +3,7 @@ package footer
 import (
 	"nighttroop.t1d.nz/server/components/ui/alert"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
@@ -11,28 +12,28 @@ import (
 templ Footer() {
 	<footer id="footer" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
 		@NewTabLink("footer--contact", "mailto:"+httputils.SupportEmail(ctx), "hover:text-primary") {
-			contact
+			{ i18n.T(ctx, "common.footer.contact") }
 		}
 		<span aria-hidden="true">·</span>
 		if url := httputils.FeedbackURL(ctx); url != "" {
 			@NewTabLink("footer--feedback", url, "hover:text-primary") {
-				feedback
+				{ i18n.T(ctx, "common.footer.feedback") }
 			}
 			<span aria-hidden="true">·</span>
 		}
 		@NewTabLink("footer--terms", "/terms", "hover:text-primary") {
-			terms of service
+			{ i18n.T(ctx, "common.footer.terms") }
 		}
 		<span aria-hidden="true">·</span>
 		@NewTabLink("footer--privacy", "/privacy", "hover:text-primary") {
-			privacy policy
+			{ i18n.T(ctx, "common.footer.privacy") }
 		}
 		<span aria-hidden="true">·</span>
 		@NewTabLink("footer--api-docs", "/api-docs", "hover:text-primary") {
-			API docs
+			{ i18n.T(ctx, "common.footer.api_docs") }
 		}
 		<span aria-hidden="true">·</span>
-		<span>Nighttroop 2026</span>
+		<span>{ i18n.T(ctx, "common.footer.year") }</span>
 		<span id="footer--dbip" class="contents">
 			if httputils.DBIPCredited(ctx) {
 				@dbipLink()
@@ -46,8 +47,7 @@ templ PublicFooter() {
 	<div class="mb-3 px-4">
 		@alert.Alert(alert.Props{ID: "medical-disclaimer", Variant: alert.VariantWarning, Class: "mx-auto max-w-3xl text-center",
 			Attributes: templ.Attributes{"role": "note"}}) {
-			<strong>Not a medical device.</strong> Nighttroop does not provide medical advice and is not a replacement for
-			proper medical care. Its data and alarms may be late, missing or wrong.
+			<strong>{ i18n.T(ctx, "common.footer.not_a_medical_device") }</strong> { i18n.T(ctx, "common.footer.medical_disclaimer") }
 		}
 	</div>
 	@Footer()
@@ -66,7 +66,7 @@ templ DBIPCredit() {
 templ dbipLink() {
 	<span aria-hidden="true">·</span>
 	@NewTabLink("footer--dbip-link", "https://db-ip.com", "hover:text-primary") {
-		IP Geolocation by DB-IP
+		{ i18n.T(ctx, "common.footer.dbip") }
 	}
 }
 

@@ -1,6 +1,9 @@
 package badge
 
-import "nighttroop.t1d.nz/utils/templui/utils"
+import (
+	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/templui/utils"
+)
 
 // Variant is a badge's colour: the theme's for branding and live states, amber for a warning, red for an error and
 // grey for anything else
@@ -52,7 +55,7 @@ templ Live(id string, events string) {
 		"hx-on::sse:close": templ.JSUnsafeFuncCall("this.classList.add('hidden')"),
 		"hx-on::sse:error": templ.JSUnsafeFuncCall("this.classList.add('hidden')"),
 	}}) {
-		● Live
+		{ i18n.T(ctx, "common.badge.live") }
 	}
 }
 

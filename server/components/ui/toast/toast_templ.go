@@ -14,6 +14,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/templui/utils"
 	"strconv"
 )
@@ -97,7 +98,7 @@ func Toast(props ...Props) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 65, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 66, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -110,7 +111,7 @@ func Toast(props ...Props) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(p.Duration)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 67, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 68, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -123,7 +124,7 @@ func Toast(props ...Props) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(string(p.Position)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 68, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 69, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -136,7 +137,7 @@ func Toast(props ...Props) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression(string(p.Variant)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 69, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 70, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -240,7 +241,7 @@ func Toast(props ...Props) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(string(p.Variant)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 103, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 104, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 				if templ_7745c5c3_Err != nil {
@@ -253,7 +254,7 @@ func Toast(props ...Props) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(p.Duration)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 104, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 105, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 				if templ_7745c5c3_Err != nil {
@@ -314,7 +315,7 @@ func Toast(props ...Props) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(p.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 124, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 125, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -333,7 +334,7 @@ func Toast(props ...Props) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(p.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 127, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/toast/toast.templ`, Line: 128, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -375,7 +376,7 @@ func Toast(props ...Props) templ.Component {
 				Size:    button.SizeIcon,
 				Variant: button.VariantGhost,
 				Attributes: templ.Attributes{
-					"aria-label":             "Close",
+					"aria-label":             i18n.T(ctx, "common.toast.close"),
 					"data-tui-toast-dismiss": "",
 					"type":                   "button",
 				},
