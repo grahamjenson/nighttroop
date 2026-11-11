@@ -63,7 +63,7 @@ func PushCredentialsTable(credentials []*sitemodels.PushCredential) templ.Compon
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:    "push_credentials_table",
-			Title: "Push Notifications",
+			Title: "Push Certificates",
 			Modal: true,
 			Description: "The keys pushes are sent to your own builds of apps with, such as an Apple push key (.p8) for the Loop you build " +
 				"with your Apple developer account. Only your site uses them, and a key is never shown again once added.",

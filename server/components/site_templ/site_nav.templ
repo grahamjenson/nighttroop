@@ -27,6 +27,8 @@ func hubIcon(hub sitenav.Hub) templ.Component {
 		return icon.Database(icon.Props{Class: "size-4"})
 	case sitenav.Reports:
 		return icon.ChartLine(icon.Props{Class: "size-4"})
+	case sitenav.Connectors:
+		return icon.Plug(icon.Props{Class: "size-4"})
 	case sitenav.Alarms:
 		return icon.BellRing(icon.Props{Class: "size-4"})
 	case sitenav.Logs:

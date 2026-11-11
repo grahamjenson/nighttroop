@@ -23,8 +23,7 @@ SCREENSHOT overview_new_site
 // day), so five fill the five days before today, or, when its 30 minutes began before midnight, yesterday and the five
 // before it
 CLICK #site--settings-menu
-CLICK #site--nav--menu--settings
-CLICK #site--settings--connectors-button
+CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit

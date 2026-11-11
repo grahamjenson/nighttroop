@@ -123,7 +123,7 @@ templ Header(path string) {
 							<span class="sr-only">Open user menu</span>
 						</button>
 					}
-					@dropdown.Content(dropdown.ContentProps{Class: "w-56"}) {
+					@dropdown.Content(dropdown.ContentProps{Class: "w-56 max-h-[80vh]"}) {
 						if name := identityName(ctx); name != "" {
 							<div class="px-2 py-1.5 text-sm text-gray-500">
 								Signed in as <span class="font-semibold text-gray-900">{ name }</span>
