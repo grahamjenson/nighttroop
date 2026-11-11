@@ -17,13 +17,17 @@ import (
 // package's folder, or the folder a script run is given
 var ScreenshotDir = filepath.Join("..", "..", ".test")
 
-// ScreenshotScale is the device pixels a test's browser draws each CSS pixel with, so screenshots are 9/16 the size
-// of the page (720 by 405 for a 1280 by 720 window), small enough to commit every one, with text drawn by the browser
+// ScreenshotScale is the device pixels a test's browser draws each CSS pixel with, so screenshots are 3/4 the size
+// of the page (960 wide for a 1280 wide window), clear enough to read on a pull request, with text drawn by the browser
 // at that size rather than resampled
-const ScreenshotScale = 0.5625
+const ScreenshotScale = 0.75
 
-// maxScreenshotBytes is the most a screenshot's file may be, as each is committed
-const maxScreenshotBytes = 1 << 20
+// maxScreenshotHeight is the most of a page, in CSS pixels, a screenshot takes from its top, as the printable report's
+// eight pages are, so a page as long as the API docs is cut rather than tens of thousands of pixels tall
+const maxScreenshotHeight = 12000
+
+// maxScreenshotBytes is the most a screenshot's file may be, as a pull request's are pushed to show on it
+const maxScreenshotBytes = 4 << 20
 
 func ScreenshotPage(page playwright.Page, foldername string, testPath string, name string) (string, error) {
 	root := filepath.Join(ScreenshotDir, foldername)
@@ -36,11 +40,16 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
 		return "", err
 	}
-	// Only the window is taken, as it is scrolled, not the whole page, so a long page's screenshot stays the size of a
-	// screen
+	// The whole page is taken, not just the window, so a long page shows all of it, up to maxScreenshotHeight
+	height, err := page.Evaluate("document.documentElement.scrollHeight")
+	if err != nil {
+		return "", err
+	}
 	path := filepath.Join(dir, name+".png")
 	if _, err := page.Screenshot(playwright.PageScreenshotOptions{
 		Path:       playwright.String(path),
+		FullPage:   playwright.Bool(true),
+		Clip:       &playwright.Rect{Width: float64(page.ViewportSize().Width), Height: min(toFloat(height), maxScreenshotHeight)},
 		Animations: playwright.ScreenshotAnimationsDisabled,
 		Caret:      playwright.ScreenshotCaretHide,
 		// A screenshot can take longer than the 1s default on a busy CI runner
@@ -646,4 +655,15 @@ func (r *AssertNoPageErrors) Execute(t *testing.T, ctx map[string]any, page play
 
 func (r *AssertNoPageErrors) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected the page to throw no uncaught error, nor htmx to log one", r.TestPath, r.TestLine)
+}
+
+// toFloat is a number the page answered, which comes back as an int or a float64, 0 for anything else
+func toFloat(n any) float64 {
+	switch v := n.(type) {
+	case int:
+		return float64(v)
+	case float64:
+		return v
+	}
+	return 0
 }
