@@ -15,9 +15,10 @@ GET http://{{ .create_site_for_api_docs.site_subdomain }}.localhost/openapi.json
 ASSERT_STATUS 200
 ASSERT_EQUALS "Nighttroop" "@info.title"
 
-// The docs page, Redoc's page of it, is served as HTML, showing only its own images, not Redocly's logo from their CDN
+// The docs page, Redoc's page of it, is served as HTML, showing only its own images, not Redocly's logo from their CDN,
+// and, as every page, framed by no other page
 NAME get_api_docs
 GET http://localhost/api-docs
 ASSERT_STATUS 200
 ASSERT_EQUALS "text/html; charset=utf-8" "#Content-Type.0"
-ASSERT_EQUALS "img-src 'self' data:" "#Content-Security-Policy.0"
+ASSERT_EQUALS "frame-ancestors 'none'; img-src 'self' data:" "#Content-Security-Policy.0"

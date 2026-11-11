@@ -43,6 +43,8 @@
        messages
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
+    1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
+       htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
 
 ## Before First Release:
 

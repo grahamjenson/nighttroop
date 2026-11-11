@@ -41,7 +41,8 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 	upload := func(r *http.Request) bool { return nightscoutWrite(r, validHostnames) }
 	shed := httputils.ShedLoadReserving(config.RequestsInFlightPerCPU*cpus, config.RequestsBacklogPerCPU*cpus, 5*time.Second, httputils.LongLived, upload)
 
-	return shed(httputils.ClientIP(config.TrustedProxies)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	secure := httputils.SecurityHeaders(config.IsHTTPS())
+	return secure(shed(httputils.ClientIP(config.TrustedProxies)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		// Global IP Address Rate Limit, which every request has, the control site's too
@@ -94,7 +95,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			slog.InfoContext(r.Context(), "Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
 		}
-	})))
+	}))))
 
 }
 
