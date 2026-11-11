@@ -106,24 +106,6 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (t *Entry) MarshalJSON() ([]byte, error) {
-	type Alias Entry
-	// Clean Up and Populate Date Fields
-	if t.UtcOffsetMinutes == nil {
-		zero := types.FlexibleInt64(0)
-		t.UtcOffsetMinutes = &zero
-	}
-
-	ds := types.DateStringFromDateIntAndUTCOffset(*t.Date, *t.UtcOffsetMinutes)
-	t.DateString = &ds
-
-	return json.Marshal(&struct {
-		*Alias
-	}{
-		Alias: (*Alias)(t),
-	})
-}
-
 //////
 // Subtypes and Constants
 //////

@@ -52,9 +52,6 @@
 1. Performance testing (cost estimate for running full node)
 1. P4: Mark the user menu's button in the header while a page of Settings, Alarms, or Logs & Events is shown, as the
    header then marks no hub and only the open menu marks it
-1. P4: Marshal an entry without `Entry.MarshalJSON` (`models/nightscoutmodels/entries.go`) marshalling it again as
-   an alias and making a `time.FixedZone` for its `dateString`, about a quarter of the CPU of a 288 entry
-   `/api/v1/entries` search now its fields are not read back as a map (`BenchmarkWriteRecordsV1Entries`)
 1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a

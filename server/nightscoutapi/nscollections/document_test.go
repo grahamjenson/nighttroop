@@ -28,11 +28,11 @@ func dayOfEntries() []nsutils.Document {
 	entries := NewEntriesCollection().(Collection[nightscoutmodels.Entry, sitedb.GlucoseReading])
 	documents := make([]nsutils.Document, 0, 288)
 	for i := range int64(288) {
-		delta, noise, direction, device := float64(i%7)-3, 1.0, "Flat", "xDrip-DexcomG6"
+		delta, noise, direction, device, utcOffset := float64(i%7)-3, 1.0, "Flat", "xDrip-DexcomG6", int64(780)
 		occurredAt := 1_700_000_000_000 + i*300_000
 		documents = append(documents, entries.document(&sitedb.GlucoseReading{ID: "0123456789abcdef01234567", Mgdl: 100 + float64(i%50),
 			ReadingType: "sgv", Delta: &delta, Direction: &direction, Noise: &noise, CreatedByDeviceName: &device,
-			OccurredAt: occurredAt, CreatedAt: occurredAt, UpdatedAt: occurredAt, CreatedByIdentityName: "xdrip"}, siteContext))
+			UtcOffsetMinutes: &utcOffset, OccurredAt: occurredAt, CreatedAt: occurredAt, UpdatedAt: occurredAt, CreatedByIdentityName: "xdrip"}, siteContext))
 	}
 	return documents
 }

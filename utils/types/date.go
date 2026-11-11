@@ -224,11 +224,6 @@ func DateStringFromInt64AndUTCOffset(dateInt int64, offsetMinutes *int64) DateSt
 	return DateStringFromTime(t)
 }
 
-func DateStringFromDateIntAndUTCOffset(dateInt DateInt, offsetMinutes FlexibleInt64) DateString {
-	t := time.UnixMilli(dateInt.Int64()).In(LocationFromUTCOffsetMinutes(offsetMinutes.Int()))
-	return DateStringFromTime(t)
-}
-
 func LocationFromUTCOffsetMinutes(offsetMin int) *time.Location {
 	return time.FixedZone(
 		fmt.Sprintf("UTC%+d", offsetMin),
