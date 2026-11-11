@@ -1088,6 +1088,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   works on its own site's address. It keeps only what checking a sign in needs: its ID, public key, flags and sign
   count, never the authenticator's model or attestation. A disabled identity's passkey does not sign in, and passkey
   sign ins are rate limited per IP, and a site's from every IP at a far higher rate.
+- Each passkey sign in or passkey added, on a site or the control site, finishes once only: its challenge is kept on
+  the server for 5 minutes and removed when it is finished, so sending the same finish again is refused.
 - The TOTP step only accepts the pre-auth token from this site's own password step.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.

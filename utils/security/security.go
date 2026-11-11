@@ -49,6 +49,9 @@ type SecurityConfig struct {
 	totpUsedSteps *expirable.LRU[string, uint64]
 	totpMu        sync.Mutex
 
+	// passkeySessions are the passkey ceremonies begun and not finished yet
+	passkeySessions *expirable.LRU[string, []byte]
+
 	/////
 	// Dangerous Dev Only Configs
 	/////
@@ -64,6 +67,7 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 		HostName:         hostname,
 		HTTPS:            https,
 		passwordVerifier: NewPasswordVerifier(),
+		passkeySessions:  newPasskeySessions(),
 		totpUsedSteps:    expirable.NewLRU[string, uint64](10_000, nil, 2*time.Minute),
 	}
 
