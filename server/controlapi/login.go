@@ -160,15 +160,17 @@ func loginTheControlUser(ctx context.Context, controlDB *db.ControlDB, config *c
 	})
 
 	if err != nil {
+		// Checked anyway, so a name with no admin is refused as slowly as a wrong password
+		config.Security.VerifyNoOnesPassword(password)
 		return nil, fmt.Errorf("admin not found: %w", err)
-	}
-	totpSecret, err := config.Security.Decrypt(admin.TotpSecretEnc)
-	if err != nil {
-		return nil, err
 	}
 
 	if !config.Security.VerifyPassword(password, admin.PasswordHash) {
 		return nil, fmt.Errorf("invalid password")
+	}
+	totpSecret, err := config.Security.Decrypt(admin.TotpSecretEnc)
+	if err != nil {
+		return nil, err
 	}
 	if !config.Security.TOTPSignIn(fmt.Sprintf("control %d", admin.ID), totpToken, totpSecret) {
 		return nil, fmt.Errorf("invalid TOTP token")

@@ -1090,6 +1090,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   (`SITE_LOGIN_NAME_PER_MINUTE_*`), so one IP sending wrong passwords for a name, or wrong passkeys or backup keys to
   a site, uses up only its own attempts and cannot lock anyone else out; an attempt one limit refuses spends none of the
   other's. One refused says "Too many login attempts. Wait a minute, then try again."; a disabled identity cannot sign in.
+- A site or control login with a name that does not exist is refused with the same status and message as a wrong
+  password, and checks a password all the same, so neither the answer nor how long it takes tells which names exist.
 - The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - A Nightscout token whose name or role has no identity, or is for an admin or an identity with TOTP, is refused with
