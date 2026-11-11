@@ -290,3 +290,32 @@ func TestMarkStaleMarksEveryPeriodATimeIsIn(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, before.StaleAt, "the month before is not marked")
 }
+
+// What was written to a site, to a day built or never built, is found from its data's updated_at since it was last
+// checked, so a server stopped before building it builds it on its first run once it starts again, and moves the
+// site's summaries_checked_at on
+func TestRebuildStaleBuildsWhatWasWrittenBeforeARestart(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	built, never := now.AddDate(0, 0, -3), now.AddDate(0, 0, -4)
+	r.reading("built", built, now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.True(t, r.built(built.Format(time.DateOnly)))
+
+	// Written, then the server stops before it hears of them
+	for id, at := range map[string]time.Time{"late": built.Add(time.Hour), "never": never} {
+		_, err := r.site.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: 120, ReadingType: "sgv", OccurredAt: at.UnixMilli(), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	restarted := NewBuilder(r.bus, r.builder.controlDB)
+	started := time.Now()
+	require.NoError(t, restarted.RebuildStale(ctx, now))
+	day, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: built.Format(time.DateOnly)})
+	require.NoError(t, err)
+	require.Equal(t, int64(2), day.GlucoseReadings)
+	require.True(t, r.built(never.Format(time.DateOnly)))
+	site, err := r.control.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: r.siteID})
+	require.NoError(t, err)
+	require.NotNil(t, site.SummariesCheckedAt)
+	require.GreaterOrEqual(t, *site.SummariesCheckedAt, started.UnixMilli())
+}

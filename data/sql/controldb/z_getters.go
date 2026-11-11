@@ -618,6 +618,16 @@ func (m *Site) SetLastWriteAt(v *int64) {
 	m.LastWriteAt = v
 }
 
+// GetSummariesCheckedAt returns the SummariesCheckedAt value.
+func (m Site) GetSummariesCheckedAt() *int64 {
+	return m.SummariesCheckedAt
+}
+
+// SetSummariesCheckedAt sets the SummariesCheckedAt value and returns the updated Site.
+func (m *Site) SetSummariesCheckedAt(v *int64) {
+	m.SummariesCheckedAt = v
+}
+
 // GetState returns the State value.
 func (m Site) GetState() string {
 	return m.State
@@ -5325,6 +5335,26 @@ func (m UpdateSiteDateFlagsParams) GetID() string {
 
 // SetID sets the ID value and returns the updated UpdateSiteDateFlagsParams.
 func (m *UpdateSiteDateFlagsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetSummariesCheckedAt returns the SummariesCheckedAt value.
+func (m UpdateSiteSummariesCheckedAtParams) GetSummariesCheckedAt() *int64 {
+	return m.SummariesCheckedAt
+}
+
+// SetSummariesCheckedAt sets the SummariesCheckedAt value and returns the updated UpdateSiteSummariesCheckedAtParams.
+func (m *UpdateSiteSummariesCheckedAtParams) SetSummariesCheckedAt(v *int64) {
+	m.SummariesCheckedAt = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteSummariesCheckedAtParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteSummariesCheckedAtParams.
+func (m *UpdateSiteSummariesCheckedAtParams) SetID(v string) {
 	m.ID = v
 }
 

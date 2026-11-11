@@ -281,6 +281,8 @@ CREATE TABLE sites (
     -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
     last_seen_at INTEGER,
     last_write_at INTEGER,
+    -- the site's data written up to then, by its updated_at, is in its summaries, as the stale rebuild last checked
+    summaries_checked_at INTEGER,
 
     -- States
     state TEXT NOT NULL CHECK (state IN ('live', 'disabled', 'archived', 'deleted')) DEFAULT 'live',

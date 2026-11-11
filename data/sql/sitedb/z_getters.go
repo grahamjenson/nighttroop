@@ -14556,6 +14556,26 @@ func (m *SearchSummaryPeriodsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetSince returns the Since value.
+func (m SummaryDataWrittenSinceParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated SummaryDataWrittenSinceParams.
+func (m *SummaryDataWrittenSinceParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetBefore returns the Before value.
+func (m SummaryDataWrittenSinceParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated SummaryDataWrittenSinceParams.
+func (m *SummaryDataWrittenSinceParams) SetBefore(v int64) {
+	m.Before = v
+}
+
 // GetPeriod returns the Period value.
 func (m UpsertSummaryPeriodParams) GetPeriod() string {
 	return m.Period

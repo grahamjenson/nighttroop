@@ -417,6 +417,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.staleSummaryDaysStmt, err = db.PrepareContext(ctx, staleSummaryDays); err != nil {
 		return nil, fmt.Errorf("error preparing query StaleSummaryDays: %w", err)
 	}
+	if q.summaryDataWrittenSinceStmt, err = db.PrepareContext(ctx, summaryDataWrittenSince); err != nil {
+		return nil, fmt.Errorf("error preparing query SummaryDataWrittenSince: %w", err)
+	}
 	if q.tempBasalTotalsStmt, err = db.PrepareContext(ctx, tempBasalTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query TempBasalTotals: %w", err)
 	}
@@ -1128,6 +1131,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing staleSummaryDaysStmt: %w", cerr)
 		}
 	}
+	if q.summaryDataWrittenSinceStmt != nil {
+		if cerr := q.summaryDataWrittenSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing summaryDataWrittenSinceStmt: %w", cerr)
+		}
+	}
 	if q.tempBasalTotalsStmt != nil {
 		if cerr := q.tempBasalTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing tempBasalTotalsStmt: %w", cerr)
@@ -1383,6 +1391,7 @@ type Queries struct {
 	softDeleteTempBasalStmt                     *sql.Stmt
 	softDeleteTempTargetStmt                    *sql.Stmt
 	staleSummaryDaysStmt                        *sql.Stmt
+	summaryDataWrittenSinceStmt                 *sql.Stmt
 	tempBasalTotalsStmt                         *sql.Stmt
 	tempTargetTotalsStmt                        *sql.Stmt
 	thinOldDeviceReportsStmt                    *sql.Stmt
@@ -1537,6 +1546,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteTempBasalStmt:                     q.softDeleteTempBasalStmt,
 		softDeleteTempTargetStmt:                    q.softDeleteTempTargetStmt,
 		staleSummaryDaysStmt:                        q.staleSummaryDaysStmt,
+		summaryDataWrittenSinceStmt:                 q.summaryDataWrittenSinceStmt,
 		tempBasalTotalsStmt:                         q.tempBasalTotalsStmt,
 		tempTargetTotalsStmt:                        q.tempTargetTotalsStmt,
 		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,

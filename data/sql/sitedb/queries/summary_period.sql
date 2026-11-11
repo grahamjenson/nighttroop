@@ -61,3 +61,25 @@ SELECT start_at FROM summary_period WHERE period = 'day' AND stale_at IS NOT NUL
 -- name: ClearStaleSummaries :exec
 -- The summaries marked stale by Before, as those just built, are up to date; one marked since is built again later
 UPDATE summary_period SET stale_at = NULL WHERE stale_at <= @before;
+
+-- name: SummaryDataWrittenSince :many
+-- When the data a day's summary is built from that was written, changed or deleted after Since, and happened before
+-- Before, happened, by the 15 minutes each is in, as every timezone's midnight starts one
+SELECT DISTINCT CAST(written.occurred_at / 900000 * 900000 AS INTEGER) AS occurred_at FROM (
+    SELECT glucose_readings.occurred_at FROM glucose_readings
+        WHERE glucose_readings.updated_at > @since AND glucose_readings.occurred_at < @before
+    UNION ALL SELECT insulin_doses.occurred_at FROM insulin_doses
+        WHERE insulin_doses.updated_at > @since AND insulin_doses.occurred_at < @before
+    UNION ALL SELECT food_intakes.occurred_at FROM food_intakes
+        WHERE food_intakes.updated_at > @since AND food_intakes.occurred_at < @before
+    UNION ALL SELECT temp_basals.occurred_at FROM temp_basals
+        WHERE temp_basals.updated_at > @since AND temp_basals.occurred_at < @before
+    UNION ALL SELECT temp_targets.occurred_at FROM temp_targets
+        WHERE temp_targets.updated_at > @since AND temp_targets.occurred_at < @before
+    UNION ALL SELECT profile_switches.occurred_at FROM profile_switches
+        WHERE profile_switches.updated_at > @since AND profile_switches.occurred_at < @before
+    UNION ALL SELECT event_groups.occurred_at FROM event_groups
+        WHERE event_groups.updated_at > @since AND event_groups.occurred_at < @before
+    UNION ALL SELECT device_reports.occurred_at FROM device_reports
+        WHERE device_reports.updated_at > @since AND device_reports.occurred_at < @before
+) AS written;
