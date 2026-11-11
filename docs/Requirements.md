@@ -129,7 +129,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The new site ID field only lets letters a to z in: capitals typed or pasted are lowered and anything else is dropped.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
-  - **disabled**, after a confirmation, so it is no longer served;
+  - **disabled**, after a confirmation, so it is no longer served and its open Socket.IO connections are closed;
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
