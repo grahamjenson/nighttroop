@@ -71,7 +71,6 @@ CLICK #site--profile-switch--edit--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Profile Switch Updated
 ASSERT_NOT_VISIBLE #site--profile-switch--details
-SCREENSHOT profile_switch_updated
 
 CLICK #profileSwitchesTable tbody tr >> nth=1
 ASSERT_VISIBLE #site--profile-switch--details
@@ -103,7 +102,6 @@ ASSERT_STATUS 200
 CLICK #profileSwitchesTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Profile Switch Deleted
 ASSERT_NOT_VISIBLE #site--profile-switch--details
-SCREENSHOT profile_switch_deleted
 
 // The deleted profile switch stays gone after a reload
 GOTO /data/profile-switches

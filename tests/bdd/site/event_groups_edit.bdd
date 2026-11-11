@@ -51,7 +51,6 @@ ASSERT_NOT_VISIBLE #site--event-group--create--modal
 ASSERT_NOT_VISIBLE #site--event-group--empty
 ASSERT_VISIBLE #eventGroupsTable >> text="Meal Bolus"
 ASSERT_VISIBLE #eventGroupsTable >> text=4 U insulin, 40 g carbs
-SCREENSHOT event_group_created
 
 // Editing a group changes its type and events. A carb correction can only have food, so its insulin is no longer
 // offered and is taken out; an event taken out is in no group, so can be grouped again (the API tests check an event
@@ -71,7 +70,6 @@ ASSERT_NOT_VISIBLE #site--event-group--details
 ASSERT_VISIBLE #eventGroupsTable >> text="Carb Correction"
 ASSERT_NOT_VISIBLE #eventGroupsTable >> text=4 U insulin, 40 g carbs
 ASSERT_VISIBLE #eventGroupsTable >> text=40 g carbs
-SCREENSHOT event_group_updated
 CLICK #site--event-group--add
 CLICK #site--event-group--add--correction-bolus
 ASSERT_NOT_VISIBLE #site--event-group--create--food-intake-id

@@ -54,7 +54,6 @@ CLICK #site--temp-basal--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE 1.25
 ASSERT_VISIBLE #tempBasalsTable td:text-is("70")
-SCREENSHOT temp_basal_created
 
 // Its details can be edited, which updates its row
 CLICK #tempBasalsTable tbody tr >> nth=0
@@ -68,7 +67,6 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Temp Basal Updated
 ASSERT_NOT_VISIBLE #site--temp-basal--details
 ASSERT_TEXT_VISIBLE 1.75
-SCREENSHOT temp_basal_updated
 
 // The edit is saved
 CLICK #tempBasalsTable tbody tr >> nth=0
@@ -85,7 +83,6 @@ ASSERT_NOT_VISIBLE #site--temp-basal--previous
 CLICK #site--temp-basal--next
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 2 to 2
-SCREENSHOT temp_basals_paged
 
 CLICK #site--temp-basal--previous
 ASSERT_STATUS 200
@@ -98,7 +95,6 @@ ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #tempBasalsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Temp Basal Deleted
 ASSERT_NOT_VISIBLE #site--temp-basal--details
-SCREENSHOT temp_basal_deleted
 
 // The deleted temp basal stays gone after a reload
 GOTO /data/temp-basals

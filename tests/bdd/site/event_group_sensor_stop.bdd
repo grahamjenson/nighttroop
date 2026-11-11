@@ -71,7 +71,6 @@ ASSERT_TEXT_VISIBLE Event Group Updated
 ASSERT_NOT_VISIBLE #site--event-group--details
 ASSERT_VISIBLE #eventGroupsTable >> text=sensor code 1234, transmitter 8G5678
 ASSERT_VISIBLE #eventGroupsTable >> text=Right arm
-SCREENSHOT event_group_sensor_change_updated
 
 // A site change has no sensor, so no sensor code
 CLICK #site--event-group--add
