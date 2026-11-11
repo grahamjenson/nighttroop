@@ -27,7 +27,7 @@ func TestSoftDeleteMovesUpdatedAtForward(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, sitedb.SoftDeleteEventGroupAndEvents(ctx, q, group.ID, nil))
-	_, err = q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: "sgv"})
+	_, err = q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: "sgv", Limit: 1})
 	require.NoError(t, err)
 
 	deletedGroup, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: group.ID, IncludeDeleted: true})

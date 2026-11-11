@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -115,11 +116,13 @@ func (c EntriesCollection) Delete(q *sitedb.Queries, ctx context.Context, identi
 	return q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: identifier})
 }
 
+// DeleteType deletes the entries of the type, and when permanent those already soft deleted too. A request deletes at
+// most a search's worth, the newest first, and says how many: the rest are deleted by asking again.
 func (c EntriesCollection) DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error) {
 	if permanent {
-		return q.HardDeleteGlucoseReadingsByType(ctx, sitedb.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+		return q.HardDeleteGlucoseReadingsByType(ctx, sitedb.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString, Limit: apiquery.MaxQueryLimit})
 	}
-	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString, Limit: apiquery.MaxQueryLimit})
 }
 
 func (c EntriesCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
