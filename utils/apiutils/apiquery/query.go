@@ -7,7 +7,8 @@ import (
 	"nighttroop.t1d.nz/utils/types"
 )
 
-// MaxQueryLimit is the most models one query returns, so no request can read a whole table at once
+// MaxQueryLimit is the most models one query returns, so no request can read a whole table at once, and the most it
+// skips, so no request walks a whole table to page past it
 const MaxQueryLimit = 1000
 
 // DefaultQueryLimit is how many models a query without a limit returns, a page of a table

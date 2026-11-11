@@ -539,12 +539,13 @@ phone), as on the presets and push credentials pages. On a phone, a table wider 
 does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap.
 Adding or deleting a record updates the table's "Showing" count straight away, without a reload, and deleting the
 last one shows the table is empty again, as deleting the last push credential does. Each page shows 50 records at a
-time, with Next while there are more after them. A box at the top of each page says how many records there are over
+time, with Next while there are more after them, up to the page starting at the 1001st, the furthest a page skips;
+a page asked for further back is that page. A box at the top of each page says how many records there are over
 every page, as "1 temp target" or "2 temp targets", and the days of the earliest and latest, without their times, as
 Today, Yesterday, "Sun 8 Nov" this year or "8 Nov 2025" before, each with how long ago it was (a device's history
 counts that device's statuses); with none it says 0, with a dash for each day. On a phone its three figures stay side
-by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 unless asked for, at most
-1000) and, for these kinds, `total`, `earliest_at` and `latest_at`:
+by side. The site API's search gives the same: its `items`, `skip` (at most 1000, a negative one 0), `limit` (50
+unless asked for, at most 1000) and, for these kinds, `total`, `earliest_at` and `latest_at`:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary and marked L or H, read out as Low or High, so they are not shown by colour alone.
@@ -810,6 +811,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any
   other search is the newest first. With a filter other than the date, a page is those that match of the page the
   dates alone would give, so it can have fewer than its `limit`, still in order.
+- A v1 or v3 search's `skip` is at most 32000, enough for Nightguard's 32 pages of 1000, and a negative one is 0.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,

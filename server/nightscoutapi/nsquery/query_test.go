@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
 // Kept first so it is the first parse in this package, like the first requests after a restart
@@ -86,6 +87,36 @@ func TestParseQueryValues(t *testing.T) {
 			require.Equal(t, test.sort, sort)
 
 			require.Equal(t, test.filters, query.HasAnyFilters())
+		})
+	}
+}
+
+// A limit or count is at most a search's worth, and a skip is never negative nor more than MaxSkip, however far a
+// client asks to page
+func TestQueryLimitAndSkip(t *testing.T) {
+	tests := []struct {
+		query string
+		limit int64
+		skip  int64
+	}{
+		{query: "", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "limit=20&skip=40", limit: 20, skip: 40},
+		{query: "count=20&skip=40", limit: 20, skip: 40},
+		{query: "limit=1001", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "limit=-5&skip=-5", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "skip=31000", limit: apiquery.MaxQueryLimit, skip: 31000},
+		{query: "skip=32001", limit: apiquery.MaxQueryLimit, skip: MaxSkip},
+		{query: "skip=1000000000", limit: apiquery.MaxQueryLimit, skip: MaxSkip},
+	}
+	for _, test := range tests {
+		t.Run(test.query, func(t *testing.T) {
+			values, err := url.ParseQuery(test.query)
+			require.NoError(t, err)
+			queryValues, err := ParseQueryValues(values)
+			require.NoError(t, err)
+			query := QueryValueToQuery(queryValues)
+			require.Equal(t, test.limit, query.Limit)
+			require.Equal(t, test.skip, query.Skip)
 		})
 	}
 }

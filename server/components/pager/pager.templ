@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
 type Props struct {
@@ -79,8 +80,11 @@ templ pageButton(id string, label string, url string) {
 }
 
 // hasNext is whether there are rows after this page: before the total, for a search that counts its rows, or else
-// when the page is full
+// when the page is full. There is none past the most a search skips, which would show this page again.
 func hasNext(ctx context.Context, p Props) bool {
+	if p.Skip+p.Limit > apiquery.MaxQueryLimit {
+		return false
+	}
 	if totals := apiutils.TotalsFrom(ctx); totals != nil {
 		return p.Skip+int64(p.Count) < totals.Total
 	}

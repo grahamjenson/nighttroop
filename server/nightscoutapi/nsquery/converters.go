@@ -97,11 +97,16 @@ func GetUnknownFilter(source QueryValues) bool {
 	return source.HasUnknownFilter()
 }
 
+// MaxSkip is the furthest a Nightscout search pages, as SQLite walks every row it skips. It is more than the site API's
+// MaxQueryLimit, as Nightguard pages a report or its statistics by skip, up to 32 pages of a search's most.
+const MaxSkip = 32 * apiquery.MaxQueryLimit
+
+// GetSkipInt64 defaults a missing or negative skip to 0, and caps it at MaxSkip, as limit is capped
 func GetSkipInt64(source QueryValues) int64 {
-	if source.Skip == nil {
+	if source.Skip == nil || *source.Skip < 0 {
 		return 0
 	}
-	return source.Skip.Int64()
+	return min(source.Skip.Int64(), MaxSkip)
 }
 
 // GetLimitInt64 defaults a missing or bad limit or count to the most a search returns, and caps it there, as the site's

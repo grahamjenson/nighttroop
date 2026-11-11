@@ -308,7 +308,7 @@
       "get": {
         "operationId": "NsV1Search", "tags": ["Nightscout"], "summary": "Searches a collection, newest first, with Nightscout's find query",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
-        "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/NsSkip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
         "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "post": {
@@ -446,7 +446,7 @@
       "get": {
         "operationId": "NsV3Search", "tags": ["Nightscout"], "summary": "Searches a collection, with API v3's filters, sort, limit and fields",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
-        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/NsSkip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
         "responses": { "200": { "$ref": "#/components/responses/NsV3Documents" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "post": {
@@ -506,10 +506,11 @@
     "parameters": {
       "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
       "Limit": { "name": "limit", "in": "query", "description": "At most 1000", "schema": { "type": "integer", "format": "int64" } },
-      "Skip": { "name": "skip", "in": "query", "schema": { "type": "integer", "format": "int64" } },
+      "Skip": { "name": "skip", "in": "query", "description": "How many to skip, at most 1000", "schema": { "type": "integer", "format": "int64" } },
       "NsCollection": { "name": "collection", "in": "path", "required": true, "schema": { "type": "string", "enum": ["entries", "treatments", "devicestatus", "profile", "food", "settings", "activity"] } },
       "NsIdentifier": { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" } },
       "NsCount": { "name": "count", "in": "query", "description": "How many documents, at most 1000", "schema": { "type": "integer", "format": "int64" } },
+      "NsSkip": { "name": "skip", "in": "query", "description": "How many documents to skip, at most 32000", "schema": { "type": "integer", "format": "int64" } },
       "NsSort": { "name": "sort", "in": "query", "description": "A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first", "schema": { "type": "string" } },
       "NsSortDesc": { "name": "sort$desc", "in": "query", "description": "A field to sort by, descending", "schema": { "type": "string" } },
       "NsFields": { "name": "fields", "in": "query", "description": "Comma separated fields to return", "schema": { "type": "string" } },

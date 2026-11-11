@@ -1,0 +1,45 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Virtual connector writes its last 30 minutes, then each backfill the day before its oldest reading (tests backfill a
+// day), so four backfills write more than 1050 readings, five minutes apart
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+
+// The page before the furthest a page skips has Next
+GOTO /data/glucose?skip=950
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 951 to 1000
+ASSERT_VISIBLE #site--glucose--next
+
+// Its next page starts at the 1001st, the furthest a page skips, so it has no Next, which would show it again
+CLICK #site--glucose--next
+ASSERT_TEXT_VISIBLE Showing 1001 to 1050
+ASSERT_VISIBLE #site--glucose--previous
+ASSERT_NOT_VISIBLE #site--glucose--next
+SCREENSHOT glucose_last_page
+
+// A page asked for further back is that page
+GOTO /data/glucose?skip=1000000
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1001 to 1050
+ASSERT_NOT_VISIBLE #site--glucose--next
