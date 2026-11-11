@@ -3,6 +3,7 @@ package security
 import (
 	"fmt"
 
+	"github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/tink-crypto/tink-go/v2/jwt"
 	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/tink-crypto/tink-go/v2/tink"
@@ -35,6 +36,9 @@ type SecurityConfig struct {
 	// Still not sure this is a good idea, but legacy tokens are soooo slow
 	passwordVerifier *PasswordVerifier
 
+	// passkeySessions are the passkey ceremonies begun and not finished yet
+	passkeySessions *expirable.LRU[string, []byte]
+
 	/////
 	// Dangerous Dev Only Configs
 	/////
@@ -50,6 +54,7 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 		HostName:         hostname,
 		HTTPS:            https,
 		passwordVerifier: NewPasswordVerifier(),
+		passkeySessions:  newPasskeySessions(),
 	}
 
 	if cfg.IsTest() {

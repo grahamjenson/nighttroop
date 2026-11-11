@@ -276,7 +276,7 @@ func siteOrigin(cfg *config.ServerConfig, r *http.Request) string {
 	return cfg.SiteURL(httputils.GetSiteContext(r.Context()).SiteID)
 }
 
-// PasskeyBegin starts a ceremony at origin: its options to the browser, and its session kept in a cookie for the finish
+// PasskeyBegin starts a ceremony at origin: its options to the browser, and its session kept, by a cookie, for the finish
 func PasskeyBegin(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, origin string, begin func(*webauthn.WebAuthn) (any, *webauthn.SessionData, error)) {
 	var options any
 	var session *webauthn.SessionData
@@ -288,13 +288,11 @@ func PasskeyBegin(w http.ResponseWriter, r *http.Request, cfg *config.ServerConf
 	if err == nil {
 		sessionJSON, err = json.Marshal(session)
 	}
-	if err == nil {
-		err = cfg.Security.SetPasskeySessionCookie(w, sessionJSON)
-	}
 	if err != nil {
 		PasskeyError(w, r, http.StatusInternalServerError, "A passkey could not be asked for.", err)
 		return
 	}
+	cfg.Security.SetPasskeySessionCookie(w, sessionJSON)
 	apiutils.WriteJSON(w, http.StatusOK, options)
 }
 
