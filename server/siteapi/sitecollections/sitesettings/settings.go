@@ -228,7 +228,25 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 	if err != nil {
 		return nil, err
 	}
-	level, subject := s.level(siteContext, identity), new("identity")
+	level := s.level(siteContext, identity)
+	if err := s.setSent(siteContext, level, model); err != nil {
+		return nil, err
+	}
+	// The settings in effect must make sense together
+	inEffect := s.inEffect(siteContext, level)
+	if err := inEffect.Consistent(); err != nil {
+		return nil, apiutils.ErrBadBodyWithHint(err.Error())
+	}
+	if err := s.save(ctx, collectionTx, siteContext, identity, level); err != nil {
+		return nil, err
+	}
+	s.logSiteChanges(ctx, collectionTx, siteContext, inEffect)
+	return s.GetRow(ctx, collectionTx, id, siteContext)
+}
+
+// setSent sets the level's settings to the values the model has, clearing those sent empty
+func (s *SettingsCollection) setSent(siteContext *httputils.SiteContext, level *settings.SettingMap, model *sitemodels.Settings) error {
+	subject := new("identity")
 	if s.Site {
 		subject = new("site")
 	}
@@ -246,17 +264,20 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 		if typed, ok := value.(string); ok && slices.Contains(glucoseSettings, name) {
 			glucose, err := strconv.ParseFloat(typed, 64)
 			if err != nil {
-				return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("%s must be a number", name))
+				return apiutils.ErrBadBodyWithHint(fmt.Sprintf("%s must be a number", name))
 			}
 			value = int64(math.Round(units.ToMGDL(glucose)))
 		}
 		if err := level.SetSettingByName(settingID(name), value, nil, subject); err != nil {
-			return nil, apiutils.ErrBadBodyWithHint(err.Error())
+			return apiutils.ErrBadBodyWithHint(err.Error())
 		}
 	}
+	return nil
+}
 
-	// The settings in effect must make sense together: the identity's over the site's, or the site's over the
-	// defaults for everyone else
+// inEffect are the settings in effect with the level's: the identity's over the site's, or the site's over the
+// defaults for everyone else
+func (s *SettingsCollection) inEffect(siteContext *httputils.SiteContext, level *settings.SettingMap) *settings.CombinedSettingsMap {
 	inEffect := siteContext.GetSettings()
 	if s.Site {
 		inEffect = &settings.CombinedSettingsMap{SiteSettingsMap: level, IdentitySettingsMap: &settings.SettingMap{}, DefaultSettingsMap: settings.DefaultSettingsMap}
@@ -264,42 +285,41 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 	if s.Other {
 		inEffect = &settings.CombinedSettingsMap{SiteSettingsMap: inEffect.SiteSettingsMap, IdentitySettingsMap: level, DefaultSettingsMap: settings.DefaultSettingsMap}
 	}
-	if err := inEffect.Consistent(); err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(err.Error())
-	}
+	return inEffect
+}
 
+// save writes every setting of the level, so the ones not on the page keep their values
+func (s *SettingsCollection) save(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, identity *controldb.SiteIdentity, level *settings.SettingMap) error {
 	q, err := collectionTx.Control()
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	// Every setting is written, so the ones not on the page keep their values
 	if s.Site {
 		params := &controldb.UpdateSitesSettingsParams{ID: siteContext.SiteModel.ID}
 		settings.SetSettings(params, level)
-		err = q.UpdateSitesSettings(ctx, *params)
-	} else {
-		params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
-		settings.SetSettings(params, level)
-		err = q.UpdateSiteIdentitySettings(ctx, *params)
+		return q.UpdateSitesSettings(ctx, *params)
 	}
-	if err != nil {
-		return nil, err
-	}
+	params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
+	settings.SetSettings(params, level)
+	return q.UpdateSiteIdentitySettings(ctx, *params)
+}
 
-	// A new site timezone is an event, once saved, so the background jobs that follow it, such as the site's days,
-	// see it
-	if was, now := siteContext.GetSiteTimezone().String(), inEffect.Location().String(); s.Site && now != was {
+// logSiteChanges logs a new site timezone or week start day as an event, once saved, so the background jobs that
+// follow it, such as the site's days, see it
+func (s *SettingsCollection) logSiteChanges(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, inEffect *settings.CombinedSettingsMap) {
+	if !s.Site {
+		return
+	}
+	if was, now := siteContext.GetSiteTimezone().String(), inEffect.Location().String(); now != was {
 		collectionTx.OnCommit(func() {
 			siteContext.ControlDB.Logs.SiteTimezoneChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
 		})
 	}
-	if was, now := siteContext.GetSiteWeekStartDay(), *inEffect.GetWeekStartDay(); s.Site && now != was {
+	if was, now := siteContext.GetSiteWeekStartDay(), *inEffect.GetWeekStartDay(); now != was {
 		collectionTx.OnCommit(func() {
 			siteContext.ControlDB.Logs.SiteWeekStartChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
 		})
 	}
-	return s.GetRow(ctx, collectionTx, id, siteContext)
 }
 
 func (s *SettingsCollection) UpdateHTMXResponse(model *sitemodels.Settings) templ.Component {
