@@ -15,7 +15,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A new server has no control admin, so every page goes to `control.<host>/setup` and the APIs answer that it is not
   set up, until the admin is made. Only the health check works.
 - The server prints a one-time setup code to its logs; the setup page asks for it, so only whoever runs the server can
-  set it up. Wrong codes are rate limited. A wrong setup or TOTP code is said to be wrong in an error toast.
+  set it up. Wrong codes are rate limited per IP, and from every IP at a far higher rate. A wrong setup or TOTP code
+  is said to be wrong in an error toast.
 - The setup page shows the control admin's username, password and TOTP secret (with a QR code) once, and saves the
   admin only when a code from that TOTP secret is entered.
 - Every TOTP QR code (the setup page, a new site's admin, a new or reset identity) scans into an authenticator app as an
@@ -42,8 +43,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
 - "Log in with a passkey" on the control login signs in the control admin whose passkey the browser has, with no
-  name, password or code, as a site's login does. Control passkey sign ins are rate limited per IP, and are sign in
-  events, as a failed one is.
+  name, password or code, as a site's login does. Control passkey sign ins are rate limited per IP, and from every IP
+  at a far higher rate, and are sign in events, as a failed one is.
 - Account, under Security in the control menu, says which control admin is signed in, and adds and removes its
   passkeys as a site's My Account does: on the control site's own address, so each works only there, at most 10, none
   the browser already has, and named for the admin, with no name, email or device of the person kept. Control admins'
@@ -297,7 +298,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - While a control admin has turned public site creation off, the home page says so instead of offering to create a
   site, and creating one is refused.
 - The public **recover page** takes a site's ID and backup key and gives the admin a new password and TOTP and the
-  site a new backup key, and removes the admin's passkeys, so a lost device's passkey signs in no more. The key works once; a wrong key is refused without saying why.
+  site a new backup key, and removes the admin's passkeys, so a lost device's passkey signs in no more. The key works once; a wrong key is refused without saying why. Attempts are rate limited per IP, and a site's from every IP at a far higher rate.
 - A recovery opens the site's own address, `/welcome`, which shows the new credentials once, as a new site's are, less
   the phone's and the read only device's tokens, which are left as they were; the recover page never shows them.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
@@ -1042,13 +1043,15 @@ Connectors are a site's third party integrations, each syncing from one service.
   password or TOTP code: a passkey is two factors, the device and the person's fingerprint, face or PIN. A passkey only
   works on its own site's address. It keeps only what checking a sign in needs: its ID, public key, flags and sign
   count, never the authenticator's model or attestation. A disabled identity's passkey does not sign in, and passkey
-  sign ins are rate limited per IP.
+  sign ins are rate limited per IP, and a site's from every IP at a far higher rate.
 - The TOTP step only accepts the pre-auth token from this site's own password step.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
-- Sign-in attempts are rate limited per identity and IP, and one refused says "Too many login attempts. Wait a minute,
-  then try again."; a disabled identity cannot sign in.
+- Sign-in attempts are rate limited per IP, and per name from every IP at a far higher rate
+  (`SITE_LOGIN_NAME_PER_MINUTE_*`), so one IP sending wrong passwords for a name, or wrong passkeys or backup keys to
+  a site, uses up only its own attempts and cannot lock anyone else out; an attempt one limit refuses spends none of the
+  other's. One refused says "Too many login attempts. Wait a minute, then try again."; a disabled identity cannot sign in.
 - The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions, and an admin's reset of it, on the site or in
