@@ -473,7 +473,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   newest first, each opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
   month outside those is refused. A past month's empty table says it has none in that month, or year for months.
 - Data written for a day before today, as a backfill or a late sync writes, or changed or deleted, builds that day's
-  summary again, and the whole weeks, fortnights and months with it in, without building the rest: once the site's
+  summary again, and the day it moved from when a change moves it to another day, and the whole weeks, fortnights and months with it in, without building the rest: once the site's
   data has gone 2 minutes without more, or after 15 minutes of it at most, so a backfill's many records are built
   once. Glucose, insulin, food, temp basals and targets, profile switches and device statuses count; today is built
   as it is read.

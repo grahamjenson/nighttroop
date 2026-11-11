@@ -90,10 +90,12 @@ func CreateSiteContext(ctx context.Context, config *config.ServerConfig, control
 }
 
 // PublishModelChange sends the event of a committed change to one of the site's models, the sitedb row, through the
-// server's events
-func (s *SiteContext) PublishModelChange(action events.Action, model any) {
+// server's events, with an update's row before, or nil
+func (s *SiteContext) PublishModelChange(action events.Action, model, previous any) {
 	if s.Config != nil && s.Config.Events != nil {
-		s.Config.Events.Publish(s.SiteID, events.ModelChange(s.SiteID, action, model))
+		event := events.ModelChange(s.SiteID, action, model)
+		event.Previous = previous
+		s.Config.Events.Publish(s.SiteID, event)
 	}
 }
 

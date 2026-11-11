@@ -198,8 +198,9 @@ func (b *Builder) buildYesterday(ctx context.Context, siteID string, now time.Ti
 	return sitedata.BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
-// markStale keeps when the record a model change is of happened, for its day's summaries to be built again, when it is
-// one a day's summary is built from. It is called as each change is published, so it only keeps it.
+// markStale keeps when the record a model change is of happened, and an update's when it happened before, as it may
+// have moved from another day, for their days' summaries to be built again, when it is one a day's summary is built
+// from. It is called as each change is published, so it only keeps it.
 func (b *Builder) markStale(event events.Event, now time.Time) {
 	switch event.Model.(type) {
 	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempBasal, *sitedb.TempTarget,
@@ -211,6 +212,10 @@ func (b *Builder) markStale(event events.Event, now time.Time) {
 	if !ok || event.SiteID == "" {
 		return
 	}
+	times := []int64{model.GetOccurredAt()}
+	if previous, ok := event.Previous.(interface{ GetOccurredAt() int64 }); ok {
+		times = append(times, previous.GetOccurredAt())
+	}
 	b.staleLock.Lock()
 	defer b.staleLock.Unlock()
 	data := b.stale[event.SiteID]
@@ -218,7 +223,9 @@ func (b *Builder) markStale(event events.Event, now time.Time) {
 		data = &staleData{buckets: map[int64]bool{}, first: now}
 		b.stale[event.SiteID] = data
 	}
-	data.buckets[model.GetOccurredAt()/staleBucket.Milliseconds()] = true
+	for _, at := range times {
+		data.buckets[at/staleBucket.Milliseconds()] = true
+	}
 	data.last = now
 }
 
