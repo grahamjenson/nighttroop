@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // orDash shows an optional count or duration as a whole number, e.g. 12345, or a dash when it is not set
@@ -43,6 +44,12 @@ func state(source *controlmodels.Connector) string {
 	return "syncing"
 }
 
+// stateLabels are the ids of each state's text
+var stateLabels = map[string]string{
+	"syncing": "control.connectors.state_syncing", "failing": "control.connectors.state_failing",
+	"disabled": "control.connectors.state_disabled", "disabled after failing": "control.connectors.state_disabled_after_failing",
+}
+
 func stateClass(source *controlmodels.Connector) string {
 	switch state(source) {
 	case "failing":
@@ -67,17 +74,17 @@ func failedClass(source *controlmodels.Connector) string {
 templ ConnectorsTable(sources []*controlmodels.Connector, skip int64, limit int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "connectors_table",
-		Title:       "Connectors",
-		Description: "Every site's connectors, the most recently failed first. Click a source to see its reports.",
+		Title:       i18n.T(ctx, "control.connectors.title"),
+		Description: i18n.T(ctx, "control.connectors.intro"),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:     "controlConnectorsTable",
 			Static: true,
 			Rows:   len(sources),
-			Empty:  "No connectors here.",
+			Empty:  i18n.T(ctx, "control.connectors.empty"),
 			Columns: []table.Column{
-				{Label: "Site"}, {Label: "Type"}, {Label: "State"}, {Label: "Last Attempted"}, {Label: "Last Success"},
-				{Label: "Succeeded", Numeric: true}, {Label: "Failed", Numeric: true},
+				{Label: i18n.T(ctx, "control.connectors.site")}, {Label: i18n.T(ctx, "control.connectors.type")}, {Label: i18n.T(ctx, "control.connectors.state")}, {Label: i18n.T(ctx, "control.connectors.last_attempted")},
+				{Label: i18n.T(ctx, "control.connectors.last_success")}, {Label: i18n.T(ctx, "control.connectors.succeeded"), Numeric: true}, {Label: i18n.T(ctx, "control.connectors.failed"), Numeric: true},
 			},
 		},
 		Pager: &pager.Props{ID: "control--connectors", Path: "/connectors", Count: len(sources), Skip: skip, Limit: limit},
@@ -97,7 +104,7 @@ templ connectorRow(source *controlmodels.Connector) {
 			{ string(source.Type) }
 		}
 		@table.Cell() {
-			<span class={ stateClass(source) }>{ state(source) }</span>
+			<span class={ stateClass(source) }>{ i18n.T(ctx, stateLabels[state(source)]) }</span>
 		}
 		@table.Cell() {
 			<span title={ display.DateTime(source.LastAttemptedSync) }>{ display.Ago(source.LastAttemptedSync, time.Now()) }</span>
@@ -118,30 +125,30 @@ templ connectorRow(source *controlmodels.Connector) {
 templ ConnectorModal(source *controlmodels.Connector) {
 	@modal.Modal(modal.Props{ID: "control--connector--details", Title: source.SiteID + " / " + string(source.Type)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@modal.Detail("State", state(source))
+			@modal.Detail(i18n.T(ctx, "control.connectors.state"), i18n.T(ctx, stateLabels[state(source)]))
 			if source.Region != nil {
-				@modal.Detail("Region", *source.Region)
+				@modal.Detail(i18n.T(ctx, "control.connectors.region"), *source.Region)
 			}
-			@modal.Detail("Created", display.DateTime(&source.CreatedAt))
-			@modal.Detail("Updated", display.DateTime(&source.UpdatedAt))
-			@modal.Detail("First Successful Sync", display.DateTime(source.FirstSuccessfulSyncTime))
-			@modal.Detail("Sync Interval", fmt.Sprintf("%ds (%s)", source.SyncIntervalSeconds, source.SyncIntervalSecondsReason))
-			@modal.Detail("Last Attempted", display.DateTime(source.LastAttemptedSync))
-			@modal.Detail("Last Success", display.DateTime(source.LastSuccessfulSync))
-			@modal.Detail("Last Failure", display.DateTime(source.LastFailedSync))
-			@modal.Detail("Total Syncs", orDash(source.TotalSyncs))
-			@modal.Detail("Succeeded", orDash(source.TotalSuccessfulSyncs))
-			@modal.Detail("Failed", orDash(source.TotalFailedSyncs))
-			@modal.Detail("Successes In A Row", orDash(source.ConsecutiveSuccessfulSyncs))
-			@modal.Detail("Failures In A Row", orDash(source.ConsecutiveFailedSyncs))
-			@modal.Detail("Last Sync Duration (ms)", orDash(source.LastSyncDuration))
-			@modal.Detail("Total EMA", averageOrDash(source.TotalEma))
-			@modal.Detail("Success EMA", averageOrDash(source.SuccessEma))
-			@modal.Detail("Failure EMA", averageOrDash(source.FailureEma))
+			@modal.Detail(i18n.T(ctx, "control.connectors.created"), display.DateTime(&source.CreatedAt))
+			@modal.Detail(i18n.T(ctx, "control.connectors.updated"), display.DateTime(&source.UpdatedAt))
+			@modal.Detail(i18n.T(ctx, "control.connectors.first_successful_sync"), display.DateTime(source.FirstSuccessfulSyncTime))
+			@modal.Detail(i18n.T(ctx, "control.connectors.sync_interval"), fmt.Sprintf("%ds (%s)", source.SyncIntervalSeconds, source.SyncIntervalSecondsReason))
+			@modal.Detail(i18n.T(ctx, "control.connectors.last_attempted"), display.DateTime(source.LastAttemptedSync))
+			@modal.Detail(i18n.T(ctx, "control.connectors.last_success"), display.DateTime(source.LastSuccessfulSync))
+			@modal.Detail(i18n.T(ctx, "control.connectors.last_failure"), display.DateTime(source.LastFailedSync))
+			@modal.Detail(i18n.T(ctx, "control.connectors.total_syncs"), orDash(source.TotalSyncs))
+			@modal.Detail(i18n.T(ctx, "control.connectors.succeeded"), orDash(source.TotalSuccessfulSyncs))
+			@modal.Detail(i18n.T(ctx, "control.connectors.failed"), orDash(source.TotalFailedSyncs))
+			@modal.Detail(i18n.T(ctx, "control.connectors.successes_in_a_row"), orDash(source.ConsecutiveSuccessfulSyncs))
+			@modal.Detail(i18n.T(ctx, "control.connectors.failures_in_a_row"), orDash(source.ConsecutiveFailedSyncs))
+			@modal.Detail(i18n.T(ctx, "control.connectors.last_sync_duration"), orDash(source.LastSyncDuration))
+			@modal.Detail(i18n.T(ctx, "control.connectors.total_ema"), averageOrDash(source.TotalEma))
+			@modal.Detail(i18n.T(ctx, "control.connectors.success_ema"), averageOrDash(source.SuccessEma))
+			@modal.Detail(i18n.T(ctx, "control.connectors.failure_ema"), averageOrDash(source.FailureEma))
 		</dl>
-		<h3 class="mt-4 text-sm font-semibold">Previous Errors</h3>
+		<h3 class="mt-4 text-sm font-semibold">{ i18n.T(ctx, "control.connectors.previous_errors") }</h3>
 		if len(source.PreviousSyncErrors) == 0 {
-			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+			<p class="mt-1 text-sm text-gray-500">{ i18n.T(ctx, "control.connectors.no_errors") }</p>
 		} else {
 			<ul id="control--connector--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
 				for _, e := range source.PreviousSyncErrors {

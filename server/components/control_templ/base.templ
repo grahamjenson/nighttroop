@@ -2,6 +2,7 @@ package control_templ
 
 import (
 	"nighttroop.t1d.nz/server/components/confirm"
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/server/components/footer"
@@ -19,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 templ ControlBase() {
@@ -62,7 +64,7 @@ templ ControlBase() {
 			</div>
 			@footer.Footer()
 			// After the page's own title, so it names the tab only when the page has none, see heading.Page
-			<title>Nighttroop Control</title>
+			<title>{ i18n.T(ctx, "control.base.title") }</title>
 		</body>
 	</html>
 }
@@ -74,17 +76,17 @@ templ StatusBanner(status config.ServerStatus) {
 		<div id="control--status-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 text-sm" role="alert">
 			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
 				if !status.S3Working {
-					<p id="control--status-banner--s3"><strong>S3 not connected:</strong> backups are not being stored.</p>
+					<p id="control--status-banner--s3"><strong>{ i18n.T(ctx, "control.status_banner.s3_title") }</strong> { i18n.T(ctx, "control.status_banner.s3_text") }</p>
 				}
 				if !status.SentryWorking {
-					<p id="control--status-banner--sentry"><strong>Sentry not connected:</strong> errors are not being reported.</p>
+					<p id="control--status-banner--sentry"><strong>{ i18n.T(ctx, "control.status_banner.sentry_title") }</strong> { i18n.T(ctx, "control.status_banner.sentry_text") }</p>
 				}
 				for _, level := range status.HighResources {
-					<p id={ "control--status-banner--" + level.Resource }><strong>{ resourceTitle(level) }:</strong> { resourceWarning(level) }</p>
+					<p id={ "control--status-banner--" + level.Resource }><strong>{ resourceTitle(ctx, level) }:</strong> { resourceWarning(ctx, level) }</p>
 				}
 				if status.SitesNearLimit() {
 					<p id="control--status-banner--sites">
-						<strong>{ sitesTitle(status) }:</strong> { fmt.Sprintf("%d of the %d MAX_SITES allows.", status.Sites, status.MaxSites) }
+						<strong>{ sitesTitle(ctx, status) }:</strong> { i18n.T(ctx, "control.status_banner.sites_text", i18n.Data{"SiteCount": status.Sites, "MaxSites": status.MaxSites}) }
 					</p>
 				}
 			</div>
@@ -92,30 +94,36 @@ templ StatusBanner(status config.ServerStatus) {
 	}
 }
 
-func sitesTitle(status config.ServerStatus) string {
+func sitesTitle(ctx context.Context, status config.ServerStatus) string {
 	if status.SitesAtLimit() {
-		return "Sites at their limit"
+		return i18n.T(ctx, "control.status_banner.sites_at_limit")
 	}
-	return "Sites near their limit"
+	return i18n.T(ctx, "control.status_banner.sites_near_limit")
 }
 
-func resourceTitle(level config.ResourceLevel) string {
-	return map[string]string{"memory": "Memory high", "disk": "Disk high", "cpu": "CPU high"}[level.Resource]
+// resourceTitles are the ids of each resource's title
+var resourceTitles = map[string]string{
+	"memory": "control.status_banner.memory_high", "disk": "control.status_banner.disk_high", "cpu": "control.status_banner.cpu_high",
+}
+
+func resourceTitle(ctx context.Context, level config.ResourceLevel) string {
+	return i18n.T(ctx, resourceTitles[level.Resource])
 }
 
 // resourceWarning says how high a resource was at the last check: the CPU's seconds at 100%, the memory used and the
 // disk free, in bytes where its total is known
-func resourceWarning(level config.ResourceLevel) string {
+func resourceWarning(ctx context.Context, level config.ResourceLevel) string {
+	value, limit := fmt.Sprintf("%.0f", level.Value), fmt.Sprintf("%.0f", level.Limit)
 	switch {
 	case level.Resource == "cpu":
-		return fmt.Sprintf("at 100%% for %.0f seconds, and %.0f or more warns.", level.Value, level.Limit)
+		return i18n.T(ctx, "control.status_banner.cpu_warning", i18n.Data{"CPUSeconds": value, "WarnAt": limit})
 	case level.Total == nil:
-		return fmt.Sprintf("%.0f%% used, and %.0f%% or more warns.", level.Value, level.Limit)
+		return i18n.T(ctx, "control.status_banner.percent_warning", i18n.Data{"UsedPercent": value, "WarnAt": limit})
 	case level.Resource == "disk":
 		free := *level.Total * (100 - level.Value) / 100
-		return fmt.Sprintf("%s free of %s.", display.Bytes(free), display.Bytes(*level.Total))
+		return i18n.T(ctx, "control.status_banner.disk_warning", i18n.Data{"FreeBytes": display.Bytes(free), "TotalBytes": display.Bytes(*level.Total)})
 	}
-	return fmt.Sprintf("%s used of %s.", display.Bytes(*level.Total*level.Value/100), display.Bytes(*level.Total))
+	return i18n.T(ctx, "control.status_banner.memory_warning", i18n.Data{"UsedBytes": display.Bytes(*level.Total*level.Value/100), "TotalBytes": display.Bytes(*level.Total)})
 }
 
 templ FullPage(content templ.Component) {
@@ -144,14 +152,14 @@ templ Header() {
 				<!-- Brand -->
 				<a href="/" class="flex items-center gap-2 text-white font-bold tracking-wide uppercase">
 					<img id="control--nav--logo" src="/logo.svg" alt="" class="size-8"/>
-					Nighttroop Control
+					{ i18n.T(ctx, "control.base.title") }
 				</a>
 				<!-- Right side -->
 				<div class="flex items-center gap-4">
 					@dropdown.Dropdown(dropdown.Props{ID: "control--menu"}) {
 						@dropdown.Trigger() {
 							<button class="flex items-center justify-center size-9 rounded-full bg-gray-800 hover:bg-gray-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-								<span class="sr-only">Open user menu</span>
+								<span class="sr-only">{ i18n.T(ctx, "control.menu.open") }</span>
 								@icon.Settings(icon.Props{Class: "size-6 text-white"})
 							</button>
 						}
@@ -164,43 +172,43 @@ templ Header() {
 							<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
 								<div>
 									@dropdown.Label() {
-										Security
+										{ i18n.T(ctx, "control.menu.security") }
 									}
 									@dropdown.Group() {
-										@menuItem("control--account-button", "/account", "Account", icon.UserCog)
-										@menuItem("control--admins-button", "/admins", "Admins", icon.ShieldUser)
+										@menuItem("control--account-button", "/account", i18n.T(ctx, "control.menu.account"), icon.UserCog)
+										@menuItem("control--admins-button", "/admins", i18n.T(ctx, "control.menu.admins"), icon.ShieldUser)
 									}
 									@dropdown.Separator()
 									@dropdown.Label() {
-										Users
+										{ i18n.T(ctx, "control.menu.users") }
 									}
 									@dropdown.Group() {
-										@menuItem("control--usage-button", "/usage", "Usage", icon.Gauge)
-										@menuItem("control--rate-limits-button", "/rate-limits", "Rate Limits", icon.Timer)
-										@menuItem("control--sites-button", "/sites", "Sites", icon.Users)
-										@menuItem("control--archived-sites-button", "/archived-sites", "Archived Sites", icon.Archive)
-										@menuItem("control--connectors-button", "/connectors", "Connectors", icon.Plug)
-										@menuItem("control--push-devices-button", "/push-devices", "Push Devices", icon.Send)
-										@menuItem("control--push-credentials-button", "/push-credentials", "Push Credentials", icon.KeyRound)
+										@menuItem("control--usage-button", "/usage", i18n.T(ctx, "control.menu.usage"), icon.Gauge)
+										@menuItem("control--rate-limits-button", "/rate-limits", i18n.T(ctx, "control.menu.rate_limits"), icon.Timer)
+										@menuItem("control--sites-button", "/sites", i18n.T(ctx, "control.menu.sites"), icon.Users)
+										@menuItem("control--archived-sites-button", "/archived-sites", i18n.T(ctx, "control.menu.archived_sites"), icon.Archive)
+										@menuItem("control--connectors-button", "/connectors", i18n.T(ctx, "control.menu.connectors"), icon.Plug)
+										@menuItem("control--push-devices-button", "/push-devices", i18n.T(ctx, "control.menu.push_devices"), icon.Send)
+										@menuItem("control--push-credentials-button", "/push-credentials", i18n.T(ctx, "control.menu.push_credentials"), icon.KeyRound)
 									}
 								</div>
 								<div>
 									@dropdown.Separator(dropdown.SeparatorProps{Class: "sm:hidden"})
 									@dropdown.Label() {
-										Jobs
+										{ i18n.T(ctx, "control.menu.jobs") }
 									}
 									@dropdown.Group() {
-										@menuItem("control--job-stats-button", "/job-stats", "Job Stats", icon.ChartColumn)
-										@menuItem("control--jobs-button", "/jobs", "Jobs", icon.ListChecks)
+										@menuItem("control--job-stats-button", "/job-stats", i18n.T(ctx, "control.menu.job_stats"), icon.ChartColumn)
+										@menuItem("control--jobs-button", "/jobs", i18n.T(ctx, "control.menu.jobs"), icon.ListChecks)
 									}
 									@dropdown.Separator()
 									@dropdown.Label() {
-										Logs
+										{ i18n.T(ctx, "control.menu.logs") }
 									}
 									@dropdown.Group() {
-										@menuItem("control--events-button", "/events", "Events", icon.Activity)
-										@menuItem("control--errors-button", "/errors", "Errors", icon.TriangleAlert)
-										@menuItem("control--logs-button", "/logs", "Logs", icon.ScrollText)
+										@menuItem("control--events-button", "/events", i18n.T(ctx, "control.menu.events"), icon.Activity)
+										@menuItem("control--errors-button", "/errors", i18n.T(ctx, "control.menu.errors"), icon.TriangleAlert)
+										@menuItem("control--logs-button", "/logs", i18n.T(ctx, "control.menu.logs"), icon.ScrollText)
 										@dropdown.Separator()
 										@dropdown.Item(dropdown.ItemProps{
 											Href: "#",
@@ -213,7 +221,7 @@ templ Header() {
 										}) {
 											<span class="flex items-center">
 												@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
-												Logout
+												{ i18n.T(ctx, "control.menu.logout") }
 											</span>
 										}
 									}

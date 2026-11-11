@@ -1,6 +1,7 @@
 package control_push_templ
 
 import (
+	"context"
 	"strconv"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -10,11 +11,13 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // columns are the table's columns, with one for the test buttons for an admin
-func columns(admin bool) []table.Column {
-	columns := []table.Column{{Label: "Site"}, {Label: "Identity"}, {Label: "App"}, {Label: "Bundle ID"}, {Label: "Registered"}, {Label: "Last Push"}}
+func columns(ctx context.Context, admin bool) []table.Column {
+	columns := []table.Column{{Label: i18n.T(ctx, "control.push_devices.site")}, {Label: i18n.T(ctx, "control.push_devices.identity")}, {Label: i18n.T(ctx, "control.push_devices.app")}, {Label: i18n.T(ctx, "control.push_devices.bundle_id")},
+		{Label: i18n.T(ctx, "control.push_devices.registered")}, {Label: i18n.T(ctx, "control.push_devices.last_push")}}
 	if admin {
 		columns = append(columns, table.Column{Actions: true})
 	}
@@ -26,15 +29,15 @@ func columns(admin bool) []table.Column {
 templ PushDevices(devices []*controlmodels.PushRegistration, admin bool) {
 	@listpage.Page(listpage.Props{
 		ID:          "control--push-devices",
-		Title:       "Push Devices",
-		Description: "The apps on every site's phones that pushes are sent to, newest first, never with their tokens. Times are UTC.",
+		Title:       i18n.T(ctx, "control.push_devices.title"),
+		Description: i18n.T(ctx, "control.push_devices.intro"),
 		Table: listpage.TableProps{
 			ID:      "control--push-devices--table",
 			Static:  true,
 			Rows:    len(devices),
 			EmptyID: "control--push-devices--empty",
-			Empty:   "No apps have registered for pushes yet.",
-			Columns: columns(admin),
+			Empty:   i18n.T(ctx, "control.push_devices.empty"),
+			Columns: columns(ctx, admin),
 		},
 	}) {
 		for _, device := range devices {
@@ -59,7 +62,7 @@ templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
 		@table.Cell() {
 			{ device.BundleID }
 			if !device.Production {
-				<span class="block text-xs text-gray-500">Development build</span>
+				<span class="block text-xs text-gray-500">{ i18n.T(ctx, "control.push_devices.development") }</span>
 			}
 		}
 		@table.Cell() {
@@ -81,7 +84,7 @@ templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
 							"hx-status:5xx": "target:#toaster swap:beforeend",
 						},
 					}) {
-						Test
+						{ i18n.T(ctx, "control.push_devices.test") }
 					}
 				</div>
 			}
@@ -93,7 +96,7 @@ templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
 templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
 	@table.Cell(table.CellProps{ID: "control--push-device--" + strconv.FormatInt(registration.ID, 10) + "--status"}) {
 		if registration.LastPushedAt == nil {
-			Never
+			{ i18n.T(ctx, "control.push_devices.never") }
 		} else {
 			{ display.DateTime(registration.LastPushedAt) }
 		}
@@ -106,5 +109,5 @@ templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
 // PushDeviceTested is the registration's status after a test push reached its push service, and a toast saying so
 templ PushDeviceTested(registration *sitemodels.PushRegistration) {
 	@pushDeviceStatus(registration)
-	@successtoast.OOB("Test push sent to " + string(registration.App))
+	@successtoast.OOB(i18n.T(ctx, "control.push_devices.tested", i18n.Data{"AppName": string(registration.App)}))
 }

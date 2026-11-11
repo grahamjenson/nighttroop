@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // dayQueueJob splits the stats' YYYY-MM-DD::queue::job key into its parts
@@ -45,18 +46,18 @@ func stdDevDuration(stats *controlmodels.JobStatsDaily) string {
 templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "job_stats_table",
-		Title:       "Job Stats",
-		Description: "Each day's totals for every queue's jobs, newest day first. Click a row to see its errors.",
+		Title:       i18n.T(ctx, "control.job_stats.title"),
+		Description: i18n.T(ctx, "control.job_stats.intro"),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:     "controlJobStatsTable",
 			Static: true,
 			Rows:   len(stats),
-			Empty:  "No job stats here.",
+			Empty:  i18n.T(ctx, "control.job_stats.empty"),
 			Columns: []table.Column{
-				{Label: "Day"}, {Label: "Queue"}, {Label: "Job"}, {Label: "Jobs", Numeric: true},
-				{Label: "Succeeded", Numeric: true}, {Label: "Failed", Numeric: true},
-				{Label: "Mean Duration", Numeric: true},
+				{Label: i18n.T(ctx, "control.job_stats.day")}, {Label: i18n.T(ctx, "control.job_stats.queue")}, {Label: i18n.T(ctx, "control.job_stats.job")}, {Label: i18n.T(ctx, "control.job_stats.jobs"), Numeric: true},
+				{Label: i18n.T(ctx, "control.job_stats.succeeded"), Numeric: true}, {Label: i18n.T(ctx, "control.job_stats.failed"), Numeric: true},
+				{Label: i18n.T(ctx, "control.job_stats.mean_duration"), Numeric: true},
 			},
 		},
 		Pager: &pager.Props{ID: "control--job-stats", Path: "/job-stats", Count: len(stats), Skip: skip, Limit: limit},
@@ -100,17 +101,17 @@ templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 	{{ day, queue, job := dayQueueJob(stats) }}
 	@modal.Modal(modal.Props{ID: "control--job-stats--details", Title: queue + " / " + job}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@modal.Detail("Day", day)
-			@modal.Detail("Jobs", fmt.Sprint(stats.TotalJobs))
-			@modal.Detail("Succeeded", fmt.Sprint(stats.TotalSuccess))
-			@modal.Detail("Failed", fmt.Sprint(stats.TotalFailed))
-			@modal.Detail("Mean Duration", meanDuration(stats))
-			@modal.Detail("Std Dev Duration", stdDevDuration(stats))
-			@modal.Detail("Updated", display.DateTime(&stats.UpdatedAt))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.day"), day)
+			@modal.Detail(i18n.T(ctx, "control.job_stats.jobs"), fmt.Sprint(stats.TotalJobs))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.succeeded"), fmt.Sprint(stats.TotalSuccess))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.failed"), fmt.Sprint(stats.TotalFailed))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.mean_duration"), meanDuration(stats))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.std_dev_duration"), stdDevDuration(stats))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.updated"), display.DateTime(&stats.UpdatedAt))
 		</dl>
-		<h3 class="mt-4 text-sm font-semibold">Errors</h3>
+		<h3 class="mt-4 text-sm font-semibold">{ i18n.T(ctx, "control.job_stats.errors") }</h3>
 		if len(stats.Errors) == 0 {
-			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+			<p class="mt-1 text-sm text-gray-500">{ i18n.T(ctx, "control.job_stats.no_errors") }</p>
 		} else {
 			<ul id="control--job-stats--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
 				for _, e := range stats.Errors {
@@ -119,8 +120,8 @@ templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 			</ul>
 		}
 		if len(stats.FailedRunIDs) > 0 {
-			<h3 class="mt-4 text-sm font-semibold">Failed Runs' Logs</h3>
-			<p class="mt-1 text-xs text-gray-500">The day's last failed runs, newest first. Old logs are trimmed, so the oldest runs may have none left.</p>
+			<h3 class="mt-4 text-sm font-semibold">{ i18n.T(ctx, "control.job_stats.failed_runs") }</h3>
+			<p class="mt-1 text-xs text-gray-500">{ i18n.T(ctx, "control.job_stats.failed_runs_note") }</p>
 			<ul id="control--job-stats--failed-runs" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm">
 				for i := range stats.FailedRunIDs {
 					<li>

@@ -1,6 +1,7 @@
 package control_admins_templ
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -16,38 +17,41 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Roles are the control roles, as an admin chooses them, the first picked to start with so an admin added without
 // choosing one is read only
 var Roles = []consts.ControlRole{consts.ControlRoleRead, consts.ControlRoleAdmin}
 
-func RoleLabel(role consts.ControlRole) string {
-	return map[consts.ControlRole]string{consts.ControlRoleAdmin: "Admin", consts.ControlRoleRead: "Read only"}[role]
+// roleLabels are the ids of each role's label
+var roleLabels = map[consts.ControlRole]string{consts.ControlRoleAdmin: "control.admins.role_admin", consts.ControlRoleRead: "control.admins.role_read"}
+
+func RoleLabel(ctx context.Context, role consts.ControlRole) string {
+	return i18n.T(ctx, roleLabels[role])
 }
 
 // Admins is control's admins, newest first. An admin adds others, changes their role, resets their password or TOTP,
 // showing the new one once, or deletes them, but never themselves, so control always has an admin to manage it.
 templ Admins(admins []*controlmodels.ControlAdmin) {
 	<div id="control--admins" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Admins") {
-			Who can sign in to control. Admins manage sites and the other admins; read only admins only look. You cannot
-			change yourself here, and the last admin cannot be deleted or made read only.
+		@heading.Page(i18n.T(ctx, "control.admins.title")) {
+			{ i18n.T(ctx, "control.admins.intro") }
 		}
 		@table.Table(table.Props{ID: "control--admins--table", Class: "rounded-lg border border-gray-200 text-sm"}) {
 			@table.Header() {
 				@table.Row() {
 					@table.Head() {
-						Name
+						{ i18n.T(ctx, "control.admins.name") }
 					}
 					@table.Head() {
-						Role
+						{ i18n.T(ctx, "control.admins.role") }
 					}
 					@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
-						Created
+						{ i18n.T(ctx, "control.admins.created") }
 					}
 					@table.Head() {
-						<span class="sr-only">Actions</span>
+						<span class="sr-only">{ i18n.T(ctx, "control.admins.actions") }</span>
 					}
 				}
 			}
@@ -74,7 +78,7 @@ templ AdminRow(admin *controlmodels.ControlAdmin) {
 		@table.Cell() {
 			{ admin.Name }
 			if you {
-				<span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">You</span>
+				<span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{ i18n.T(ctx, "control.admins.you") }</span>
 			}
 		}
 		@table.Cell() {
@@ -83,7 +87,7 @@ templ AdminRow(admin *controlmodels.ControlAdmin) {
 				<select
 					id={ id + "--role" }
 					name="role"
-					aria-label={ "Role of " + admin.Name }
+					aria-label={ i18n.T(ctx, "control.admins.role_of", i18n.Data{"AdminName": admin.Name}) }
 					data-role={ string(admin.Role) }
 					class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm"
 					hx-post={ path + "/role" }
@@ -95,17 +99,17 @@ templ AdminRow(admin *controlmodels.ControlAdmin) {
 					hx-on::after:request="if (ctx.response.status >= 400) this.value = this.dataset.role; else this.dataset.role = this.value"
 				>
 					for _, role := range Roles {
-						<option value={ string(role) } selected?={ role == admin.Role }>{ RoleLabel(role) }</option>
+						<option value={ string(role) } selected?={ role == admin.Role }>{ RoleLabel(ctx, role) }</option>
 					}
 				</select>
 			} else {
-				<span id={ id + "--role" }>{ RoleLabel(admin.Role) }</span>
+				<span id={ id + "--role" }>{ RoleLabel(ctx, admin.Role) }</span>
 			}
 		}
 		@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
 			{ display.DateTime(&admin.CreatedAt) }
 			if admin.CreatedByIdentityName != "" {
-				by { admin.CreatedByIdentityName }
+				{ i18n.T(ctx, "control.admins.created_by", i18n.Data{"AdminName": admin.CreatedByIdentityName}) }
 			}
 		}
 		@table.Cell() {
@@ -121,29 +125,29 @@ templ manageMenu(id string, path string, name string) {
 	@dropdown.Dropdown(dropdown.Props{ID: id + "--menu"}) {
 		@dropdown.Trigger() {
 			@button.Button(button.Props{ID: id + "--manage", Variant: button.VariantOutline, Size: button.SizeSm}) {
-				Manage
+				{ i18n.T(ctx, "control.admins.manage") }
 				@icon.ChevronDown(icon.Props{Class: "size-4"})
 			}
 		}
 		@dropdown.Content(dropdown.ContentProps{Placement: dropdown.PlacementBottomEnd, Class: "w-48"}) {
-			@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Attributes: resetAttributes(path+"/password", "Reset "+name+"'s password? Its old one and its passkeys stop working.")}) {
-				@menuLabel(icon.KeyRound, "Reset password")
+			@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Attributes: resetAttributes(path+"/password", i18n.T(ctx, "control.admins.reset_password_confirm", i18n.Data{"AdminName": name}))}) {
+				@menuLabel(icon.KeyRound, i18n.T(ctx, "control.admins.reset_password"))
 			}
-			@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-totp", Attributes: resetAttributes(path+"/totp", "Reset "+name+"'s TOTP? Codes from its old secret and its passkeys stop working.")}) {
-				@menuLabel(icon.RotateCcwKey, "Reset TOTP")
+			@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-totp", Attributes: resetAttributes(path+"/totp", i18n.T(ctx, "control.admins.reset_totp_confirm", i18n.Data{"AdminName": name}))}) {
+				@menuLabel(icon.RotateCcwKey, i18n.T(ctx, "control.admins.reset_totp"))
 			}
 			@dropdown.Separator()
 			@dropdown.Item(dropdown.ItemProps{ID: id + "--delete", Class: "text-red-600 hover:text-red-700",
 				Attributes: templ.Attributes{
 					"hx-delete":            path,
-					"hx-confirm":           "Delete " + name + "? They can no longer sign in to control.",
+					"hx-confirm":           i18n.T(ctx, "control.admins.delete_confirm", i18n.Data{"AdminName": name}),
 					"hx-target":            "#toaster",
 					"hx-swap":              "beforeend",
 					"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
 					"hx-status:4xx":        "target:#toaster swap:beforeend",
 					"hx-status:5xx":        "target:#toaster swap:beforeend",
 				}}) {
-				@menuLabel(icon.Trash2, "Delete")
+				@menuLabel(icon.Trash2, i18n.T(ctx, "control.admins.delete"))
 			}
 		}
 	}
@@ -179,18 +183,18 @@ templ addForm() {
 		hx-status:4xx="target:#toaster swap:beforeend"
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
-		@field.Field("control--admins--add--name", "Name", "w-40") {
+		@field.Field("control--admins--add--name", i18n.T(ctx, "control.admins.name"), "w-40") {
 			@input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": "32", "autocomplete": "off"}})
 		}
-		@field.Field("control--admins--add--role", "Role", "w-36") {
+		@field.Field("control--admins--add--role", i18n.T(ctx, "control.admins.role"), "w-36") {
 			<select id="control--admins--add--role" name="role" class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
 				for _, role := range Roles {
-					<option value={ string(role) }>{ RoleLabel(role) }</option>
+					<option value={ string(role) }>{ RoleLabel(ctx, role) }</option>
 				}
 			</select>
 		}
 		@button.Button(button.Props{ID: "control--admins--add--submit", Type: button.TypeSubmit}) {
-			Add Admin
+			{ i18n.T(ctx, "control.admins.add") }
 		}
 	</form>
 }
@@ -213,9 +217,9 @@ templ Credentials(url string, credentials *controlmodels.SiteIdentityCredentials
 }
 
 templ RoleChanged(admin *controlmodels.ControlAdmin) {
-	@successtoast.Toast(admin.Name + " is now " + RoleLabel(admin.Role))
+	@successtoast.Toast(i18n.T(ctx, "control.admins.role_changed", i18n.Data{"AdminName": admin.Name, "RoleName": RoleLabel(ctx, admin.Role)}))
 }
 
 templ Deleted(admin *controlmodels.ControlAdmin) {
-	@successtoast.Toast(admin.Name + " deleted")
+	@successtoast.Toast(i18n.T(ctx, "control.admins.deleted", i18n.Data{"AdminName": admin.Name}))
 }
