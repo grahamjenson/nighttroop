@@ -11,8 +11,6 @@
 ## Before Beta Testing
 
 1. Reports/Derived Values:
-    1. Time below and above range, as well as time in range
-    1. Small multiples Daily
     1. P3: Keep the days waiting to be built again (`summary_daily.Builder.stale`) in the site's DB, as they are held in
        memory and lost when the server stops or deploys before it builds them; and mark the day a changed record moved
        from, as only the day it moved to is marked
