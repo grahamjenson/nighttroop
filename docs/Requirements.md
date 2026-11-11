@@ -626,6 +626,8 @@ Close or saving) gives the focus back to the row or button that opened it.
   its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses (an empty
   one is none sent). Each shows its app, what it came in, its device and when it was first and last seen, newest
   first; clicking one shows the settings as sent, indented to inspect.
+  - A read only identity reading them from the site's API gets them without Loop's or Trio's `deviceToken`, and no
+    change to one.
   - Clicking a set also shows what changed from the same app's set last seen before it: each setting changed, added
     or removed, by its name (a preset's by the preset's name, as `overridePresets.Running.targetRange`), old then new
     ("not sent" when it was not), glucose in the site's units; an app's first set says there is no set before it. The
@@ -821,6 +823,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
+- A profile's Loop `loopSettings.deviceToken` and Trio `deviceToken` are only given back, in v1, v3 and the socket's
+  storage, to an identity that can change the site's data, as LoopFollow sending remote commands is; a read only
+  user or device gets the profile without them, and the socket's `dataUpdate`, sent to every reader, has none.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
 - A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
   from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
