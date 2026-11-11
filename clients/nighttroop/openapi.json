@@ -506,7 +506,7 @@
     "parameters": {
       "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
       "Limit": { "name": "limit", "in": "query", "description": "At most 1000", "schema": { "type": "integer", "format": "int64" } },
-      "Skip": { "name": "skip", "in": "query", "schema": { "type": "integer", "format": "int64" } },
+      "Skip": { "name": "skip", "in": "query", "description": "How many to skip, at most 32000", "schema": { "type": "integer", "format": "int64" } },
       "NsCollection": { "name": "collection", "in": "path", "required": true, "schema": { "type": "string", "enum": ["entries", "treatments", "devicestatus", "profile", "food", "settings", "activity"] } },
       "NsIdentifier": { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" } },
       "NsCount": { "name": "count", "in": "query", "description": "How many documents, at most 1000", "schema": { "type": "integer", "format": "int64" } },

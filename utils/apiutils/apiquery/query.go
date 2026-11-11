@@ -10,6 +10,10 @@ import (
 // MaxQueryLimit is the most models one query returns, so no request can read a whole table at once
 const MaxQueryLimit = 1000
 
+// MaxQuerySkip is the furthest a search pages, as SQLite walks every row it skips: 32 searches' worth, enough for
+// Nightguard's 32 pages of a report and a few months of glucose on a site's pages
+const MaxQuerySkip = 32 * MaxQueryLimit
+
 // DefaultQueryLimit is how many models a query without a limit returns, a page of a table
 const DefaultQueryLimit = 50
 
