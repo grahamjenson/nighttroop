@@ -26,6 +26,7 @@ func TestNS(t *testing.T) {
 	t.Setenv("MAX_IDENTITIES_PER_USER", "8")
 	// Every file signs in as its site's admin from the same IP
 	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "100")
+	t.Setenv("SITE_LOGIN_NAME_PER_MINUTE_BURST", "100")
 
 	config, controlDB, siteInformation := testutils.NewControlDBWithSite(t)
 
