@@ -195,14 +195,17 @@ func (db *ControlDB) restoreFromBatch(ctx context.Context, batch string, siteIDs
 		return nil, fmt.Errorf("cannot create staging dir: %w", err)
 	}
 	defer os.RemoveAll(dir)
-	if _, found, err := download(ctx, sitedb.GetS3BatchPath(batch, db.ServerConfig), dir); err != nil || !found {
+	// Downloaded to a path in dir that is not there yet, so the download's own staging folder, made beside it, is in
+	// dir too and removed with it
+	downloaded := filepath.Join(dir, "batch")
+	if _, found, err := download(ctx, sitedb.GetS3BatchPath(batch, db.ServerConfig), downloaded); err != nil || !found {
 		return nil, err
 	}
 	restored := map[string]bool{}
 	for _, siteID := range siteIDs {
 		path := sitedb.GetPath(siteID, db.ServerConfig)
 		// A rename on the same disk, so the site's DB is there whole or not at all
-		if err := os.Rename(filepath.Join(dir, filepath.Base(path)), path); err != nil {
+		if err := os.Rename(filepath.Join(downloaded, filepath.Base(path)), path); err != nil {
 			continue
 		}
 		siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)

@@ -541,9 +541,14 @@ func TestRestoreMissingSites(t *testing.T) {
 	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
 	require.NoError(t, os.Remove(sitedb.GetPath("kingsite", &cfg)))
 	downloads := 0
+	// Like s3utils.DownloadFilesFromS3 it makes its staging folder beside outpath, and it leaves it there, as a start
+	// killed part way through the download does
 	download := func(_ context.Context, key string, outpath string) (int64, bool, error) {
 		downloads++
 		require.Equal(t, sitedb.GetS3BatchPath("k", &cfg), key)
+		_, err := os.MkdirTemp(filepath.Dir(outpath), "."+filepath.Base(outpath)+"-restore-")
+		require.NoError(t, err)
+		require.NoError(t, os.MkdirAll(outpath, 0o755))
 		data, err := os.ReadFile(backup)
 		require.NoError(t, err)
 		return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, "kostsite.sqlite"), data, 0o600)
@@ -623,6 +628,7 @@ func TestRestoreMissingSite(t *testing.T) {
 				require.NoError(t, raw.Close())
 			}
 			download := func(_ context.Context, _ string, outpath string) (int64, bool, error) {
+				require.NoError(t, os.MkdirAll(outpath, 0o755))
 				data, err := os.ReadFile(backup)
 				require.NoError(t, err)
 				return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, siteID+".sqlite"), data, 0o600)
