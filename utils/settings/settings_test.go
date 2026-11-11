@@ -110,56 +110,40 @@ func TestFastRiseAndDropMinutes(t *testing.T) {
 	}
 }
 
-// Times are shown in the identity's time format, then the site's, then the default, each as its Go layout
-func TestCombinedSettingsTimeLayout(t *testing.T) {
+// Times and dates are shown in the identity's format, then the site's, then the default, each as its Go layout
+func TestCombinedSettingsLayouts(t *testing.T) {
+	layoutOf := map[string]func(*settings.CombinedSettingsMap) string{
+		"time_format": (*settings.CombinedSettingsMap).TimeLayout,
+		"date_format": (*settings.CombinedSettingsMap).DateLayout,
+	}
 	tests := []struct {
+		setting        string
 		site, identity string
 		layout         string
 	}{
-		{"", "", "15:04:05"},
-		{"hh:mm:ss a", "", "03:04:05 PM"},
-		{"hh:mm:ss a", "HH:mm", "15:04"},
-		{"", "hh:mm a", "03:04 PM"},
-		{"", "HH:mm:ss", "15:04:05"},
+		{"time_format", "", "", "15:04:05"},
+		{"time_format", "hh:mm:ss a", "", "03:04:05 PM"},
+		{"time_format", "hh:mm:ss a", "HH:mm", "15:04"},
+		{"time_format", "", "hh:mm a", "03:04 PM"},
+		{"time_format", "", "HH:mm:ss", "15:04:05"},
+		{"date_format", "", "", "2006-01-02"},
+		{"date_format", "DD/MM/YYYY", "", "02/01/2006"},
+		{"date_format", "DD/MM/YYYY", "MM/DD/YYYY", "01/02/2006"},
+		{"date_format", "", "YYYY/MM/DD", "2006/01/02"},
+		{"date_format", "", "DD-MM-YYYY", "02-01-2006"},
+		{"date_format", "", "MM-DD-YYYY", "01-02-2006"},
+		{"date_format", "", "YYYY-MM-DD", "2006-01-02"},
 	}
 	for _, test := range tests {
-		t.Run(test.site+"_"+test.identity, func(t *testing.T) {
+		t.Run(test.setting+"/"+test.site+"_"+test.identity, func(t *testing.T) {
 			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
 			for level, format := range map[*settings.SettingMap]string{site: test.site, identity: test.identity} {
 				if format != "" {
-					require.NoError(t, level.SetSettingByName("time_format", format, nil, nil))
+					require.NoError(t, level.SetSettingByName(test.setting, format, nil, nil))
 				}
 			}
 			combined := &settings.CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: settings.DefaultSettingsMap}
-			require.Equal(t, test.layout, combined.TimeLayout())
-		})
-	}
-}
-
-// Dates are shown in the identity's date format, then the site's, then the default, each as its Go layout
-func TestCombinedSettingsDateLayout(t *testing.T) {
-	tests := []struct {
-		site, identity string
-		layout         string
-	}{
-		{"", "", "2006-01-02"},
-		{"DD/MM/YYYY", "", "02/01/2006"},
-		{"DD/MM/YYYY", "MM/DD/YYYY", "01/02/2006"},
-		{"", "YYYY/MM/DD", "2006/01/02"},
-		{"", "DD-MM-YYYY", "02-01-2006"},
-		{"", "MM-DD-YYYY", "01-02-2006"},
-		{"", "YYYY-MM-DD", "2006-01-02"},
-	}
-	for _, test := range tests {
-		t.Run(test.site+"_"+test.identity, func(t *testing.T) {
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			for level, format := range map[*settings.SettingMap]string{site: test.site, identity: test.identity} {
-				if format != "" {
-					require.NoError(t, level.SetSettingByName("date_format", format, nil, nil))
-				}
-			}
-			combined := &settings.CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: settings.DefaultSettingsMap}
-			require.Equal(t, test.layout, combined.DateLayout())
+			require.Equal(t, test.layout, layoutOf[test.setting](combined))
 		})
 	}
 }
