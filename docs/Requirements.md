@@ -304,6 +304,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service, the privacy policy and the API docs, and each footer link
   opens in a new tab, so the page the user was on stays open.
+- The terms of service and privacy policy name the server's operator, `OPERATOR_NAME`, and link its `SUPPORT_EMAIL`,
+  with the governing law where the operator is based; a server run by someone else never names T1DNZ or New Zealand.
+- A production or staging server will not start without `OPERATOR_NAME` and `SUPPORT_EMAIL`; development and test
+  default to T1DNZ and `nighttroop@t1d.nz`.
 - The API docs, at `/api-docs` on every host, show the OpenAPI schema, `/openapi.json`, with Redoc in the site's
   colours: a menu and search of every endpoint, grouped into Site, Data, Settings and Nightscout and each named by its
   summary, each with how it is signed in to, its parameters, body, responses and samples of them, and a link to

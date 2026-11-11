@@ -55,6 +55,10 @@ var ownServers = []ownServer{
 	}},
 	// A server with a feedback link, on its home page and every footer
 	{"feedback/links.bdd", "192.0.2.14", func(c *config.ServerConfig) { c.FeedbackURL = "https://github.com/grahamjenson/nighttroop/issues" }, seedDevAdmin},
+	// A server run by another operator, with its own support email
+	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
+		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"
+	}, seedDevAdmin},
 }
 
 func seedDevAdmin(t *testing.T, controlDB *db.ControlDB) map[string]any {

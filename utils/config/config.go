@@ -24,8 +24,12 @@ import (
 	"nighttroop.t1d.nz/utils/usage"
 )
 
-// DefaultSupportEmail is the support email address when SUPPORT_EMAIL is not set
-const DefaultSupportEmail = "nighttroop@t1d.nz"
+// DefaultSupportEmail and DefaultOperatorName are the support email address and operator when SUPPORT_EMAIL and
+// OPERATOR_NAME are not set, in development and test only: production and staging must name their own
+const (
+	DefaultSupportEmail = "nighttroop@t1d.nz"
+	DefaultOperatorName = "T1DNZ"
+)
 
 // ServerStatus records which optional services are working. It is filled in
 // at startup and read by anything that depends on them.
@@ -97,6 +101,9 @@ type ServerConfig struct {
 	// SupportEmail is where users contact the server's operator, linked from every page's footer and in the terms
 	// of service and privacy policy
 	SupportEmail string
+
+	// OperatorName is who runs this server, as named in the terms of service and privacy policy
+	OperatorName string
 
 	// FeedbackURL, when set, is where users give feedback, e.g. a Google Form or GitHub issues, linked from every
 	// page's footer and the home page
@@ -301,6 +308,11 @@ func readFlagsAndDotEnv() (consts.ServerMode, map[string]string, error) {
 // readServerConfig reads each setting from the environment, then dotenv, then its default, removing what it reads
 // from dotenv, so the variables left in it are unknown
 func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerConfig, error) {
+	// Only development and test default to the project's own operator, so no other server names it as theirs
+	supportEmail, operatorName := "", ""
+	if mode == consts.Development || mode == consts.Test {
+		supportEmail, operatorName = DefaultSupportEmail, DefaultOperatorName
+	}
 	// DEFAULTS
 	serverConfig := ServerConfig{
 		Mode: mode,
@@ -328,7 +340,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SentryDSN:  configStringSelect(dotenv, "SENTRY_DSN", ""),
 		Deployment: configStringSelect(dotenv, "DEPLOYMENT", "development"),
 
-		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
+		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", supportEmail),
+		OperatorName: configStringSelect(dotenv, "OPERATOR_NAME", operatorName),
 		FeedbackURL:  configStringSelect(dotenv, "FEEDBACK_URL", ""),
 		TestSite:     mode == consts.Staging,
 		// Read in every mode, but only on in staging, as it keeps sites' data in the logs
@@ -519,6 +532,10 @@ func (config *ServerConfig) ValidateClean() error {
 		return fmt.Errorf("http is only allowed in development or test mode")
 	}
 
+	if strings.TrimSpace(config.OperatorName) == "" || strings.TrimSpace(config.SupportEmail) == "" {
+		return fmt.Errorf("OPERATOR_NAME and SUPPORT_EMAIL must be set: who runs this server, and how its users contact them")
+	}
+
 	if config.IsStaging() {
 		return validateStagingAdmin(config.StagingAdminPassword, config.StagingAdminTOTPSecret)
 	}
@@ -697,6 +714,7 @@ func printServerConfig(config ServerConfig) {
 	slog.Info("Server Config",
 		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test", consts.Staging: "Staging"}[config.Mode],
 		"Deployment", config.Deployment,
+		"Operator", config.OperatorName,
 		"CaptureRequests", config.CaptureRequests,
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),

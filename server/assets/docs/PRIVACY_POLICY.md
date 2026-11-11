@@ -1,8 +1,8 @@
 # PRIVACY POLICY
 
-<!-- SUPPORT_EMAIL is replaced with the server's support email address wherever these documents are shown -->
+<!-- OPERATOR_NAME and SUPPORT_EMAIL are replaced with who runs the server and its support email address wherever these documents are shown -->
 
-This privacy policy explains what Data Nighttroop (the 'Service'), operated by T1DNZ (the 'Owner'), keeps about its Users, why, and what Users can do about it. To ask about your Personal Data, the purposes it is used for and the parties it is shared with, contact the Owner.
+This privacy policy explains what Data Nighttroop (the 'Service'), operated by OPERATOR_NAME (the 'Owner'), keeps about its Users, why, and what Users can do about it. To ask about your Personal Data, the purposes it is used for and the parties it is shared with, contact the Owner.
 
 Owner contact email: **[SUPPORT_EMAIL](mailto:SUPPORT_EMAIL)**
 
@@ -71,7 +71,7 @@ Users may exercise certain rights over their Data processed by the Owner. In par
 5. **Restrict the processing of their Data**: under certain circumstances; the Owner will then only store the Data.
 6. **Have their Data deleted**: a site's admin can delete the site, which removes it from the Service and keeps it only in an encrypted archive for a limited time. To have the archive erased too, contact the Owner.
 7. **Receive their Data and have it transferred to another controller**: the site's Data can be downloaded in a structured, commonly used and machine-readable format, and much of it is also available through the Service's Nightscout compatible API.
-8. **Lodge a complaint**: with their competent data protection authority, such as the New Zealand Privacy Commissioner.
+8. **Lodge a complaint**: with their competent data protection authority, such as the privacy regulator of the country they live in.
 
 ## How to exercise these rights
 
@@ -99,4 +99,4 @@ Should the changes affect processing based on the User's consent, the Owner will
 Owner contact email: **[SUPPORT_EMAIL](mailto:SUPPORT_EMAIL)**
 
 ## Version
-Last Changed - 2026-10-30
+Last Changed - 2026-11-11
