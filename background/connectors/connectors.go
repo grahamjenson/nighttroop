@@ -2,12 +2,13 @@ package connectors
 
 import (
 	"context"
+	"encoding/json"
 	stderrors "errors"
+	"fmt"
 	"log/slog"
 	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -112,11 +113,26 @@ func (b *ConnectorJobManager) publishConnector(siteID string, sourceType consts.
 // recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is
 // truncated first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
 // recordRefused records a record a sync could not read, or the site refused, with the record, as an error of the
-// site's connector, and sends it to Sentry with the record, to debug it by. A sync records only its first, so one bad
-// kind of record cannot fill the errors.
+// site's connector, to debug it by. It is logged and sent to Sentry with only its fields' names and types, as its
+// values are health data and notes. A sync records only its first, so one bad kind of record cannot fill the errors.
 func recordRefused(ctx context.Context, jobInfo *ConnectorJobInfo, err error, record any) {
 	jobInfo.Site.ControlDB.Logs.ConnectorRecordError(ctx, jobInfo.SiteID, jobInfo.Type, err, record)
-	slog.ErrorContext(ctx, "A connector's record was refused", "error", err, "connector_type", jobInfo.Type, "record", db.RecordJSON(record))
+	slog.ErrorContext(ctx, "A connector's record was refused", "error", err, "connector_type", jobInfo.Type, "record_fields", recordFields(record))
+}
+
+// recordFields is the type of each field of a record as JSON, by its name, without its value; nil when it is not a
+// JSON object
+func recordFields(record any) map[string]string {
+	raw, _ := json.Marshal(record)
+	var fields map[string]any
+	if json.Unmarshal(raw, &fields) != nil {
+		return nil
+	}
+	types := make(map[string]string, len(fields))
+	for name, value := range fields {
+		types[name] = fmt.Sprintf("%T", value)
+	}
+	return types
 }
 
 func (b *ConnectorJobManager) recordSyncFailure(jobInfo *ConnectorJobInfo, err error, elapsedTimeMS int64) {

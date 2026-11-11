@@ -1,7 +1,9 @@
 package connectors
 
 import (
+	"bytes"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -170,6 +172,31 @@ func TestNightscoutConnectorCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.
 	require.Contains(t, *errs[0].Attributes, `"kind":"connector"`)
 	require.Contains(t, *errs[0].Attributes, `"record":{`)
 	require.Contains(t, *errs[0].Attributes, `"eventType":"Something Custom"`)
+}
+
+// A refused record is logged and sent to Sentry with its fields' names and types, but not their values, which are
+// health data and notes
+func TestRefusedRecordIsLoggedWithoutItsValues(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
+	enc := func(s string) *string {
+		v, err := cfg.Security.Encrypt(s)
+		require.NoError(t, err)
+		return &v
+	}
+	nightscout_client.TestDocuments = map[string][]any{
+		"treatments": {map[string]any{"eventType": "Something Custom", "notes": "a private note", "carbs": 87.6543, "date": float64(time.Now().UnixMilli())}},
+	}
+	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+
+	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+	require.NoError(t, SetupConnectorJobManager(cfg, controlDB).RunConnector(ctx, ConnectorJobParams{SiteID: siteID, Type: typ}))
+	require.Contains(t, logs.String(), `msg="A connector's record was refused"`)
+	require.Contains(t, logs.String(), `record_fields="map[carbs:float64 date:float64 eventType:string notes:string]"`)
+	require.NotContains(t, logs.String(), "a private note")
+	require.NotContains(t, logs.String(), "87.6543")
 }
 
 // A profile store is used long after it starts, so the newest is copied whenever the profiles change, however old, as

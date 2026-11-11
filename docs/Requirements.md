@@ -651,11 +651,12 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
 - Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Connector box, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
-- A failing source syncs less often, and says when it failed and why.
+- A failing source syncs less often, and says when it failed and why. Why, as stored, logged and sent to Sentry, never
+  has the Nightscout's URL or host, the Dexcom session, or the followed LibreLinkUp patient's ID, as a timeout's would.
 - A record a sync or backfill cannot read, such as a Dexcom or LibreLinkUp reading in a shape it does not know, or that
   the site refuses, such as a Nightscout treatment with an eventType it does not know, is skipped. The first of each
-  sync is recorded as an error of the site's connector with the record (up to 8 KB) and sent to Sentry with it, to
-  debug it by.
+  sync is recorded as an error of the site's connector with the record (up to 8 KB), to debug it by. It is logged and
+  sent to Sentry with only the names and types of the record's fields, never their values.
 - A working source can be backfilled with the days before its oldest reading, from midnight in the site's timezone,
   so its data starts at the start of a day. A Nightscout or virtual backfill also
   fetches the last 2 days again, to fill gaps the site missed while it was down, as for a deploy, and its toast says so;

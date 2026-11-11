@@ -3,13 +3,29 @@ package httputils
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+// A request's error keeps what went wrong, but not its URL, nor the URL's host a DNS error names
+func TestWithoutURL(t *testing.T) {
+	dnsErr := &net.DNSError{Err: "no such host", Name: "my-nightscout.example.com", IsNotFound: true}
+	err := WithoutURL(&url.Error{Op: "Get", URL: "https://my-nightscout.example.com/api?sessionId=secret", Err: dnsErr})
+	require.Equal(t, "Get: lookup the host: no such host", err.Error())
+	require.ErrorIs(t, err, dnsErr)
+	_, isDNSErr := errors.AsType[*net.DNSError](err)
+	require.True(t, isDNSErr)
+
+	other := errors.New("not a request's")
+	require.Equal(t, other, WithoutURL(other))
+}
 
 func TestReadLimitedBodyRefusesLargeBodies(t *testing.T) {
 	// A JSON object padded with spaces compresses well, like a gzip bomb would

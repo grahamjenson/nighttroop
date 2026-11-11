@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -19,6 +20,20 @@ func liveClient(baseURL string) *Client {
 	c.baseURL = baseURL
 	c.sessionID = "live-session"
 	return c
+}
+
+// A request that times out is a sync error, stored, logged and sent to Sentry, so it never has the session in its
+// URL's query, which reads the account's glucose
+func TestFetchEGVsTimeoutHidesTheSession(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { <-r.Context().Done() }))
+	defer srv.Close()
+	c := liveClient(srv.URL)
+	c.httpClient.Timeout = 50 * time.Millisecond
+
+	_, err := c.FetchEGVs(context.Background(), 60)
+	require.ErrorContains(t, err, "Client.Timeout exceeded")
+	require.NotContains(t, err.Error(), "live-session")
+	require.NotContains(t, err.Error(), srv.URL)
 }
 
 func TestFetchEGVsRefusesRedirect(t *testing.T) {
