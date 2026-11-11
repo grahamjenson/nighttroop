@@ -3,6 +3,8 @@ package api_test
 import (
 	"bufio"
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -159,4 +161,31 @@ func TestSettingsEventsStreamToTheirIdentityAlone(t *testing.T) {
 	event, data = nextEvent(t, stream)
 	require.Equal(t, "event: updated\n", event)
 	require.Contains(t, data, `"timezone":"Europe/Paris"`)
+}
+
+// An update's event has the row as it was before, so the day a record moved from is built again as well
+func TestUpdateEventsHaveTheRowBefore(t *testing.T) {
+	s := newEventsSite(t)
+	resp := s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin", `{"dose": 4}`)
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	var created struct {
+		Result struct {
+			ID         string `json:"id"`
+			OccurredAt int64  `json:"occurred_at"`
+		} `json:"result"`
+	}
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&created))
+	previous := make(chan any, 1)
+	s.config.Events.Subscribe(s.site.SiteDB.Subdomain, func(event events.Event) {
+		if event.Action == events.Updated {
+			previous <- event.Previous
+		}
+	})
+
+	moved := time.Now().AddDate(0, 0, -2).UnixMilli()
+	resp = s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin/"+created.Result.ID, fmt.Sprintf(`{"dose": 4, "occurred_at": %d}`, moved))
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	row, ok := (<-previous).(interface{ GetOccurredAt() int64 })
+	require.True(t, ok)
+	require.Equal(t, created.Result.OccurredAt, row.GetOccurredAt())
 }
