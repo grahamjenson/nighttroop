@@ -70,6 +70,10 @@ func TestValidateSecrets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dotenv := map[string]string{"HOST_PROTOCOL": "https",
 				"STAGING_ADMIN_PASSWORD": "a long staging password", "STAGING_ADMIN_TOTP_SECRET": "JBSWY3DPEHPK3PXP"}
+			// Development is only for local use, over http
+			if tt.mode == consts.Development {
+				dotenv["HOST_PROTOCOL"] = "http"
+			}
 			for key, value := range tt.dotenv {
 				dotenv[key] = value
 			}
