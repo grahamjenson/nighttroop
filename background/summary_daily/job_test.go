@@ -238,3 +238,27 @@ func TestRebuildStaleLeavesToday(t *testing.T) {
 	require.NoError(t, r.builder.RebuildStale(t.Context(), now.Add(staleQuiet)))
 	require.Zero(t, r.opened)
 }
+
+// A record changed to another day builds the day it moved from again as well as the one it moved to
+func TestRebuildStaleBuildsTheDayARecordMovedFrom(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	from, to := now.AddDate(0, 0, -3), now.AddDate(0, 0, -2)
+	r.reading("before", from, now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+
+	_, err := r.site.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: "before"})
+	require.NoError(t, err)
+	moved, err := r.site.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "after", Mgdl: 120, ReadingType: "sgv", OccurredAt: to.UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	event := events.ModelChange(r.siteID, events.Updated, moved)
+	event.Previous = &sitedb.GlucoseReading{ID: "before", OccurredAt: from.UnixMilli()}
+	r.builder.markStale(event, now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+
+	require.True(t, r.built(to.Format(time.DateOnly)))
+	day, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: from.Format(time.DateOnly)})
+	if err == nil {
+		require.Zero(t, day.GlucoseReadings, "the day it moved from no longer has it")
+	}
+}

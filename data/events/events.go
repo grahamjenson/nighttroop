@@ -96,6 +96,8 @@ type Event struct {
 	// *sitedb.GlucoseReading or *sitedb.EventGroupsBundle; a deleted model is the row as it was before.
 	Action Action
 	Model  any
+	// Previous is an updated model's row as it was before, as it may have moved, such as to another day
+	Previous any
 }
 
 // IsPersisted is whether the event is kept in the logs DB
