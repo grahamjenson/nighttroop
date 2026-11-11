@@ -24,6 +24,7 @@ type ControlIdentity struct {
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 	DeletedAt             *int64
+	CredentialsChangedAt  int64
 }
 
 type Passkey struct {

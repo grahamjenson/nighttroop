@@ -25,9 +25,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   Microsoft Authenticator and 2FAS.
 - A new site's admin, a recovered site's and a new or reset identity's TOTP QR code is a link, so tapping it on a phone
   opens its authenticator app, and under it the secret is shown as text, in fours, with a button to copy it bare.
+- The server will not start without a `MODE`, or with an unknown one, or with `test` outside `go test`, saying what
+  to set; a `development` server, whose passwords are all `password` and TOTP `123123`, will not start over `https`.
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
+- A production or staging server will not start with `KEY_SETS` holding any of the public keys from `.env.dev` and
+  `.env.test`, saying to make new ones with `cmd/keysets/create_keysets.go`.
 - A staging deploy wipes every DB, and their backups, when one cannot be migrated and prepared, or its schema is not
   the one the migrations make on a new DB, as after a migration's `CHECK` was edited, and keeps them otherwise.
 
@@ -81,7 +85,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   admin changed is signed out, as its sign in was for its old role.
 - An Admin resets another's password or TOTP from its Manage menu, after confirming, and the new one is shown once in
   the credentials dialog. The reset removes the admin's passkeys and is recorded as a credentials changed event; the
-  secret is never logged. Its sign in, if it has one, keeps working until it ends, within the hour.
+  secret is never logged. The reset signs it out, refusing (401) its sign ins from before; the Admin who reset it stays
+  signed in, and it signs in again with its new password or TOTP.
 - An Admin deletes another from its Manage menu, after confirming in the confirm dialog, which removes its row and its
   passkeys and signs it out.
 - Only an Admin can add, change, reset or delete admins; a Read only admin sees the list only. No admin can change,
@@ -189,7 +194,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - One for every site, with no `site_id`, is refused (400) until the server uses it only for tokens its app registered
   itself, requires its bundle IDs and limits pushes across the server.
 - A control admin can delete any of them, a site's or one for every site, after a confirmation, removing its secret
-  so pushes stop using it; a read only control identity is refused (403) adding or deleting one.
+  so pushes stop using it.
+- A read only control identity sees them, but no Add Push Credential or Delete buttons, and is refused (403) opening
+  the form to add one (`/push-credentials/new`), adding one or deleting one.
 
 ### Logs
 
@@ -967,6 +974,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - S3 is off without `S3_URL`, with nothing restored on start or backed up. With it, the server tests uploading to S3
   at startup, again over about half a minute, and does not start if it never works, so a server that cannot reach
   its backups never starts empty and backs that up over them.
+- A production or staging server with `S3_URL` will not start unless `S3_ACCESS_KEY` and `S3_SECRET_KEY` are set, and
+  not to the development MinIO's `minioadmin`.
 - Every site's DB is backed up to S3 in batches, and the control DB on its own, with old versions kept for a
   retention period.
 - A site not written to since its last backup is not copied again, so its DB is not opened, and a batch with the same

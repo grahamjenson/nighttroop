@@ -28,5 +28,7 @@ func main() {
 	s3Client := &s3utils.S3Client{ServerConfig: &configs}
 
 	// This takes in stdin and outputs decrypted and decompressed data to folders
-	s3Client.ExtractTarLZ4(os.Stdin, ".")
+	if err := s3Client.ExtractTarLZ4(os.Stdin, "."); err != nil {
+		log.Fatal(fmt.Errorf("failed to extract backup: %w", err))
+	}
 }

@@ -112,7 +112,7 @@ ASSERT_EQUALS 110 "@0.store.Default.target_high.0.value"
 NAME setup_devicestatus
 POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
 B {
-    "device": "openaps://samsung SM-G970F",
+    "device": "openaps://Test Phone",
     "created_at": "{{ time 2 }}",
     "uploaderBattery": 54,
     "isCharging": false,
@@ -132,7 +132,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EXISTS "@0.created_at"
-ASSERT_EQUALS "openaps://samsung SM-G970F" "@0.device"
+ASSERT_EQUALS "openaps://Test Phone" "@0.device"
 ASSERT_EQUALS 54 "@0.uploaderBattery"
 ASSERT_EQUALS false "@0.isCharging"
 ASSERT_EQUALS 75 "@0.pump.battery.percent"

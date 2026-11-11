@@ -25,7 +25,7 @@ ASSERT_LENGTH 5 "@collections"
 # A master's device status, as an AAPS client reads it live
 NAME post_devicestatus
 POST http://{{ site }}/api/v3/devicestatus?token={{ token }}
-B {"app":"AAPS","date":{{ itime 0 }},"uploaderBattery":87,"isCharging":false,"device":"openaps://samsung SM-G970F","uploader":{},"pump":{"reservoir":120.5,"battery":{"percent":75}},"openaps":{"iob":{"iob":0.5,"basaliob":0.1,"time":"{{ time 0 }}"}}}
+B {"app":"AAPS","date":{{ itime 0 }},"uploaderBattery":87,"isCharging":false,"device":"openaps://Test Phone","uploader":{},"pump":{"reservoir":120.5,"battery":{"percent":75}},"openaps":{"iob":{"iob":0.5,"basaliob":0.1,"time":"{{ time 0 }}"}}}
 ASSERT_STATUS 201
 
 NAME devicestatus_created

@@ -26,7 +26,7 @@ CREATE TABLE control_identities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
     deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
-) STRICT;
+, credentials_changed_at INTEGER NOT NULL DEFAULT 0) STRICT;
 
 CREATE TABLE passkeys (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

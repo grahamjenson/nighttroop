@@ -88,6 +88,32 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 
 }
 
+// UsesDevKeySets is whether any key in the comma separated key sets is one of DevKeySets', even in a key set of its own
+func UsesDevKeySets(keySetsRaw string) bool {
+	devKeys := keyValues(DevKeySets)
+	for value := range keyValues(keySetsRaw) {
+		if devKeys[value] {
+			return true
+		}
+	}
+	return false
+}
+
+// keyValues are the key data of every key in the comma separated key sets, leaving out any key set that cannot be read
+func keyValues(keySetsRaw string) map[string]bool {
+	values := map[string]bool{}
+	for _, rawKeySet := range strings.Split(keySetsRaw, ",") {
+		handle, err := readKeySetFromBase64(rawKeySet)
+		if err != nil {
+			continue
+		}
+		for _, key := range insecurecleartextkeyset.KeysetMaterial(handle).GetKey() {
+			values[string(key.GetKeyData().GetValue())] = true
+		}
+	}
+	return values
+}
+
 func readKeySetFromBase64(rawKeySet string) (*keyset.Handle, error) {
 	// 1. Decode the Base64 string to binary
 	keySetBytes, err := base64.RawStdEncoding.DecodeString(rawKeySet)
