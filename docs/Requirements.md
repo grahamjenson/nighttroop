@@ -1020,11 +1020,16 @@ Connectors are a site's third party integrations, each syncing from one service.
 | Admin | Password and TOTP | No | Yes | Yes |
 | User | Password | Yes | Yes | No |
 | Read only user | Nightscout token | Yes | No | No |
+| Clinician | Password | No | No | No |
 | PWD phone (the loop's phone) | Nightscout token | Yes | Yes | No |
 | Read and write device | Nightscout token | Yes | Yes | No |
 | Read only device | Nightscout token | Yes | No | No |
 
 - A new site has an admin, a PWD phone and a read only device.
+- An admin adds a clinician, such as the person with diabetes' doctor, as a user with the Clinician role. It has a
+  password, but no TOTP or Nightscout token, and its only page is the printable report: signed in, it opens the report
+  with Print and Sign out buttons, and no header, menus or tabs. Any other page opens the report instead, and anything
+  else, as the site's data, its own settings, its password or the Nightscout API, is refused.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 
 ### Signing in

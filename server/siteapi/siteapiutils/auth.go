@@ -36,10 +36,16 @@ var readWriteRoles = map[consts.IdentityRole]bool{
 	consts.IdentityRoleDevicePWDPhone: true, consts.IdentityRoleDeviceReadWrite: true,
 }
 
+// clinicianStores are what a clinician reads, the site's summaries, to see its printable report, all a clinician sees
+var clinicianStores = map[string]bool{"summary_periods": true}
+
 // HasPermission is whether the identity may do the action on the store; every other store is the site's data
 func HasPermission(collectionName string, action Action, identity *controldb.SiteIdentity) bool {
 	if identity == nil {
 		return false
+	}
+	if identity.Role == consts.IdentityRoleClinician {
+		return clinicianStores[collectionName] && (action == ActionSearch || action == ActionGet)
 	}
 	if adminStores[collectionName] {
 		return identity.Role == consts.IdentityRoleAdmin

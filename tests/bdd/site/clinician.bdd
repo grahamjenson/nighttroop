@@ -1,0 +1,59 @@
+INCLUDE steps/new_site_admin.steps
+
+// The virtual connector fills its last 30 minutes, so the report has glucose
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+// An admin adds a clinician as a user, who has a password but no TOTP or Nightscout token
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--identities-button
+INPUT #name-createIdentityFormusersTable doctor
+CLICK #select-form-createIdentityFormusersTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="clinician"]
+CLICK "Add User"
+ASSERT_STATUS 201
+ASSERT_VISIBLE #site--identities--created--password
+ASSERT_NOT_VISIBLE #site--identities--created--ns-token
+ASSERT_NOT_VISIBLE #qrcode
+SAVE_TEXT #site--identities--created--site site_url
+SAVE_TEXT #site--identities--created--password doctor_password
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_VISIBLE #identities_table tr:has-text("doctor"):has-text("Clinician")
+CLICK #site--settings-menu
+CLICK #site--settings--logout-button
+ASSERT_PATH /login
+
+// The clinician signs in with just their password, and sees only the printable report: no header, menus or tabs
+INPUT #site--login--name doctor
+INPUT #site--login--password {{ .doctor_password }}
+CLICK #site--login-button
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_COUNT #site--print > section 8
+ASSERT_VISIBLE #site--print>section:nth-of-type(1) #site--overview--mean >> text=/^\d+\.\d$/
+ASSERT_NOT_VISIBLE #site--nav--reports
+ASSERT_NOT_VISIBLE #site--settings-menu
+ASSERT_VISIBLE #site--print--print
+ASSERT_VISIBLE #site--print--logout
+SCREENSHOT clinician_report
+
+// Any other page opens the report instead, so the clinician cannot see the data or manage the account
+GOTO {{ .site_url }}/data/glucose
+ASSERT_PATH /
+ASSERT_COUNT #site--print > section 8
+GOTO {{ .site_url }}/settings/account
+ASSERT_PATH /
+GOTO {{ .site_url }}/reports/agp
+ASSERT_PATH /
+
+// Signing out goes back to sign in
+CLICK #site--print--logout
+ASSERT_VISIBLE #site--login-button

@@ -1,6 +1,8 @@
 package siteapi
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
@@ -9,7 +11,9 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -53,6 +57,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 		r.Use(httputils.CountRoutes(config.Usage, "site"))
+		r.Use(clinicianReportOnly)
 
 		// The summary is the home page
 		r.Get("/", store.Collection("data", "summary").Search)
@@ -113,4 +118,26 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	})
 
 	return r
+}
+
+// clinicianReportOnly keeps a clinician to the printable report, its home page: it can sign out, any other page opens the
+// report instead, and anything else is forbidden
+func clinicianReportOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siteContext := httputils.GetSiteContext(r.Context())
+		if siteContext == nil || siteContext.IdentityModel == nil || siteContext.IdentityModel.Role != consts.IdentityRoleClinician {
+			next.ServeHTTP(w, r)
+			return
+		}
+		switch {
+		case r.Method == http.MethodGet && (r.URL.Path == "/" || r.URL.Path == "/reports/print"):
+			sitecollections.PrintReportHandler(w, r)
+		case r.Method == http.MethodPost && r.URL.Path == "/logout":
+			next.ServeHTTP(w, r)
+		case r.Method == http.MethodGet && httputils.GetAcceptType(r) == httputils.AcceptTypeHTML:
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+		default:
+			apiutils.ErrForbidden.Write(httputils.GetAcceptType(r), w)
+		}
+	})
 }

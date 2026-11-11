@@ -24,7 +24,7 @@ import (
 type IdentitiesCollection struct{}
 
 var identityRoles = []consts.IdentityRole{
-	consts.IdentityRoleAdmin, consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly,
+	consts.IdentityRoleAdmin, consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleClinician,
 	consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite,
 }
 

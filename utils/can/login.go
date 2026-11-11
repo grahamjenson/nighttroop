@@ -8,7 +8,7 @@ func LoginToWebsite(role consts.IdentityRole) bool {
 	switch role {
 	case consts.IdentityRoleAdmin:
 		return true
-	case consts.IdentityRoleUser:
+	case consts.IdentityRoleUser, consts.IdentityRoleClinician:
 		return true
 	default:
 		return false
@@ -29,9 +29,11 @@ func MustLoginWithTotp(role consts.IdentityRole, hasTotpSecret bool) bool {
 	}
 }
 
+// HaveNightscoutToken is whether the role is given a Nightscout token: not an admin, nor a clinician, who sees only the
+// printable report
 func HaveNightscoutToken(role consts.IdentityRole) bool {
 	switch role {
-	case consts.IdentityRoleAdmin:
+	case consts.IdentityRoleAdmin, consts.IdentityRoleClinician:
 		return false
 	default:
 		return true

@@ -36,7 +36,7 @@ import (
 
 // roleLabels match the role names in the create forms
 var roleLabels = map[consts.IdentityRole]string{
-	consts.IdentityRoleAdmin: "Admin", consts.IdentityRoleUser: "User", consts.IdentityRoleUserReadOnly: "Read Only User",
+	consts.IdentityRoleAdmin: "Admin", consts.IdentityRoleUser: "User", consts.IdentityRoleUserReadOnly: "Read Only User", consts.IdentityRoleClinician: "Clinician",
 	consts.IdentityRoleDeviceRead: "Read", consts.IdentityRoleDeviceReadWrite: "Read+Write", consts.IdentityRoleDevicePWDPhone: "PWD Phone",
 }
 
@@ -151,7 +151,7 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 		@card.Card(card.Props{Title: "Admins & Users"}) {
 			@buildIdentityTable("usersTable", users)
 			// The first role is picked to start with, so a user added without choosing one is a User, not an Admin
-			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Admin", Value: consts.IdentityRoleAdmin}})
+			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Clinician", Value: consts.IdentityRoleClinician}, {Label: "Admin", Value: consts.IdentityRoleAdmin}})
 		}
 		@card.Card(card.Props{Title: "Devices"}) {
 			@buildIdentityTable("devicesTable", devices)
