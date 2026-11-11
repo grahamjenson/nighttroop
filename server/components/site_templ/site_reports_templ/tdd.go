@@ -1,15 +1,18 @@
 package site_reports_templ
 
 import (
+	"context"
 	"slices"
 	"time"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/css"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ECharts draws the TDD chart with these colours from css/theme.css, as it cannot use the Tailwind classes
@@ -134,7 +137,7 @@ func tddStats(days []*sitemodels.SiteSummaryDaily) (mean, lowest, highest *float
 // tddChart is a bar of each day's dose, its basal under its boluses, each named by its date for the tooltip, on an
 // axis of every date of the report from first to last, with no bar where a day had no insulin. Today's bar, the last, is
 // paler and labelled so far to its right, as it is not over.
-func tddChart(days []*sitemodels.SiteSummaryDaily, first, last, today time.Time) *charts.Bar {
+func tddChart(ctx context.Context, days []*sitemodels.SiteSummaryDaily, first, last, today time.Time) *charts.Bar {
 	byDate := map[string]*sitemodels.SiteSummaryDaily{}
 	for _, day := range days {
 		byDate[day.Date] = day
@@ -146,9 +149,10 @@ func tddChart(days []*sitemodels.SiteSummaryDaily, first, last, today time.Time)
 			basal.Value, boluss.Value = day.TotalDailyBasal, bolus(day.TotalDailyDose, day.TotalDailyBasal)
 		}
 		if at.Equal(today) {
-			basal.Name, boluss.Name = basal.Name+", so far", boluss.Name+", so far"
+			basal.Name = i18n.T(ctx, "site.reports.tdd.day_so_far", i18n.Data{"Day": basal.Name})
+			boluss.Name = basal.Name
 			basal.ItemStyle, boluss.ItemStyle = &opts.ItemStyle{Opacity: opts.Float(0.5)}, &opts.ItemStyle{Opacity: opts.Float(0.5)}
-			boluss.Label = &opts.Label{Show: opts.Bool(true), Position: "right", Formatter: "so far", Color: gray500}
+			boluss.Label = &opts.Label{Show: opts.Bool(true), Position: "right", Formatter: types.FuncStr(i18n.T(ctx, "site.reports.tdd.so_far")), Color: gray500}
 			right = "52"
 		}
 		dates, basals, boluses = append(dates, at.Format("2 Jan")), append(basals, basal), append(boluses, boluss)
@@ -166,8 +170,8 @@ func tddChart(days []*sitemodels.SiteSummaryDaily, first, last, today time.Time)
 	narrowGaps := func(s *charts.SingleSeries) { s.BarCategoryGap = "2" }
 	stacked := charts.WithBarChartOpts(opts.BarChart{Stack: "dose"})
 	chart.SetXAxis(dates).
-		AddSeries("Basal", basals, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandGold}), stacked, narrowGaps).
-		AddSeries("Bolus", boluses, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}), stacked, narrowGaps)
+		AddSeries(i18n.T(ctx, "site.reports.tdd.basal"), basals, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandGold}), stacked, narrowGaps).
+		AddSeries(i18n.T(ctx, "site.reports.tdd.bolus"), boluses, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}), stacked, narrowGaps)
 	chart.AddJSFuncs("window.addEventListener('resize', function() { %MY_ECHARTS%.resize(); });")
 	return chart
 }

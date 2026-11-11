@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // gmiDays and cgmActiveGoal are the days with data a GMI needs, and the percent of the time the CGM must read, for a
@@ -22,19 +23,19 @@ const (
 )
 
 // gmiNote cautions that a GMI of fewer than gmiDays days with data is less reliable
-func gmiNote(p *sitemodels.SiteSummaryPeriod) string {
+func gmiNote(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	if p.GMI == nil || p.Days >= gmiDays {
 		return ""
 	}
-	return fmt.Sprintf("Reliable from %d days of data", gmiDays)
+	return i18n.T(ctx, "site.reports.overview.gmi_note", i18n.Data{"Days": gmiDays})
 }
 
 // cgmActiveNote cautions that numbers from a CGM that read for less than cgmActiveGoal of the time may not be typical
-func cgmActiveNote(p *sitemodels.SiteSummaryPeriod) string {
+func cgmActiveNote(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	if p.CGMActive == nil || *p.CGMActive >= cgmActiveGoal {
 		return ""
 	}
-	return fmt.Sprintf("Under %.0f%%, so these numbers may not be typical", cgmActiveGoal)
+	return i18n.T(ctx, "site.reports.overview.cgm_active_note", i18n.Data{"Percent": fmt.Sprintf("%.0f", cgmActiveGoal)})
 }
 
 // previousOf is the report before, or an empty one when there is none, so its numbers are all missing
@@ -46,16 +47,17 @@ func previousOf(previous *sitemodels.SiteSummaryPeriod) *sitemodels.SiteSummaryP
 }
 
 // previousName is what the report before p is, as the previous 7 days or the previous month
-func previousName(p *sitemodels.SiteSummaryPeriod) string {
+func previousName(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	if n, ok := sitemodels.ReportDays[p.Period]; ok {
-		return fmt.Sprintf("the previous %d days", n)
+		return i18n.T(ctx, "site.reports.change.previous_days", i18n.Data{"Days": n})
 	}
-	return map[string]string{"day": "the day before", "month": "the previous month"}[p.Period]
+	id := map[string]string{"day": "site.reports.change.day_before", "month": "site.reports.change.previous_month"}[p.Period]
+	return i18n.T(ctx, id)
 }
 
 // change is how much a number of the report rose or fell from the one before, to decimals places, with what it is
-// in, as ▲ 0.3 mmol/L or ▼ 4%, "No change" when the same, or "" when either is missing
-func change(now, before *float64, decimals int, unit string) string {
+// in, as ▲ 0.3 mmol/L or ▼ 4%, that there was no change when the same, or "" when either is missing
+func change(ctx context.Context, now, before *float64, decimals int, unit string) string {
 	if now == nil || before == nil {
 		return ""
 	}
@@ -66,17 +68,17 @@ func change(now, before *float64, decimals int, unit string) string {
 	case difference < 0:
 		return fmt.Sprintf("▼ %.*f%s", decimals, -difference, unit)
 	}
-	return "No change"
+	return i18n.T(ctx, "site.reports.change.none")
 }
 
 // glucoseChange is how much the average glucose rose or fell from the report before, in its units, mmol/L to one
 // decimal place and mg/dL whole
-func glucoseChange(p, previous *sitemodels.SiteSummaryPeriod) string {
+func glucoseChange(ctx context.Context, p, previous *sitemodels.SiteSummaryPeriod) string {
 	decimals := 0
 	if p.Units != nil && *p.Units == consts.UnitsMMOLL {
 		decimals = 1
 	}
-	return change(p.Mean, previousOf(previous).Mean, decimals, " "+display.Units(p.Units))
+	return change(ctx, p.Mean, previousOf(previous).Mean, decimals, " "+display.Units(p.Units))
 }
 
 // oneDecimal is a number to one decimal place, or "–" for none
@@ -87,7 +89,7 @@ func oneDecimal(v *float64) string {
 	return fmt.Sprintf("%.1f", *v)
 }
 
-// band is a range of glucose a report counts readings in: its ID, its name, the percent of readings in it, and the
+// band is a range of glucose a report counts readings in: its ID, its name's message, the percent of readings in it, and the
 // classes it is drawn with
 type band struct {
 	ID, Label string
@@ -103,11 +105,11 @@ var inRange = site_data_templ.GlucoseColour{Text: "text-report-in-range", Fill: 
 func bands(p *sitemodels.SiteSummaryPeriod) []band {
 	colours := site_data_templ.GlucoseColours
 	return []band{
-		{"very-high", "Very high", p.TimeVeryHigh, colours["Very high"].Background},
-		{"high", "High", p.TimeHigh, colours["High"].Background},
-		{"in-range", "In range", p.TimeInRange, inRange.Background},
-		{"low", "Low", p.TimeLow, colours["Low"].Background},
-		{"very-low", "Very low", p.TimeVeryLow, colours["Very low"].Background},
+		{"very-high", "site.reports.ranges.very_high", p.TimeVeryHigh, colours["Very high"].Background},
+		{"high", "site.reports.ranges.high", p.TimeHigh, colours["High"].Background},
+		{"in-range", "site.reports.ranges.in_range", p.TimeInRange, inRange.Background},
+		{"low", "site.reports.ranges.low", p.TimeLow, colours["Low"].Background},
+		{"very-low", "site.reports.ranges.very_low", p.TimeVeryLow, colours["Very low"].Background},
 	}
 }
 
@@ -276,8 +278,8 @@ func twelveHour(ctx context.Context) bool {
 
 // overviewLegend is the overview graph's key: its bars above and below the range and between its 25th and 75th
 // percentiles, and its average
-var overviewLegend = []legendItem{{"h-3 w-2 rounded-sm bg-glucose-high", "Above the range"}, {"h-3 w-2 rounded-sm bg-gray-300", "25th to 75th percentile"},
-	{"h-1.5 w-1.5 rounded-full bg-gray-900", "Average"}, {"h-3 w-2 rounded-sm bg-glucose-low", "Below the range"}}
+var overviewLegend = []legendItem{{"h-3 w-2 rounded-sm bg-glucose-high", "site.reports.legend.above_range"}, {"h-3 w-2 rounded-sm bg-gray-300", "site.reports.legend.inner_percentiles"},
+	{"h-1.5 w-1.5 rounded-full bg-gray-900", "site.reports.legend.average"}, {"h-3 w-2 rounded-sm bg-glucose-low", "site.reports.legend.below_range"}}
 
 // overviewTop is the highest 75th percentile of the period, so its graph shows all its bars
 func overviewTop(bars []overviewBar) float64 {
