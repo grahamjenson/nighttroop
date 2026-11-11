@@ -33,7 +33,7 @@ func Graph(summary *sitemodels.Summary) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		chart := graph(summary, time.Now().UnixMilli(), site_data_templ.Location(ctx))
+		chart := graph(ctx, summary, time.Now().UnixMilli(), site_data_templ.Location(ctx))
 		snippet := chart.RenderSnippet()
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"site--summary--graph\" class=\"h-90 w-full text-xs\"><div id=\"")
 		if templ_7745c5c3_Err != nil {

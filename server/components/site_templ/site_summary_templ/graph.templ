@@ -10,7 +10,7 @@ import (
 // Graph draws the summary with go-echarts: the chart's element is ours, so it fills the section, and its
 // script, which draws it when the page or an htmx swap loads, is the library's
 templ Graph(summary *sitemodels.Summary) {
-	{{ chart := graph(summary, time.Now().UnixMilli(), site_data_templ.Location(ctx)) }}
+	{{ chart := graph(ctx, summary, time.Now().UnixMilli(), site_data_templ.Location(ctx)) }}
 	{{ snippet := chart.RenderSnippet() }}
 	<div id="site--summary--graph" class="h-90 w-full text-xs">
 		<div id={ chart.ChartID } class="h-full w-full"></div>
