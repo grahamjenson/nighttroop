@@ -97,11 +97,11 @@ templ Page(p PageProps) {
 }
 
 // Duration is how long an event took, or a dash when it happened at a moment
-func Duration(row Row) string {
+func Duration(ctx context.Context, row Row) string {
 	if row.FinishedAt == nil {
 		return "-"
 	}
-	return display.Duration(*row.FinishedAt - row.At)
+	return display.Duration(ctx, *row.FinishedAt - row.At)
 }
 
 // Attributes are a row's attributes as JSON, indented to read
@@ -161,7 +161,7 @@ templ aboutDetail(v View, row Row) {
 
 templ when(v View, at int64) {
 	@table.Cell() {
-		<span title={ v.Date(ctx, at) }>{ display.Ago(&at, time.Now()) }</span>
+		<span title={ v.Date(ctx, at) }>{ display.Ago(ctx, &at, time.Now()) }</span>
 	}
 }
 
@@ -224,7 +224,7 @@ templ EventsTable(v View, id string, events []Row) {
 					@aboutCell(v, event)
 					@when(v, event.At)
 					@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-						{ Duration(event) }
+						{ Duration(ctx, event) }
 					}
 				}
 			}
@@ -242,7 +242,7 @@ templ EventModal(v View, event Row) {
 			if event.FinishedAt != nil {
 				@modal.Detail(i18n.T(ctx, "common.log_view.finished"), v.Date(ctx, *event.FinishedAt))
 			}
-			@modal.Detail(i18n.T(ctx, "common.log_view.duration"), Duration(event))
+			@modal.Detail(i18n.T(ctx, "common.log_view.duration"), Duration(ctx, event))
 		}
 	}
 }

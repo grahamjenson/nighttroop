@@ -136,9 +136,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var7 string
-				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(source.LastSuccessfulSync, time.Now()))
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, source.LastSuccessfulSync, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 32, Col: 124}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 32, Col: 129}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -184,9 +184,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var10 string
-				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(source.LastFailedSync, time.Now()))
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, source.LastFailedSync, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 35, Col: 116}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 35, Col: 121}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -216,9 +216,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 				ctx = templ.InitializeContext(ctx)
 				if source.LastSyncDuration != nil {
 					var templ_7745c5c3_Var12 string
-					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(display.Duration(*source.LastSyncDuration))
+					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(display.Duration(ctx, *source.LastSyncDuration))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 39, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 39, Col: 55}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -249,9 +249,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s (%s)", display.Duration(source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)))
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s (%s)", display.Duration(ctx, source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 45, Col: 128}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 45, Col: 133}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -415,9 +415,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var25 string
-					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(source.LastBackfillFinishedAt, time.Now()))
+					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, source.LastBackfillFinishedAt, time.Now()))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 67, Col: 133}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 67, Col: 138}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 					if templ_7745c5c3_Err != nil {
@@ -428,9 +428,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var26 string
-					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connector_status.backfill_records", i18n.Data{"Records": count(source.LastBackfillRecords), "Duration": display.Duration(count(source.LastBackfillDuration))}))
+					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connector_status.backfill_records", i18n.Data{"Records": count(source.LastBackfillRecords), "Duration": display.Duration(ctx, count(source.LastBackfillDuration))}))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 67, Col: 329}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 67, Col: 339}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 					if templ_7745c5c3_Err != nil {
@@ -498,9 +498,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var30 string
-					templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(" (" + display.Ago(source.LastBackfillFrom, time.Now()) + ")")
+					templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(" (" + display.Ago(ctx, source.LastBackfillFrom, time.Now()) + ")")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 77, Col: 149}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 77, Col: 154}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 					if templ_7745c5c3_Err != nil {
@@ -558,9 +558,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var33 string
-					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&event.StartedAt, time.Now()))
+					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &event.StartedAt, time.Now()))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 86, Col: 82}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 86, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 					if templ_7745c5c3_Err != nil {
@@ -573,7 +573,7 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 					var templ_7745c5c3_Var34 string
 					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(event.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 86, Col: 118}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 86, Col: 123}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 					if templ_7745c5c3_Err != nil {
@@ -590,9 +590,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var35 string
-					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&syncError.CreatedAt, time.Now()))
+					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &syncError.CreatedAt, time.Now()))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 89, Col: 107}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 89, Col: 112}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 					if templ_7745c5c3_Err != nil {
@@ -605,7 +605,7 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 					var templ_7745c5c3_Var36 string
 					templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(syncError.Message)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 89, Col: 136}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 89, Col: 141}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 					if templ_7745c5c3_Err != nil {

@@ -46,6 +46,8 @@ var (
 		// Values that are sent, stored or compared: a key's name, a Nightscout trend, a part of an element's id and the
 		// temp target reasons suggested, which are stored as they are
 		"Enter": true, "Escape": true, "Flat": true, "Other": true, "Activity": true, "Eating Soon": true, "Hypo": true,
+		// A command to run, as it is typed
+		"docker compose logs nighttroop": true,
 	}
 )
 

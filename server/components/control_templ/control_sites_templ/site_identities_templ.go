@@ -471,9 +471,9 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 								return templ_7745c5c3_Err
 							}
 							var templ_7745c5c3_Var32 string
-							templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(identity.LastSeenAt, time.Now()))
+							templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, identity.LastSeenAt, time.Now()))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 65, Col: 106}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 65, Col: 111}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 							if templ_7745c5c3_Err != nil {
@@ -812,7 +812,8 @@ func identitySummary(ctx context.Context, identity *controlmodels.SiteIdentity) 
 	if identity.HasTotp {
 		summary += " · " + i18n.T(ctx, "control.site_identities.totp")
 	}
-	if seen := display.Ago(identity.LastSeenAt, time.Now()); seen != "Never" {
+	if identity.LastSeenAt != nil && *identity.LastSeenAt != 0 {
+		seen := display.Ago(ctx, identity.LastSeenAt, time.Now())
 		return summary + " · " + i18n.T(ctx, "control.site_identities.summary_seen", i18n.Data{"SeenAgo": seen})
 	}
 	return summary + " · " + i18n.T(ctx, "control.site_identities.summary_never_seen")

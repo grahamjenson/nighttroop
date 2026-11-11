@@ -816,9 +816,9 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var40 string
-				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(identity.LastSeenAt, time.Now()))
+				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, identity.LastSeenAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 242, Col: 110}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 242, Col: 115}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -864,9 +864,9 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var43 string
-				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(identity.LastWriteAt, time.Now()))
+				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, identity.LastWriteAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 245, Col: 112}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 245, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 				if templ_7745c5c3_Err != nil {
@@ -1126,9 +1126,9 @@ func recentClients(identity *sitemodels.UserIdentity) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var57 string
-				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&client.LastAt, time.Now()))
+				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &client.LastAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 277, Col: 127}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 277, Col: 132}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 				if templ_7745c5c3_Err != nil {

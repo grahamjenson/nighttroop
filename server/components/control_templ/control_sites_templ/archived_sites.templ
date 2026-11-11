@@ -47,7 +47,7 @@ templ archivedSiteRow(site *controlmodels.Site) {
 			{ display.DateTime(site.ArchivedAt) }
 		}
 		@table.Cell() {
-			<span title={ display.DateTime(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
+			<span title={ display.DateTime(site.LastSeenAt) }>{ display.Ago(ctx, site.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell(table.NumCell) {
 			{ sizeMB(site.EstimatedDbSizeKb) }

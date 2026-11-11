@@ -195,9 +195,9 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(site.LastSeenAt, time.Now()))
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, site.LastSeenAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 50, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 50, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {

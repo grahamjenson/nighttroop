@@ -1,6 +1,7 @@
 package control_job_stats_templ
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -25,21 +26,21 @@ func dayQueueJob(stats *controlmodels.JobStatsDaily) (string, string, string) {
 }
 
 // meanDuration is the jobs' mean time from being fetched to finishing
-func meanDuration(stats *controlmodels.JobStatsDaily) string {
+func meanDuration(ctx context.Context, stats *controlmodels.JobStatsDaily) string {
 	if stats.TotalJobs == 0 {
 		return "-"
 	}
-	return display.Duration(int64(math.Round(stats.DurationSum / float64(stats.TotalJobs))))
+	return display.Duration(ctx, int64(math.Round(stats.DurationSum / float64(stats.TotalJobs))))
 }
 
 // stdDevDuration is how much the jobs' durations spread around their mean
-func stdDevDuration(stats *controlmodels.JobStatsDaily) string {
+func stdDevDuration(ctx context.Context, stats *controlmodels.JobStatsDaily) string {
 	if stats.TotalJobs == 0 {
 		return "-"
 	}
 	n := float64(stats.TotalJobs)
 	mean := stats.DurationSum / n
-	return display.Duration(int64(math.Round(math.Sqrt(max(stats.DurationSquaredSum/n-mean*mean, 0)))))
+	return display.Duration(ctx, int64(math.Round(math.Sqrt(max(stats.DurationSquaredSum/n-mean*mean, 0)))))
 }
 
 // JobStatsTable shows one page of daily job totals, newest day first, with buttons to the pages either side
@@ -90,7 +91,7 @@ templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
 			{ fmt.Sprint(stats.TotalFailed) }
 		}
 		@table.Cell(table.NumCell) {
-			{ meanDuration(stats) }
+			{ meanDuration(ctx, stats) }
 		}
 	}
 }
@@ -105,8 +106,8 @@ templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 			@modal.Detail(i18n.T(ctx, "control.job_stats.jobs"), fmt.Sprint(stats.TotalJobs))
 			@modal.Detail(i18n.T(ctx, "control.job_stats.succeeded"), fmt.Sprint(stats.TotalSuccess))
 			@modal.Detail(i18n.T(ctx, "control.job_stats.failed"), fmt.Sprint(stats.TotalFailed))
-			@modal.Detail(i18n.T(ctx, "control.job_stats.mean_duration"), meanDuration(stats))
-			@modal.Detail(i18n.T(ctx, "control.job_stats.std_dev_duration"), stdDevDuration(stats))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.mean_duration"), meanDuration(ctx, stats))
+			@modal.Detail(i18n.T(ctx, "control.job_stats.std_dev_duration"), stdDevDuration(ctx, stats))
 			@modal.Detail(i18n.T(ctx, "control.job_stats.updated"), display.DateTime(&stats.UpdatedAt))
 		</dl>
 		<h3 class="mt-4 text-sm font-semibold">{ i18n.T(ctx, "control.job_stats.errors") }</h3>

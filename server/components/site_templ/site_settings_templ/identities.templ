@@ -239,10 +239,10 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			{ formatIdentityDate(ctx, &identity.CreatedAt) }
 		}
 		@table.Cell() {
-			<span title={ formatIdentityDate(ctx, identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
+			<span title={ formatIdentityDate(ctx, identity.LastSeenAt) }>{ display.Ago(ctx, identity.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell() {
-			<span title={ formatIdentityDate(ctx, identity.LastWriteAt) }>{ display.Ago(identity.LastWriteAt, time.Now()) }</span>
+			<span title={ formatIdentityDate(ctx, identity.LastWriteAt) }>{ display.Ago(ctx, identity.LastWriteAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			@recentClients(identity)
@@ -274,7 +274,7 @@ templ recentClients(identity *sitemodels.UserIdentity) {
 			}
 			<ul class="mt-1 space-y-1 text-xs text-gray-600">
 				for _, client := range identity.RecentClients {
-					<li><span class="break-all">{ client.UserAgent }</span> · { client.Network } · { display.Ago(&client.LastAt, time.Now()) }</li>
+					<li><span class="break-all">{ client.UserAgent }</span> · { client.Network } · { display.Ago(ctx, &client.LastAt, time.Now()) }</li>
 				}
 			</ul>
 		</details>

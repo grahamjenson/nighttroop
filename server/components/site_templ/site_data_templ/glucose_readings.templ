@@ -182,7 +182,7 @@ func glucoseFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
 		{Name: "reading", Label: i18n.T(ctx, "site.data.glucose_readings.reading", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.glucose_readings.reading_help"), Required: true, Min: fmt.Sprint(attributes["min"]), Max: fmt.Sprint(attributes["max"]), Step: "any"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.glucose_readings.when_help"), Kind: addmodal.When},
-		{Name: "reading_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.glucose_readings.type_help"), Required: true, Kind: addmodal.Select, Options: []string{"mbg", "sgv"}, OptionLabel: display.ReadingType},
+		{Name: "reading_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.glucose_readings.type_help"), Required: true, Kind: addmodal.Select, Options: []string{"mbg", "sgv"}, OptionLabel: func(t string) string { return display.ReadingType(ctx, t) }},
 		{Name: "measurement_method", Label: i18n.T(ctx, "site.data.glucose_readings.method"), Help: i18n.T(ctx, "site.data.glucose_readings.method_help"), Kind: addmodal.Text, Max: "32", Options: []string{"meter", "cgm", "manual"}},
 		{Name: "direction", Label: i18n.T(ctx, "site.data.glucose_readings.trend"), Help: i18n.T(ctx, "site.data.glucose_readings.trend_help"), Kind: addmodal.Select, Options: []string{"DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown", "DoubleDown"},
 			OptionLabel: func(direction string) string { return directionDetail(&direction) }},
@@ -202,7 +202,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 			@glucoseRangeMarker(glucoseRange(ctx, reading.Reading))
 		}
 		@table.Cell() {
-			{ display.ReadingType(reading.ReadingType) }
+			{ display.ReadingType(ctx, reading.ReadingType) }
 		}
 		@table.Cell() {
 			<span title={ orDash(reading.Direction) }>{ display.Direction(reading.Direction) }</span>
@@ -219,7 +219,7 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@addmodal.Detail(edit, "reading_type", i18n.T(ctx, "site.data.common.type"), display.ReadingType(reading.ReadingType))
+			@addmodal.Detail(edit, "reading_type", i18n.T(ctx, "site.data.common.type"), display.ReadingType(ctx, reading.ReadingType))
 			@addmodal.Detail(edit, "original_units", i18n.T(ctx, "site.data.glucose_readings.original_units"), orDash(reading.OriginalUnits))
 			@addmodal.Detail(edit, "measurement_method", i18n.T(ctx, "site.data.glucose_readings.measurement_method"), orDash(reading.MeasurementMethod))
 			@addmodal.Detail(edit, "delta", i18n.T(ctx, "site.data.glucose_readings.delta"), orDash(reading.Delta))

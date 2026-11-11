@@ -29,20 +29,20 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 		<div id={ "site--settings--" + name + "-connector--status" } class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
 			<dl class="grid gap-x-4 gap-y-1 sm:grid-cols-2 md:grid-cols-3">
 				@connectorStat(name, "last-success", i18n.T(ctx, "site.settings.connector_status.last_worked")) {
-					<span title={ formatIdentityDate(ctx, source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
+					<span title={ formatIdentityDate(ctx, source.LastSuccessfulSync) }>{ display.Ago(ctx, source.LastSuccessfulSync, time.Now()) }</span>
 				}
 				@connectorStat(name, "last-failure", i18n.T(ctx, "site.settings.connector_status.last_failed")) {
-					<span title={ formatIdentityDate(ctx, source.LastFailedSync) }>{ display.Ago(source.LastFailedSync, time.Now()) }</span>
+					<span title={ formatIdentityDate(ctx, source.LastFailedSync) }>{ display.Ago(ctx, source.LastFailedSync, time.Now()) }</span>
 				}
 				@connectorStat(name, "duration", i18n.T(ctx, "site.settings.connector_status.last_sync_took")) {
 					if source.LastSyncDuration != nil {
-						{ display.Duration(*source.LastSyncDuration) }
+						{ display.Duration(ctx, *source.LastSyncDuration) }
 					} else {
 						-
 					}
 				}
 				@connectorStat(name, "interval", i18n.T(ctx, "site.settings.connector_status.syncs_every")) {
-					{ fmt.Sprintf("%s (%s)", display.Duration(source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)) }
+					{ fmt.Sprintf("%s (%s)", display.Duration(ctx, source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)) }
 				}
 				@connectorStat(name, "totals", i18n.T(ctx, "site.settings.connector_status.syncs")) {
 					{ i18n.T(ctx, "site.settings.connector_status.worked_failed", i18n.Data{"Worked": count(source.TotalSuccessfulSyncs), "Failed": count(source.TotalFailedSyncs)}) }
@@ -64,7 +64,7 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 					if source.TotalBackfills == 0 {
 						{ i18n.T(ctx, "site.settings.never") }
 					} else {
-						<span title={ formatIdentityDate(ctx, source.LastBackfillFinishedAt) }>{ display.Ago(source.LastBackfillFinishedAt, time.Now()) }</span>{ i18n.T(ctx, "site.settings.connector_status.backfill_records", i18n.Data{"Records": count(source.LastBackfillRecords), "Duration": display.Duration(count(source.LastBackfillDuration))}) }
+						<span title={ formatIdentityDate(ctx, source.LastBackfillFinishedAt) }>{ display.Ago(ctx, source.LastBackfillFinishedAt, time.Now()) }</span>{ i18n.T(ctx, "site.settings.connector_status.backfill_records", i18n.Data{"Records": count(source.LastBackfillRecords), "Duration": display.Duration(ctx, count(source.LastBackfillDuration))}) }
 						if source.LastBackfillError != nil {
 							<span class="text-red-700">: { *source.LastBackfillError }</span>
 						}
@@ -74,7 +74,7 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 					if source.TotalBackfills == 0 || source.LastBackfillFrom == nil {
 						-
 					} else {
-						{ formatIdentityDate(ctx, source.LastBackfillFrom) }<span class="text-gray-500">{ " (" + display.Ago(source.LastBackfillFrom, time.Now()) + ")" }</span>
+						{ formatIdentityDate(ctx, source.LastBackfillFrom) }<span class="text-gray-500">{ " (" + display.Ago(ctx, source.LastBackfillFrom, time.Now()) + ")" }</span>
 					}
 				}
 			</dl>
@@ -83,10 +83,10 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 					<summary class="cursor-pointer text-gray-600">{ i18n.T(ctx, "site.settings.connector_status.recent") }</summary>
 					<ul class="mt-2 space-y-1">
 						for _, event := range source.RecentEvents {
-							<li><span class="text-gray-500">{ display.Ago(&event.StartedAt, time.Now()) }</span> { display.Name(event.Name) }</li>
+							<li><span class="text-gray-500">{ display.Ago(ctx, &event.StartedAt, time.Now()) }</span> { display.Name(event.Name) }</li>
 						}
 						for _, syncError := range source.RecentErrors {
-							<li class="text-red-700"><span class="text-gray-500">{ display.Ago(&syncError.CreatedAt, time.Now()) }</span> { syncError.Message }</li>
+							<li class="text-red-700"><span class="text-gray-500">{ display.Ago(ctx, &syncError.CreatedAt, time.Now()) }</span> { syncError.Message }</li>
 						}
 					</ul>
 					<p class="mt-2">

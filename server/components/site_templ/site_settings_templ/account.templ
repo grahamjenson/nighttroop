@@ -41,11 +41,11 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 					for _, passkey := range passkeys {
 						@table.Row() {
 							@table.Cell() {
-								{ i18n.T(ctx, "site.settings.account.added") } <span title={ site_data_templ.FormatDate(ctx, passkey.CreatedAt) }>{ display.RoundedAgo(passkey.CreatedAt, time.Now()) }</span>
+								{ i18n.T(ctx, "site.settings.account.added") } <span title={ site_data_templ.FormatDate(ctx, passkey.CreatedAt) }>{ display.RoundedAgo(ctx, passkey.CreatedAt, time.Now()) }</span>
 							}
 							@table.Cell(table.CellProps{Class: "text-gray-500"}) {
 								if passkey.LastUsedAt != nil {
-									{ i18n.T(ctx, "site.settings.account.last_used", i18n.Data{"Ago": display.RoundedAgo(*passkey.LastUsedAt, time.Now())}) }
+									{ i18n.T(ctx, "site.settings.account.last_used", i18n.Data{"Ago": display.RoundedAgo(ctx, *passkey.LastUsedAt, time.Now())}) }
 								} else {
 									{ i18n.T(ctx, "site.settings.account.not_used") }
 								}

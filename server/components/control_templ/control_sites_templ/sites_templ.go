@@ -725,9 +725,9 @@ func siteRow(site *controlmodels.Site) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var34 string
-				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(site.LastSeenAt, time.Now()))
+				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, site.LastSeenAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 219, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 219, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
@@ -773,9 +773,9 @@ func siteRow(site *controlmodels.Site) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var37 string
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(site.LastWriteAt, time.Now()))
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, site.LastWriteAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 222, Col: 97}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 222, Col: 102}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
@@ -899,7 +899,7 @@ func lastError(ctx context.Context, errors []*controlmodels.Error) string {
 	if len(errors) == 0 {
 		return i18n.T(ctx, "control.site.no_error")
 	}
-	return display.Ago(&errors[0].CreatedAt, time.Now())
+	return display.Ago(ctx, &errors[0].CreatedAt, time.Now())
 }
 
 // siteURL is the site's own address, to open it
@@ -1067,11 +1067,11 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("control--site--last-seen", i18n.T(ctx, "control.site.last_seen"), display.Ago(site.LastSeenAt, time.Now()), icon.Eye).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("control--site--last-seen", i18n.T(ctx, "control.site.last_seen"), display.Ago(ctx, site.LastSeenAt, time.Now()), icon.Eye).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("control--site--last-write", i18n.T(ctx, "control.site.last_write"), display.Ago(site.LastWriteAt, time.Now()), icon.PenLine).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("control--site--last-write", i18n.T(ctx, "control.site.last_write"), display.Ago(ctx, site.LastWriteAt, time.Now()), icon.PenLine).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -317,7 +317,7 @@ func glucoseFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
 		{Name: "reading", Label: i18n.T(ctx, "site.data.glucose_readings.reading", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.glucose_readings.reading_help"), Required: true, Min: fmt.Sprint(attributes["min"]), Max: fmt.Sprint(attributes["max"]), Step: "any"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.glucose_readings.when_help"), Kind: addmodal.When},
-		{Name: "reading_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.glucose_readings.type_help"), Required: true, Kind: addmodal.Select, Options: []string{"mbg", "sgv"}, OptionLabel: display.ReadingType},
+		{Name: "reading_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.glucose_readings.type_help"), Required: true, Kind: addmodal.Select, Options: []string{"mbg", "sgv"}, OptionLabel: func(t string) string { return display.ReadingType(ctx, t) }},
 		{Name: "measurement_method", Label: i18n.T(ctx, "site.data.glucose_readings.method"), Help: i18n.T(ctx, "site.data.glucose_readings.method_help"), Kind: addmodal.Text, Max: "32", Options: []string{"meter", "cgm", "manual"}},
 		{Name: "direction", Label: i18n.T(ctx, "site.data.glucose_readings.trend"), Help: i18n.T(ctx, "site.data.glucose_readings.trend_help"), Kind: addmodal.Select, Options: []string{"DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown", "DoubleDown"},
 			OptionLabel: func(direction string) string { return directionDetail(&direction) }},
@@ -427,9 +427,9 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(display.ReadingType(reading.ReadingType))
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(display.ReadingType(ctx, reading.ReadingType))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 205, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 205, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -565,7 +565,7 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = addmodal.Detail(edit, "reading_type", i18n.T(ctx, "site.data.common.type"), display.ReadingType(reading.ReadingType)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "reading_type", i18n.T(ctx, "site.data.common.type"), display.ReadingType(ctx, reading.ReadingType)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

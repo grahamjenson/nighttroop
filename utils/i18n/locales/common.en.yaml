@@ -73,3 +73,33 @@ common:
     scan_with: "Scan with an authenticator app, such as "
     comma: ", "
     or_last: " or "
+  time:
+    never: "Never"
+    just_now: "just now"
+    min_ago: "{{.Count}} min ago"
+    h_ago: "{{.Count}} h ago"
+    days_ago: "{{.Count}} days ago"
+    days_hours_minutes_ago: "{{.Days}}d{{.Hours}}h{{.Minutes}}m ago"
+    hours_minutes_ago: "{{.Hours}}h{{.Minutes}}m ago"
+    minutes_ago: "{{.Minutes}}m ago"
+    ago: "{{.HowLong}} ago"
+    minutes:
+      one: "{{.Count}} minute"
+      other: "{{.Count}} minutes"
+    hours:
+      one: "{{.Count}} hour"
+      other: "{{.Count}} hours"
+    days:
+      one: "{{.Count}} day"
+      other: "{{.Count}} days"
+    days_and_hours: "{{.Days}} {{.Hours}}"
+  duration:
+    milliseconds: "{{.Count}} ms"
+    seconds: "{{.Count}} s"
+    minutes: "{{.Count}} min"
+    minutes_and_seconds: "{{.Count}} min {{.Part}} s"
+    hours: "{{.Count}} h"
+    hours_and_minutes: "{{.Count}} h {{.Part}} min"
+  reading_type:
+    sensor: "Sensor"
+    meter: "Meter"

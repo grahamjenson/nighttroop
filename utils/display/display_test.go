@@ -1,6 +1,7 @@
 package display
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -28,8 +29,8 @@ func TestAgo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Ago(tt.ms, now); got != tt.want {
-				t.Errorf("Ago() = %q, want %q", got, tt.want)
+			if got := Ago(context.Background(), tt.ms, now); got != tt.want {
+				t.Errorf("Ago(context.Background(), ) = %q, want %q", got, tt.want)
 			}
 		})
 	}
@@ -78,8 +79,8 @@ func TestTimeAgo(t *testing.T) {
 		{-10 * time.Minute, "0m ago"},
 	}
 	for _, tt := range tests {
-		if got := TimeAgo(now.Add(-tt.before).UnixMilli(), now); got != tt.want {
-			t.Errorf("TimeAgo(%s before) = %q, want %q", tt.before, got, tt.want)
+		if got := TimeAgo(context.Background(), now.Add(-tt.before).UnixMilli(), now); got != tt.want {
+			t.Errorf("TimeAgo(context.Background(), %s before) = %q, want %q", tt.before, got, tt.want)
 		}
 	}
 }
@@ -104,8 +105,8 @@ func TestRoundedAgo(t *testing.T) {
 		{9*24*time.Hour + 23*time.Hour + 50*time.Minute, "10 days ago"},
 	}
 	for _, tt := range tests {
-		if got := RoundedAgo(now.Add(-tt.before).UnixMilli(), now); got != tt.want {
-			t.Errorf("RoundedAgo(%s before) = %q, want %q", tt.before, got, tt.want)
+		if got := RoundedAgo(context.Background(), now.Add(-tt.before).UnixMilli(), now); got != tt.want {
+			t.Errorf("RoundedAgo(context.Background(), %s before) = %q, want %q", tt.before, got, tt.want)
 		}
 	}
 }
@@ -121,16 +122,16 @@ func TestDuration(t *testing.T) {
 		12_000_000: "3 h 20 min",
 		10_800_000: "3 h",
 	} {
-		if got := Duration(in); got != want {
-			t.Errorf("Duration(%d) = %q, want %q", in, got, want)
+		if got := Duration(context.Background(), in); got != want {
+			t.Errorf("Duration(context.Background(), %d) = %q, want %q", in, got, want)
 		}
 	}
 }
 
 func TestReadingType(t *testing.T) {
 	for in, want := range map[string]string{"sgv": "Sensor", "mbg": "Meter", "cal": "cal"} {
-		if got := ReadingType(in); got != want {
-			t.Errorf("ReadingType(%q) = %q, want %q", in, got, want)
+		if got := ReadingType(context.Background(), in); got != want {
+			t.Errorf("ReadingType(context.Background(), %q) = %q, want %q", in, got, want)
 		}
 	}
 }

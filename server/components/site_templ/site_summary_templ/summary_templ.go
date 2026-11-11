@@ -84,11 +84,11 @@ func insulinAndCarbs(s *sitemodels.Summary) []intake {
 }
 
 // ago is how long ago ms was, or a dash when it is not set
-func ago(ms *int64) string {
+func ago(ctx context.Context, ms *int64) string {
 	if ms == nil {
 		return "–"
 	}
-	return display.RoundedAgo(*ms, time.Now())
+	return display.RoundedAgo(ctx, *ms, time.Now())
 }
 
 func orDash(v *string) string {
@@ -363,11 +363,11 @@ func summaryContent(summary *sitemodels.Summary) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--summary--sensor-started", i18n.T(ctx, "site.summary.sensor_started"), ago(summary.SensorStartedAt), icon.Activity).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--summary--sensor-started", i18n.T(ctx, "site.summary.sensor_started"), ago(ctx, summary.SensorStartedAt), icon.Activity).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--summary--site-changed", i18n.T(ctx, "site.summary.site_changed"), ago(summary.SiteChangedAt), icon.Bandage).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--summary--site-changed", i18n.T(ctx, "site.summary.site_changed"), ago(ctx, summary.SiteChangedAt), icon.Bandage).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -480,7 +480,7 @@ func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
 	if age < time.Duration(staleAfterMinutes(ctx))*time.Minute {
 		return ""
 	}
-	return display.Duration(age.Milliseconds())
+	return display.Duration(ctx, age.Milliseconds())
 }
 
 // staleTrigger is the summary content's trigger to reload once its latest reading turns stale, a second after so the
@@ -721,9 +721,9 @@ func glucoseHero(summary *sitemodels.Summary) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var27 string
-			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(latest.OccurredAt, time.Now()))
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(ctx, latest.OccurredAt, time.Now()))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 245, Col: 178}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 245, Col: 183}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -987,9 +987,9 @@ func deviceCard(status *sitemodels.SiteDeviceStatus) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var42 string
-		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(status.OccurredAt, time.Now()))
+		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(ctx, status.OccurredAt, time.Now()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 279, Col: 169}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 279, Col: 174}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -1176,9 +1176,9 @@ func treatmentsTable(list []treatment) templ.Component {
 								return templ_7745c5c3_Err
 							}
 							var templ_7745c5c3_Var52 string
-							templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(t.At, time.Now()))
+							templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(ctx, t.At, time.Now()))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 309, Col: 98}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 309, Col: 103}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 							if templ_7745c5c3_Err != nil {
@@ -1510,9 +1510,9 @@ func insulinCarbsTable(list []intake) templ.Component {
 								return templ_7745c5c3_Err
 							}
 							var templ_7745c5c3_Var73 string
-							templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(i.At, time.Now()))
+							templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(ctx, i.At, time.Now()))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 348, Col: 98}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 348, Col: 103}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 							if templ_7745c5c3_Err != nil {

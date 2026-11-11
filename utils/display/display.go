@@ -2,11 +2,13 @@
 package display
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Layouts a day is named with: in full, as "Monday 2 January 2006", short with its year, as "Mon 2 Jan 2006", and
@@ -35,21 +37,21 @@ func PerDay(days int64, v float64, unit string) string {
 }
 
 // Ago is how long before now the time in ms was, as "just now", "5 min ago", "3 h ago" or "2 days ago",
-// or "Never" when there is no time
-func Ago(ms *int64, now time.Time) string {
+// or "Never" when there is no time, in the context's language
+func Ago(ctx context.Context, ms *int64, now time.Time) string {
 	if ms == nil || *ms == 0 {
-		return "Never"
+		return i18n.T(ctx, "common.time.never")
 	}
 	since := now.Sub(time.UnixMilli(*ms))
 	switch {
 	case since < time.Minute:
-		return "just now"
+		return i18n.T(ctx, "common.time.just_now")
 	case since < time.Hour:
-		return fmt.Sprintf("%d min ago", int(since.Minutes()))
+		return i18n.T(ctx, "common.time.min_ago", i18n.Data{"Count": int(since.Minutes())})
 	case since < 48*time.Hour:
-		return fmt.Sprintf("%d h ago", int(since.Hours()))
+		return i18n.T(ctx, "common.time.h_ago", i18n.Data{"Count": int(since.Hours())})
 	}
-	return fmt.Sprintf("%d days ago", int(since.Hours()/24))
+	return i18n.T(ctx, "common.time.days_ago", i18n.Data{"Count": int(since.Hours() / 24)})
 }
 
 // DateTime is the time in ms as its date and time in UTC, as "2026-10-26 12:00:00", or "-" when there is no time,
@@ -63,78 +65,73 @@ func DateTime(ms *int64) string {
 
 // TimeAgo is how long before now the time in ms was, in whole minutes, then hours and minutes, then days, hours and
 // minutes: "5m ago", "1h5m ago" or "2d1h5m ago". A time after now, as from a phone's clock running fast, is "0m ago".
-func TimeAgo(ms int64, now time.Time) string {
+func TimeAgo(ctx context.Context, ms int64, now time.Time) string {
 	minutes := max(int(now.Sub(time.UnixMilli(ms)).Minutes()), 0)
-	days, hours := minutes/(24*60), minutes/60%24
+	parts := i18n.Data{"Days": minutes / (24 * 60), "Hours": minutes / 60 % 24, "Minutes": minutes % 60}
 	switch {
-	case days > 0:
-		return fmt.Sprintf("%dd%dh%dm ago", days, hours, minutes%60)
-	case hours > 0:
-		return fmt.Sprintf("%dh%dm ago", hours, minutes%60)
+	case minutes >= 24*60:
+		return i18n.T(ctx, "common.time.days_hours_minutes_ago", parts)
+	case minutes >= 60:
+		return i18n.T(ctx, "common.time.hours_minutes_ago", parts)
 	}
-	return fmt.Sprintf("%dm ago", minutes)
+	return i18n.T(ctx, "common.time.minutes_ago", parts)
 }
 
 // RoundedAgo is how long before now the time in ms was, in words, and to the nearest hour once it is an hour or more:
 // "just now", "1 minute ago", "45 minutes ago", "3 hours ago", "1 day ago" or "2 days 1 hour ago". A time after now,
 // as from a phone's clock running fast, is "just now".
-func RoundedAgo(ms int64, now time.Time) string {
+func RoundedAgo(ctx context.Context, ms int64, now time.Time) string {
 	since := now.Sub(time.UnixMilli(ms))
+	ago := func(how string) string { return i18n.T(ctx, "common.time.ago", i18n.Data{"HowLong": how}) }
 	switch {
 	case since < time.Minute:
-		return "just now"
+		return i18n.T(ctx, "common.time.just_now")
 	case since < time.Hour:
-		return count(int(since.Minutes()), "minute") + " ago"
+		return ago(i18n.N(ctx, "common.time.minutes", int(since.Minutes())))
 	}
 	hours := int(since.Round(time.Hour).Hours())
 	days := hours / 24
 	switch {
 	case days == 0:
-		return count(hours, "hour") + " ago"
+		return ago(i18n.N(ctx, "common.time.hours", hours))
 	case hours%24 == 0:
-		return count(days, "day") + " ago"
+		return ago(i18n.N(ctx, "common.time.days", days))
 	}
-	return count(days, "day") + " " + count(hours%24, "hour") + " ago"
-}
-
-// count is n of a unit, as "1 day" or "2 days"
-func count(n int, unit string) string {
-	if n == 1 {
-		return "1 " + unit
-	}
-	return fmt.Sprintf("%d %ss", n, unit)
+	return ago(i18n.T(ctx, "common.time.days_and_hours", i18n.Data{"Days": i18n.N(ctx, "common.time.days", days),
+		"Hours": i18n.N(ctx, "common.time.hours", hours%24)}))
 }
 
 // Duration is how long ms milliseconds is, as "250 ms", "1.5 s", "2 min 5 s" or "3 h 20 min", leaving off a
 // second part of 0, as in "2 min" or "3 h"
-func Duration(ms int64) string {
+func Duration(ctx context.Context, ms int64) string {
 	d := time.Duration(ms) * time.Millisecond
 	switch {
 	case d < time.Second:
-		return fmt.Sprintf("%d ms", ms)
+		return i18n.T(ctx, "common.duration.milliseconds", i18n.Data{"Count": ms})
 	case d < time.Minute:
-		return fmt.Sprintf("%.1f s", d.Seconds())
+		return i18n.T(ctx, "common.duration.seconds", i18n.Data{"Count": fmt.Sprintf("%.1f", d.Seconds())})
 	case d < time.Hour:
-		return withPart(int(d.Minutes()), "min", int(d.Seconds())%60, "s")
+		return withPart(ctx, "common.duration.minutes", "common.duration.minutes_and_seconds", int(d.Minutes()), int(d.Seconds())%60)
 	}
-	return withPart(int(d.Hours()), "h", int(d.Minutes())%60, "min")
+	return withPart(ctx, "common.duration.hours", "common.duration.hours_and_minutes", int(d.Hours()), int(d.Minutes())%60)
 }
 
-// withPart is a count of a unit, then of the next smaller unit unless it is 0
-func withPart(count int, unit string, part int, partUnit string) string {
+// withPart is a count of a unit, then of the next smaller unit unless it is 0, by the message ids of the unit alone
+// and of both
+func withPart(ctx context.Context, alone, both string, count int, part int) string {
 	if part == 0 {
-		return fmt.Sprintf("%d %s", count, unit)
+		return i18n.T(ctx, alone, i18n.Data{"Count": count})
 	}
-	return fmt.Sprintf("%d %s %d %s", count, unit, part, partUnit)
+	return i18n.T(ctx, both, i18n.Data{"Count": count, "Part": part})
 }
 
 // ReadingType is what took a glucose reading: Sensor for sgv and Meter for mbg
-func ReadingType(readingType string) string {
+func ReadingType(ctx context.Context, readingType string) string {
 	switch readingType {
 	case "sgv":
-		return "Sensor"
+		return i18n.T(ctx, "common.reading_type.sensor")
 	case "mbg":
-		return "Meter"
+		return i18n.T(ctx, "common.reading_type.meter")
 	}
 	return readingType
 }

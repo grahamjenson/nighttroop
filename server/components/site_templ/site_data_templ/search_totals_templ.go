@@ -307,9 +307,9 @@ func totalsDay(id string, ms *int64) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(*ms, time.Now()))
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(display.RoundedAgo(ctx, *ms, time.Now()))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/search_totals.templ`, Line: 57, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/search_totals.templ`, Line: 57, Col: 97}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {

@@ -539,7 +539,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 
 // pushCredentialForm adds a credential to a site: the site's own form, with the site it is for first
 func pushCredentialForm(ctx context.Context) addmodal.Props {
-	form := site_settings_templ.PushCredentialForm
+	form := site_settings_templ.PushCredentialFormIn(ctx)
 	form.ID, form.Path, form.Target = "control--push-credential--create", "/push-credentials", "#control--push-credentials--table tbody"
 	form.Fields = append([]addmodal.Field{{Name: "site_id", Label: i18n.T(ctx, "control.push_credentials.site"), Required: true, Kind: addmodal.Text, Max: "32",
 		Help: i18n.T(ctx, "control.push_credentials.site_help")}}, form.Fields...)

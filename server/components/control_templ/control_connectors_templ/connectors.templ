@@ -107,10 +107,10 @@ templ connectorRow(source *controlmodels.Connector) {
 			<span class={ stateClass(source) }>{ i18n.T(ctx, stateLabels[state(source)]) }</span>
 		}
 		@table.Cell() {
-			<span title={ display.DateTime(source.LastAttemptedSync) }>{ display.Ago(source.LastAttemptedSync, time.Now()) }</span>
+			<span title={ display.DateTime(source.LastAttemptedSync) }>{ display.Ago(ctx, source.LastAttemptedSync, time.Now()) }</span>
 		}
 		@table.Cell() {
-			<span title={ display.DateTime(source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
+			<span title={ display.DateTime(source.LastSuccessfulSync) }>{ display.Ago(ctx, source.LastSuccessfulSync, time.Now()) }</span>
 		}
 		@table.Cell(table.NumCell) {
 			{ orDash(source.TotalSuccessfulSyncs) }

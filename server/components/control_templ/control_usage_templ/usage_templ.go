@@ -101,9 +101,9 @@ func Usage(model controlmodels.Usage) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.usage.intro", i18n.Data{"StartedAgo": display.TimeAgo(model.SinceStart.Started, model.NowTime())}))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.usage.intro", i18n.Data{"StartedAgo": display.TimeAgo(ctx, model.SinceStart.Started, model.NowTime())}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_usage_templ/usage.templ`, Line: 74, Col: 124}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_usage_templ/usage.templ`, Line: 74, Col: 129}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -292,7 +292,7 @@ func Usage(model controlmodels.Usage) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = stat.NoteTile("control--usage--uptime", i18n.T(ctx, "control.usage.uptime"), display.Duration(model.Server.UptimeMs), i18n.T(ctx, "control.usage.since_start")).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = stat.NoteTile("control--usage--uptime", i18n.T(ctx, "control.usage.uptime"), display.Duration(ctx, model.Server.UptimeMs), i18n.T(ctx, "control.usage.since_start")).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

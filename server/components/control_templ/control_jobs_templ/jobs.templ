@@ -1,6 +1,7 @@
 package control_jobs_templ
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,11 +17,11 @@ import (
 )
 
 // duration is how long the job took from being fetched to finishing
-func duration(job *controlmodels.Job) string {
+func duration(ctx context.Context, job *controlmodels.Job) string {
 	if job.ConsumerFetchedAt == 0 || job.FinishedAt == 0 {
 		return "-"
 	}
-	return display.Duration(job.FinishedAt - job.ConsumerFetchedAt)
+	return display.Duration(ctx, job.FinishedAt - job.ConsumerFetchedAt)
 }
 
 // statusClass shows failed jobs as errors
@@ -71,10 +72,10 @@ templ jobRow(job *controlmodels.Job) {
 			<span class={ statusClass(job) }>{ job.JobStatus }</span>
 		}
 		@table.Cell() {
-			<span title={ display.DateTime(&job.CreatedAt) }>{ display.Ago(&job.CreatedAt, time.Now()) }</span>
+			<span title={ display.DateTime(&job.CreatedAt) }>{ display.Ago(ctx, &job.CreatedAt, time.Now()) }</span>
 		}
 		@table.Cell(table.NumCell) {
-			{ duration(job) }
+			{ duration(ctx, job) }
 		}
 	}
 }
@@ -92,7 +93,7 @@ templ JobModal(job *controlmodels.Job) {
 			@modal.Detail(i18n.T(ctx, "control.jobs.execute_after"), display.DateTime(&job.ExecuteAfter))
 			@modal.Detail(i18n.T(ctx, "control.jobs.fetched"), display.DateTime(&job.ConsumerFetchedAt))
 			@modal.Detail(i18n.T(ctx, "control.jobs.finished"), display.DateTime(&job.FinishedAt))
-			@modal.Detail(i18n.T(ctx, "control.jobs.duration"), duration(job))
+			@modal.Detail(i18n.T(ctx, "control.jobs.duration"), duration(ctx, job))
 			if job.RunID != nil {
 				<dt class="text-gray-500">{ i18n.T(ctx, "control.jobs.logs") }</dt>
 				<dd>

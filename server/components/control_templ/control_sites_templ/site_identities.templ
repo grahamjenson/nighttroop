@@ -62,7 +62,7 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 						{ yesNo(ctx, identity.HasTotp) }
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
-						<span title={ display.DateTime(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
+						<span title={ display.DateTime(identity.LastSeenAt) }>{ display.Ago(ctx, identity.LastSeenAt, time.Now()) }</span>
 					}
 					if httputils.IsControlAdmin(ctx) {
 						@table.Cell() {
@@ -153,7 +153,8 @@ func identitySummary(ctx context.Context, identity *controlmodels.SiteIdentity) 
 	if identity.HasTotp {
 		summary += " · " + i18n.T(ctx, "control.site_identities.totp")
 	}
-	if seen := display.Ago(identity.LastSeenAt, time.Now()); seen != "Never" {
+	if identity.LastSeenAt != nil && *identity.LastSeenAt != 0 {
+		seen := display.Ago(ctx, identity.LastSeenAt, time.Now())
 		return summary + " · " + i18n.T(ctx, "control.site_identities.summary_seen", i18n.Data{"SeenAgo": seen})
 	}
 	return summary + " · " + i18n.T(ctx, "control.site_identities.summary_never_seen")

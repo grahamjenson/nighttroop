@@ -54,7 +54,7 @@ templ totalsDay(id string, ms *int64) {
 		<p class="text-lg font-bold text-gray-400 sm:text-2xl">–</p>
 	} else {
 		<p id={ id } class="text-lg font-bold text-gray-900 sm:text-2xl">{ totalsDate(ctx, *ms, time.Now()) }</p>
-		<p id={ id + "--ago" } class="text-xs text-gray-500">{ display.RoundedAgo(*ms, time.Now()) }</p>
+		<p id={ id + "--ago" } class="text-xs text-gray-500">{ display.RoundedAgo(ctx, *ms, time.Now()) }</p>
 	}
 }
 

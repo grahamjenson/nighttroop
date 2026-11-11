@@ -71,7 +71,7 @@ templ Usage(model controlmodels.Usage) {
 		hx-swap="outerHTML"
 	>
 		@heading.Page(i18n.T(ctx, "control.usage.title")) {
-			{ i18n.T(ctx, "control.usage.intro", i18n.Data{"StartedAgo": display.TimeAgo(model.SinceStart.Started, model.NowTime())}) }
+			{ i18n.T(ctx, "control.usage.intro", i18n.Data{"StartedAgo": display.TimeAgo(ctx, model.SinceStart.Started, model.NowTime())}) }
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.active"), Class: tiles}) {
 			@stat.NoteTile("control--usage--sites-day", i18n.T(ctx, "control.usage.sites_today"), fmt.Sprint(model.ActiveSitesDay), i18n.T(ctx, "control.usage.seen_day"))
@@ -108,7 +108,7 @@ templ Usage(model controlmodels.Usage) {
 			}
 			@stat.NoteTile("control--usage--goroutines", i18n.T(ctx, "control.usage.goroutines"), fmt.Sprint(model.Server.Goroutines), i18n.T(ctx, "control.usage.gcs", i18n.Data{"GCCount": model.Server.GCs}))
 			@stat.NoteTile("control--usage--disk", i18n.T(ctx, "control.usage.db_disk_used"), display.Bytes(float64(model.Server.DiskUsed)), i18n.T(ctx, "control.usage.disk_free", i18n.Data{"FreeBytes": display.Bytes(float64(model.Server.DiskFree))}))
-			@stat.NoteTile("control--usage--uptime", i18n.T(ctx, "control.usage.uptime"), display.Duration(model.Server.UptimeMs), i18n.T(ctx, "control.usage.since_start"))
+			@stat.NoteTile("control--usage--uptime", i18n.T(ctx, "control.usage.uptime"), display.Duration(ctx, model.Server.UptimeMs), i18n.T(ctx, "control.usage.since_start"))
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.resources")}) {
 			if len(model.ResourceReadings) == 0 {

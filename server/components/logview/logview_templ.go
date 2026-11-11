@@ -208,11 +208,11 @@ func Page(p PageProps) templ.Component {
 }
 
 // Duration is how long an event took, or a dash when it happened at a moment
-func Duration(row Row) string {
+func Duration(ctx context.Context, row Row) string {
 	if row.FinishedAt == nil {
 		return "-"
 	}
-	return display.Duration(*row.FinishedAt - row.At)
+	return display.Duration(ctx, *row.FinishedAt-row.At)
 }
 
 // Attributes are a row's attributes as JSON, indented to read
@@ -537,9 +537,9 @@ func when(v View, at int64) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var24 string
-			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&at, time.Now()))
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &at, time.Now()))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 164, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 164, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -985,9 +985,9 @@ func EventsTable(v View, id string, events []Row) templ.Component {
 							}
 							ctx = templ.InitializeContext(ctx)
 							var templ_7745c5c3_Var46 string
-							templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(Duration(event))
+							templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(Duration(ctx, event))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 227, Col: 23}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 227, Col: 28}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 							if templ_7745c5c3_Err != nil {
@@ -1085,7 +1085,7 @@ func EventModal(v View, event Row) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "common.log_view.duration"), Duration(event)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "common.log_view.duration"), Duration(ctx, event)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

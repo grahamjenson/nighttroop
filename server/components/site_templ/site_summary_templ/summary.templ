@@ -77,11 +77,11 @@ func insulinAndCarbs(s *sitemodels.Summary) []intake {
 }
 
 // ago is how long ago ms was, or a dash when it is not set
-func ago(ms *int64) string {
+func ago(ctx context.Context, ms *int64) string {
 	if ms == nil {
 		return "–"
 	}
-	return display.RoundedAgo(*ms, time.Now())
+	return display.RoundedAgo(ctx, *ms, time.Now())
 }
 
 func orDash(v *string) string {
@@ -165,8 +165,8 @@ templ summaryContent(summary *sitemodels.Summary) {
 			@previous("site--summary--total-daily-dose--last-fortnight", i18n.T(ctx, "site.summary.last_fortnight"), display.PerDay(summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U"))
 			@previous("site--summary--total-daily-dose--last-month", i18n.T(ctx, "site.summary.last_month"), display.PerDay(summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U"))
 		}
-		@stat.Tile("site--summary--sensor-started", i18n.T(ctx, "site.summary.sensor_started"), ago(summary.SensorStartedAt), icon.Activity)
-		@stat.Tile("site--summary--site-changed", i18n.T(ctx, "site.summary.site_changed"), ago(summary.SiteChangedAt), icon.Bandage)
+		@stat.Tile("site--summary--sensor-started", i18n.T(ctx, "site.summary.sensor_started"), ago(ctx, summary.SensorStartedAt), icon.Activity)
+		@stat.Tile("site--summary--site-changed", i18n.T(ctx, "site.summary.site_changed"), ago(ctx, summary.SiteChangedAt), icon.Bandage)
 	</div>
 	@card.Card(card.Props{}) {
 		@Graph(summary)
@@ -203,7 +203,7 @@ func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
 	if age < time.Duration(staleAfterMinutes(ctx))*time.Minute {
 		return ""
 	}
-	return display.Duration(age.Milliseconds())
+	return display.Duration(ctx, age.Milliseconds())
 }
 
 // staleTrigger is the summary content's trigger to reload once its latest reading turns stale, a second after so the
@@ -242,7 +242,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 					}
 				</div>
 				<div class="mt-1 flex gap-3 text-sm">
-					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</span>
+					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(ctx, latest.OccurredAt, time.Now()) }</span>
 					@nav.Link("site--summary--all-readings", "/data/glucose", "text-primary underline") {
 						{ i18n.T(ctx, "site.summary.glucose.all_readings") }
 					}
@@ -276,7 +276,7 @@ templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 	>
 		<div class="flex items-baseline justify-between gap-2">
 			<span class="truncate font-semibold text-brand-night">{ orDash(status.CreatedByDeviceName) }</span>
-			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(status.OccurredAt, time.Now()) }</span>
+			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(ctx, status.OccurredAt, time.Now()) }</span>
 		</div>
 		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
 			@detail(i18n.T(ctx, "site.summary.device.phone"), display.Value(status.DeviceBatteryPercent, "%"))
@@ -306,7 +306,7 @@ templ treatmentsTable(list []treatment) {
 			for _, t := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
+						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(ctx, t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
 						@nav.Link("", t.Path, "font-medium text-primary underline") {
@@ -345,7 +345,7 @@ templ insulinCarbsTable(list []intake) {
 			for _, i := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(i.At, time.Now()) }</span>
+						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(ctx, i.At, time.Now()) }</span>
 					}
 					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
 						if i.SMB {
