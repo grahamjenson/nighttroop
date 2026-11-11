@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"strconv"
 	"strings"
 
@@ -18,10 +19,11 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // PushCredentials is every site's push credentials, and those for every site, newest first, never with their secrets,
-// with a button to add one to a site and each one's to delete it
+// with, for an admin, a button to add one to a site and each one's to delete it
 func PushCredentials(credentials []*controlmodels.PushCredential) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -61,7 +63,7 @@ func PushCredentials(credentials []*controlmodels.PushCredential) templ.Componen
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = heading.PageWith("Push Credentials", addmodal.Open("control--push-credential--add", "/push-credentials/new", "Add Push Credential")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = heading.PageWith("Push Credentials", addButton(ctx)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -121,7 +123,7 @@ func PushCredentials(credentials []*controlmodels.PushCredential) templ.Componen
 							var templ_7745c5c3_Var7 string
 							templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(head)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 30, Col: 14}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 32, Col: 14}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 							if templ_7745c5c3_Err != nil {
@@ -218,7 +220,15 @@ func PushCredentials(credentials []*controlmodels.PushCredential) templ.Componen
 	})
 }
 
-// PushCredentialRow is a credential, without its secret, whose site it is, and a button to delete it
+// addButton is, for an admin, the button to add a credential to a site, as a read only identity cannot
+func addButton(ctx context.Context) templ.Component {
+	if !httputils.IsControlAdmin(ctx) {
+		return templ.NopComponent
+	}
+	return addmodal.Open("control--push-credential--add", "/push-credentials/new", "Add Push Credential")
+}
+
+// PushCredentialRow is a credential, without its secret, whose site it is, and for an admin a button to delete it
 func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -270,7 +280,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 					var templ_7745c5c3_Var13 string
 					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(*credential.SiteID)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 58, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 68, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {
@@ -298,7 +308,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(credential.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 62, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 72, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -325,7 +335,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(site_settings_templ.PushProviders[string(credential.Provider)])
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 65, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 75, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -352,7 +362,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(credential.TeamOrProjectID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 68, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 78, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -370,7 +380,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(*credential.KeyID)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 70, Col: 69}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 80, Col: 69}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -402,7 +412,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(credential.Apps, ", "))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 74, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 84, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -435,7 +445,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 					var templ_7745c5c3_Var24 string
 					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(credential.BundleIDs, ", "))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 80, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 90, Col: 46}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 					if templ_7745c5c3_Err != nil {
@@ -463,7 +473,7 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(credential.CreatedByIdentityName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 84, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push_credentials.templ`, Line: 94, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -475,9 +485,16 @@ func PushCredentialRow(credential *controlmodels.PushCredential) templ.Component
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = table.DeleteCell(id+"--delete", "/push-credentials/"+strconv.FormatInt(credential.ID, 10), "Delete this push credential? Pushes sent with it will stop.").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			if httputils.IsControlAdmin(ctx) {
+				templ_7745c5c3_Err = table.DeleteCell(id+"--delete", "/push-credentials/"+strconv.FormatInt(credential.ID, 10), "Delete this push credential? Pushes sent with it will stop.").Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = table.Cell().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
 			return nil
 		})

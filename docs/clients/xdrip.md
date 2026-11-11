@@ -65,7 +65,7 @@ a Wi-Fi uploader, and with `send_ob1dex_tx_battery_to_nightscout` the Dexcom tra
 (`utilitymodels/NightscoutBatteryDevice.java`):
 
 ```json
-{"device": "Google Pixel 7", "uploader": {"battery": 87, "type": "PHONE"}}
+{"device": "Test Phone", "uploader": {"battery": 87, "type": "PHONE"}}
 {"device": "G6 Transmitter", "uploader": {"days": 50, "daysEstimate": "50 / 100", "status": "OK", "voltagea": 285,
  "voltageb": 275, "temperature": 30, "battery": "50 days (voltage: 285/275)", "lastQueried": 1793613019000,
  "type": "DEXCOM_TRANSMITTER"}}

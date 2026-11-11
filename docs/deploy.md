@@ -110,7 +110,8 @@ rolls back.
 The settings come from `nighttroop.env` and the compose file ([docs/config.md](config.md)).
 
 - **Fails** when a setting has a bad value, or one it needs, such as `KEY_SETS`, `OPERATOR_NAME` or `SUPPORT_EMAIL`, is
-  missing: `cannot create server config`.
+  missing: `cannot create server config`. The public `KEY_SETS` of `.env.dev`, and `minioadmin` S3 keys, are bad values
+  here.
 - **Fix:** correct `nighttroop.env`, and update again. A new version that needs a new setting must say so in its
   release.
 

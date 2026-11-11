@@ -15,7 +15,7 @@ import (
 func TestValuesMeaningNoneAreNotStored(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
 	q, ctx, now := site.SiteDB.Queries(), context.Background(), time.Now().UnixMilli()
-	zero, noise, empty, serial, heartRate, by := 0.0, 1.0, "", "4241", int64(0), "test"
+	zero, noise, empty, serial, heartRate, by := 0.0, 1.0, "", "1234", int64(0), "test"
 
 	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "r", Mgdl: 100, ReadingType: "sgv",
 		Unfiltered: &zero, Filtered: &zero, Rssi: &zero, Noise: &noise, OccurredAt: now, CreatedByIdentityName: "test"})

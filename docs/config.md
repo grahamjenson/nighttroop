@@ -15,13 +15,13 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `MODE` | `development`, or `test` under `go test` | `development`, `test`, `production` or `staging`. Picks the `.env` file (`staging` reads `.env`, as production does), and dev and test use cheap bcrypt, fixed site names and fixed keys. `staging` runs as production does, but makes its control admin from `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET` instead of being set up, and puts a large banner at the top of every page saying it is a test site whose data is frequently wiped. Only `development`, `test` and `staging` offer the virtual connector, which makes up glucose |
+| `MODE` | none: the server will not start without it, except under `go test`, where it is `test` | `development`, `production` or `staging`, and `test` only under `go test`; any other value stops the server starting. Picks the `.env` file (`staging` reads `.env`, as production does), and dev and test use cheap bcrypt, fixed site names and fixed keys, and every initial password is `password` and TOTP `123123`, so `development` is only for local use and will not start with `HOST_PROTOCOL` `https`. `air` passes `-MODE=development`. `staging` runs as production does, but makes its control admin from `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET` instead of being set up, and puts a large banner at the top of every page saying it is a test site whose data is frequently wiped. Only `development`, `test` and `staging` offer the virtual connector, which makes up glucose |
 | `HOST_NAME` | `nt.local.t1d.nz` | The domain sites are subdomains of, e.g. `abc.nt.local.t1d.nz`, used in links and cookies |
 | `HOST_PORT` | `3000` | The port the server listens on. Links to sites, such as the create site page's login, have no port with `HOST_PROTOCOL` `https`, as a proxy takes HTTPS on 443; with `http` they have this port |
 | `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body the server reads, above an uploader's largest batch, Juggluco's 5000 readings. A larger body is refused with 413 |
 | `REQUESTS_IN_FLIGHT_PER_CPU` | `16` | Requests each CPU works on at once. Past these and the backlog a request is refused at once with 503 and `Retry-After`, so a server that falls behind, such as when its CPU is throttled, answers what it can rather than every request timing out. The health check, live updates and Socket.IO are not counted. A quarter of these, and of the backlog, is kept for writes to the Nightscout API, so device uploads are not refused for page loads |
 | `REQUESTS_BACKLOG_PER_CPU` | `64` | Requests for each CPU that wait, up to 5 seconds, for one in flight to finish, once `REQUESTS_IN_FLIGHT_PER_CPU` are being worked on. One that waits longer, or arrives with the backlog full, is refused at once with 503 and `Retry-After` |
-| `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
+| `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test, and development only allows `http` |
 | `DATA_DIR` | `./.dbs` | Where the SQLite DBs (`db/`) and backups waiting to upload (`backup/`) are kept |
 | `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP: the client is the last hop before these proxies. On Fly.io, also the only peers whose `Fly-Client-IP` is believed: set it to where Fly's proxy connects from, as the staging `fly.toml` does |
 | `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header, but only on a request whose TCP peer is in `TRUSTED_PROXIES`, and unless it is not an IP. Any other peer, such as another machine on Fly's private network, could set it to anything |
@@ -40,7 +40,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `KEY_SETS` | empty | Required: the server will not start without it, except in test mode, which uses fixed keys. The four keys that encrypt secrets in the DBs and backups, and sign logins. Make them with `cmd/keysets/create_keysets.go`, and keep a copy somewhere safe: backups cannot be read without them |
+| `KEY_SETS` | empty | Required: the server will not start without it, except in test mode, which uses fixed keys. The keys in `.env.dev` and `.env.test` are public, so production and staging will not start with any of them. The four keys that encrypt secrets in the DBs and backups, and sign logins. Make them with `cmd/keysets/create_keysets.go`, and keep a copy somewhere safe: backups cannot be read without them |
 
 ## S3 backups
 
@@ -48,8 +48,8 @@ Limits written per minute are rates; their burst is how many can be used at once
 | --- | --- | --- |
 | `S3_URL` | none | The S3 compatible endpoint backups and archives upload to, e.g. `http://localhost:9000` for the docker-compose MinIO. Unset or empty, S3 is off: there is no restore on start, no backup upload, and sites cannot be deleted. Set, the server tests uploading to it at startup, again over about half a minute, and does not start if it never works |
 | `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on for it at startup |
-| `S3_ACCESS_KEY` | `minioadmin` | The S3 access key ID |
-| `S3_SECRET_KEY` | `minioadmin` | The S3 secret key |
+| `S3_ACCESS_KEY` | `minioadmin`, the docker-compose MinIO's | The S3 access key ID. Required in production and staging when `S3_URL` is set: they will not start without it, or with `minioadmin` |
+| `S3_SECRET_KEY` | `minioadmin`, the docker-compose MinIO's | The S3 secret key. Required in production and staging when `S3_URL` is set: they will not start without it, or with `minioadmin` |
 | `CONTROL_BACKUP_INTERVAL_IN_SECONDS` | `30` | How often the control DB is backed up to S3 |
 | `BATCH_BACKUP_INTERVAL_IN_SECONDS` | `300` | How often each batch of site DBs is backed up to S3 |
 | `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a control backup after a newer upload replaces it |

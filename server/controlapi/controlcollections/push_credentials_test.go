@@ -24,8 +24,8 @@ func TestPushCredentialsForEverySite(t *testing.T) {
 	ctx, collection := t.Context(), &PushCredentialsCollection{}
 	router := chi.NewRouter()
 	router.Get("/push-credentials", SearchHandler(collection))
-	router.Post("/push-credentials", collection.CreateHandler)
-	router.Delete("/push-credentials/{id}", collection.DeleteHandler)
+	router.With(AdminOnly).Post("/push-credentials", collection.CreateHandler)
+	router.With(AdminOnly).Delete("/push-credentials/{id}", collection.DeleteHandler)
 	request := func(role consts.ControlRole, method, path, body string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(method, path, strings.NewReader(body))
 		r.Header.Set("Accept", "application/json")
