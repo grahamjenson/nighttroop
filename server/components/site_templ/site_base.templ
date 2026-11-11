@@ -19,6 +19,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/label"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 templ Base() {
@@ -104,7 +105,7 @@ templ Header(path string) {
 				<img id="site--nav--logo" src="/logo.svg" alt="" class="size-8"/>
 				Nighttroop
 				@badge.Badge(badge.Props{Variant: badge.VariantGold, Class: "hidden sm:inline"}) {
-					Alpha
+					{ i18n.T(ctx, "site.base.alpha") }
 				}
 			</a>
 			@HeaderLinks(path, false)
@@ -120,19 +121,19 @@ templ Header(path string) {
 							</span>
 							<span class="hidden sm:inline">{ identityName(ctx) }</span>
 							@icon.ChevronDown(icon.Props{Class: "hidden size-4 text-gray-400 sm:block"})
-							<span class="sr-only">Open user menu</span>
+							<span class="sr-only">{ i18n.T(ctx, "site.base.open_user_menu") }</span>
 						</button>
 					}
 					@dropdown.Content(dropdown.ContentProps{Class: "w-56"}) {
 						if name := identityName(ctx); name != "" {
 							<div class="px-2 py-1.5 text-sm text-gray-500">
-								Signed in as <span class="font-semibold text-gray-900">{ name }</span>
+								{ i18n.T(ctx, "site.base.signed_in_as") } <span class="font-semibold text-gray-900">{ name }</span>
 							</div>
 							@dropdown.Separator()
 						}
 						@dropdown.Group() {
-							@menuItem("site--settings--account-button", "/settings/account", "My Account", icon.User(icon.Props{Class: "size-4 mr-2"}))
-							@menuItem("site--settings--getting-started-button", "/getting-started", "Getting Started", icon.BookOpen(icon.Props{Class: "size-4 mr-2"}))
+							@menuItem("site--settings--account-button", "/settings/account", i18n.T(ctx, "site.base.my_account"), icon.User(icon.Props{Class: "size-4 mr-2"}))
+							@menuItem("site--settings--getting-started-button", "/getting-started", i18n.T(ctx, "site.base.getting_started"), icon.BookOpen(icon.Props{Class: "size-4 mr-2"}))
 						}
 						@MenuLinks(path, false)
 						@dropdown.Separator()
@@ -147,7 +148,7 @@ templ Header(path string) {
 						}) {
 							<span class="flex items-center">
 								@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
-								Logout
+								{ i18n.T(ctx, "site.base.logout") }
 							</span>
 						}
 					}
@@ -167,9 +168,9 @@ templ SiteErrorRecorded(admin bool) {
 	@toast.Toast(toast.Props{Variant: toast.VariantError, Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true}) {
 		<p class="text-sm opacity-90 mt-1">
 			if admin {
-				Something went wrong. It has been recorded on the <a href="/logs/errors" class="text-primary underline">Errors page</a>.
+				{ i18n.T(ctx, "site.base.error_recorded_on") } <a href="/logs/errors" class="text-primary underline">{ i18n.T(ctx, "site.base.errors_page") }</a>.
 			} else {
-				Something went wrong. It has been recorded for the site's admins.
+				{ i18n.T(ctx, "site.base.error_recorded_for_admins") }
 			}
 		</p>
 	}
@@ -178,9 +179,9 @@ templ SiteErrorRecorded(admin bool) {
 // NotFound is the page for an address the site has nothing at, or for something a collection cannot do
 templ NotFound(message string) {
 	<div id="site--not-found" class="mx-auto max-w-xl space-y-4 py-16 text-center">
-		<h1 class="text-2xl font-semibold text-brand-night">Not found</h1>
+		<h1 class="text-2xl font-semibold text-brand-night">{ i18n.T(ctx, "site.base.not_found") }</h1>
 		<p id="site--not-found--message" class="text-gray-600">{ message }</p>
-		<a id="site--not-found--home" href="/" class="text-primary underline">Back to the summary</a>
+		<a id="site--not-found--home" href="/" class="text-primary underline">{ i18n.T(ctx, "site.base.back_to_summary") }</a>
 	</div>
 }
 

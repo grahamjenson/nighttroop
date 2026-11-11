@@ -8,6 +8,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
+
 	"nighttroop.t1d.nz/data/db"
 	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
@@ -16,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/logview"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // view shows a site its own rows only: they have no site ID to show, and their request and job IDs are plain text,
@@ -23,18 +26,24 @@ import (
 var view = logview.View{Prefix: "site", Path: "/logs", Date: site_data_templ.FormatDate}
 
 // eventsView also shows who each event was for, this site or its batch
-var eventsView = logview.View{Prefix: "site", Path: "/logs", About: "For", Date: site_data_templ.FormatDate}
-
-// about is who an event was for: this site, or the batch of sites it is backed up with
-func about(event *sitemodels.SiteEvent) string {
-	if event.Batch != nil {
-		return "Batch " + *event.Batch
-	}
-	return "This site"
+func eventsView(ctx context.Context) logview.View {
+	return logview.View{Prefix: "site", Path: "/logs", About: i18n.T(ctx, "site.logs.events.about"), Date: site_data_templ.FormatDate}
 }
 
-func eventRow(e *sitemodels.SiteEvent) logview.Row {
-	return logview.Row{ID: e.ID, Name: e.Name, About: about(e), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+// about is who an event was for: this site, or the batch of sites it is backed up with
+func about(ctx context.Context, event *sitemodels.SiteEvent) string {
+	if event.Batch != nil {
+		return i18n.T(ctx, "site.logs.events.batch", i18n.Data{"BatchID": *event.Batch})
+	}
+	return i18n.T(ctx, "site.logs.events.this_site")
+}
+
+// eventRow is how an event is shown, in the context's language
+func eventRow(ctx context.Context) func(*sitemodels.SiteEvent) logview.Row {
+	return func(e *sitemodels.SiteEvent) logview.Row {
+		return logview.Row{ID: e.ID, Name: e.Name, About: about(ctx, e), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID,
+			Attributes: e.Attributes}
+	}
 }
 
 func errorRow(e *sitemodels.SiteError) logview.Row {
@@ -79,17 +88,17 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: i18n.T(ctx, "site.logs.events.all"), Types: dataevents.PersistedNames(), Selected: eventType, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = logview.EventsTable(eventsView, "siteEventsTable", logview.Rows(events, eventRow)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = logview.EventsTable(eventsView(ctx), "siteEventsTable", logview.Rows(events, eventRow(ctx))).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "events_table", Title: "Events", Description: "What happened to this site and the batch of sites it is backed up with, newest first. A search looks through the newest 10,000.", Pager: "site--events", Path: filter.PagePath("/logs/events", eventType, search), Count: len(events), Skip: skip, Limit: limit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "events_table", Title: i18n.T(ctx, "site.logs.events.title"), Description: i18n.T(ctx, "site.logs.events.explanation"), Pager: "site--events", Path: filter.PagePath("/logs/events", eventType, search), Count: len(events), Skip: skip, Limit: limit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -114,7 +123,7 @@ func EventModal(event *sitemodels.SiteEvent) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = logview.EventModal(eventsView, eventRow(event)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.EventModal(eventsView(ctx), eventRow(ctx)(event)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -152,7 +161,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: i18n.T(ctx, "site.logs.errors.all"), Types: db.ErrorKinds, Selected: kind, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -162,7 +171,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "errors_table", Title: "Errors", Description: "What failed for this site, newest first. A search or kind looks through the newest 10,000.", Pager: "site--errors", Path: filter.PagePath("/logs/errors", kind, search), Count: len(errors), Skip: skip, Limit: limit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "errors_table", Title: i18n.T(ctx, "site.logs.errors.title"), Description: i18n.T(ctx, "site.logs.errors.explanation"), Pager: "site--errors", Path: filter.PagePath("/logs/errors", kind, search), Count: len(errors), Skip: skip, Limit: limit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -235,7 +244,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *stri
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "logs_table", Title: "Logs", Description: "Messages logged for this site, newest first. A search looks through the newest 10,000.", Pager: "site--logs", Path: filter.PagePath("/logs/logs", nil, search), Count: len(logs), Skip: skip, Limit: limit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "logs_table", Title: i18n.T(ctx, "site.logs.logs.title"), Description: i18n.T(ctx, "site.logs.logs.explanation"), Pager: "site--logs", Path: filter.PagePath("/logs/logs", nil, search), Count: len(logs), Skip: skip, Limit: limit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -8,6 +8,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
+
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/listpage"
@@ -16,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // FoodPresetsTable shows one page of food presets, newest first, with buttons to the pages either side
@@ -58,17 +61,18 @@ func FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, limi
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "food_presets_table",
-			Title:       "Food Presets",
-			Description: "Foods kept to pick from, with what a portion has. Click one to see and edit it.",
-			Action:      addmodal.Open("presets--food--add", "/presets/food/new", "Add Food Preset"),
+			Title:       i18n.T(ctx, "site.presets.food.title"),
+			Description: i18n.T(ctx, "site.presets.food.explanation"),
+			Action:      addmodal.Open("presets--food--add", "/presets/food/new", i18n.T(ctx, "site.presets.food.add")),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "foodPresetsTable",
 				EmptyID: "presets--food--empty",
-				Empty:   "No food presets here.",
+				Empty:   i18n.T(ctx, "site.presets.food.empty"),
 				Columns: []table.Column{
-					{Label: "Name"}, {Label: "Carbs (g)", Numeric: true}, {Label: "Absorption (min)", Numeric: true},
-					{Label: "Category"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.presets.food.name")}, {Label: i18n.T(ctx, "site.presets.food.carbs"), Numeric: true},
+					{Label: i18n.T(ctx, "site.presets.food.absorption"), Numeric: true}, {Label: i18n.T(ctx, "site.presets.food.category")},
+					{Actions: true},
 				},
 			},
 			Pager: &pager.Props{ID: "presets--food", Path: "/presets/food", Count: len(foodPresets), Skip: skip, Limit: limit},
@@ -98,8 +102,8 @@ func FoodPresetNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "presets--food--create", Title: "Add Food Preset", Path: "/presets/food", Target: "#foodPresetsTable tbody",
-			Submit: "Add Food Preset", Fields: foodPresetFields}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "presets--food--create", Title: i18n.T(ctx, "site.presets.food.add"), Path: "/presets/food",
+			Target: "#foodPresetsTable tbody", Submit: i18n.T(ctx, "site.presets.food.add"), Fields: foodPresetFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -108,19 +112,23 @@ func FoodPresetNew() templ.Component {
 }
 
 // foodPresetFields are what a food preset has that a person can type in, as a food intake has, less its time and notes
-var foodPresetFields = []addmodal.Field{
-	{Name: "name", Label: "Name", Help: "What the food is, e.g. toast, to pick it by.", Required: true, Kind: addmodal.Text, Max: "64"},
-	{Name: "carbs", Label: "Carbs (g)", Help: "Grams of carbohydrate in a portion.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "absorption_time_minutes", Label: "Absorption time (minutes)", Help: "How long its carbs take to be absorbed.", Min: "0", Max: "1440", Step: "1"},
-	{Name: "fat", Label: "Fat (g)", Help: "Grams of fat, which slows absorption.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "protein", Label: "Protein (g)", Help: "Grams of protein.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "fibre", Label: "Fibre (g)", Help: "Grams of fibre.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "energy", Label: "Energy", Help: "Its energy, in kcal or kJ.", Min: "0", Max: "20000", Step: "any"},
-	{Name: "portions", Label: "Portions", Help: "How many portions these amounts are for.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "pre_bolus", Label: "Pre-bolus (minutes)", Help: "Minutes before eating to give its insulin.", Min: "-1440", Max: "1440", Step: "1"},
-	{Name: "food_type", Label: "Type", Help: "The kind of food, e.g. a meal or a snack.", Kind: addmodal.Text, Max: "32", Options: []string{"meal", "snack", "hypo treatment"}},
-	{Name: "category", Label: "Category", Help: "A group it belongs to, e.g. bread.", Kind: addmodal.Text, Max: "64"},
-	{Name: "subcategory", Label: "Subcategory", Help: "A group within its category, e.g. white bread.", Kind: addmodal.Text, Max: "64"},
+func foodPresetFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "name", Label: i18n.T(ctx, "site.presets.food.name"), Help: i18n.T(ctx, "site.presets.food.name_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+		{Name: "carbs", Label: i18n.T(ctx, "site.presets.food.carbs"), Help: i18n.T(ctx, "site.presets.food.carbs_help"), Min: "0", Max: "1000", Step: "any"},
+		{Name: "absorption_time_minutes", Label: i18n.T(ctx, "site.presets.food.absorption_time"), Help: i18n.T(ctx, "site.presets.food.absorption_time_help"),
+			Min: "0", Max: "1440", Step: "1"},
+		{Name: "fat", Label: i18n.T(ctx, "site.presets.food.fat"), Help: i18n.T(ctx, "site.presets.food.fat_help"), Min: "0", Max: "1000", Step: "any"},
+		{Name: "protein", Label: i18n.T(ctx, "site.presets.food.protein"), Help: i18n.T(ctx, "site.presets.food.protein_help"), Min: "0", Max: "1000", Step: "any"},
+		{Name: "fibre", Label: i18n.T(ctx, "site.presets.food.fibre"), Help: i18n.T(ctx, "site.presets.food.fibre_help"), Min: "0", Max: "1000", Step: "any"},
+		{Name: "energy", Label: i18n.T(ctx, "site.presets.food.energy"), Help: i18n.T(ctx, "site.presets.food.energy_help"), Min: "0", Max: "20000", Step: "any"},
+		{Name: "portions", Label: i18n.T(ctx, "site.presets.food.portions"), Help: i18n.T(ctx, "site.presets.food.portions_help"), Min: "0", Max: "1000", Step: "any"},
+		{Name: "pre_bolus", Label: i18n.T(ctx, "site.presets.food.pre_bolus"), Help: i18n.T(ctx, "site.presets.food.pre_bolus_help"), Min: "-1440", Max: "1440", Step: "1"},
+		{Name: "food_type", Label: i18n.T(ctx, "site.presets.food.type"), Help: i18n.T(ctx, "site.presets.food.type_help"), Kind: addmodal.Text, Max: "32",
+			Options: []string{"meal", "snack", "hypo treatment"}},
+		{Name: "category", Label: i18n.T(ctx, "site.presets.food.category"), Help: i18n.T(ctx, "site.presets.food.category_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "subcategory", Label: i18n.T(ctx, "site.presets.food.subcategory"), Help: i18n.T(ctx, "site.presets.food.subcategory_help"), Kind: addmodal.Text, Max: "64"},
+	}
 }
 
 // foodPresetRow opens the food preset's details when clicked.
@@ -168,7 +176,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.Name))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 65, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 73, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -195,7 +203,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.Carbs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 68, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 76, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -222,7 +230,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.AbsorptionTimeMinutes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 71, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 79, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -249,7 +257,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.Category))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 74, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 82, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -263,7 +271,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("presets--food--"+foodPreset.ID, "/presets/food/"+foodPreset.ID, "Delete this food preset?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("presets--food--"+foodPreset.ID, "/presets/food/"+foodPreset.ID, i18n.T(ctx, "site.presets.food.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -288,8 +296,8 @@ func FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Props{ID: "presets--food--edit", Path: "/presets/food/" + foodPreset.ID, Target: "#presets--food--" + foodPreset.ID, Swap: "outerHTML", Submit: "Save",
-			Fields: addmodal.Edit(foodPresetFields, foodPreset, nil)}
+		edit := addmodal.Props{ID: "presets--food--edit", Path: "/presets/food/" + foodPreset.ID, Target: "#presets--food--" + foodPreset.ID, Swap: "outerHTML",
+			Submit: i18n.T(ctx, "site.presets.food.save"), Fields: addmodal.Edit(foodPresetFields(ctx), foodPreset, nil)}
 		templ_7745c5c3_Var15 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -379,7 +387,7 @@ func FoodPresetUpdated(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Food Preset Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.presets.food.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -404,7 +412,7 @@ func FoodPresetDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Food Preset Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.presets.food.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
