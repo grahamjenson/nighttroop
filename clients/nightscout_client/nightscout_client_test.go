@@ -66,6 +66,30 @@ func TestGetDocumentsRefusesRedirect(t *testing.T) {
 	require.Equal(t, 0, secretHits, "redirect target must never be requested")
 }
 
+// A request that fails is a sync error, stored, logged and sent to Sentry, so it never has the user's Nightscout URL
+func TestRequestErrorsHideTheNightscoutURL(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/my-nightscout/api/v3/lastModified" {
+			_, _ = w.Write([]byte(`{"result":{}}`))
+			return
+		}
+		<-r.Context().Done()
+	}))
+	defer srv.Close()
+	c := liveClient(srv.URL + "/my-nightscout")
+	c.httpClient.Timeout = 50 * time.Millisecond
+
+	_, documentsErr := c.GetDocuments(context.Background(), "entries", time.Now(), time.Time{}, 10)
+	require.ErrorContains(t, documentsErr, "Client.Timeout exceeded")
+	_, profileErr := c.GetCurrentProfile(context.Background())
+	_, modifiedErr := c.GetLastModified(context.Background())
+	for _, err := range []error{documentsErr, profileErr, modifiedErr} {
+		require.Error(t, err)
+		require.NotContains(t, err.Error(), "my-nightscout")
+		require.NotContains(t, err.Error(), strings.TrimPrefix(srv.URL, "http://"))
+	}
+}
+
 func TestGetDocumentsErrorOmitsBody(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
