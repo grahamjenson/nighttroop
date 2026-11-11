@@ -25,6 +25,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   Microsoft Authenticator and 2FAS.
 - A new site's admin, a recovered site's and a new or reset identity's TOTP QR code is a link, so tapping it on a phone
   opens its authenticator app, and under it the secret is shown as text, in fours, with a button to copy it bare.
+- The server will not start without a `MODE`, or with an unknown one, or with `test` outside `go test`, saying what
+  to set; a `development` server, whose passwords are all `password` and TOTP `123123`, will not start over `https`.
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
