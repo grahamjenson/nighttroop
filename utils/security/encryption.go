@@ -163,8 +163,7 @@ func (config *SecurityConfig) EncryptFor(purpose Purpose, siteID, plaintext stri
 	return base64.RawStdEncoding.EncodeToString(ciphertext), nil
 }
 
-// DecryptFor decrypts what EncryptFor encrypted for the purpose and site, or what was encrypted before ciphertexts were
-// bound, with no associated data, until those are encrypted again (TODOs.md)
+// DecryptFor decrypts what EncryptFor encrypted for the purpose and site, and nothing else
 func (config *SecurityConfig) DecryptFor(purpose Purpose, siteID, ciphertext string) (string, error) {
 	ciphertextBytes, err := base64.RawStdEncoding.DecodeString(ciphertext)
 	if err != nil {
@@ -172,10 +171,7 @@ func (config *SecurityConfig) DecryptFor(purpose Purpose, siteID, ciphertext str
 	}
 	plaintext, err := config.aeadEnc.Decrypt(ciphertextBytes, associatedData(purpose, siteID))
 	if err != nil {
-		var unboundErr error
-		if plaintext, unboundErr = config.aeadEnc.Decrypt(ciphertextBytes, nil); unboundErr != nil {
-			return "", fmt.Errorf("failed to decrypt: %w", err)
-		}
+		return "", fmt.Errorf("failed to decrypt: %w", err)
 	}
 	return string(plaintext), nil
 }
@@ -192,26 +188,7 @@ func (config *SecurityConfig) EncryptingWriterFor(writer io.Writer, objectKey st
 	return config.streamEnc.NewEncryptingWriter(writer, backupAssociatedData(objectKey))
 }
 
-// backupProbeBytes are read ahead to tell an older, unbound backup from a bound one, by whether its first segment, of
-// 4KB or at most 1MB, decrypts; more than one segment, so the first is not taken as the last
-const backupProbeBytes = 2 << 20
-
-// DecryptingReaderFor decrypts a backup kept at the object key, or one encrypted before backups were bound, with no
-// associated data, until retention has removed those (TODOs.md)
+// DecryptingReaderFor decrypts a backup kept at the object key, and no other
 func (config *SecurityConfig) DecryptingReaderFor(reader io.Reader, objectKey string) (io.Reader, error) {
-	first := make([]byte, backupProbeBytes)
-	n, err := io.ReadFull(reader, first)
-	if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
-		return nil, err
-	}
-	first = first[:n]
-	associated := backupAssociatedData(objectKey)
-	probe, err := config.streamEnc.NewDecryptingReader(bytes.NewReader(first), associated)
-	if err == nil {
-		_, err = io.ReadFull(probe, make([]byte, 1))
-	}
-	if err != nil && err != io.EOF {
-		associated = nil
-	}
-	return config.streamEnc.NewDecryptingReader(io.MultiReader(bytes.NewReader(first), reader), associated)
+	return config.streamEnc.NewDecryptingReader(reader, backupAssociatedData(objectKey))
 }

@@ -701,8 +701,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Connector credentials are encrypted at rest.
 - Each secret kept encrypted (connector credentials, TOTP secrets, push secrets and tokens, Nightscout tokens and the
   welcome's passkey cookie) is bound to what it is and its site, and each backup to its object key without its host,
-  so one copied in as another site's, another kind of secret, or another batch's backup does not decrypt. Those
-  encrypted before this still decrypt, as do backups copied to a bucket for another host.
+  so one copied in as another site's, another kind of secret, or another batch's backup does not decrypt, nor one
+  encrypted without them. Backups copied to a bucket for another host still restore.
 - A connector's password, API secret or token, and its username, email or URL, are not offered to the browser or a
   password manager to save or fill, as they are not this site's sign in: the password is a masked text box, not a
   password box, which Chrome offers to save whatever its autocomplete, and its eye still shows it.

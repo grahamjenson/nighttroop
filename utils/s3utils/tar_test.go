@@ -135,7 +135,7 @@ func TestBackupRestoreFailsWhenAFileCannotBeClosed(t *testing.T) {
 const testKey = "example.org/backup/a.tar.lz4.enc"
 
 // A backup only unpacks for the object key it was made for, whatever the host, so one batch's archive cannot be put at
-// another's key; one from before backups were bound, with no key, still unpacks, however long
+// another's key, nor one encrypted with no key
 func TestBackupBoundToItsKey(t *testing.T) {
 	c := testClient(t)
 	path := filepath.Join(t.TempDir(), "site.sqlite")
@@ -163,9 +163,5 @@ func TestBackupBoundToItsKey(t *testing.T) {
 	require.NoError(t, tw.Close())
 	require.NoError(t, lz.Close())
 	require.NoError(t, enc.Close())
-	dir := t.TempDir()
-	require.NoError(t, c.ExtractTarLZ4(bytes.NewReader(archive.Bytes()), dir, testKey))
-	got, err := os.ReadFile(filepath.Join(dir, "site.sqlite"))
-	require.NoError(t, err)
-	require.Equal(t, content, got)
+	require.Error(t, c.ExtractTarLZ4(bytes.NewReader(archive.Bytes()), t.TempDir(), testKey))
 }

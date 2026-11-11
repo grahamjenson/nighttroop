@@ -11,7 +11,7 @@ import (
 )
 
 // A ciphertext decrypts only for the purpose and site it was encrypted for, so one site's Dexcom password cannot be
-// copied in as another site's, or as a TOTP secret; one encrypted before ciphertexts were bound still decrypts
+// copied in as another site's, or as a TOTP secret, nor one encrypted with no associated data
 func TestDecryptForOnlyItsPurposeAndSite(t *testing.T) {
 	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
 	ciphertext, err := cfg.EncryptFor(security.PurposeConnector, "sitea", "dexcom password")
@@ -44,9 +44,8 @@ func TestDecryptForOnlyItsPurposeAndSite(t *testing.T) {
 	require.NoError(t, err)
 	older, err := unbound.Encrypt([]byte("older password"), nil)
 	require.NoError(t, err)
-	plaintext, err := cfg.DecryptFor(security.PurposeConnector, "sitea", base64.RawStdEncoding.EncodeToString(older))
-	require.NoError(t, err)
-	require.Equal(t, "older password", plaintext)
+	_, err = cfg.DecryptFor(security.PurposeConnector, "sitea", base64.RawStdEncoding.EncodeToString(older))
+	require.Error(t, err)
 
 	_, err = cfg.DecryptFor(security.PurposeConnector, "sitea", "not a ciphertext")
 	require.Error(t, err)
