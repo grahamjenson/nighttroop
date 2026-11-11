@@ -127,7 +127,7 @@ func FooterRoutes(r chi.Router, config *config.ServerConfig) {
 	r.Get("/api-docs", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		// Redoc shows Redocly's logo from their CDN, which would tell them who reads the docs: images are only our own
-		w.Header().Set("Content-Security-Policy", "img-src 'self' data:")
+		w.Header().Set("Content-Security-Policy", httputils.FrameAncestorsNone+"; img-src 'self' data:")
 		if err := public_templ.APIDocs().Render(r.Context(), w); err != nil {
 			slog.ErrorContext(r.Context(), "failed to render the API docs", "error", err)
 		}
@@ -135,7 +135,7 @@ func FooterRoutes(r chi.Router, config *config.ServerConfig) {
 	for path, document := range map[string]string{"/terms": docs.TermsOfService, "/privacy": docs.PrivacyPolicy} {
 		r.Get(path, func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			if err := public_templ.Legal(docs.WithSupportEmail(document, httputils.SupportEmail(r.Context()))).Render(r.Context(), w); err != nil {
+			if err := public_templ.Legal(docs.WithOperator(document, config.OperatorName, httputils.SupportEmail(r.Context()))).Render(r.Context(), w); err != nil {
 				slog.ErrorContext(r.Context(), "failed to render a legal document", "path", path, "error", err)
 			}
 		})

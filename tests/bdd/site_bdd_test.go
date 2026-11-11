@@ -27,7 +27,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed site/** control/** steps/** setup/** resources/** testsite/** sitelimit/** feedback/**
+//go:embed site/** control/** steps/** setup/** resources/** testsite/** sitelimit/** feedback/** operator/**
 var embeddedFiles embed.FS
 
 // bddShards is how many groups of scenarios run at once. Each has its own databases, server and background jobs, so

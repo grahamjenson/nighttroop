@@ -9,7 +9,8 @@ import (
 
 // Staging runs like production, always shows the test site banner, and will not start without its admin
 func TestStagingConfig(t *testing.T) {
-	cfg, err := readServerConfig(consts.Staging, map[string]string{"HOST_PROTOCOL": "https"})
+	cfg, err := readServerConfig(consts.Staging, map[string]string{"HOST_PROTOCOL": "https",
+		"OPERATOR_NAME": "T1DNZ", "SUPPORT_EMAIL": "nighttroop@t1d.nz"})
 	require.NoError(t, err)
 	require.True(t, cfg.IsStaging())
 	require.False(t, cfg.IsDevOrTest())
@@ -17,7 +18,8 @@ func TestStagingConfig(t *testing.T) {
 	require.ErrorContains(t, cfg.ValidateClean(), "STAGING_ADMIN_PASSWORD")
 
 	cfg, err = readServerConfig(consts.Staging, map[string]string{"HOST_PROTOCOL": "https",
-		"STAGING_ADMIN_PASSWORD": "a long staging password", "STAGING_ADMIN_TOTP_SECRET": "JBSWY3DPEHPK3PXP"})
+		"STAGING_ADMIN_PASSWORD": "a long staging password", "STAGING_ADMIN_TOTP_SECRET": "JBSWY3DPEHPK3PXP",
+		"OPERATOR_NAME": "T1DNZ", "SUPPORT_EMAIL": "nighttroop@t1d.nz"})
 	require.NoError(t, err)
 	require.True(t, cfg.TestSite)
 	require.NoError(t, cfg.ValidateClean())
@@ -29,7 +31,8 @@ func TestStagingConfig(t *testing.T) {
 	require.Error(t, rejectUnknownVariables(dotenv))
 
 	// Production has no staging admin, and needs none
-	cfg, err = readServerConfig(consts.Production, map[string]string{"HOST_PROTOCOL": "https"})
+	cfg, err = readServerConfig(consts.Production, map[string]string{"HOST_PROTOCOL": "https",
+		"OPERATOR_NAME": "T1DNZ", "SUPPORT_EMAIL": "nighttroop@t1d.nz"})
 	require.NoError(t, err)
 	require.False(t, cfg.TestSite)
 	require.NoError(t, cfg.ValidateClean())

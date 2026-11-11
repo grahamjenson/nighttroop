@@ -3,6 +3,8 @@ package s3utils
 import (
 	"archive/tar"
 	"bytes"
+	"errors"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -99,4 +101,30 @@ func TestBackupCannotEscapeItsFolder(t *testing.T) {
 			require.True(t, os.IsNotExist(err))
 		})
 	}
+}
+
+// failingClose is a file whose Close fails, as a full disk can report only when the file is closed
+type failingClose struct{ *os.File }
+
+func (f failingClose) Close() error {
+	f.File.Close()
+	return errors.New("no space left on device")
+}
+
+// A restored file that cannot be closed fails the restore, as it may have been cut short
+func TestBackupRestoreFailsWhenAFileCannotBeClosed(t *testing.T) {
+	c := testClient(t)
+	path := filepath.Join(t.TempDir(), "site.sqlite")
+	require.NoError(t, os.WriteFile(path, []byte("readings"), 0o600))
+	var backup bytes.Buffer
+	_, err := c.createTarLZ4([]string{path}, &backup)
+	require.NoError(t, err)
+
+	previous := createFile
+	t.Cleanup(func() { createFile = previous })
+	createFile = func(name string) (io.WriteCloser, error) {
+		f, err := os.Create(name)
+		return failingClose{f}, err
+	}
+	require.ErrorContains(t, c.ExtractTarLZ4(&backup, t.TempDir()), "no space left on device")
 }

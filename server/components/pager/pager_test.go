@@ -1,6 +1,13 @@
 package pager
 
-import "testing"
+import (
+	"bytes"
+	"context"
+	"strings"
+	"testing"
+
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+)
 
 func TestPageURL(t *testing.T) {
 	tests := []struct {
@@ -18,5 +25,27 @@ func TestPageURL(t *testing.T) {
 				t.Errorf("PageURL(%q, 50, 25) = %q, want %q", tt.path, got, tt.want)
 			}
 		})
+	}
+}
+
+// A full page has Next, unless its next page would start past the furthest a search skips, which would show it again
+func TestPagerNextStopsAtMaxQuerySkip(t *testing.T) {
+	tests := []struct {
+		skip int64
+		next bool
+	}{
+		{0, true},
+		{apiquery.MaxQuerySkip - 100, true},
+		{apiquery.MaxQuerySkip - 50, true},
+		{apiquery.MaxQuerySkip, false},
+	}
+	for _, tt := range tests {
+		var html bytes.Buffer
+		if err := Pager(Props{ID: "p", Path: "/data/glucose", Count: 50, Skip: tt.skip, Limit: 50}).Render(context.Background(), &html); err != nil {
+			t.Fatal(err)
+		}
+		if got := strings.Contains(html.String(), `id="p--next"`); got != tt.next {
+			t.Errorf("skip %d: Next shown %v, want %v", tt.skip, got, tt.next)
+		}
 	}
 }

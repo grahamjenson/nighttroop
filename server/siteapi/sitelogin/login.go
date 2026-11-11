@@ -250,6 +250,8 @@ func loginTheUserPasswordOnly(ctx context.Context, controlDB *db.ControlDB, secu
 		Name:   formName,
 	})
 	if err != nil {
+		// Checked anyway, so a name with no identity is refused as slowly as a wrong password
+		securityConfig.VerifyNoOnesPassword(formPassword)
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
@@ -279,7 +281,7 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *controldb.SiteI
 		return err
 	}
 
-	if !config.Security.TOTPValidate(totpToken, totpSecret) {
+	if !config.Security.TOTPSignIn(fmt.Sprintf("site %s %d", identity.SiteID, identity.ID), totpToken, totpSecret) {
 		return fmt.Errorf("invalid TOTP token")
 	}
 
@@ -373,15 +375,8 @@ func loginTheUserAPI(ctx context.Context, controlDB *db.ControlDB, subdomain str
 
 	// An Identity only requires a TOTP secret if the role is admin
 	if can.MustLoginWithTotp(device.Role, device.TotpSecretEnc != "") {
-		if totpToken == "" {
-			return nil, fmt.Errorf("user requires TOTP secret")
-		}
-		totpSecret, err := cfg.Security.Decrypt(device.TotpSecretEnc)
-		if err != nil {
+		if err := validateIdentityTOTP(cfg, device, totpToken); err != nil {
 			return nil, err
-		}
-		if !cfg.Security.TOTPValidate(totpToken, totpSecret) {
-			return nil, fmt.Errorf("invalid TOTP token")
 		}
 	}
 

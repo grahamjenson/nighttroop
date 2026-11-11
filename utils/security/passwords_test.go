@@ -78,3 +78,45 @@ func TestTOTPURIIsAKeyAnAppAdds(t *testing.T) {
 		}
 	}
 }
+
+// A TOTP code signs an identity in once, so one seen as it was typed cannot sign in again while it is valid, nor can
+// an earlier one, though another identity with the same secret signs in with it. The fixed dev code is not one time
+func TestTOTPSignInRefusesACodeUsedAlready(t *testing.T) {
+	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
+	secret := "JBSWY3DPEHPK3PXP"
+	now := time.Now()
+	code, err := totp.GenerateCode(secret, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	earlier, err := totp.GenerateCode(secret, now.Add(-30*time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name     string
+		identity string
+		token    string
+		secret   string
+		valid    bool
+	}{
+		{"the code now", "site abcdefgh 1", code, secret, true},
+		{"the code again", "site abcdefgh 1", code, secret, false},
+		{"the code before it", "site abcdefgh 1", earlier, secret, false},
+		{"the code for another identity", "site abcdefgh 2", code, secret, true},
+		{"the code for a control identity", "control 1", code, secret, true},
+		{"a wrong code", "site abcdefgh 3", code[:5] + "x", secret, false},
+		{"the dev code", "site abcdefgh 1", "123123", "FakeTOTPSecretForDevOnly", true},
+		{"the dev code again", "site abcdefgh 1", "123123", "FakeTOTPSecretForDevOnly", true},
+	}
+	for _, test := range tests {
+		if got := cfg.TOTPSignIn(test.identity, test.token, test.secret); got != test.valid {
+			t.Errorf("%s: TOTPSignIn(%q, %q) = %v, want %v", test.name, test.identity, test.token, got, test.valid)
+		}
+	}
+	// Checking a code, as setup does, does not use it up
+	if !cfg.TOTPValidate(code, secret) {
+		t.Errorf("TOTPValidate(%q) refused a code signed in with", code)
+	}
+}

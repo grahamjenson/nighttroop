@@ -50,7 +50,7 @@ POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B [
     {
         "eventType": "Insulin Change",
-        "pumpSerial": "4241",
+        "pumpSerial": "1234",
         "pumpType": "OMNIPOD_DASH",
         "created_at": "{{ time 1 }}",
         "notes": "Profile Switch 1"

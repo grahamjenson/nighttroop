@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"crypto/subtle"
-	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -38,8 +37,8 @@ type setup struct {
 
 // startSetupIfNoAdmin gives a server without a control admin its setup code
 func (db *ControlDB) startSetupIfNoAdmin(ctx context.Context) error {
-	_, err := db.Queries.GetControlIdentity(ctx, controldb.GetControlIdentityParams{Name: consts.FIRST_ADMIN_NAME})
-	if !errors.Is(err, sql.ErrNoRows) {
+	admins, err := db.Queries.CountControlAdmins(ctx)
+	if err != nil || admins > 0 {
 		return err
 	}
 	db.setup.mu.Lock()

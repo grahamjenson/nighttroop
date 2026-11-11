@@ -1,0 +1,20 @@
+INCLUDE steps/new_site.steps
+
+// A site's page is not sniffed as another type, is framed by no page, another site's among them, and sends its URL as
+// the referrer to no other origin. Tests run over HTTP, so it does not ask to be reached only over HTTPS.
+NAME get_site_page
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "nosniff" "#X-Content-Type-Options.0"
+ASSERT_EQUALS "DENY" "#X-Frame-Options.0"
+ASSERT_EQUALS "frame-ancestors 'none'" "#Content-Security-Policy.0"
+ASSERT_EQUALS "same-origin" "#Referrer-Policy.0"
+ASSERT_EQUALS null "#Strict-Transport-Security"
+
+// The Nightscout API answers its clients as before, with the same headers, which no API client reads
+NAME get_ns_status
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "nosniff" "#X-Content-Type-Options.0"
+ASSERT_EQUALS "DENY" "#X-Frame-Options.0"

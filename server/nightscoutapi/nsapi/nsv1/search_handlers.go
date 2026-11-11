@@ -2,11 +2,13 @@ package nsv1
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func Count(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
@@ -123,12 +125,15 @@ func Echo(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			}
 		}
 
+		// The request is echoed with its credentials redacted, so the response never holds them
+		query, echoURL := httputils.RedactValues(r.URL.Query()), *r.URL
+		echoURL.RawQuery = url.Values(query).Encode()
 		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"input": map[string]any{
 				"method": r.Method,
-				"url":    r.URL.String(),
-				"query":  r.URL.Query(),
-				"header": r.Header,
+				"url":    echoURL.String(),
+				"query":  query,
+				"header": httputils.RedactHeaders(r.Header),
 			},
 			"collection": collection,
 			"storage":    collection,

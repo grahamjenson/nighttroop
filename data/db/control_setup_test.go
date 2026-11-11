@@ -37,3 +37,23 @@ func TestSeedStagingAdmin(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, cfg.Security.TOTPValidate(code, secret))
 }
+
+// A server whose first admin, named admin, was deleted once another admin was made is still set up when it starts
+// again, so it does not take every site offline until someone with its logs claims it with a new setup code
+func TestSetupDoneWithoutTheFirstAdmin(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, q := t.Context(), controlDB.Queries
+	first, err := q.GetControlIdentity(ctx, controldb.GetControlIdentityParams{Name: consts.FIRST_ADMIN_NAME})
+	require.NoError(t, err)
+	_, err = controlDB.CreateControlIdentity(ctx, "boss", consts.ControlRoleAdmin, first)
+	require.NoError(t, err)
+	require.NoError(t, controlDB.DeleteControlIdentity(ctx, first))
+	// Nor can its last admin be deleted, leaving it none
+	boss, err := q.GetControlIdentity(ctx, controldb.GetControlIdentityParams{Name: "boss"})
+	require.NoError(t, err)
+	require.ErrorIs(t, controlDB.DeleteControlIdentity(ctx, boss), db.ErrLastControlAdmin)
+
+	require.NoError(t, controlDB.StartSetupIfNoAdmin(ctx))
+	require.True(t, controlDB.SetupDone(), "a server with an admin is not set up again")
+	require.Empty(t, controlDB.SetupCode())
+}

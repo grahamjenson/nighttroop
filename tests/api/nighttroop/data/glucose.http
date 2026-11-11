@@ -83,6 +83,26 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result.items"
 
+// A skip is at most 32000, so no request walks a whole table to page past it
+NAME skip_capped
+GET http://{{ site }}/data/glucose?limit=1000000&skip=1000000
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+ASSERT_EQUALS 32000 "@result.skip"
+ASSERT_EQUALS 1000 "@result.limit"
+ASSERT_EQUALS 3 "@result.total"
+
+// and a negative skip is none
+NAME skip_negative
+GET http://{{ site }}/data/glucose?skip=-5
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS 0 "@result.skip"
+
 NAME bad_limit
 GET http://{{ site }}/data/glucose?limit=lots
 H Authorization: Bearer {{ jwt }}

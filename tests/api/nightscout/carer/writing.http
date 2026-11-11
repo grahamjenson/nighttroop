@@ -81,7 +81,7 @@ B {
       "battery": {},
       "clock": "2026-08-16T09:35:04.092Z",
       "extended": {
-        "Version": "3.3.1.0-2ac634c908-2025.01.10",
+        "Version": "3.3.1.0-abcdef0123-2025.01.10",
         "ActiveProfile": "Dash-2025",
         "TempBasalAbsoluteRate": 0.2,
         "TempBasalStart": "16/08/26 09:34pm",

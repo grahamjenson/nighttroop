@@ -5,25 +5,25 @@ INCLUDE steps/new_ns_site.steps
 NAME create_profile_v1
 POST http://{{ site }}/api/v1/profiles?token={{ token }}
 B {
-    "_id": "6821b76124e3e5030c3a6d6a",
+    "_id": "5ca1ab1e0000000000000001",
     "defaultProfile": "loopProfile",
     "store": {
         "loopProfile": {
-            "sens": [{"value": 40,"timeAsSeconds": 0,"time": "00:00"}],
-            "basal": [{"value": 0.8,"timeAsSeconds": 0,"time": "00:00"},{"timeAsSeconds": 14400,"time": "04:00","value": 1},{"time": "06:00","timeAsSeconds": 21600,"value": 1.1},{"timeAsSeconds": 36000,"time": "10:00","value": 1}],
-            "carbratio": [{"time": "00:00","value": 6.5,"timeAsSeconds": 0},{"value": 5.4,"time": "08:30","timeAsSeconds": 30600},{"timeAsSeconds": 41400,"time": "11:30","value": 6.5}],
+            "sens": [{"value": 50,"timeAsSeconds": 0,"time": "00:00"}],
+            "basal": [{"value": 1,"timeAsSeconds": 0,"time": "00:00"},{"timeAsSeconds": 14400,"time": "04:00","value": 1},{"time": "06:00","timeAsSeconds": 21600,"value": 1},{"timeAsSeconds": 36000,"time": "10:00","value": 1}],
+            "carbratio": [{"time": "00:00","value": 10,"timeAsSeconds": 0},{"value": 10,"time": "08:30","timeAsSeconds": 30600},{"timeAsSeconds": 41400,"time": "11:30","value": 10}],
             "carbs_hr": "0",
             "dia": 6,
             "target_high": [
                 {
                     "timeAsSeconds": 0,
                     "time": "00:00",
-                    "value": 100
+                    "value": 120
                 },
                 {
                     "time": "08:00",
                     "timeAsSeconds": 28800,
-                    "value": 95
+                    "value": 120
                 }
             ],
             "target_low": [
@@ -34,28 +34,28 @@ B {
                 },
                 {
                     "time": "08:00",
-                    "value": 95,
+                    "value": 100,
                     "timeAsSeconds": 28800
                 }
             ],
             "units": "mg/dL",
             "delay": "0",
-            "timezone": "ETC/GMT-8"
+            "timezone": "ETC/GMT+0"
         }
     },
     "loopSettings": {
         "dosingEnabled": true,
         "dosingStrategy": "automaticBolus",
-        "bundleIdentifier": "com.libre.new3.loopkit.Loop.Loop",
+        "bundleIdentifier": "com.example.loopkit.Loop",
         "maximumBasalRatePerHour": 4,
-        "maximumBolus": 12,
-        "minimumBGGuard": 75,
+        "maximumBolus": 10,
+        "minimumBGGuard": 70,
         "deviceToken": "asd",
         "overridePresets": [
             {
                 "symbol": "🏐",
                 "name": "b",
-                "insulinNeedsScaleFactor": 0.7,
+                "insulinNeedsScaleFactor": 0.5,
                 "targetRange": [
                     150,
                     180
@@ -65,11 +65,11 @@ B {
         ],
         "preMealTargetRange": [
             80,
-            85
+            90
         ]
     },
-    "startDate": "2025-05-12T08:54:57Z",
-    "mills": "1747040097006",
+    "startDate": "2025-01-01T00:00:00Z",
+    "mills": "1735689600000",
     "enteredBy": "Loop",
     "units": "mg/dL"
  }
@@ -84,31 +84,31 @@ B {
     "defaultProfile": "loopProfile",
     "store": {
         "loopProfile": {
-            "sens": [ { "value": 40, "timeAsSeconds": 0, "time": "00:00" } ],
-            "basal": [{"value": 0.8,"timeAsSeconds": 0,"time": "00:00"},{"timeAsSeconds": 14400,"time": "04:00","value": 1},{"time": "06:00","timeAsSeconds": 21600,"value": 1.1},{"timeAsSeconds": 36000,"time": "10:00","value": 1}],
-            "carbratio": [{"time": "00:00","value": 6.5,"timeAsSeconds": 0},{"value": 5.4,"time": "08:30","timeAsSeconds": 30600},{"timeAsSeconds": 41400,"time": "11:30","value": 6.5}],
+            "sens": [ { "value": 50, "timeAsSeconds": 0, "time": "00:00" } ],
+            "basal": [{"value": 1,"timeAsSeconds": 0,"time": "00:00"},{"timeAsSeconds": 14400,"time": "04:00","value": 1},{"time": "06:00","timeAsSeconds": 21600,"value": 1},{"timeAsSeconds": 36000,"time": "10:00","value": 1}],
+            "carbratio": [{"time": "00:00","value": 10,"timeAsSeconds": 0},{"value": 10,"time": "08:30","timeAsSeconds": 30600},{"timeAsSeconds": 41400,"time": "11:30","value": 10}],
             "carbs_hr": "0",
             "dia": 6,
-            "target_high": [{"timeAsSeconds": 0,"time": "00:00","value": 100},{"time": "08:00","timeAsSeconds": 28800,"value": 95}],
-            "target_low": [{"time": "00:00","timeAsSeconds": 0,"value": 100},{"time": "08:00","value": 95,"timeAsSeconds": 28800}],
+            "target_high": [{"timeAsSeconds": 0,"time": "00:00","value": 120},{"time": "08:00","timeAsSeconds": 28800,"value": 120}],
+            "target_low": [{"time": "00:00","timeAsSeconds": 0,"value": 100},{"time": "08:00","value": 100,"timeAsSeconds": 28800}],
             "units": "mg/dL",
             "delay": "0",
-            "timezone": "ETC/GMT-8"
+            "timezone": "ETC/GMT+0"
         }
     },
     "loopSettings": {
         "dosingEnabled": true,
         "dosingStrategy": "automaticBolus",
-        "bundleIdentifier": "com.libre.new3.loopkit.Loop.Loop",
+        "bundleIdentifier": "com.example.loopkit.Loop",
         "maximumBasalRatePerHour": 4,
-        "maximumBolus": 12,
-        "minimumBGGuard": 75,
+        "maximumBolus": 10,
+        "minimumBGGuard": 70,
         "deviceToken": "asddsfdfgghfghfghaswqeadssawqqweasddsfdfgghfghfghaswqeadssawqqwe",
         "overridePresets": [
             {
                 "symbol": "🏐",
                 "name": "b",
-                "insulinNeedsScaleFactor": 0.7,
+                "insulinNeedsScaleFactor": 0.5,
                 "targetRange": [
                     150,
                     180
@@ -118,7 +118,7 @@ B {
         ],
         "preMealTargetRange": [
             80,
-            85
+            90
         ]
     },
     "startDate": "{{ time 0 }}",
@@ -128,19 +128,19 @@ ASSERT_STATUS 201
 ASSERT_EQUALS 6 "@result.store.loopProfile.dia"
 ASSERT_EQUALS true "@result.loopSettings.dosingEnabled"
 ASSERT_EQUALS "automaticBolus" "@result.loopSettings.dosingStrategy"
-ASSERT_EQUALS "com.libre.new3.loopkit.Loop.Loop" "@result.loopSettings.bundleIdentifier"
+ASSERT_EQUALS "com.example.loopkit.Loop" "@result.loopSettings.bundleIdentifier"
 ASSERT_EQUALS 4 "@result.loopSettings.maximumBasalRatePerHour"
-ASSERT_EQUALS 12 "@result.loopSettings.maximumBolus"
-ASSERT_EQUALS 75 "@result.loopSettings.minimumBGGuard"
+ASSERT_EQUALS 10 "@result.loopSettings.maximumBolus"
+ASSERT_EQUALS 70 "@result.loopSettings.minimumBGGuard"
 ASSERT_EQUALS "asddsfdfgghfghfghaswqeadssawqqweasddsfdfgghfghfghaswqeadssawqqwe" "@result.loopSettings.deviceToken"
 ASSERT_EQUALS "🏐" "@result.loopSettings.overridePresets.0.symbol"
 ASSERT_EQUALS "b" "@result.loopSettings.overridePresets.0.name"
-ASSERT_EQUALS 0.7 "@result.loopSettings.overridePresets.0.insulinNeedsScaleFactor"
+ASSERT_EQUALS 0.5 "@result.loopSettings.overridePresets.0.insulinNeedsScaleFactor"
 ASSERT_EQUALS 150 "@result.loopSettings.overridePresets.0.targetRange.0"
 ASSERT_EQUALS 180 "@result.loopSettings.overridePresets.0.targetRange.1"
 ASSERT_EQUALS 0 "@result.loopSettings.overridePresets.0.duration"
 ASSERT_EQUALS 80 "@result.loopSettings.preMealTargetRange.0"
-ASSERT_EQUALS 85 "@result.loopSettings.preMealTargetRange.1"
+ASSERT_EQUALS 90 "@result.loopSettings.preMealTargetRange.1"
 
 
 ######

@@ -81,6 +81,11 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 		require.Len(t, result, apiquery.MaxQueryLimit, url)
 	}
 
+	// A skip is capped too, so an absurd one stops at MaxQuerySkip, past these rows, rather than walking every row
+	page := send("GET", "http://"+subdomain+".localhost/data/glucose?skip="+absurd, "").(map[string]any)["result"].(map[string]any)
+	require.Equal(t, float64(apiquery.MaxQuerySkip), page["skip"])
+	require.Empty(t, page["items"])
+
 	// The clean readings are worked out from the raw ones, and paged the same
 	clean := send("GET", "http://"+subdomain+".localhost/data/clean_glucose?hours="+absurd+"&limit="+absurd, "")
 	require.LessOrEqual(t, len(clean.(map[string]any)["result"].(map[string]any)["items"].([]any)), apiquery.MaxQueryLimit)

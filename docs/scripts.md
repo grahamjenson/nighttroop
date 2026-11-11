@@ -27,7 +27,7 @@ A line `HTTP` or `BROWSE` switches the lines after it:
 - **Values** are filled in from `{{ }}`:
   - `{{ .name.field }}` is from an earlier step, and `{{ dig "name.0.field" }}` too;
   - `{{ site_url "abcdefgh" }}` is a site's address, and `{{ server_url }}` the server's;
-  - `{{ totp .create_site.totp_secret }}` is the code an authenticator app shows now, made when the step runs, so a later step's is the code then. A dev or test server takes the code its dev TOTP secret makes, as well as `123123`, so a script making codes runs on one as on staging;
+  - `{{ totp .create_site.totp_secret }}` is the code an authenticator app shows now, made when the step runs, so a later step's is the code then. A dev or test server takes the code its dev TOTP secret makes, as well as `123123`, so a script making codes runs on one as on staging. A code signs an identity in once, so a script signing the same identity in again within 30 seconds waits for the next code;
   - `{{ env "PASSWORD" }}` is an environment variable.
 
 ## Running one against staging

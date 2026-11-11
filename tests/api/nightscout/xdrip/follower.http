@@ -44,7 +44,7 @@ ASSERT_STATUS 200
 NAME setup_devicestatus
 POST http://{{ .ns_site }}/api/v1/devicestatus
 H api-secret: {{ sha1 token }}
-B {"device": "Google Pixel 7", "uploader": {"battery": 64, "type": "PHONE"}}
+B {"device": "Test Phone", "uploader": {"battery": 64, "type": "PHONE"}}
 ASSERT_STATUS 200
 
 ######

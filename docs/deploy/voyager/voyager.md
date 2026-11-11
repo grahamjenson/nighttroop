@@ -276,6 +276,10 @@ Every setting is listed in [`docs/config.md`](../../config.md).
    # The keys from create_keysets: one long line
    KEY_SETS=...
 
+   # Required: who runs this server and how its users contact you, named in its terms and privacy policy
+   OPERATOR_NAME=Your Name or Organisation
+   SUPPORT_EMAIL=you@example.org
+
    # S3 backups (step 5); leave these out to run without them
    S3_URL=https://<account-id>.r2.cloudflarestorage.com
    S3_BUCKET=nighttroop-backups

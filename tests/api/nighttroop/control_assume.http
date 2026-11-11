@@ -28,9 +28,11 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "admin" "@result.name"
 ASSERT_CONTAINS "/login/assume?token=" "@result.url"
 
+// The link, with its token, is sent to no page as the referrer, not even the site's own
 NAME follow_link
 GET {{ .assume_admin.result.url }}
 ASSERT_STATUS 200
+ASSERT_EQUALS "no-referrer" "#Referrer-Policy.0"
 
 // It works only once
 NAME follow_link_again

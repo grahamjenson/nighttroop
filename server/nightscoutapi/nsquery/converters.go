@@ -97,11 +97,13 @@ func GetUnknownFilter(source QueryValues) bool {
 	return source.HasUnknownFilter()
 }
 
+// GetSkipInt64 defaults a missing or negative skip to 0, and caps it at apiquery.MaxQuerySkip, as the site API's is, which
+// Nightguard's report and statistics, paging by skip up to 32 pages of a search's most, fit in
 func GetSkipInt64(source QueryValues) int64 {
-	if source.Skip == nil {
+	if source.Skip == nil || *source.Skip < 0 {
 		return 0
 	}
-	return source.Skip.Int64()
+	return min(source.Skip.Int64(), apiquery.MaxQuerySkip)
 }
 
 // GetLimitInt64 defaults a missing or bad limit or count to the most a search returns, and caps it there, as the site's

@@ -4,14 +4,12 @@ import (
 	"cmp"
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -26,8 +24,9 @@ const maxCapturedBody = 64 * 1024
 const redacted = "REDACTED"
 
 // CaptureRequests logs each request and its response, with their headers and bodies, in the logs DB, along with the
-// site and identity the request was for. Credentials in headers, the query and bodies are redacted. A long lived
-// request, as an event stream or Socket.IO connection, is captured without its bodies.
+// site and identity the request was for. Credentials in headers, the query and bodies are redacted, and a body that
+// cannot be, as a page, is left out. A long lived request, as an event stream or Socket.IO connection, is captured
+// without its bodies.
 func CaptureRequests(logs *db.LogsDB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -92,14 +91,17 @@ func redactPath(r *http.Request) string {
 	return path
 }
 
-// cappedBuffer keeps the first limit bytes written to it, maxCapturedBody when it has none, and whether there were more
+// cappedBuffer keeps the first limit bytes written to it, maxCapturedBody when it has none, whether there were more,
+// and how many there were
 type cappedBuffer struct {
 	bytes.Buffer
 	limit     int
 	truncated bool
+	size      int
 }
 
 func (b *cappedBuffer) Write(p []byte) (int, error) {
+	b.size += len(p)
 	if room := cmp.Or(b.limit, maxCapturedBody) - b.Len(); len(p) > room {
 		b.truncated = true
 		b.Buffer.Write(p[:max(room, 0)])
@@ -108,40 +110,38 @@ func (b *cappedBuffer) Write(p []byte) (int, error) {
 	return b.Buffer.Write(p)
 }
 
-// body is the captured body with its credentials redacted: as text, or base64 when it is not text, such as gzip
+// body is the captured body with its credentials redacted: its JSON, whatever its content type says, or its form. A
+// body that cannot be parsed and redacted, as one cut short, a page or text, is left out, saying only its size and
+// content type, so no credential or personal detail in it is kept.
 func body(b *cappedBuffer, contentType string) map[string]any {
 	if b.Len() == 0 {
 		return nil
 	}
-	raw, captured := b.Bytes(), map[string]any{"truncated": b.truncated}
-	switch {
-	case strings.Contains(contentType, "json") && !b.truncated:
+	if !b.truncated {
 		var value any
-		if json.Unmarshal(raw, &value) == nil {
-			raw, _ = json.Marshal(redactJSON(value))
+		if json.Unmarshal(b.Bytes(), &value) == nil {
+			redactedJSON, _ := json.Marshal(redactJSON(value))
+			return map[string]any{"truncated": false, "text": string(redactedJSON)}
 		}
-	case strings.Contains(contentType, "x-www-form-urlencoded") && !b.truncated:
-		if form, err := url.ParseQuery(string(raw)); err == nil {
-			raw = []byte(url.Values(redactQuery(form)).Encode())
+		if form, err := url.ParseQuery(b.String()); err == nil && strings.Contains(contentType, "x-www-form-urlencoded") {
+			return map[string]any{"truncated": false, "text": url.Values(redactQuery(form)).Encode()}
 		}
 	}
-	if utf8.Valid(raw) {
-		captured["text"] = string(raw)
-	} else {
-		captured["base64"] = base64.StdEncoding.EncodeToString(raw)
-	}
-	return captured
+	return map[string]any{"truncated": b.truncated, "omitted": true, "bytes": b.size, "content_type": contentType}
 }
 
-// secret is whether a header, query, form or JSON key names a credential
+// secret is whether a header, query, form or JSON key names a credential or a connector's identity, such as a Dexcom
+// username or a Nightscout URL in url_or_username, a backup or API key or a TOTP code
 func secret(key string) bool {
 	key = strings.ToLower(key)
-	for _, word := range []string{"authorization", "cookie", "secret", "token", "password", "jwt"} {
+	for _, word := range []string{"auth", "cookie", "secret", "token", "pass", "pwd", "jwt", "key", "totp", "username",
+		"email", "url", "referer", "session", "credential"} {
 		if strings.Contains(key, word) {
 			return true
 		}
 	}
-	return false
+	// A TOTP code, or a Libre sensor's, but not a key only ending in code, as encode
+	return key == "code" || strings.HasSuffix(key, "_code")
 }
 
 func redactHeaders(header http.Header) map[string][]string {

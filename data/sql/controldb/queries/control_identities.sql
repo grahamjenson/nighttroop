@@ -5,14 +5,16 @@ INSERT INTO control_identities (
     totp_secret_enc,
     role,
     created_by_identity_id,
-    created_by_identity_name
+    created_by_identity_name,
+    credentials_changed_at
 ) VALUES (
     ?,
     ?,
     ?,
     ?,
     ?,
-    ?
+    ?,
+    CAST(unixepoch('subsec') * 1000 AS INTEGER)
  );
 
 
@@ -21,6 +23,10 @@ INSERT INTO control_identities (
 -- Control has at most 20 admins, see controlapi.maxControlAdmins
 SELECT * FROM control_identities ORDER BY created_at DESC LIMIT 100;
 
+
+-- A server without an admin is set up, whatever its admins are named, see control_setup.go
+-- name: CountControlAdmins :one
+SELECT COUNT(*) FROM control_identities WHERE role = 'admin';
 
 -- name: GetControlIdentity :one
 SELECT * FROM control_identities WHERE name = sqlc.arg('Name') LIMIT 1;
@@ -41,10 +47,12 @@ WHERE control_identities.id = sqlc.arg('ID') AND (control_identities.role != 'ad
 
 -- name: UpdateControlIdentityPassword :exec
 UPDATE control_identities
-SET password_hash = sqlc.arg('PasswordHash'), updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'), updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+SET password_hash = sqlc.arg('PasswordHash'), credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'), updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID');
 
 -- name: UpdateControlIdentityTOTP :exec
 UPDATE control_identities
-SET totp_secret_enc = sqlc.arg('TotpSecretEnc'), updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'), updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+SET totp_secret_enc = sqlc.arg('TotpSecretEnc'), credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'), updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID');
