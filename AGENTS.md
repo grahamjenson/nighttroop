@@ -81,7 +81,8 @@ When making a change kep these documents up to date:
 - Never create an Issue
 - If you create a PR always start PR description with bold letters saying "I AM A LITTLE AI HERE TO HELP" with the model name at the end
 - One PR per feature or fix. When asked for several things, make separate PRs; stack a PR on the branch it depends on and say so in its description.
-- A PR description says what changed and why, notes any approved size over the limit, and lists the tests.
+- A PR description says what changed and why, notes any approved size over the limit, lists the tests, and ends with
+  its `## Screenshots` (see UI Changes).
 - Remove code a change makes dead in the same PR.
 
 ## Change Size
@@ -97,8 +98,11 @@ Keep every change as small as possible.
 
 ## UI Changes
 
-- During go test tests/bdd we store screenshots in tests/screenshots. Any UI test must commit these screenshots folder to show the changes
-- Only commit screenshots a `.bdd` file takes with `SCREENSHOT`.
+- `SCREENSHOT` steps in `tests/bdd` save to `.test/savedScreenshots`, which is not committed. A PR's description ends
+  with a `## Screenshots` section listing the screenshots of each page it changes, one a line, as
+  `- site/summaries/summaries`: the `.bdd` file's path in `tests/bdd` without `.bdd`, then the `SCREENSHOT` name. It
+  says `None` when the PR changes no page. Once its tests pass, CI shows them in a comment on the PR.
+- Only list screenshots a `.bdd` file takes with `SCREENSHOT`.
 - Use the theme colours (`primary`, `brand-night`, `brand-gold`) for branding, not raw Tailwind colours. Amber, blue and red stay for warnings, info and errors.
 - Give every input an ID unique to its page (e.g. `site--glucose--create--reading`), so typed values do not carry between pages; BDD tests use these IDs.
 - With htmx: errors go to `#toaster` with `hx-status:4xx`, success toasts go out-of-band with `<div hx-swap-oob="beforeend:#toaster">`

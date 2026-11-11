@@ -46,7 +46,6 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Activity Updated
 ASSERT_NOT_VISIBLE #site--activity--details
 ASSERT_TEXT_VISIBLE Match
-SCREENSHOT activity_updated
 
 // A page of one activity pages through them, newest first
 GOTO /data/activities?limit=1
@@ -67,7 +66,6 @@ ASSERT_STATUS 200
 CLICK #activitiesTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Activity Deleted
 ASSERT_NOT_VISIBLE #site--activity--details
-SCREENSHOT activity_deleted
 
 // The deleted activity stays gone after a reload
 GOTO /data/activities
@@ -79,7 +77,6 @@ CLICK #activitiesTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Activity Deleted
 ASSERT_VISIBLE #site--activity--empty
 ASSERT_NOT_VISIBLE #site--activity--showing
-SCREENSHOT activities_empty_after_delete
 // Adding one again hides it and counts the new one
 CLICK #site--activity--add
 INPUT #site--activity--create--name Swim

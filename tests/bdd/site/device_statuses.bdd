@@ -68,7 +68,6 @@ ASSERT_TEXT_VISIBLE Showing 1 to 6
 CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Device Status Deleted
 ASSERT_NOT_VISIBLE #site--device-status--details
-SCREENSHOT device_status_deleted
 
 // The deleted status stays gone after a reload
 CLICK #site--device-status--all-devices

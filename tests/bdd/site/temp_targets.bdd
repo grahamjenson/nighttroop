@@ -49,7 +49,6 @@ INPUT #site--temp-target--create--notes Walk
 CLICK #site--temp-target--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE 9.0
-SCREENSHOT temp_target_created
 
 // Its details can be edited, which updates its row
 CLICK #tempTargetsTable tbody tr >> nth=0
@@ -65,7 +64,6 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Temp Target Updated
 ASSERT_NOT_VISIBLE #site--temp-target--details
 ASSERT_TEXT_VISIBLE 9.5
-SCREENSHOT temp_target_updated
 
 // The edit is saved
 CLICK #tempTargetsTable tbody tr >> nth=0
@@ -83,7 +81,6 @@ ASSERT_NOT_VISIBLE #site--temp-target--previous
 CLICK #site--temp-target--next
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 2 to 2
-SCREENSHOT temp_targets_paged
 
 CLICK #site--temp-target--previous
 ASSERT_STATUS 200
@@ -96,7 +93,6 @@ ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #tempTargetsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Temp Target Deleted
 ASSERT_NOT_VISIBLE #site--temp-target--details
-SCREENSHOT temp_target_deleted
 
 // The deleted temp target stays gone after a reload
 GOTO /data/temp-targets

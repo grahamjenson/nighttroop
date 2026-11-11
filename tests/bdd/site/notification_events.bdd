@@ -45,7 +45,6 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Notification Updated
 ASSERT_NOT_VISIBLE #site--notification--details
 ASSERT_TEXT_VISIBLE Sensor changed
-SCREENSHOT notification_event_updated
 
 // A page of one notification pages through them, newest first
 GOTO /data/notifications?limit=1
@@ -66,7 +65,6 @@ ASSERT_STATUS 200
 CLICK #notificationEventsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Notification Deleted
 ASSERT_NOT_VISIBLE #site--notification--details
-SCREENSHOT notification_event_deleted
 
 // The deleted notification stays gone after a reload
 GOTO /data/notifications

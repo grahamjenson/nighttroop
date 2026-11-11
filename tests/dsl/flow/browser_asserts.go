@@ -17,9 +17,10 @@ import (
 // package's folder, or the folder a script run is given
 var ScreenshotDir = filepath.Join("..", "..", ".test")
 
-// ScreenshotScale is the device pixels a test's browser draws each CSS pixel with, so screenshots are 3/4 the size of
-// the page, which keeps their text readable in a file about half the size
-const ScreenshotScale = 0.75
+// ScreenshotScale is the device pixels a test's browser draws each CSS pixel with, so screenshots are 9/16 the size
+// of the page (720 by 405 for a 1280 by 720 window), small enough to commit every one, with text drawn by the browser
+// at that size rather than resampled
+const ScreenshotScale = 0.5625
 
 // maxScreenshotBytes is the most a screenshot's file may be, as each is committed
 const maxScreenshotBytes = 1 << 20
@@ -71,7 +72,7 @@ type Screenshot struct {
 	TestLine int
 }
 
-// Execute writes ./tests/screenshots/<bdd file>/<name>.png we can see the screenshots
+// Execute writes .test/savedScreenshots/<bdd file>/<name>.png, which a pull request lists to be shown (cmd/pr_screenshots.sh)
 func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	_, err := ScreenshotPage(page, "savedScreenshots", r.TestPath, r.Name)
 	return err
