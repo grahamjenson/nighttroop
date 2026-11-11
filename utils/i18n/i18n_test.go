@@ -28,8 +28,8 @@ var (
 	// Text with a word in it
 	words = regexp.MustCompile(`[A-Za-z]{2,}`)
 	// A Go string literal in a component that reads as English: a capitalised word and any after it, e.g. "Not found",
-	// but not a map's key, such as a message's placeholder in i18n.Data{"Name": name}
-	sentence = regexp.MustCompile(`"([A-Z][a-z]+(?: [A-Za-z0-9,.'’:;!?()/%-]+)*)"(?:[^:]|$)`)
+	// but not a map's key, such as a message's placeholder in i18n.Data{"Name": name}, or one looked up in a map
+	sentence = regexp.MustCompile(`"([A-Z][a-z]+(?: [A-Za-z0-9,.'’:;!?()/%-]+)*)"(?:[^:\]]|$)`)
 	// A Go comment to the end of the line
 	comment = regexp.MustCompile(`(?:^|\s)//.*$`)
 	// Go lines whose English is for logs and errors, not people
@@ -40,7 +40,9 @@ var (
 	untranslated = map[string]bool{
 		"Nighttroop": true, "Nighttroop Control": true, "Nightscout": true, "Dexcom": true, "LibreLinkUp": true, "Libre": true,
 		"Loop": true, "Trio": true, "Nightguard": true, "Apple": true, "Firebase": true, "Apple (APNs)": true, "Firebase (FCM)": true, "Google Authenticator": true,
-		"Microsoft Authenticator": true, "mg/dL": true, "mmol/L": true, "MB": true,
+		"Microsoft Authenticator": true, "mg/dL": true, "mmol/L": true, "MB": true, "SMB": true,
+		// Go's date layouts, as dates are in English until they are formatted in each language
+		"January 2006": true, "Mon": true,
 		// Values that are sent, stored or compared: a key's name, a Nightscout trend, a part of an element's id and the
 		// temp target reasons suggested, which are stored as they are
 		"Enter": true, "Escape": true, "Flat": true, "Other": true, "Activity": true, "Eating Soon": true, "Hypo": true,
