@@ -1052,6 +1052,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
+- A TOTP code signs an identity in once, on the site (page or API) or in control: the same code, or an earlier one,
+  is refused like a wrong one while it would still be valid, even after its owner signed in with it, though another
+  identity with the same secret signs in with it. Checking a new site's code, or the setup page's, does not use it up.
+  A dev or test server's fixed code `123123` is not one time.
 - Sign-in attempts are rate limited per IP, and per name from every IP at a far higher rate
   (`SITE_LOGIN_NAME_PER_MINUTE_*`), so one IP sending wrong passwords for a name, or wrong passkeys or backup keys to
   a site, uses up only its own attempts and cannot lock anyone else out; an attempt one limit refuses spends none of the
