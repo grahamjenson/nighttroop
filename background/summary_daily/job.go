@@ -29,23 +29,24 @@ type Builder struct {
 	builtLock sync.Mutex
 	built     map[string]built
 
-	// stale are, by site, the times of the data written since its summaries were built, waiting to be built again. The
-	// summaries of days already built are also marked stale in the site's DB, which a restart keeps, so the first run
-	// since the server started builds every site's; checked is whether it has.
+	// stale are, by site, when the data its summaries are built from was first and last written since they were built
+	// again. Which summaries are stale is kept in the site's DB, which a restart keeps, so the first run since the
+	// server started builds every site's; checked is whether it has.
 	staleLock sync.Mutex
 	stale     map[string]*staleData
 	checked   bool
 }
 
-// staleData are a site's 15 minute buckets, by when they start, of the data written to it, and when the first and
-// last were written. Buckets of 15 minutes are kept, as every timezone's midnight starts one.
+// staleData is when a site's data was first and last written since its summaries were built again
 type staleData struct {
-	buckets     map[int64]bool
 	first, last time.Time
 }
 
 const (
-	staleBucket = 15 * time.Minute
+	// unbuiltSince is how long before a site's first write since it was built that its glucose is looked through for
+	// days never built, as a write is published once saved; and restartSince how long before the server started
+	unbuiltSince = time.Minute
+	restartSince = time.Hour
 	// staleQuiet is how long a site's data must go unchanged before its days are built again, so the many records a
 	// backfill or sync writes are built once, from all of them, and staleWait the longest written data waits, so a
 	// long backfill's days are still built as it goes
@@ -201,9 +202,9 @@ func (b *Builder) buildYesterday(ctx context.Context, siteID string, now time.Ti
 	return sitedata.BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
-// markStale keeps when the record a model change is of happened, and an update's when it happened before, as it may
-// have moved from another day, for their days' summaries to be built again, when it is one a day's summary is built
-// from. It is called as each change is published, so it only keeps it.
+// markStale keeps when a site's data a day's summary is built from was first and last written, for when to build its
+// stale days again; which they are its triggers mark in its DB. It is called as each change is published, so it only
+// keeps it.
 func (b *Builder) markStale(event events.Event, now time.Time) {
 	switch event.Model.(type) {
 	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempBasal, *sitedb.TempTarget,
@@ -211,31 +212,23 @@ func (b *Builder) markStale(event events.Event, now time.Time) {
 	default:
 		return
 	}
-	model, ok := event.Model.(interface{ GetOccurredAt() int64 })
-	if !ok || event.SiteID == "" {
+	if event.SiteID == "" {
 		return
-	}
-	times := []int64{model.GetOccurredAt()}
-	if previous, ok := event.Previous.(interface{ GetOccurredAt() int64 }); ok {
-		times = append(times, previous.GetOccurredAt())
 	}
 	b.staleLock.Lock()
 	defer b.staleLock.Unlock()
 	data := b.stale[event.SiteID]
 	if data == nil {
-		data = &staleData{buckets: map[int64]bool{}, first: now}
+		data = &staleData{first: now}
 		b.stale[event.SiteID] = data
-	}
-	for _, at := range times {
-		data.buckets[at/staleBucket.Milliseconds()] = true
 	}
 	data.last = now
 }
 
-// RebuildStale builds again the days, and their weeks, fortnights and months, of the data written to each site that
-// has gone staleQuiet without more, or waited staleWait, and its days marked stale in its DB, and on the first run
-// since the server started every site's days marked stale, leaving out today, which is built as it is read. A site
-// with only today's data written is not opened.
+// RebuildStale builds again the days, and their weeks, fortnights and months, marked stale in each site's DB, and those
+// of the glucose written to it since in days never built, once its data has gone staleQuiet without more, or waited
+// staleWait, and on the first run since the server started every site's, leaving out today, which is built as it is
+// read. A site with only today's data written is not opened.
 func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 	b.staleLock.Lock()
 	due := map[string]*staleData{}
@@ -248,7 +241,7 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 	if !b.checked {
 		for _, site := range b.controlDB.AllSites() {
 			if due[site.Subdomain] == nil {
-				due[site.Subdomain] = &staleData{buckets: map[int64]bool{}}
+				due[site.Subdomain] = &staleData{first: time.Now().Add(unbuiltSince - restartSince)}
 			}
 		}
 		b.checked = true
@@ -269,20 +262,21 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 		// Taken before its stale days are read, so one marked as they are built is not cleared unbuilt
 		began := time.Now()
 		siteDB, _, err := b.controlDB.GetSite(ctx, siteID)
-		var stale []int64
+		var stale, unbuilt []int64
 		if err == nil {
 			stale, err = siteDB.Queries().StaleSummaryDays(ctx)
+		}
+		if err == nil {
+			unbuilt, err = siteDB.Queries().UnbuiltGlucoseTimes(ctx, sitedb.UnbuiltGlucoseTimesParams{
+				Since: data.first.Add(-unbuiltSince).UnixMilli(), Before: today.UnixMilli()})
 		}
 		if err != nil {
 			b.restale(siteID, data)
 			errs = append(errs, err)
 			continue
 		}
-		for bucket := range data.buckets {
-			stale = append(stale, bucket*staleBucket.Milliseconds())
-		}
 		var times []time.Time
-		for _, at := range stale {
+		for _, at := range append(stale, unbuilt...) {
 			if at := time.UnixMilli(at); at.Before(today) {
 				times = append(times, at)
 			}
@@ -306,12 +300,11 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 	return errors.Join(errs...)
 }
 
-// restale keeps a site's data that could not be built to be built on a later run, with any written since
+// restale keeps a site whose stale days could not be built to be built on a later run, with any written since
 func (b *Builder) restale(siteID string, data *staleData) {
 	b.staleLock.Lock()
 	defer b.staleLock.Unlock()
 	if since := b.stale[siteID]; since != nil {
-		maps.Copy(data.buckets, since.buckets)
 		data.last = since.last
 	}
 	b.stale[siteID] = data

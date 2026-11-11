@@ -199,6 +199,45 @@ func (q *Queries) StaleSummaryDays(ctx context.Context) ([]int64, error) {
 	return items, nil
 }
 
+const unbuiltGlucoseTimes = `-- name: UnbuiltGlucoseTimes :many
+SELECT DISTINCT CAST(glucose_readings.occurred_at / 900000 * 900000 AS INTEGER) AS occurred_at FROM glucose_readings
+WHERE glucose_readings.updated_at >= ?1 AND glucose_readings.occurred_at < ?2
+    AND glucose_readings.deleted_at IS NULL AND NOT EXISTS (
+        SELECT 1 FROM summary_period WHERE summary_period.period = 'day'
+            AND summary_period.end_at > glucose_readings.occurred_at AND summary_period.start_at <= glucose_readings.occurred_at
+    )
+`
+
+type UnbuiltGlucoseTimesParams struct {
+	Since  int64
+	Before int64
+}
+
+// The glucose written since Since, before Before, in no day's summary yet, as a backfill writes to days never built,
+// by the 15 minutes each is in
+func (q *Queries) UnbuiltGlucoseTimes(ctx context.Context, arg UnbuiltGlucoseTimesParams) ([]int64, error) {
+	rows, err := q.query(ctx, q.unbuiltGlucoseTimesStmt, unbuiltGlucoseTimes, arg.Since, arg.Before)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var occurred_at int64
+		if err := rows.Scan(&occurred_at); err != nil {
+			return nil, err
+		}
+		items = append(items, occurred_at)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertSummaryPeriod = `-- name: UpsertSummaryPeriod :one
 INSERT INTO summary_period (period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json,
     loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, glucose_readings, meter_readings, cgm_slots,

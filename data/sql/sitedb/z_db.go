@@ -423,6 +423,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.thinOldDeviceReportsStmt, err = db.PrepareContext(ctx, thinOldDeviceReports); err != nil {
 		return nil, fmt.Errorf("error preparing query ThinOldDeviceReports: %w", err)
 	}
+	if q.unbuiltGlucoseTimesStmt, err = db.PrepareContext(ctx, unbuiltGlucoseTimes); err != nil {
+		return nil, fmt.Errorf("error preparing query UnbuiltGlucoseTimes: %w", err)
+	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
 	}
@@ -1135,6 +1138,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing thinOldDeviceReportsStmt: %w", cerr)
 		}
 	}
+	if q.unbuiltGlucoseTimesStmt != nil {
+		if cerr := q.unbuiltGlucoseTimesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing unbuiltGlucoseTimesStmt: %w", cerr)
+		}
+	}
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
@@ -1377,6 +1385,7 @@ type Queries struct {
 	tempBasalTotalsStmt                         *sql.Stmt
 	tempTargetTotalsStmt                        *sql.Stmt
 	thinOldDeviceReportsStmt                    *sql.Stmt
+	unbuiltGlucoseTimesStmt                     *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
 	updateDeviceReportStmt                      *sql.Stmt
 	updateEventGroupStmt                        *sql.Stmt
@@ -1530,6 +1539,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tempBasalTotalsStmt:                         q.tempBasalTotalsStmt,
 		tempTargetTotalsStmt:                        q.tempTargetTotalsStmt,
 		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,
+		unbuiltGlucoseTimesStmt:                     q.unbuiltGlucoseTimesStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
 		updateDeviceReportStmt:                      q.updateDeviceReportStmt,
 		updateEventGroupStmt:                        q.updateEventGroupStmt,

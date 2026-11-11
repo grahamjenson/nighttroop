@@ -80,7 +80,7 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 		return apiutils.ErrInternalServerError
 	}
 	for _, change := range t.reportedChanges {
-		t.siteContext.PublishModelChange(change.Action, change.Model, change.Previous)
+		t.siteContext.PublishModelChange(change.Action, change.Model)
 	}
 	for _, committed := range t.onCommit {
 		committed()
@@ -88,10 +88,9 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 	return nil
 }
 
-// ReportChange reports a change to one of the site's models, its sitedb row, with an update's row before, or nil, to be
-// published once committed
-func (t *CollectionTx) ReportChange(action events.Action, row, previous any) {
-	t.reportedChanges = append(t.reportedChanges, events.Event{Action: action, Model: row, Previous: previous})
+// reportChange reports a change to one of the site's models, its sitedb row, to be published once committed
+func (t *CollectionTx) ReportChange(action events.Action, row any) {
+	t.reportedChanges = append(t.reportedChanges, events.Event{Action: action, Model: row})
 }
 
 // OnCommit calls committed once everything is committed, and never when it is rolled back, e.g. to record an event a

@@ -159,11 +159,11 @@ func updateHandler[R, M any](collection CollectionUpdate[R, M], creator Collecti
 
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		oldModel, oldRow, herr := get(r.Context(), tx, collection, id, siteContext)
+		oldModel, _, herr := get(r.Context(), tx, collection, id, siteContext)
 		switch {
 		case herr != nil:
 		case oldModel != nil:
-			herr = update(r.Context(), tx, collection, siteContext, oldModel, oldRow, requestModel)
+			herr = update(r.Context(), tx, collection, siteContext, oldModel, requestModel)
 		case creator != nil:
 			herr = create(r.Context(), tx, creator, &id, siteContext, requestModel)
 		default:
@@ -401,13 +401,13 @@ func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 	return nil
 }
 
-func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionUpdate[R, M], siteContext *httputils.SiteContext, oldModel *M, oldRow *R, model *M) *apiutils.HTTPError {
+func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionUpdate[R, M], siteContext *httputils.SiteContext, oldModel *M, model *M) *apiutils.HTTPError {
 
 	row, err := collection.UpdateRow(ctx, tx, siteContext, oldModel, model)
 	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return herr
 	}
-	tx.ReportChange(events.Updated, row, oldRow)
+	reportChange(tx, events.Updated, row)
 	*model = *collection.ToModel(row, siteContext)
 	return nil
 }
@@ -424,7 +424,7 @@ func delete[R, M any](ctx context.Context, siteContext *httputils.SiteContext, t
 
 // reportChange reports a change to the site's own rows, to be published once the transaction commits, only to the site
 func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, row *R) {
-	tx.ReportChange(action, row, nil)
+	tx.ReportChange(action, row)
 }
 
 // GettingStartedHandler is the guide to setting up the site, a page for people, so it has no JSON

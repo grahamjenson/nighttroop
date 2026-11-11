@@ -228,9 +228,7 @@ func TestRebuildStaleBuildsTheDayARecordMovedFrom(t *testing.T) {
 	require.NoError(t, err)
 	moved, err := r.site.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "after", Mgdl: 120, ReadingType: "sgv", OccurredAt: to.UnixMilli(), CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
-	event := events.ModelChange(r.siteID, events.Updated, moved)
-	event.Previous = &sitedb.GlucoseReading{ID: "before", OccurredAt: from.UnixMilli()}
-	r.builder.markStale(event, now)
+	r.builder.markStale(events.ModelChange(r.siteID, events.Updated, moved), now)
 	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
 
 	require.True(t, r.built(to.Format(time.DateOnly)))
@@ -324,4 +322,19 @@ func TestWritesMarkTheirDaysStale(t *testing.T) {
 			require.ElementsMatch(t, test.stale, r.staleDays())
 		})
 	}
+}
+
+// A day never built that glucose is written to, as a backfill writes, is built from its glucose written since, so one
+// written just before the server stopped is built on its first run once it starts again too
+func TestRebuildStaleBuildsADayNeverBuiltWrittenBeforeARestart(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	require.NoError(t, r.builder.RebuildStale(ctx, now))
+	day := now.AddDate(0, 0, -3)
+	_, err := r.site.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "backfilled", Mgdl: 120, ReadingType: "sgv", OccurredAt: day.UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	require.False(t, r.built(day.Format(time.DateOnly)))
+
+	require.NoError(t, NewBuilder(r.bus, r.builder.controlDB).RebuildStale(ctx, now))
+	require.True(t, r.built(day.Format(time.DateOnly)))
 }

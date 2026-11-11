@@ -56,3 +56,13 @@ SELECT start_at FROM summary_period WHERE period = 'day' AND stale_at IS NOT NUL
 -- name: ClearStaleSummaries :exec
 -- The summaries marked stale by Before, as those just built, are up to date; one marked since is built again later
 UPDATE summary_period SET stale_at = NULL WHERE stale_at <= @before;
+
+-- name: UnbuiltGlucoseTimes :many
+-- The glucose written since Since, before Before, in no day's summary yet, as a backfill writes to days never built,
+-- by the 15 minutes each is in
+SELECT DISTINCT CAST(glucose_readings.occurred_at / 900000 * 900000 AS INTEGER) AS occurred_at FROM glucose_readings
+WHERE glucose_readings.updated_at >= @since AND glucose_readings.occurred_at < @before
+    AND glucose_readings.deleted_at IS NULL AND NOT EXISTS (
+        SELECT 1 FROM summary_period WHERE summary_period.period = 'day'
+            AND summary_period.end_at > glucose_readings.occurred_at AND summary_period.start_at <= glucose_readings.occurred_at
+    );

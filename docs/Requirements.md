@@ -482,7 +482,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   as it is read.
 - A day already built that data is written to is marked stale in the site's DB as the data is written, so a server
   stopped or deployed before building it again builds it within a minute of starting. Truncating device reports does
-  not mark their days.
+  not mark their days. A day never built is built from the glucose written to it, and one written in the hour before
+  the server started is built within a minute of starting too.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
