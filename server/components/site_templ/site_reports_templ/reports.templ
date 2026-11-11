@@ -201,8 +201,8 @@ templ arrowButton(id, path, label string) {
 	}
 }
 
-// SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, a table for
-// each period, the longest first, each newest first and opening its AGP report: the months of its year, the
+// SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, their time below,
+// in and above range among them, a table for each period, the longest first, each newest first and opening its AGP report: the months of its year, the
 // fortnights and weeks with a day in it, and the month's days. Arrows beside the month go to the month before and after. An admin can have them all
 // regenerated from the site's data.
 templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) {
@@ -226,7 +226,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 							@table.Head() {
 								{ kind.Label }
 							}
-							for _, column := range []string{"Days with data", "Time in range", "Daily dose", "Daily carbs"} {
+							for _, column := range []string{"Days with data", "Below range", "Time in range", "Above range", "Daily dose", "Daily carbs"} {
 								@table.Head(table.HeadProps{Class: "text-right"}) {
 									{ column }
 								}
@@ -236,7 +236,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 					@table.Body() {
 						if len(summaries[kind.Period]) == 0 {
 							<tr>
-								<td colspan="5" class="whitespace-normal p-4 text-gray-500">
+								<td colspan="7" class="whitespace-normal p-4 text-gray-500">
 									if next != "" {
 										No { kind.Period }s kept in { emptyIn(kind.Period, first) }.
 									} else {
@@ -254,7 +254,8 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 										{ title(ctx, p) }
 									}
 								}
-								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(p.TimeInRange), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
+								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(sum(p.TimeLow, p.TimeVeryLow)), display.Percent(p.TimeInRange),
+									display.Percent(sum(p.TimeHigh, p.TimeVeryHigh)), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
 									@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 										{ value }
 									}

@@ -57,7 +57,12 @@ RUN_BACKGROUND_JOBS
 GOTO /reports/summaries?month={{ slice (date -1) 0 7 }}
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(2):text-is("1")
+// Its time below range, in range and above range
+ASSERT_VISIBLE #site--summaries--day thead th:nth-child(3):text-is("Below range")
+ASSERT_VISIBLE #site--summaries--day thead th:nth-child(5):text-is("Above range")
 ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(3) >> text=/^(\d+%|<1%)$/
+ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(4) >> text=/^(\d+%|<1%)$/
+ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(5) >> text=/^(\d+%|<1%)$/
 SCREENSHOT summaries
 // The newest day kept is yesterday
 CLICK #site--summaries--day tbody tr:first-child a

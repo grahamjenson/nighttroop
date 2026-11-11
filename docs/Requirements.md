@@ -469,7 +469,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), is of a month, this one unless it is
   given as `?month=2026-10`, and has a table of each, the longest first: the kept months of its year, the fortnights
-  and weeks with a day in it, and its days: each one's days with data, time in range, daily dose and daily carbs,
+  and weeks with a day in it, and its days: each one's days with data, time below range (low and very low), time in range, time above range
+  (high and very high), daily dose and daily carbs,
   newest first, each opening its AGP report. Arrows beside the month go to the month before, back a year, and after, up to this one; a
   month outside those is refused. A past month's empty table says it has none in that month, or year for months.
 - Data written for a day before today, as a backfill or a late sync writes, or changed or deleted, builds that day's
