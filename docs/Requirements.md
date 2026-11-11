@@ -1058,6 +1058,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   other's. One refused says "Too many login attempts. Wait a minute, then try again."; a disabled identity cannot sign in.
 - The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
+- A Nightscout token whose name or role has no identity, or is for an admin or an identity with TOTP, is refused with
+  the same status and message as a wrong secret, and checks a password all the same, so neither tells what is on the site.
 - Changing an identity's password or TOTP signs out its existing sessions, and an admin's reset of it, on the site or in
   control, also removes its passkeys, as for a lost device, so it signs in only with its new credentials.
 - Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO

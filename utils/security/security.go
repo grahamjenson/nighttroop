@@ -6,6 +6,7 @@ import (
 	"github.com/tink-crypto/tink-go/v2/jwt"
 	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/tink-crypto/tink-go/v2/tink"
+	"golang.org/x/crypto/bcrypt"
 
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -34,6 +35,8 @@ type SecurityConfig struct {
 
 	// Still not sure this is a good idea, but legacy tokens are soooo slow
 	passwordVerifier *PasswordVerifier
+	// noOnesPasswordHash is checked when a login's name has no identity, so it takes as long to refuse as a wrong password
+	noOnesPasswordHash string
 
 	/////
 	// Dangerous Dev Only Configs
@@ -67,6 +70,16 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 		panic(fmt.Sprintf("Failed to create JWT primitives: %v", err))
 	}
 
+	// A random password, at the cost of the passwords the server makes, so checking it takes as long as theirs
+	cost := bcrypt.DefaultCost
+	if cfg.IsDevOrTest() {
+		cost = bcrypt.MinCost
+	}
+	_, cfg.noOnesPasswordHash, err = SecureCredentials(cost)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to make a password hash: %v", err))
+	}
+
 	if cfg.IsDevOrTest() {
 		cfg.DevelopmentDangerousHardcodedAdminPassword = new("password")
 		cfg.DevelopmentDangerousHardcodedAdminTOTPSecret = new("FakeTOTPSecretForDevOnly")
@@ -78,6 +91,18 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 
 func (config *SecurityConfig) VerifyPassword(plainPassword, storedHash string) bool {
 	return config.passwordVerifier.VerifyPassword(plainPassword, storedHash)
+}
+
+// VerifyNoOnesPassword checks plainPassword as VerifyPassword does, against a hash of no identity's password, for a
+// login whose name has no identity: it is refused as slowly as a wrong password, so the time taken does not tell which
+// names exist
+func (config *SecurityConfig) VerifyNoOnesPassword(plainPassword string) {
+	config.passwordVerifier.VerifyPassword(plainPassword, config.noOnesPasswordHash)
+}
+
+// PasswordsVerified is how many passwords VerifyPassword and VerifyNoOnesPassword have checked
+func (config *SecurityConfig) PasswordsVerified() int64 {
+	return config.passwordVerifier.verified.Load()
 }
 
 func (config *SecurityConfig) VerifyPasswordWithCache(plainPassword, storedHash string) bool {
