@@ -16,7 +16,7 @@ The files this guide uses are in this folder:
 | File | What it is |
 | --- | --- |
 | [`voyager.compose.yml`](voyager.compose.yml) | Docker Compose file for Nighttroop and Caddy |
-| [`update.sh`](update.sh) | The safe update script, shared with [the Hostinger guide](hostinger.md) |
+| [`update.sh`](../update.sh) | The safe update script, shared with [the Hostinger guide](../hostinger/hostinger.md) |
 
 ## Contents
 
@@ -217,7 +217,7 @@ To set up S3:
 2. **Copy the files up.** From your clone of this repository, on your own computer:
 
    ```sh
-   scp docs/deploy/voyager.compose.yml docs/deploy/update.sh root@203.0.113.10:/opt/nighttroop/
+   scp docs/deploy/voyager/voyager.compose.yml docs/deploy/update.sh root@203.0.113.10:/opt/nighttroop/
    ```
 
 3. **Let the VPS pull the image.** The image is at `ghcr.io/grahamjenson/nighttroop`. While the repository is private,
@@ -262,7 +262,7 @@ NIGHTTROOP_IMAGE=ghcr.io/grahamjenson/nighttroop:latest
 ### `nighttroop.env`: settings for Nighttroop
 
 The compose file already sets the host name, HTTPS and the trusted proxy, so this file only holds secrets and options.
-Every setting is listed in [`docs/config.md`](../config.md).
+Every setting is listed in [`docs/config.md`](../../config.md).
 
 1. Make the encryption keys. The image includes the tool:
 
@@ -341,7 +341,7 @@ the setup code the server prints to its logs can, so nobody else can take a new 
 ## Updating Nighttroop safely
 
 Updating works as on Hostinger, with the same script. Deploy a version tag, as
-[the Hostinger guide explains](hostinger.md#where-new-versions-come-from), so you always know which version is running:
+[the Hostinger guide explains](../hostinger/hostinger.md#where-new-versions-come-from), so you always know which version is running:
 
 ```sh
 cd /opt/nighttroop
@@ -355,7 +355,7 @@ healthy has served nothing. Once a new version has served, fix forward: update t
 back to an earlier one means putting back an old copy of `./data` and losing everything written since.
 
 What each step does, its exit codes, what a rollback can't undo, and how to roll back by hand are in
-[the Hostinger guide's update section](hostinger.md#updating-nighttroop-safely); they are the same here.
+[the Hostinger guide's update section](../hostinger/hostinger.md#updating-nighttroop-safely); they are the same here.
 
 ## Other upkeep
 
@@ -422,7 +422,7 @@ Look at `docker compose logs nighttroop`:
 
 - **`cannot create server config`:** a setting has a bad value, such as `TRUSTED_PROXIES`.
 - **A setting seems to be ignored:** check its spelling in `nighttroop.env` against
-  [`docs/config.md`](../config.md). Settings there reach Nighttroop as environment variables, so a misspelled one is
+  [`docs/config.md`](../../config.md). Settings there reach Nighttroop as environment variables, so a misspelled one is
   ignored and the default is used.
 - **Permission denied under `/data`:** the data folder isn't owned by user `10001`:
 
