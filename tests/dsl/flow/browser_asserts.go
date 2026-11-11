@@ -72,7 +72,7 @@ type Screenshot struct {
 	TestLine int
 }
 
-// Execute writes ./tests/screenshots/<bdd file>/<name>.png we can see the screenshots
+// Execute writes .test/savedScreenshots/<bdd file>/<name>.png, which a pull request lists to be shown (cmd/pr_screenshots.sh)
 func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	_, err := ScreenshotPage(page, "savedScreenshots", r.TestPath, r.Name)
 	return err
