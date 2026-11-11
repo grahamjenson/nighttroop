@@ -37,6 +37,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.engine.Se
 // Close disconnects every client
 func (s *Server) Close() { s.engine.Close() }
 
+// Count is how many Engine.IO sessions are open, connected to a namespace or not
+func (s *Server) Count() int { return s.engine.Count() }
+
 // Of is the namespace with this name, made on first use; clients can only join namespaces made here
 func (s *Server) Of(name string) *Namespace {
 	s.mu.Lock()
