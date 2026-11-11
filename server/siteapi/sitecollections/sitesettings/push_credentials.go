@@ -64,7 +64,12 @@ func CreatePushCredential(ctx context.Context, q *controldb.Queries, sec *securi
 		Secret: *model.Secret, Apps: model.Apps, BundleIDs: model.BundleIDs}); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err.Error())
 	}
-	secretEnc, err := sec.Encrypt(*model.Secret)
+	// A credential for every site, with no site of its own, is encrypted for none
+	credentialSite := ""
+	if params.SiteID != nil {
+		credentialSite = *params.SiteID
+	}
+	secretEnc, err := sec.EncryptFor(security.PurposePushSecret, credentialSite, *model.Secret)
 	if err != nil {
 		return nil, err
 	}

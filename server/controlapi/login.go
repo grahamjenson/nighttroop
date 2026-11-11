@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 type LoginRequest struct {
@@ -168,7 +169,7 @@ func loginTheControlUser(ctx context.Context, controlDB *db.ControlDB, config *c
 	if !config.Security.VerifyPassword(password, admin.PasswordHash) {
 		return nil, fmt.Errorf("invalid password")
 	}
-	totpSecret, err := config.Security.Decrypt(admin.TotpSecretEnc)
+	totpSecret, err := config.Security.DecryptFor(security.PurposeTOTP, "", admin.TotpSecretEnc)
 	if err != nil {
 		return nil, err
 	}

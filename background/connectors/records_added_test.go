@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -22,9 +23,9 @@ func TestSyncThatAddsRecordsRecordsAnEvent(t *testing.T) {
 	jobs := connectors.SetupConnectorJobManager(cfg, controlDB)
 	now := time.Now().UnixMilli()
 	require.NoError(t, q.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{LastSeenAt: &now, ID: siteID}))
-	username, err := cfg.Security.Encrypt(dexcom_client.TestValidUsername)
+	username, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, dexcom_client.TestValidUsername)
 	require.NoError(t, err)
-	password, err := cfg.Security.Encrypt("pass")
+	password, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, "pass")
 	require.NoError(t, err)
 	added := func() []string {
 		events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Search: new("connector_records_added"), Limit: 10})

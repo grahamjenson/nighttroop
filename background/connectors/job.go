@@ -211,11 +211,11 @@ func (b *ConnectorJobManager) getUsernamePasswordRegion(connector *controldb.Sit
 		region = *connector.Region
 	}
 
-	unencUsername, err := b.security.Decrypt(*encUrlOrUserName)
+	unencUsername, err := b.security.DecryptFor(security.PurposeConnector, connector.SiteID, *encUrlOrUserName)
 	if err != nil {
 		return "", "", "", fmt.Errorf("error decrypting username: %w", err)
 	}
-	unencPassword, err := b.security.Decrypt(*encPassword)
+	unencPassword, err := b.security.DecryptFor(security.PurposeConnector, connector.SiteID, *encPassword)
 	if err != nil {
 		return "", "", "", fmt.Errorf("error decrypting password: %w", err)
 	}

@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -21,7 +22,7 @@ func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeDexcom
 	jobs := connectors.SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -96,7 +97,7 @@ func TestARefusedDexcomLoginIsAWarning(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeDexcom
 	jobs := connectors.SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}

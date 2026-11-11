@@ -730,7 +730,7 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 	encTOTPSecret := ""
 	if can.MustLoginWithTotp(role, false) {
 
-		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, siteID, hostname))
+		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(siteID, fmt.Sprintf("%s@%s.%s", name, siteID, hostname))
 		if err != nil {
 			return nil, fmt.Errorf("cannot generate user TOTP: %w", err)
 		}
@@ -805,7 +805,7 @@ func (db *ControlDB) nightscoutToken(siteID, name string, role consts.IdentityRo
 // ResetSiteIdentityTOTP gives one of a site's identities a new TOTP secret, for its authenticator app, recorded as
 // changed by the control or site identity named by. Codes from the old secret stop working.
 func (db *ControlDB) ResetSiteIdentityTOTP(ctx context.Context, identity *controldb.SiteIdentity, by string) (*IdentityValues, error) {
-	totpSecret, encTOTPSecret, err := db.ServerConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", identity.Name, identity.SiteID, db.ServerConfig.HostName))
+	totpSecret, encTOTPSecret, err := db.ServerConfig.Security.TOTPGenerate(identity.SiteID, fmt.Sprintf("%s@%s.%s", identity.Name, identity.SiteID, db.ServerConfig.HostName))
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate user TOTP: %w", err)
 	}
@@ -849,7 +849,7 @@ func (db *ControlDB) CreateControlIdentity(ctx context.Context, name string, rol
 
 // controlTOTP is a new TOTP secret for a control admin's authenticator app, and the secret encrypted to keep
 func (db *ControlDB) controlTOTP(name string) (string, string, error) {
-	totpSecret, encTOTPSecret, err := db.ServerConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN, db.ServerConfig.HostName))
+	totpSecret, encTOTPSecret, err := db.ServerConfig.Security.TOTPGenerate("", fmt.Sprintf("%s@%s.%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN, db.ServerConfig.HostName))
 	if err != nil {
 		return "", "", fmt.Errorf("cannot generate control TOTP: %w", err)
 	}

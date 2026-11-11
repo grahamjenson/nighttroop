@@ -137,34 +137,81 @@ func readKeySetFromBase64(rawKeySet string) (*keyset.Handle, error) {
 // Encryption Methods
 // //
 
-func (config *SecurityConfig) Encrypt(plaintext string) (string, error) {
+// Purpose is what a ciphertext is, bound into it with its site, so it decrypts only as that, for that site: one
+// site's Dexcom password cannot be copied in as another's, or as a TOTP secret
+type Purpose string
 
-	ciphertext, err := config.aeadEnc.Encrypt([]byte(plaintext), nil)
+const (
+	PurposeConnector       Purpose = "connector" // a connector's URL or username, and its password
+	PurposeTOTP            Purpose = "totp"
+	PurposePushSecret      Purpose = "push_secret"
+	PurposePushToken       Purpose = "push_token"
+	PurposeNightscoutToken Purpose = "nightscout_token"
+	PurposeWelcomePasskey  Purpose = "welcome_passkey"
+)
+
+func associatedData(purpose Purpose, siteID string) []byte {
+	return []byte(string(purpose) + "|" + siteID)
+}
+
+// EncryptFor encrypts plaintext for its purpose and site, "" where it has none, as a control admin's TOTP secret
+func (config *SecurityConfig) EncryptFor(purpose Purpose, siteID, plaintext string) (string, error) {
+	ciphertext, err := config.aeadEnc.Encrypt([]byte(plaintext), associatedData(purpose, siteID))
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt: %w", err)
 	}
-
 	return base64.RawStdEncoding.EncodeToString(ciphertext), nil
 }
 
-func (config *SecurityConfig) Decrypt(ciphertext string) (string, error) {
+// DecryptFor decrypts what EncryptFor encrypted for the purpose and site, or what was encrypted before ciphertexts were
+// bound, with no associated data, until those are encrypted again (TODOs.md)
+func (config *SecurityConfig) DecryptFor(purpose Purpose, siteID, ciphertext string) (string, error) {
 	ciphertextBytes, err := base64.RawStdEncoding.DecodeString(ciphertext)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode base64 ciphertext: %w", err)
 	}
-
-	plaintext, err := config.aeadEnc.Decrypt(ciphertextBytes, nil)
+	plaintext, err := config.aeadEnc.Decrypt(ciphertextBytes, associatedData(purpose, siteID))
 	if err != nil {
-		return "", fmt.Errorf("failed to decrypt: %w", err)
+		var unboundErr error
+		if plaintext, unboundErr = config.aeadEnc.Decrypt(ciphertextBytes, nil); unboundErr != nil {
+			return "", fmt.Errorf("failed to decrypt: %w", err)
+		}
 	}
-
 	return string(plaintext), nil
 }
 
-func (config *SecurityConfig) EncryptingWriter(writer io.Writer) (io.WriteCloser, error) {
-	return config.streamEnc.NewEncryptingWriter(writer, nil)
+// backupAssociatedData binds a backup to its object key without its host name, so a bucket copied to another host
+// still restores, but one site batch's archive cannot be put at another's key
+func backupAssociatedData(objectKey string) []byte {
+	_, path, _ := strings.Cut(objectKey, "/")
+	return []byte("backup|" + path)
 }
 
-func (config *SecurityConfig) DecryptingReader(reader io.Reader) (io.Reader, error) {
-	return config.streamEnc.NewDecryptingReader(reader, nil)
+// EncryptingWriterFor encrypts a backup to be kept at the object key
+func (config *SecurityConfig) EncryptingWriterFor(writer io.Writer, objectKey string) (io.WriteCloser, error) {
+	return config.streamEnc.NewEncryptingWriter(writer, backupAssociatedData(objectKey))
+}
+
+// backupProbeBytes are read ahead to tell an older, unbound backup from a bound one, by whether its first segment, of
+// 4KB or at most 1MB, decrypts; more than one segment, so the first is not taken as the last
+const backupProbeBytes = 2 << 20
+
+// DecryptingReaderFor decrypts a backup kept at the object key, or one encrypted before backups were bound, with no
+// associated data, until retention has removed those (TODOs.md)
+func (config *SecurityConfig) DecryptingReaderFor(reader io.Reader, objectKey string) (io.Reader, error) {
+	first := make([]byte, backupProbeBytes)
+	n, err := io.ReadFull(reader, first)
+	if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
+		return nil, err
+	}
+	first = first[:n]
+	associated := backupAssociatedData(objectKey)
+	probe, err := config.streamEnc.NewDecryptingReader(bytes.NewReader(first), associated)
+	if err == nil {
+		_, err = io.ReadFull(probe, make([]byte, 1))
+	}
+	if err != nil && err != io.EOF {
+		associated = nil
+	}
+	return config.streamEnc.NewDecryptingReader(io.MultiReader(bytes.NewReader(first), reader), associated)
 }

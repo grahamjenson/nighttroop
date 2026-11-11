@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -31,7 +32,7 @@ func TestSeedStagingAdmin(t *testing.T) {
 	require.True(t, cfg.Security.VerifyPassword("a long staging password", admin.PasswordHash))
 	require.False(t, cfg.Security.VerifyPassword("password", admin.PasswordHash))
 	// Its TOTP is the configured secret, so an authenticator app given it signs in
-	secret, err := cfg.Security.Decrypt(admin.TotpSecretEnc)
+	secret, err := cfg.Security.DecryptFor(security.PurposeTOTP, "", admin.TotpSecretEnc)
 	require.NoError(t, err)
 	code, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
 	require.NoError(t, err)

@@ -169,7 +169,7 @@ func ConnectorFromDB(source *controldb.SiteConnector, context *security.Security
 			xstring := *(*source).Region
 			sitemodelsConnector.Region = &xstring
 		}
-		pString, err := Decrypt((*source).UrlOrUsernameEnc, context)
+		pString, err := DecryptUrlOrUsername(source, context)
 		if err != nil {
 			return nil, err
 		}

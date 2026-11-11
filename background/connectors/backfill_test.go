@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -147,7 +148,7 @@ func TestLibreBackfillFetchesTheLastTwelveHours(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeLibre
 	jobs := SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -173,7 +174,7 @@ func TestNightscoutBackfillCopiesOlderDocuments(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	jobs := SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -223,7 +224,7 @@ func TestNightscoutBackfillStopsAtAPageOlderThanItsStart(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	jobs := SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -252,7 +253,7 @@ func TestNightscoutBackfillKeepsNoLoopStatus(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -297,7 +298,7 @@ func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}

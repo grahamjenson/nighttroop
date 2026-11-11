@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -40,7 +41,7 @@ func TestNightscoutConnectorRemembersWhenCollectionsWereModified(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	jobs := SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -75,7 +76,7 @@ func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	jobs := SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -123,7 +124,7 @@ func TestNightscoutConnectorCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	jobs := SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -182,7 +183,7 @@ func TestRefusedRecordIsLoggedWithoutItsValues(t *testing.T) {
 	var logs bytes.Buffer
 	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}
@@ -207,7 +208,7 @@ func TestNightscoutConnectorCopiesTheCurrentProfile(t *testing.T) {
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	jobs := SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}

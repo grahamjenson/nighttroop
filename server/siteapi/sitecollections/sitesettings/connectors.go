@@ -93,7 +93,7 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("password")
 	}
 
-	if err := encryptCredentials(siteContext.Config.Security, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
+	if err := encryptCredentials(siteContext.Config.Security, siteContext.SiteID, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
 		return nil, err
 	}
 
@@ -151,7 +151,7 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 		params.PasswordEnc = nil
 	}
 
-	if err := encryptCredentials(siteContext.Config.Security, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
+	if err := encryptCredentials(siteContext.Config.Security, siteContext.SiteID, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
 		return nil, err
 	}
 
@@ -320,13 +320,13 @@ func cleanURLOrUsername(ctx context.Context, siteContext *httputils.SiteContext,
 	return normalized, nil
 }
 
-// encryptCredentials encrypts in place each of the connector's URL or username and password that is set
-func encryptCredentials(security *security.SecurityConfig, credentials ...*string) error {
+// encryptCredentials encrypts in place, for the site, each of the connector's URL or username and password that is set
+func encryptCredentials(sec *security.SecurityConfig, siteID string, credentials ...*string) error {
 	for _, credential := range credentials {
 		if credential == nil {
 			continue
 		}
-		encrypted, err := security.Encrypt(*credential)
+		encrypted, err := sec.EncryptFor(security.PurposeConnector, siteID, *credential)
 		if err != nil {
 			return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt connector credentials: %s", err))
 		}

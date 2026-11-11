@@ -57,11 +57,16 @@ func send(ctx context.Context, sec *security.SecurityConfig, credential *control
 	if credential.SecretEnc == nil || (credential.Provider == consts.PushProviderAPNs && credential.KeyID == nil) {
 		return ErrNoCredential
 	}
-	secret, err := sec.Decrypt(*credential.SecretEnc)
+	// A credential for every site, with no site of its own, is encrypted for none
+	credentialSite := ""
+	if credential.SiteID != nil {
+		credentialSite = *credential.SiteID
+	}
+	secret, err := sec.DecryptFor(security.PurposePushSecret, credentialSite, *credential.SecretEnc)
 	if err != nil {
 		return fmt.Errorf("cannot decrypt the push credential: %w", err)
 	}
-	token, err := sec.Decrypt(registration.TokenEnc)
+	token, err := sec.DecryptFor(security.PurposePushToken, registration.SiteID, registration.TokenEnc)
 	if err != nil {
 		return fmt.Errorf("cannot decrypt the push token: %w", err)
 	}
