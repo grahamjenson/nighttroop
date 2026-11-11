@@ -588,6 +588,16 @@ func (m *Site) SetEstimatedDbSizeKb(v *int64) {
 	m.EstimatedDbSizeKb = v
 }
 
+// GetTableSizesJson returns the TableSizesJson value.
+func (m Site) GetTableSizesJson() types.TableSizes {
+	return m.TableSizesJson
+}
+
+// SetTableSizesJson sets the TableSizesJson value and returns the updated Site.
+func (m *Site) SetTableSizesJson(v types.TableSizes) {
+	m.TableSizesJson = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m Site) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
@@ -1106,16 +1116,6 @@ func (m Site) GetNotificationsEnabled() *bool {
 // SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated Site.
 func (m *Site) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
-}
-
-// GetTableSizesJson returns the TableSizesJson value.
-func (m Site) GetTableSizesJson() types.TableSizes {
-	return m.TableSizesJson
-}
-
-// SetTableSizesJson sets the TableSizesJson value and returns the updated Site.
-func (m *Site) SetTableSizesJson(v types.TableSizes) {
-	m.TableSizesJson = v
 }
 
 // GetSiteID returns the SiteID value.

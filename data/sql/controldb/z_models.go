@@ -84,6 +84,7 @@ type Site struct {
 	CreatedAt                        int64
 	MaxDbSizeKbLimit                 *int64
 	EstimatedDbSizeKb                *int64
+	TableSizesJson                   types.TableSizes
 	LastSeenAt                       *int64
 	LastWriteAt                      *int64
 	State                            string
@@ -136,7 +137,6 @@ type Site struct {
 	AlarmLowReservoirEnabled         *bool
 	AlarmLowReservoirUnits           *int64
 	NotificationsEnabled             *bool
-	TableSizesJson                   types.TableSizes
 }
 
 type SiteConnector struct {
