@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"maps"
+	"slices"
 	"sync"
 	"time"
 
@@ -34,11 +35,13 @@ type Builder struct {
 	stale     map[string]*staleData
 }
 
-// staleData are a site's 15 minute buckets, by when they start, of the data written to it, and when the first and
-// last were written. Buckets of 15 minutes are kept, as every timezone's midnight starts one.
+// staleData are a site's 15 minute buckets, by when they start, of the data written to it, each with whether it is
+// saved in the site's DB, and when the first and last were written; saved is whether any may be in its DB, to be read
+// back and deleted once built. Buckets of 15 minutes are kept, as every timezone's midnight starts one.
 type staleData struct {
 	buckets     map[int64]bool
 	first, last time.Time
+	saved       bool
 }
 
 const (
@@ -145,6 +148,8 @@ func (b *Builder) Build(ctx context.Context, now time.Time) error {
 		err := b.buildYesterday(aslog.WithSite(ctx, site.ID), site.ID, now)
 		if err == nil {
 			b.remember(site.ID, &yesterday)
+			// Its days saved waiting to be built are read back and built, as the server may have restarted since
+			b.restale(site.ID, &staleData{buckets: map[int64]bool{}, saved: true})
 		}
 		errs = append(errs, err)
 	}
@@ -218,52 +223,120 @@ func (b *Builder) markStale(event events.Event, now time.Time) {
 		data = &staleData{buckets: map[int64]bool{}, first: now}
 		b.stale[event.SiteID] = data
 	}
-	data.buckets[model.GetOccurredAt()/staleBucket.Milliseconds()] = true
+	if bucket := model.GetOccurredAt() / staleBucket.Milliseconds(); !data.buckets[bucket] {
+		data.buckets[bucket] = false
+	}
 	data.last = now
 }
 
 // RebuildStale builds again the days, and their weeks, fortnights and months, of the data written to each site that
-// has gone staleQuiet without more, or waited staleWait, leaving out today, which is built as it is read. A site with
-// only today's data written is not opened.
+// has gone staleQuiet without more, or waited staleWait, leaving out today, which is built as it is read, and saves the
+// days of the rest in their DBs, so a restart does not lose them. A site with only today's data written is not opened.
 func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 	b.staleLock.Lock()
-	due := map[string]*staleData{}
+	due, waiting := map[string]*staleData{}, map[string][]int64{}
 	for siteID, data := range b.stale {
 		if now.Sub(data.last) >= staleQuiet || now.Sub(data.first) >= staleWait {
 			due[siteID] = data
 			delete(b.stale, siteID)
+			continue
+		}
+		for bucket, saved := range data.buckets {
+			if !saved {
+				waiting[siteID] = append(waiting[siteID], bucket)
+				data.buckets[bucket] = true
+			}
 		}
 	}
 	b.staleLock.Unlock()
 
 	var errs []error
+	for siteID, buckets := range waiting {
+		errs = append(errs, b.saveStale(aslog.WithSite(ctx, siteID), siteID, buckets, now))
+	}
 	for siteID, data := range due {
-		site, err := b.controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		today := sitedata.PeriodStart("day", now, (&httputils.SiteContext{SiteID: siteID, SiteModel: site}).GetSiteTimezone(), "monday")
-		var times []time.Time
-		for bucket := range data.buckets {
-			if at := time.UnixMilli(bucket * staleBucket.Milliseconds()); at.Before(today) {
-				times = append(times, at)
-			}
-		}
-		if len(times) == 0 || site.State != "live" {
-			continue
-		}
-		siteCtx := aslog.WithSite(ctx, siteID)
-		siteContext, err := b.site(siteCtx, siteID)
-		if err == nil {
-			err = sitedata.RebuildSummaryDays(siteCtx, siteContext.SiteDB.Queries(), siteContext, times, now)
-		}
-		if err != nil {
-			b.restale(siteID, data)
-		}
-		errs = append(errs, err)
+		errs = append(errs, b.rebuildStale(aslog.WithSite(ctx, siteID), siteID, data, now))
 	}
 	return errors.Join(errs...)
+}
+
+// siteToday is when the site's today starts in its timezone, zero once it is no longer live
+func (b *Builder) siteToday(ctx context.Context, siteID string, now time.Time) (time.Time, error) {
+	site, err := b.controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	if err != nil || site.State != "live" {
+		return time.Time{}, err
+	}
+	return sitedata.PeriodStart("day", now, (&httputils.SiteContext{SiteID: siteID, SiteModel: site}).GetSiteTimezone(), "monday"), nil
+}
+
+// beforeToday are when each of the buckets before today starts
+func beforeToday(buckets []int64, today time.Time) []time.Time {
+	var times []time.Time
+	for _, bucket := range buckets {
+		if at := time.UnixMilli(bucket * staleBucket.Milliseconds()); at.Before(today) {
+			times = append(times, at)
+		}
+	}
+	return times
+}
+
+// saveStale saves the site's buckets before its today in its DB, in one transaction, so they are built after a restart
+func (b *Builder) saveStale(ctx context.Context, siteID string, buckets []int64, now time.Time) error {
+	today, err := b.siteToday(ctx, siteID, now)
+	times := beforeToday(buckets, today)
+	if err != nil || len(times) == 0 {
+		return err
+	}
+	siteContext, err := b.site(ctx, siteID)
+	var tx *sql.Tx
+	if err == nil {
+		tx, err = siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	}
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	for _, at := range times {
+		if err := siteContext.SiteDB.QueriesWithTx(tx).SaveSummaryStale(ctx, sitedb.SaveSummaryStaleParams{At: at.UnixMilli()}); err != nil {
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	b.staleLock.Lock()
+	defer b.staleLock.Unlock()
+	if data := b.stale[siteID]; data != nil {
+		data.saved = true
+	}
+	return nil
+}
+
+// rebuildStale builds again the site's days before its today of its data, with any saved in its DB, which are then
+// deleted, keeping them to be built on a later run when it cannot
+func (b *Builder) rebuildStale(ctx context.Context, siteID string, data *staleData, now time.Time) error {
+	today, err := b.siteToday(ctx, siteID, now)
+	if err != nil || today.IsZero() || (!data.saved && len(beforeToday(slices.Collect(maps.Keys(data.buckets)), today)) == 0) {
+		return err
+	}
+	siteContext, err := b.site(ctx, siteID)
+	var saved []int64
+	if err == nil && data.saved {
+		saved, err = siteContext.SiteDB.Queries().GetSummaryStale(ctx)
+	}
+	for _, at := range saved {
+		data.buckets[at/staleBucket.Milliseconds()] = true
+	}
+	if times := beforeToday(slices.Collect(maps.Keys(data.buckets)), today); err == nil && len(times) > 0 {
+		err = sitedata.RebuildSummaryDays(ctx, siteContext.SiteDB.Queries(), siteContext, times, now)
+	}
+	if err == nil && len(saved) > 0 {
+		err = siteContext.SiteDB.Queries().DeleteSummaryStale(ctx)
+	}
+	if err != nil {
+		b.restale(siteID, data)
+	}
+	return err
 }
 
 // restale keeps a site's data that could not be built to be built on a later run, with any written since
@@ -272,7 +345,7 @@ func (b *Builder) restale(siteID string, data *staleData) {
 	defer b.staleLock.Unlock()
 	if since := b.stale[siteID]; since != nil {
 		maps.Copy(data.buckets, since.buckets)
-		data.last = since.last
+		data.last, data.saved = since.last, data.saved || since.saved
 	}
 	b.stale[siteID] = data
 }

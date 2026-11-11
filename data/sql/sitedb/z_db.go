@@ -126,6 +126,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
 	}
+	if q.deleteSummaryStaleStmt, err = db.PrepareContext(ctx, deleteSummaryStale); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSummaryStale: %w", err)
+	}
 	if q.deleteUnreferencedLoopSettingsStmt, err = db.PrepareContext(ctx, deleteUnreferencedLoopSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUnreferencedLoopSettings: %w", err)
 	}
@@ -218,6 +221,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getSummaryPeriodStmt, err = db.PrepareContext(ctx, getSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSummaryPeriod: %w", err)
+	}
+	if q.getSummaryStaleStmt, err = db.PrepareContext(ctx, getSummaryStale); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSummaryStale: %w", err)
 	}
 	if q.getTempBasalStmt, err = db.PrepareContext(ctx, getTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempBasal: %w", err)
@@ -317,6 +323,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.regroupEventGroupStmt, err = db.PrepareContext(ctx, regroupEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query RegroupEventGroup: %w", err)
+	}
+	if q.saveSummaryStaleStmt, err = db.PrepareContext(ctx, saveSummaryStale); err != nil {
+		return nil, fmt.Errorf("error preparing query SaveSummaryStale: %w", err)
 	}
 	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
@@ -634,6 +643,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteSummaryPeriodsStmt: %w", cerr)
 		}
 	}
+	if q.deleteSummaryStaleStmt != nil {
+		if cerr := q.deleteSummaryStaleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSummaryStaleStmt: %w", cerr)
+		}
+	}
 	if q.deleteUnreferencedLoopSettingsStmt != nil {
 		if cerr := q.deleteUnreferencedLoopSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUnreferencedLoopSettingsStmt: %w", cerr)
@@ -787,6 +801,11 @@ func (q *Queries) Close() error {
 	if q.getSummaryPeriodStmt != nil {
 		if cerr := q.getSummaryPeriodStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSummaryPeriodStmt: %w", cerr)
+		}
+	}
+	if q.getSummaryStaleStmt != nil {
+		if cerr := q.getSummaryStaleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSummaryStaleStmt: %w", cerr)
 		}
 	}
 	if q.getTempBasalStmt != nil {
@@ -952,6 +971,11 @@ func (q *Queries) Close() error {
 	if q.regroupEventGroupStmt != nil {
 		if cerr := q.regroupEventGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing regroupEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.saveSummaryStaleStmt != nil {
+		if cerr := q.saveSummaryStaleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing saveSummaryStaleStmt: %w", cerr)
 		}
 	}
 	if q.searchActivitiesStmt != nil {
@@ -1262,6 +1286,7 @@ type Queries struct {
 	deleteLoopSettingsStmt                      *sql.Stmt
 	deleteOldDeviceReportsStmt                  *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
+	deleteSummaryStaleStmt                      *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
 	deviceReportHistoryIDsStmt                  *sql.Stmt
@@ -1293,6 +1318,7 @@ type Queries struct {
 	getProfileStoreStmt                         *sql.Stmt
 	getProfileSwitchStmt                        *sql.Stmt
 	getSummaryPeriodStmt                        *sql.Stmt
+	getSummaryStaleStmt                         *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
 	glucoseReadingAscendingIDsStmt              *sql.Stmt
@@ -1326,6 +1352,7 @@ type Queries struct {
 	profileSwitchTotalsStmt                     *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
+	saveSummaryStaleStmt                        *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
 	searchDeviceReportsStmt                     *sql.Stmt
 	searchEventGroupsStmt                       *sql.Stmt
@@ -1413,6 +1440,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
 		deleteOldDeviceReportsStmt:                  q.deleteOldDeviceReportsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
+		deleteSummaryStaleStmt:                      q.deleteSummaryStaleStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
 		deviceReportHistoryIDsStmt:                  q.deviceReportHistoryIDsStmt,
@@ -1444,6 +1472,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileStoreStmt:                         q.getProfileStoreStmt,
 		getProfileSwitchStmt:                        q.getProfileSwitchStmt,
 		getSummaryPeriodStmt:                        q.getSummaryPeriodStmt,
+		getSummaryStaleStmt:                         q.getSummaryStaleStmt,
 		getTempBasalStmt:                            q.getTempBasalStmt,
 		getTempTargetStmt:                           q.getTempTargetStmt,
 		glucoseReadingAscendingIDsStmt:              q.glucoseReadingAscendingIDsStmt,
@@ -1477,6 +1506,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		profileSwitchTotalsStmt:                     q.profileSwitchTotalsStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
+		saveSummaryStaleStmt:                        q.saveSummaryStaleStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
 		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,
 		searchEventGroupsStmt:                       q.searchEventGroupsStmt,

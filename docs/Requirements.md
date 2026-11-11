@@ -477,6 +477,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   data has gone 2 minutes without more, or after 15 minutes of it at most, so a backfill's many records are built
   once. Glucose, insulin, food, temp basals and targets, profile switches and device statuses count; today is built
   as it is read.
+- A day waiting to be built again is still built after the server restarts or deploys: each minute the days waiting
+  are kept in the site's DB, and read back once the server has started.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.

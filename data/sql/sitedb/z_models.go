@@ -498,6 +498,10 @@ type SummaryPeriod struct {
 	UpdatedAt            int64
 }
 
+type SummaryStale struct {
+	At int64
+}
+
 type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64

@@ -4366,6 +4366,16 @@ func (m *SummaryPeriod) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
+// GetAt returns the At value.
+func (m SummaryStale) GetAt() int64 {
+	return m.At
+}
+
+// SetAt sets the At value and returns the updated SummaryStale.
+func (m *SummaryStale) SetAt(v int64) {
+	m.At = v
+}
+
 // GetID returns the ID value.
 func (m TempBasal) GetID() string {
 	return m.ID
@@ -14754,6 +14764,16 @@ func (m UpsertSummaryPeriodParams) GetTotalDailyBasal() float64 {
 // SetTotalDailyBasal sets the TotalDailyBasal value and returns the updated UpsertSummaryPeriodParams.
 func (m *UpsertSummaryPeriodParams) SetTotalDailyBasal(v float64) {
 	m.TotalDailyBasal = v
+}
+
+// GetAt returns the At value.
+func (m SaveSummaryStaleParams) GetAt() int64 {
+	return m.At
+}
+
+// SetAt sets the At value and returns the updated SaveSummaryStaleParams.
+func (m *SaveSummaryStaleParams) SetAt(v int64) {
+	m.At = v
 }
 
 // GetSince returns the Since value.

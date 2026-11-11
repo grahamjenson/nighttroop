@@ -507,6 +507,10 @@ CREATE TABLE summary_period (
     PRIMARY KEY (period, date)
 ) STRICT;
 
+CREATE TABLE summary_stale (
+    at INTEGER PRIMARY KEY
+) STRICT;
+
 CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 

@@ -177,19 +177,42 @@ func TestRebuildStaleBuildsTheWrittenDaysOnceQuiet(t *testing.T) {
 	r.reading("tuesday-later", tuesday.Add(time.Hour), now.Add(30*time.Second))
 	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
 	require.False(t, r.built(tuesday.Format(time.DateOnly)), "not until its data has gone quiet")
-	require.Zero(t, r.opened)
+	require.Equal(t, 1, r.opened, "only to save the day waiting")
 
 	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(30*time.Second+staleQuiet)))
 	require.True(t, r.built(tuesday.Format(time.DateOnly)))
 	require.False(t, r.built(week.AddDate(0, 0, 2).Format(time.DateOnly)), "a day with nothing written is not built")
-	require.Equal(t, 1, r.opened)
+	require.Equal(t, 2, r.opened)
 	built, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "week", Date: week.Format(time.DateOnly)})
 	require.NoError(t, err)
 	require.Equal(t, int64(2), built.Days, "the kept week is built again with its new day")
 
 	// Once built, nothing is left to build
 	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(time.Hour)))
-	require.Equal(t, 1, r.opened)
+	require.Equal(t, 2, r.opened)
+}
+
+// The days waiting to be built are saved in the site's DB, today's left out as it is built as it is read, so they are
+// built after the server restarts, once its first build reads them back, and then deleted
+func TestRebuildStaleBuildsTheSavedDaysAfterARestart(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	day := now.AddDate(0, 0, -3)
+	r.reading("old", day, now)
+	r.reading("today", now, now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(time.Minute)))
+	saved, err := r.site.GetSummaryStale(ctx)
+	require.NoError(t, err)
+	require.Len(t, saved, 1)
+
+	r.builder.stale = map[string]*staleData{}
+	require.NoError(t, r.builder.Build(ctx, now))
+	require.False(t, r.built(day.Format(time.DateOnly)))
+	require.NoError(t, r.builder.RebuildStale(ctx, now))
+	require.True(t, r.built(day.Format(time.DateOnly)))
+	saved, err = r.site.GetSummaryStale(ctx)
+	require.NoError(t, err)
+	require.Empty(t, saved)
 }
 
 // A site written to without a pause, as by a long backfill, has its days built once its data has waited staleWait

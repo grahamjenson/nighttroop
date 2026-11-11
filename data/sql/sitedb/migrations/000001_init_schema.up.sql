@@ -519,6 +519,12 @@ CREATE TABLE profile_presets (
 
 
 
+-- summary_stale are the 15 minute buckets, by when each starts, of data written to a day before today since its
+-- summaries were built, kept until its days are built again, so a restart or deploy does not lose them
+CREATE TABLE summary_stale (
+    at INTEGER PRIMARY KEY
+) STRICT;
+
 --
 -- INDEXES
 --
