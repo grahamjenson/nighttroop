@@ -175,7 +175,7 @@ type region struct {
 
 var regions = []region{
 	{"above", site_data_templ.GlucoseColours["High"], func(g graph, _, _ float64) float64 { return 0 }, func(g graph, _, high float64) float64 { return g.Y(high) }},
-	{"within", site_data_templ.GlucoseColours[""], func(g graph, _, high float64) float64 { return g.Y(high) }, func(g graph, low, _ float64) float64 { return g.Y(low) }},
+	{"within", inRange, func(g graph, _, high float64) float64 { return g.Y(high) }, func(g graph, low, _ float64) float64 { return g.Y(low) }},
 	{"below", site_data_templ.GlucoseColours["Low"], func(g graph, low, _ float64) float64 { return g.Y(low) }, func(g graph, _, _ float64) float64 { return g.Height }},
 }
 
@@ -222,8 +222,8 @@ func weekStartDay(ctx context.Context) int {
 // agpLegend is the AGP graph's key: its percentiles' bands and median, a day's own glucose over them, and the colours
 // above and below the range
 func agpLegend(p *sitemodels.SiteSummaryPeriod) []legendItem {
-	items := []legendItem{{"h-3 w-3 rounded-sm bg-glucose-in-range/20", "5th to 95th percentile"},
-		{"h-3 w-3 rounded-sm bg-glucose-in-range/50", "25th to 75th percentile"}, {"h-1 w-4 rounded-full bg-glucose-in-range", "Median"}}
+	items := []legendItem{{"h-3 w-3 rounded-sm bg-report-in-range/20", "5th to 95th percentile"},
+		{"h-3 w-3 rounded-sm bg-report-in-range/50", "25th to 75th percentile"}, {"h-1 w-4 rounded-full bg-report-in-range", "Median"}}
 	if p.Period == "day" {
 		items = append(items, legendItem{"h-1 w-4 rounded-full bg-brand-gold", "This day's glucose"})
 	}

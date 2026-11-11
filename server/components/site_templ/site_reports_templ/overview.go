@@ -95,13 +95,17 @@ type band struct {
 	Class     string
 }
 
+// inRange colours what is in range in the reports green, as other diabetes reports draw it, rather than in the brand's
+// colour the glucose pages keep
+var inRange = site_data_templ.GlucoseColour{Text: "text-report-in-range", Fill: "fill-report-in-range", Stroke: "stroke-report-in-range", Background: "bg-report-in-range"}
+
 // bands are the period's very high, high, in range, low and very low, top down as they are drawn
 func bands(p *sitemodels.SiteSummaryPeriod) []band {
 	colours := site_data_templ.GlucoseColours
 	return []band{
 		{"very-high", "Very high", p.TimeVeryHigh, colours["Very high"].Background},
 		{"high", "High", p.TimeHigh, colours["High"].Background},
-		{"in-range", "In range", p.TimeInRange, colours[""].Background},
+		{"in-range", "In range", p.TimeInRange, inRange.Background},
 		{"low", "Low", p.TimeLow, colours["Low"].Background},
 		{"very-low", "Very low", p.TimeVeryLow, colours["Very low"].Background},
 	}

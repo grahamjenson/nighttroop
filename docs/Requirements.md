@@ -413,6 +413,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
+- The reports draw what is in range in green, as other diabetes reports do, not the brand's colour the glucose pages
+  keep for it: the time in range bar, the best day, and the AGP's percentiles and median within the range.
 - Every report's days, weeks and months are the site's: from midnight in the site's timezone, and dated, listed and
   linked in it, whatever the timezone of whoever views them.
 - A report's week and fortnight, on the Overview and AGP pages, are the 7 and 14 days to its date, as Dexcom Clarity's
