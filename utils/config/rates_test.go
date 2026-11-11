@@ -28,7 +28,7 @@ func TestSiteUpdateConnectorsLimiterIsSeparateFromPOST(t *testing.T) {
 func TestSiteLoginAllowKeysAreFixedSize(t *testing.T) {
 	limiters := newRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10,
-		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 10,
+		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 10, SiteLoginNamePerMinuteLimit: 30, SiteLoginNamePerMinuteBurst: 60,
 	})
 
 	huge := strings.Repeat("a", 500*1024)
@@ -42,13 +42,49 @@ func TestSiteLoginAllowKeysAreFixedSize(t *testing.T) {
 	}
 }
 
+// An IP using up its own login attempts at a name, as one locking its owner out would, does not stop another IP
+// logging in to it. A name's own limit, across every IP, only caps guessing spread over many, and an attempt one
+// limiter refuses spends nothing from the other.
+func TestSiteLoginAllowOneIPCannotLockOthersOut(t *testing.T) {
+	limiters := newRateLimiters(ServerConfig{
+		MaxSites: 10, MaxIdentitiesPerSite: 10,
+		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 3, SiteLoginNamePerMinuteLimit: 1, SiteLoginNamePerMinuteBurst: 6,
+	})
+	attacker, owner := "203.0.113.1", "203.0.113.2"
+	tests := []struct {
+		name, ip, login string
+		allowed         bool
+		remaining       int
+	}{
+		{"the attacker's first guess", attacker, "site:admin", true, 3},
+		{"its second", attacker, "site:admin", true, 2},
+		{"its third", attacker, "site:admin", true, 1},
+		{"its IP has none left", attacker, "site:admin", false, 0},
+		{"nor at another name", attacker, "site:phone", false, 0},
+		{"refused guesses spend none of the name's", attacker, "site:admin", false, 0},
+		{"so the owner still logs in", owner, "site:admin", true, 3},
+		{"as at a site's passkeys", owner, "site:passkey", true, 2},
+		{"and its recovery", owner, "site::backup_key", true, 1},
+		{"another IP spends one of the name's last two", "203.0.113.3", "site:admin", true, 2},
+		{"and another the last", "203.0.113.4", "site:admin", true, 1},
+		{"then guessing spread over many IPs is capped", "203.0.113.5", "site:admin", false, 0},
+		{"which spent none of that IP's", "203.0.113.5", "site:phone", true, 3},
+		{"while other sites' names are not capped", "203.0.113.5", "other:admin", true, 2},
+	}
+	for _, tt := range tests {
+		allowed, remaining := limiters.SiteLoginAllow(tt.login, tt.ip)
+		require.Equal(t, tt.allowed, allowed, "%s: %s from %s", tt.name, tt.login, tt.ip)
+		require.Equal(t, tt.remaining, remaining, "%s: remaining", tt.name)
+	}
+}
+
 // A host is usually given a whole IPv6 /64, so an IP's limits hold for every address in it, or stepping through them
 // would give it fresh limits on every request
 func TestIPLimitersKeyOnIPv6Slash64(t *testing.T) {
 	limiters := newRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10,
 		GlobalIPPerMinuteLimit: 1, GlobalIPPerMinuteBurst: 1,
-		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 1,
+		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 1, SiteLoginNamePerMinuteLimit: 30, SiteLoginNamePerMinuteBurst: 60,
 		SiteUnauthPerMinuteLimit: 1, SiteUnauthPerMinuteBurst: 1,
 		SiteCreateIPPerMinuteLimit: 1, SiteCreateIPPerMinuteBurst: 1,
 	})

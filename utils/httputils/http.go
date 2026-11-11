@@ -1,11 +1,36 @@
 package httputils
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
+
+// WithoutURL is the error of an http.Client's request without its URL, which can hold a secret, such as a session in
+// its query or a device token in its path, or a user's own Nightscout. What went wrong is kept, with the URL's host
+// left out of it too, as a DNS error names it, and errors.Is and errors.As still find its cause.
+func WithoutURL(err error) error {
+	urlErr, ok := errors.AsType[*url.Error](err)
+	if !ok {
+		return err
+	}
+	message := urlErr.Err.Error()
+	if u, parseErr := url.Parse(urlErr.URL); parseErr == nil && u.Hostname() != "" {
+		message = strings.ReplaceAll(message, u.Hostname(), "the host")
+	}
+	return &withoutURLError{message: urlErr.Op + ": " + message, err: urlErr.Err}
+}
+
+type withoutURLError struct {
+	message string
+	err     error
+}
+
+func (e *withoutURLError) Error() string { return e.message }
+func (e *withoutURLError) Unwrap() error { return e.err }
 
 // ReadLimitedBody reads an upstream response body of at most max bytes and fails
 // when it is longer, so a large (or gzip-inflated) body cannot exhaust memory.
@@ -137,7 +162,8 @@ func GetHTTPAction(r *http.Request) HTTPAction {
 // Writer
 //////
 
-// THIS IS SO STUPID THAT I HAVE TO DO THIS TO CHECK THE STATUS OF THE RETURNED RESPONSE.
+// StatusResponseWriter records the status code a handler writes, as http.ResponseWriter has no way to read it back,
+// and the middleware that marks an identity seen acts only on a successful response.
 type StatusResponseWriter struct {
 	http.ResponseWriter
 	Status int

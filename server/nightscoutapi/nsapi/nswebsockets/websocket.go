@@ -56,7 +56,7 @@ type Websocket struct {
 	jwtIdentity, tokenIdentity IdentityFinder
 
 	mu      sync.Mutex
-	servers map[string]*socketio.Server              // one per site, so sites share no sessions or rooms
+	servers map[string]*siteSockets                  // one per site, so sites share no sessions or rooms
 	storage map[string]map[string]*storageSubscriber // each site's /storage subscribers by socket ID
 }
 
@@ -65,19 +65,41 @@ type IdentityFinder func(config *config.ServerConfig, ctx context.Context, token
 
 // NewWebsocket serves the Nightscout API's collections, finding identities as the API does
 func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig, collections map[nsutils.Collection]nscollections.CollectionStore, jwtIdentity, tokenIdentity IdentityFinder) *Websocket {
-	return &Websocket{config: config, controlDB: controlDB, collections: collections, jwtIdentity: jwtIdentity, tokenIdentity: tokenIdentity, servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}}
+	return &Websocket{config: config, controlDB: controlDB, collections: collections, jwtIdentity: jwtIdentity, tokenIdentity: tokenIdentity, servers: map[string]*siteSockets{}, storage: map[string]map[string]*storageSubscriber{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ws.siteServer(httputils.GetSiteContext(r.Context()).SiteID, true).ServeHTTP(w, r)
+	server := ws.siteServer(httputils.GetSiteContext(r.Context()).SiteID, true)
+	defer func() {
+		ws.mu.Lock()
+		server.serving--
+		ws.mu.Unlock()
+	}()
+	server.ServeHTTP(w, r)
 }
 
-// siteServer is the site's Socket.IO server, made on its first connection when create is set
-func (ws *Websocket) siteServer(siteID string, create bool) *socketio.Server {
+// siteSockets is a site's Socket.IO server, with its subscription to the site's events and how many requests it is
+// serving, as one being served may be about to open a session
+type siteSockets struct {
+	*socketio.Server
+	unsubscribe func()
+	serving     int
+}
+
+// idleServerSweep is how often each site's server with no sessions, and no request being served, is freed with its
+// subscription, so the servers of sites no longer connected to, or deleted or disabled, are not kept until restart
+var idleServerSweep = 5 * time.Minute
+
+// siteServer is the site's Socket.IO server, made on its first connection when create is set, which then counts as a
+// request being served until ServeHTTP is done with it
+func (ws *Websocket) siteServer(siteID string, create bool) *siteSockets {
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
-	if server := ws.servers[siteID]; server != nil || !create {
-		return server
+	if site := ws.servers[siteID]; site != nil || !create {
+		if site != nil && create {
+			site.serving++
+		}
+		return site
 	}
 	server := socketio.NewServer(ws.engineConfig())
 	main := server.Of(socketio.DefaultNamespace)
@@ -85,7 +107,7 @@ func (ws *Websocket) siteServer(siteID string, create bool) *socketio.Server {
 	server.Of("/storage").OnConnection(ws.onStorageConnect)
 	alarm := server.Of("/alarm")
 	alarm.OnConnection(ws.onAlarmConnect)
-	ws.config.Events.Subscribe(siteID, func(event events.Event) {
+	unsubscribe := ws.config.Events.Subscribe(siteID, func(event events.Event) {
 		// Model changes are sent to the site's sockets, its announcements and an identity's alarms to its /alarm sockets
 		if event.Model != nil {
 			ws.broadcastChange(main, alarm, event)
@@ -94,9 +116,33 @@ func (ws *Websocket) siteServer(siteID string, create bool) *socketio.Server {
 		if checked, ok := event.Attributes.(alarms.Checked); ok && event.Name == events.Alarm {
 			ws.sendAlarms(alarm, checked)
 		}
+		// A site deleted or disabled is no longer served, so its sessions are closed and the sweep frees its server
+		if event.Name == events.SiteDeleted || event.Name == events.SiteDisabled {
+			go server.Close()
+		}
 	})
-	ws.servers[siteID] = server
-	return server
+	if len(ws.servers) == 0 {
+		time.AfterFunc(idleServerSweep, ws.sweepServers)
+	}
+	site := &siteSockets{Server: server, unsubscribe: unsubscribe, serving: 1}
+	ws.servers[siteID] = site
+	return site
+}
+
+// sweepServers frees each site's server with no sessions and no request being served, then sweeps again while any
+// are left. Requests get a site's server under ws.mu, so none can open a session on one being freed.
+func (ws *Websocket) sweepServers() {
+	ws.mu.Lock()
+	defer ws.mu.Unlock()
+	for siteID, site := range ws.servers {
+		if site.serving == 0 && site.Count() == 0 {
+			site.unsubscribe()
+			delete(ws.servers, siteID)
+		}
+	}
+	if len(ws.servers) > 0 {
+		time.AfterFunc(idleServerSweep, ws.sweepServers)
+	}
 }
 
 // engineConfig is the server config's limits on one site's sessions

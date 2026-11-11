@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -45,6 +47,24 @@ func LoopSettingsFromDB(row *sitedb.LoopSetting) *SiteLoopSettings {
 	}
 	return &SiteLoopSettings{ID: row.ID, App: row.App, Source: row.Source, Settings: json.RawMessage(row.SettingsJson),
 		FirstSeenAt: row.FirstSeenAt, LastSeenAt: row.LastSeenAt, CreatedByDeviceName: row.CreatedByDeviceName, CreatedAt: row.CreatedAt}
+}
+
+// LoopSettingsFor are the settings as the identity may see them: without their deviceToken, at the top of Loop's and
+// Trio's, unless can.SeeDeviceTokens, and none when they cannot be read without it
+func LoopSettingsFor(identity *controldb.SiteIdentity, settings json.RawMessage) json.RawMessage {
+	if can.SeeDeviceTokens(identity) {
+		return settings
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(settings, &fields); err != nil {
+		return nil
+	}
+	if _, sent := fields["deviceToken"]; !sent {
+		return settings
+	}
+	delete(fields, "deviceToken")
+	hidden, _ := json.Marshal(fields)
+	return hidden
 }
 
 // loopGlucoseSettings are the settings Loop and Trio send glucose in, Loop's in its profile's units and Trio's in

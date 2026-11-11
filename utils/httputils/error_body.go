@@ -2,7 +2,6 @@ package httputils
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 
@@ -38,18 +37,14 @@ func KeepErrorRequestBodies(next http.Handler) http.Handler {
 }
 
 // ErrorRequestBody is the body of the request ctx is for, as KeepErrorRequestBodies kept it, with its credentials
-// redacted: its JSON, a form, or its text, such as JSON that did not parse; nil when it had none
+// redacted: its JSON, even sent without saying so, or a form, or only its size and content type when it is neither, such
+// as JSON that did not parse or was cut short; nil when it had none
 func ErrorRequestBody(ctx context.Context) map[string]any {
 	kept, _ := ctx.Value(errorRequestBodyKey{}).(*errorRequestBody)
 	if kept == nil {
 		return nil
 	}
-	contentType := kept.contentType
-	// A client may send JSON without saying so; it is redacted as JSON all the same
-	if json.Valid(kept.buffer.Bytes()) {
-		contentType = "application/json"
-	}
-	return body(&kept.buffer, contentType)
+	return body(&kept.buffer, kept.contentType)
 }
 
 // reportErrorRequestBodies sends the body of a request whose handler reports an error to Sentry with it, under
