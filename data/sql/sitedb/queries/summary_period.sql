@@ -48,3 +48,11 @@ DELETE FROM summary_period WHERE period = ? AND date = ?;
 -- name: DeleteSummaryPeriods :execresult
 -- Deletes the days, weeks or months, or with no period all of them
 DELETE FROM summary_period WHERE CAST(sqlc.narg('Period') AS TEXT) IS NULL OR period = sqlc.narg('Period');
+
+-- name: StaleSummaryDays :many
+-- The days whose data was written since they were built, by when each starts
+SELECT start_at FROM summary_period WHERE period = 'day' AND stale_at IS NOT NULL;
+
+-- name: ClearStaleSummaries :exec
+-- The summaries marked stale by Before, as those just built, are up to date; one marked since is built again later
+UPDATE summary_period SET stale_at = NULL WHERE stale_at <= @before;

@@ -239,3 +239,89 @@ func TestRebuildStaleBuildsTheDayARecordMovedFrom(t *testing.T) {
 		require.Zero(t, day.GlucoseReadings, "the day it moved from no longer has it")
 	}
 }
+
+// staleDays are the dates of the site's days marked stale in its DB
+func (r *rig) staleDays() []string {
+	starts, err := r.site.StaleSummaryDays(r.t.Context())
+	require.NoError(r.t, err)
+	dates := []string{}
+	for _, start := range starts {
+		dates = append(dates, time.UnixMilli(start).UTC().Format(time.DateOnly))
+	}
+	return dates
+}
+
+// A day built before data was written to it is marked stale in the site's DB, so a server stopped before building it
+// again builds it on its first run once it starts again, though it no longer knows what was written
+func TestRebuildStaleBuildsTheDaysMarkedStaleBeforeARestart(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	day := now.AddDate(0, 0, -3)
+	r.reading("first", day, now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.Empty(t, r.staleDays())
+
+	// Written, then the server stops before it is built again
+	_, err := r.site.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "second", Mgdl: 120, ReadingType: "sgv", OccurredAt: day.Add(time.Hour).UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	require.Equal(t, []string{day.Format(time.DateOnly)}, r.staleDays())
+
+	restarted := NewBuilder(r.bus, r.builder.controlDB)
+	require.NoError(t, restarted.RebuildStale(ctx, now))
+	built, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: day.Format(time.DateOnly)})
+	require.NoError(t, err)
+	require.Equal(t, int64(2), built.GlucoseReadings)
+	require.Empty(t, r.staleDays(), "once built it is up to date")
+}
+
+// Each write of data a day's summary is built from marks the built days it is in stale, an update the one it moved from
+// too, and a delete the one it was in; truncating device reports, thinning, deleting and clearing them, marks none
+func TestWritesMarkTheirDaysStale(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	days := []time.Time{now.AddDate(0, 0, -5), now.AddDate(0, 0, -4), now.AddDate(0, 0, -3)}
+	for i, day := range days {
+		r.reading(fmt.Sprint("day", i), day, now)
+	}
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	date := func(i int) string { return days[i].Format(time.DateOnly) }
+	clear := func() {
+		require.NoError(t, r.site.ClearStaleSummaries(ctx, sitedb.ClearStaleSummariesParams{Before: new(time.Now().Add(time.Hour).UnixMilli())}))
+	}
+	report := func(id string, at time.Time) {
+		_, err := r.site.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: at.UnixMilli(), CreatedByDeviceName: new("loop"), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+
+	tests := []struct {
+		name  string
+		write func()
+		stale []string
+	}{
+		{"a reading added", func() { r.reading("added", days[0].Add(time.Minute), now) }, []string{date(0)}},
+		{"a reading today, in no built day", func() { r.reading("today", now, now) }, []string{}},
+		{"a treatment moved to another day", func() {
+			_, err := r.site.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "note", GroupType: "Note", OccurredAt: days[1].UnixMilli(), CreatedByIdentityName: "phone"})
+			require.NoError(t, err)
+			clear()
+			_, err = r.site.RegroupEventGroup(ctx, sitedb.RegroupEventGroupParams{ID: "note", OccurredAt: new(days[2].UnixMilli())})
+			require.NoError(t, err)
+		}, []string{date(1), date(2)}},
+		{"a reading deleted", func() {
+			_, err := r.site.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: "day0"})
+			require.NoError(t, err)
+		}, []string{date(0)}},
+		{"a device report added", func() { report("report", days[1]) }, []string{date(1)}},
+		{"device reports truncated", func() {
+			require.NoError(t, r.site.ClearDeviceReportStatuses(ctx, sitedb.ClearDeviceReportStatusesParams{ID: "report"}))
+			require.NoError(t, r.site.DeleteOldDeviceReports(ctx, sitedb.DeleteOldDeviceReportsParams{Before: now.UnixMilli()}))
+		}, []string{}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			clear()
+			test.write()
+			require.ElementsMatch(t, test.stale, r.staleDays())
+		})
+	}
+}

@@ -566,11 +566,17 @@ CREATE TABLE summary_period (
     loop_iob_basal_json TEXT NOT NULL CHECK(length(loop_iob_basal_json) <= 4096 AND json_valid(loop_iob_basal_json)),
     loop_iob_treatment_json TEXT NOT NULL CHECK(length(loop_iob_treatment_json) <= 4096 AND json_valid(loop_iob_treatment_json)),
     loop_cob_json TEXT NOT NULL CHECK(length(loop_cob_json) <= 4096 AND json_valid(loop_cob_json)),
+    -- When data in it was first written since it was built, by the triggers below, so it is built again, after a
+    -- restart too; null while it is up to date
+    stale_at INTEGER,
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     PRIMARY KEY (period, date)
 ) STRICT;
+-- The summaries a time is in, as each write to a day's data looks them up, and those stale
+CREATE INDEX summary_period_end_at_idx ON summary_period(end_at);
+CREATE INDEX summary_period_stale_at_idx ON summary_period(stale_at) WHERE stale_at IS NOT NULL;
 
 -- Every All*/Search* query orders by occurred_at DESC with a LIMIT, so an
 -- index on it lets SQLite walk rows newest first and stop instead of scanning
@@ -604,3 +610,60 @@ CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(r
 CREATE INDEX event_groups_group_type_occurred_at_idx ON event_groups(group_type, occurred_at);
 CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
 CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_store_id);
+
+-- A time written to the data a day's summary is built from, inserted into summary_period_stale, marks the summaries it
+-- is in stale. Each write of that data inserts its time, and an update its old time too, so a record moved to another
+-- day builds both. Device reports' deletes, and their updates that leave updated_at alone, are truncation thinning them
+-- and clearing what was sent, which their summaries are not built again from.
+CREATE VIEW summary_period_stale (occurred_at) AS SELECT 0 WHERE 0;
+CREATE TRIGGER summary_period_stale_mark INSTEAD OF INSERT ON summary_period_stale BEGIN
+    UPDATE summary_period SET stale_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+        WHERE stale_at IS NULL AND end_at > NEW.occurred_at AND start_at <= NEW.occurred_at;
+END;
+CREATE TRIGGER glucose_readings_stale_insert AFTER INSERT ON glucose_readings
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER glucose_readings_stale_update AFTER UPDATE ON glucose_readings
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;
+CREATE TRIGGER glucose_readings_stale_delete AFTER DELETE ON glucose_readings
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at); END;
+CREATE TRIGGER insulin_doses_stale_insert AFTER INSERT ON insulin_doses
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER insulin_doses_stale_update AFTER UPDATE ON insulin_doses
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;
+CREATE TRIGGER insulin_doses_stale_delete AFTER DELETE ON insulin_doses
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at); END;
+CREATE TRIGGER food_intakes_stale_insert AFTER INSERT ON food_intakes
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER food_intakes_stale_update AFTER UPDATE ON food_intakes
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;
+CREATE TRIGGER food_intakes_stale_delete AFTER DELETE ON food_intakes
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at); END;
+CREATE TRIGGER temp_basals_stale_insert AFTER INSERT ON temp_basals
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER temp_basals_stale_update AFTER UPDATE ON temp_basals
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;
+CREATE TRIGGER temp_basals_stale_delete AFTER DELETE ON temp_basals
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at); END;
+CREATE TRIGGER temp_targets_stale_insert AFTER INSERT ON temp_targets
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER temp_targets_stale_update AFTER UPDATE ON temp_targets
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;
+CREATE TRIGGER temp_targets_stale_delete AFTER DELETE ON temp_targets
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at); END;
+CREATE TRIGGER profile_switches_stale_insert AFTER INSERT ON profile_switches
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER profile_switches_stale_update AFTER UPDATE ON profile_switches
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;
+CREATE TRIGGER profile_switches_stale_delete AFTER DELETE ON profile_switches
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at); END;
+CREATE TRIGGER event_groups_stale_insert AFTER INSERT ON event_groups
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER event_groups_stale_update AFTER UPDATE ON event_groups
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;
+CREATE TRIGGER event_groups_stale_delete AFTER DELETE ON event_groups
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at); END;
+CREATE TRIGGER device_reports_stale_insert AFTER INSERT ON device_reports
+    BEGIN INSERT INTO summary_period_stale VALUES (NEW.occurred_at); END;
+CREATE TRIGGER device_reports_stale_update AFTER UPDATE ON device_reports
+    WHEN NEW.updated_at IS NOT OLD.updated_at OR NEW.occurred_at IS NOT OLD.occurred_at
+    BEGIN INSERT INTO summary_period_stale VALUES (OLD.occurred_at), (NEW.occurred_at); END;

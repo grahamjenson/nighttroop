@@ -4346,6 +4346,16 @@ func (m *SummaryPeriod) SetLoopCobJson(v string) {
 	m.LoopCobJson = v
 }
 
+// GetStaleAt returns the StaleAt value.
+func (m SummaryPeriod) GetStaleAt() *int64 {
+	return m.StaleAt
+}
+
+// SetStaleAt sets the StaleAt value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetStaleAt(v *int64) {
+	m.StaleAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m SummaryPeriod) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -14404,6 +14414,16 @@ func (m UpdateProfilePresetParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateProfilePresetParams.
 func (m *UpdateProfilePresetParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearStaleSummariesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearStaleSummariesParams.
+func (m *ClearStaleSummariesParams) SetBefore(v *int64) {
+	m.Before = v
 }
 
 // GetPeriod returns the Period value.
