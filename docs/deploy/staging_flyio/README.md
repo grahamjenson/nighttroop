@@ -57,7 +57,13 @@ of your own domain:
   - Measured with 500 sites, it uses about 50 MB with none in use, and 1.5 MB more for each site used in the last 30
     seconds, so it holds about 130 sites in use at once before it swaps.
   - Fly's proxy ends HTTPS and forwards to the server on port 3000.
-  - Nighttroop reads the visitor's IP from Fly's `Fly-Client-IP` header, because Fly sets `FLY_APP_NAME`.
+  - Nighttroop reads the visitor's IP from Fly's `Fly-Client-IP` header, because Fly sets `FLY_APP_NAME`, but only on
+    a request from `TRUSTED_PROXIES`, which [`fly.toml`](fly.toml) sets to `172.16.0.0/16`.
+    - Anything else that reaches the machine, such as another app or machine on your organisation's private network,
+      could set the header to any IP and dodge the per-IP rate limits, so its header is ignored.
+    - Fly does not document where its proxy connects from. Its proxy has been seen to connect from `172.16.x.x`, while
+      other machines on the private network have `fdaa:` addresses. See
+      [the visitors all share one IP](#the-visitors-all-share-one-ip) to check it.
   - There is only one machine because each machine would have its own databases.
 - **A volume.** The databases are in `/data`, on the `nighttroop_staging_data` volume, which the first deploy makes.
   - The image is the `Dockerfile`'s `staging` target. It starts as root, as Fly mounts the volume owned by root, gives
@@ -280,6 +286,17 @@ the migrations now make.
 
 Each machine has its own databases. Remove the extra one with `fly scale count 1 --app nighttroop-staging`, and
 deploy with `--ha=false`, as the workflow does.
+
+### The visitors all share one IP
+
+Rate limits are hit far too often, or every request has the same IP, when Fly's proxy connects from outside
+`TRUSTED_PROXIES`, so its `Fly-Client-IP` is ignored.
+
+- Each request is kept as a `Captured` log, as `CAPTURE_REQUESTS` is on. On the control plane's logs page, check a
+  request of yours has your own IP as its `remote_ip`.
+- If it has an address of Fly's instead, add that address to `TRUSTED_PROXIES` in `fly.toml` and deploy.
+- Don't add `fdaa::/16` or `0.0.0.0/0`. Other machines on your private network can connect from there, and can then
+  claim to be any IP.
 
 ### The Deploy staging workflow is skipped
 

@@ -1,0 +1,147 @@
+# Loop's and Trio's device tokens, which with the app's push credentials push to the phone, are only given to the
+# identities that can change the site's data, as LoopFollow sending remote commands must. Read only followers get the
+# profile and the loop settings without them. See docs/clients/loopfollow.md.
+
+INCLUDE steps/new_site_admin.steps
+
+NAME create_viewer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "viewer", "role": "user_readonly"}
+ASSERT_STATUS 201
+SET viewer_token {{ .create_viewer.result.ns_token }}
+
+NAME create_follower
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "follower", "role": "device_read"}
+ASSERT_STATUS 201
+SET follower_token {{ .create_follower.result.ns_token }}
+
+NAME create_carer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "device_read_write"}
+ASSERT_STATUS 201
+SET carer_token {{ .create_carer.result.ns_token }}
+
+NAME viewer_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .viewer_token }}
+ASSERT_STATUS 200
+SET viewer_jwt {{ .viewer_jwt.token }}
+
+######
+# Loop uploads its profile, then again with a new device token, and Trio uploads its own
+######
+
+NAME loop_profile
+POST http://{{ .ns_site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 120 }}", "units": "mg/dL", "enteredBy": "Loop",
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}},
+    "loopSettings": {"dosingEnabled": true, "maximumBolus": 10, "bundleIdentifier": "com.ABCDE12345.loopkit.Loop", "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"}}
+ASSERT_STATUS 200
+
+NAME loop_profile_new_token
+POST http://{{ .ns_site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 60 }}", "units": "mg/dL", "enteredBy": "Loop",
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}},
+    "loopSettings": {"dosingEnabled": true, "maximumBolus": 10, "bundleIdentifier": "com.ABCDE12345.loopkit.Loop", "deviceToken": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}}
+ASSERT_STATUS 200
+
+NAME trio_profile
+POST http://{{ .ns_site }}/api/v1/profile.json?token={{ token }}
+B {"defaultProfile": "default", "startDate": "{{ time 0 }}", "units": "mg/dl", "enteredBy": "Trio",
+    "store": {"default": {"dia": 6, "units": "mg/dl", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}},
+    "bundleIdentifier": "org.nightscout.ABCDE12345.trio", "deviceToken": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809", "isAPNSProduction": false, "teamID": "ABCDE12345"}
+ASSERT_STATUS 200
+
+######
+# Read only followers get the profiles without the device tokens, but with the rest of the settings
+######
+
+NAME viewer_profiles
+GET http://{{ .ns_site }}/api/v1/profiles.json?token={{ .viewer_token }}&count=3
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS null "@0.deviceToken"
+ASSERT_EQUALS "org.nightscout.ABCDE12345.trio" "@0.bundleIdentifier"
+ASSERT_EQUALS "ABCDE12345" "@0.teamID"
+ASSERT_EQUALS null "@1.loopSettings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@1.loopSettings.bundleIdentifier"
+ASSERT_EQUALS 10 "@1.loopSettings.maximumBolus"
+ASSERT_EQUALS null "@2.loopSettings.deviceToken"
+
+NAME follower_profiles
+GET http://{{ .ns_site }}/api/v1/profiles.json?token={{ .follower_token }}&count=3
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS null "@0.deviceToken"
+ASSERT_EQUALS null "@1.loopSettings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@1.loopSettings.bundleIdentifier"
+
+NAME follower_v3_profile
+GET http://{{ .ns_site }}/api/v3/profile?token={{ .follower_token }}&limit=3
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result"
+ASSERT_EQUALS null "@result.0.deviceToken"
+ASSERT_EQUALS null "@result.0.loopSettings.deviceToken"
+ASSERT_EQUALS null "@result.1.deviceToken"
+ASSERT_EQUALS null "@result.1.loopSettings.deviceToken"
+ASSERT_EQUALS null "@result.2.deviceToken"
+ASSERT_EQUALS null "@result.2.loopSettings.deviceToken"
+
+######
+# LoopFollow sending remote commands, with a token that can write, and the loop's own phone get them
+######
+
+NAME carer_profiles
+GET http://{{ .ns_site }}/api/v1/profiles.json?token={{ .carer_token }}&count=3
+ASSERT_STATUS 200
+ASSERT_EQUALS "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809" "@0.deviceToken"
+ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@1.loopSettings.deviceToken"
+ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0" "@2.loopSettings.deviceToken"
+
+NAME pwd_phone_profiles
+GET http://{{ .ns_site }}/api/v1/profiles.json?token={{ token }}&count=3
+ASSERT_STATUS 200
+ASSERT_EQUALS "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809" "@0.deviceToken"
+ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@1.loopSettings.deviceToken"
+
+######
+# The site's loop settings are the same: without the device tokens, or a change to one, for a read only identity
+######
+
+NAME viewer_loop_settings
+GET http://{{ site }}/presets/loop-settings
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS "trio" "@result.items.0.app"
+ASSERT_EQUALS null "@result.items.0.settings.deviceToken"
+ASSERT_EQUALS "org.nightscout.ABCDE12345.trio" "@result.items.0.settings.bundleIdentifier"
+ASSERT_EQUALS "loop" "@result.items.1.app"
+ASSERT_EQUALS null "@result.items.1.settings.deviceToken"
+ASSERT_EQUALS 10 "@result.items.1.settings.maximumBolus"
+SET new_token_settings_id {{ dig "viewer_loop_settings.result.items.1.id" }}
+
+NAME viewer_loop_settings_changes
+GET http://{{ site }}/presets/loop-settings/{{ .new_token_settings_id }}
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.settings.deviceToken"
+ASSERT_EXISTS "@result.previous_id"
+ASSERT_LENGTH 0 "@result.changes"
+
+NAME admin_loop_settings_changes
+GET http://{{ site }}/presets/loop-settings/{{ .new_token_settings_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@result.settings.deviceToken"
+ASSERT_LENGTH 1 "@result.changes"
+ASSERT_EQUALS "deviceToken" "@result.changes.0.field"
