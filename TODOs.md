@@ -39,6 +39,29 @@
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
+    1. P2: Bind each ciphertext to where it is kept, as `utils/security/encryption.go` encrypts every secret and backup
+       with one key and no associated data, so anyone who can write to a DB or the S3 bucket can swap ciphertexts
+       between sites, columns or backup objects (e.g. one site's Dexcom password as another's TOTP secret, or one
+       site's archive at another's key) and the server decrypts them. Design: `EncryptFor(purpose, siteID, plaintext)`
+       with associated data `purpose|siteID` (siteID empty where there is no site), and `DecryptFor` trying it, then
+       nil for older ciphertexts; backups' streaming AEAD bound to `backup|` and the object key without its host name
+       (so a bucket copied to a new host still restores), falling back to nil at the first read as Tink's own
+       `streamingaead` decrypt reader does across keys. About 165 lines, so in PRs each under 150:
+        1. `EncryptFor`/`DecryptFor`, their purposes, and connector credentials (URL or username and password as two
+           purposes): `sitesettings/connectors.go` `encryptCredentials`, `background/connectors/job.go`
+           `getUsernamePasswordRegion`, and `models/sitemodels/converters_site.go` `Decrypt` (goverter, mapped from
+           the whole connector for its site); with unit tests that site A's or purpose X's ciphertext does not
+           decrypt as site B's or purpose Y's and a nil one still does (about 55 lines)
+        1. TOTP secrets (`TOTPGenerate` taking the site, its 5 callers in `data/db`, `control_setup.go`'s staging
+           secret, and the decrypts in `controlapi/login.go` and `sitelogin/login.go` twice), push secrets and tokens
+           (`sitesettings/push_credentials.go`, `utils/push/registration.go`, `utils/push/send.go`), Nightscout tokens
+           (`nightscout_token.go`) and passkey cookies (`passkey.go`), then removing the dead `Encrypt`/`Decrypt`
+           (about 55 lines)
+        1. Backups: `EncryptingWriterFor`/`DecryptingReaderFor`, and `createTarLZ4`/`ExtractTarLZ4` in
+           `utils/s3utils/s3.go` and `cmd/keysets/decrypt_tar_lz4_enc.go` taking the object key (about 55 lines)
+        1. Then re-encrypt the older rows with their context, at start or as a job, and drop the nil fallback for DB
+           values; and drop it for backups once retention has removed every older one. Until then an older
+           ciphertext can still be swapped, as it decrypts with nil anywhere
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
