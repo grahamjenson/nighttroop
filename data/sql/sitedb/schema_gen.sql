@@ -42,7 +42,7 @@ CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at);
 
 CREATE INDEX summary_period_end_at_idx ON summary_period(end_at);
 
-CREATE INDEX summary_period_stale_at_idx ON summary_period(stale_at) WHERE stale_at IS NOT NULL;
+CREATE INDEX summary_period_stale_idx ON summary_period(period, start_at) WHERE stale_at IS NOT NULL;
 
 CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);
 

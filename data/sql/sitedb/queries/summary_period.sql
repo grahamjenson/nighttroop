@@ -50,9 +50,9 @@ DELETE FROM summary_period WHERE period = ? AND date = ?;
 DELETE FROM summary_period WHERE CAST(sqlc.narg('Period') AS TEXT) IS NULL OR period = sqlc.narg('Period');
 
 -- name: MarkSummariesStale :exec
--- The summaries At is in are built again, as a record at At was deleted or moved from it
+-- The summaries a record at At was deleted or moved from; none is longer than 32 days, however old At is
 UPDATE summary_period SET stale_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE stale_at IS NULL AND end_at > @at AND start_at <= @at;
+WHERE stale_at IS NULL AND end_at > @at AND end_at <= @at + 2764800000 AND start_at <= @at;
 
 -- name: StaleSummaryDays :many
 -- The days marked to be built again, by when each starts

@@ -97,14 +97,14 @@ func (q *Queries) HardDeleteSummaryPeriod(ctx context.Context, arg HardDeleteSum
 
 const markSummariesStale = `-- name: MarkSummariesStale :exec
 UPDATE summary_period SET stale_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE stale_at IS NULL AND end_at > ?1 AND start_at <= ?1
+WHERE stale_at IS NULL AND end_at > ?1 AND end_at <= ?1 + 2764800000 AND start_at <= ?1
 `
 
 type MarkSummariesStaleParams struct {
 	At int64
 }
 
-// The summaries At is in are built again, as a record at At was deleted or moved from it
+// The summaries a record at At was deleted or moved from; none is longer than 32 days, however old At is
 func (q *Queries) MarkSummariesStale(ctx context.Context, arg MarkSummariesStaleParams) error {
 	_, err := q.exec(ctx, q.markSummariesStaleStmt, markSummariesStale, arg.At)
 	return err

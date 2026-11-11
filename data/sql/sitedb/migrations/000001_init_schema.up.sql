@@ -576,7 +576,7 @@ CREATE TABLE summary_period (
 ) STRICT;
 -- The summaries a time is in, as marking them stale looks them up, and those stale
 CREATE INDEX summary_period_end_at_idx ON summary_period(end_at);
-CREATE INDEX summary_period_stale_at_idx ON summary_period(stale_at) WHERE stale_at IS NOT NULL;
+CREATE INDEX summary_period_stale_idx ON summary_period(period, start_at) WHERE stale_at IS NOT NULL;
 
 -- Every All*/Search* query orders by occurred_at DESC with a LIMIT, so an
 -- index on it lets SQLite walk rows newest first and stop instead of scanning

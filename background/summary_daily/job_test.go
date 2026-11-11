@@ -267,3 +267,26 @@ func TestRebuildStaleBuildsTheDaysMarkedStaleBeforeARestart(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, starts, "once built it is up to date")
 }
+
+// Marking a time stale marks every summary it is in, its day, week, fortnight and month, however old, and only those:
+// a month's first hour is the furthest from its end a summary can be
+func TestMarkStaleMarksEveryPeriodATimeIsIn(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	month := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, -4, 0)
+	at := month.Add(time.Hour)
+	r.reading("first-hour", at, now)
+	r.reading("month-before", at.AddDate(0, 0, -1), now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+
+	require.NoError(t, r.site.MarkStale(ctx, sitedb.GlucoseReading{OccurredAt: at.UnixMilli()}))
+	for _, period := range []string{"day", "week", "fortnight", "month"} {
+		date := sitedata.PeriodStart(period, at, time.UTC, "monday").Format(time.DateOnly)
+		summary, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: period, Date: date})
+		require.NoError(t, err, period)
+		require.NotNil(t, summary.StaleAt, "its %s %s", period, date)
+	}
+	before, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "month", Date: month.AddDate(0, -1, 0).Format(time.DateOnly)})
+	require.NoError(t, err)
+	require.Nil(t, before.StaleAt, "the month before is not marked")
+}
