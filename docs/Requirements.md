@@ -14,6 +14,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A new server has no control admin, so every page goes to `control.<host>/setup` and the APIs answer that it is not
   set up, until the admin is made. Only the health check works.
+- A server with any Admin, whatever it is named, starts set up: deleting the first admin, `admin`, once another Admin
+  is made, and restarting the server does not put it back into setup or take its sites offline.
 - The server prints a one-time setup code to its logs; the setup page asks for it, so only whoever runs the server can
   set it up. Wrong codes are rate limited per IP, and from every IP at a far higher rate. A wrong setup or TOTP code
   is said to be wrong in an error toast.

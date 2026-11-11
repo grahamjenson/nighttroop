@@ -39,6 +39,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.countActiveSitesStmt, err = db.PrepareContext(ctx, countActiveSites); err != nil {
 		return nil, fmt.Errorf("error preparing query CountActiveSites: %w", err)
 	}
+	if q.countControlAdminsStmt, err = db.PrepareContext(ctx, countControlAdmins); err != nil {
+		return nil, fmt.Errorf("error preparing query CountControlAdmins: %w", err)
+	}
 	if q.countPushCredentialsStmt, err = db.PrepareContext(ctx, countPushCredentials); err != nil {
 		return nil, fmt.Errorf("error preparing query CountPushCredentials: %w", err)
 	}
@@ -343,6 +346,11 @@ func (q *Queries) Close() error {
 	if q.countActiveSitesStmt != nil {
 		if cerr := q.countActiveSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countActiveSitesStmt: %w", cerr)
+		}
+	}
+	if q.countControlAdminsStmt != nil {
+		if cerr := q.countControlAdminsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countControlAdminsStmt: %w", cerr)
 		}
 	}
 	if q.countPushCredentialsStmt != nil {
@@ -849,6 +857,7 @@ type Queries struct {
 	archiveSitesStmt                        *sql.Stmt
 	countActiveIdentitiesStmt               *sql.Stmt
 	countActiveSitesStmt                    *sql.Stmt
+	countControlAdminsStmt                  *sql.Stmt
 	countPushCredentialsStmt                *sql.Stmt
 	countPushRegistrationsStmt              *sql.Stmt
 	countSiteIdentitiesStmt                 *sql.Stmt
@@ -952,6 +961,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		archiveSitesStmt:                        q.archiveSitesStmt,
 		countActiveIdentitiesStmt:               q.countActiveIdentitiesStmt,
 		countActiveSitesStmt:                    q.countActiveSitesStmt,
+		countControlAdminsStmt:                  q.countControlAdminsStmt,
 		countPushCredentialsStmt:                q.countPushCredentialsStmt,
 		countPushRegistrationsStmt:              q.countPushRegistrationsStmt,
 		countSiteIdentitiesStmt:                 q.countSiteIdentitiesStmt,

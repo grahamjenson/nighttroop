@@ -24,6 +24,10 @@ INSERT INTO control_identities (
 SELECT * FROM control_identities ORDER BY created_at DESC LIMIT 100;
 
 
+-- A server without an admin is set up, whatever its admins are named, see control_setup.go
+-- name: CountControlAdmins :one
+SELECT COUNT(*) FROM control_identities WHERE role = 'admin';
+
 -- name: GetControlIdentity :one
 SELECT * FROM control_identities WHERE name = sqlc.arg('Name') LIMIT 1;
 -- name: GetControlIdentityByID :one
