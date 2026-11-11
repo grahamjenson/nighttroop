@@ -167,6 +167,9 @@ func (s *Socket) Namespace() *Namespace { return s.namespace }
 // Request is the Engine.IO handshake request, for its headers, query, remote address and context values
 func (s *Socket) Request() *http.Request { return s.conn.session.Request() }
 
+// Authorize marks the socket's session as given access, so it no longer counts against its client's unauthorized ones
+func (s *Socket) Authorize() { s.conn.session.Authorize() }
+
 // On sets the handler for an event from the client; handlers run in order, one at a time
 func (s *Socket) On(event string, handler EventHandler) {
 	s.mu.Lock()
@@ -233,9 +236,11 @@ func (s *Socket) Disconnect() {
 }
 
 // Close disconnects the socket and, when its client has no other socket, closes its session, so it holds none of the
-// server's sessions
+// server's sessions. One already disconnected sends no disconnect, which would end a new socket its client opened.
 func (s *Socket) Close() {
-	s.Disconnect()
+	if s.Connected() {
+		s.Disconnect()
+	}
 	s.conn.closeIfEmpty("server close")
 }
 

@@ -109,6 +109,7 @@ control DB's server settings and used in place of the env's from then on, until 
 | `SOCKET_PING_TIMEOUT_IN_SECONDS` | `20` | How long a ping waits for its pong before the client is closed |
 | `SOCKET_MAX_PAYLOAD_BYTES` | `100000` | The largest POST body or websocket message |
 | `SOCKET_MAX_SESSIONS_PER_SITE` | `100` | The most live sessions one site may hold |
+| `SOCKET_MAX_UNAUTH_SESSIONS_PER_IP` | `10` | The most of a site's live sessions one IP (an IPv6 /64) may hold before they are given access, so it cannot take them all from the site's followers |
 | `SOCKET_MAX_BUFFERED_PACKETS` | `1000` | Packets waiting for a client before it is closed as too slow |
 | `SOCKET_MAX_BUFFERED_BYTES` | `2000000` | Bytes waiting for a client before it is closed as too slow |
 | `SOCKET_MAX_PACKETS_PER_SECOND` | `20` | Packets a client may send a second, after a burst of 5 seconds' worth, before it is closed |

@@ -26,7 +26,8 @@ import (
 // websocket_db.go, the data it sends in websocket_data.go, and the /storage and /alarm namespaces in their own files.
 
 const (
-	// maxAuthorizeAttempts bounds the token checks one socket can make; clients authorize once
+	// maxAuthorizeAttempts bounds the token checks one socket can make; clients authorize once, though the Nightscout
+	// web app subscribes first with no credentials, then with its API secret, which may be mistyped
 	maxAuthorizeAttempts = 3
 	// maxHistoryHours is how far back the first dataUpdate goes, Nightscout's two days
 	maxHistoryHours = 48
@@ -40,6 +41,10 @@ const (
 // they connect, so one that has not, or was given nothing, is only holding one of the site's SocketMaxSessionsPerSite
 // sessions from its followers.
 var authorizeWithin = 30 * time.Second
+
+// refusedCloseAfter is how long a socket refused for good has for its answer and disconnect to reach its client before
+// its session is closed
+var refusedCloseAfter = time.Second
 
 // identityRecheck is how often a socket's identity is read again, so one deleted, disabled or given new credentials
 // stops being sent the site's data
@@ -155,6 +160,9 @@ func (ws *Websocket) engineConfig() engineio.Config {
 		MaxBuffered:      ws.config.SocketMaxBufferedPackets,
 		MaxBufferedBytes: ws.config.SocketMaxBufferedBytes,
 		MaxPacketRate:    ws.config.SocketMaxPacketsPerSecond,
+		// One IP may hold only a few of the site's sessions until they are given access, leaving the rest to its followers
+		ClientKey:       func(r *http.Request) string { return config.IPKey(httputils.GetSiteContext(r.Context()).IPAddress) },
+		MaxUnauthorized: ws.config.SocketMaxUnauthPerIP,
 	}
 }
 
@@ -166,9 +174,10 @@ func acknowledge(ack func(...any), reply any) {
 }
 
 // onCredentials handles a socket's event that checks credentials, as authorize and the subscribes do. A client
-// sends one, so past maxAuthorizeAttempts, or over the site's read limit, the socket is disconnected; otherwise its
-// first argument, decoded as M, is handled and the reply is the ack, unless handling it disconnected the socket. A
-// socket that handling has not granted access within authorizeWithin is closed.
+// sends few, so past maxAuthorizeAttempts, or over its limit, the socket is refused; otherwise its first argument,
+// decoded as M, is handled and the reply is the ack, unless handling it disconnected the socket. A socket that
+// handling has not granted access within authorizeWithin is closed, and one that handling disconnected or refused
+// maxAuthorizeAttempts times is refused.
 func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, handle func(message M) (reply any, granted bool)) {
 	attempts := 0
 	var granted atomic.Bool
@@ -177,10 +186,17 @@ func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, 
 			socket.Close()
 		}
 	})
+	// refuse disconnects the socket now, after any answer, and closes its session once both have reached the client
+	refuse := func() {
+		if socket.Connected() {
+			socket.Disconnect()
+		}
+		time.AfterFunc(refusedCloseAfter, socket.Close)
+	}
 	socket.On(event, func(args []json.RawMessage, ack func(...any)) {
 		attempts++
-		if attempts > maxAuthorizeAttempts || !ws.withinReadLimit(socket.Request().Context()) {
-			socket.Disconnect()
+		if attempts > maxAuthorizeAttempts || !ws.withinAuthorizeLimit(socket, granted.Load()) {
+			refuse()
 			return
 		}
 		var message M
@@ -188,17 +204,30 @@ func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, 
 			json.Unmarshal(args[0], &message)
 		}
 		reply, ok := handle(message)
-		if ok {
-			granted.Store(true)
-		}
 		if socket.Connected() {
 			acknowledge(ack, reply)
+		}
+		if ok {
+			granted.Store(true)
+			socket.Authorize()
+		} else if attempts == maxAuthorizeAttempts || !socket.Connected() {
+			refuse()
 		}
 	})
 }
 
-// withinReadLimit counts an authorize against the site's GET limit, as a request would: it checks a token
-// then reads the recent data, which a client reconnecting in a loop could otherwise ask for without end
+// withinAuthorizeLimit counts an authorize against the IP's unauthenticated budget on the site until the socket is
+// given access, as a request that fails auth is, so one IP cannot spend the site's own limit; after, against the
+// site's GET limit, as it reads the recent data, which a client reconnecting in a loop could otherwise ask for without end
+func (ws *Websocket) withinAuthorizeLimit(socket *socketio.Socket, granted bool) bool {
+	if granted {
+		return ws.withinReadLimit(socket.Request().Context())
+	}
+	allowed, _ := httputils.SiteUnauthWithinRateLimit(ws.config, socket.Request())
+	return allowed
+}
+
+// withinReadLimit counts a socket's read against the site's GET limit, as a request would
 func (ws *Websocket) withinReadLimit(ctx context.Context) bool {
 	allowed, _ := httputils.WithinRateLimitAll(ws.config.RateLimiters.SiteGETLimiter(httputils.GetSiteContext(ctx).SiteID))
 	return allowed
