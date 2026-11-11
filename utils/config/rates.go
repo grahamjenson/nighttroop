@@ -120,6 +120,11 @@ func ipKey(ip string) string {
 	return prefix.String()
 }
 
+// IPKey is ipKey for those that count IPs the way the rate limiters do, as the Socket.IO sessions each IP holds
+func IPKey(ip string) string {
+	return ipKey(ip)
+}
+
 func (r *RateLimiters) GetGlobalIPRateLimiter(ipAddress string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipKey(ipAddress), "global_ip")
 }
@@ -174,7 +179,7 @@ func (r *RateLimiters) SitePushLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.sitePushRateLimiters, subdomain, "site_push")
 }
 
-// SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes spend it, not the site's own limit
+// SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes and authorizes spend it, not the site's own limit
 func (r *RateLimiters) SiteUnauthLimiter(subdomain string, ip string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ipKey(ip), "site_unauth")
 }

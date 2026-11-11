@@ -132,17 +132,22 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 
+	// Each refusal below checks a password, so it takes as long as a wrong one and its time does not tell whether the
+	// name exists on the site, or is an admin or has TOTP
 	identity, err := httputils.GetSiteIdentity(ctx, tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
 	if err != nil {
+		config.Security.VerifyNoOnesPassword(tokenParamPassword)
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
 	if identity.TotpSecretEnc != "" {
+		config.Security.VerifyNoOnesPassword(tokenParamPassword)
 		return nil, fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
 	}
 
 	// Constraint: Not allowed to be admin and use legacy token
 	if identity.Role == consts.IdentityRoleAdmin {
+		config.Security.VerifyNoOnesPassword(tokenParamPassword)
 		return nil, fmt.Errorf("legacy token cannot be used for admin identities")
 	}
 

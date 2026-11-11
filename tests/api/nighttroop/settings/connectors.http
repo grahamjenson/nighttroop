@@ -45,6 +45,24 @@ ASSERT_STATUS 400
 ASSERT_CONTAINS "not a valid URL" "@message"
 ASSERT_CONTAINS "Nightscout URL must use HTTPS. Nightscout URL cannot have a path." "@message"
 
+// A Nightscout URL refused is not said back, nor kept on the error it is recorded as, as it can hold a login or token
+NAME update_nightscout_sync_bad_url_with_login
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://nsuser:nspass@valid.nightscout.test/path?token=nstoken", "enabled": true}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing request body: Nightscout URL is not a valid URL. Nightscout URL cannot have a path. Nightscout URL cannot have query parameters." "@message"
+
+NAME bad_url_with_login_recorded_without_it
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "/settings/{collection}/{id}" "@result.items.0.attributes.route"
+ASSERT_EQUALS "400 Bad Request: Bad or missing request body: Nightscout URL is not a valid URL. Nightscout URL cannot have a path. Nightscout URL cannot have query parameters." "@result.items.0.message"
+ASSERT_EQUALS "{\"enabled\":true,\"url_or_username\":\"REDACTED\"}" "@result.items.0.attributes.request_body.text"
+
 NAME update_nightscout_sync_unreachable
 POST http://{{ site }}/settings/connectors/nightscout
 H Authorization: Bearer {{ jwt }}

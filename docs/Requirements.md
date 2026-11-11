@@ -129,7 +129,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The new site ID field only lets letters a to z in: capitals typed or pasted are lowered and anything else is dropped.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
-  - **disabled**, after a confirmation, so it is no longer served;
+  - **disabled**, after a confirmation, so it is no longer served and its open Socket.IO connections are closed;
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
@@ -206,8 +206,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   one of a site is recorded at most once a minute, and at most 20 of a site's a minute, so a client repeating bad
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - A request refused for what it sent, or that failed with a 5xx, keeps the first 8 KB of what it sent on its error, and
-  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON, or its text when it is not
-  JSON (such as JSON that did not parse), with credentials (tokens, secrets, passwords) `REDACTED`, to debug it by.
+  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON or form, with credentials
+  and connector logins (tokens, secrets, passwords, keys, TOTP codes, usernames, emails and URLs) `REDACTED`, to debug
+  it by. A body that is neither, or was cut off at 8 KB (such as JSON that did not parse), keeps only its size and
+  content type.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
 - A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
@@ -221,8 +223,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
 - A staging server with `CAPTURE_REQUESTS=true` keeps each request and its response as a `Captured <method> <path>`
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
-  64 KB, as text or, when it is not text, base64. Authorization, cookies, API secrets, tokens and passwords are
-  `REDACTED` in its headers, query, path and JSON or form bodies. A page's styles, scripts, images and fonts are not
+  64 KB. Authorization, cookies, API secrets, tokens, passwords, keys, TOTP codes, usernames, emails and URLs are
+  `REDACTED` in its headers, query, path and JSON or form bodies. Any other body, such as a page, text or one past
+  64 KB, keeps only its size and content type, so a page showing a new site's credentials is not kept. A page's
+  styles, scripts, images and fonts are not
   kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
   none.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
@@ -626,6 +630,8 @@ Close or saving) gives the focus back to the row or button that opened it.
   its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses (an empty
   one is none sent). Each shows its app, what it came in, its device and when it was first and last seen, newest
   first; clicking one shows the settings as sent, indented to inspect.
+  - A read only identity reading them from the site's API gets them without Loop's or Trio's `deviceToken`, and no
+    change to one.
   - Clicking a set also shows what changed from the same app's set last seen before it: each setting changed, added
     or removed, by its name (a preset's by the preset's name, as `overridePresets.Running.targetRange`), old then new
     ("not sent" when it was not), glucose in the site's units; an app's first set says there is no set before it. The
@@ -650,6 +656,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
   Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
+- A site's saves of its connectors, adding a source as well as changing one, share one rate limit
+  (`SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT`); one past it is refused (429).
 - Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Connector box, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
 - A failing source syncs less often, and says when it failed and why. Why, as stored, logged and sent to Sentry, never
@@ -745,6 +753,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo, experiments/test, notifications/ack and adminnotifies.
+- v1 `echo` shows the request's method, URL, query and headers with credentials (Authorization, Cookie, api-secret,
+  token) `REDACTED`, and how its search is understood.
 - `/pebble` has the newest `count` readings (1 by default, at most 1000) from the last two days for Pebble and other
   watch faces, each glucose a string in the `units` asked for (`mmol` or `mg/dl`) or the settings' units, with its
   trend number, and the newest with the delta, the uploader's battery and IOB, as Nightscout's has them.
@@ -790,10 +800,16 @@ Connectors are a site's third party integrations, each syncing from one service.
   `/alarm` socket that can read as a `notification`, titled with its event type and saying who entered it and its
   notes, as Nightscout's treatment notify does.
 - A Socket.IO `authorize` with a token that is no one's is disconnected unanswered, as Nightscout does; a wrong API
-  secret is answered that it can do nothing.
+  secret is answered that it can do nothing. Either way, once a socket has been refused, at once for a token and on the
+  third refusal otherwise, its connection is closed a second later.
+- A Socket.IO `authorize` or `subscribe` before its socket is given access spends its IP's budget on the site
+  (`SITE_UNAUTH_PER_MINUTE_LIMIT`), as a request that fails auth does, not the site's own, so one IP's failed sign ins
+  cannot leave the site's pages and followers with 429s.
 - A Socket.IO connection that joins no namespace within 45 seconds is closed, and a socket not given access within 30
   seconds (by an `authorize` that can read or write, or a `/storage` or `/alarm` `subscribe` that succeeds) is closed
-  with its connection, so connections that never sign in cannot hold a site's live sessions from its followers.
+  with its connection, so connections that never sign in cannot hold a site's live sessions from its followers. One IP
+  (an IPv6 /64) may hold at most 10 of a site's live sessions not yet given access
+  (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`); its next is refused with 429, so it cannot take them all.
 - Glucose is stored in mg/dL and always returned in mg/dL, whatever the identity's or site's units, as Nightscout's
   clients read `sgv`, `mbg`, a treatment's `glucose` and a profile's targets as mg/dL: entries, treatments, profiles
   and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
@@ -821,6 +837,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
+- A profile's Loop `loopSettings.deviceToken` and Trio `deviceToken` are only given back, in v1, v3 and the socket's
+  storage, to an identity that can change the site's data, as LoopFollow sending remote commands is; a read only
+  user or device gets the profile without them, and the socket's `dataUpdate`, sent to every reader, has none.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
 - A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
   from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
@@ -1014,6 +1033,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   open a new one, while a quiet site's DB closes all of them.
 - An IP's rate limits, on requests, sign ins, recoveries and site creation, cover its whole IPv6 /64, so stepping
   through the addresses of one /64 does not get fresh limits.
+- An IP is the request's TCP peer, unless that is a trusted proxy (`TRUSTED_PROXIES`): then it is the hop before it in
+  `X-Forwarded-For` and, on Fly.io, its `Fly-Client-IP`. Any other peer setting either header keeps its own IP's limits.
 - A request body larger than `MAX_REQUEST_BODY_BYTES` is refused with 413, or, when it does not say its length,
   stops being read there and is refused as a bad body.
 - A request whose headers hold more than 64 KiB, far above a browser's cookies or an uploader's token, is refused with
@@ -1052,6 +1073,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
+- A TOTP code signs an identity in once, on the site (page or API) or in control: the same code, or an earlier one,
+  is refused like a wrong one while it would still be valid, even after its owner signed in with it, though another
+  identity with the same secret signs in with it. Checking a new site's code, or the setup page's, does not use it up.
+  A dev or test server's fixed code `123123` is not one time.
 - Sign-in attempts are rate limited per IP, and per name from every IP at a far higher rate
   (`SITE_LOGIN_NAME_PER_MINUTE_*`), so one IP sending wrong passwords for a name, or wrong passkeys or backup keys to
   a site, uses up only its own attempts and cannot lock anyone else out; an attempt one limit refuses spends none of the
@@ -1060,6 +1085,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   password, and checks a password all the same, so neither the answer nor how long it takes tells which names exist.
 - The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
+- A Nightscout token whose name or role has no identity, or is for an admin or an identity with TOTP, is refused with
+  the same status and message as a wrong secret, and checks a password all the same, so neither tells what is on the site.
 - Changing an identity's password or TOTP signs out its existing sessions, and an admin's reset of it, on the site or in
   control, also removes its passkeys, as for a lost device, so it signs in only with its new credentials.
 - Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO

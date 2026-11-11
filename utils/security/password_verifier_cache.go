@@ -52,6 +52,8 @@ func (p *PasswordVerifier) VerifyPasswordWithCache(plainPassword, storedHash str
 		p.cache.Remove(key)
 	}
 
+	// Counted with VerifyPassword's, as a password checked here costs as much
+	p.verified.Add(1)
 	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(plainPassword))
 
 	if err == nil {

@@ -172,7 +172,7 @@ func loginTheControlUser(ctx context.Context, controlDB *db.ControlDB, config *c
 	if err != nil {
 		return nil, err
 	}
-	if !config.Security.TOTPValidate(totpToken, totpSecret) {
+	if !config.Security.TOTPSignIn(fmt.Sprintf("control %d", admin.ID), totpToken, totpSecret) {
 		return nil, fmt.Errorf("invalid TOTP token")
 	}
 	return admin, nil
