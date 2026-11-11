@@ -67,7 +67,7 @@ templ overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSum
 			{{ date, _ := time.ParseInLocation(time.DateOnly, best.Date, location) }}
 			{{ low, high := site_data_templ.RangeBounds(ctx) }}
 			@card.Card(card.Props{ID: "site--overview--best-day", Class: "flex flex-wrap items-center gap-3"}) {
-				<span class="h-10 w-1.5 shrink-0 rounded-full bg-glucose-in-range"></span>
+				<span class="h-10 w-1.5 shrink-0 rounded-full bg-report-in-range"></span>
 				<div class="min-w-0 flex-1">
 					<h2 class="font-semibold text-gray-900">
 						Best day:

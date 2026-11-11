@@ -283,7 +283,7 @@ func overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSumm
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<span class=\"h-10 w-1.5 shrink-0 rounded-full bg-glucose-in-range\"></span><div class=\"min-w-0 flex-1\"><h2 class=\"font-semibold text-gray-900\">Best day: ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<span class=\"h-10 w-1.5 shrink-0 rounded-full bg-report-in-range\"></span><div class=\"min-w-0 flex-1\"><h2 class=\"font-semibold text-gray-900\">Best day: ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

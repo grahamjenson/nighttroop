@@ -101,6 +101,7 @@
     --color-glucose-very-high: oklch(55.3% 0.195 38.402);
     --color-glucose-high-text: oklch(47.3% 0.137 46.201);
     --color-glucose-in-range: #10203F;
+    --color-report-in-range: oklch(62.7% 0.194 149.214);
     --color-green-500: oklch(72.3% 0.219 149.579);
     --color-green-700: oklch(52.7% 0.154 150.069);
     --color-green-800: oklch(44.8% 0.119 151.328);
@@ -1258,18 +1259,6 @@
   .bg-glucose-in-range {
     background-color: var(--color-glucose-in-range);
   }
-  .bg-glucose-in-range\/20 {
-    background-color: color-mix(in srgb, #10203F 20%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-glucose-in-range) 20%, transparent);
-    }
-  }
-  .bg-glucose-in-range\/50 {
-    background-color: color-mix(in srgb, #10203F 50%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-glucose-in-range) 50%, transparent);
-    }
-  }
   .bg-glucose-low {
     background-color: var(--color-glucose-low);
   }
@@ -1332,6 +1321,21 @@
   }
   .bg-red-600 {
     background-color: var(--color-red-600);
+  }
+  .bg-report-in-range {
+    background-color: var(--color-report-in-range);
+  }
+  .bg-report-in-range\/20 {
+    background-color: color-mix(in srgb, oklch(62.7% 0.194 149.214) 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-report-in-range) 20%, transparent);
+    }
+  }
+  .bg-report-in-range\/50 {
+    background-color: color-mix(in srgb, oklch(62.7% 0.194 149.214) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-report-in-range) 50%, transparent);
+    }
   }
   .bg-secondary {
     background-color: var(--secondary);
@@ -1413,6 +1417,9 @@
   .fill-gray-900 {
     fill: var(--color-gray-900);
   }
+  .fill-report-in-range {
+    fill: var(--color-report-in-range);
+  }
   .fill-white {
     fill: var(--color-white);
   }
@@ -1442,6 +1449,9 @@
   }
   .stroke-gray-400 {
     stroke: var(--color-gray-400);
+  }
+  .stroke-report-in-range {
+    stroke: var(--color-report-in-range);
   }
   .p-0 {
     padding: calc(var(--spacing) * 0);
@@ -1788,6 +1798,9 @@
   }
   .text-red-800 {
     color: var(--color-red-800);
+  }
+  .text-report-in-range {
+    color: var(--color-report-in-range);
   }
   .text-rose-400 {
     color: var(--color-rose-400);
