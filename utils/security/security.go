@@ -2,7 +2,10 @@ package security
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
+	"github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/tink-crypto/tink-go/v2/jwt"
 	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/tink-crypto/tink-go/v2/tink"
@@ -35,6 +38,10 @@ type SecurityConfig struct {
 	// Still not sure this is a good idea, but legacy tokens are soooo slow
 	passwordVerifier *PasswordVerifier
 
+	// totpUsedSteps is the last TOTP time step each identity signed in with, kept as long as its code is valid
+	totpUsedSteps *expirable.LRU[string, uint64]
+	totpMu        sync.Mutex
+
 	/////
 	// Dangerous Dev Only Configs
 	/////
@@ -50,6 +57,7 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 		HostName:         hostname,
 		HTTPS:            https,
 		passwordVerifier: NewPasswordVerifier(),
+		totpUsedSteps:    expirable.NewLRU[string, uint64](10_000, nil, 2*time.Minute),
 	}
 
 	if cfg.IsTest() {

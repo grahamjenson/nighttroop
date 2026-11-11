@@ -40,7 +40,8 @@ func TestRefusesToConnectToLocalAddresses(t *testing.T) {
 	require.Contains(t, err.Error(), "private or local network")
 	require.Equal(t, 0, hits, "a local address must never be requested")
 
-	for _, address := range []string{"127.0.0.1:443", "10.0.0.1:443", "169.254.169.254:80", "[::1]:443", "[fd00:ec2::254]:80"} {
+	for _, address := range []string{"127.0.0.1:443", "10.0.0.1:443", "169.254.169.254:80", "[::1]:443", "[fd00:ec2::254]:80",
+		"0.1.2.3:443", "[64:ff9b::a00:5]:443", "[2002:a00:5::1]:443", "[::ffff:10.0.0.5]:443", "224.0.0.1:443"} {
 		require.Error(t, refuseBlockedIPs("tcp", address, nil), address)
 	}
 	require.NoError(t, refuseBlockedIPs("tcp", "93.184.215.14:443", nil))
@@ -64,6 +65,30 @@ func TestGetDocumentsRefusesRedirect(t *testing.T) {
 	require.Contains(t, err.Error(), "302")
 	require.NotContains(t, err.Error(), "xyz")
 	require.Equal(t, 0, secretHits, "redirect target must never be requested")
+}
+
+// A request that fails is a sync error, stored, logged and sent to Sentry, so it never has the user's Nightscout URL
+func TestRequestErrorsHideTheNightscoutURL(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/my-nightscout/api/v3/lastModified" {
+			_, _ = w.Write([]byte(`{"result":{}}`))
+			return
+		}
+		<-r.Context().Done()
+	}))
+	defer srv.Close()
+	c := liveClient(srv.URL + "/my-nightscout")
+	c.httpClient.Timeout = 50 * time.Millisecond
+
+	_, documentsErr := c.GetDocuments(context.Background(), "entries", time.Now(), time.Time{}, 10)
+	require.ErrorContains(t, documentsErr, "Client.Timeout exceeded")
+	_, profileErr := c.GetCurrentProfile(context.Background())
+	_, modifiedErr := c.GetLastModified(context.Background())
+	for _, err := range []error{documentsErr, profileErr, modifiedErr} {
+		require.Error(t, err)
+		require.NotContains(t, err.Error(), "my-nightscout")
+		require.NotContains(t, err.Error(), strings.TrimPrefix(srv.URL, "http://"))
+	}
 }
 
 func TestGetDocumentsErrorOmitsBody(t *testing.T) {

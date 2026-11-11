@@ -10,7 +10,7 @@ DO NOT UPDATE THIS FILE UNLESS SPECIFICALLY ASKED TO DO SO.
 - **Build:** `go build main.go`
 - **Test:** `go test ./...`
 - **Run** `docker-compose up -d && air` will run and rebuild as files change
-- **Clean** `docker-compose 
+- **Clean** `docker-compose restart && rm -rf .dbs` wipes the local DBs and the backups in `minio`
 
 ## Directory Structure
 
@@ -21,7 +21,7 @@ DO NOT UPDATE THIS FILE UNLESS SPECIFICALLY ASKED TO DO SO.
 - `data/events`: event bus code
 - `docs`: posts and docs
 - `models`: models for the various inputs, including converters built with goverter
-- `scripts`: necessary scripts for generating the initial key bundle and other functions
+- `cmd`: command line tools and CI scripts: creating the key bundle, decrypting backups, running scripts against a server, and checking migrations
 - `server`: primary routers and controllers for the requests
 - `socketio`: Socket.IO and Engine.IO (long-polling and websocket) server and client, for Nightscout live updates
 - `tests`: integration tests across the site
@@ -48,7 +48,7 @@ Use code generators where possible, especially for building models and params fo
 
 When making a change kep these documents up to date:
 
-- `docs/REQUIREMENTS.md` 
+- `docs/Requirements.md` 
     - lists every feature, under Control, Site and Identity. A PR that adds, changes or removes a feature must update it in the same PR.
     - Write it as the file is written: one feature per line, as if to a quality tester, making sure everything works.
 
