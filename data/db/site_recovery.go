@@ -44,7 +44,7 @@ func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backup
 		return nil, fmt.Errorf("cannot generate password: %w", err)
 	}
 	name := consts.FIRST_ADMIN_NAME
-	totpSecret, totpSecretEnc, err := db.ServerConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, siteID, db.ServerConfig.HostName))
+	totpSecret, totpSecretEnc, err := db.ServerConfig.Security.TOTPGenerate(siteID, fmt.Sprintf("%s@%s.%s", name, siteID, db.ServerConfig.HostName))
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate TOTP: %w", err)
 	}

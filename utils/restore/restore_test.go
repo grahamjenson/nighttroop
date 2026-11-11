@@ -62,14 +62,14 @@ func newClient(t *testing.T) (*s3utils.S3Client, *fakeS3) {
 	return s3utils.NewS3Client(&serverConfig), fake
 }
 
-// backup is a file, too big for one encrypted segment, packed as a backup, and that file's content
-func backup(t *testing.T, c *s3utils.S3Client, name string) ([]byte, []byte) {
+// backup is a file, too big for one encrypted segment, packed as a backup kept at key, and that file's content
+func backup(t *testing.T, c *s3utils.S3Client, key, name string) ([]byte, []byte) {
 	content := make([]byte, 2<<20)
 	_, err := rand.Read(content)
 	require.NoError(t, err)
 
 	var archive bytes.Buffer
-	enc, err := c.ServerConfig.Security.EncryptingWriter(&archive)
+	enc, err := c.ServerConfig.Security.EncryptingWriterFor(&archive, key)
 	require.NoError(t, err)
 	// Small blocks, as a real DB is many blocks, so a cut off download has already written some of the file
 	lz := lz4.NewWriter(enc)
@@ -88,7 +88,7 @@ func backup(t *testing.T, c *s3utils.S3Client, name string) ([]byte, []byte) {
 func TestCutOffControlDownloadLeavesNoControlDB(t *testing.T) {
 	c, fake := newClient(t)
 	key, path := controldb.GetS3Path(c.ServerConfig), controldb.GetPath(c.ServerConfig)
-	archive, content := backup(t, c, filepath.Base(path))
+	archive, content := backup(t, c, key, filepath.Base(path))
 
 	fake.set(key, archive[:len(archive)/2])
 	require.Error(t, restore.TryDownloadExtractControlDbs(c))
@@ -112,7 +112,7 @@ func TestCutOffControlDownloadLeavesNoControlDB(t *testing.T) {
 func TestFailedBatchDownloadIsRetried(t *testing.T) {
 	c, fake := newClient(t)
 	key, folder := sitedb.GetS3BatchPath("a", c.ServerConfig), sitedb.GetBatchFolder("a", c.ServerConfig)
-	archive, content := backup(t, c, "abcdef.sqlite")
+	archive, content := backup(t, c, key, "abcdef.sqlite")
 
 	fake.set(key, archive[:len(archive)/2])
 	require.Error(t, restore.TryRestoreAllFiles(c))

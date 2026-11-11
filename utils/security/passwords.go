@@ -25,7 +25,8 @@ func TOTPURI(name, siteURL, secret string) string {
 	return (&url.URL{Scheme: "otpauth", Host: "totp", Path: "/" + TOTPIssuer + ":" + account, RawQuery: query.Encode()}).String()
 }
 
-func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSecret string, err error) {
+// TOTPGenerate makes a TOTP secret for an identity of the site, "" for a control admin, encrypted for that site
+func (cfg *SecurityConfig) TOTPGenerate(siteID, accountName string) (totpSecret, totpEncSecret string, err error) {
 	totpKey, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      TOTPIssuer,
 		AccountName: fmt.Sprintf("%s@%s", accountName, cfg.HostName),
@@ -41,7 +42,7 @@ func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEnc
 		totpSecret = *cfg.DevelopmentDangerousHardcodedAdminTOTPSecret
 	}
 
-	encTOTPSecret, err := cfg.Encrypt(totpSecret)
+	encTOTPSecret, err := cfg.EncryptFor(PurposeTOTP, siteID, totpSecret)
 	if err != nil {
 		return "", "", fmt.Errorf("cannot encrypt TOTP secret: %w", err)
 	}

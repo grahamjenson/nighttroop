@@ -20,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/push"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -63,7 +64,7 @@ func TestSend(t *testing.T) {
 	require.NoError(t, err)
 	der, err := x509.MarshalPKCS8PrivateKey(key)
 	require.NoError(t, err)
-	secretEnc, err := sec.Encrypt(string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der})))
+	secretEnc, err := sec.EncryptFor(security.PurposePushSecret, siteID, string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der})))
 	require.NoError(t, err)
 	_, err = q.CreatePushCredential(t.Context(), controldb.CreatePushCredentialParams{SiteID: &siteID, Name: "My Loop",
 		Provider: consts.PushProviderAPNs, TeamOrProjectID: "TEAM123456", KeyID: new("ABC123DEFG"), SecretEnc: &secretEnc,
@@ -141,7 +142,7 @@ func TestSendFCM(t *testing.T) {
 	account, _ := json.Marshal(map[string]string{"type": "service_account", "project_id": "t1d-carer", "private_key_id": "key1",
 		"client_email": "push@t1d-carer.iam.gserviceaccount.com", "token_uri": elsewhere.URL,
 		"private_key": string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der}))})
-	secretEnc, err := sec.Encrypt(string(account))
+	secretEnc, err := sec.EncryptFor(security.PurposePushSecret, siteID, string(account))
 	require.NoError(t, err)
 	_, err = q.CreatePushCredential(t.Context(), controldb.CreatePushCredentialParams{SiteID: &siteID, Name: "T1D Carer",
 		Provider: consts.PushProviderFCM, TeamOrProjectID: "t1d-carer", SecretEnc: &secretEnc, AppsJson: `["t1dcarer"]`,

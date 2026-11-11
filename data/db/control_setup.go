@@ -70,7 +70,7 @@ func (db *ControlDB) BeginSetup(code string) (*SetupAdmin, error) {
 		return nil, err
 	}
 	name := consts.FIRST_ADMIN_NAME
-	totpSecret, totpSecretEnc, err := db.ServerConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN))
+	totpSecret, totpSecretEnc, err := db.ServerConfig.Security.TOTPGenerate("", fmt.Sprintf("%s@%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN))
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (db *ControlDB) SeedDevAdmin(ctx context.Context) error {
 // server whose data is wiped needs no setting up again. An admin it already has is kept as it is.
 func (db *ControlDB) SeedStagingAdmin(ctx context.Context) error {
 	cfg := db.ServerConfig
-	totpSecretEnc, err := cfg.Security.Encrypt(strings.ToUpper(cfg.StagingAdminTOTPSecret))
+	totpSecretEnc, err := cfg.Security.EncryptFor(security.PurposeTOTP, "", strings.ToUpper(cfg.StagingAdminTOTPSecret))
 	if err != nil {
 		return fmt.Errorf("cannot encrypt the staging admin's TOTP secret: %w", err)
 	}

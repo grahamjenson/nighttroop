@@ -75,7 +75,7 @@ func TokenHash(token string) string {
 // Register checks the registration and keeps it for the site's identity, its token encrypted, moving the token there if
 // another of the site's identities had it. It is refused with ErrTooManyRegistrations when the identity has
 // MaxRegistrations other than this token, counted in q's transaction, if it has one.
-func Register(ctx context.Context, q *controldb.Queries, security *security.SecurityConfig, siteID string, identityID int64, r Registration) (*controldb.PushRegistration, error) {
+func Register(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfig, siteID string, identityID int64, r Registration) (*controldb.PushRegistration, error) {
 	if err := CheckRegistration(r); err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func Register(ctx context.Context, q *controldb.Queries, security *security.Secu
 	if count >= MaxRegistrations {
 		return nil, ErrTooManyRegistrations
 	}
-	tokenEnc, err := security.Encrypt(r.Token)
+	tokenEnc, err := sec.EncryptFor(security.PurposePushToken, siteID, r.Token)
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("cannot encrypt a push token"), err)
 	}

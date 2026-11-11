@@ -263,7 +263,7 @@ func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Re
 	go func() {
 		defer pw.Close()
 		// An upload logs only when it fails, as every backup is one
-		_, err := c.createTarLZ4(paths, pw)
+		_, err := c.createTarLZ4(paths, pw, key)
 		if err != nil {
 			slog.ErrorContext(ctx, "Error creating tar LZ4", "key", key, "error", err)
 			// Important: propagate error to the reader side
@@ -340,7 +340,7 @@ func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath 
 	defer os.RemoveAll(staging)
 
 	cr := &utils.CountingReader{R: out.Body}
-	err = c.ExtractTarLZ4(cr, staging)
+	err = c.ExtractTarLZ4(cr, staging, key)
 
 	info = fmt.Sprintf("downloaded and extracted %d bytes", cr.Bytes)
 	if err != nil {
@@ -376,10 +376,10 @@ func moveInto(dir string, outpath string) error {
 
 // createTarLZ4 writes files to writer as a tar, compressed with LZ4 and encrypted with the server's keys, and is how
 // many bytes it wrote
-func (c *S3Client) createTarLZ4(files []string, writer io.Writer) (int64, error) {
+func (c *S3Client) createTarLZ4(files []string, writer io.Writer, objectKey string) (int64, error) {
 	cw := &utils.CountingWriter{W: writer}
 	// Wrap all up in encryption
-	encWriter, err := c.ServerConfig.Security.EncryptingWriter(cw)
+	encWriter, err := c.ServerConfig.Security.EncryptingWriterFor(cw, objectKey)
 	if err != nil {
 		return 0, fmt.Errorf("cannot create encrypting writer: %w", err)
 	}
@@ -444,12 +444,12 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 // createFile is os.Create, which tests can stand in for to fail a file's close
 var createFile = func(name string) (io.WriteCloser, error) { return os.Create(name) }
 
-// ExtractTarLZ4 decrypts, decompresses and untars a backup from reader into outputDir, refusing an entry that would be
-// written outside it
-func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
+// ExtractTarLZ4 decrypts, decompresses and untars the backup kept at the object key from reader into outputDir,
+// refusing an entry that would be written outside it
+func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string, objectKey string) error {
 
 	// Wrap with decryption
-	decReader, err := c.ServerConfig.Security.DecryptingReader(reader)
+	decReader, err := c.ServerConfig.Security.DecryptingReaderFor(reader, objectKey)
 	if err != nil {
 		return fmt.Errorf("cannot create decrypting reader: %w", err)
 	}

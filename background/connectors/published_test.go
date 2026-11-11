@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -21,7 +22,7 @@ func TestSyncPublishesItsSourceChanging(t *testing.T) {
 	q, ctx, siteID := controlDB.Queries, t.Context(), site.SiteDB.Subdomain
 	jobs := connectors.SetupConnectorJobManager(cfg, controlDB)
 	enc := func(s string) *string {
-		v, err := cfg.Security.Encrypt(s)
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
 		require.NoError(t, err)
 		return &v
 	}

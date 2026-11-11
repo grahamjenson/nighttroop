@@ -55,7 +55,7 @@ const welcomePasskeyFor = 15 * time.Minute
 // when it ends are encrypted, so neither can be changed, and the cookie is only sent to the site's own address.
 func (cfg *SecurityConfig) SetWelcomePasskeyCookie(w http.ResponseWriter, subdomain string) error {
 	until := time.Now().Add(welcomePasskeyFor)
-	encrypted, err := cfg.Encrypt(subdomain + " " + strconv.FormatInt(until.UnixMilli(), 10))
+	encrypted, err := cfg.EncryptFor(PurposeWelcomePasskey, "", subdomain+" "+strconv.FormatInt(until.UnixMilli(), 10))
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (cfg *SecurityConfig) WelcomePasskeySite(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	value, err := cfg.Decrypt(encrypted)
+	value, err := cfg.DecryptFor(PurposeWelcomePasskey, "", encrypted)
 	if err != nil {
 		return "", err
 	}

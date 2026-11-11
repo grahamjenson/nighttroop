@@ -17,7 +17,7 @@ import (
 func TestWelcomePasskeyCookie(t *testing.T) {
 	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
 	encrypt := func(value string) string {
-		encrypted, err := cfg.Encrypt(value)
+		encrypted, err := cfg.EncryptFor(security.PurposeWelcomePasskey, "", value)
 		require.NoError(t, err)
 		return encrypted
 	}

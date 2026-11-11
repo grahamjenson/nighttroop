@@ -25,7 +25,7 @@ type SiteConverter interface {
 	///////
 
 	// goverter:map Password | SetPasswordGarbage
-	// goverter:map UrlOrUsernameEnc UrlOrUsername | Decrypt
+	// goverter:map . UrlOrUsername | DecryptUrlOrUsername
 	// goverter:ignore RecentEvents RecentErrors
 	// goverter:context security
 	ConnectorFromDB(source *controldb.SiteConnector, security *security.SecurityConfig) (*Connector, error)
@@ -348,19 +348,18 @@ func SetPasswordGarbage() *string {
 	return new(consts.PASSWORD_GARBAGE_VALUE)
 }
 
-// goverter:context security
-func Decrypt(encString *string, security *security.SecurityConfig) (*string, error) {
-	if encString != nil {
-		decString, err := security.Decrypt(*encString)
-		if err != nil {
-			return nil, err
-		}
-		encString = &decString
+// DecryptUrlOrUsername is the connector's URL or username, decrypted for its site, or nil when it has none
+//
+// goverter:context sec
+func DecryptUrlOrUsername(source *controldb.SiteConnector, sec *security.SecurityConfig) (*string, error) {
+	if source.UrlOrUsernameEnc == nil {
+		return nil, nil
 	}
-	if encString != nil {
-		return encString, nil
+	decrypted, err := sec.DecryptFor(security.PurposeConnector, source.SiteID, *source.UrlOrUsernameEnc)
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+	return &decrypted, nil
 }
 
 // goverter:context siteContext

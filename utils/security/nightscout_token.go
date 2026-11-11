@@ -15,7 +15,8 @@ import (
 
 func (cfg *SecurityConfig) CreateNightscoutTokenForIdentity(subdomain, identityName, role, password string) (string, error) {
 	tokenStr := fmt.Sprintf("%s:%s:%s:%s", subdomain, identityName, role, password)
-	encryptedToken, err := cfg.Encrypt(tokenStr)
+	// The token has its site in it, checked against the request's, so it is bound to its purpose alone
+	encryptedToken, err := cfg.EncryptFor(PurposeNightscoutToken, "", tokenStr)
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt token: %w", err)
 	}
@@ -42,7 +43,7 @@ func (cfg *SecurityConfig) SplitNightscoutTokenForIdentity(tokenStr string) (str
 		return "", "", "", "", fmt.Errorf("failed to decode token: %w", err)
 	}
 
-	decryptedToken, err := cfg.Decrypt(string(decodedBytes))
+	decryptedToken, err := cfg.DecryptFor(PurposeNightscoutToken, "", string(decodedBytes))
 	if err != nil {
 		return "", "", "", "", fmt.Errorf("failed to decrypt token: %w", err)
 	}

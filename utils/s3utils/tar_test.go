@@ -3,6 +3,7 @@ package s3utils
 import (
 	"archive/tar"
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"io"
 	"log/slog"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/pierrec/lz4/v4"
 	"github.com/stretchr/testify/require"
+	"github.com/tink-crypto/tink-go/v2/streamingaead"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -39,7 +41,7 @@ func TestBackupRoundTrip(t *testing.T) {
 	}
 
 	var backup bytes.Buffer
-	written, err := c.createTarLZ4(paths, &backup)
+	written, err := c.createTarLZ4(paths, &backup, testKey)
 	require.NoError(t, err)
 	require.Equal(t, int64(backup.Len()), written)
 	// Encrypted, so none of the files can be read from it
@@ -49,7 +51,7 @@ func TestBackupRoundTrip(t *testing.T) {
 	var logged bytes.Buffer
 	previous := slog.Default()
 	slog.SetDefault(slog.New(slog.NewTextHandler(&logged, nil)))
-	err = c.ExtractTarLZ4(&backup, dst)
+	err = c.ExtractTarLZ4(&backup, dst, testKey)
 	slog.SetDefault(previous)
 	require.NoError(t, err)
 	require.Empty(t, logged.String())
@@ -69,13 +71,13 @@ func TestBackupRefusesTampering(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "site.sqlite")
 	require.NoError(t, os.WriteFile(path, []byte("readings"), 0o600))
 	var backup bytes.Buffer
-	_, err := c.createTarLZ4([]string{path}, &backup)
+	_, err := c.createTarLZ4([]string{path}, &backup, testKey)
 	require.NoError(t, err)
 
 	tampered := bytes.Clone(backup.Bytes())
 	tampered[len(tampered)/2] ^= 0xff
-	require.Error(t, c.ExtractTarLZ4(bytes.NewReader(tampered), t.TempDir()))
-	require.Error(t, c.ExtractTarLZ4(bytes.NewReader([]byte("not a backup")), t.TempDir()))
+	require.Error(t, c.ExtractTarLZ4(bytes.NewReader(tampered), t.TempDir(), testKey))
+	require.Error(t, c.ExtractTarLZ4(bytes.NewReader([]byte("not a backup")), t.TempDir(), testKey))
 }
 
 // An archive's entries cannot be written outside the folder it is unpacked into
@@ -84,7 +86,7 @@ func TestBackupCannotEscapeItsFolder(t *testing.T) {
 	for _, name := range []string{"../escaped", "/tmp/escaped", "a/../../escaped"} {
 		t.Run(name, func(t *testing.T) {
 			var archive bytes.Buffer
-			enc, err := c.ServerConfig.Security.EncryptingWriter(&archive)
+			enc, err := c.ServerConfig.Security.EncryptingWriterFor(&archive, testKey)
 			require.NoError(t, err)
 			lz := lz4.NewWriter(enc)
 			tw := tar.NewWriter(lz)
@@ -96,7 +98,7 @@ func TestBackupCannotEscapeItsFolder(t *testing.T) {
 			require.NoError(t, enc.Close())
 
 			dir := t.TempDir()
-			require.ErrorContains(t, c.ExtractTarLZ4(&archive, filepath.Join(dir, "out")), name)
+			require.ErrorContains(t, c.ExtractTarLZ4(&archive, filepath.Join(dir, "out"), testKey), name)
 			_, err = os.Stat(filepath.Join(dir, "escaped"))
 			require.True(t, os.IsNotExist(err))
 		})
@@ -117,7 +119,7 @@ func TestBackupRestoreFailsWhenAFileCannotBeClosed(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "site.sqlite")
 	require.NoError(t, os.WriteFile(path, []byte("readings"), 0o600))
 	var backup bytes.Buffer
-	_, err := c.createTarLZ4([]string{path}, &backup)
+	_, err := c.createTarLZ4([]string{path}, &backup, testKey)
 	require.NoError(t, err)
 
 	previous := createFile
@@ -126,5 +128,44 @@ func TestBackupRestoreFailsWhenAFileCannotBeClosed(t *testing.T) {
 		f, err := os.Create(name)
 		return failingClose{f}, err
 	}
-	require.ErrorContains(t, c.ExtractTarLZ4(&backup, t.TempDir()), "no space left on device")
+	require.ErrorContains(t, c.ExtractTarLZ4(&backup, t.TempDir(), testKey), "no space left on device")
+}
+
+// testKey is where the tests' backups are kept
+const testKey = "example.org/backup/a.tar.lz4.enc"
+
+// A backup only unpacks for the object key it was made for, whatever the host, so one batch's archive cannot be put at
+// another's key; one from before backups were bound, with no key, still unpacks, however long
+func TestBackupBoundToItsKey(t *testing.T) {
+	c := testClient(t)
+	path := filepath.Join(t.TempDir(), "site.sqlite")
+	content := make([]byte, 3<<20)
+	_, err := rand.Read(content)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(path, content, 0o600))
+	var backup bytes.Buffer
+	_, err = c.createTarLZ4([]string{path}, &backup, testKey)
+	require.NoError(t, err)
+
+	require.NoError(t, c.ExtractTarLZ4(bytes.NewReader(backup.Bytes()), t.TempDir(), "another.host/backup/a.tar.lz4.enc"))
+	require.Error(t, c.ExtractTarLZ4(bytes.NewReader(backup.Bytes()), t.TempDir(), "example.org/backup/b.tar.lz4.enc"))
+
+	unbound, err := streamingaead.New(c.ServerConfig.Security.StreamEncryptionKeySet)
+	require.NoError(t, err)
+	var archive bytes.Buffer
+	enc, err := unbound.NewEncryptingWriter(&archive, nil)
+	require.NoError(t, err)
+	lz := lz4.NewWriter(enc)
+	tw := tar.NewWriter(lz)
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "site.sqlite", Mode: 0o600, Size: int64(len(content)), Typeflag: tar.TypeReg}))
+	_, err = tw.Write(content)
+	require.NoError(t, err)
+	require.NoError(t, tw.Close())
+	require.NoError(t, lz.Close())
+	require.NoError(t, enc.Close())
+	dir := t.TempDir()
+	require.NoError(t, c.ExtractTarLZ4(bytes.NewReader(archive.Bytes()), dir, testKey))
+	got, err := os.ReadFile(filepath.Join(dir, "site.sqlite"))
+	require.NoError(t, err)
+	require.Equal(t, content, got)
 }

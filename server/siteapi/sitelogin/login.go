@@ -276,7 +276,7 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *controldb.SiteI
 		return fmt.Errorf("identity does not have a TOTP secret set")
 	}
 
-	totpSecret, err := config.Security.Decrypt(identity.TotpSecretEnc)
+	totpSecret, err := config.Security.DecryptFor(security.PurposeTOTP, identity.SiteID, identity.TotpSecretEnc)
 	if err != nil {
 		return err
 	}
