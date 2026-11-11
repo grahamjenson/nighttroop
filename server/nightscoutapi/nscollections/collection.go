@@ -218,7 +218,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, httpErr
 	}
 
-	siteContext.PublishModelChange(events.Created, dbModel, nil)
+	siteContext.PublishModelChange(events.Created, dbModel)
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbModel, siteContext), false, nil
 }
@@ -237,7 +237,7 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 		if httpErr := c.commit(tx, "refresh"); httpErr != nil {
 			return nil, false, httpErr
 		}
-		siteContext.PublishModelChange(events.Updated, refreshed, nil)
+		siteContext.PublishModelChange(events.Updated, refreshed)
 		c.afterStored(ctx, siteContext, nsModel)
 	}
 	return c.document(refreshed, siteContext), true, nil
@@ -410,11 +410,15 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		return nsutils.ErrNotFound
 	}
 	slog.InfoContext(ctx, label+" Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
+	if err := q.MarkStale(ctx, deleted); err != nil {
+		slog.ErrorContext(ctx, "failed to mark summaries stale", "error", err, "collection", m.Name())
+		return nsutils.ErrInternal
+	}
 
 	if httpErr := c.commit(tx, "delete"); httpErr != nil {
 		return httpErr
 	}
-	siteContext.PublishModelChange(events.Deleted, deleted, nil)
+	siteContext.PublishModelChange(events.Deleted, deleted)
 	return nil
 }
 
@@ -473,7 +477,7 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 		return 0, httpErr
 	}
 	for _, deleted := range found {
-		siteContext.PublishModelChange(events.Deleted, deleted, nil)
+		siteContext.PublishModelChange(events.Deleted, deleted)
 	}
 	return len(found), nil
 }
@@ -505,6 +509,10 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	if httpErr := c.stored(dbCreateModel, err, "replace"); httpErr != nil {
 		return nil, false, httpErr
 	}
+	if err := q.MarkStale(ctx, replaced); err != nil {
+		slog.ErrorContext(ctx, "failed to mark summaries stale", "error", err, "collection", m.Name())
+		return nil, false, nsutils.ErrInternal
+	}
 
 	if httpErr := c.commit(tx, "replace"); httpErr != nil {
 		return nil, false, httpErr
@@ -512,9 +520,9 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 
 	creatingNewRecord := replaced == nil
 	if creatingNewRecord {
-		siteContext.PublishModelChange(events.Created, dbCreateModel, nil)
+		siteContext.PublishModelChange(events.Created, dbCreateModel)
 	} else {
-		siteContext.PublishModelChange(events.Updated, dbCreateModel, replaced)
+		siteContext.PublishModelChange(events.Updated, dbCreateModel)
 	}
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbCreateModel, siteContext), creatingNewRecord, nil
@@ -624,12 +632,16 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	if httpErr := c.stored(dbModel, err, "patch"); httpErr != nil {
 		return nil, httpErr
 	}
+	if err := q.MarkStale(ctx, updateingModel); err != nil {
+		slog.ErrorContext(ctx, "failed to mark summaries stale", "error", err, "collection", m.Name())
+		return nil, nsutils.ErrInternal
+	}
 
 	if httpErr := c.commit(tx, "patch"); httpErr != nil {
 		return nil, httpErr
 	}
 
-	siteContext.PublishModelChange(events.Updated, dbModel, updateingModel)
+	siteContext.PublishModelChange(events.Updated, dbModel)
 	return c.document(dbModel, siteContext), nil
 }
 

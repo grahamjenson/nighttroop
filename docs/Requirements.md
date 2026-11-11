@@ -481,6 +481,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   data has gone 2 minutes without more, or after 15 minutes of it at most, so a backfill's many records are built
   once. Glucose, insulin, food, temp basals and targets, profile switches and device statuses count; today is built
   as it is read.
+- The day a record is moved away from, through the site or Nightscout API, or deleted from for good, through the
+  Nightscout API, is marked stale in the site's DB as it is written, so a server stopped before building it again
+  builds it within a minute of starting.
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.

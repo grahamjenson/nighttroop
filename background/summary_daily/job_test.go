@@ -228,9 +228,9 @@ func TestRebuildStaleBuildsTheDayARecordMovedFrom(t *testing.T) {
 	require.NoError(t, err)
 	moved, err := r.site.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "after", Mgdl: 120, ReadingType: "sgv", OccurredAt: to.UnixMilli(), CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
-	event := events.ModelChange(r.siteID, events.Updated, moved)
-	event.Previous = &sitedb.GlucoseReading{ID: "before", OccurredAt: from.UnixMilli()}
-	r.builder.markStale(event, now)
+	// As the APIs mark the day a record was in before they update or delete it
+	require.NoError(t, r.site.MarkStale(ctx, sitedb.GlucoseReading{ID: "before", OccurredAt: from.UnixMilli()}))
+	r.builder.markStale(events.ModelChange(r.siteID, events.Updated, moved), now)
 	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
 
 	require.True(t, r.built(to.Format(time.DateOnly)))
@@ -238,4 +238,32 @@ func TestRebuildStaleBuildsTheDayARecordMovedFrom(t *testing.T) {
 	if err == nil {
 		require.Zero(t, day.GlucoseReadings, "the day it moved from no longer has it")
 	}
+}
+
+// A day a record was deleted from for good is marked stale in the site's DB, so a server stopped before building it
+// again builds it on its first run once it starts again, though it no longer knows what was deleted
+func TestRebuildStaleBuildsTheDaysMarkedStaleBeforeARestart(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	day := now.AddDate(0, 0, -3)
+	r.reading("kept", day, now)
+	r.reading("deleted", day.Add(time.Hour), now)
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+
+	// Deleted for good, as the Nightscout API does, then the server stops before it is built again
+	deleted, err := r.site.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: "deleted"})
+	require.NoError(t, err)
+	require.NotNil(t, deleted)
+	require.NoError(t, r.site.MarkStale(ctx, sitedb.GlucoseReading{OccurredAt: day.Add(time.Hour).UnixMilli()}))
+	starts, err := r.site.StaleSummaryDays(ctx)
+	require.NoError(t, err)
+	require.Len(t, starts, 1)
+
+	require.NoError(t, NewBuilder(r.bus, r.builder.controlDB).RebuildStale(ctx, now))
+	built, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: day.Format(time.DateOnly)})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), built.GlucoseReadings)
+	starts, err = r.site.StaleSummaryDays(ctx)
+	require.NoError(t, err)
+	require.Empty(t, starts, "once built it is up to date")
 }

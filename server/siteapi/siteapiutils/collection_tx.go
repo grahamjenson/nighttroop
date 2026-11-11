@@ -24,6 +24,9 @@ type CollectionTx struct {
 	siteTx      *sql.Tx
 	// reportedChanges are the changes to the site's models made in the transaction, published once it commits
 	reportedChanges []events.Event
+	// before are the rows updated, as they were, whose summaries are marked to be built again as it commits, as a row
+	// may have moved to another day
+	before []any
 	// onCommit are called once everything is committed
 	onCommit []func()
 }
@@ -65,6 +68,16 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 		t.Rollback()
 		return herr
 	}
+	for _, row := range t.before {
+		q, err := t.Site()
+		if err == nil {
+			err = q.MarkStale(t.ctx, row)
+		}
+		if err != nil {
+			t.Rollback()
+			return apiutils.ErrInternalServerError
+		}
+	}
 	var err error
 	if t.siteTx != nil {
 		err = t.siteTx.Commit()
@@ -80,7 +93,7 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 		return apiutils.ErrInternalServerError
 	}
 	for _, change := range t.reportedChanges {
-		t.siteContext.PublishModelChange(change.Action, change.Model, change.Previous)
+		t.siteContext.PublishModelChange(change.Action, change.Model)
 	}
 	for _, committed := range t.onCommit {
 		committed()
@@ -88,10 +101,13 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 	return nil
 }
 
-// ReportChange reports a change to one of the site's models, its sitedb row, with an update's row before, or nil, to be
-// published once committed
+// ReportChange reports a change to one of the site's models, its sitedb row, to be published once committed, with an
+// update's row before, or nil, whose summaries are marked to be built again
 func (t *CollectionTx) ReportChange(action events.Action, row, previous any) {
-	t.reportedChanges = append(t.reportedChanges, events.Event{Action: action, Model: row, Previous: previous})
+	t.reportedChanges = append(t.reportedChanges, events.Event{Action: action, Model: row})
+	if previous != nil {
+		t.before = append(t.before, previous)
+	}
 }
 
 // OnCommit calls committed once everything is committed, and never when it is rolled back, e.g. to record an event a
