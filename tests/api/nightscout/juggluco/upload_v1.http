@@ -17,7 +17,7 @@ NAME juggluco_post_entries_v1
 POST http://{{ site }}/api/v1/entries
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
-B [{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T23:00:00.000+13:00","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","noise":1,"filtered":123000,"unfiltered":123000,"rssi":100},{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T06:31:00.000-03:-30","date":{{ dayms -1 601 }},"sgv":125,"delta":0.000,"direction":"","noise":1,"filtered":125000,"unfiltered":125000,"rssi":100},{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T10:02:00.000+00:00","date":{{ dayms -1 602 }},"sgv":128,"delta":3.000,"direction":"FortyFiveUp","noise":1,"filtered":128000,"unfiltered":128000,"rssi":100}]
+B [{"type":"sgv","device":"3MH000TEST","dateString":"{{ date -1 }}T23:00:00.000+13:00","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","noise":1,"filtered":123000,"unfiltered":123000,"rssi":100},{"type":"sgv","device":"3MH000TEST","dateString":"{{ date -1 }}T06:31:00.000-03:-30","date":{{ dayms -1 601 }},"sgv":125,"delta":0.000,"direction":"","noise":1,"filtered":125000,"unfiltered":125000,"rssi":100},{"type":"sgv","device":"3MH000TEST","dateString":"{{ date -1 }}T10:02:00.000+00:00","date":{{ dayms -1 602 }},"sgv":128,"delta":3.000,"direction":"FortyFiveUp","noise":1,"filtered":128000,"unfiltered":128000,"rssi":100}]
 ASSERT_STATUS 200
 ASSERT_LENGTH 3 "@"
 
@@ -26,7 +26,7 @@ NAME juggluco_post_entries_v1_again
 POST http://{{ site }}/api/v1/entries
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
-B [{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T23:00:00.000+13:00","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","noise":1,"filtered":123000,"unfiltered":123000,"rssi":100}]
+B [{"type":"sgv","device":"3MH000TEST","dateString":"{{ date -1 }}T23:00:00.000+13:00","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","noise":1,"filtered":123000,"unfiltered":123000,"rssi":100}]
 ASSERT_STATUS 200
 
 NAME juggluco_entries_v1_stored_once
@@ -38,7 +38,7 @@ ASSERT_EQUALS 128 "@0.sgv"
 ASSERT_EQUALS "FortyFiveUp" "@0.direction"
 ASSERT_EQUALS "" "@1.direction"
 ASSERT_EQUALS 123 "@2.sgv"
-ASSERT_EQUALS "3MH0058XKP" "@2.device"
+ASSERT_EQUALS "3MH000TEST" "@2.device"
 
 ######
 # Amounts: uploadtreatments deletes each new or changed amount by its _id, ignoring the answer, then PUTs it alone,

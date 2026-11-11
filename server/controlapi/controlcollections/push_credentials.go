@@ -16,7 +16,6 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ/control_push_templ"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -68,10 +67,6 @@ func (s *PushCredentialsCollection) NewHandler(w http.ResponseWriter, r *http.Re
 // CreateHandler adds a credential to a live site, as its admin would, its secret encrypted. Only admins can.
 func (s *PushCredentialsCollection) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	model, herr := apiutils.ExtractModelFromRequest[controlmodels.PushCredential](httputils.GetContentType(r), r)
 	if herr == nil && (model.SiteID == nil || *model.SiteID == "") {
 		herr = apiutils.ErrConstraintCheckFailedWithHint("a credential for every site cannot be added until the server " +
@@ -122,10 +117,6 @@ func (s *PushCredentialsCollection) create(ctx context.Context, controlContext *
 // DeleteHandler deletes any credential, removing its secret, so pushes no longer use it. Only admins can.
 func (s *PushCredentialsCollection) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	row, err := s.GetRow(r.Context(), chi.URLParam(r, "id"), controlContext)
 	if err == nil {
 		_, err = controlContext.ControlDB.Queries.DeletePushCredential(r.Context(), controldb.DeletePushCredentialParams{ID: row.ID, SiteID: row.SiteID})

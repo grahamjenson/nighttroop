@@ -1,0 +1,28 @@
+// A server run by someone else names them, and their support email, in its terms and privacy policy, never T1DNZ, and
+// its governing law is the operator's, not New Zealand's
+GOTO {{ server_url }}/terms
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE TERMS OF SERVICE
+ASSERT_TEXT_VISIBLE We are Example Health Trust
+ASSERT_TEXT_VISIBLE the laws of the place the Owner is based
+ASSERT_VISIBLE #legal a[href="mailto:help@example.org"] >> nth=0
+ASSERT_NOT_VISIBLE #legal >> text=T1DNZ
+ASSERT_NOT_VISIBLE #legal >> text=nighttroop@t1d.nz
+ASSERT_NOT_VISIBLE #legal >> text=New Zealand
+ASSERT_NOT_VISIBLE #legal >> text=OPERATOR_NAME
+// The medical disclaimer stays, naming the operator
+ASSERT_TEXT_VISIBLE IT IS NOT A MEDICAL OR HEALTHCARE SERVICE
+ASSERT_TEXT_VISIBLE Example Health Trust is not a healthcare professional
+ASSERT_VISIBLE #footer--contact[href="mailto:help@example.org"]
+SCREENSHOT terms
+
+GOTO {{ server_url }}/privacy
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE PRIVACY POLICY
+ASSERT_TEXT_VISIBLE operated by Example Health Trust
+ASSERT_VISIBLE #legal a[href="mailto:help@example.org"] >> nth=0
+ASSERT_NOT_VISIBLE #legal >> text=T1DNZ
+ASSERT_NOT_VISIBLE #legal >> text=nighttroop@t1d.nz
+ASSERT_NOT_VISIBLE #legal >> text=New Zealand
+ASSERT_NOT_VISIBLE #legal >> text=OPERATOR_NAME
+SCREENSHOT privacy

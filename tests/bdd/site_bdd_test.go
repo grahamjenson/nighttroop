@@ -27,7 +27,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed site/** control/** steps/** setup/** resources/** testsite/** sitelimit/** feedback/**
+//go:embed site/** control/** steps/** setup/** resources/** testsite/** sitelimit/** feedback/** operator/**
 var embeddedFiles embed.FS
 
 // bddShards is how many groups of scenarios run at once. Each has its own databases, server and background jobs, so
@@ -38,8 +38,9 @@ const bddShards = 4
 // TestMain sets the environment before any test loads the package's one config, which its rate limiters copy then
 func TestMain(m *testing.M) {
 	// Every scenario logs in from 127.0.0.1, and the shards share one config's rate limiters, so the per-IP login
-	// burst is shared across all files. They use nearly 100 attempts, so leave room for more files.
+	// burst, and each name's across IPs, are shared across all files. They use nearly 100 attempts, so leave room for more.
 	os.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "1000")
+	os.Setenv("SITE_LOGIN_NAME_PER_MINUTE_BURST", "1000")
 	// The servers here are not started by main, which samples the queries the usage page shows, so every one is
 	sqltiming.SetSamplePercent(100)
 	os.Exit(m.Run())

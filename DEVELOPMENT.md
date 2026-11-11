@@ -17,6 +17,13 @@ The primary generators are:
 
 # Submitting changes
 
+- Open pull requests against `main`, one per feature or fix, and keep each change small (see `AGENTS.md`).
+- Before opening one, run `go generate ./...` and commit what it changes (CI fails otherwise), then run `go test ./...`.
+- Keep `docs/Requirements.md`, `docs/config.md` and `clients/nighttroop/openapi.json` up to date with the change.
+- Say what changed and why, list the tests, and end the description with a `## Screenshots` section (see
+  [Screenshots](#screenshots)), saying `None` when no page changes.
+- Disclose any AI use, as [AI_POLICY.md](AI_POLICY.md) asks.
+
 # Testing locally
 
 Docker runs our local test s3 server `minio` (the only external dependency)
@@ -52,6 +59,9 @@ server would restore the old databases from their backups when it starts.
 docker-compose restart && rm -rf .dbs && go generate ./... && sleep 2 && air | spretty
 ```
 
+`air` runs the server with `-MODE=development` (see `.air.toml`): it will not start without a `MODE`. To run it without
+`air`, use `go run main.go -MODE=development`.
+
 Then go to `localhost:8080` and create a user, `control.localhost:8080` and login as control.
 In Development all initial passwords are `password` and all TOTP is `123123`
 
@@ -65,7 +75,7 @@ We are using playwright to run integration tests
 have to install the driver with
 
 ```
-go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.0 install chromium
+go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install chromium
 ```
 
 # Screenshots

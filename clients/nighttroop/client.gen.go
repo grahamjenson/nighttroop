@@ -233,7 +233,7 @@ type LoopSettings struct {
 	// PreviousId The set of the same app last seen before this one; only on a set read alone, null for an app's first
 	PreviousId *string `json:"previous_id"`
 
-	// Settings As the app sent them
+	// Settings As the app sent them, without Loop's or Trio's deviceToken for an identity that can only read the site's data
 	Settings map[string]interface{} `json:"settings"`
 
 	// Source What they were sent in: profile or devicestatus

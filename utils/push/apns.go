@@ -12,9 +12,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"sync"
 	"time"
+
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // providerTokenAge is how long a provider token is used for: Apple refuses one older than an hour, and one made again
@@ -73,12 +74,9 @@ func (a *APNs) Send(ctx context.Context, signer Signer, deviceToken string, topi
 	req.Header.Set("apns-topic", topic)
 	req.Header.Set("apns-push-type", "alert")
 	resp, err := a.Client.Do(req)
-	if urlErr, ok := errors.AsType[*url.Error](err); ok {
-		// Its URL has the device token, which is never shown, so only what went wrong is kept
-		err = urlErr.Err
-	}
 	if err != nil {
-		return fmt.Errorf("cannot reach Apple's push service: %w", err)
+		// Its URL has the device token, which is never shown
+		return fmt.Errorf("cannot reach Apple's push service: %w", httputils.WithoutURL(err))
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {

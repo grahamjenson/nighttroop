@@ -1,18 +1,22 @@
 package controlapi
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// testConfig allows one login attempt an IP and name; a config can only be made once per process
+// testConfig allows one login attempt an IP; a config can only be made once per process
 var testConfig *config.ServerConfig
 
 func TestMain(m *testing.M) {
@@ -97,6 +101,50 @@ func TestControlLoginErrors(t *testing.T) {
 			} else {
 				require.Equal(t, tt.message+"\n", w.Body.String())
 			}
+		})
+	}
+}
+
+// A name with no admin is refused as a wrong password is, with a password checked, so neither its answer nor how long
+// it takes tells which names exist
+func TestControlLoginMissingNameIsLikeWrongPassword(t *testing.T) {
+	// A config from testutils cannot be made beside TestMain's, as each reads the flags
+	controlDB, err := db.NewControlDB(t.Context(), testConfig)
+	require.NoError(t, err)
+	defer controlDB.Close()
+
+	tests := []struct {
+		name string
+		htmx bool
+	}{{"apiadmin", false}, {"pageadmin", true}}
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Its own admin, as login attempts are limited to one for each name
+			_, err := controlDB.CreateControlIdentity(t.Context(), tt.name, consts.ControlRoleAdmin, nil)
+			require.NoError(t, err)
+			// Each from its own IP, as login attempts are limited to one for each IP
+			login := func(ip string, name string) (int, string) {
+				r := httptest.NewRequest("POST", "/login", strings.NewReader(`{"name":"`+name+`","password":"wrong","totp":"123123"}`))
+				r.Header.Set("Content-Type", "application/json")
+				if tt.htmx {
+					r = httptest.NewRequest("POST", "/login", strings.NewReader("name="+name+"&password=wrong&totp=123123"))
+					r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+					r.Header.Set("HX-Request", "true")
+				}
+				r.RemoteAddr = ip + ":1234"
+				before := testConfig.Security.PasswordsVerified()
+				w := httptest.NewRecorder()
+				POSTLogin(controlDB, testConfig)(w, r.WithContext(httputils.WithClientIP(r)))
+				require.Equal(t, int64(1), testConfig.Security.PasswordsVerified()-before, "passwords checked logging in as %s", name)
+				// A toast has an ID of its own each time
+				return w.Code, regexp.MustCompile(`id="id-[A-Z0-9]+"`).ReplaceAllString(w.Body.String(), "")
+			}
+
+			wrongStatus, wrongBody := login(fmt.Sprintf("192.0.2.%d", 10+2*i), tt.name)
+			missingStatus, missingBody := login(fmt.Sprintf("192.0.2.%d", 11+2*i), "nosuch"+tt.name)
+			require.Equal(t, http.StatusUnauthorized, wrongStatus)
+			require.Equal(t, wrongStatus, missingStatus)
+			require.Equal(t, wrongBody, missingBody)
 		})
 	}
 }

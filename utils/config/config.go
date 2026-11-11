@@ -24,8 +24,12 @@ import (
 	"nighttroop.t1d.nz/utils/usage"
 )
 
-// DefaultSupportEmail is the support email address when SUPPORT_EMAIL is not set
-const DefaultSupportEmail = "nighttroop@t1d.nz"
+// DefaultSupportEmail and DefaultOperatorName are the support email address and operator when SUPPORT_EMAIL and
+// OPERATOR_NAME are not set, in development and test only: production and staging must name their own
+const (
+	DefaultSupportEmail = "nighttroop@t1d.nz"
+	DefaultOperatorName = "T1DNZ"
+)
 
 // ServerStatus records which optional services are working. It is filled in
 // at startup and read by anything that depends on them.
@@ -98,6 +102,9 @@ type ServerConfig struct {
 	// of service and privacy policy
 	SupportEmail string
 
+	// OperatorName is who runs this server, as named in the terms of service and privacy policy
+	OperatorName string
+
 	// FeedbackURL, when set, is where users give feedback, e.g. a Google Form or GitHub issues, linked from every
 	// page's footer and the home page
 	FeedbackURL string
@@ -139,6 +146,9 @@ type ServerConfig struct {
 
 	SiteLoginPerMinuteLimit int
 	SiteLoginPerMinuteBurst int
+	// SiteLoginNamePerMinute is a login name's limit across every IP, to cap guessing spread over many
+	SiteLoginNamePerMinuteLimit int
+	SiteLoginNamePerMinuteBurst int
 
 	SiteUnauthPerMinuteLimit int
 	SiteUnauthPerMinuteBurst int
@@ -218,6 +228,7 @@ type ServerConfig struct {
 	SocketPingTimeoutInSeconds  int
 	SocketMaxPayloadBytes       int
 	SocketMaxSessionsPerSite    int
+	SocketMaxUnauthPerIP        int // of a site's sessions, how many one IP may hold before they are given access
 	SocketMaxBufferedPackets    int
 	SocketMaxBufferedBytes      int
 	SocketMaxPacketsPerSecond   float64
@@ -283,7 +294,10 @@ func NewServerConfig() (*ServerConfig, error) {
 func readFlagsAndDotEnv() (consts.ServerMode, map[string]string, error) {
 	flagsnev := compileFlags()
 
-	mode := findMode(flagsnev)
+	mode, err := findMode(flagsnev, testing.Testing())
+	if err != nil {
+		return "", nil, err
+	}
 	dotenv, err := compileDotEnvFile(mode)
 	if err != nil {
 		return mode, nil, err
@@ -298,6 +312,11 @@ func readFlagsAndDotEnv() (consts.ServerMode, map[string]string, error) {
 // readServerConfig reads each setting from the environment, then dotenv, then its default, removing what it reads
 // from dotenv, so the variables left in it are unknown
 func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerConfig, error) {
+	// Only development and test default to the project's own operator, so no other server names it as theirs
+	supportEmail, operatorName := "", ""
+	if mode == consts.Development || mode == consts.Test {
+		supportEmail, operatorName = DefaultSupportEmail, DefaultOperatorName
+	}
 	// DEFAULTS
 	serverConfig := ServerConfig{
 		Mode: mode,
@@ -325,7 +344,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SentryDSN:  configStringSelect(dotenv, "SENTRY_DSN", ""),
 		Deployment: configStringSelect(dotenv, "DEPLOYMENT", "development"),
 
-		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
+		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", supportEmail),
+		OperatorName: configStringSelect(dotenv, "OPERATOR_NAME", operatorName),
 		FeedbackURL:  configStringSelect(dotenv, "FEEDBACK_URL", ""),
 		TestSite:     mode == consts.Staging,
 		// Read in every mode, but only on in staging, as it keeps sites' data in the logs
@@ -348,6 +368,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		SiteLoginPerMinuteLimit: configIntSelect(dotenv, "SITE_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
 		SiteLoginPerMinuteBurst: configIntSelect(dotenv, "SITE_LOGIN_PER_MINUTE_BURST", 10),
+		// A name's logins from every IP, far above one IP's, so one IP cannot lock others out of it
+		SiteLoginNamePerMinuteLimit: configIntSelect(dotenv, "SITE_LOGIN_NAME_PER_MINUTE_LIMIT", 30),
+		SiteLoginNamePerMinuteBurst: configIntSelect(dotenv, "SITE_LOGIN_NAME_PER_MINUTE_BURST", 60),
 
 		SiteUnauthPerMinuteLimit: configIntSelect(dotenv, "SITE_UNAUTH_PER_MINUTE_LIMIT", 60), // What one IP may send a site before it authenticates, so bad tokens cannot spend the site's limit
 		SiteUnauthPerMinuteBurst: configIntSelect(dotenv, "SITE_UNAUTH_PER_MINUTE_BURST", 120),
@@ -417,6 +440,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SocketMaxBufferedPackets:    configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_PACKETS", 1000), // A client too slow to collect its packets is closed
 		SocketMaxBufferedBytes:      configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_BYTES", 2000000),
 		SocketMaxPacketsPerSecond:   configFloatSelect(dotenv, "SOCKET_MAX_PACKETS_PER_SECOND", 20), // A client sending faster, past a burst of 5 seconds' worth, is closed
+		// Stop one IP holding all of a site's sessions before they are given access, keeping its followers out
+		SocketMaxUnauthPerIP: configIntSelect(dotenv, "SOCKET_MAX_UNAUTH_SESSIONS_PER_IP", 10),
 	}
 
 	var err error
@@ -509,14 +534,47 @@ func (config *ServerConfig) ValidateClean() error {
 		return fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
 	}
 
+	// Development has known passwords and TOTP, so it only runs locally, over http
+	if config.HostProtocol == "https" && config.IsDev() {
+		return fmt.Errorf("development mode is only for local use: set HOST_PROTOCOL=http, or MODE=production")
+	}
+
 	if config.HostProtocol == "http" && !config.IsDev() && !config.IsTest() {
 		return fmt.Errorf("http is only allowed in development or test mode")
+	}
+
+	if strings.TrimSpace(config.OperatorName) == "" || strings.TrimSpace(config.SupportEmail) == "" {
+		return fmt.Errorf("OPERATOR_NAME and SUPPORT_EMAIL must be set: who runs this server, and how its users contact them")
+	}
+
+	if !config.IsDevOrTest() {
+		if err := validateSecrets(config.RawKeySets, config.S3URL, config.S3AccessKeyID, config.S3AccessSecretKey); err != nil {
+			return err
+		}
 	}
 
 	if config.IsStaging() {
 		return validateStagingAdmin(config.StagingAdminPassword, config.StagingAdminTOTPSecret)
 	}
 
+	return nil
+}
+
+// validateSecrets refuses the public keys and S3 credentials of .env.dev, .env.test and the docker-compose MinIO, which
+// anyone could use to sign control logins, and read secrets and backups, on a server outside development and test
+func validateSecrets(keySets, s3URL, s3AccessKey, s3SecretKey string) error {
+	if security.UsesDevKeySets(keySets) {
+		return fmt.Errorf("KEY_SETS has the public development and test keys: make new ones with cmd/keysets/create_keysets.go")
+	}
+	if s3URL == "" {
+		return nil
+	}
+	if s3AccessKey == "" || s3AccessKey == "minioadmin" {
+		return fmt.Errorf("S3_URL is set, so S3_ACCESS_KEY must be set, and not to the development MinIO's minioadmin")
+	}
+	if s3SecretKey == "" || s3SecretKey == "minioadmin" {
+		return fmt.Errorf("S3_URL is set, so S3_SECRET_KEY must be set, and not to the development MinIO's minioadmin")
+	}
 	return nil
 }
 
@@ -581,34 +639,29 @@ func configFloatSelect(dotenv map[string]string, envVar string, defaultValue flo
 	return configSelect(dotenv, envVar, defaultValue, func(raw string) (float64, error) { return strconv.ParseFloat(raw, 64) })
 }
 
-// 1. check explicit settings, the flag and envar
-// 2. Guess, if go is running test
-// 3. return default dev
-func findMode(flags map[string]string) consts.ServerMode {
-	if modeStr, ok := flags["MODE"]; ok {
-		mode, err := consts.ServerMode(modeStr).Normalize()
-		if err != nil {
-			slog.Error("Invalid mode in flags", "mode", modeStr, "error", err)
-			return consts.Development
+// findMode is the MODE flag, else the MODE environment variable, else test under go test. Any other MODE is a startup
+// error rather than a fallback, as development and test have known passwords, TOTP and keys: an unset or unknown
+// MODE, or test outside go test
+func findMode(flags map[string]string, underGoTest bool) (consts.ServerMode, error) {
+	modeStr, ok := flags["MODE"]
+	if !ok {
+		modeStr, ok = os.LookupEnv("MODE")
+	}
+	if !ok {
+		if underGoTest {
+			return consts.Test, nil
 		}
-		return mode
+		return "", fmt.Errorf("MODE is not set: set MODE=production to serve, or pass -MODE=development to run locally")
 	}
 
-	if modeStr, ok := os.LookupEnv("MODE"); ok {
-		mode, err := consts.ServerMode(modeStr).Normalize()
-		if err != nil {
-			slog.Error("Invalid mode in env", "mode", modeStr, "error", err)
-			return consts.Development
-		}
-		return mode
+	mode, err := consts.ServerMode(modeStr).Normalize()
+	if err != nil {
+		return "", fmt.Errorf("invalid MODE: %w", err)
 	}
-
-	// If go test is running then it is test mode
-	if testing.Testing() {
-		return consts.Test
+	if mode == consts.Test && !underGoTest {
+		return "", fmt.Errorf("MODE test is only for go test")
 	}
-
-	return consts.Development
+	return mode, nil
 }
 
 func compileFlags() map[string]string {
@@ -691,6 +744,7 @@ func printServerConfig(config ServerConfig) {
 	slog.Info("Server Config",
 		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test", consts.Staging: "Staging"}[config.Mode],
 		"Deployment", config.Deployment,
+		"Operator", config.OperatorName,
 		"CaptureRequests", config.CaptureRequests,
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
@@ -718,6 +772,7 @@ func printServerConfig(config ServerConfig) {
 		"SiteBackupRetentionDays", config.SiteBackupRetentionDays,
 		"ControlBackupRetentionDays", config.ControlBackupRetentionDays,
 		"SocketMaxSessionsPerSite", config.SocketMaxSessionsPerSite,
+		"SocketMaxUnauthPerIP", config.SocketMaxUnauthPerIP,
 		"SocketMaxBufferedBytes", config.SocketMaxBufferedBytes,
 		"SocketMaxPacketsPerSecond", config.SocketMaxPacketsPerSecond,
 	)

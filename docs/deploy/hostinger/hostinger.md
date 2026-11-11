@@ -16,7 +16,7 @@ The files this guide uses are in this folder:
 | File | What it is |
 | --- | --- |
 | [`hostinger.compose.yml`](hostinger.compose.yml) | Docker Compose file for Nighttroop and Caddy |
-| [`update.sh`](update.sh) | The safe update script |
+| [`update.sh`](../update.sh) | The safe update script |
 
 ## Contents
 
@@ -208,7 +208,7 @@ The backups are encrypted with your `KEY_SETS` before they are uploaded.
 2. **Copy the files up.** From your clone of this repository, on your own computer:
 
    ```sh
-   scp docs/deploy/hostinger.compose.yml docs/deploy/update.sh root@203.0.113.10:/opt/nighttroop/
+   scp docs/deploy/hostinger/hostinger.compose.yml docs/deploy/update.sh root@203.0.113.10:/opt/nighttroop/
    ```
 
 3. **Let the VPS pull the image.** The image is at `ghcr.io/grahamjenson/nighttroop`. While the repository is private,
@@ -265,6 +265,10 @@ The compose file already sets the host name, HTTPS and the trusted proxy, so thi
    ```sh
    # The keys from create_keysets: one long line
    KEY_SETS=...
+
+   # Required: who runs this server and how its users contact you, named in its terms and privacy policy
+   OPERATOR_NAME=Your Name or Organisation
+   SUPPORT_EMAIL=you@example.org
 
    # S3 backups (step 5); leave these out to run without them
    S3_URL=https://<account-id>.r2.cloudflarestorage.com

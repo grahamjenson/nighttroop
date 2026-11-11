@@ -183,11 +183,13 @@ func TestTimeoutSparesEventStreams(t *testing.T) {
 		}
 	}
 	router.Get("/wait", wait)
+	router.Get("/data/{collection}/events", wait)
 	router.Get(ControlLogsDBPath, wait)
 
 	for _, test := range []struct{ host, path, accept, want string }{
 		{"example.com", "/wait", "text/html", "cancelled"},
-		{"example.com", "/wait", "text/event-stream", "finished"},
+		{"example.com", "/wait", "text/event-stream", "cancelled"},
+		{"site.example.com", "/data/glucose/events", "text/event-stream", "finished"},
 		{"control.example.com", ControlLogsDBPath, "*/*", "finished"},
 		{"site.example.com", ControlLogsDBPath, "*/*", "cancelled"},
 	} {

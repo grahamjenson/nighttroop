@@ -231,9 +231,10 @@ func GetJWTSiteIdentity(ctx context.Context, cfg *config.ServerConfig, token str
 	return identity, nil
 }
 
-// CheckIssuedAfterCredentialsChanged refuses a JWT issued, in milliseconds, before its identity's credentials changed
-func CheckIssuedAfterCredentialsChanged(identity *controldb.SiteIdentity, issuedAtMs int64) error {
-	if issuedAtMs < identity.CredentialsChangedAt {
+// CheckIssuedAfterCredentialsChanged refuses a JWT issued, in milliseconds, before its site or control identity's
+// credentials changed
+func CheckIssuedAfterCredentialsChanged(identity interface{ GetCredentialsChangedAt() int64 }, issuedAtMs int64) error {
+	if issuedAtMs < identity.GetCredentialsChangedAt() {
 		return fmt.Errorf("JWT was issued before the identity's credentials changed")
 	}
 	return nil

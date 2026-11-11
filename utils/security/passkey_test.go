@@ -47,3 +47,33 @@ func TestWelcomePasskeyCookie(t *testing.T) {
 		})
 	}
 }
+
+// TestPasskeySessionFinishedOnce checks a passkey ceremony's session is finished once only: sending its cookie again,
+// as a replayed sign in or registration would, is refused, while another ceremony's session still finishes
+func TestPasskeySessionFinishedOnce(t *testing.T) {
+	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
+	begin := func(session string) *http.Cookie {
+		w := httptest.NewRecorder()
+		cfg.SetPasskeySessionCookie(w, []byte(session))
+		return w.Result().Cookies()[0]
+	}
+	finish := func(cookie *http.Cookie) (string, error) {
+		r := httptest.NewRequest(http.MethodPost, "/login/passkey/finish", nil)
+		r.AddCookie(cookie)
+		session, err := cfg.PasskeySession(httptest.NewRecorder(), r)
+		return string(session), err
+	}
+	first, second := begin(`{"challenge":"one"}`), begin(`{"challenge":"two"}`)
+
+	session, err := finish(first)
+	require.NoError(t, err)
+	require.Equal(t, `{"challenge":"one"}`, session)
+	_, err = finish(first)
+	require.Error(t, err)
+
+	session, err = finish(second)
+	require.NoError(t, err)
+	require.Equal(t, `{"challenge":"two"}`, session)
+	_, err = finish(&http.Cookie{Name: security.PASSKEY_SESSION_COOKIE, Value: "made up"})
+	require.Error(t, err)
+}

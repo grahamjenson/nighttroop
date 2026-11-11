@@ -3,6 +3,7 @@ package httputils
 import (
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -50,12 +51,23 @@ func RefuseBusy(w http.ResponseWriter, r *http.Request, why string) {
 // ControlLogsDBPath is the control site's download of the logs DB, which can take minutes to copy and send
 const ControlLogsDBPath = "/logs-db"
 
+// SiteSections are the site's sections, each with its collections at /<section>/<collection>, whose live updates are
+// streamed at /<section>/<collection>/events
+var SiteSections = []string{"data", "settings", "presets", "logs"}
+
 // LongLived is a request held open, a live update, a Socket.IO connection or the control site's download of the logs
-// DB, or the health check, which must answer while the server is busy so it is not taken for down
+// DB, or the health check, which must answer while the server is busy so it is not taken for down. It is known by its
+// route alone, never by what the client says it accepts, so no other request can skip the load shedding and timeout.
 func LongLived(r *http.Request) bool {
-	return r.URL.Path == "/health" || strings.HasPrefix(r.URL.Path, "/socket.io/") ||
-		strings.Contains(r.Header.Get("Accept"), "text/event-stream") ||
+	return r.URL.Path == "/health" || strings.HasPrefix(r.URL.Path, "/socket.io/") || eventStream(r) ||
 		(r.URL.Path == ControlLogsDBPath && strings.HasPrefix(r.Host, "control."))
+}
+
+// eventStream is whether a request is for a collection's live updates, GET /<section>/<collection>/events
+func eventStream(r *http.Request) bool {
+	parts := strings.Split(r.URL.Path, "/")
+	return r.Method == http.MethodGet && len(parts) == 4 && slices.Contains(SiteSections, parts[1]) && parts[2] != "" &&
+		parts[3] == "events"
 }
 
 // ShedLoadReserving is ShedLoad keeping a quarter of its requests, in flight and waiting, for those reserved, such as

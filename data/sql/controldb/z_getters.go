@@ -138,6 +138,16 @@ func (m *ControlIdentity) SetDeletedAt(v *int64) {
 	m.DeletedAt = v
 }
 
+// GetCredentialsChangedAt returns the CredentialsChangedAt value.
+func (m ControlIdentity) GetCredentialsChangedAt() int64 {
+	return m.CredentialsChangedAt
+}
+
+// SetCredentialsChangedAt sets the CredentialsChangedAt value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetCredentialsChangedAt(v int64) {
+	m.CredentialsChangedAt = v
+}
+
 // GetID returns the ID value.
 func (m Passkey) GetID() int64 {
 	return m.ID
