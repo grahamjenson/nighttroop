@@ -10,13 +10,16 @@ ASSERT_NOT_VISIBLE #public--feedback
 ASSERT_TEXT_VISIBLE Nighttroop 2026
 SCREENSHOT footer
 
-// The terms and privacy policy are generated from their Markdown, with the support email in place
+// The terms and privacy policy are generated from their Markdown, with the operator, by default in test T1DNZ, and the
+// support email in place; operator/legal.bdd has another operator
 CLICK #footer--terms
 ASSERT_NEW_PAGE
 ASSERT_PATH /terms
 ASSERT_TEXT_VISIBLE TERMS OF SERVICE
+ASSERT_TEXT_VISIBLE We are T1DNZ
 ASSERT_VISIBLE #legal a[href="mailto:nighttroop@t1d.nz"] >> nth=0
 ASSERT_NOT_VISIBLE #legal >> text=SUPPORT_EMAIL
+ASSERT_NOT_VISIBLE #legal >> text=OPERATOR_NAME
 SCREENSHOT terms
 
 CLICK #footer--privacy

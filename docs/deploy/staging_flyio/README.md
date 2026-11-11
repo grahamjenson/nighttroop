@@ -113,6 +113,8 @@ fly apps create nighttroop-staging
 1. **Edit [`fly.toml`](fly.toml):**
    - Change `HOST_NAME` and the health check's `Host` to your staging domain. They must match, as the server only answers
      its own host name.
+   - Change `OPERATOR_NAME` and `SUPPORT_EMAIL` to who runs the server and how its testers contact you, as its terms
+     and privacy policy name them. Staging won't start without them.
    - Set `primary_region` to the [region](https://fly.io/docs/reference/regions/) nearest your testers.
    - Commit the change to `main`.
 2. **Make the keys and store them as a secret.**

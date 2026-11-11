@@ -18,6 +18,9 @@ swap_size_mb = 512
   CAPTURE_REQUESTS = "true"
   HOST_NAME = "staging.nighttroop.nz"
   HOST_PROTOCOL = "https"
+  # Who runs this server and how its users contact them, named in its terms and privacy policy: change both to yours
+  OPERATOR_NAME = "T1DNZ"
+  SUPPORT_EMAIL = "nighttroop@t1d.nz"
   # Where Fly's proxy connects from, so its Fly-Client-IP header is believed for the visitor's IP. Fly does not document
   # this, but its proxy reaches the machine from 172.16.x.x, while other machines on its private network use fdaa::
   # addresses. Any other peer's Fly-Client-IP is ignored. See README.md to check it.
