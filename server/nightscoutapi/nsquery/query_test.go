@@ -91,7 +91,7 @@ func TestParseQueryValues(t *testing.T) {
 	}
 }
 
-// A limit or count is at most a search's worth, and a skip is never negative nor more than MaxSkip, however far a
+// A limit or count is at most a search's worth, and a skip is never negative nor more than MaxQuerySkip, however far a
 // client asks to page
 func TestQueryLimitAndSkip(t *testing.T) {
 	tests := []struct {
@@ -105,8 +105,8 @@ func TestQueryLimitAndSkip(t *testing.T) {
 		{query: "limit=1001", limit: apiquery.MaxQueryLimit, skip: 0},
 		{query: "limit=-5&skip=-5", limit: apiquery.MaxQueryLimit, skip: 0},
 		{query: "skip=31000", limit: apiquery.MaxQueryLimit, skip: 31000},
-		{query: "skip=32001", limit: apiquery.MaxQueryLimit, skip: MaxSkip},
-		{query: "skip=1000000000", limit: apiquery.MaxQueryLimit, skip: MaxSkip},
+		{query: "skip=32001", limit: apiquery.MaxQueryLimit, skip: apiquery.MaxQuerySkip},
+		{query: "skip=1000000000", limit: apiquery.MaxQueryLimit, skip: apiquery.MaxQuerySkip},
 	}
 	for _, test := range tests {
 		t.Run(test.query, func(t *testing.T) {

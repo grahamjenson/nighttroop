@@ -56,6 +56,8 @@
 
 1. Translations
 1. Docs hosting
+1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at
+   `apiquery.MaxQuerySkip` (32000 rows, about 110 days of glucose) and walks every row it skips
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. Performance testing (cost estimate for running full node)

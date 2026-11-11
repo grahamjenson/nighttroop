@@ -280,7 +280,7 @@ func pageButton(id string, label string, url string) templ.Component {
 // hasNext is whether there are rows after this page: before the total, for a search that counts its rows, or else
 // when the page is full. There is none past the most a search skips, which would show this page again.
 func hasNext(ctx context.Context, p Props) bool {
-	if p.Skip+p.Limit > apiquery.MaxQueryLimit {
+	if p.Skip+p.Limit > apiquery.MaxQuerySkip {
 		return false
 	}
 	if totals := apiutils.TotalsFrom(ctx); totals != nil {

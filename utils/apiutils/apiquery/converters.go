@@ -27,12 +27,12 @@ func GetLimitInt64(source QueryValues) int64 {
 	return min(source.Limit.Int64(), MaxQueryLimit)
 }
 
-// GetSkipInt64 defaults a missing or negative skip to 0, and caps it at MaxQueryLimit, as SQLite walks every row it skips
+// GetSkipInt64 defaults a missing or negative skip to 0, and caps it at MaxQuerySkip
 func GetSkipInt64(source QueryValues) int64 {
 	if source.Skip == nil || *source.Skip < 0 {
 		return 0
 	}
-	return min(source.Skip.Int64(), MaxQueryLimit)
+	return min(source.Skip.Int64(), MaxQuerySkip)
 }
 
 // GetHoursInt64 leaves a missing or bad hours unset, and caps it at MaxQueryHours

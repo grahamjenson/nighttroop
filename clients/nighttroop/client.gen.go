@@ -466,9 +466,6 @@ type NsIdentifier = string
 // NsPermanent defines model for NsPermanent.
 type NsPermanent = bool
 
-// NsSkip defines model for NsSkip.
-type NsSkip = int64
-
 // NsSort defines model for NsSort.
 type NsSort = string
 
@@ -684,8 +681,8 @@ type NsV1SearchParams struct {
 	// Count How many documents, at most 1000
 	Count *NsCount `form:"count,omitempty" json:"count,omitempty"`
 
-	// Skip How many documents to skip, at most 32000
-	Skip *NsSkip `form:"skip,omitempty" json:"skip,omitempty"`
+	// Skip How many to skip, at most 32000
+	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 
 	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first
 	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
@@ -726,8 +723,8 @@ type NsV3SearchParams struct {
 	// Limit At most 1000
 	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// Skip How many documents to skip, at most 32000
-	Skip *NsSkip `form:"skip,omitempty" json:"skip,omitempty"`
+	// Skip How many to skip, at most 32000
+	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 
 	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first
 	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
@@ -768,7 +765,7 @@ type ListFoodIntakesParams struct {
 	// Limit At most 1000
 	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// Skip How many to skip, at most 1000
+	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
@@ -777,7 +774,7 @@ type ListGlucoseReadingsParams struct {
 	// Limit At most 1000
 	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// Skip How many to skip, at most 1000
+	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
@@ -786,7 +783,7 @@ type ListInsulinDosesParams struct {
 	// Limit At most 1000
 	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// Skip How many to skip, at most 1000
+	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
@@ -807,7 +804,7 @@ type ListLoopSettingsParams struct {
 	// Limit At most 1000
 	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// Skip How many to skip, at most 1000
+	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
