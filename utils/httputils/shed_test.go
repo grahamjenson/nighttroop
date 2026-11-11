@@ -65,6 +65,40 @@ func TestShedLoad(t *testing.T) {
 	require.Equal(t, http.StatusOK, (<-slow).Code)
 }
 
+// A request is long lived by its route alone: one asking for an event stream from any other route is not, so it cannot
+// skip the load shedding and timeout
+func TestLongLived(t *testing.T) {
+	for _, test := range []struct {
+		method, url, accept string
+		want                bool
+	}{
+		{"GET", "http://localhost/health", "", true},
+		{"GET", "http://site.ns.localhost/socket.io/?EIO=4&transport=polling", "", true},
+		{"POST", "http://site.ns.localhost/socket.io/?EIO=4&transport=polling", "", true},
+		{"GET", "http://control.localhost" + httputils.ControlLogsDBPath, "", true},
+		{"GET", "http://site.localhost/data/summary/events", "text/event-stream", true},
+		{"GET", "http://site.localhost/data/alarms/events", "text/html, text/event-stream", true},
+		{"GET", "http://site.localhost/settings/connectors/events", "text/event-stream", true},
+		{"GET", "http://site.localhost/presets/profiles/events", "", true},
+		{"GET", "http://site.localhost/logs/events/events", "", true},
+		{"GET", "http://site.localhost" + httputils.ControlLogsDBPath, "", false},
+		{"GET", "http://site.localhost/data/summary", "text/event-stream", false},
+		{"POST", "http://site.localhost/login", "text/event-stream", false},
+		{"POST", "http://control.localhost/login", "text/event-stream", false},
+		{"GET", "http://site.localhost/reports/agp", "text/event-stream", false},
+		{"GET", "http://site.ns.localhost/api/v1/entries", "text/event-stream", false},
+		{"POST", "http://site.localhost/data/glucose/events", "text/event-stream", false},
+		{"GET", "http://site.localhost/data//events", "text/event-stream", false},
+		{"GET", "http://site.localhost/data/glucose/1/events", "text/event-stream", false},
+		{"GET", "http://site.localhost/reports/glucose/events", "text/event-stream", false},
+		{"GET", "http://site.localhost/events", "text/event-stream", false},
+	} {
+		r := httptest.NewRequest(test.method, test.url, nil)
+		r.Header.Set("Accept", test.accept)
+		require.Equal(t, test.want, httputils.LongLived(r), test.method+" "+test.url+" "+test.accept)
+	}
+}
+
 // Uploads keep a share of a busy server to themselves, so they are worked on while page loads fill the rest
 func TestShedLoadReserving(t *testing.T) {
 	release := make(chan struct{})

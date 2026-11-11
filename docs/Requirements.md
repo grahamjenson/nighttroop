@@ -992,8 +992,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Past the requests the server can work on at once (`REQUESTS_IN_FLIGHT_PER_CPU`) and a short queue
   (`REQUESTS_BACKLOG_PER_CPU`, waiting up to 5 seconds), a request is refused at once with 503 and `Retry-After`, so a
   server that falls behind answers what it can rather than every request timing out. The health check, live updates
-  and Socket.IO connections are never refused this way. A quarter of each is kept for uploads to the Nightscout API,
-  so glucose keeps arriving while page loads and reads fill the rest.
+  and Socket.IO connections are never refused this way. They are known by their route (`/health`, `/socket.io/`, a
+  collection's `/<section>/<collection>/events`), so any other request sent with `Accept: text/event-stream` is still
+  refused when the server is busy and still times out after 30 seconds. A quarter of each is kept for uploads to the
+  Nightscout API, so glucose keeps arriving while page loads and reads fill the rest.
 - A request for a site there is not is 404, but one whose site cannot be looked up, as when the server is too busy to
   answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
