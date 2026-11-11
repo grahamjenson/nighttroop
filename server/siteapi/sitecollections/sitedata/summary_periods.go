@@ -1,6 +1,7 @@
 package sitedata
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"errors"
@@ -86,12 +87,13 @@ func SummariesOutOfDate(ctx context.Context, q *sitedb.Queries, siteContext *htt
 		}
 		start, end = min(start, row.StartAt), max(end, row.EndAt)
 	}
-	checked := siteContext.SiteModel.SummariesCheckedAt
-	if checked == nil || start >= today {
+	if start >= today {
 		return false, nil
 	}
-	// Without the rebuild's overlap, as what was written just before it was checked has been built
-	written, err := q.SummaryDataWrittenSince(ctx, sitedb.SummaryDataWrittenSinceParams{Since: *checked, Before: min(end, today)})
+	// Without the rebuild's overlap, as what was written just before it was checked has been built; a site not yet
+	// checked has had nothing built since it was made
+	since := cmp.Or(siteContext.SiteModel.SummariesCheckedAt, &siteContext.SiteModel.CreatedAt)
+	written, err := q.SummaryDataWrittenSince(ctx, sitedb.SummaryDataWrittenSinceParams{Since: *since, Before: min(end, today)})
 	return slices.ContainsFunc(written, func(at int64) bool { return at >= start }), err
 }
 
