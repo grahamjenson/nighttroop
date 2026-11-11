@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Setup is a new server's first page, asking for the setup code it printed to its logs
@@ -14,19 +15,18 @@ templ Setup() {
 		@authenticator.Page() {
 			@authenticator.Card("setup-target", true) {
 				<form hx-post="/setup" hx-target="closest .setup-target" hx-swap="outerHTML" hx-status:4xx="target:#toaster swap:beforeend" hx-status:5xx="target:#toaster swap:beforeend" class="space-y-4">
-					@authenticator.Title("Set up Nighttroop")
+					@authenticator.Title(i18n.T(ctx, "control.setup.title"))
 					<p class="text-sm text-slate-600">
-						Nothing can be used until the control admin is made. The server printed a setup code to its logs
-						when it started; with Docker, find it with <code class="font-mono">docker compose logs nighttroop</code>.
+						{ i18n.T(ctx, "control.setup.intro") } <code class="font-mono">docker compose logs nighttroop</code>{ i18n.T(ctx, "control.setup.intro_end") }
 					</p>
 					@form.Item(form.ItemProps{}) {
 						@form.Label(form.LabelProps{For: "control--setup--code"}) {
-							Setup code
+							{ i18n.T(ctx, "control.setup.code") }
 						}
 						@input.Input(input.Props{ID: "control--setup--code", Name: "code", Required: true, Attributes: templ.Attributes{"autocomplete": "off", "autocapitalize": "none"}})
 					}
 					@button.Button(button.Props{ID: "control--setup--submit", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
-						Continue
+						{ i18n.T(ctx, "control.setup.continue") }
 					}
 				</form>
 			}
@@ -37,12 +37,12 @@ templ Setup() {
 // SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered
 templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
 	@authenticator.Card("setup-target space-y-4", true) {
-		<h2 class="font-bold text-2xl">Save the control admin's login</h2>
-		<p class="text-sm text-slate-600">It is shown once. Add the TOTP secret to your authenticator app, then enter its code to finish.</p>
+		<h2 class="font-bold text-2xl">{ i18n.T(ctx, "control.setup.save_title") }</h2>
+		<p class="text-sm text-slate-600">{ i18n.T(ctx, "control.setup.save_intro") }</p>
 		<dl class="divide-y divide-slate-100 rounded-lg border border-slate-200 font-mono text-sm">
-			@row("username", "Username", name)
-			@row("password", "Password", password)
-			@row("totp-secret", "TOTP secret", totpSecret)
+			@row("username", i18n.T(ctx, "control.setup.username"), name)
+			@row("password", i18n.T(ctx, "control.setup.password"), password)
+			@row("totp-secret", i18n.T(ctx, "control.setup.totp_secret"), totpSecret)
 		</dl>
 		<div class="flex flex-col items-center gap-2">
 			<div id="control--setup--qrcode" class="w-fit p-2 rounded-lg border border-slate-200"></div>
@@ -55,12 +55,12 @@ templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
 			<input type="hidden" name="code" value={ code }/>
 			@form.Item() {
 				@form.Label(form.LabelProps{For: "control--setup--otp"}) {
-					Code from your authenticator app
+					{ i18n.T(ctx, "control.setup.totp_code") }
 				}
 				@authenticator.CodeInput("control--setup--otp", "", "totp", false)
 			}
 			@button.Button(button.Props{ID: "control--setup--confirm", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
-				Finish setup
+				{ i18n.T(ctx, "control.setup.finish") }
 			}
 		</form>
 	}
@@ -69,10 +69,10 @@ templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
 templ SetupComplete() {
 	@authenticator.Card("setup-target", true) {
 		<div id="control--setup--complete" class="space-y-4 text-center">
-			<h2 class="font-bold text-2xl">Nighttroop is set up</h2>
-			<p class="text-sm text-slate-600">Log in with the control admin's login to start creating sites.</p>
+			<h2 class="font-bold text-2xl">{ i18n.T(ctx, "control.setup.done_title") }</h2>
+			<p class="text-sm text-slate-600">{ i18n.T(ctx, "control.setup.done_intro") }</p>
 			@button.Button(button.Props{ID: "control--setup--login", Href: "/login", Size: button.SizeXl, Class: "px-8"}) {
-				Log in
+				{ i18n.T(ctx, "control.setup.login") }
 			}
 		</div>
 	}

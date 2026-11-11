@@ -66,7 +66,7 @@ func TestIdentityTypes(t *testing.T) {
 		}
 		return list
 	}
-	require.Equal(t, "1 person, 2 devices", identityTypes(identities(consts.IdentityRoleAdmin, consts.IdentityRoleDeviceRead, consts.IdentityRoleDevicePWDPhone)))
-	require.Equal(t, "2 people, 1 device", identityTypes(identities(consts.IdentityRoleAdmin, consts.IdentityRoleUser, consts.IdentityRoleDeviceRead)))
-	require.Equal(t, "0 people, 0 devices", identityTypes(nil))
+	require.Equal(t, "1 person, 2 devices", identityTypes(context.Background(), identities(consts.IdentityRoleAdmin, consts.IdentityRoleDeviceRead, consts.IdentityRoleDevicePWDPhone)))
+	require.Equal(t, "2 people, 1 device", identityTypes(context.Background(), identities(consts.IdentityRoleAdmin, consts.IdentityRoleUser, consts.IdentityRoleDeviceRead)))
+	require.Equal(t, "0 people, 0 devices", identityTypes(context.Background(), nil))
 }

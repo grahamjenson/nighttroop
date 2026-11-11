@@ -14,38 +14,43 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
-// view shows each row's site, and links its request and job to the rows with them
-var view = controlView(true)
-
-// controlView shows rows on control, with the site of each when withSite, as one site's own page does not need
-func controlView(withSite bool) logview.View {
+// controlView shows rows on control, with the site of each when withSite, as one site's own page does not need, and
+// links each row's request and job to the rows with them
+func controlView(ctx context.Context, withSite bool) logview.View {
 	v := logview.View{Prefix: "control", Links: true, Date: func(_ context.Context, ms int64) string { return display.DateTime(&ms) }}
 	if withSite {
-		v.About = "Site"
+		v.About = i18n.T(ctx, "control.logs.site")
 	}
 	return v
 }
 
 // orServer is the row's site, or that it is the server's own
-func orServer(siteID *string) string {
+func orServer(ctx context.Context, siteID *string) string {
 	if siteID == nil {
-		return "server"
+		return i18n.T(ctx, "control.logs.server")
 	}
 	return *siteID
 }
 
-func eventRow(e *controlmodels.Event) logview.Row {
-	return logview.Row{ID: e.ID, Name: e.Name, About: orServer(e.SiteID), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+func eventRow(ctx context.Context) func(*controlmodels.Event) logview.Row {
+	return func(e *controlmodels.Event) logview.Row {
+		return logview.Row{ID: e.ID, Name: e.Name, About: orServer(ctx, e.SiteID), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+	}
 }
 
-func errorRow(e *controlmodels.Error) logview.Row {
-	return logview.Row{ID: e.ID, Message: e.Message, About: orServer(e.SiteID), At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+func errorRow(ctx context.Context) func(*controlmodels.Error) logview.Row {
+	return func(e *controlmodels.Error) logview.Row {
+		return logview.Row{ID: e.ID, Message: e.Message, About: orServer(ctx, e.SiteID), At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+	}
 }
 
-func logRow(l *controlmodels.Log) logview.Row {
-	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, About: orServer(l.SiteID), At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+func logRow(ctx context.Context) func(*controlmodels.Log) logview.Row {
+	return func(l *controlmodels.Log) logview.Row {
+		return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, About: orServer(ctx, l.SiteID), At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+	}
 }
 
 // download is, for an admin, a download of the whole logs DB
@@ -55,24 +60,28 @@ templ download() {
 			ID:         "control--logs-db--download",
 			Href:       "/logs-db",
 			Variant:    button.VariantOutline,
-			Attributes: templ.Attributes{"download": "", "title": "A copy of the logs DB, with every site's events, errors and logs, as one SQLite file"},
+			Attributes: templ.Attributes{"download": "", "title": i18n.T(ctx, "control.logs.download_title")},
 		}) {
-			Download Logs DB
+			{ i18n.T(ctx, "control.logs.download") }
 		}
 	}
 }
 
 // ids are the site, request and job a page's rows can be narrowed to
-func ids(q *apiquery.Query) []filter.ID {
-	return []filter.ID{{Name: "site_id", Label: "Site ID", Value: q.SiteID}, {Name: "request_id", Label: "Request ID", Value: q.RequestID}, {Name: "job_id", Label: "Job ID", Value: q.JobID}}
+func ids(ctx context.Context, q *apiquery.Query) []filter.ID {
+	return []filter.ID{
+		{Name: "site_id", Label: i18n.T(ctx, "control.logs.site_id"), Value: q.SiteID},
+		{Name: "request_id", Label: i18n.T(ctx, "control.logs.request_id"), Value: q.RequestID},
+		{Name: "job_id", Label: i18n.T(ctx, "control.logs.job_id"), Value: q.JobID},
+	}
 }
 
 // EventsTable shows one page of events, the newest first
 templ EventsTable(events []*controlmodels.Event, q *apiquery.Query) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
-	@logview.Page(logview.PageProps{ID: "events_table", Title: "Events", Description: "What happened to each site and the server, newest first. Click an event to see its details.", Pager: "control--events", Path: filter.PagePath("/events", q.Type, q.Search, ids(q)...), Count: len(events), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
-		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(q)})
+	@logview.Page(logview.PageProps{ID: "events_table", Title: i18n.T(ctx, "control.logs.events_title"), Description: i18n.T(ctx, "control.logs.events_intro"), Pager: "control--events", Path: filter.PagePath("/events", q.Type, q.Search, ids(ctx, q)...), Count: len(events), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
+		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: i18n.T(ctx, "control.logs.all_events"), Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)})
 		@EventsList("controlEventsTable", events, true)
 	}
 }
@@ -80,17 +89,17 @@ templ EventsTable(events []*controlmodels.Event, q *apiquery.Query) {
 // EventsList is a table of events, newest first, each opening its details, with the site of each when withSite, as
 // one site's own page does not need
 templ EventsList(id string, events []*controlmodels.Event, withSite bool) {
-	@logview.EventsTable(controlView(withSite), id, logview.Rows(events, eventRow))
+	@logview.EventsTable(controlView(ctx, withSite), id, logview.Rows(events, eventRow(ctx)))
 }
 
 templ EventModal(event *controlmodels.Event) {
-	@logview.EventModal(view, eventRow(event))
+	@logview.EventModal(controlView(ctx, true), eventRow(ctx)(event))
 }
 
 // ErrorsTable shows one page of errors, the newest first
 templ ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) {
-	@logview.Page(logview.PageProps{ID: "errors_table", Title: "Errors", Description: "What failed for each site and the server, newest first. Click an error to see its details.", Pager: "control--errors", Path: filter.PagePath("/errors", q.Type, q.Search, ids(q)...), Count: len(errors), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
-		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(q)})
+	@logview.Page(logview.PageProps{ID: "errors_table", Title: i18n.T(ctx, "control.logs.errors_title"), Description: i18n.T(ctx, "control.logs.errors_intro"), Pager: "control--errors", Path: filter.PagePath("/errors", q.Type, q.Search, ids(ctx, q)...), Count: len(errors), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
+		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: i18n.T(ctx, "control.logs.all_errors"), Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)})
 		@ErrorsList("controlErrorsTable", errors, true)
 	}
 }
@@ -98,21 +107,21 @@ templ ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) {
 // ErrorsList is a table of errors, newest first, each opening its details, with the site of each when withSite, as
 // one site's own page does not need
 templ ErrorsList(id string, errors []*controlmodels.Error, withSite bool) {
-	@logview.ErrorsTable(controlView(withSite), id, logview.Rows(errors, errorRow))
+	@logview.ErrorsTable(controlView(ctx, withSite), id, logview.Rows(errors, errorRow(ctx)))
 }
 
 templ ErrorModal(e *controlmodels.Error) {
-	@logview.ErrorModal(view, errorRow(e))
+	@logview.ErrorModal(controlView(ctx, true), errorRow(ctx)(e))
 }
 
 // LogsTable shows one page of logs, the newest first
 templ LogsTable(logs []*controlmodels.Log, q *apiquery.Query) {
-	@logview.Page(logview.PageProps{ID: "logs_table", Title: "Logs", Description: "Messages logged for each site and the server, newest first. Click a log to see its details.", Pager: "control--logs", Path: filter.PagePath("/logs", nil, q.Search, ids(q)...), Count: len(logs), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
-		@filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: q.Search, IDs: ids(q)})
-		@logview.LogsTable(view, "controlLogsTable", logview.Rows(logs, logRow))
+	@logview.Page(logview.PageProps{ID: "logs_table", Title: i18n.T(ctx, "control.logs.logs_title"), Description: i18n.T(ctx, "control.logs.logs_intro"), Pager: "control--logs", Path: filter.PagePath("/logs", nil, q.Search, ids(ctx, q)...), Count: len(logs), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
+		@filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: q.Search, IDs: ids(ctx, q)})
+		@logview.LogsTable(controlView(ctx, true), "controlLogsTable", logview.Rows(logs, logRow(ctx)))
 	}
 }
 
 templ LogModal(log *controlmodels.Log) {
-	@logview.LogModal(view, logRow(log))
+	@logview.LogModal(controlView(ctx, true), logRow(ctx)(log))
 }
