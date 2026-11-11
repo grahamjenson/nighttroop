@@ -4346,6 +4346,16 @@ func (m *SummaryPeriod) SetLoopCobJson(v string) {
 	m.LoopCobJson = v
 }
 
+// GetStaleAt returns the StaleAt value.
+func (m SummaryPeriod) GetStaleAt() *int64 {
+	return m.StaleAt
+}
+
+// SetStaleAt sets the StaleAt value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetStaleAt(v *int64) {
+	m.StaleAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m SummaryPeriod) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -14426,6 +14436,16 @@ func (m *UpdateProfilePresetParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetBefore returns the Before value.
+func (m ClearStaleSummariesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearStaleSummariesParams.
+func (m *ClearStaleSummariesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
 // GetPeriod returns the Period value.
 func (m DeleteSummaryPeriodsParams) GetPeriod() *string {
 	return m.Period
@@ -14474,6 +14494,16 @@ func (m HardDeleteSummaryPeriodParams) GetDate() string {
 // SetDate sets the Date value and returns the updated HardDeleteSummaryPeriodParams.
 func (m *HardDeleteSummaryPeriodParams) SetDate(v string) {
 	m.Date = v
+}
+
+// GetAt returns the At value.
+func (m MarkSummariesStaleParams) GetAt() int64 {
+	return m.At
+}
+
+// SetAt sets the At value and returns the updated MarkSummariesStaleParams.
+func (m *MarkSummariesStaleParams) SetAt(v int64) {
+	m.At = v
 }
 
 // GetPeriod returns the Period value.

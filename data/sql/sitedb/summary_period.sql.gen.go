@@ -10,6 +10,20 @@ import (
 	"database/sql"
 )
 
+const clearStaleSummaries = `-- name: ClearStaleSummaries :exec
+UPDATE summary_period SET stale_at = NULL WHERE stale_at <= ?1
+`
+
+type ClearStaleSummariesParams struct {
+	Before *int64
+}
+
+// The summaries marked stale by Before, as those just built, are up to date; one marked since is built again later
+func (q *Queries) ClearStaleSummaries(ctx context.Context, arg ClearStaleSummariesParams) error {
+	_, err := q.exec(ctx, q.clearStaleSummariesStmt, clearStaleSummaries, arg.Before)
+	return err
+}
+
 const deleteSummaryPeriods = `-- name: DeleteSummaryPeriods :execresult
 DELETE FROM summary_period WHERE CAST(?1 AS TEXT) IS NULL OR period = ?1
 `
@@ -24,7 +38,7 @@ func (q *Queries) DeleteSummaryPeriods(ctx context.Context, arg DeleteSummaryPer
 }
 
 const getSummaryPeriod = `-- name: GetSummaryPeriod :one
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
 `
 
 type GetSummaryPeriodParams struct {
@@ -61,6 +75,7 @@ func (q *Queries) GetSummaryPeriod(ctx context.Context, arg GetSummaryPeriodPara
 		&i.LoopIobBasalJson,
 		&i.LoopIobTreatmentJson,
 		&i.LoopCobJson,
+		&i.StaleAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -80,8 +95,23 @@ func (q *Queries) HardDeleteSummaryPeriod(ctx context.Context, arg HardDeleteSum
 	return q.exec(ctx, q.hardDeleteSummaryPeriodStmt, hardDeleteSummaryPeriod, arg.Period, arg.Date)
 }
 
+const markSummariesStale = `-- name: MarkSummariesStale :exec
+UPDATE summary_period SET stale_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE stale_at IS NULL AND end_at > ?1 AND end_at <= ?1 + 2764800000 AND start_at <= ?1
+`
+
+type MarkSummariesStaleParams struct {
+	At int64
+}
+
+// The summaries a record at At was deleted or moved from; none is longer than 32 days, however old At is
+func (q *Queries) MarkSummariesStale(ctx context.Context, arg MarkSummariesStaleParams) error {
+	_, err := q.exec(ctx, q.markSummariesStaleStmt, markSummariesStale, arg.At)
+	return err
+}
+
 const searchSummaryPeriods = `-- name: SearchSummaryPeriods :many
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at FROM summary_period
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, created_at, updated_at FROM summary_period
 WHERE
     period = ?1
     AND (CAST(?2 AS TEXT) IS NULL OR date >= ?2)
@@ -139,12 +169,41 @@ func (q *Queries) SearchSummaryPeriods(ctx context.Context, arg SearchSummaryPer
 			&i.LoopIobBasalJson,
 			&i.LoopIobTreatmentJson,
 			&i.LoopCobJson,
+			&i.StaleAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
 		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const staleSummaryDays = `-- name: StaleSummaryDays :many
+SELECT start_at FROM summary_period WHERE period = 'day' AND stale_at IS NOT NULL
+`
+
+// The days marked to be built again, by when each starts
+func (q *Queries) StaleSummaryDays(ctx context.Context) ([]int64, error) {
+	rows, err := q.query(ctx, q.staleSummaryDaysStmt, staleSummaryDays)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var start_at int64
+		if err := rows.Scan(&start_at); err != nil {
+			return nil, err
+		}
+		items = append(items, start_at)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -185,7 +244,7 @@ ON CONFLICT(period, date) DO UPDATE SET
     time_very_high = excluded.time_very_high,
     total_daily_basal = excluded.total_daily_basal,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at
+RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, created_at, updated_at
 `
 
 type UpsertSummaryPeriodParams struct {
@@ -271,6 +330,7 @@ func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeri
 		&i.LoopIobBasalJson,
 		&i.LoopIobTreatmentJson,
 		&i.LoopCobJson,
+		&i.StaleAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

@@ -494,6 +494,7 @@ type SummaryPeriod struct {
 	LoopIobBasalJson     string
 	LoopIobTreatmentJson string
 	LoopCobJson          string
+	StaleAt              *int64
 	CreatedAt            int64
 	UpdatedAt            int64
 }

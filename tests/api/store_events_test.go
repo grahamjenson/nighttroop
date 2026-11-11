@@ -16,10 +16,13 @@ import (
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -163,29 +166,44 @@ func TestSettingsEventsStreamToTheirIdentityAlone(t *testing.T) {
 	require.Contains(t, data, `"timezone":"Europe/Paris"`)
 }
 
-// An update's event has the row as it was before, so the day a record moved from is built again as well
-func TestUpdateEventsHaveTheRowBefore(t *testing.T) {
+// A day a record moved away from, through the site API, or was deleted from for good, through the Nightscout API, is
+// marked stale in the site's DB as it is written, so its summary is built again after a restart too
+func TestMovesAndPermanentDeletesMarkTheirDayStale(t *testing.T) {
 	s := newEventsSite(t)
-	resp := s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin", `{"dose": 4}`)
+	ctx, now := t.Context(), time.Now()
+	day := now.AddDate(0, 0, -3)
+	q := s.site.SiteDB.Queries()
+	stale := func() []int64 {
+		starts, err := q.StaleSummaryDays(ctx)
+		require.NoError(t, err)
+		return starts
+	}
+	build := func() {
+		_, model, err := s.controlDB.GetSite(ctx, s.site.SiteDB.Subdomain)
+		require.NoError(t, err)
+		siteContext := &httputils.SiteContext{SiteID: s.site.SiteDB.Subdomain, ControlDB: s.controlDB, SiteDB: s.site.SiteDB, SiteModel: model}
+		require.NoError(t, sitedata.RebuildSummaryDays(ctx, q, siteContext, []time.Time{day}, now))
+		require.NoError(t, q.ClearStaleSummaries(ctx, sitedb.ClearStaleSummariesParams{Before: new(time.Now().UnixMilli())}))
+		require.Empty(t, stale())
+	}
+
+	resp := s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin", fmt.Sprintf(`{"dose": 4, "occurred_at": %d}`, day.UnixMilli()))
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 	var created struct {
 		Result struct {
-			ID         string `json:"id"`
-			OccurredAt int64  `json:"occurred_at"`
+			ID string `json:"id"`
 		} `json:"result"`
 	}
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&created))
-	previous := make(chan any, 1)
-	s.config.Events.Subscribe(s.site.SiteDB.Subdomain, func(event events.Event) {
-		if event.Action == events.Updated {
-			previous <- event.Previous
-		}
-	})
-
-	moved := time.Now().AddDate(0, 0, -2).UnixMilli()
-	resp = s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin/"+created.Result.ID, fmt.Sprintf(`{"dose": 4, "occurred_at": %d}`, moved))
+	build()
+	resp = s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin/"+created.Result.ID, fmt.Sprintf(`{"dose": 4, "occurred_at": %d}`, day.AddDate(0, 0, -1).UnixMilli()))
 	require.Equal(t, http.StatusOK, resp.StatusCode)
-	row, ok := (<-previous).(interface{ GetOccurredAt() int64 })
-	require.True(t, ok)
-	require.Equal(t, created.Result.OccurredAt, row.GetOccurredAt())
+	require.Len(t, stale(), 1, "the day it moved from")
+
+	_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "deleted-for-good", Mgdl: 120, ReadingType: "sgv", OccurredAt: day.UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	build()
+	status, _, _ := testutils.JSONRequest[any](t, s.router, http.MethodDelete, "http://"+s.site.SiteDB.Subdomain+".ns.localhost/api/v1/entries/deleted-for-good?permanent=true&token="+s.site.PwdNSToken, nil)
+	require.Equal(t, http.StatusOK, status)
+	require.Len(t, stale(), 1, "the day it was deleted from")
 }

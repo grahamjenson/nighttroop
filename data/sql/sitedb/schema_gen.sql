@@ -40,6 +40,10 @@ CREATE INDEX profile_presets_updated_at_idx ON profile_presets(updated_at);
 
 CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at);
 
+CREATE INDEX summary_period_end_at_idx ON summary_period(end_at);
+
+CREATE INDEX summary_period_stale_idx ON summary_period(period, start_at) WHERE stale_at IS NOT NULL;
+
 CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);
 
 CREATE INDEX temp_targets_occurred_at_idx ON temp_targets(occurred_at);
@@ -501,6 +505,9 @@ CREATE TABLE summary_period (
     loop_iob_basal_json TEXT NOT NULL CHECK(length(loop_iob_basal_json) <= 4096 AND json_valid(loop_iob_basal_json)),
     loop_iob_treatment_json TEXT NOT NULL CHECK(length(loop_iob_treatment_json) <= 4096 AND json_valid(loop_iob_treatment_json)),
     loop_cob_json TEXT NOT NULL CHECK(length(loop_cob_json) <= 4096 AND json_valid(loop_cob_json)),
+    -- When it was marked to be built again, as a record in it was deleted or moved to another day, so it is built again
+    -- after a restart too; null while it is up to date
+    stale_at INTEGER,
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

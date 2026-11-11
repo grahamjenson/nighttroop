@@ -81,6 +81,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearOldPumpsStmt, err = db.PrepareContext(ctx, clearOldPumps); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldPumps: %w", err)
 	}
+	if q.clearStaleSummariesStmt, err = db.PrepareContext(ctx, clearStaleSummaries); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearStaleSummaries: %w", err)
+	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
 	}
@@ -297,6 +300,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.lastModifiedCollectionsStmt, err = db.PrepareContext(ctx, lastModifiedCollections); err != nil {
 		return nil, fmt.Errorf("error preparing query LastModifiedCollections: %w", err)
 	}
+	if q.markSummariesStaleStmt, err = db.PrepareContext(ctx, markSummariesStale); err != nil {
+		return nil, fmt.Errorf("error preparing query MarkSummariesStale: %w", err)
+	}
 	if q.notificationEventTotalsStmt, err = db.PrepareContext(ctx, notificationEventTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query NotificationEventTotals: %w", err)
 	}
@@ -407,6 +413,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.softDeleteTempTargetStmt, err = db.PrepareContext(ctx, softDeleteTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteTempTarget: %w", err)
+	}
+	if q.staleSummaryDaysStmt, err = db.PrepareContext(ctx, staleSummaryDays); err != nil {
+		return nil, fmt.Errorf("error preparing query StaleSummaryDays: %w", err)
 	}
 	if q.tempBasalTotalsStmt, err = db.PrepareContext(ctx, tempBasalTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query TempBasalTotals: %w", err)
@@ -557,6 +566,11 @@ func (q *Queries) Close() error {
 	if q.clearOldPumpsStmt != nil {
 		if cerr := q.clearOldPumpsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearOldPumpsStmt: %w", cerr)
+		}
+	}
+	if q.clearStaleSummariesStmt != nil {
+		if cerr := q.clearStaleSummariesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearStaleSummariesStmt: %w", cerr)
 		}
 	}
 	if q.createActivityStmt != nil {
@@ -919,6 +933,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing lastModifiedCollectionsStmt: %w", cerr)
 		}
 	}
+	if q.markSummariesStaleStmt != nil {
+		if cerr := q.markSummariesStaleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing markSummariesStaleStmt: %w", cerr)
+		}
+	}
 	if q.notificationEventTotalsStmt != nil {
 		if cerr := q.notificationEventTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing notificationEventTotalsStmt: %w", cerr)
@@ -1104,6 +1123,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing softDeleteTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.staleSummaryDaysStmt != nil {
+		if cerr := q.staleSummaryDaysStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing staleSummaryDaysStmt: %w", cerr)
+		}
+	}
 	if q.tempBasalTotalsStmt != nil {
 		if cerr := q.tempBasalTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing tempBasalTotalsStmt: %w", cerr)
@@ -1247,6 +1271,7 @@ type Queries struct {
 	clearDeviceReportStatusesStmt               *sql.Stmt
 	clearOldLoopStatusesStmt                    *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
+	clearStaleSummariesStmt                     *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
 	createEventGroupStmt                        *sql.Stmt
@@ -1319,6 +1344,7 @@ type Queries struct {
 	hardDeleteTempTargetStmt                    *sql.Stmt
 	insulinDoseTotalsStmt                       *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
+	markSummariesStaleStmt                      *sql.Stmt
 	notificationEventTotalsStmt                 *sql.Stmt
 	oldestGlucoseReadingAtStmt                  *sql.Stmt
 	profileStoreAscendingIDsStmt                *sql.Stmt
@@ -1356,6 +1382,7 @@ type Queries struct {
 	softDeleteProfileSwitchStmt                 *sql.Stmt
 	softDeleteTempBasalStmt                     *sql.Stmt
 	softDeleteTempTargetStmt                    *sql.Stmt
+	staleSummaryDaysStmt                        *sql.Stmt
 	tempBasalTotalsStmt                         *sql.Stmt
 	tempTargetTotalsStmt                        *sql.Stmt
 	thinOldDeviceReportsStmt                    *sql.Stmt
@@ -1398,6 +1425,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
 		clearOldLoopStatusesStmt:                    q.clearOldLoopStatusesStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
+		clearStaleSummariesStmt:                     q.clearStaleSummariesStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,
 		createEventGroupStmt:                        q.createEventGroupStmt,
@@ -1470,6 +1498,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
 		insulinDoseTotalsStmt:                       q.insulinDoseTotalsStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
+		markSummariesStaleStmt:                      q.markSummariesStaleStmt,
 		notificationEventTotalsStmt:                 q.notificationEventTotalsStmt,
 		oldestGlucoseReadingAtStmt:                  q.oldestGlucoseReadingAtStmt,
 		profileStoreAscendingIDsStmt:                q.profileStoreAscendingIDsStmt,
@@ -1507,6 +1536,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteProfileSwitchStmt:                 q.softDeleteProfileSwitchStmt,
 		softDeleteTempBasalStmt:                     q.softDeleteTempBasalStmt,
 		softDeleteTempTargetStmt:                    q.softDeleteTempTargetStmt,
+		staleSummaryDaysStmt:                        q.staleSummaryDaysStmt,
 		tempBasalTotalsStmt:                         q.tempBasalTotalsStmt,
 		tempTargetTotalsStmt:                        q.tempTargetTotalsStmt,
 		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,
