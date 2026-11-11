@@ -43,7 +43,7 @@ import (
 
 // roleLabels match the role names in the create forms
 var roleLabels = map[consts.IdentityRole]string{
-	consts.IdentityRoleAdmin: "Admin", consts.IdentityRoleUser: "User", consts.IdentityRoleUserReadOnly: "Read Only User",
+	consts.IdentityRoleAdmin: "Admin", consts.IdentityRoleUser: "User", consts.IdentityRoleUserReadOnly: "Read Only User", consts.IdentityRoleClinician: "Clinician",
 	consts.IdentityRoleDeviceRead: "Read", consts.IdentityRoleDeviceReadWrite: "Read+Write", consts.IdentityRoleDevicePWDPhone: "PWD Phone",
 }
 
@@ -228,7 +228,7 @@ func IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.User
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Admin", Value: consts.IdentityRoleAdmin}}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Clinician", Value: consts.IdentityRoleClinician}, {Label: "Admin", Value: consts.IdentityRoleAdmin}}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -9,7 +9,9 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // PrintMonths are how many months the printable report is of: this month so far and the 3 before it
@@ -31,7 +33,13 @@ templ Printable(generated time.Time, months []*PeriodReport) {
 		// Printed smaller, so each page's report fits on it, with its colours, as its range bars are backgrounds
 		<style>@page { size: A4; margin: 10mm; } @media print { html { font-size: 10px; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }</style>
 		<main id="site--print" class="flex-1 bg-gray-100 py-6 print:bg-white print:py-0">
-			<div class="mx-auto mb-4 flex max-w-4xl justify-end px-4 print:hidden">
+			<div class="mx-auto mb-4 flex max-w-4xl justify-end gap-2 px-4 print:hidden">
+				// A clinician has no menu, so signs out here
+				if clinician(ctx) {
+					@button.Button(button.Props{ID: "site--print--logout", Variant: button.VariantOutline, Attributes: templ.Attributes{"hx-post": "/logout", "hx-target": "body", "hx-swap": "outerHTML"}}) {
+						Sign out
+					}
+				}
 				@button.Button(button.Props{ID: "site--print--print", Attributes: templ.Attributes{"onclick": templ.JSUnsafeFuncCall("window.print()")}}) {
 					Print
 				}
@@ -87,4 +95,10 @@ templ sheet(p sheetProps) {
 func sheetDates(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	first, last := days(ctx, p)
 	return fmt.Sprintf("%d days • %s – %s", periodDays(p, time.Now(), first.Location()), first.Format(display.DayLayout), last.Format(display.DayLayout))
+}
+
+// clinician is whether the signed in identity is a clinician, whose only page is the printable report
+func clinician(ctx context.Context) bool {
+	siteContext := httputils.GetSiteContext(ctx)
+	return siteContext != nil && siteContext.IdentityModel != nil && siteContext.IdentityModel.Role == consts.IdentityRoleClinician
 }

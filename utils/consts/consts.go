@@ -57,6 +57,7 @@ const (
 	IdentityRoleAdmin           IdentityRole = "admin"            // Login with password + totp
 	IdentityRoleUser            IdentityRole = "user"             // Login with password with TOTP
 	IdentityRoleUserReadOnly    IdentityRole = "user_readonly"    // Login with password with TOTP
+	IdentityRoleClinician       IdentityRole = "clinician"        // Login with password, sees only the printable report
 	IdentityRoleDevicePWDPhone  IdentityRole = "device_pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
 	IdentityRoleDeviceRead      IdentityRole = "device_read"
 	IdentityRoleDeviceReadWrite IdentityRole = "device_read_write"
@@ -74,7 +75,7 @@ func (i IdentityRole) GetType() IdentityType {
 	switch i {
 	case IdentityRoleAdmin:
 		return IdentityTypeAdmin
-	case IdentityRoleUser, IdentityRoleUserReadOnly:
+	case IdentityRoleUser, IdentityRoleUserReadOnly, IdentityRoleClinician:
 		return IdentityTypeUser
 	case IdentityRoleDevicePWDPhone, IdentityRoleDeviceRead, IdentityRoleDeviceReadWrite:
 		return IdentityTypeDevice

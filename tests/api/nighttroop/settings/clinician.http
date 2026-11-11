@@ -1,0 +1,70 @@
+INCLUDE steps/new_site_admin.steps
+
+// A clinician signs in with only a password, and has no TOTP or Nightscout token
+NAME create_clinician
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "doctor", "role": "clinician"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "clinician" "@result.role"
+ASSERT_EXISTS "@result.password"
+
+NAME login_clinician
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "doctor", "password": "{{ .create_clinician.result.password }}"}
+ASSERT_STATUS 200
+
+// Its home page is the printable report
+NAME clinician_home
+GET http://{{ site }}/
+H Authorization: Bearer {{ .login_clinician.token }}
+H Accept: text/html
+ASSERT_STATUS 200
+
+// Any other page opens the report instead
+NAME clinician_settings_page
+GET http://{{ site }}/settings
+H Authorization: Bearer {{ .login_clinician.token }}
+H Accept: text/html
+ASSERT_STATUS 303
+ASSERT_EQUALS "/" "#Location.0"
+
+// It cannot read or change the site's data, its own settings or the site's identities
+NAME clinician_reads_glucose
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .login_clinician.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME clinician_reads_summaries
+GET http://{{ site }}/data/summary-periods
+H Authorization: Bearer {{ .login_clinician.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME clinician_writes_glucose
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .login_clinician.token }}
+H Accept: application/json
+B {"reading": 5.5}
+ASSERT_STATUS 403
+
+NAME clinician_reads_own_settings
+GET http://{{ site }}/settings/identity
+H Authorization: Bearer {{ .login_clinician.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME clinician_resets_own_password
+POST http://{{ site }}/settings/identities/{{ .create_clinician.result.id }}/password
+H Authorization: Bearer {{ .login_clinician.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// nor use the Nightscout API
+NAME clinician_nightscout
+GET http://{{ .ns_site }}/api/v1/entries.json
+H Authorization: Bearer {{ .login_clinician.token }}
+ASSERT_STATUS 401
