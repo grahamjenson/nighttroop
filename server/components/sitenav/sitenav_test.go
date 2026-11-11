@@ -63,12 +63,14 @@ func TestVisible(t *testing.T) {
 	require.Len(t, Visible(admin, Settings), 5)
 	require.Equal(t, []string{"site--settings--alarms-button"}, ids(Visible(admin, Alarms)))
 	require.Equal(t, []string{"site--logs--events-button", "site--logs--errors-button", "site--logs--logs-button"}, ids(Visible(admin, Logs)))
-	require.Len(t, Visible(admin, MenuHubs...), 9)
+	require.Equal(t, []string{"site--usage-button"}, ids(Visible(admin, Usage)))
+	require.Len(t, Visible(admin, MenuHubs...), 10)
 	for _, role := range []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead} {
 		settings := ids(Visible(&controldb.SiteIdentity{Role: role}, Settings))
 		require.Equal(t, []string{"site--settings--settings-button", "site--settings--push-devices-button"}, settings, role)
 		require.Equal(t, []string{"site--settings--alarms-button"}, ids(Visible(&controldb.SiteIdentity{Role: role}, Alarms)), role)
 		require.Empty(t, Visible(&controldb.SiteIdentity{Role: role}, Logs), role)
+		require.Empty(t, Visible(&controldb.SiteIdentity{Role: role}, Usage), role)
 		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 13, role)
 	}
 	require.Empty(t, Visible(nil))
@@ -93,14 +95,14 @@ func TestGroups(t *testing.T) {
 	for _, group := range Groups(Pages, true) {
 		names = append(names, group.Name)
 	}
-	require.Equal(t, []string{"Data", "Reports", "Settings", "Alarms", "Logs & Events"}, names)
+	require.Equal(t, []string{"Data", "Reports", "Settings", "Alarms", "Logs & Events", "Usage"}, names)
 	require.Equal(t, "site--nav--search--settings--push-devices", At("/settings/push-devices").SearchID())
 	// Alarms and the logs and events are hubs of their own, out of Settings
 	require.Equal(t, Alarms, At("/settings/alarms").Hub)
 	require.Equal(t, Logs, At("/logs/errors").Hub)
 }
 
-// The header opens Data and Reports, and the account menu Settings, Alarms, and Logs & Events, every hub once, each
+// The header opens Data and Reports, and the account menu Settings, Alarms, Logs & Events and Usage, every hub once, each
 // named in IDs by its first word
 func TestHubs(t *testing.T) {
 	var all []Hub
@@ -112,7 +114,7 @@ func TestHubs(t *testing.T) {
 	for _, hub := range all {
 		slugs = append(slugs, hub.Slug())
 	}
-	require.Equal(t, []string{"data", "reports", "settings", "alarms", "logs"}, slugs)
+	require.Equal(t, []string{"data", "reports", "settings", "alarms", "logs", "usage"}, slugs)
 }
 
 // Search finds a page by the headings and words on it and by what people also call it, as the header's search

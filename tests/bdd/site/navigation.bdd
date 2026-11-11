@@ -13,8 +13,8 @@ ASSERT_NOT_VISIBLE #site--nav--links >> text=Settings
 ASSERT_VISIBLE #site--nav--search[aria-label="Search pages"]
 SCREENSHOT navigation_header
 
-// The user menu has who is signed in, their account, the guide, Settings, Alarms, Logs & Events and logout, none
-// marked on the summary
+// The user menu has who is signed in, their account, the guide, Settings, Alarms, Logs & Events, Usage and logout,
+// none marked on the summary
 CLICK #site--settings-menu
 ASSERT_TEXT_VISIBLE Signed in as
 ASSERT_VISIBLE #site--settings--account-button
@@ -22,11 +22,13 @@ ASSERT_VISIBLE #site--settings--getting-started-button
 ASSERT_TEXT_EQUALS #site--nav--menu--settings Settings
 ASSERT_TEXT_EQUALS #site--nav--menu--alarms Alarms
 ASSERT_TEXT_EQUALS #site--nav--menu--logs Logs & Events
+ASSERT_TEXT_EQUALS #site--nav--menu--usage Usage
 ASSERT_VISIBLE #site--nav--menu--settings
 ASSERT_VISIBLE #site--nav--menu--alarms
 ASSERT_VISIBLE #site--nav--menu--logs
+ASSERT_VISIBLE #site--nav--menu--usage
 ASSERT_VISIBLE #site--settings--logout-button
-ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 6
+ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 7
 ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
 SCREENSHOT navigation_account_menu
 PRESS Escape
@@ -348,6 +350,7 @@ CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--settings
 ASSERT_VISIBLE #site--nav--menu--alarms
 ASSERT_NOT_VISIBLE #site--nav--menu--logs
+ASSERT_NOT_VISIBLE #site--nav--menu--usage
 ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 5
 CLICK #site--nav--menu--settings
 ASSERT_STATUS 200

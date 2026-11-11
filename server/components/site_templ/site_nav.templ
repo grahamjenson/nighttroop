@@ -31,6 +31,8 @@ func hubIcon(hub sitenav.Hub) templ.Component {
 		return icon.BellRing(icon.Props{Class: "size-4"})
 	case sitenav.Logs:
 		return icon.ScrollText(icon.Props{Class: "size-4"})
+	case sitenav.Usage:
+		return icon.HardDrive(icon.Props{Class: "size-4"})
 	}
 	return icon.Settings(icon.Props{Class: "size-4"})
 }

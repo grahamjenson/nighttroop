@@ -1,0 +1,63 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// The virtual connector writes readings, treatments and device reports, so the site's DB has data to show
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+// Usage, in the user menu, shows an admin the site's DB size against its limit, measured as it opens, and where its
+// data builds up, by table as the resource check the background jobs ran last measured it, as the control site's page
+// of it does
+CLICK #site--settings-menu
+CLICK #site--nav--menu--usage
+ASSERT_STATUS 200
+ASSERT_PATH /usage
+ASSERT_TITLE Usage · Nighttroop
+ASSERT_VISIBLE #site--usage--db-size >> text=/^\d+\.\d\d$/
+ASSERT_VISIBLE #site--usage--db-limit >> text=of its 20.00 MB limit
+ASSERT_DRAWN #site--usage--db-used
+ASSERT_VISIBLE #site--usage--db-table--Other
+ASSERT_VISIBLE #site--usage--db-table--device_reports
+ASSERT_VISIBLE #site--usage--truncate-card >> text=Readings, treatments, profiles and everything else are kept.
+// It has Download Data, a link to a snapshot of the site's DB, to look through its data
+ASSERT_VISIBLE #site--usage--download >> text=A copy of all the site's data
+ASSERT_VISIBLE #site--usage--download-data[href="/usage/download"][download]
+SCREENSHOT usage
+// The user menu marks Usage as the page shown
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--usage[aria-current="page"]
+PRESS Escape
+
+// My Account and the General settings no longer have them
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/account
+ASSERT_NOT_VISIBLE #site--usage--db-size
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--usage--download
+ASSERT_NOT_VISIBLE "Download Data"
+
+// Truncating, after confirming (the test accepts), clears and thins the device reports, and shows the storage again
+// with the DB's new size
+GOTO /usage
+ASSERT_STATUS 200
+CLICK #site--usage--truncate
+ASSERT_TEXT_VISIBLE Site Truncated
+// Its toast is a success toast like every page's, with a bar of the time it has left
+ASSERT_COUNT #toaster [data-tui-toast][data-variant="success"]:has-text("Site Truncated") .toast-progress 1
+ASSERT_VISIBLE #site--usage--db-size >> text=/^\d+\.\d\d$/
+ASSERT_VISIBLE #site--usage--db-table--Other
+ASSERT_NO_PAGE_ERRORS
+
+// The site's events record who truncated it
+GOTO /logs/events
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Site truncated

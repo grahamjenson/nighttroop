@@ -376,8 +376,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Reports'
   and Logs & Events' tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page
   gets wider. The user menu is the same as on a computer.
-- The user menu has who is signed in, My Account, Getting Started, then Settings, Alarms, and Logs & Events, each with
-  its icon and marked when its page is shown, and Logout.
+- The user menu has who is signed in, My Account, Getting Started, then Settings, Alarms, Logs & Events, and Usage
+  (for admins), each with its icon and marked when its page is shown, and Logout.
 - Every link and button opening a page in place of this one, as the tabs, pagers and filters do, keeps its URL, so back
   returns, and clicking several quickly shows the last one clicked.
 
@@ -740,8 +740,6 @@ Connectors are a site's third party integrations, each syncing from one service.
   timezone chosen the same way; the logs pages too.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
-- An admin can **download** the site's data: a zip, `<site>-<date>.zip`, of a snapshot of its DB, `<site>-<date>.sqlite`,
-  so more files can be added beside it later.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
 - An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
   (`/settings/push-credentials`): an Apple APNs key (team ID, key ID and the `.p8` file pasted in) or a Firebase
@@ -1172,14 +1170,20 @@ Connectors are a site's third party integrations, each syncing from one service.
   the identity (e.g. admin), so no name, email or device of the person is asked for or kept. A passkey the browser
   already has for the identity is not added again, and an identity has at most 10.
 - "Remove" (after asking) removes one of the identity's own passkeys, as for a lost device, so it signs in no more.
-- An admin's My Account also shows the site's DB size, measured as it opens, against its limit, and where its data
-  builds up: a bar and a key of its largest tables, each with its records, size and share, the rest as Other, as last
-  measured, as the control site's page of the site does. Others' My Account, and control's, do not.
+
+### Usage
+
+- Usage (`/usage`), in the user menu, is an admin's page of the site's DB size, measured as it opens, against its
+  limit, and where its data builds up: a bar and a key of its largest tables, each with its records, size and share,
+  the rest as Other, as last measured, as the control site's page of the site does. Others have no Usage, and My
+  Account and the General settings do not show it.
 - Its Truncate, after asking, truncates the site as control's Truncate does: the loop's status and pump as sent are
   cleared from all but each device's newest report, device reports are thinned and those over 30 days old deleted,
   loop settings no profile or device status refers to any more are deleted, but each app's last seen, and the DB is
   shrunk. Everything else is kept, and the card says so. It shows the storage again, with a toast of
   the DB's new size, and records a "Site truncated" event with the admin. It shares the site's few downloads a minute.
+- Its Download Data downloads the site's data: a zip, `<site>-<date>.zip`, of a snapshot of its DB,
+  `<site>-<date>.sqlite`, so more files can be added beside it later. It shares the site's few downloads a minute.
 
 ### Own settings and alarms
 
