@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -16,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Usage is the site's usage page for its admins: its storage (UsageStorage) and a download of all its data
@@ -52,13 +54,18 @@ func Usage(storage templ.Component) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "How much the site keeps, against its limit, and a copy of all of it to download.")
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.usage.about"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/usage.templ`, Line: 20, Col: 45}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = heading.Page("Usage").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = heading.Page(i18n.T(ctx, "site.settings.usage.title")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -66,14 +73,14 @@ func Usage(storage templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = card.Card(card.Props{ID: "site--usage--download", Title: "Download Data",
-			Note: "A copy of all the site's data, as it is now, in a zip of a SQLite file, which a SQLite browser can open to look through.",
-			Action: labelled("Download Data", button.Props{ID: "site--usage--download-data", Href: "/usage/download", Variant: button.VariantOutline,
+		templ_7745c5c3_Err = card.Card(card.Props{ID: "site--usage--download", Title: i18n.T(ctx, "site.settings.usage.download_data"),
+			Note: i18n.T(ctx, "site.settings.usage.download_note"),
+			Action: labelled(i18n.T(ctx, "site.settings.usage.download_data"), button.Props{ID: "site--usage--download-data", Href: "/usage/download", Variant: button.VariantOutline,
 				Attributes: templ.Attributes{"download": ""}})}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -100,7 +107,7 @@ func UsageStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) tem
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<section id=\"site--usage--storage\" class=\"space-y-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section id=\"site--usage--storage\" class=\"space-y-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -108,19 +115,16 @@ func UsageStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) tem
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = card.Card(card.Props{ID: "site--usage--truncate-card", Title: "Truncate",
-			Note: "Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all " +
-				"but each device's newest report, and thins device reports to fewer the older they are, deleting those over " +
-				"30 days old, and deletes old loop settings no profile or device report refers to any more. Readings, " +
-				"treatments, profiles and everything else are kept. The DB is then shrunk.",
-			Action: labelled("Truncate", button.Props{ID: "site--usage--truncate", Variant: button.VariantOutline,
+		templ_7745c5c3_Err = card.Card(card.Props{ID: "site--usage--truncate-card", Title: i18n.T(ctx, "site.settings.usage.truncate"),
+			Note: i18n.T(ctx, "site.settings.usage.truncate_note"),
+			Action: labelled(i18n.T(ctx, "site.settings.usage.truncate"), button.Props{ID: "site--usage--truncate", Variant: button.VariantOutline,
 				Attributes: templ.Attributes{"hx-post": "/usage/truncate", "hx-target": "#site--usage--storage", "hx-swap": "outerHTML",
 					"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
-					"hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}})}).Render(ctx, templ_7745c5c3_Buffer)
+					"hx-confirm": i18n.T(ctx, "site.settings.usage.truncate_confirm")}})}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -146,7 +150,7 @@ func UsageTruncated(sizeKB *int64) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.TitledOOB("Site Truncated", truncatedSize(sizeKB), 5000).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.TitledOOB(i18n.T(ctx, "site.settings.usage.truncated"), truncatedSize(ctx, sizeKB), 5000).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -155,11 +159,11 @@ func UsageTruncated(sizeKB *int64) templ.Component {
 }
 
 // truncatedSize says the site's DB size after truncating, when it is known
-func truncatedSize(sizeKB *int64) string {
+func truncatedSize(ctx context.Context, sizeKB *int64) string {
 	if sizeKB == nil {
-		return "Its device reports were truncated."
+		return i18n.T(ctx, "site.settings.usage.truncated_reports")
 	}
-	return fmt.Sprintf("Its DB is now %.2f MB.", float64(*sizeKB)/1024)
+	return i18n.T(ctx, "site.settings.usage.truncated_size", i18n.Data{"Size": fmt.Sprintf("%.2f", float64(*sizeKB)/1024)})
 }
 
 var _ = templruntime.GeneratedTemplate

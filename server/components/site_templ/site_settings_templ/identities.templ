@@ -31,19 +31,21 @@ import (
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/security"
 )
 
-// roleLabels match the role names in the create forms
+// roleLabels are the messages of the role names, in the create forms too
 var roleLabels = map[consts.IdentityRole]string{
-	consts.IdentityRoleAdmin: "Admin", consts.IdentityRoleUser: "User", consts.IdentityRoleUserReadOnly: "Read Only User", consts.IdentityRoleClinician: "Clinician",
-	consts.IdentityRoleDeviceRead: "Read", consts.IdentityRoleDeviceReadWrite: "Read+Write", consts.IdentityRoleDevicePWDPhone: "PWD Phone",
+	consts.IdentityRoleAdmin: "site.settings.identities.roles.admin", consts.IdentityRoleUser: "site.settings.identities.roles.user", consts.IdentityRoleUserReadOnly: "site.settings.identities.roles.user_read_only",
+	consts.IdentityRoleClinician: "site.settings.identities.roles.clinician", consts.IdentityRoleDeviceRead: "site.settings.identities.roles.device_read",
+	consts.IdentityRoleDeviceReadWrite: "site.settings.identities.roles.device_read_write", consts.IdentityRoleDevicePWDPhone: "site.settings.identities.roles.device_pwd_phone",
 }
 
 // deviceClient is a Nightscout client a device can be added for, with how to set it up. In a step, *Name* is a menu
 // or field in the client, shown in bold, and {url}, {token}, {xdrip} and {nightguard} are values to enter, shown with
 // a button to copy them: the site's Nightscout URL, the device's Nightscout token, and the URL with the token in it
-// that xDrip+ and Nightguard take.
+// that xDrip+ and Nightguard take. Its Steps are message ids, and its Label its name, which Other's is not.
 type deviceClient struct {
 	Value, Label string
 	Steps        []string
@@ -53,19 +55,28 @@ type deviceClient struct {
 
 // deviceClients are the clients a device can be added for, Other first as the one chosen to start with
 var deviceClients = []deviceClient{
-	{"other", "Other", []string{"Set its *Nightscout URL* to {url}", "Set its *token* or *API secret* to {token}"}, false},
-	{"aaps", "AAPS", []string{"Open *Config Builder*, and under *Synchronization* turn on *NSClient*.", "In *NSClient*'s settings, set *Nightscout URL* to {url}", "Set *NS access token* to {token}"}, true},
-	{"trio", "Trio", []string{"Open *Settings*, then *Services*, then *Nightscout*.", "Set *URL* to {url}", "Set *API secret* to {token}", "Tap *Connect*."}, true},
-	{"loop", "Loop", []string{"Open *Settings*, then *Services*, and add *Nightscout*.", "Set *Site URL* to {url}", "Set *API secret* to {token}"}, true},
-	{"xdrip", "xDrip+", []string{"Open *Settings*, then *Cloud Upload*, then *Nightscout Sync (REST-API)*, and turn it on.", "Set *Base URL* to {xdrip}"}, true},
-	{"xdrip4ios", "xDrip4iOS", []string{"Open *Settings*, then *Nightscout*, and set *URL* to {url}", "Set *Token*, or *API_SECRET* instead, to {token}", "Keep it the *Master* to upload, as a PWD Phone or Read+Write device, or make it a *Follower* of Nightscout to only read."}, true},
-	{"nightguard", "Nightguard", []string{"Open *Configuration*, and set *URL* to {nightguard}"}, true},
-	{"sugarpixel", "SugarPixel", []string{"In the SugarPixel app, choose *Nightscout* as its glucose source.", "Set *Nightscout URL* to {url}", "Set its *token* to {token}"}, true},
-	{"t1dcarer", "T1D Carer", []string{"In T1D Carer, add a *Nightscout* site.", "Set *Nightscout URL* to {url}", "Set its *token* to {token}"}, true},
+	{"other", "", []string{"site.settings.identities.clients.other_client.step_1", "site.settings.identities.clients.other_client.step_2"}, false},
+	{"aaps", "AAPS", []string{"site.settings.identities.clients.aaps.step_1", "site.settings.identities.clients.aaps.step_2", "site.settings.identities.clients.aaps.step_3"}, true},
+	{"trio", "Trio", []string{"site.settings.identities.clients.trio.step_1", "site.settings.identities.clients.trio.step_2", "site.settings.identities.clients.trio.step_3", "site.settings.identities.clients.trio.step_4"}, true},
+	{"loop", "Loop", []string{"site.settings.identities.clients.loop.step_1", "site.settings.identities.clients.loop.step_2", "site.settings.identities.clients.loop.step_3"}, true},
+	{"xdrip", "xDrip+", []string{"site.settings.identities.clients.xdrip.step_1", "site.settings.identities.clients.xdrip.step_2"}, true},
+	{"xdrip4ios", "xDrip4iOS", []string{"site.settings.identities.clients.xdrip4ios.step_1", "site.settings.identities.clients.xdrip4ios.step_2", "site.settings.identities.clients.xdrip4ios.step_3"}, true},
+	{"nightguard", "Nightguard", []string{"site.settings.identities.clients.nightguard.step_1"}, true},
+	{"sugarpixel", "SugarPixel", []string{"site.settings.identities.clients.sugarpixel.step_1", "site.settings.identities.clients.sugarpixel.step_2", "site.settings.identities.clients.sugarpixel.step_3"}, true},
+	{"t1dcarer", "T1D Carer", []string{"site.settings.identities.clients.t1dcarer.step_1", "site.settings.identities.clients.t1dcarer.step_2", "site.settings.identities.clients.t1dcarer.step_3"}, true},
 }
 
-// valueNames name the values in the steps, for their copy buttons
-var valueNames = map[string]string{"url": "Nightscout URL", "token": "Nightscout token", "xdrip": "xDrip+ URL", "nightguard": "Nightguard URL"}
+// clientLabel is what the client is called: its name, or Other
+func clientLabel(ctx context.Context, client deviceClient) string {
+	if client.Value == "other" {
+		return i18n.T(ctx, "site.settings.identities.clients.other_client.label")
+	}
+	return client.Label
+}
+
+// valueNames are the messages naming the values in the steps, for their copy buttons
+var valueNames = map[string]string{"url": "site.settings.identities.values.url", "token": "site.settings.identities.values.token", "xdrip": "site.settings.identities.values.xdrip",
+	"nightguard": "site.settings.identities.values.nightguard"}
 
 // stepPart is a piece of a step: text, in bold when it names a menu or field, or a value to copy, with its name
 type stepPart struct {
@@ -76,7 +87,7 @@ type stepPart struct {
 }
 
 // stepParts splits a step into its text, bold names and values, filling the values in
-func stepParts(step string, values map[string]string) []stepPart {
+func stepParts(ctx context.Context, step string, values map[string]string) []stepPart {
 	parts := []stepPart{}
 	bold := false
 	for step != "" {
@@ -93,7 +104,7 @@ func stepParts(step string, values map[string]string) []stepPart {
 			continue
 		}
 		name, rest, _ := strings.Cut(step[at+1:], "}")
-		parts = append(parts, stepPart{Text: values[name], Value: true, Name: valueNames[name]})
+		parts = append(parts, stepPart{Text: values[name], Value: true, Name: i18n.T(ctx, valueNames[name])})
 		step = rest
 	}
 	return parts
@@ -101,7 +112,7 @@ func stepParts(step string, values map[string]string) []stepPart {
 
 // clientSteps are how to set up the device's client, with its URL and token filled in, or none for a device added
 // without one
-func clientSteps(identity *sitemodels.UserIdentity) (deviceClient, [][]stepPart) {
+func clientSteps(ctx context.Context, identity *sitemodels.UserIdentity) (deviceClient, [][]stepPart) {
 	index := slices.IndexFunc(deviceClients, func(c deviceClient) bool { return c.Value == identity.Client })
 	if index < 0 || identity.NSToken == nil {
 		return deviceClient{}, nil
@@ -114,7 +125,7 @@ func clientSteps(identity *sitemodels.UserIdentity) (deviceClient, [][]stepPart)
 	values := map[string]string{"url": url, "token": token, "xdrip": "https://" + token + "@" + host + "/api/v1/", "nightguard": url + "/?token=" + token}
 	steps := [][]stepPart{}
 	for _, step := range deviceClients[index].Steps {
-		steps = append(steps, stepParts(step, values))
+		steps = append(steps, stepParts(ctx, i18n.T(ctx, step), values))
 	}
 	return deviceClients[index], steps
 }
@@ -128,38 +139,38 @@ func forceClientRole(formID string) string {
 		trigger.disabled = !!role`
 }
 
-func roleLabel(role string) string {
+func roleLabel(ctx context.Context, role string) string {
 	if label, ok := roleLabels[consts.IdentityRole(role)]; ok {
-		return label
+		return i18n.T(ctx, label)
 	}
 	return role
 }
 
 func formatIdentityDate(ctx context.Context, ms *int64) string {
 	if ms == nil || *ms == 0 {
-		return "Never"
+		return i18n.T(ctx, "site.settings.never")
 	}
 	return site_data_templ.FormatDate(ctx, *ms)
 }
 
 templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
 	<div id="identities_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Users & Devices") {
-			Nighttroop uses strict role separation to improve security. Each user and device should have its own credentials.
+		@heading.Page(i18n.T(ctx, "site.settings.identities.title")) {
+			{ i18n.T(ctx, "site.settings.identities.about") }
 		}
 		<div class="grid gap-4 md:grid-cols-3">
-			@roleCard("Admin", "Manages users and site settings. Logs in with a password and TOTP, recovers only with the initial backup key, and cannot use the Nightscout API.")
-			@roleCard("User", "A person using Nighttroop. Users can log in, view reports and use Nightscout features.")
-			@roleCard("Device", "A phone, SugarPixel or display. Devices use the Nightscout API but cannot log in. The PWD phone's credentials go into your loop (AAPS, Trio...).")
+			@roleCard(i18n.T(ctx, "site.settings.identities.admin_card.title"), i18n.T(ctx, "site.settings.identities.admin_card.about"))
+			@roleCard(i18n.T(ctx, "site.settings.identities.user_card.title"), i18n.T(ctx, "site.settings.identities.user_card.about"))
+			@roleCard(i18n.T(ctx, "site.settings.identities.device_card.title"), i18n.T(ctx, "site.settings.identities.device_card.about"))
 		</div>
-		@card.Card(card.Props{Title: "Admins & Users"}) {
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.identities.users")}) {
 			@buildIdentityTable("usersTable", users)
 			// The first role is picked to start with, so a user added without choosing one is a User, not an Admin
-			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Clinician", Value: consts.IdentityRoleClinician}, {Label: "Admin", Value: consts.IdentityRoleAdmin}})
+			@formCreateIdentity("usersTable", false, roleOptions(ctx, consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleClinician, consts.IdentityRoleAdmin))
 		}
-		@card.Card(card.Props{Title: "Devices"}) {
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.identities.devices")}) {
 			@buildIdentityTable("devicesTable", devices)
-			@formCreateIdentity("devicesTable", "Device", []sitemodels.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
+			@formCreateIdentity("devicesTable", true, roleOptions(ctx, consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite, consts.IdentityRoleDevicePWDPhone))
 		}
 		<div id="modal-container"></div>
 	</div>
@@ -181,25 +192,25 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 		@table.Header() {
 			@table.Row() {
 				@table.Head() {
-					Name 
+					{ i18n.T(ctx, "site.settings.identities.heads.name") }
 				}
 				@table.Head() {
-					Role 
+					{ i18n.T(ctx, "site.settings.identities.heads.role") }
 				}
 				@table.Head() {
-					Created 
+					{ i18n.T(ctx, "site.settings.identities.heads.created") }
 				}
 				@table.Head() {
-					Last Seen 
+					{ i18n.T(ctx, "site.settings.identities.heads.last_seen") }
 				}
 				@table.Head() {
-					Last Write 
+					{ i18n.T(ctx, "site.settings.identities.heads.last_write") }
 				}
 				@table.Head() {
-					Recent Clients
+					{ i18n.T(ctx, "site.settings.identities.heads.recent_clients") }
 				}
 				@table.Head() {
-					<span class="sr-only">Actions</span>
+					<span class="sr-only">{ i18n.T(ctx, "site.settings.identities.heads.actions") }</span>
 				}
 			}
 		}
@@ -217,12 +228,12 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			{ identity.Name }
 			if identity.CurrentIdentity {
 				@badge.Badge(badge.Props{Class: "ml-2"}) {
-					You
+					{ i18n.T(ctx, "site.settings.identities.you") }
 				}
 			}
 		}
 		@table.Cell() {
-			{ roleLabel(identity.Role) }
+			{ roleLabel(ctx, identity.Role) }
 		}
 		@table.Cell() {
 			{ formatIdentityDate(ctx, &identity.CreatedAt) }
@@ -248,18 +259,18 @@ templ recentClients(identity *sitemodels.UserIdentity) {
 	{{ id := "site--identities--" + identity.Name + "--clients" }}
 	{{ shared := consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice && authclients.Shared(identity.RecentClients, time.Now()) }}
 	if len(identity.RecentClients) == 0 {
-		<span id={ id } class="text-sm text-gray-400">None yet</span>
+		<span id={ id } class="text-sm text-gray-400">{ i18n.T(ctx, "site.settings.identities.clients_none") }</span>
 	} else {
 		<details id={ id } class="max-w-xs text-sm">
 			<summary class={ "cursor-pointer", templ.KV("font-medium text-amber-800", shared) }>
 				if shared {
-					Used by more than one app
+					{ i18n.T(ctx, "site.settings.identities.clients_shared") }
 				} else {
-					{ strconv.Itoa(len(identity.RecentClients)) } recent
+					{ i18n.T(ctx, "site.settings.identities.clients_recent", i18n.Data{"Count": len(identity.RecentClients)}) }
 				}
 			</summary>
 			if shared {
-				<p class="mt-1 text-xs text-amber-800">Give each device its own identity, so its settings and alarms are its own.</p>
+				<p class="mt-1 text-xs text-amber-800">{ i18n.T(ctx, "site.settings.identities.clients_shared_help") }</p>
 			}
 			<ul class="mt-1 space-y-1 text-xs text-gray-600">
 				for _, client := range identity.RecentClients {
@@ -277,7 +288,7 @@ templ recentClients(identity *sitemodels.UserIdentity) {
 templ identityActions(identity *sitemodels.UserIdentity) {
 	{{ id := "site--identities--" + identity.Name }}
 	<div class="flex items-center justify-end gap-2">
-		<label id={ id + "--enabled" } title="Enabled" class={ "relative inline-flex items-center", templ.KV("cursor-pointer", !identity.CurrentIdentity), templ.KV("opacity-50", identity.CurrentIdentity) }>
+		<label id={ id + "--enabled" } title={ i18n.T(ctx, "site.settings.identities.enabled") } class={ "relative inline-flex items-center", templ.KV("cursor-pointer", !identity.CurrentIdentity), templ.KV("opacity-50", identity.CurrentIdentity) }>
 			<input
 				type="checkbox"
 				name="enabled"
@@ -298,36 +309,36 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 		@dropdown.Dropdown(dropdown.Props{ID: id + "--menu"}) {
 			@dropdown.Trigger() {
 				@button.Button(button.Props{ID: id + "--manage", Variant: button.VariantOutline, Size: button.SizeSm}) {
-					Manage
+					{ i18n.T(ctx, "site.settings.identities.manage") }
 					@icon.ChevronDown(icon.Props{Class: "size-4"})
 				}
 			}
 			@dropdown.Content(dropdown.ContentProps{Placement: dropdown.PlacementBottomEnd, Class: "w-48"}) {
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--settings", Attributes: nav.Attributes("/settings/identity-settings/" + strconv.FormatInt(identity.ID, 10))}) {
-					@menuLabel(icon.UserCog, "Settings")
+					@menuLabel(icon.UserCog, i18n.T(ctx, "site.settings.identities.settings"))
 				}
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Disabled: identity.CurrentIdentity,
-					Attributes: resetAttributes(identity.ID, "password", "Reset "+identity.Name+"'s password? Its old password and Nightscout token stop working, and it is signed out.")}) {
-					@menuLabel(icon.KeyRound, "Reset password")
+					Attributes: resetAttributes(identity.ID, "password", i18n.T(ctx, "site.settings.identities.reset_password_confirm", i18n.Data{"Name": identity.Name}))}) {
+					@menuLabel(icon.KeyRound, i18n.T(ctx, "site.settings.identities.reset_password"))
 				}
 				if identity.HasTotpSecret {
 					@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-totp", Disabled: identity.CurrentIdentity,
-						Attributes: resetAttributes(identity.ID, "totp", "Reset "+identity.Name+"'s TOTP? Codes from its old secret stop working, and it is signed out.")}) {
-						@menuLabel(icon.RotateCcwKey, "Reset TOTP")
+						Attributes: resetAttributes(identity.ID, "totp", i18n.T(ctx, "site.settings.identities.reset_totp_confirm", i18n.Data{"Name": identity.Name}))}) {
+						@menuLabel(icon.RotateCcwKey, i18n.T(ctx, "site.settings.identities.reset_totp"))
 					}
 				}
 				@dropdown.Separator()
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--delete", Disabled: identity.CurrentIdentity, Class: "text-red-600 hover:text-red-700",
 					Attributes: templ.Attributes{
 						"hx-delete":            "/settings/identities/" + strconv.FormatInt(identity.ID, 10),
-						"hx-confirm":           "Delete " + identity.Name + "? Its password and tokens will stop working.",
+						"hx-confirm":           i18n.T(ctx, "site.settings.identities.delete_confirm", i18n.Data{"Name": identity.Name}),
 						"hx-target":            "#toaster",
 						"hx-swap":              "beforeend",
 						"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
 						"hx-status:4xx":        "target:#toaster swap:beforeend",
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					}}) {
-					@menuLabel(icon.Trash2, "Delete")
+					@menuLabel(icon.Trash2, i18n.T(ctx, "site.settings.identities.delete"))
 				}
 			}
 		}
@@ -365,7 +376,16 @@ templ resetButton(props button.Props, identityID int64, credential string, title
 	}
 }
 
-templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOption) {
+// roleOptions are the roles an identity can be added with, named
+func roleOptions(ctx context.Context, roles ...consts.IdentityRole) []sitemodels.RoleOption {
+	options := []sitemodels.RoleOption{}
+	for _, role := range roles {
+		options = append(options, sitemodels.RoleOption{Label: roleLabel(ctx, string(role)), Value: role})
+	}
+	return options
+}
+
+templ formCreateIdentity(tableid string, device bool, roles []sitemodels.RoleOption) {
 	{{ formID := "createIdentityForm" + tableid }}
 	<div class="flex justify-end items-end mt-4">
 		<form
@@ -377,28 +397,28 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			<div class="flex flex-wrap justify-end items-end gap-2">
-				@field.Field("name-"+formID, "Name", "w-24") {
+				@field.Field("name-"+formID, i18n.T(ctx, "site.settings.identities.heads.name"), "w-24") {
 					@input.Input(input.Props{
 						ID:          "name-" + formID,
 						Type:        "text",
 						Name:        "name",
-						Placeholder: "Name",
+						Placeholder: i18n.T(ctx, "site.settings.identities.heads.name"),
 						Required:    true,
 					})
 				}
 				// The client is picked first, as some decide the role
-				if name == "Device" {
-					@field.Field("client-"+formID, "Client", "w-36") {
+				if device {
+					@field.Field("client-"+formID, i18n.T(ctx, "site.settings.identities.client"), "w-36") {
 						<div onchange={ templ.JSUnsafeFuncCall(forceClientRole(formID)) }>
 							@selectbox.SelectBox() {
 								@selectbox.Trigger(selectbox.TriggerProps{ID: "client-" + formID, Name: "client", Form: formID}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "Client"})
+									@selectbox.Value(selectbox.ValueProps{Placeholder: i18n.T(ctx, "site.settings.identities.client")})
 								}
 								@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
 									@selectbox.Group() {
 										for i, client := range deviceClients {
 											@selectbox.Item(selectbox.ItemProps{Value: client.Value, Selected: i == 0}) {
-												{ client.Label }
+												{ clientLabel(ctx, client) }
 											}
 										}
 									}
@@ -410,7 +430,7 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 				if (len(roles) == 1) {
 					<input type="hidden" name="role" value={ string(roles[0].Value) }/>
 				} else {
-					@field.Field("select-form-"+formID, "Role", "w-40") {
+					@field.Field("select-form-"+formID, i18n.T(ctx, "site.settings.identities.heads.role"), "w-40") {
 						@selectbox.SelectBox() {
 							@selectbox.Trigger(selectbox.TriggerProps{
 								ID:   "select-form-" + formID,
@@ -418,7 +438,7 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 								Form: formID,
 							}) {
 								@selectbox.Value(selectbox.ValueProps{
-									Placeholder: "Role",
+									Placeholder: i18n.T(ctx, "site.settings.identities.heads.role"),
 								})
 							}
 							@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
@@ -442,7 +462,11 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 					@button.Button(button.Props{
 						Type: "submit",
 					}) {
-						Add { name }
+						if device {
+							{ i18n.T(ctx, "site.settings.identities.add_device") }
+						} else {
+							{ i18n.T(ctx, "site.settings.identities.add_user") }
+						}
 					}
 				}
 			</div>
@@ -461,10 +485,10 @@ templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, pass
 
 // clientGuide says how to set up the client a device was added for, and that its units are mg/dL when it needs them
 templ clientGuide(identity *sitemodels.UserIdentity) {
-	{{ client, steps := clientSteps(identity) }}
+	{{ client, steps := clientSteps(ctx, identity) }}
 	if len(steps) > 0 {
 		<div id="site--identities--created--guide" class="mt-4 w-full space-y-2 text-left text-sm">
-			<p class="font-semibold">Setting up { client.Label }</p>
+			<p class="font-semibold">{ i18n.T(ctx, "site.settings.identities.setting_up", i18n.Data{"Client": clientLabel(ctx, client)}) }</p>
 			<ol class="list-decimal space-y-2 pl-5">
 				for i, step := range steps {
 					<li>
@@ -481,7 +505,7 @@ templ clientGuide(identity *sitemodels.UserIdentity) {
 				}
 			</ol>
 			if client.MGDL {
-				<p id="site--identities--created--units" class="text-xs text-gray-500">{ client.Label } needs mg/dL, so this device's own units are mg/dL, whatever the site's.</p>
+				<p id="site--identities--created--units" class="text-xs text-gray-500">{ i18n.T(ctx, "site.settings.identities.needs_mgdl", i18n.Data{"Client": clientLabel(ctx, client)}) }</p>
 			}
 		</div>
 	}
@@ -491,7 +515,7 @@ templ clientGuide(identity *sitemodels.UserIdentity) {
 templ copyValue(id string, name string, value string) {
 	<div class="mt-1 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1">
 		<code id={ id } class="flex-1 break-all font-mono text-xs text-slate-800">{ value }</code>
-		@copybutton.CopyButton(copybutton.Props{TargetID: id, Label: "Copy " + name})
+		@copybutton.CopyButton(copybutton.Props{TargetID: id, Label: i18n.T(ctx, "site.settings.identities.copy", i18n.Data{"Name": name})})
 	</div>
 }
 
@@ -508,11 +532,11 @@ templ CredentialsModal(url string, name string, password string, totpSecret *str
 	if signedOut {
 		{{ dismiss = "document.getElementById('site--identities--sign-in-again').focus()" }}
 	}
-	@modal.Modal(modal.Props{ID: "site--identities--credentials", Title: "Credentials for " + name, Actions: credentialsActions(signedOut), Dismiss: dismiss}) {
+	@modal.Modal(modal.Props{ID: "site--identities--credentials", Title: i18n.T(ctx, "site.settings.identities.credentials_for", i18n.Data{"Name": name}), Actions: credentialsActions(signedOut), Dismiss: dismiss}) {
 		<div class="mt-4 flex flex-col items-center">
 			if signedOut {
 				@alert.Alert(alert.Props{ID: "site--identities--signed-out", Variant: alert.VariantWarning, Class: "mb-4 w-full"}) {
-					You have been signed out. Save these, then sign in again with them.
+					{ i18n.T(ctx, "site.settings.identities.signed_out") }
 				}
 			}
 			@createdUserInfo(url, name, password, totpSecret, nsToken)
@@ -525,7 +549,7 @@ templ CredentialsModal(url string, name string, password string, totpSecret *str
 templ credentialsActions(signedOut bool) {
 	if signedOut {
 		@button.Button(button.Props{ID: "site--identities--sign-in-again", Href: "/login"}) {
-			Sign In Again
+			{ i18n.T(ctx, "site.settings.identities.sign_in_again") }
 		}
 	} else {
 		@savedThese()
@@ -543,12 +567,12 @@ templ savedThese() {
 					"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.hidden = true; this.parentElement.nextElementSibling.hidden = false; document.getElementById('site--identities--saved-back').focus()"),
 				},
 			}) {
-				I Have Saved These
+				{ i18n.T(ctx, "site.settings.identities.saved_these") }
 			}
 		</div>
 		@alert.Alert(alert.Props{Variant: alert.VariantWarning, Class: "space-y-3", Attributes: templ.Attributes{"hidden": true}}) {
 			<p id="site--identities--saved-warning" class="font-medium">
-				Once closed, these credentials disappear and are never shown again. If they are lost, they can only be reset.
+				{ i18n.T(ctx, "site.settings.identities.saved_warning") }
 			</p>
 			<div class="flex justify-end gap-2">
 				@button.Button(button.Props{
@@ -558,7 +582,7 @@ templ savedThese() {
 						"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.parentElement.hidden = true; this.closest('#site--identities--saved').firstElementChild.hidden = false; document.getElementById('site--identities--saved-these').focus()"),
 					},
 				}) {
-					Go Back
+					{ i18n.T(ctx, "site.settings.identities.go_back") }
 				}
 				@button.Button(button.Props{
 					ID: "site--identities--close",
@@ -568,7 +592,7 @@ templ savedThese() {
 						"hx-swap":   "innerHTML",
 					},
 				}) {
-					Close
+					{ i18n.T(ctx, "site.settings.identities.close") }
 				}
 			</div>
 		}
@@ -576,16 +600,16 @@ templ savedThese() {
 }
 
 // credentialsText is the credentials to copy, one a line, leaving out those a reset did not change
-func credentialsText(url string, username string, password string, totpSecret *string, nsToken *string) string {
-	text := "Site: " + url + "\nUsername: " + username
+func credentialsText(ctx context.Context, url string, username string, password string, totpSecret *string, nsToken *string) string {
+	text := i18n.T(ctx, "site.settings.identities.labels.site") + " " + url + "\n" + i18n.T(ctx, "site.settings.identities.labels.username") + " " + username
 	if password != "" {
-		text += "\nPassword: " + password
+		text += "\n" + i18n.T(ctx, "site.settings.identities.labels.password") + " " + password
 	}
 	if totpSecret != nil {
-		text += "\nTOTP Secret: " + *totpSecret
+		text += "\n" + i18n.T(ctx, "site.settings.identities.labels.totp_secret") + " " + *totpSecret
 	}
 	if nsToken != nil {
-		text += "\nNightscout Token: " + *nsToken
+		text += "\n" + i18n.T(ctx, "site.settings.identities.labels.ns_token") + " " + *nsToken
 	}
 	return text
 }
@@ -593,37 +617,37 @@ func credentialsText(url string, username string, password string, totpSecret *s
 templ createdUserInfo(url string, username string, password string, totpSecret *string, nsToken *string) {
 	<div class="text-left w-full max-w-2xl mx-auto space-y-2">
 		<div class="flex items-start gap-2 mb-4">
-			<p class="font-bold text-green-800">Save this information in a secure place</p>
+			<p class="font-bold text-green-800">{ i18n.T(ctx, "site.settings.identities.save_securely") }</p>
 		</div>
 		<div class="relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
 			<div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5">
-				<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Credentials</span>
-				<textarea id="textToCopy" hidden>{ credentialsText(url, username, password, totpSecret, nsToken) }</textarea>
+				<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">{ i18n.T(ctx, "site.settings.identities.your_credentials") }</span>
+				<textarea id="textToCopy" hidden>{ credentialsText(ctx, url, username, password, totpSecret, nsToken) }</textarea>
 				<!-- Clear, High-Visibility Copy Button -->
 				<div class="inline-flex shadow-sm rounded-lg">
 					@copybutton.CopyButton(copybutton.Props{
 						ID:       "site--identities--created--copy-all",
 						TargetID: "textToCopy",
-						Label:    "Copy all credentials",
+						Label:    i18n.T(ctx, "site.settings.identities.copy_all_label"),
 						Class:    "h-auto w-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20",
 					}) {
-						Copy all
+						{ i18n.T(ctx, "site.settings.identities.copy_all") }
 					}
 				</div>
 			</div>
 			<!-- Monospace Content Area -->
 			<div class="p-4 font-mono text-sm text-slate-800 space-y-2 select-all bg-white">
-				@credentialRow("Site:", "site--identities--created--site", url)
-				@credentialRow("Username:", "site--identities--created--username", username)
+				@credentialRow(i18n.T(ctx, "site.settings.identities.labels.site"), "site--identities--created--site", url)
+				@credentialRow(i18n.T(ctx, "site.settings.identities.labels.username"), "site--identities--created--username", username)
 				if password != "" {
-					@credentialRow("Password:", "site--identities--created--password", password)
+					@credentialRow(i18n.T(ctx, "site.settings.identities.labels.password"), "site--identities--created--password", password)
 				}
 				if nsToken != nil {
-					@credentialRow("Nightscout Token:", "site--identities--created--ns-token", *nsToken)
+					@credentialRow(i18n.T(ctx, "site.settings.identities.labels.ns_token"), "site--identities--created--ns-token", *nsToken)
 				}
 				if totpSecret != nil {
 					<div class="flex items-start">
-						<span class="w-28 shrink-0 font-medium text-slate-400 select-none">TOTP Secret:</span>
+						<span class="w-28 shrink-0 font-medium text-slate-400 select-none">{ i18n.T(ctx, "site.settings.identities.labels.totp_secret") }</span>
 						@authenticator.Secret("site--identities--created", security.TOTPURI(username, url, *totpSecret), *totpSecret, 128)
 					</div>
 				}
@@ -637,18 +661,18 @@ templ credentialRow(label string, id string, value string) {
 	<div class="flex items-start">
 		<span class="w-28 shrink-0 font-medium text-slate-400 select-none">{ label }</span>
 		<span id={ id } class="flex-1 break-all">{ value }</span>
-		@copybutton.CopyButton(copybutton.Props{TargetID: id, Label: "Copy " + strings.TrimSuffix(label, ":")})
+		@copybutton.CopyButton(copybutton.Props{TargetID: id, Label: i18n.T(ctx, "site.settings.identities.copy", i18n.Data{"Name": strings.TrimSuffix(label, ":")})})
 	</div>
 }
 
 templ IdentityUpdated(identity *sitemodels.UserIdentity) {
-	{{ state := "disabled" }}
 	if identity.Enabled {
-		{{ state = "enabled" }}
+		@successtoast.Toast(i18n.T(ctx, "site.settings.identities.enabled_toast", i18n.Data{"Name": identity.Name}))
+	} else {
+		@successtoast.Toast(i18n.T(ctx, "site.settings.identities.disabled_toast", i18n.Data{"Name": identity.Name}))
 	}
-	@successtoast.Toast(identity.Name + " " + state)
 }
 
 templ IdentityDeleted() {
-	@successtoast.Toast("Identity Deleted")
+	@successtoast.Toast(i18n.T(ctx, "site.settings.identities.deleted"))
 }

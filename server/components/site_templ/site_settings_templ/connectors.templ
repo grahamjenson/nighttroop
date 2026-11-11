@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
@@ -50,8 +51,8 @@ func enableOnFirstInput(source *sitemodels.Connector) templ.Attributes {
 
 templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
 	<div id="mainForm" class="mx-auto max-w-5xl">
-		@heading.PageBeside("Connectors", badge.Live("site--settings--connectors--live", "/settings/connectors/events")) {
-			Choose where Nighttroop syncs your glucose data from.
+		@heading.PageBeside(i18n.T(ctx, "site.settings.connectors.title"), badge.Live("site--settings--connectors--live", "/settings/connectors/events")) {
+			{ i18n.T(ctx, "site.settings.connectors.about") }
 		}
 		@connectorsLive()
 		@NightscoutConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeNightscout))
@@ -109,10 +110,10 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h2 class="text-lg font-semibold">
-							Dexcom Share Connector
+							{ i18n.T(ctx, "site.settings.connectors.dexcom.title") }
 						</h2>
 						<div class="text-sm text-gray-500">
-							Connect your Dexcom Account
+							{ i18n.T(ctx, "site.settings.connectors.dexcom.about") }
 						</div>
 					</div>
 					@form.Item(form.ItemProps{
@@ -128,7 +129,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 							For:   "site--settings--dexcom-connector--enable",
 							Class: "item-center flex cursor-pointer gap-2",
 						}) {
-							Enable Connector
+							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
 				</div>
@@ -141,7 +142,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 							@form.Label(form.LabelProps{
 								For: "site--settings--dexcom-connector--username",
 							}) {
-								Dexcom Username
+								{ i18n.T(ctx, "site.settings.connectors.dexcom.username") }
 							}
 							@input.Input(input.Props{
 								ID:       "site--settings--dexcom-connector--username",
@@ -163,7 +164,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 							@form.Label(form.LabelProps{
 								For: "site--settings--dexcom-connector--password",
 							}) {
-								Dexcom Password
+								{ i18n.T(ctx, "site.settings.connectors.dexcom.password") }
 							}
 							@input.Input(input.Props{
 								ID:       "site--settings--dexcom-connector--password",
@@ -186,11 +187,11 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 							@form.Label(form.LabelProps{
 								For: "site--settings--dexcom-connector--region",
 							}) {
-								Dexcom Region
+								{ i18n.T(ctx, "site.settings.connectors.dexcom.region") }
 							}
 							<select id="site--settings--dexcom-connector--region" name="region" class="h-9 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs">
-								<option value="OUS" selected?={ !dexcomConnectorSettings.IsUSARegion() }>Outside the United States</option>
-								<option value="US" selected?={ dexcomConnectorSettings.IsUSARegion() }>United States</option>
+								<option value="OUS" selected?={ !dexcomConnectorSettings.IsUSARegion() }>{ i18n.T(ctx, "site.settings.connectors.dexcom.outside_us") }</option>
+								<option value="US" selected?={ dexcomConnectorSettings.IsUSARegion() }>{ i18n.T(ctx, "site.settings.connectors.dexcom.us") }</option>
 							</select>
 						}
 					</div>
@@ -218,10 +219,10 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h2 class="text-lg font-semibold">
-							FreeStyle Libre Connector
+							{ i18n.T(ctx, "site.settings.connectors.libre.title") }
 						</h2>
 						<div class="text-sm text-gray-500">
-							Connect a LibreLinkUp account that follows you
+							{ i18n.T(ctx, "site.settings.connectors.libre.about") }
 						</div>
 					</div>
 					@form.Item(form.ItemProps{
@@ -237,7 +238,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 							For:   "site--settings--libre-connector--enable",
 							Class: "item-center flex cursor-pointer gap-2",
 						}) {
-							Enable Connector
+							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
 				</div>
@@ -249,7 +250,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 							@form.Label(form.LabelProps{
 								For: "site--settings--libre-connector--email",
 							}) {
-								LibreLinkUp Email
+								{ i18n.T(ctx, "site.settings.connectors.libre.email") }
 							}
 							@input.Input(input.Props{
 								ID:       "site--settings--libre-connector--email",
@@ -270,7 +271,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 							@form.Label(form.LabelProps{
 								For: "site--settings--libre-connector--password",
 							}) {
-								LibreLinkUp Password
+								{ i18n.T(ctx, "site.settings.connectors.libre.password") }
 							}
 							@input.Input(input.Props{
 								ID:       "site--settings--libre-connector--password",
@@ -292,7 +293,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 							@form.Label(form.LabelProps{
 								For: "site--settings--libre-connector--region",
 							}) {
-								LibreLinkUp Region
+								{ i18n.T(ctx, "site.settings.connectors.libre.region") }
 							}
 							<select id="site--settings--libre-connector--region" name="region" class="h-9 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs">
 								for _, region := range consts.LibreRegions {
@@ -326,10 +327,10 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h2 class="text-lg font-semibold">
-							Nightscout Connector
+							{ i18n.T(ctx, "site.settings.connectors.nightscout.title") }
 						</h2>
 						<div class="text-sm text-gray-500">
-							Connect your Nightscout instance
+							{ i18n.T(ctx, "site.settings.connectors.nightscout.about") }
 						</div>
 					</div>
 					@form.Item(form.ItemProps{
@@ -345,7 +346,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 							For:   "site--settings--nightscout-connector--enable",
 							Class: "item-center flex cursor-pointer gap-2",
 						}) {
-							Enable Connector
+							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
 				</div>
@@ -358,7 +359,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 							@form.Label(form.LabelProps{
 								For: "site--settings--nightscout-connector--url",
 							}) {
-								Nightscout URL
+								{ i18n.T(ctx, "site.settings.connectors.nightscout.url") }
 							}
 							@input.Input(input.Props{
 								ID:          "site--settings--nightscout-connector--url",
@@ -379,7 +380,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 								},
 							})
 							@form.Description() {
-								Base URL only. Paste a link with its token, such as .../api/v1?token=..., and it is split into the URL and token
+								{ i18n.T(ctx, "site.settings.connectors.nightscout.url_help") }
 							}
 						}
 					</div>
@@ -389,7 +390,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 							@form.Label(form.LabelProps{
 								For: "site--settings--nightscout-connector--password",
 							}) {
-								API Secret or Token
+								{ i18n.T(ctx, "site.settings.connectors.nightscout.secret") }
 							}
 							@input.Input(input.Props{
 								ID:       "site--settings--nightscout-connector--password",
@@ -449,10 +450,10 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h2 class="text-lg font-semibold">
-							Virtual Connector
+							{ i18n.T(ctx, "site.settings.connectors.virtual.title") }
 						</h2>
 						<div class="text-sm text-gray-500">
-							This will create fake data for testing purposes.
+							{ i18n.T(ctx, "site.settings.connectors.virtual.about") }
 						</div>
 					</div>
 					@form.Item(form.ItemProps{
@@ -468,7 +469,7 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 							For:   "site--settings--virtual-connector--enable",
 							Class: "item-center flex cursor-pointer gap-2",
 						}) {
-							Enable Connector
+							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
 				</div>
@@ -495,12 +496,12 @@ templ connectorActions(source *sitemodels.Connector, connectorType consts.Connec
 					Attributes: templ.Attributes{
 						"hx-include": "none",
 						"hx-delete":  "/settings/connectors/" + name,
-						"hx-confirm": "Are you sure you want to delete this " + connectorLabel(connectorType) + " connector?",
+						"hx-confirm": i18n.T(ctx, "site.settings.connectors.delete_confirm", i18n.Data{"Connector": connectorLabel(ctx, connectorType)}),
 						"hx-target":  "closest form",
 						"hx-swap":    "outerHTML",
 					},
 				}) {
-					Delete
+					{ i18n.T(ctx, "site.settings.connectors.delete") }
 				}
 			}
 		</div>
@@ -512,7 +513,7 @@ templ connectorActions(source *sitemodels.Connector, connectorType consts.Connec
 				ID:   "site--settings--" + name + "-connector--submit",
 				Type: button.TypeSubmit,
 			}) {
-				Save
+				{ i18n.T(ctx, "site.settings.connectors.save") }
 			}
 		</div>
 	</div>
@@ -528,7 +529,7 @@ templ BackfillButton(name string) {
 		Attributes: templ.Attributes{
 			"hx-include":      "none",
 			"hx-post":         "/settings/connectors/" + name + "/backfill",
-			"hx-confirm":      backfillConfirm(name),
+			"hx-confirm":      backfillConfirm(ctx, name),
 			"hx-disabled-elt": "this",
 			"hx-sync":         "this:drop",
 			"hx-target":       "#toaster",
@@ -537,28 +538,29 @@ templ BackfillButton(name string) {
 			"hx-status:5xx":   "target:#toaster swap:beforeend",
 		},
 	}) {
-		Backfill
+		{ i18n.T(ctx, "site.settings.connectors.backfill") }
 	}
 }
 
-func backfillConfirm(name string) string {
+func backfillConfirm(ctx context.Context, name string) string {
 	switch name {
 	case string(consts.ConnectorTypeDexcom):
-		return "Backfill fetches the last 24 hours of readings, which is as far back as Dexcom Share goes. It runs in the background. Continue?"
+		return i18n.T(ctx, "site.settings.connectors.backfill_confirm_dexcom")
 	case string(consts.ConnectorTypeLibre):
-		return "Backfill fetches the last 12 hours of readings, which is as far back as LibreLinkUp goes. It runs in the background. Continue?"
+		return i18n.T(ctx, "site.settings.connectors.backfill_confirm_libre")
 	}
-	return "Backfill fetches older records from before your oldest glucose reading, a week of them by default. It runs in the background and can take a minute. Continue?"
+	return i18n.T(ctx, "site.settings.connectors.backfill_confirm")
 }
 
 // BackfillQueued says which records a backfill that has just started will fetch: from and to, and again from
 // recentFrom, to fill gaps, when it is set
 templ BackfillQueued(sourceType consts.ConnectorType, from int64, to int64, recentFrom int64) {
-	{{ description := "Fetching records from " + backfillTime(from) + " to " + backfillTime(to) + " UTC" }}
+	{{ description := i18n.T(ctx, "site.settings.connectors.fetching", i18n.Data{"From": backfillTime(from), "To": backfillTime(to)}) }}
 	if recentFrom > 0 {
-		{{ description += ", and again from " + backfillTime(recentFrom) + " UTC to fill any gaps" }}
+		{{ description += i18n.T(ctx, "site.settings.connectors.fetching_again", i18n.Data{"From": backfillTime(recentFrom)}) }}
 	}
-	@successtoast.Titled("Backfilling " + strings.ToUpper(string(sourceType)[:1]) + string(sourceType)[1:], description, 8000)
+	{{ connector := strings.ToUpper(string(sourceType)[:1]) + string(sourceType)[1:] }}
+	@successtoast.Titled(i18n.T(ctx, "site.settings.connectors.backfilling", i18n.Data{"Connector": connector}), description, 8000)
 }
 
 // backfillTime is a time in ms a backfill fetches from or to, as 2 Jan 15:04 in UTC
@@ -567,12 +569,12 @@ func backfillTime(ms int64) string {
 }
 
 templ SuccessfulUpdate(model *sitemodels.Connector) {
-	@successtoast.Toast("Connector Updated")
+	@successtoast.Toast(i18n.T(ctx, "site.settings.connectors.updated"))
 	@connectorActions(model, model.Type, true)
 }
 
 // connectorLabel is what a connector is called in its confirmations
-func connectorLabel(connectorType consts.ConnectorType) string {
+func connectorLabel(ctx context.Context, connectorType consts.ConnectorType) string {
 	switch connectorType {
 	case consts.ConnectorTypeDexcom:
 		return "Dexcom"
@@ -581,7 +583,7 @@ func connectorLabel(connectorType consts.ConnectorType) string {
 	case consts.ConnectorTypeNightscout:
 		return "Nightscout"
 	}
-	return "Virtual"
+	return i18n.T(ctx, "site.settings.connectors.virtual.name")
 }
 
 // ConnectorDeleted replaces the deleted source's form with an empty one and shows a toast
@@ -596,5 +598,5 @@ templ ConnectorDeleted(sourceType consts.ConnectorType) {
 		case consts.ConnectorTypeVirtual:
 			@VirtualConnectorForm(nil)
 	}
-	@successtoast.OOB("Connector Deleted")
+	@successtoast.OOB(i18n.T(ctx, "site.settings.connectors.deleted"))
 }

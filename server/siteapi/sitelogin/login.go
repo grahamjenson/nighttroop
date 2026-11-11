@@ -22,6 +22,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -80,7 +81,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		siteID := siteContext.SiteID
 
 		if err := r.ParseForm(); err != nil {
-			identityLoginErrorHTMX(w, r, "Failed to parse", fmt.Errorf("failed to parse form: %w", err))
+			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.failed_to_parse"), fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
 
@@ -89,7 +90,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		// Reject names no identity can have before they reach the rate limiter, which keys on them
 		if utf8.RuneCountInString(formName) > consts.MAX_IDENTITY_NAME_LENGTH {
-			identityLoginErrorHTMX(w, r, "Invalid username or password.", fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
+			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.invalid_name_or_password"), fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
 			return
 		}
 
@@ -103,12 +104,12 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		// First thing validate the password
 		identity, err := loginTheUserPasswordOnly(r.Context(), siteContext.ControlDB, config.Security, siteContext.SiteID, formName, formPassword)
 		if err != nil {
-			identityLoginErrorHTMX(w, r, "Invalid username or password.", fmt.Errorf("failed to login with password: %w", err))
+			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.invalid_name_or_password"), fmt.Errorf("failed to login with password: %w", err))
 			return
 		}
 
 		if !can.LoginToWebsite(identity.Role) {
-			identityLoginErrorHTMX(w, r, "Identity does not have permission to login to website", fmt.Errorf("identity with role %s cannot login to website", identity.Role))
+			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.no_permission"), fmt.Errorf("identity with role %s cannot login to website", identity.Role))
 			return
 		}
 
@@ -194,7 +195,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 
 		err = validateIdentityTOTP(config, identity, totpToken)
 		if err != nil {
-			identityLoginErrorHTMX(w, r, "Invalid TOTP token", fmt.Errorf("invalid TOTP token: %w", err))
+			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.invalid_totp"), fmt.Errorf("invalid TOTP token: %w", err))
 			return
 		}
 
@@ -383,7 +384,7 @@ func loginTheUserAPI(ctx context.Context, controlDB *db.ControlDB, subdomain str
 	return device, nil
 }
 
-// tooManyAttempts is what a login refused by the rate limiter says, on the page and to the API
+// tooManyAttempts is what a login refused by the rate limiter says to the API, and site.login.too_many_attempts on the page
 const tooManyAttempts = "Too many login attempts. Wait a minute, then try again."
 
 func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
@@ -391,7 +392,7 @@ func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusTooManyRequests)
 
-	err := errortoast.Toast("", tooManyAttempts).Render(r.Context(), w)
+	err := errortoast.Toast("", i18n.T(r.Context(), "site.login.too_many_attempts")).Render(r.Context(), w)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Failed to render login error template", "error", err)
 	}
@@ -408,7 +409,7 @@ func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg strin
 	slog.InfoContext(r.Context(), "Identity Login Failed", allArgs...)
 
 	if usrMsg == "" {
-		usrMsg = "Invalid login attempt"
+		usrMsg = i18n.T(r.Context(), "site.login.invalid_attempt")
 	}
 	w.WriteHeader(http.StatusUnauthorized)
 	err = errortoast.Toast("", usrMsg).Render(r.Context(), w)

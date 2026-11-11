@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Login signs in an identity by its name and password, then its TOTP code. A name the link gives, such as the new site's
@@ -24,13 +25,13 @@ templ Login(name string) {
 					hx-status:4xx="target:#toaster swap:beforeend"
 					hx-status:5xx="target:#toaster swap:beforeend"
 				>
-					@authenticator.Title("Nighttroop Login")
+					@authenticator.Title(i18n.T(ctx, "site.login.title"))
 					<!-- Username -->
 					@form.Item(form.ItemProps{}) {
 						@form.Label(form.LabelProps{
 							For: "site--login--name",
 						}) {
-							Name
+							{ i18n.T(ctx, "site.login.name") }
 						}
 						@input.Input(input.Props{
 							ID:       "site--login--name",
@@ -52,7 +53,7 @@ templ Login(name string) {
 						@form.Label(form.LabelProps{
 							For: "site--login--password",
 						}) {
-							Password
+							{ i18n.T(ctx, "site.login.password") }
 						}
 						@input.Input(input.Props{
 							ID:         "site--login--password",
@@ -65,7 +66,7 @@ templ Login(name string) {
 					<div class="mt-4"></div>
 					<!-- Submit Button -->
 					@button.Button(button.Props{ID: "site--login-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
-						Log in
+						{ i18n.T(ctx, "site.login.log_in") }
 					}
 				</form>
 				@PasskeyLogin("site--login")
@@ -88,23 +89,23 @@ templ LoginTOTP() {
 			hx-status:5xx="target:#toaster swap:beforeend"
 			class="needs-validation"
 		>
-			@authenticator.Title("Nighttroop Login")
+			@authenticator.Title(i18n.T(ctx, "site.login.title"))
 			<!-- TOTP -->
 			@form.Item() {
 				@form.Label(form.LabelProps{
 					For: "site--login--otp",
 				}) {
-					Verification Code
+					{ i18n.T(ctx, "site.login.verification_code") }
 				}
 				@authenticator.CodeInput("site--login--otp", "otp", "totp", true)
 				@form.Description() {
-					Enter the 6-digit code from your authenticator app
+					{ i18n.T(ctx, "site.login.code_description") }
 				}
 			}
 			<div class="mt-4"></div>
 			<!-- Submit Button -->
 			@button.Button(button.Props{ID: "site--login-totp-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
-				Log in
+				{ i18n.T(ctx, "site.login.log_in") }
 			}
 		</form>
 		// Logs in as soon as the code's last digit is typed or pasted
