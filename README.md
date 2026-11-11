@@ -20,7 +20,9 @@ The "framework" that Nighttroop uses uses Go and SQLc, relying heavily on genera
 
 # Security 
 
-We generate the `tink-go` library to generate keysets for encryption, hashing, JWT with `go run utils/keysets/create_keysets.go`
+To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
+We generate the `tink-go` library to generate keysets for encryption, hashing, JWT with `go run cmd/keysets/create_keysets.go`
 
 These keysets are uploaded to the server to the ENVAR `KEY_SETS`
 
