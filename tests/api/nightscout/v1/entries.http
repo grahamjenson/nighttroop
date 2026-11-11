@@ -107,6 +107,18 @@ GET http://{{ .site }}/api/v1/echo/entries/abc123?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "abc123" "@query.id_eq"
 
+// The echo reflects the request, but never its credentials
+NAME get_entries_echo_redacts_credentials_v1
+GET http://{{ .site }}/api/v1/echo/entries?token={{ token }}
+H Authorization: Bearer {{ jwt }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "GET" "@input.method"
+ASSERT_EQUALS "REDACTED" "@input.header.Authorization.0"
+ASSERT_EQUALS "REDACTED" "@input.header.Api-Secret.0"
+ASSERT_EQUALS "REDACTED" "@input.query.token.0"
+ASSERT_EQUALS "/api/v1/echo/entries?token=REDACTED" "@input.url"
+
 
 /////
 // UPDATE

@@ -753,6 +753,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo, experiments/test, notifications/ack and adminnotifies.
+- v1 `echo` shows the request's method, URL, query and headers with credentials (Authorization, Cookie, api-secret,
+  token) `REDACTED`, and how its search is understood.
 - `/pebble` has the newest `count` readings (1 by default, at most 1000) from the last two days for Pebble and other
   watch faces, each glucose a string in the `units` asked for (`mmol` or `mg/dl`) or the settings' units, with its
   trend number, and the newest with the delta, the uploader's battery and IOB, as Nightscout's has them.
