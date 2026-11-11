@@ -20,7 +20,8 @@ ASSERT_NOT_VISIBLE #site--overview--best-day
 SCREENSHOT overview_new_site
 
 // The virtual connector fills its last 30 minutes, and each backfill the day before its oldest reading (tests backfill a
-// day), so five fill the five days before today
+// day), so five fill the five days before today, or, when its 30 minutes began before midnight, yesterday and the five
+// before it
 CLICK #site--settings-menu
 CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
@@ -91,10 +92,11 @@ SCROLL 450
 SCREENSHOT overview_month_graph
 
 // A week and fortnight are the 7 and 14 days to their date, as Clarity's are, rather than the calendar week, so the
-// week to yesterday has all 5 backfilled days, whatever day of the week it is
+// week to yesterday has all 5 backfilled days, whatever day of the week it is, and 6 when the first 30 minutes began
+// before midnight
 GOTO /reports/overview/week-{{ date -1 }}
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--overview--days 5/7
+ASSERT_VISIBLE #site--overview--days:text-matches("^[56]/7$")
 // The 7 days before have no data, so there is nothing to compare with, not even its time CGM active of 0%
 ASSERT_NOT_VISIBLE #site--overview--mean--change
 ASSERT_NOT_VISIBLE #site--overview--cgm-active--change
@@ -105,7 +107,7 @@ SCROLL 450
 SCREENSHOT overview_week_graph
 GOTO /reports/overview/fortnight-{{ date -1 }}
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--overview--days 5/14
+ASSERT_VISIBLE #site--overview--days:text-matches("^[56]/14$")
 ASSERT_DRAWN #site--overview--graph
 SCREENSHOT overview_fortnight
 SCROLL 450
