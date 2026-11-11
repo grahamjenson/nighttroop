@@ -362,7 +362,7 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 	}
 
 	scheme := strings.ToLower(nsURL.Scheme)
-	host := strings.ToLower(nsURL.Hostname())
+	host := httputils.NormalizeHost(nsURL.Hostname())
 	path := nsURL.Path
 	params := nsURL.RawQuery
 	port := nsURL.Port()
