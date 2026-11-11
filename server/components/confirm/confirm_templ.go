@@ -7,12 +7,15 @@ package confirm
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "nighttroop.t1d.nz/server/components/ui/button"
+import (
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 // Dialog asks to confirm a request with hx-confirm, such as a delete, in the site's own style rather than the browser's
 // plain one: its question, Cancel, and a button doing it, a red Delete for a delete and Continue for anything else.
 // What asks can say it deletes, though it is not an hx-delete, with data-confirm-delete, whose value, if any, names
-// the red button instead, e.g. data-confirm-delete="Remove". Cancel, Escape or pressing beside it drops the request.
+// the red button instead, e.g. Remove. Cancel, Escape or pressing beside it drops the request.
 func Dialog() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -30,11 +33,37 @@ func Dialog() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<dialog id=\"confirm\" aria-labelledby=\"confirm--message\" class=\"m-auto w-[calc(100%-2rem)] max-w-md rounded-lg bg-white p-6 shadow-lg backdrop:bg-black/50\"><p id=\"confirm--message\" class=\"text-sm text-gray-900\"></p><div class=\"mt-6 flex justify-end gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<dialog id=\"confirm\" data-delete-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.confirm.delete")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `confirm/confirm.templ`, Line: 15, Col: 58}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" data-continue-label=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.confirm.continue")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `confirm/confirm.templ`, Line: 16, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" aria-labelledby=\"confirm--message\" class=\"m-auto w-[calc(100%-2rem)] max-w-md rounded-lg bg-white p-6 shadow-lg backdrop:bg-black/50\"><p id=\"confirm--message\" class=\"text-sm text-gray-900\"></p><div class=\"mt-6 flex justify-end gap-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -46,17 +75,22 @@ func Dialog() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "Cancel")
+			var templ_7745c5c3_Var5 string
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.confirm.cancel"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `confirm/confirm.templ`, Line: 22, Col: 42}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = button.Button(button.Props{ID: "confirm--cancel", Variant: button.VariantOutline}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = button.Button(button.Props{ID: "confirm--cancel", Variant: button.VariantOutline}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var3 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -68,17 +102,22 @@ func Dialog() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "Continue")
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.confirm.continue"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `confirm/confirm.templ`, Line: 25, Col: 44}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = button.Button(button.Props{ID: "confirm--ok", Class: "data-[delete]:bg-red-600 data-[delete]:hover:bg-red-700"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = button.Button(button.Props{ID: "confirm--ok", Class: "data-[delete]:bg-red-600 data-[delete]:hover:bg-red-700"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></dialog><script>\n\t\tdocument.addEventListener(\"htmx:confirm\", (event) => {\n\t\t\tconst dialog = document.getElementById(\"confirm\");\n\t\t\tif (!dialog || dialog.open) return;\n\t\t\tevent.preventDefault();\n\t\t\tconst { ctx, issueRequest, dropRequest } = event.detail;\n\t\t\tconst ok = dialog.querySelector(\"#confirm--ok\"), label = event.target.getAttribute(\"data-confirm-delete\");\n\t\t\tconst isDelete = event.target.hasAttribute(\"hx-delete\") || label !== null;\n\t\t\tdialog.querySelector(\"#confirm--message\").textContent = ctx.confirm;\n\t\t\tok.textContent = isDelete ? label || \"Delete\" : \"Continue\";\n\t\t\tok.toggleAttribute(\"data-delete\", isDelete);\n\t\t\tlet answered = false;\n\t\t\tconst answer = (confirmed) => {\n\t\t\t\tif (answered) return;\n\t\t\t\tanswered = true;\n\t\t\t\tdialog.close();\n\t\t\t\tconfirmed ? issueRequest() : dropRequest();\n\t\t\t};\n\t\t\tok.onclick = () => answer(true);\n\t\t\tdialog.querySelector(\"#confirm--cancel\").onclick = () => answer(false);\n\t\t\tdialog.onclose = () => answer(false);\n\t\t\tdialog.onclick = (click) => { if (click.target === dialog) answer(false); };\n\t\t\tdialog.showModal();\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></dialog><script>\n\t\tdocument.addEventListener(\"htmx:confirm\", (event) => {\n\t\t\tconst dialog = document.getElementById(\"confirm\");\n\t\t\tif (!dialog || dialog.open) return;\n\t\t\tevent.preventDefault();\n\t\t\tconst { ctx, issueRequest, dropRequest } = event.detail;\n\t\t\tconst ok = dialog.querySelector(\"#confirm--ok\"), label = event.target.getAttribute(\"data-confirm-delete\");\n\t\t\tconst isDelete = event.target.hasAttribute(\"hx-delete\") || label !== null;\n\t\t\tdialog.querySelector(\"#confirm--message\").textContent = ctx.confirm;\n\t\t\tok.textContent = isDelete ? label || dialog.dataset.deleteLabel : dialog.dataset.continueLabel;\n\t\t\tok.toggleAttribute(\"data-delete\", isDelete);\n\t\t\tlet answered = false;\n\t\t\tconst answer = (confirmed) => {\n\t\t\t\tif (answered) return;\n\t\t\t\tanswered = true;\n\t\t\t\tdialog.close();\n\t\t\t\tconfirmed ? issueRequest() : dropRequest();\n\t\t\t};\n\t\t\tok.onclick = () => answer(true);\n\t\t\tdialog.querySelector(\"#confirm--cancel\").onclick = () => answer(false);\n\t\t\tdialog.onclose = () => answer(false);\n\t\t\tdialog.onclick = (click) => { if (click.target === dialog) answer(false); };\n\t\t\tdialog.showModal();\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

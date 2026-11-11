@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Kind is how a field is typed in
@@ -43,7 +44,7 @@ type Field struct {
 	Min, Max, Step string
 	// Options are a select's choices, or a text's suggestions
 	Options []string
-	// OptionLabel shows a select's option as people read it, e.g. "Meter" for mbg, when set
+	// OptionLabel shows a select's option as people read it, e.g. Meter for mbg, when set
 	OptionLabel func(string) string
 	// Value is what a number, text, select or time starts at
 	Value string
@@ -76,7 +77,7 @@ templ Open(id string, path string, label string) {
 // Modal adds a record with all its fields, each saying what it is and whether it is required. It closes once the record
 // is added, and an error goes to the toaster, leaving it open to fix.
 templ Modal(p Props) {
-	@modal.Modal(modal.Props{ID: p.ID + "--modal", Title: p.Title, Subtitle: "Only the required fields need filling in.", Actions: SubmitButton(p)}) {
+	@modal.Modal(modal.Props{ID: p.ID + "--modal", Title: p.Title, Subtitle: i18n.T(ctx, "common.add_modal.subtitle"), Actions: SubmitButton(p)}) {
 		@Form(p)
 	}
 }
@@ -148,16 +149,16 @@ templ field(p Props, f Field) {
 		<label for={ id } class="mb-1 flex items-baseline justify-between text-sm font-medium text-gray-700">
 			{ f.Label }
 			if f.Required {
-				<span class="text-xs font-semibold text-primary">Required</span>
+				<span class="text-xs font-semibold text-primary">{ i18n.T(ctx, "common.add_modal.required") }</span>
 			} else {
-				<span class="text-xs font-normal text-gray-400">Optional</span>
+				<span class="text-xs font-normal text-gray-400">{ i18n.T(ctx, "common.add_modal.optional") }</span>
 			}
 		</label>
 		switch f.Kind {
 			case Select:
 				<select id={ id } name={ f.Name } required?={ f.Required } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
 					if !f.Required {
-						<option value="">None</option>
+						<option value="">{ i18n.T(ctx, "common.add_modal.none") }</option>
 					}
 					if f.Value != "" && !slices.Contains(f.Options, f.Value) {
 						<option value={ f.Value } selected>{ optionLabel(f, f.Value) }</option>

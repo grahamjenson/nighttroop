@@ -1,10 +1,13 @@
 package successtoast
 
-import "nighttroop.t1d.nz/server/components/ui/toast"
+import (
+	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 // Toast says an action worked, as every page says it: at the top, for five seconds, with a bar of the time left
 templ Toast(description string) {
-	@Titled("Success", description, 5000)
+	@Titled(i18n.T(ctx, "common.success_toast.title"), description, 5000)
 }
 
 // Titled is a Toast with a title of its own, shown for durationMs
@@ -23,7 +26,7 @@ templ Titled(title string, description string, durationMs int) {
 
 // OOB is a Toast swapped into the page's #toaster out of band, beside the rest of a response
 templ OOB(description string) {
-	@TitledOOB("Success", description, 5000)
+	@TitledOOB(i18n.T(ctx, "common.success_toast.title"), description, 5000)
 }
 
 // TitledOOB is a Titled toast swapped into the page's #toaster out of band, beside the rest of a response

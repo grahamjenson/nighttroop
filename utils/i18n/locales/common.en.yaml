@@ -1,2 +1,75 @@
+# English text of the components every page shares, by component. Edit the wording here; the code only has the ids.
 common:
   nighttroop: Nighttroop
+  test_site:
+    title: "This is a test site"
+    warning: "All data here is frequently wiped, at least every time a new version is deployed. Do not use it to manage your diabetes, and do not put anything here you want to keep."
+  footer:
+    not_a_medical_device: "Not a medical device."
+    medical_disclaimer: "Nighttroop does not provide medical advice and is not a replacement for proper medical care. Its data and alarms may be late, missing or wrong."
+    contact: "contact"
+    feedback: "feedback"
+    terms: "terms of service"
+    privacy: "privacy policy"
+    api_docs: "API docs"
+    year: "Nighttroop 2026"
+    dbip: "IP Geolocation by DB-IP"
+  modal:
+    close: "Close"
+  confirm:
+    cancel: "Cancel"
+    continue: "Continue"
+    delete: "Delete"
+  add_modal:
+    subtitle: "Only the required fields need filling in."
+    required: "Required"
+    optional: "Optional"
+    none: "None"
+  filter:
+    search: "Search"
+    type: "Type"
+    filter: "Filter"
+    clear: "Clear"
+  table:
+    actions: "Actions"
+    delete: "Delete"
+  pager:
+    showing: "Showing {{.From}} to {{.To}}"
+    previous: "Previous"
+    next: "Next"
+  success_toast:
+    title: "Success"
+  toast:
+    close: "Close"
+  select_box:
+    clear_selection: "Clear selection"
+    search: "Search..."
+  badge:
+    live: "● Live"
+  db_size:
+    title: "DB size"
+    not_measured: "Not measured yet"
+    limit: "of its {{.Limit}} MB limit"
+    other_tables: "Other"
+    used: "{{.Percent}}% of its limit used"
+    measured_by: "The resource check measures each site's DB"
+  log_view:
+    event: "Event"
+    started: "Started"
+    duration: "Duration"
+    no_events: "No events here."
+    finished: "Finished"
+    error: "Error"
+    when: "When"
+    no_errors: "No errors here."
+    level: "Level"
+    message: "Message"
+    no_logs: "No logs here."
+    request: "Request"
+    job: "Job"
+  authenticator:
+    add_to_app: "Add to an authenticator app"
+    copy_secret: "Copy the TOTP secret"
+    scan_with: "Scan with an authenticator app, such as "
+    comma: ", "
+    or_last: " or "

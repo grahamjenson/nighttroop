@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // View is where rows are shown: a site's own pages, or control's
@@ -25,7 +26,7 @@ type View struct {
 	Prefix string
 	// Path is where the events, errors and logs pages are: "/logs" on a site and "" on control
 	Path string
-	// About heads the column, and labels the detail, of who each row was for, as "For" or "Site"; "" leaves it out
+	// About heads the column, and labels the detail, of who each row was for, as For or Site; "" leaves it out
 	About string
 	// Links are a row's request and job, each linking to the rows with it; without them they are plain text
 	Links bool
@@ -119,9 +120,9 @@ templ AttributesDetail(id string, raw json.RawMessage) {
 	}
 }
 
-// Empty fills a table of no rows, of the number of columns, saying there are none
-templ Empty(columns int, what string) {
-	<tr><td colspan={ fmt.Sprint(columns) } class="p-4 text-sm text-gray-500">No { what } here.</td></tr>
+// Empty fills a table of no rows, of the number of columns, with text saying there are none
+templ Empty(columns int, text string) {
+	<tr><td colspan={ fmt.Sprint(columns) } class="p-4 text-sm text-gray-500">{ text }</td></tr>
 }
 
 // columns is how many columns a table has, with its About column when the View has one
@@ -171,10 +172,11 @@ templ modalRow(v View, kind string, row Row) {
 	}
 }
 
-// idDetail is a row's request or job, when it has one, linking to the rows of kind with it when the View Links
+// idDetail is a row's request or job, sent as name, when it has one, linking to the rows of kind with it when the View
+// Links
 templ idDetail(v View, kind string, label string, name string, value *string) {
 	if value != nil {
-		{{ id := v.Prefix + "--" + kind + "--" + strings.ToLower(label) + "-id" }}
+		{{ id := v.Prefix + "--" + kind + "--" + strings.ReplaceAll(name, "_", "-") }}
 		<dt class="text-gray-500">{ label }</dt>
 		if v.Links {
 			{{ link := filter.PagePath(v.Path+"/"+kind+"s", nil, nil, filter.ID{Name: name, Value: value}) }}
@@ -191,8 +193,8 @@ templ idDetail(v View, kind string, label string, name string, value *string) {
 templ details(v View, kind string, row Row) {
 	<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 		{ children... }
-		@idDetail(v, kind, "Request", "request_id", row.RequestID)
-		@idDetail(v, kind, "Job", "job_id", row.JobID)
+		@idDetail(v, kind, i18n.T(ctx, "common.log_view.request"), "request_id", row.RequestID)
+		@idDetail(v, kind, i18n.T(ctx, "common.log_view.job"), "job_id", row.JobID)
 	</dl>
 	@AttributesDetail(v.Prefix+"--"+kind+"--attributes", row.Attributes)
 }
@@ -202,17 +204,17 @@ templ EventsTable(v View, id string, events []Row) {
 	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
 		@table.Header() {
 			@table.Row() {
-				@head("Event")
+				@head(i18n.T(ctx, "common.log_view.event"))
 				@aboutHead(v)
-				@head("Started")
+				@head(i18n.T(ctx, "common.log_view.started"))
 				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					Duration
+					{ i18n.T(ctx, "common.log_view.duration") }
 				}
 			}
 		}
 		@table.Body() {
 			if len(events) == 0 {
-				@Empty(v.columns(4), "events")
+				@Empty(v.columns(4), i18n.T(ctx, "common.log_view.no_events"))
 			}
 			for _, event := range events {
 				@modalRow(v, "event", event) {
@@ -236,11 +238,11 @@ templ EventModal(v View, event Row) {
 	@modal.Modal(modal.Props{ID: v.Prefix + "--event--details", Title: display.Name(event.Name), Subtitle: v.Date(ctx, event.At)}) {
 		@details(v, "event", event) {
 			@aboutDetail(v, event)
-			@modal.Detail("Started", v.Date(ctx, event.At))
+			@modal.Detail(i18n.T(ctx, "common.log_view.started"), v.Date(ctx, event.At))
 			if event.FinishedAt != nil {
-				@modal.Detail("Finished", v.Date(ctx, *event.FinishedAt))
+				@modal.Detail(i18n.T(ctx, "common.log_view.finished"), v.Date(ctx, *event.FinishedAt))
 			}
-			@modal.Detail("Duration", Duration(event))
+			@modal.Detail(i18n.T(ctx, "common.log_view.duration"), Duration(event))
 		}
 	}
 }
@@ -250,14 +252,14 @@ templ ErrorsTable(v View, id string, errors []Row) {
 	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
 		@table.Header() {
 			@table.Row() {
-				@head("Error")
+				@head(i18n.T(ctx, "common.log_view.error"))
 				@aboutHead(v)
-				@head("When")
+				@head(i18n.T(ctx, "common.log_view.when"))
 			}
 		}
 		@table.Body() {
 			if len(errors) == 0 {
-				@Empty(v.columns(3), "errors")
+				@Empty(v.columns(3), i18n.T(ctx, "common.log_view.no_errors"))
 			}
 			for _, e := range errors {
 				@modalRow(v, "error", e) {
@@ -273,7 +275,7 @@ templ ErrorsTable(v View, id string, errors []Row) {
 }
 
 templ ErrorModal(v View, e Row) {
-	@modal.Modal(modal.Props{ID: v.Prefix + "--error--details", Title: "Error", Subtitle: v.Date(ctx, e.At)}) {
+	@modal.Modal(modal.Props{ID: v.Prefix + "--error--details", Title: i18n.T(ctx, "common.log_view.error"), Subtitle: v.Date(ctx, e.At)}) {
 		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
 		@details(v, "error", e) {
 			@aboutDetail(v, e)
@@ -286,15 +288,15 @@ templ LogsTable(v View, id string, logs []Row) {
 	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
 		@table.Header() {
 			@table.Row() {
-				@head("Level")
-				@head("Message")
+				@head(i18n.T(ctx, "common.log_view.level"))
+				@head(i18n.T(ctx, "common.log_view.message"))
 				@aboutHead(v)
-				@head("When")
+				@head(i18n.T(ctx, "common.log_view.when"))
 			}
 		}
 		@table.Body() {
 			if len(logs) == 0 {
-				@Empty(v.columns(4), "logs")
+				@Empty(v.columns(4), i18n.T(ctx, "common.log_view.no_logs"))
 			}
 			for _, log := range logs {
 				@modalRow(v, "log", log) {

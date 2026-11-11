@@ -1,10 +1,12 @@
 package dbsize
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // usedPercent is how much of its DB size limit the site uses, when both are known
@@ -55,11 +57,22 @@ func dbParts(tables []*controlmodels.SiteTable) []dbPart {
 	}
 	for i, table := range tables {
 		if i == len(partClasses) {
-			return append(parts, share("Other", tables[i:], "bg-gray-300"))
+			return append(parts, share(otherTables, tables[i:], "bg-gray-300"))
 		}
 		parts = append(parts, share(table.Name, tables[i:i+1], partClasses[i]))
 	}
 	return parts
+}
+
+// otherTables names the part of the rest of a DB's tables together in its elements' IDs
+const otherTables = "Other"
+
+// partName is a part's name as people read it: its table's, or Other for the rest of them
+func partName(ctx context.Context, part dbPart) string {
+	if part.Name == otherTables {
+		return i18n.T(ctx, "common.db_size.other_tables")
+	}
+	return part.Name
 }
 
 // measuredBy is the DB's size, or its size from its tables when the resource check has not measured it yet
@@ -107,17 +120,17 @@ templ Panel(prefix string, sizeKB, limitKB *int64, tables []*controlmodels.SiteT
 	<div id={ prefix + "--db" } class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 		<div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
 			@icon.Database(icon.Props{Class: "size-4"})
-			DB size
+			{ i18n.T(ctx, "common.db_size.title") }
 		</div>
 		<div class="mt-1 flex flex-wrap items-baseline gap-2">
 			if sizeKB != nil {
 				<span id={ prefix + "--db-size" } class="text-5xl font-extrabold tracking-tight tabular-nums">{ mb(sizeKB) }</span>
 				<span class="text-lg text-gray-500">MB</span>
 			} else {
-				<span id={ prefix + "--db-size" } class="text-2xl font-bold text-gray-400">Not measured yet</span>
+				<span id={ prefix + "--db-size" } class="text-2xl font-bold text-gray-400">{ i18n.T(ctx, "common.db_size.not_measured") }</span>
 			}
 			if limitKB != nil {
-				<span id={ prefix + "--db-limit" } class="text-sm text-gray-500">of its { mb(limitKB) } MB limit</span>
+				<span id={ prefix + "--db-limit" } class="text-sm text-gray-500">{ i18n.T(ctx, "common.db_size.limit", i18n.Data{"Limit": mb(limitKB)}) }</span>
 			}
 		</div>
 		{{ percent, measured := usedPercent(sizeKB, limitKB) }}
@@ -125,10 +138,10 @@ templ Panel(prefix string, sizeKB, limitKB *int64, tables []*controlmodels.SiteT
 			<div class="mt-4 h-3 w-full rounded-full bg-gray-100">
 				<div id={ prefix + "--db-used" } class="flex h-full gap-[2px]" style={ fmt.Sprintf("width: %d%%", barWidth(sizeKB, limitKB)) }>
 					for i, part := range parts {
-						<div id={ prefix + "--db-part--" + part.Name } aria-label={ part.Name + ": " + partText(part) } class={ "group relative h-full min-w-[2px]", part.Class, templ.KV("rounded-l-full", i == 0), templ.KV("rounded-r-full", i == len(parts)-1) } style={ fmt.Sprintf("flex: %d 1 0%%", part.Bytes) }>
+						<div id={ prefix + "--db-part--" + part.Name } aria-label={ partName(ctx, part) + ": " + partText(part) } class={ "group relative h-full min-w-[2px]", part.Class, templ.KV("rounded-l-full", i == 0), templ.KV("rounded-r-full", i == len(parts)-1) } style={ fmt.Sprintf("flex: %d 1 0%%", part.Bytes) }>
 							// A tooltip naming the table shows over its part on hover, kept inside the bar at its ends
 							<div id={ prefix + "--db-part--" + part.Name + "--tooltip" } class={ "pointer-events-none absolute bottom-full z-10 mb-2 hidden whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-md group-hover:block", templ.KV("left-0", i == 0), templ.KV("right-0", i > 0 && i == len(parts)-1), templ.KV("left-1/2 -translate-x-1/2", i > 0 && i < len(parts)-1) }>
-								<span class="font-mono font-semibold">{ part.Name }</span>
+								<span class="font-mono font-semibold">{ partName(ctx, part) }</span>
 								<span class="tabular-nums text-gray-500">{ partText(part) }</span>
 							</div>
 						</div>
@@ -144,17 +157,17 @@ templ Panel(prefix string, sizeKB, limitKB *int64, tables []*controlmodels.SiteT
 				if percent >= 80 {
 					@icon.TriangleAlert(icon.Props{Class: "size-3.5"})
 				}
-				{ fmt.Sprintf("%d%% of its limit used", percent) }
+				{ i18n.T(ctx, "common.db_size.used", i18n.Data{"Percent": percent}) }
 			</div>
 		} else if sizeKB == nil {
-			<div class="mt-1 text-xs text-gray-500">The resource check measures each site's DB</div>
+			<div class="mt-1 text-xs text-gray-500">{ i18n.T(ctx, "common.db_size.measured_by") }</div>
 		}
 		if len(parts) > 0 {
 			<ul id={ prefix + "--db-tables" } class="mt-4 gap-x-6 space-y-1 text-sm text-gray-700 sm:columns-2">
 				for _, part := range parts {
 					<li id={ prefix + "--db-table--" + part.Name } class="flex break-inside-avoid items-center gap-2">
 						<span class={ "size-3 shrink-0 rounded-sm", part.Class }></span>
-						<span class="truncate font-mono text-xs">{ part.Name }</span>
+						<span class="truncate font-mono text-xs">{ partName(ctx, part) }</span>
 						<span class="ml-auto shrink-0 text-xs tabular-nums text-gray-500">{ keyText(part) }</span>
 					</li>
 				}

@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 type Props struct {
@@ -66,8 +67,8 @@ templ Filter(p Props) {
 			id={ p.ID + "--search" }
 			name="search"
 			type="search"
-			aria-label="Search"
-			placeholder="Search"
+			aria-label={ i18n.T(ctx, "common.filter.search") }
+			placeholder={ i18n.T(ctx, "common.filter.search") }
 			maxlength="64"
 			if p.Search != nil {
 				value={ *p.Search }
@@ -75,7 +76,7 @@ templ Filter(p Props) {
 			class="h-9 w-64 rounded-md border border-gray-200 bg-white px-3 text-sm"
 		/>
 		if len(p.Types) > 0 {
-			<select id={ p.ID + "--type" } name="type" aria-label="Type" class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm">
+			<select id={ p.ID + "--type" } name="type" aria-label={ i18n.T(ctx, "common.filter.type") } class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm">
 			<option value="" selected?={ p.Selected == nil }>{ p.All }</option>
 			for _, t := range p.Types {
 				<option value={ t } selected?={ p.Selected != nil && *p.Selected == t }>{ display.Name(t) }</option>
@@ -83,7 +84,7 @@ templ Filter(p Props) {
 		</select>
 		}
 		@button.Button(button.Props{ID: p.ID + "--submit", Type: "submit", Variant: button.VariantOutline}) {
-			Filter
+			{ i18n.T(ctx, "common.filter.filter") }
 		}
 		// Once a type, search or ID is chosen, one click goes back to every row
 		if p.set() {
@@ -93,7 +94,7 @@ templ Filter(p Props) {
 				Variant: button.VariantGhost,
 				Attributes: nav.Attributes(p.Path),
 			}) {
-				Clear
+				{ i18n.T(ctx, "common.filter.clear") }
 			}
 		}
 	</form>

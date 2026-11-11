@@ -12,6 +12,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ModalRow opens path in #modal-container when clicked, or on Enter; its children are the cells
@@ -153,7 +154,7 @@ func DeleteButton(id, path, confirm string) templ.Component {
 			Variant: button.VariantGhost,
 			Size:    button.SizeIcon,
 			Attributes: templ.Attributes{
-				"title":                "Delete",
+				"title":                i18n.T(ctx, "common.table.delete"),
 				"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
 				"hx-delete":            path,
 				"hx-confirm":           confirm,

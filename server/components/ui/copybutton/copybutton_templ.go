@@ -24,8 +24,8 @@ type Props struct {
 	Class    string           // Custom CSS classes
 	Attrs    templ.Attributes // Additional HTML attributes
 	TargetID string           // Required - ID of element to copy from
-	// Label is required: what it does, such as "Copy the password", as its accessible name and tooltip, since it may
-	// show only an icon. Its children, such as "Copy all", are shown beside the icon.
+	// Label is required: what it does, such as Copy the password, as its accessible name and tooltip, since it may
+	// show only an icon. Its children, such as Copy all, are shown beside the icon.
 	Label string
 }
 
