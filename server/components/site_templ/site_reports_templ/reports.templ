@@ -77,6 +77,15 @@ func link(report, period string, date time.Time) string {
 	return ""
 }
 
+// OutOfDate says a report's numbers are being worked out again, as data in its days changed since they were, as a
+// backfill or a late sync writes
+templ OutOfDate() {
+	<div id="site--reports--out-of-date" class="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+		@icon.RefreshCw(icon.Props{Class: "size-4 shrink-0"})
+		Data in this report changed since it was worked out, so it is being updated. Refresh in a minute or two to see it.
+	</div>
+}
+
 // periodHeader is the report's name, as AGP, over its dates, with arrow buttons either side to the period before and
 // after, and buttons to the report of each kind of period ending on its last day
 templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
