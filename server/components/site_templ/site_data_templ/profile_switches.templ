@@ -1,7 +1,7 @@
 package site_data_templ
 
 import (
-	"fmt"
+	"context"
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
@@ -11,24 +11,25 @@ import (
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ProfileSwitchesTable shows one page of profile switches, newest first, with buttons to the pages either side
 templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip int64, limit int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "profile_switches_table",
-		Title:       "Profile Switches",
-		Description: "Newest first. Click a profile switch to see all its details.",
-		Action:      addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", "Add Profile Switch"),
-		Above:       searchTotals("site--profile-switch", "profile switch", "profile switches"),
+		Title:       i18n.T(ctx, "site.data.profile_switches.title"),
+		Description: i18n.T(ctx, "site.data.profile_switches.about"),
+		Action:      addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", i18n.T(ctx, "site.data.profile_switches.add")),
+		Above:       searchTotals("site--profile-switch", "site.data.profile_switches.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:      "profileSwitchesTable",
 			EmptyID: "site--profile-switch--empty",
-			Empty:   "No profile switches here.",
+			Empty:   i18n.T(ctx, "site.data.profile_switches.empty"),
 			Columns: []table.Column{
-				{Label: "Time"}, {Label: "Name"}, {Label: "Insulin (%)", Numeric: true},
-				{Label: "Shift", Numeric: true}, {Label: "Minutes", Numeric: true}, {Label: "Device"}, {Actions: true},
+				{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.common.name")}, {Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Numeric: true},
+				{Label: i18n.T(ctx, "site.data.profile_switches.shift"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 			},
 		},
 		Pager: &pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit},
@@ -41,25 +42,27 @@ templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip
 
 // ProfileSwitchNew adds a profile switch with all its fields, putting its row at the top of the table
 templ ProfileSwitchNew() {
-	@addmodal.Modal(addmodal.Props{ID: "site--profile-switch--create", Title: "Add Profile Switch", Path: "/data/profile-switches", Target: "#profileSwitchesTable tbody",
-		Submit: "Add Profile Switch", Fields: profileSwitchFields})
+	@addmodal.Modal(addmodal.Props{ID: "site--profile-switch--create", Title: i18n.T(ctx, "site.data.profile_switches.add"), Path: "/data/profile-switches", Target: "#profileSwitchesTable tbody",
+		Submit: i18n.T(ctx, "site.data.profile_switches.add"), Fields: profileSwitchFields(ctx)})
 }
 
 // profileSwitchFields are what a profile switch has that a person can type in
-var profileSwitchFields = []addmodal.Field{
-	{Name: "name", Label: "Profile", Help: "The name of the profile switched to.", Required: true, Kind: addmodal.Text, Max: "64"},
-	{Name: "occurred_at", Label: "When", Help: "When it was switched to, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "multiplier", Label: "Insulin (%)", Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
-	{Name: "timeshift", Label: "Shift (minutes)", Help: "Its schedule moved forward by this, e.g. 60 for an hour.", Min: "-1440", Max: "1440", Step: "1", Value: "0"},
-	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasts, 0 or blank until the next switch.", Min: "0", Max: "10080", Step: "1"},
-	{Name: "reason", Label: "Reason", Help: "Why it was switched to, e.g. illness.", Kind: addmodal.Text, Max: "64"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func profileSwitchFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "name", Label: i18n.T(ctx, "site.data.profile_switches.profile"), Help: i18n.T(ctx, "site.data.profile_switches.profile_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.profile_switches.when_help"), Kind: addmodal.When},
+		{Name: "multiplier", Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
+		{Name: "timeshift", Label: i18n.T(ctx, "site.data.profile_switches.shift_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.shift_help"), Min: "-1440", Max: "1440", Step: "1", Value: "0"},
+		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.duration_help"), Min: "0", Max: "10080", Step: "1"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.profile_switches.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // profileSwitchInputs always send a multiplier, shift and minutes, as an empty number is not one
 // profileSwitchRow opens the profile switch's details when clicked.
 templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
-	@table.DataRow("site--profile-switch--"+profileSwitch.ID, "/data/profile-switches/"+profileSwitch.ID, "Delete this profile switch?") {
+	@table.DataRow("site--profile-switch--"+profileSwitch.ID, "/data/profile-switches/"+profileSwitch.ID, i18n.T(ctx, "site.data.profile_switches.delete_confirm")) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, profileSwitch.OccurredAt) }
 		}
@@ -84,23 +87,23 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 	{{ siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx) }}
 	{{ unitsLabel := orEmpty(units.Stringp()) }}
-	{{ edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: "Save",
-		Fields: addmodal.Edit(profileSwitchFields, profileSwitch, nil)} }}
-	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "-")), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+	{{ edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+		Fields: addmodal.Edit(profileSwitchFields(ctx), profileSwitch, nil)} }}
+	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: i18n.T(ctx, "site.data.profile_switches.details_title", i18n.Data{"Name": profileSwitch.Name, "Percent": percentOr(profileSwitch.Multiplier, "-")}), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<div id="site--profile-switch--details--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
-			@ProfileSchedule("site--profile-switch--details--basal-rates", "Basal (U/h)", sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue)
-			@ProfileSchedule("site--profile-switch--details--carb-ratios", "Carb Ratio (g/U)", sitemodels.ScheduleFromJSON(profileSwitch.CarbRatiosJson), ScheduleValue)
-			@ProfileSchedule("site--profile-switch--details--sensitivities", "Sensitivity ("+unitsLabel+"/U)", sitemodels.SensitivityScheduleFromJSON(profileSwitch.InsulinSensitivitiesJson, profileSwitch.Units, siteContext), GlucoseValue(units))
-			@ProfileSchedule("site--profile-switch--details--targets-low", "Low Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsLowJson, siteContext), GlucoseValue(units))
-			@ProfileSchedule("site--profile-switch--details--targets-high", "High Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsHighJson, siteContext), GlucoseValue(units))
+			@ProfileSchedule("site--profile-switch--details--basal-rates", i18n.T(ctx, "site.data.profile_switches.basal_schedule"), sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue)
+			@ProfileSchedule("site--profile-switch--details--carb-ratios", i18n.T(ctx, "site.data.profile_switches.carb_ratio_schedule"), sitemodels.ScheduleFromJSON(profileSwitch.CarbRatiosJson), ScheduleValue)
+			@ProfileSchedule("site--profile-switch--details--sensitivities", i18n.T(ctx, "site.data.profile_switches.sensitivity_schedule", i18n.Data{"Units": unitsLabel}), sitemodels.SensitivityScheduleFromJSON(profileSwitch.InsulinSensitivitiesJson, profileSwitch.Units, siteContext), GlucoseValue(units))
+			@ProfileSchedule("site--profile-switch--details--targets-low", i18n.T(ctx, "site.data.profile_switches.low_target_schedule", i18n.Data{"Units": unitsLabel}), sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsLowJson, siteContext), GlucoseValue(units))
+			@ProfileSchedule("site--profile-switch--details--targets-high", i18n.T(ctx, "site.data.profile_switches.high_target_schedule", i18n.Data{"Units": unitsLabel}), sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsHighJson, siteContext), GlucoseValue(units))
 		</div>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@addmodal.Detail(edit, "dia", "DIA (hours)", orDash(profileSwitch.Dia))
-			@addmodal.Detail(edit, "units", "Profile Units", orDash(profileSwitch.Units))
-			@addmodal.Detail(edit, "timezone", "Timezone", orDash(profileSwitch.Timezone))
-			@addmodal.Detail(edit, "carbs_hr", "Carbs per Hour", orDash(profileSwitch.CarbsHr))
-			@addmodal.Detail(edit, "delay", "Delay", orDash(profileSwitch.Delay))
+			@addmodal.Detail(edit, "dia", i18n.T(ctx, "site.data.profile_switches.dia"), orDash(profileSwitch.Dia))
+			@addmodal.Detail(edit, "units", i18n.T(ctx, "site.data.profile_switches.profile_units"), orDash(profileSwitch.Units))
+			@addmodal.Detail(edit, "timezone", i18n.T(ctx, "site.data.profile_switches.timezone"), orDash(profileSwitch.Timezone))
+			@addmodal.Detail(edit, "carbs_hr", i18n.T(ctx, "site.data.profile_switches.carbs_per_hour"), orDash(profileSwitch.CarbsHr))
+			@addmodal.Detail(edit, "delay", i18n.T(ctx, "site.data.profile_switches.delay"), orDash(profileSwitch.Delay))
 			@RecordDetails(Record{ID: profileSwitch.ID, UtcOffset: profileSwitch.UtcOffsetMinutes, App: profileSwitch.CreatedByAppName, Device: profileSwitch.CreatedByDeviceName, CreatedBy: profileSwitch.CreatedByIdentityName, Created: profileSwitch.CreatedAt, Updated: profileSwitch.UpdatedAt, UpdatedBy: profileSwitch.UpdatedByIdentityName})
 		</dl>
 	}
@@ -114,9 +117,9 @@ templ ProfileSwitchCreated(profileSwitch *sitemodels.SiteProfileSwitch) {
 templ ProfileSwitchUpdated(profileSwitch *sitemodels.SiteProfileSwitch) {
 	@profileSwitchRow(profileSwitch)
 	@modal.CloseOOB()
-	@successtoast.OOB("Profile Switch Updated")
+	@successtoast.OOB(i18n.T(ctx, "site.data.profile_switches.updated"))
 }
 
 templ ProfileSwitchDeleted() {
-	@successtoast.Toast("Profile Switch Deleted")
+	@successtoast.Toast(i18n.T(ctx, "site.data.profile_switches.deleted"))
 }

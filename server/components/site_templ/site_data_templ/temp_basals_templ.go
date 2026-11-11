@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -17,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
@@ -59,18 +61,18 @@ func TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit i
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "temp_basals_table",
-			Title:       "Temp Basals",
-			Description: "Newest first. Click a temp basal to see all its details.",
-			Action:      addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal"),
-			Above:       searchTotals("site--temp-basal", "temp basal", "temp basals"),
+			Title:       i18n.T(ctx, "site.data.temp_basals.title"),
+			Description: i18n.T(ctx, "site.data.temp_basals.about"),
+			Action:      addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", i18n.T(ctx, "site.data.temp_basals.add")),
+			Above:       searchTotals("site--temp-basal", "site.data.temp_basals.noun"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "tempBasalsTable",
 				EmptyID: "site--temp-basal--empty",
-				Empty:   "No temp basals here.",
+				Empty:   i18n.T(ctx, "site.data.temp_basals.empty"),
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "U/hr", Numeric: true}, {Label: "Basal (%)", Numeric: true},
-					{Label: "Minutes", Numeric: true}, {Label: "Reason"}, {Label: "Device"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.data.common.time")}, {Label: "U/hr", Numeric: true}, {Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Numeric: true},
+					{Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
 			Pager: &pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit},
@@ -100,8 +102,8 @@ func TempBasalNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--temp-basal--create", Title: "Add Temp Basal", Path: "/data/temp-basals", Target: "#tempBasalsTable tbody",
-			Submit: "Add Temp Basal", Fields: tempBasalFields}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--temp-basal--create", Title: i18n.T(ctx, "site.data.temp_basals.add"), Path: "/data/temp-basals", Target: "#tempBasalsTable tbody",
+			Submit: i18n.T(ctx, "site.data.temp_basals.add"), Fields: tempBasalFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -110,13 +112,15 @@ func TempBasalNew() templ.Component {
 }
 
 // tempBasalFields are what a temp basal has that a person can type in
-var tempBasalFields = []addmodal.Field{
-	{Name: "rate", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
-	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it runs for.", Required: true, Min: "1", Max: "1440", Step: "1"},
-	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "multiplier", Label: "Basal (%)", Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "1", Max: "1100"},
-	{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. exercise.", Kind: addmodal.Text, Max: "64"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func tempBasalFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "rate", Label: i18n.T(ctx, "site.data.temp_basals.rate"), Help: i18n.T(ctx, "site.data.temp_basals.rate_help"), Required: true, Min: "0", Max: "50", Step: "any"},
+		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_basals.duration_help"), Required: true, Min: "1", Max: "1440", Step: "1"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.temp_basals.when_help"), Kind: addmodal.When},
+		{Name: "multiplier", Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "1", Max: "1100"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_basals.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // tempBasalRow opens the temp basal's details when clicked.
@@ -164,7 +168,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, tempBasal.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 61, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 65, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -191,7 +195,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Rate))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 64, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 68, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -218,7 +222,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(percentOr(tempBasal.Multiplier, "-"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 67, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 71, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -245,7 +249,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(tempBasal.DurationMinutes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 70, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 74, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -272,7 +276,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Reason))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 73, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 77, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -299,7 +303,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 76, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 80, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -313,7 +317,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("site--temp-basal--"+tempBasal.ID, "/data/temp-basals/"+tempBasal.ID, "Delete this temp basal?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("site--temp-basal--"+tempBasal.ID, "/data/temp-basals/"+tempBasal.ID, i18n.T(ctx, "site.data.temp_basals.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -338,8 +342,8 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Props{ID: "site--temp-basal--edit", Path: "/data/temp-basals/" + tempBasal.ID, Target: "#site--temp-basal--" + tempBasal.ID, Swap: "outerHTML", Submit: "Save",
-			Fields: addmodal.Edit(tempBasalFields, tempBasal, nil)}
+		edit := addmodal.Props{ID: "site--temp-basal--edit", Path: "/data/temp-basals/" + tempBasal.ID, Target: "#site--temp-basal--" + tempBasal.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+			Fields: addmodal.Edit(tempBasalFields(ctx), tempBasal, nil)}
 		templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -370,7 +374,7 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: i18n.T(ctx, "site.data.temp_basals.details_title", i18n.Data{"Rate": orDash(tempBasal.Rate), "Minutes": tempBasal.DurationMinutes}), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -429,7 +433,7 @@ func TempBasalUpdated(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Temp Basal Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.data.temp_basals.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -454,7 +458,7 @@ func TempBasalDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Temp Basal Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.data.temp_basals.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

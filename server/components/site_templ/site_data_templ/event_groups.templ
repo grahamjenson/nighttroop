@@ -19,40 +19,42 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // eventGroupEvents are the group's events in words, like "4 U insulin", "40 g carbs" and "5.5–6.7 mmol/L temp target for 30 min",
 // and a sensor change's sensor code and transmitter
-func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
+func eventGroupEvents(ctx context.Context, group *sitemodels.SiteEventGroup) []string {
 	events := []string{}
 	if r := group.GlucoseReading; r != nil {
-		events = append(events, fmt.Sprintf("%s %s glucose", formatGlucose(r.Reading, r.Units), orDash(r.Units)))
+		events = append(events, i18n.T(ctx, "site.data.event_groups.glucose_event", i18n.Data{"Reading": formatGlucose(r.Reading, r.Units), "Units": orDash(r.Units)}))
 	}
 	if d := group.InsulinDose; d != nil {
-		events = append(events, fmt.Sprintf("%g U insulin", d.Dose))
+		events = append(events, i18n.T(ctx, "site.data.event_groups.insulin_event", i18n.Data{"Dose": fmt.Sprintf("%g", d.Dose)}))
 	}
 	if f := group.FoodIntake; f != nil {
-		events = append(events, fmt.Sprintf("%s g carbs", orDash(f.Carbs)))
+		events = append(events, i18n.T(ctx, "site.data.common.carbs", i18n.Data{"Carbs": orDash(f.Carbs)}))
 	}
 	if b := group.TempBasal; b != nil {
-		events = append(events, fmt.Sprintf("%s U/hr temp basal for %d min", orDash(b.Rate), b.DurationMinutes))
+		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_basal_event", i18n.Data{"Rate": orDash(b.Rate), "Minutes": b.DurationMinutes}))
 	}
 	if t := group.TempTarget; t != nil {
-		events = append(events, fmt.Sprintf("%s–%s %s temp target for %d min", formatGlucose(t.LowTarget, t.Units), formatGlucose(t.HighTarget, t.Units), orDash(t.Units), t.DurationMinutes))
+		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_target_event", i18n.Data{"Low": formatGlucose(t.LowTarget, t.Units), "High": formatGlucose(t.HighTarget, t.Units), "Units": orDash(t.Units), "Minutes": t.DurationMinutes}))
 	}
 	for _, other := range []struct {
-		id   *string
-		name string
-	}{{group.ProfileSwitchID, "profile switch"}, {group.ActivityID, "activity"}, {group.NotificationEventID, "notification"}} {
+		id      *string
+		message string
+	}{{group.ProfileSwitchID, "site.data.event_groups.profile_switch_event"}, {group.ActivityID, "site.data.event_groups.activity_event"},
+		{group.NotificationEventID, "site.data.event_groups.notification_event"}} {
 		if other.id != nil {
-			events = append(events, other.name)
+			events = append(events, i18n.T(ctx, other.message))
 		}
 	}
 	if group.SensorCode != nil {
-		events = append(events, "sensor code "+*group.SensorCode)
+		events = append(events, i18n.T(ctx, "site.data.event_groups.sensor_code_event", i18n.Data{"Code": *group.SensorCode}))
 	}
 	if group.TransmitterID != nil {
-		events = append(events, "transmitter "+*group.TransmitterID)
+		events = append(events, i18n.T(ctx, "site.data.event_groups.transmitter_event", i18n.Data{"Transmitter": *group.TransmitterID}))
 	}
 	return events
 }
@@ -61,17 +63,17 @@ func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limit int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "event_groups_table",
-		Title:       "Event Groups",
-		Description: "Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.",
+		Title:       i18n.T(ctx, "site.data.event_groups.title"),
+		Description: i18n.T(ctx, "site.data.event_groups.about"),
 		Action:      eventGroupAdd(),
-		Above:       searchTotals("site--event-group", "event group", "event groups"),
+		Above:       searchTotals("site--event-group", "site.data.event_groups.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:      "eventGroupsTable",
 			EmptyID: "site--event-group--empty",
-			Empty:   "No event groups here.",
+			Empty:   i18n.T(ctx, "site.data.event_groups.empty"),
 			Columns: []table.Column{
-				{Label: "Time"}, {Label: "Type"}, {Label: "Events"}, {Label: "Notes"}, {Label: "Device"},
+				{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.common.type")}, {Label: i18n.T(ctx, "site.data.event_groups.events")}, {Label: i18n.T(ctx, "site.data.common.notes")}, {Label: i18n.T(ctx, "site.data.common.device")},
 				{Actions: true},
 			},
 		},
@@ -85,7 +87,7 @@ templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, lim
 
 // eventGroupRow opens the group's details when clicked.
 templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
-	@table.DataRow("site--event-group--"+eventGroup.ID, "/data/event-groups/"+eventGroup.ID, "Delete this event group and all its events?") {
+	@table.DataRow("site--event-group--"+eventGroup.ID, "/data/event-groups/"+eventGroup.ID, i18n.T(ctx, "site.data.event_groups.delete_confirm")) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, eventGroup.OccurredAt) }
 		}
@@ -93,7 +95,7 @@ templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
 			{ eventGroup.GroupType }
 		}
 		@table.Cell() {
-			{ strings.Join(eventGroupEvents(eventGroup), ", ") }
+			{ strings.Join(eventGroupEvents(ctx, eventGroup), ", ") }
 		}
 		@table.Cell(notesCell) {
 			{ orDash(eventGroup.Notes) }
@@ -110,7 +112,7 @@ templ eventGroupAdd() {
 		@dropdown.Dropdown(dropdown.Props{ID: "site--event-group--add-menu"}) {
 			@dropdown.Trigger() {
 				@button.Button(button.Props{ID: "site--event-group--add"}) {
-					Add Event Group
+					{ i18n.T(ctx, "site.data.event_groups.add") }
 					@icon.ChevronDown(icon.Props{Class: "size-4"})
 				}
 			}
@@ -132,22 +134,22 @@ templ eventGroupAdd() {
 // eventGroupForm adds a group of groupType, or with a group changes it, its events picked from those near its time of
 // the kinds its type can have
 func eventGroupForm(ctx context.Context, group *sitemodels.SiteEventGroup, groupType string) addmodal.Props {
-	p := addmodal.Props{ID: "site--event-group--create", Title: "Add " + groupType, Path: "/data/event-groups", Target: "#eventGroupsTable tbody",
-		Submit: "Add " + groupType}
+	p := addmodal.Props{ID: "site--event-group--create", Title: i18n.T(ctx, "site.data.event_groups.add_type", i18n.Data{"Type": groupType}), Path: "/data/event-groups", Target: "#eventGroupsTable tbody",
+		Submit: i18n.T(ctx, "site.data.event_groups.add_type", i18n.Data{"Type": groupType})}
 	when, reason, notes := time.Now(), "", ""
 	choices := "/data/event-groups/choices"
 	if group != nil {
-		p.ID, p.Path, p.Target, p.Swap, p.Submit = "site--event-group--edit", "/data/event-groups/"+group.ID, "#site--event-group--"+group.ID, "outerHTML", "Save"
+		p.ID, p.Path, p.Target, p.Swap, p.Submit = "site--event-group--edit", "/data/event-groups/"+group.ID, "#site--event-group--"+group.ID, "outerHTML", i18n.T(ctx, "site.data.common.save")
 		when, reason, notes = time.UnixMilli(group.OccurredAt), orEmpty(group.Reason), orEmpty(group.Notes)
 		choices += "?group_id=" + group.ID
-		p.Fields = []addmodal.Field{{Name: "group_type", Label: "Type", Help: "What kind of treatment it is, as Nightscout calls it.", Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes, Value: groupType}}
+		p.Fields = []addmodal.Field{{Name: "group_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.event_groups.type_help"), Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes, Value: groupType}}
 	}
 	p.Extra = eventGroupChoicesLoader(p.ID, choices, group == nil, groupType)
-	whenHelp := "When it happened. Events within an hour of it can be picked."
+	whenHelp := i18n.T(ctx, "site.data.event_groups.when_help")
 	if len(sitemodels.EventGroupTypeKinds[nightscoutmodels.TreatmentEventType(groupType)]) == 0 {
-		whenHelp = "When it happened."
+		whenHelp = i18n.T(ctx, "site.data.event_groups.when_help_no_events")
 	}
-	p.Fields = append(p.Fields, addmodal.Field{Name: "occurred_at", Label: "When", Help: whenHelp, Kind: addmodal.When, Value: when.In(Location(ctx)).Format("2006-01-02T15:04")})
+	p.Fields = append(p.Fields, addmodal.Field{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: whenHelp, Kind: addmodal.When, Value: when.In(Location(ctx)).Format("2006-01-02T15:04")})
 	// A sensor's start, stop or change can say its code and transmitter
 	if slices.Contains(sensorTypes, groupType) {
 		sensorCode, transmitterID := "", ""
@@ -155,13 +157,13 @@ func eventGroupForm(ctx context.Context, group *sitemodels.SiteEventGroup, group
 			sensorCode, transmitterID = orEmpty(group.SensorCode), orEmpty(group.TransmitterID)
 		}
 		p.Fields = append(p.Fields, []addmodal.Field{
-			{Name: "sensor_code", Label: "Sensor code", Help: "The new sensor's calibration code.", Kind: addmodal.Text, Max: "64", Value: sensorCode},
-			{Name: "transmitter_id", Label: "Transmitter ID", Help: "The sensor's transmitter.", Kind: addmodal.Text, Max: "64", Value: transmitterID},
+			{Name: "sensor_code", Label: i18n.T(ctx, "site.data.event_groups.sensor_code"), Help: i18n.T(ctx, "site.data.event_groups.sensor_code_help"), Kind: addmodal.Text, Max: "64", Value: sensorCode},
+			{Name: "transmitter_id", Label: i18n.T(ctx, "site.data.event_groups.transmitter_id"), Help: i18n.T(ctx, "site.data.event_groups.transmitter_id_help"), Kind: addmodal.Text, Max: "64", Value: transmitterID},
 		}...)
 	}
 	p.Fields = append(p.Fields, []addmodal.Field{
-		{Name: "reason", Label: "Reason", Help: "Why, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64", Value: reason},
-		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Value: notes},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.event_groups.reason_help"), Kind: addmodal.Text, Max: "64", Value: reason},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Value: notes},
 	}...)
 	return p
 }
@@ -179,18 +181,19 @@ templ eventGroupChoicesLoader(formID string, path string, creating bool, groupTy
 		hx-include={ "#" + formID + "--occurred-at, #" + formID + "--group-type" }
 		hx-swap="innerHTML"
 	>
-		<p class="text-sm text-gray-500">Finding events near this time…</p>
+		<p class="text-sm text-gray-500">{ i18n.T(ctx, "site.data.event_groups.finding_events") }</p>
 	</div>
 }
 
 // sensorTypes are the changes of a sensor, which can have its code and transmitter
 var sensorTypes = []string{nightscoutmodels.SensorStart.String(), nightscoutmodels.SensorStop.String(), nightscoutmodels.SensorChange.String()}
 
-// eventKinds are the kinds of event a group can have one of, by its field for it
+// eventKinds are the kinds of event a group can have one of, by its field for it, with the id of its label
 var eventKinds = []struct{ field, label string }{
-	{"glucose_reading_id", "Glucose"}, {"insulin_dose_id", "Insulin"}, {"food_intake_id", "Food"},
-	{"temp_basal_id", "Temp basal"}, {"temp_target_id", "Temp target"}, {"profile_switch_id", "Profile switch"},
-	{"activity_id", "Activity"}, {"notification_event_id", "Notification"},
+	{"glucose_reading_id", "site.data.event_groups.glucose_kind"}, {"insulin_dose_id", "site.data.event_groups.insulin_kind"},
+	{"food_intake_id", "site.data.event_groups.food_kind"}, {"temp_basal_id", "site.data.event_groups.temp_basal_kind"},
+	{"temp_target_id", "site.data.event_groups.temp_target_kind"}, {"profile_switch_id", "site.data.event_groups.profile_switch_kind"},
+	{"activity_id", "site.data.event_groups.activity_kind"}, {"notification_event_id", "site.data.event_groups.notification_kind"},
 }
 
 // eventChoiceLabel is an event's time, in the time format, and what tells it apart, like "12:30:00 40 g carbs, sandwich"
@@ -203,13 +206,13 @@ func eventChoiceLabel(ctx context.Context, choice *sitemodels.SiteEventChoice) s
 		case "insulin_dose_id":
 			parts = append(parts, fmt.Sprintf("%g U", *a))
 		case "food_intake_id":
-			parts = append(parts, fmt.Sprintf("%g g carbs", *a))
+			parts = append(parts, i18n.T(ctx, "site.data.common.carbs", i18n.Data{"Carbs": fmt.Sprintf("%g", *a)}))
 		case "temp_basal_id":
 			parts = append(parts, fmt.Sprintf("%g U/hr", *a))
 		}
 	}
 	if choice.Minutes != nil {
-		parts = append(parts, fmt.Sprintf("for %d min", *choice.Minutes))
+		parts = append(parts, i18n.T(ctx, "site.data.event_groups.for_minutes", i18n.Data{"Minutes": *choice.Minutes}))
 	}
 	if choice.Detail != nil && *choice.Detail != "" {
 		parts = append(parts, *choice.Detail)
@@ -224,10 +227,10 @@ templ EventGroupChoices(editing bool, kinds []string, from int64, to int64, choi
 	if editing {
 		{{ formID = "site--event-group--edit" }}
 	}
-	<p class="mb-2 text-sm font-medium text-gray-700">Events</p>
+	<p class="mb-2 text-sm font-medium text-gray-700">{ i18n.T(ctx, "site.data.event_groups.events") }</p>
 	<p id={ formID + "--events-window" } class="mb-3 text-xs text-gray-500">
-		Pick up to one of each kind, from { time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " " + timeLayout(ctx)) } to { time.UnixMilli(to).In(Location(ctx)).Format(timeLayout(ctx)) }.
-		Events already in another group are not shown.
+		{ i18n.T(ctx, "site.data.event_groups.pick", i18n.Data{"From": time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " " + timeLayout(ctx)),
+			"To": time.UnixMilli(to).In(Location(ctx)).Format(timeLayout(ctx))}) }
 	</p>
 	<div class="grid gap-x-4 gap-y-3 sm:grid-cols-2">
 		for _, kind := range eventKinds {
@@ -236,9 +239,9 @@ templ EventGroupChoices(editing bool, kinds []string, from int64, to int64, choi
 			}
 			{{ id := formID + "--" + strings.ReplaceAll(kind.field, "_", "-") }}
 			<div>
-				<label for={ id } class="mb-1 block text-sm font-medium text-gray-700">{ kind.label }</label>
+				<label for={ id } class="mb-1 block text-sm font-medium text-gray-700">{ i18n.T(ctx, kind.label) }</label>
 				<select id={ id } name={ kind.field } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
-					<option value="">None</option>
+					<option value="">{ i18n.T(ctx, "site.data.event_groups.no_event") }</option>
 					for _, choice := range choices {
 						if choice.Kind == kind.field {
 							<option value={ choice.ID } selected?={ choice.Picked }>{ eventChoiceLabel(ctx, choice) }</option>
@@ -256,7 +259,7 @@ templ EventGroupNoChoices(editing bool) {
 	if editing {
 		{{ formID = "site--event-group--edit" }}
 	}
-	<p id={ formID + "--no-events" } class="text-sm text-gray-500">This type has no events to pick, just its time and notes.</p>
+	<p id={ formID + "--no-events" } class="text-sm text-gray-500">{ i18n.T(ctx, "site.data.event_groups.no_events") }</p>
 }
 
 // EventGroupNew is the modal to add a group of groupType in, putting the group's row at the top of the table
@@ -272,7 +275,7 @@ templ EventGroupCreated(eventGroup *sitemodels.SiteEventGroup) {
 templ EventGroupUpdated(eventGroup *sitemodels.SiteEventGroup) {
 	@eventGroupRow(eventGroup)
 	@modal.CloseOOB()
-	@successtoast.OOB("Event Group Updated")
+	@successtoast.OOB(i18n.T(ctx, "site.data.event_groups.updated"))
 }
 
 // EventGroupModal is the group's details, and a form to change its type, time and events
@@ -280,23 +283,23 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 	{{ edit := eventGroupForm(ctx, eventGroup, eventGroup.GroupType) }}
 	@modal.Modal(modal.Props{ID: "site--event-group--details", Title: eventGroup.GroupType, Subtitle: formatReadingDate(ctx, eventGroup.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		<ul id="site--event-group--events" class="mt-4 list-inside list-disc text-sm">
-			for _, event := range eventGroupEvents(eventGroup) {
+			for _, event := range eventGroupEvents(ctx, eventGroup) {
 				<li>{ event }</li>
 			}
 		</ul>
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Minutes", orDash(eventGroup.DurationMinutes))
-			@readingDetail("Notes", orDash(eventGroup.Notes))
-			@readingDetail("Reason", orDash(eventGroup.Reason))
-			@readingDetail("Pump ID", orDash(eventGroup.PumpID))
-			@readingDetail("Pump Serial", orDash(eventGroup.PumpSerial))
-			@readingDetail("Pump Type", orDash(eventGroup.PumpType))
+			@readingDetail(i18n.T(ctx, "site.data.common.minutes"), orDash(eventGroup.DurationMinutes))
+			@readingDetail(i18n.T(ctx, "site.data.common.notes"), orDash(eventGroup.Notes))
+			@readingDetail(i18n.T(ctx, "site.data.common.reason"), orDash(eventGroup.Reason))
+			@readingDetail(i18n.T(ctx, "site.data.event_groups.pump_id"), orDash(eventGroup.PumpID))
+			@readingDetail(i18n.T(ctx, "site.data.event_groups.pump_serial"), orDash(eventGroup.PumpSerial))
+			@readingDetail(i18n.T(ctx, "site.data.event_groups.pump_type"), orDash(eventGroup.PumpType))
 			@RecordDetails(Record{ID: eventGroup.ID, UtcOffset: eventGroup.UtcOffsetMinutes, App: eventGroup.CreatedByAppName, Device: eventGroup.CreatedByDeviceName, CreatedBy: eventGroup.CreatedByIdentityName, Created: eventGroup.CreatedAt, Updated: eventGroup.UpdatedAt, UpdatedBy: eventGroup.UpdatedByIdentityName})
 		</dl>
 	}
 }
 
 templ EventGroupDeleted() {
-	@successtoast.Toast("Event Group Deleted")
+	@successtoast.Toast(i18n.T(ctx, "site.data.event_groups.deleted"))
 }

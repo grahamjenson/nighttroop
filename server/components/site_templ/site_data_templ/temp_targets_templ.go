@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // TempTargetsTable shows one page of temp targets, newest first, with buttons to the pages either side
@@ -61,19 +62,19 @@ func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limi
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "temp_targets_table",
-			Title:       "Temp Targets",
-			Description: "Newest first. Click a temp target to see all its details.",
-			Action:      addmodal.Open("site--temp-target--add", "/data/temp-targets/new", "Add Temp Target"),
-			Above:       searchTotals("site--temp-target", "temp target", "temp targets"),
+			Title:       i18n.T(ctx, "site.data.temp_targets.title"),
+			Description: i18n.T(ctx, "site.data.temp_targets.about"),
+			Action:      addmodal.Open("site--temp-target--add", "/data/temp-targets/new", i18n.T(ctx, "site.data.temp_targets.add")),
+			Above:       searchTotals("site--temp-target", "site.data.temp_targets.noun"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "tempTargetsTable",
 				EmptyID: "site--temp-target--empty",
-				Empty:   "No temp targets here.",
+				Empty:   i18n.T(ctx, "site.data.temp_targets.empty"),
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "Low (" + units + ")", Numeric: true},
-					{Label: "High (" + units + ")", Numeric: true}, {Label: "Duration (min)", Numeric: true},
-					{Label: "Reason"}, {Label: "Device"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.temp_targets.low", i18n.Data{"Units": units}), Numeric: true},
+					{Label: i18n.T(ctx, "site.data.temp_targets.high", i18n.Data{"Units": units}), Numeric: true}, {Label: i18n.T(ctx, "site.data.temp_targets.duration_min"), Numeric: true},
+					{Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
 			Pager: &pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit},
@@ -103,8 +104,8 @@ func TempTargetNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--temp-target--create", Title: "Add Temp Target", Path: "/data/temp-targets", Target: "#tempTargetsTable tbody",
-			Submit: "Add Temp Target", Fields: tempTargetFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--temp-target--create", Title: i18n.T(ctx, "site.data.temp_targets.add"), Path: "/data/temp-targets", Target: "#tempTargetsTable tbody",
+			Submit: i18n.T(ctx, "site.data.temp_targets.add"), Fields: tempTargetFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -117,13 +118,13 @@ func tempTargetFields(ctx context.Context) []addmodal.Field {
 	attributes, units := glucoseInputAttributes(ctx), string(*glucoseUnits(ctx))
 	low, high := fmt.Sprint(attributes["min"]), fmt.Sprint(attributes["max"])
 	return []addmodal.Field{
-		{Name: "low_target", Label: "Low (" + units + ")", Help: "The bottom of the range aimed for.", Required: true, Min: low, Max: high, Step: "any"},
-		{Name: "high_target", Label: "High (" + units + ")", Help: "The top of the range aimed for, at least the low.", Required: true, Min: low, Max: high, Step: "any"},
-		{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it is aimed for, at most a week.", Required: true, Min: "1", Max: "10080", Step: "1"},
-		{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-		{Name: "insulin_needs_scale_factor", Label: "Insulin needs", Help: "What insulin needs are scaled by, e.g. 0.8 for 80%.", Min: "0", Max: "10", Step: "any"},
-		{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. activity or eating soon.", Kind: addmodal.Text, Max: "64", Options: []string{"Activity", "Eating Soon", "Hypo"}},
-		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "low_target", Label: i18n.T(ctx, "site.data.temp_targets.low", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.temp_targets.low_help"), Required: true, Min: low, Max: high, Step: "any"},
+		{Name: "high_target", Label: i18n.T(ctx, "site.data.temp_targets.high", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.temp_targets.high_help"), Required: true, Min: low, Max: high, Step: "any"},
+		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_targets.duration_help"), Required: true, Min: "1", Max: "10080", Step: "1"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.temp_targets.when_help"), Kind: addmodal.When},
+		{Name: "insulin_needs_scale_factor", Label: i18n.T(ctx, "site.data.temp_targets.insulin_needs"), Help: i18n.T(ctx, "site.data.temp_targets.insulin_needs_help"), Min: "0", Max: "10", Step: "any"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_targets.reason_help"), Kind: addmodal.Text, Max: "64", Options: []string{"Activity", "Eating Soon", "Hypo"}},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
 	}
 }
 
@@ -172,7 +173,7 @@ func tempTargetRow(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, tempTarget.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 69, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 70, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -199,7 +200,7 @@ func tempTargetRow(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(formatGlucose(tempTarget.LowTarget, tempTarget.Units))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 72, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 73, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -226,7 +227,7 @@ func tempTargetRow(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(formatGlucose(tempTarget.HighTarget, tempTarget.Units))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 75, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 76, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -253,7 +254,7 @@ func tempTargetRow(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(tempTarget.DurationMinutes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 78, Col: 43}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 79, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -280,7 +281,7 @@ func tempTargetRow(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempTarget.Reason))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 81, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 82, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -307,7 +308,7 @@ func tempTargetRow(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempTarget.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 84, Col: 43}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_targets.templ`, Line: 85, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -321,7 +322,7 @@ func tempTargetRow(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("site--temp-target--"+tempTarget.ID, "/data/temp-targets/"+tempTarget.ID, "Delete this temp target?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("site--temp-target--"+tempTarget.ID, "/data/temp-targets/"+tempTarget.ID, i18n.T(ctx, "site.data.temp_targets.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -346,7 +347,7 @@ func TempTargetModal(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: "Save",
+		edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
 			Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "high_target": formatGlucose(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor")}
 		templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -368,7 +369,7 @@ func TempTargetModal(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = addmodal.Detail(edit, "insulin_needs_scale_factor", "Insulin needs", orDash(tempTarget.InsulinNeedsScaleFactor)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "insulin_needs_scale_factor", i18n.T(ctx, "site.data.temp_targets.insulin_needs"), orDash(tempTarget.InsulinNeedsScaleFactor)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -382,7 +383,7 @@ func TempTargetModal(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--temp-target--details", Title: i18n.T(ctx, "site.data.temp_targets.details_title", i18n.Data{"Low": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "High": formatGlucose(tempTarget.HighTarget, tempTarget.Units), "Units": orDash(tempTarget.Units), "Minutes": tempTarget.DurationMinutes}), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -441,7 +442,7 @@ func TempTargetUpdated(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Temp Target Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.data.temp_targets.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -466,7 +467,7 @@ func TempTargetDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Temp Target Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.data.temp_targets.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
