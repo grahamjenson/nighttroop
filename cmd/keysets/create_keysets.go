@@ -39,14 +39,16 @@ func main() {
 		log.Fatal(fmt.Errorf("failed to create MAC keyset: %w", err))
 	}
 
-	fmt.Printf("%s,%s,%s,%s", aesKS, streamKS, jwtKS, macKS)
+	if _, err := fmt.Printf("%s,%s,%s,%s", aesKS, streamKS, jwtKS, macKS); err != nil {
+		log.Fatal(fmt.Errorf("failed to write keysets: %w", err))
+	}
 }
 
 func createBase64StreamingAEADKeyset() (string, error) {
 	// 1. Create the handle
 	nkh, err := keyset.NewHandle(streamingaead.AES256GCMHKDF4KBKeyTemplate())
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	return base64AKeySet(nkh)
 }
@@ -55,7 +57,7 @@ func createBase64AESGCMKeyset() (string, error) {
 	// 1. Create the handle
 	nkh, err := keyset.NewHandle(aead.AES256GCMKeyTemplate())
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	return base64AKeySet(nkh)
@@ -65,7 +67,7 @@ func createBase64JWTKeyset() (string, error) {
 	// 1. Create the handle
 	nkh, err := keyset.NewHandle(jwt.HS256Template())
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	return base64AKeySet(nkh)
@@ -75,7 +77,7 @@ func createBase64MACKeyset() (string, error) {
 	// 1. Create the handle
 	nkh, err := keyset.NewHandle(mac.HMACSHA256Tag256KeyTemplate())
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	return base64AKeySet(nkh)
@@ -85,7 +87,7 @@ func base64AKeySet(handle *keyset.Handle) (string, error) {
 	binBuf := new(bytes.Buffer)
 	binWr := keyset.NewBinaryWriter(binBuf)
 	if err := insecurecleartextkeyset.Write(handle, binWr); err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	keySetString := base64.RawStdEncoding.EncodeToString(binBuf.Bytes())
 	return keySetString, nil
