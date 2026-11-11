@@ -8,7 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"fmt"
+	"context"
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ProfileSwitchesTable shows one page of profile switches, newest first, with buttons to the pages either side
@@ -60,18 +61,18 @@ func ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip 
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "profile_switches_table",
-			Title:       "Profile Switches",
-			Description: "Newest first. Click a profile switch to see all its details.",
-			Action:      addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", "Add Profile Switch"),
-			Above:       searchTotals("site--profile-switch", "profile switch", "profile switches"),
+			Title:       i18n.T(ctx, "site.data.profile_switches.title"),
+			Description: i18n.T(ctx, "site.data.profile_switches.about"),
+			Action:      addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", i18n.T(ctx, "site.data.profile_switches.add")),
+			Above:       searchTotals("site--profile-switch", "site.data.profile_switches.noun"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "profileSwitchesTable",
 				EmptyID: "site--profile-switch--empty",
-				Empty:   "No profile switches here.",
+				Empty:   i18n.T(ctx, "site.data.profile_switches.empty"),
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "Name"}, {Label: "Insulin (%)", Numeric: true},
-					{Label: "Shift", Numeric: true}, {Label: "Minutes", Numeric: true}, {Label: "Device"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.common.name")}, {Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Numeric: true},
+					{Label: i18n.T(ctx, "site.data.profile_switches.shift"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
 			Pager: &pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit},
@@ -101,8 +102,8 @@ func ProfileSwitchNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--profile-switch--create", Title: "Add Profile Switch", Path: "/data/profile-switches", Target: "#profileSwitchesTable tbody",
-			Submit: "Add Profile Switch", Fields: profileSwitchFields}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--profile-switch--create", Title: i18n.T(ctx, "site.data.profile_switches.add"), Path: "/data/profile-switches", Target: "#profileSwitchesTable tbody",
+			Submit: i18n.T(ctx, "site.data.profile_switches.add"), Fields: profileSwitchFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -111,14 +112,16 @@ func ProfileSwitchNew() templ.Component {
 }
 
 // profileSwitchFields are what a profile switch has that a person can type in
-var profileSwitchFields = []addmodal.Field{
-	{Name: "name", Label: "Profile", Help: "The name of the profile switched to.", Required: true, Kind: addmodal.Text, Max: "64"},
-	{Name: "occurred_at", Label: "When", Help: "When it was switched to, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "multiplier", Label: "Insulin (%)", Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
-	{Name: "timeshift", Label: "Shift (minutes)", Help: "Its schedule moved forward by this, e.g. 60 for an hour.", Min: "-1440", Max: "1440", Step: "1", Value: "0"},
-	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasts, 0 or blank until the next switch.", Min: "0", Max: "10080", Step: "1"},
-	{Name: "reason", Label: "Reason", Help: "Why it was switched to, e.g. illness.", Kind: addmodal.Text, Max: "64"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func profileSwitchFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "name", Label: i18n.T(ctx, "site.data.profile_switches.profile"), Help: i18n.T(ctx, "site.data.profile_switches.profile_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.profile_switches.when_help"), Kind: addmodal.When},
+		{Name: "multiplier", Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Help: addmodal.MultiplierHelp, Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
+		{Name: "timeshift", Label: i18n.T(ctx, "site.data.profile_switches.shift_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.shift_help"), Min: "-1440", Max: "1440", Step: "1", Value: "0"},
+		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.duration_help"), Min: "0", Max: "10080", Step: "1"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.profile_switches.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // profileSwitchInputs always send a multiplier, shift and minutes, as an empty number is not one
@@ -167,7 +170,7 @@ func profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compone
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, profileSwitch.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 64, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 67, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -194,7 +197,7 @@ func profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compone
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(profileSwitch.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 67, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 70, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -221,7 +224,7 @@ func profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compone
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(percentOr(profileSwitch.Multiplier, "-"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 70, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 73, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -248,7 +251,7 @@ func profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compone
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(profileSwitch.Timeshift))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 73, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 76, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -275,7 +278,7 @@ func profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compone
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(profileSwitch.DurationMinutes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 76, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 79, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -302,7 +305,7 @@ func profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compone
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(profileSwitch.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 79, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/profile_switches.templ`, Line: 82, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -316,7 +319,7 @@ func profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compone
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("site--profile-switch--"+profileSwitch.ID, "/data/profile-switches/"+profileSwitch.ID, "Delete this profile switch?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("site--profile-switch--"+profileSwitch.ID, "/data/profile-switches/"+profileSwitch.ID, i18n.T(ctx, "site.data.profile_switches.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -343,8 +346,8 @@ func ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compo
 		ctx = templ.ClearChildren(ctx)
 		siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx)
 		unitsLabel := orEmpty(units.Stringp())
-		edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: "Save",
-			Fields: addmodal.Edit(profileSwitchFields, profileSwitch, nil)}
+		edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+			Fields: addmodal.Edit(profileSwitchFields(ctx), profileSwitch, nil)}
 		templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -365,23 +368,23 @@ func ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--basal-rates", "Basal (U/h)", sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--basal-rates", i18n.T(ctx, "site.data.profile_switches.basal_schedule"), sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--carb-ratios", "Carb Ratio (g/U)", sitemodels.ScheduleFromJSON(profileSwitch.CarbRatiosJson), ScheduleValue).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--carb-ratios", i18n.T(ctx, "site.data.profile_switches.carb_ratio_schedule"), sitemodels.ScheduleFromJSON(profileSwitch.CarbRatiosJson), ScheduleValue).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--sensitivities", "Sensitivity ("+unitsLabel+"/U)", sitemodels.SensitivityScheduleFromJSON(profileSwitch.InsulinSensitivitiesJson, profileSwitch.Units, siteContext), GlucoseValue(units)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--sensitivities", i18n.T(ctx, "site.data.profile_switches.sensitivity_schedule", i18n.Data{"Units": unitsLabel}), sitemodels.SensitivityScheduleFromJSON(profileSwitch.InsulinSensitivitiesJson, profileSwitch.Units, siteContext), GlucoseValue(units)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--targets-low", "Low Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsLowJson, siteContext), GlucoseValue(units)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--targets-low", i18n.T(ctx, "site.data.profile_switches.low_target_schedule", i18n.Data{"Units": unitsLabel}), sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsLowJson, siteContext), GlucoseValue(units)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--targets-high", "High Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsHighJson, siteContext), GlucoseValue(units)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ProfileSchedule("site--profile-switch--details--targets-high", i18n.T(ctx, "site.data.profile_switches.high_target_schedule", i18n.Data{"Units": unitsLabel}), sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsHighJson, siteContext), GlucoseValue(units)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -389,23 +392,23 @@ func ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = addmodal.Detail(edit, "dia", "DIA (hours)", orDash(profileSwitch.Dia)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "dia", i18n.T(ctx, "site.data.profile_switches.dia"), orDash(profileSwitch.Dia)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = addmodal.Detail(edit, "units", "Profile Units", orDash(profileSwitch.Units)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "units", i18n.T(ctx, "site.data.profile_switches.profile_units"), orDash(profileSwitch.Units)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = addmodal.Detail(edit, "timezone", "Timezone", orDash(profileSwitch.Timezone)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "timezone", i18n.T(ctx, "site.data.profile_switches.timezone"), orDash(profileSwitch.Timezone)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = addmodal.Detail(edit, "carbs_hr", "Carbs per Hour", orDash(profileSwitch.CarbsHr)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "carbs_hr", i18n.T(ctx, "site.data.profile_switches.carbs_per_hour"), orDash(profileSwitch.CarbsHr)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = addmodal.Detail(edit, "delay", "Delay", orDash(profileSwitch.Delay)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addmodal.Detail(edit, "delay", i18n.T(ctx, "site.data.profile_switches.delay"), orDash(profileSwitch.Delay)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -419,7 +422,7 @@ func ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compo
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "-")), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: i18n.T(ctx, "site.data.profile_switches.details_title", i18n.Data{"Name": profileSwitch.Name, "Percent": percentOr(profileSwitch.Multiplier, "-")}), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -478,7 +481,7 @@ func ProfileSwitchUpdated(profileSwitch *sitemodels.SiteProfileSwitch) templ.Com
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Profile Switch Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.data.profile_switches.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -503,7 +506,7 @@ func ProfileSwitchDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Profile Switch Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.data.profile_switches.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

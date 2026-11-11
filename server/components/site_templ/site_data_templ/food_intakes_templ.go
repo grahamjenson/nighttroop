@@ -8,7 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"fmt"
+	"context"
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // FoodIntakesTable shows one page of food intakes, newest first, with buttons to the pages either side
@@ -59,18 +60,18 @@ func FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, limi
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "food_intakes_table",
-			Title:       "Food Intakes",
-			Description: "Newest first. Click a food intake to see all its details.",
-			Action:      addmodal.Open("site--food--add", "/data/food/new", "Add Food Intake"),
-			Above:       searchTotals("site--food", "food intake", "food intakes"),
+			Title:       i18n.T(ctx, "site.data.food_intakes.title"),
+			Description: i18n.T(ctx, "site.data.food_intakes.about"),
+			Action:      addmodal.Open("site--food--add", "/data/food/new", i18n.T(ctx, "site.data.food_intakes.add")),
+			Above:       searchTotals("site--food", "site.data.food_intakes.noun"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "foodIntakesTable",
 				EmptyID: "site--food--empty",
-				Empty:   "No food intakes here.",
+				Empty:   i18n.T(ctx, "site.data.food_intakes.empty"),
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "Carbs (g)", Numeric: true}, {Label: "Name"}, {Label: "Notes"},
-					{Label: "Device"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.food_intakes.carbs"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.name")}, {Label: i18n.T(ctx, "site.data.common.notes")},
+					{Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
 			Pager: &pager.Props{ID: "site--food", Path: "/data/food", Count: len(foodIntakes), Skip: skip, Limit: limit},
@@ -100,8 +101,8 @@ func FoodIntakeNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: "Add Food Intake", Path: "/data/food", Target: "#foodIntakesTable tbody",
-			Submit: "Add Food Intake", Fields: foodIntakeFields}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: i18n.T(ctx, "site.data.food_intakes.add"), Path: "/data/food", Target: "#foodIntakesTable tbody",
+			Submit: i18n.T(ctx, "site.data.food_intakes.add"), Fields: foodIntakeFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -110,22 +111,24 @@ func FoodIntakeNew() templ.Component {
 }
 
 // foodIntakeFields are what a food intake has that a person can type in
-var foodIntakeFields = []addmodal.Field{
-	{Name: "carbs", Label: "Carbs (g)", Help: "Grams of carbohydrate eaten. Negative takes back food entered by mistake.", Required: true, Min: "-1000", Max: "1000", Step: "any"},
-	{Name: "occurred_at", Label: "When", Help: "When it was eaten, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "name", Label: "Name", Help: "What it was, e.g. a sandwich.", Kind: addmodal.Text, Max: "64"},
-	{Name: "absorption_time_minutes", Label: "Absorption time (minutes)", Help: "How long its carbs take to be absorbed.", Min: "0", Max: "1440", Step: "1"},
-	{Name: "fat", Label: "Fat (g)", Help: "Grams of fat, which slows absorption.", Min: "-1000", Max: "1000", Step: "any"},
-	{Name: "protein", Label: "Protein (g)", Help: "Grams of protein.", Min: "-1000", Max: "1000", Step: "any"},
-	{Name: "fibre", Label: "Fibre (g)", Help: "Grams of fibre.", Min: "-1000", Max: "1000", Step: "any"},
-	{Name: "energy", Label: "Energy", Help: "Its energy, in kcal or kJ.", Min: "0", Max: "20000", Step: "any"},
-	{Name: "portions", Label: "Portions", Help: "How many portions of it were eaten.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "pre_bolus", Label: "Pre-bolus (minutes)", Help: "Minutes before eating that its insulin was given.", Min: "-1440", Max: "1440", Step: "1"},
-	{Name: "food_type", Label: "Type", Help: "The kind of food, e.g. a meal or a snack.", Kind: addmodal.Text, Max: "32", Options: []string{"meal", "snack", "hypo treatment"}},
-	{Name: "category", Label: "Category", Help: "A group it belongs to, e.g. fruit.", Kind: addmodal.Text, Max: "64"},
-	{Name: "subcategory", Label: "Subcategory", Help: "A group within its category, e.g. apples.", Kind: addmodal.Text, Max: "64"},
-	{Name: "reason", Label: "Reason", Help: "Why it was eaten, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func foodIntakeFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "carbs", Label: i18n.T(ctx, "site.data.food_intakes.carbs"), Help: i18n.T(ctx, "site.data.food_intakes.carbs_help"), Required: true, Min: "-1000", Max: "1000", Step: "any"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.food_intakes.when_help"), Kind: addmodal.When},
+		{Name: "name", Label: i18n.T(ctx, "site.data.common.name"), Help: i18n.T(ctx, "site.data.food_intakes.name_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "absorption_time_minutes", Label: i18n.T(ctx, "site.data.food_intakes.absorption"), Help: i18n.T(ctx, "site.data.food_intakes.absorption_help"), Min: "0", Max: "1440", Step: "1"},
+		{Name: "fat", Label: i18n.T(ctx, "site.data.food_intakes.fat"), Help: i18n.T(ctx, "site.data.food_intakes.fat_help"), Min: "-1000", Max: "1000", Step: "any"},
+		{Name: "protein", Label: i18n.T(ctx, "site.data.food_intakes.protein"), Help: i18n.T(ctx, "site.data.food_intakes.protein_help"), Min: "-1000", Max: "1000", Step: "any"},
+		{Name: "fibre", Label: i18n.T(ctx, "site.data.food_intakes.fibre"), Help: i18n.T(ctx, "site.data.food_intakes.fibre_help"), Min: "-1000", Max: "1000", Step: "any"},
+		{Name: "energy", Label: i18n.T(ctx, "site.data.food_intakes.energy"), Help: i18n.T(ctx, "site.data.food_intakes.energy_help"), Min: "0", Max: "20000", Step: "any"},
+		{Name: "portions", Label: i18n.T(ctx, "site.data.food_intakes.portions"), Help: i18n.T(ctx, "site.data.food_intakes.portions_help"), Min: "0", Max: "1000", Step: "any"},
+		{Name: "pre_bolus", Label: i18n.T(ctx, "site.data.food_intakes.pre_bolus"), Help: i18n.T(ctx, "site.data.food_intakes.pre_bolus_help"), Min: "-1440", Max: "1440", Step: "1"},
+		{Name: "food_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.food_intakes.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"meal", "snack", "hypo treatment"}},
+		{Name: "category", Label: i18n.T(ctx, "site.data.food_intakes.category"), Help: i18n.T(ctx, "site.data.food_intakes.category_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "subcategory", Label: i18n.T(ctx, "site.data.food_intakes.subcategory"), Help: i18n.T(ctx, "site.data.food_intakes.subcategory_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.food_intakes.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // foodIntakeRow opens the food intake's details when clicked.
@@ -173,7 +176,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, foodIntake.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 70, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 73, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -200,7 +203,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.Carbs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 73, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 76, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -227,7 +230,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.Name))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 76, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 79, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -254,7 +257,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.Notes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 79, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 82, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -281,7 +284,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 82, Col: 43}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 85, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -295,7 +298,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("site--food--"+foodIntake.ID, "/data/food/"+foodIntake.ID, "Delete this food intake?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("site--food--"+foodIntake.ID, "/data/food/"+foodIntake.ID, i18n.T(ctx, "site.data.food_intakes.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -320,8 +323,8 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Props{ID: "site--food--edit", Path: "/data/food/" + foodIntake.ID, Target: "#site--food--" + foodIntake.ID, Swap: "outerHTML", Submit: "Save",
-			Fields: addmodal.Edit(foodIntakeFields, foodIntake, nil)}
+		edit := addmodal.Props{ID: "site--food--edit", Path: "/data/food/" + foodIntake.ID, Target: "#site--food--" + foodIntake.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+			Fields: addmodal.Edit(foodIntakeFields(ctx), foodIntake, nil)}
 		templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -352,7 +355,7 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--food--details", Title: i18n.T(ctx, "site.data.common.carbs", i18n.Data{"Carbs": orDash(foodIntake.Carbs)}), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -411,7 +414,7 @@ func FoodIntakeUpdated(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Food Intake Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.data.food_intakes.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -436,7 +439,7 @@ func FoodIntakeDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Food Intake Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.data.food_intakes.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

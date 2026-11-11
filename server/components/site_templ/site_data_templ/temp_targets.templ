@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // TempTargetsTable shows one page of temp targets, newest first, with buttons to the pages either side
@@ -18,19 +19,19 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 	{{ units := string(*glucoseUnits(ctx)) }}
 	@listpage.Page(listpage.Props{
 		ID:          "temp_targets_table",
-		Title:       "Temp Targets",
-		Description: "Newest first. Click a temp target to see all its details.",
-		Action:      addmodal.Open("site--temp-target--add", "/data/temp-targets/new", "Add Temp Target"),
-		Above:       searchTotals("site--temp-target", "temp target", "temp targets"),
+		Title:       i18n.T(ctx, "site.data.temp_targets.title"),
+		Description: i18n.T(ctx, "site.data.temp_targets.about"),
+		Action:      addmodal.Open("site--temp-target--add", "/data/temp-targets/new", i18n.T(ctx, "site.data.temp_targets.add")),
+		Above:       searchTotals("site--temp-target", "site.data.temp_targets.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:      "tempTargetsTable",
 			EmptyID: "site--temp-target--empty",
-			Empty:   "No temp targets here.",
+			Empty:   i18n.T(ctx, "site.data.temp_targets.empty"),
 			Columns: []table.Column{
-				{Label: "Time"}, {Label: "Low (" + units + ")", Numeric: true},
-				{Label: "High (" + units + ")", Numeric: true}, {Label: "Duration (min)", Numeric: true},
-				{Label: "Reason"}, {Label: "Device"}, {Actions: true},
+				{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.temp_targets.low", i18n.Data{"Units": units}), Numeric: true},
+				{Label: i18n.T(ctx, "site.data.temp_targets.high", i18n.Data{"Units": units}), Numeric: true}, {Label: i18n.T(ctx, "site.data.temp_targets.duration_min"), Numeric: true},
+				{Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 			},
 		},
 		Pager: &pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit},
@@ -43,8 +44,8 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 
 // TempTargetNew adds a temp target with all its fields, putting its row at the top of the table
 templ TempTargetNew() {
-	@addmodal.Modal(addmodal.Props{ID: "site--temp-target--create", Title: "Add Temp Target", Path: "/data/temp-targets", Target: "#tempTargetsTable tbody",
-		Submit: "Add Temp Target", Fields: tempTargetFields(ctx)})
+	@addmodal.Modal(addmodal.Props{ID: "site--temp-target--create", Title: i18n.T(ctx, "site.data.temp_targets.add"), Path: "/data/temp-targets", Target: "#tempTargetsTable tbody",
+		Submit: i18n.T(ctx, "site.data.temp_targets.add"), Fields: tempTargetFields(ctx)})
 }
 
 // tempTargetFields are what a temp target has that a person can type in
@@ -52,19 +53,19 @@ func tempTargetFields(ctx context.Context) []addmodal.Field {
 	attributes, units := glucoseInputAttributes(ctx), string(*glucoseUnits(ctx))
 	low, high := fmt.Sprint(attributes["min"]), fmt.Sprint(attributes["max"])
 	return []addmodal.Field{
-		{Name: "low_target", Label: "Low (" + units + ")", Help: "The bottom of the range aimed for.", Required: true, Min: low, Max: high, Step: "any"},
-		{Name: "high_target", Label: "High (" + units + ")", Help: "The top of the range aimed for, at least the low.", Required: true, Min: low, Max: high, Step: "any"},
-		{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it is aimed for, at most a week.", Required: true, Min: "1", Max: "10080", Step: "1"},
-		{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-		{Name: "insulin_needs_scale_factor", Label: "Insulin needs", Help: "What insulin needs are scaled by, e.g. 0.8 for 80%.", Min: "0", Max: "10", Step: "any"},
-		{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. activity or eating soon.", Kind: addmodal.Text, Max: "64", Options: []string{"Activity", "Eating Soon", "Hypo"}},
-		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "low_target", Label: i18n.T(ctx, "site.data.temp_targets.low", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.temp_targets.low_help"), Required: true, Min: low, Max: high, Step: "any"},
+		{Name: "high_target", Label: i18n.T(ctx, "site.data.temp_targets.high", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.temp_targets.high_help"), Required: true, Min: low, Max: high, Step: "any"},
+		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_targets.duration_help"), Required: true, Min: "1", Max: "10080", Step: "1"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.temp_targets.when_help"), Kind: addmodal.When},
+		{Name: "insulin_needs_scale_factor", Label: i18n.T(ctx, "site.data.temp_targets.insulin_needs"), Help: i18n.T(ctx, "site.data.temp_targets.insulin_needs_help"), Min: "0", Max: "10", Step: "any"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_targets.reason_help"), Kind: addmodal.Text, Max: "64", Options: []string{"Activity", "Eating Soon", "Hypo"}},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
 	}
 }
 
 // tempTargetRow opens the temp target's details when clicked.
 templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
-	@table.DataRow("site--temp-target--"+tempTarget.ID, "/data/temp-targets/"+tempTarget.ID, "Delete this temp target?") {
+	@table.DataRow("site--temp-target--"+tempTarget.ID, "/data/temp-targets/"+tempTarget.ID, i18n.T(ctx, "site.data.temp_targets.delete_confirm")) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, tempTarget.OccurredAt) }
 		}
@@ -87,12 +88,12 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 }
 
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
-	{{ edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: "Save",
+	{{ edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
 		Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "high_target": formatGlucose(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor")} }}
-	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: i18n.T(ctx, "site.data.temp_targets.details_title", i18n.Data{"Low": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "High": formatGlucose(tempTarget.HighTarget, tempTarget.Units), "Units": orDash(tempTarget.Units), "Minutes": tempTarget.DurationMinutes}), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@addmodal.Detail(edit, "insulin_needs_scale_factor", "Insulin needs", orDash(tempTarget.InsulinNeedsScaleFactor))
+			@addmodal.Detail(edit, "insulin_needs_scale_factor", i18n.T(ctx, "site.data.temp_targets.insulin_needs"), orDash(tempTarget.InsulinNeedsScaleFactor))
 			@RecordDetails(Record{ID: tempTarget.ID, UtcOffset: tempTarget.UtcOffsetMinutes, App: tempTarget.CreatedByAppName, Device: tempTarget.CreatedByDeviceName, CreatedBy: tempTarget.CreatedByIdentityName, Created: tempTarget.CreatedAt, Updated: tempTarget.UpdatedAt, UpdatedBy: tempTarget.UpdatedByIdentityName})
 		</dl>
 	}
@@ -106,9 +107,9 @@ templ TempTargetCreated(tempTarget *sitemodels.SiteTempTarget) {
 templ TempTargetUpdated(tempTarget *sitemodels.SiteTempTarget) {
 	@tempTargetRow(tempTarget)
 	@modal.CloseOOB()
-	@successtoast.OOB("Temp Target Updated")
+	@successtoast.OOB(i18n.T(ctx, "site.data.temp_targets.updated"))
 }
 
 templ TempTargetDeleted() {
-	@successtoast.Toast("Temp Target Deleted")
+	@successtoast.Toast(i18n.T(ctx, "site.data.temp_targets.deleted"))
 }

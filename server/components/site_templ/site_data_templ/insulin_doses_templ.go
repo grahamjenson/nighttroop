@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -17,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // InsulinDosesTable shows one page of insulin doses, newest first, with buttons to the pages either side
@@ -59,17 +61,17 @@ func InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, l
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "insulin_doses_table",
-			Title:       "Insulin Doses",
-			Description: "Newest first. Click an insulin dose to see all its details.",
-			Action:      addmodal.Open("site--insulin--add", "/data/insulin/new", "Add Insulin Dose"),
-			Above:       searchTotals("site--insulin", "insulin dose", "insulin doses"),
+			Title:       i18n.T(ctx, "site.data.insulin_doses.title"),
+			Description: i18n.T(ctx, "site.data.insulin_doses.about"),
+			Action:      addmodal.Open("site--insulin--add", "/data/insulin/new", i18n.T(ctx, "site.data.insulin_doses.add")),
+			Above:       searchTotals("site--insulin", "site.data.insulin_doses.noun"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "insulinDosesTable",
 				EmptyID: "site--insulin--empty",
-				Empty:   "No insulin doses here.",
+				Empty:   i18n.T(ctx, "site.data.insulin_doses.empty"),
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "Units", Numeric: true}, {Label: "Type"}, {Label: "Notes"}, {Label: "Device"},
+					{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.insulin_doses.units"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.type")}, {Label: i18n.T(ctx, "site.data.common.notes")}, {Label: i18n.T(ctx, "site.data.common.device")},
 					{Actions: true},
 				},
 			},
@@ -100,8 +102,8 @@ func InsulinDoseNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--insulin--create", Title: "Add Insulin Dose", Path: "/data/insulin", Target: "#insulinDosesTable tbody",
-			Submit: "Add Insulin Dose", Fields: insulinDoseFields}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--insulin--create", Title: i18n.T(ctx, "site.data.insulin_doses.add"), Path: "/data/insulin", Target: "#insulinDosesTable tbody",
+			Submit: i18n.T(ctx, "site.data.insulin_doses.add"), Fields: insulinDoseFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -110,14 +112,16 @@ func InsulinDoseNew() templ.Component {
 }
 
 // insulinDoseFields are what an insulin dose has that a person can type in
-var insulinDoseFields = []addmodal.Field{
-	{Name: "dose", Label: "Dose (U)", Help: "Units of insulin given. A negative dose takes back one entered by mistake.", Required: true, Min: "-100", Max: "100", Step: "any"},
-	{Name: "occurred_at", Label: "When", Help: "When it was given, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "dose_type", Label: "Type", Help: "How it was given, e.g. normal, or SMB for a loop's small automatic bolus.", Kind: addmodal.Text, Max: "32", Options: []string{"normal", "SMB"}},
-	{Name: "reason", Label: "Reason", Help: "Why it was given, e.g. a correction or a meal.", Kind: addmodal.Text, Max: "64"},
-	{Name: "split_now", Label: "Given at once (%)", Help: "For a combo bolus, the percent of it given straight away, e.g. 70.", Kind: addmodal.Percent, Min: "0", Max: "100"},
-	{Name: "split_ext", Label: "Extended (%)", Help: "For a combo bolus, the percent of it given over time, e.g. 30.", Kind: addmodal.Percent, Min: "0", Max: "100"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func insulinDoseFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "dose", Label: i18n.T(ctx, "site.data.insulin_doses.dose"), Help: i18n.T(ctx, "site.data.insulin_doses.dose_help"), Required: true, Min: "-100", Max: "100", Step: "any"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.insulin_doses.when_help"), Kind: addmodal.When},
+		{Name: "dose_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.insulin_doses.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"normal", "SMB"}},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.insulin_doses.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "split_now", Label: i18n.T(ctx, "site.data.insulin_doses.split_now"), Help: i18n.T(ctx, "site.data.insulin_doses.split_now_help"), Kind: addmodal.Percent, Min: "0", Max: "100"},
+		{Name: "split_ext", Label: i18n.T(ctx, "site.data.insulin_doses.split_ext"), Help: i18n.T(ctx, "site.data.insulin_doses.split_ext_help"), Kind: addmodal.Percent, Min: "0", Max: "100"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // insulinDoseRow opens the insulin dose's details when clicked.
@@ -165,7 +169,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, insulinDose.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 62, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 66, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -192,7 +196,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(insulinDose.Dose))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 65, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 69, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -219,7 +223,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(insulinDose.DoseType))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 68, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 72, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -246,7 +250,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(insulinDose.Notes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 71, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 75, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -273,7 +277,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(insulinDose.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 74, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 78, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -287,7 +291,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("site--insulin--"+insulinDose.ID, "/data/insulin/"+insulinDose.ID, "Delete this insulin dose?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("site--insulin--"+insulinDose.ID, "/data/insulin/"+insulinDose.ID, i18n.T(ctx, "site.data.insulin_doses.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -312,8 +316,8 @@ func InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Props{ID: "site--insulin--edit", Path: "/data/insulin/" + insulinDose.ID, Target: "#site--insulin--" + insulinDose.ID, Swap: "outerHTML", Submit: "Save",
-			Fields: addmodal.Edit(insulinDoseFields, insulinDose, nil)}
+		edit := addmodal.Props{ID: "site--insulin--edit", Path: "/data/insulin/" + insulinDose.ID, Target: "#site--insulin--" + insulinDose.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+			Fields: addmodal.Edit(insulinDoseFields(ctx), insulinDose, nil)}
 		templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -344,7 +348,7 @@ func InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--insulin--details", Title: i18n.T(ctx, "site.data.insulin_doses.details_title", i18n.Data{"Dose": fmt.Sprint(insulinDose.Dose)}), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt), Actions: addmodal.SubmitButton(edit)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -403,7 +407,7 @@ func InsulinDoseUpdated(insulinDose *sitemodels.SiteInsulinDose) templ.Component
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Insulin Dose Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.data.insulin_doses.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -428,7 +432,7 @@ func InsulinDoseDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Insulin Dose Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.data.insulin_doses.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
