@@ -198,3 +198,6 @@ SELECT * FROM sites WHERE
 
 
 
+
+-- name: UpdateSiteTableSizes :exec
+UPDATE sites SET table_sizes_json = sqlc.arg('TableSizesJson') WHERE id = sqlc.arg('ID');

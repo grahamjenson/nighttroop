@@ -28,10 +28,6 @@
     1. Show bad users
     1. Block IP addresses
     1. Restore one site from its backup
-    1. P4: Sign out a control admin whose password or TOTP another resets, as a reset site identity is; its control
-       sign in, which lasts an hour, keeps working until then
-    1. P4: Measure each site's DB tables in the resource check and keep them, as a site's page reads every page of its DB
-       (SQLite's `dbstat`) to split its DB size bar, which a DB of hundreds of MB takes a while to do
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
@@ -87,8 +83,6 @@
        until then
     1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
        identities that can change the site's data are given them back, and push registrations keep them encrypted
-       `controlcollections.AdminOnly` in `server/control_router.go`, as its other admin only routes are, and drop
-       their handlers' own admin checks
 1. Nightscout API:
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor

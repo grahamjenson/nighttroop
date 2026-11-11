@@ -136,6 +136,7 @@ type Site struct {
 	AlarmLowReservoirEnabled         *bool
 	AlarmLowReservoirUnits           *int64
 	NotificationsEnabled             *bool
+	TableSizesJson                   types.TableSizes
 }
 
 type SiteConnector struct {

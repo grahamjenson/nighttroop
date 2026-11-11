@@ -355,7 +355,7 @@ CREATE TABLE sites (
     -- NOTIFICATIONS
     notifications_enabled INTEGER
 
-) STRICT;
+, table_sizes_json TEXT CHECK(length(table_sizes_json) <= 16384 AND json_valid(table_sizes_json))) STRICT;
 
 CREATE TABLE sqlite_sequence(name,seq);
 

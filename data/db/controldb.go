@@ -1,6 +1,7 @@
 package db
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -20,6 +21,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/backup"
@@ -293,6 +295,10 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 
 	db.sites.bySubdomain[subdomain] = siteDB
 	db.Logs.SiteCreatedEvent(ctx, subdomain)
+	// Its tables are measured now, a quick read of so new a DB, so its pages show them before the resource check runs
+	if err := db.RecordSiteTableSizes(ctx, []*SiteDB{siteDB}); err != nil {
+		slog.ErrorContext(ctx, "Cannot measure a new site's tables", "site_id", subdomain, "error", err)
+	}
 
 	return &SiteCreateResult{
 		SiteDB:          siteDB,
@@ -449,7 +455,11 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
 	}
 	sizeKB := site.EstimatedSizeKB()
-	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
+	if err := db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain}); err != nil {
+		return sizeKB, err
+	}
+	// Its tables are measured again now, as truncating changed them all, for the page that shows its new size
+	return sizeKB, db.RecordSiteTableSizes(ctx, []*SiteDB{site})
 }
 
 // TruncateSites truncates every open site, as the job every 10 minutes does, without shrinking their DBs, as SQLite
@@ -586,14 +596,57 @@ func (db *ControlDB) RecordSiteSize(ctx context.Context, subdomain string) error
 	return db.RecordSiteSizes(ctx, []*SiteDB{site})
 }
 
-// SiteTableSizes are the bytes each table of the site's DB takes, its indexes with it, largest first, or none when its
-// DB is not open here, as an archived site's is not
+// RecordSiteTableSizes measures each table of each site's DB from SQLite's dbstat and keeps them in its site, for its
+// pages to show without reading the whole DB. A site is measured again only when its DB's size changed since, as dbstat
+// reads every page of the DB; one in memory, whose size is not known, is measured each time.
+func (db *ControlDB) RecordSiteTableSizes(ctx context.Context, sites []*SiteDB) error {
+	var errs []error
+	for _, site := range sites {
+		sizeKB := site.EstimatedSizeKB()
+		if sizeKB != nil && site.tablesMeasuredKB.Load() == *sizeKB {
+			continue
+		}
+		if err := db.recordSiteTableSizes(ctx, site); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		if sizeKB != nil {
+			site.tablesMeasuredKB.Store(*sizeKB)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func (db *ControlDB) recordSiteTableSizes(ctx context.Context, site *SiteDB) error {
+	sizes, err := site.TableSizes(ctx)
+	if err != nil {
+		return fmt.Errorf("cannot measure site %s tables: %w", site.Subdomain, err)
+	}
+	tables := types.TableSizes{}
+	for _, size := range sizes {
+		tables[size.Name] = types.TableSize{Bytes: size.Bytes, Records: size.Records}
+	}
+	return db.Queries.UpdateSiteTableSizes(ctx, controldb.UpdateSiteTableSizesParams{TableSizesJson: tables, ID: site.Subdomain})
+}
+
+// SiteTableSizes are the bytes each table of the site's DB takes, its indexes with it, and its records, largest first,
+// as last measured, or none before the site's tables have been
 func (db *ControlDB) SiteTableSizes(ctx context.Context, subdomain string) ([]sitedb.TableSize, error) {
-	site := db.sites.get(subdomain)
-	if site == nil {
+	site, err := db.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: subdomain})
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
-	return site.TableSizes(ctx)
+	if err != nil {
+		return nil, err
+	}
+	sizes := []sitedb.TableSize{}
+	for name, size := range site.TableSizesJson {
+		sizes = append(sizes, sitedb.TableSize{Name: name, Bytes: size.Bytes, Records: size.Records})
+	}
+	slices.SortFunc(sizes, func(a, b sitedb.TableSize) int {
+		return cmp.Or(cmp.Compare(b.Bytes, a.Bytes), strings.Compare(a.Name, b.Name))
+	})
+	return sizes, nil
 }
 
 // ErrSiteNotFound is a site there is not, or whose DB is not open, as against one that cannot be looked up now
