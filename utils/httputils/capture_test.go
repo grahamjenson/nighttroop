@@ -3,6 +3,7 @@ package httputils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -45,17 +46,32 @@ func TestCaptureRequests(t *testing.T) {
 		{name: "a client's JSON, with its headers, query, site and identity", method: http.MethodPost, path: "/api/v1/treatments?token=querytoken&count=10",
 			contentType: "application/json", body: `{"eventType":"Bolus","insulin":1.5,"pump":{"password":"bodypassword","api_secret":"bodysecret"}}`,
 			message: "Captured POST /api/v1/treatments", has: []string{`\"insulin\":1.5`, `"count":["10"]`, `"Loop/3.4"`, `"identity_name":"loop_phone"`, `"status":200`, "REDACTED"},
-			hidden: []string{"querytoken", "bodypassword", "bodysecret", "headertoken", "headersecret"}},
+			hidden: []string{"querytoken", "bodypassword", "bodysecret", "headertoken", "headersecret", "referertoken", "headerkey"}},
 		{name: "a form's password", method: http.MethodPost, path: "/api/v1/treatments", contentType: "application/x-www-form-urlencoded",
 			body: "name=admin&password=formpassword", message: "Captured POST /api/v1/treatments", has: []string{"name=admin"}, hidden: []string{"formpassword"}},
 		{name: "a token in the path", method: http.MethodGet, path: "/api/v2/authorization/request/pathtoken", message: "Captured GET /api/v2/authorization/request/REDACTED",
 			hidden: []string{"pathtoken"}},
-		{name: "a body past the most kept is cut", method: http.MethodPost, path: "/api/v1/treatments", contentType: "text/plain", body: big,
-			message: "Captured POST /api/v1/treatments", has: []string{`"truncated":true`, `"text":"` + big[:maxCapturedBody] + `"`}},
-		{name: "a body that is not text is base64", method: http.MethodPost, path: "/api/v1/treatments", contentType: "application/octet-stream", body: "\xff\xfe",
-			message: "Captured POST /api/v1/treatments", has: []string{`"base64":"//4="`}},
-		{name: "a page's HTML is kept as it is", method: http.MethodPost, path: "/api/v1/treatments", contentType: "text/html", body: "<p>a & b</p>",
-			message: "Captured POST /api/v1/treatments", has: []string{`"text":"<p>a & b</p>"`}},
+		{name: "a connector's login, keys and TOTP code", method: http.MethodPost, path: "/api/v1/treatments", contentType: "application/json",
+			body: `{"type":"dexcom","url_or_username":"dexuser","pwd_ns_url":"https://nstoken@ns.example","backup_key":"backupkey1","api_key":"apikey1",` +
+				`"totp":"123456","code":"654321","sensor_code":"sensor1","client_email":"me@example.com","enabled":true}`,
+			message: "Captured POST /api/v1/treatments", has: []string{`\"type\":\"dexcom\"`, `\"enabled\":true`},
+			hidden: []string{"dexuser", "nstoken", "backupkey1", "apikey1", "123456", "654321", "sensor1", "me@example.com"}},
+		{name: "a form's TOTP and backup key", method: http.MethodPost, path: "/api/v1/treatments", contentType: "application/x-www-form-urlencoded",
+			body: "totp=123456&code=654321&backup_key=backupkey1&language=en", message: "Captured POST /api/v1/treatments", has: []string{"language=en"},
+			hidden: []string{"123456", "654321", "backupkey1"}},
+		{name: "JSON sent as text is redacted as JSON", method: http.MethodPost, path: "/api/v1/treatments", contentType: "text/plain",
+			body: `{"carbs":20,"api_secret":"bodysecret"}`, message: "Captured POST /api/v1/treatments", has: []string{`\"carbs\":20`}, hidden: []string{"bodysecret"}},
+		{name: "a body past the most kept keeps only its size", method: http.MethodPost, path: "/api/v1/treatments", contentType: "application/json",
+			body: `{"password":"bigpassword","notes":"` + big + `"}`, message: "Captured POST /api/v1/treatments",
+			has: []string{`"truncated":true`, `"omitted":true`, fmt.Sprintf(`"bytes":%d`, len(big)+37)}, hidden: []string{"bigpassword", big[:100]}},
+		{name: "a body that is not text keeps only its size and type", method: http.MethodPost, path: "/api/v1/treatments", contentType: "application/octet-stream",
+			body: "\xff\xfe", message: "Captured POST /api/v1/treatments", has: []string{`"omitted":true`, `"bytes":2`, `"content_type":"application/octet-stream"`},
+			hidden: []string{"//4="}},
+		{name: "a page showing credentials keeps only its size and type", method: http.MethodPost, path: "/api/v1/treatments", contentType: "text/html",
+			body: "<p>Admin password: pagepassword</p>", message: "Captured POST /api/v1/treatments", has: []string{`"omitted":true`, `"content_type":"text/html"`},
+			hidden: []string{"pagepassword"}},
+		{name: "JSON that does not parse keeps only its size", method: http.MethodPost, path: "/api/v1/treatments", contentType: "application/json",
+			body: `{"url_or_username":"dexuser",`, message: "Captured POST /api/v1/treatments", has: []string{`"omitted":true`}, hidden: []string{"dexuser"}},
 		{name: "a page's style is not captured", method: http.MethodGet, path: "/style.css", contentType: "text/css", body: "body{}"},
 		{name: "a download of the logs DB is captured without its bodies", method: http.MethodGet, path: "http://control.example.com" + ControlLogsDBPath,
 			contentType: "application/vnd.sqlite3", body: "\xff\xfe", message: "Captured GET " + ControlLogsDBPath, has: []string{`"status":200`}, hidden: []string{"//4="}},
@@ -67,6 +83,8 @@ func TestCaptureRequests(t *testing.T) {
 			r.Header.Set("User-Agent", "Loop/3.4")
 			r.Header.Set("Authorization", "Bearer headertoken")
 			r.Header.Set("Api-Secret", "headersecret")
+			r.Header.Set("Referer", "https://site.example/?token=referertoken")
+			r.Header.Set("X-Api-Key", "headerkey")
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, r)
 			require.Equal(t, tt.body, w.Body.String(), "the response is not changed by capturing it")
@@ -88,6 +106,25 @@ func TestCaptureRequests(t *testing.T) {
 			}
 			require.True(t, json.Valid([]byte(*captured[0].Attributes)))
 		})
+	}
+}
+
+// Each key naming a credential or a connector's login is secret, but no other, so what a client sent can still be read
+func TestSecret(t *testing.T) {
+	tests := []struct {
+		key    string
+		secret bool
+	}{
+		{"Authorization", true}, {"Cookie", true}, {"api_secret", true}, {"token", true}, {"read_only_ns_token", true},
+		{"password", true}, {"admin_password", true}, {"jwt", true}, {"url_or_username", true}, {"pwd_ns_url", true},
+		{"url", true}, {"backup_key", true}, {"api_key", true}, {"X-Api-Key", true}, {"private_key", true},
+		{"totp", true}, {"totp_secret", true}, {"code", true}, {"sensor_code", true}, {"client_email", true},
+		{"Referer", true}, {"Hx-Current-Url", true}, {"credentials", true}, {"session", true}, {"pwd", true},
+		{"User-Agent", false}, {"Content-Type", false}, {"eventType", false}, {"insulin", false}, {"enabled", false},
+		{"name", false}, {"region", false}, {"type", false}, {"language", false}, {"count", false}, {"encode", false},
+	}
+	for _, tt := range tests {
+		require.Equal(t, tt.secret, secret(tt.key), tt.key)
 	}
 }
 

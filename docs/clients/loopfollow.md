@@ -26,7 +26,9 @@ requests and check the fields it decodes.
   read-only token from it on a 200 (`provisionReadOnlyToken`, `POST /api/v2/authorization/subjects`). Nighttroop
   has no API secret: it takes the SHA-1 of a device's token (#512), which a token that got a 401 is not, so this is a
   401 and LoopFollow does not offer it; give it a Nighttroop token.
-- A read-only token is enough for everything LoopFollow does.
+- A read-only token is enough for everything LoopFollow does but remote commands. Their device token, in the profile,
+  is only given to an identity that can change the site's data, so LoopFollow sending remote commands needs a
+  Read & Write token (`device_read_write`); a read-only token gets the profile without it.
 - Socket.IO sends the token as the `token` connect param and as `secret` in `authorize`.
 
 ## Glucose units
@@ -181,6 +183,7 @@ device token, bundle and team from the profile.
 | Device status Loop `override` | Works since #516 (it was dropped) |
 | Profile, schedules and Loop's `loopSettings` | Works |
 | Profile Trio remote control settings and override presets | Works since #516 (they were dropped) |
+| Profile `deviceToken`s for a read-only token | Left out, as they push to the phone; remote commands need a Read & Write token |
 | Profile history for the remote diagnostics | Fixed in this PR: `count` gives that many stores, newest first (it was only the latest) |
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |
 | Nightscout tab (`/`) | Fixed: sent on to the site's pages |

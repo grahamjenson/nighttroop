@@ -139,6 +139,9 @@ type ServerConfig struct {
 
 	SiteLoginPerMinuteLimit int
 	SiteLoginPerMinuteBurst int
+	// SiteLoginNamePerMinute is a login name's limit across every IP, to cap guessing spread over many
+	SiteLoginNamePerMinuteLimit int
+	SiteLoginNamePerMinuteBurst int
 
 	SiteUnauthPerMinuteLimit int
 	SiteUnauthPerMinuteBurst int
@@ -218,6 +221,7 @@ type ServerConfig struct {
 	SocketPingTimeoutInSeconds  int
 	SocketMaxPayloadBytes       int
 	SocketMaxSessionsPerSite    int
+	SocketMaxUnauthPerIP        int // of a site's sessions, how many one IP may hold before they are given access
 	SocketMaxBufferedPackets    int
 	SocketMaxBufferedBytes      int
 	SocketMaxPacketsPerSecond   float64
@@ -348,6 +352,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		SiteLoginPerMinuteLimit: configIntSelect(dotenv, "SITE_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
 		SiteLoginPerMinuteBurst: configIntSelect(dotenv, "SITE_LOGIN_PER_MINUTE_BURST", 10),
+		// A name's logins from every IP, far above one IP's, so one IP cannot lock others out of it
+		SiteLoginNamePerMinuteLimit: configIntSelect(dotenv, "SITE_LOGIN_NAME_PER_MINUTE_LIMIT", 30),
+		SiteLoginNamePerMinuteBurst: configIntSelect(dotenv, "SITE_LOGIN_NAME_PER_MINUTE_BURST", 60),
 
 		SiteUnauthPerMinuteLimit: configIntSelect(dotenv, "SITE_UNAUTH_PER_MINUTE_LIMIT", 60), // What one IP may send a site before it authenticates, so bad tokens cannot spend the site's limit
 		SiteUnauthPerMinuteBurst: configIntSelect(dotenv, "SITE_UNAUTH_PER_MINUTE_BURST", 120),
@@ -417,6 +424,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SocketMaxBufferedPackets:    configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_PACKETS", 1000), // A client too slow to collect its packets is closed
 		SocketMaxBufferedBytes:      configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_BYTES", 2000000),
 		SocketMaxPacketsPerSecond:   configFloatSelect(dotenv, "SOCKET_MAX_PACKETS_PER_SECOND", 20), // A client sending faster, past a burst of 5 seconds' worth, is closed
+		// Stop one IP holding all of a site's sessions before they are given access, keeping its followers out
+		SocketMaxUnauthPerIP: configIntSelect(dotenv, "SOCKET_MAX_UNAUTH_SESSIONS_PER_IP", 10),
 	}
 
 	var err error
@@ -718,6 +727,7 @@ func printServerConfig(config ServerConfig) {
 		"SiteBackupRetentionDays", config.SiteBackupRetentionDays,
 		"ControlBackupRetentionDays", config.ControlBackupRetentionDays,
 		"SocketMaxSessionsPerSite", config.SocketMaxSessionsPerSite,
+		"SocketMaxUnauthPerIP", config.SocketMaxUnauthPerIP,
 		"SocketMaxBufferedBytes", config.SocketMaxBufferedBytes,
 		"SocketMaxPacketsPerSecond", config.SocketMaxPacketsPerSecond,
 	)

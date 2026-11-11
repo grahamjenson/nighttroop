@@ -1,0 +1,82 @@
+INCLUDE steps/new_site_admin.steps
+
+// Adding a source and changing one share a limit, of 10 saves at once in this test, so new sources cannot be added
+// to sync from any faster than sources can be changed
+
+NAME create_virtual
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 200
+
+NAME create_dexcom
+POST http://{{ site }}/settings/connectors/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": false}
+ASSERT_STATUS 200
+
+NAME create_libre
+POST http://{{ site }}/settings/connectors/libre
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "libre-user", "password": "libre-pass", "enabled": false}
+ASSERT_STATUS 200
+
+NAME update_virtual_1
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+
+NAME update_virtual_2
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 200
+
+NAME update_virtual_3
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+
+NAME update_virtual_4
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 200
+
+NAME update_virtual_5
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+
+NAME update_virtual_6
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 200
+
+NAME update_virtual_7
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+
+NAME create_nightscout_over_rate_limit
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://valid.nightscout.test", "password": "a-token", "enabled": false}
+ASSERT_STATUS 429
+ASSERT_CONTAINS "Too Many Requests" "@message"

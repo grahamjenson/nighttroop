@@ -148,7 +148,8 @@ func (c *Client) doRequest(
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		// The error is stored, logged and sent to Sentry, so it never has the user's Nightscout URL
+		return nil, httputils.WithoutURL(err)
 	}
 	defer resp.Body.Close()
 
@@ -270,12 +271,12 @@ func (c *Client) refreshJWT() error {
 func (c *Client) GetLastModified(ctx context.Context) (map[string]int64, error) {
 	resp, err := c.doRequest(ctx, http.MethodGet, lastModifiedEndpoint(c.baseURL))
 	if err != nil {
-		return nil, fmt.Errorf("NSClient Get Last Modified Error %s: %w", c.baseURL, err)
+		return nil, fmt.Errorf("NSClient Get Last Modified Error: %w", err)
 	}
 	result, _ := resp["result"].(map[string]any)
 	collections, ok := result["collections"].(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("NSClient Get Last Modified Error: %s returned no collections", c.baseURL)
+		return nil, fmt.Errorf("NSClient Get Last Modified Error: Nightscout returned no collections")
 	}
 	lastModified := map[string]int64{}
 	for collection, modified := range collections {
@@ -295,7 +296,7 @@ func (c *Client) GetLastModified(ctx context.Context) (map[string]int64, error) 
 func (c *Client) GetCurrentProfile(ctx context.Context) (map[string]any, error) {
 	resp, err := c.doRequest(ctx, http.MethodGet, currentProfileEndpoint(c.baseURL))
 	if err != nil {
-		return nil, fmt.Errorf("NSClient Get Current Profile Error %s: %w", c.baseURL, err)
+		return nil, fmt.Errorf("NSClient Get Current Profile Error: %w", err)
 	}
 	if list, ok := resp["result"].([]any); ok {
 		profiles, err := documentsFromResult(list)
@@ -327,7 +328,7 @@ func (c *Client) GetDocuments(
 	resp, err := c.doRequest(ctx, http.MethodGet, reqURL)
 
 	if err != nil {
-		return nil, fmt.Errorf("NSClient Get %s Error %s: %w", collection, c.baseURL, err)
+		return nil, fmt.Errorf("NSClient Get %s Error: %w", collection, err)
 	}
 
 	if result, ok := resp["result"].([]any); ok {
@@ -335,7 +336,7 @@ func (c *Client) GetDocuments(
 	}
 
 	// The body is never put in the error: it is stored and shown as a sync error.
-	return nil, fmt.Errorf("NSClient Get %s Error: %s returned no result array", collection, c.baseURL)
+	return nil, fmt.Errorf("NSClient Get %s Error: Nightscout returned no result array", collection)
 
 }
 
