@@ -1025,6 +1025,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   open a new one, while a quiet site's DB closes all of them.
 - An IP's rate limits, on requests, sign ins, recoveries and site creation, cover its whole IPv6 /64, so stepping
   through the addresses of one /64 does not get fresh limits.
+- An IP is the request's TCP peer, unless that is a trusted proxy (`TRUSTED_PROXIES`): then it is the hop before it in
+  `X-Forwarded-For` and, on Fly.io, its `Fly-Client-IP`. Any other peer setting either header keeps its own IP's limits.
 - A request body larger than `MAX_REQUEST_BODY_BYTES` is refused with 413, or, when it does not say its length,
   stops being read there and is refused as a bad body.
 - A request whose headers hold more than 64 KiB, far above a browser's cookies or an uploader's token, is refused with
