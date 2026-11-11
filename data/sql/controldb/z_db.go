@@ -312,6 +312,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteIdentityTOTPStmt, err = db.PrepareContext(ctx, updateSiteIdentityTOTP); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityTOTP: %w", err)
 	}
+	if q.updateSiteTableSizesStmt, err = db.PrepareContext(ctx, updateSiteTableSizes); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteTableSizes: %w", err)
+	}
 	if q.updateSitesSettingsStmt, err = db.PrepareContext(ctx, updateSitesSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSitesSettings: %w", err)
 	}
@@ -803,6 +806,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteIdentityTOTPStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteTableSizesStmt != nil {
+		if cerr := q.updateSiteTableSizesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteTableSizesStmt: %w", cerr)
+		}
+	}
 	if q.updateSitesSettingsStmt != nil {
 		if cerr := q.updateSitesSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSitesSettingsStmt: %w", cerr)
@@ -948,6 +956,7 @@ type Queries struct {
 	updateSiteIdentityPasswordStmt          *sql.Stmt
 	updateSiteIdentitySettingsStmt          *sql.Stmt
 	updateSiteIdentityTOTPStmt              *sql.Stmt
+	updateSiteTableSizesStmt                *sql.Stmt
 	updateSitesSettingsStmt                 *sql.Stmt
 	upsertPushRegistrationStmt              *sql.Stmt
 }
@@ -1052,6 +1061,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteIdentityPasswordStmt:          q.updateSiteIdentityPasswordStmt,
 		updateSiteIdentitySettingsStmt:          q.updateSiteIdentitySettingsStmt,
 		updateSiteIdentityTOTPStmt:              q.updateSiteIdentityTOTPStmt,
+		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
 		updateSitesSettingsStmt:                 q.updateSitesSettingsStmt,
 		upsertPushRegistrationStmt:              q.upsertPushRegistrationStmt,
 	}

@@ -12,7 +12,7 @@ ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // An admin's My Account shows the site's DB size against its limit, measured as it opens, and where its data builds up,
-// by table, as the control site's page of it does
+// by table as the resource check the background jobs ran last measured it, as the control site's page of it does
 CLICK #site--settings-menu
 CLICK #site--settings--account-button
 ASSERT_STATUS 200

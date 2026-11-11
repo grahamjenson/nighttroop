@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync/atomic"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 
@@ -18,6 +19,9 @@ type SiteDB struct {
 	*sitedb.DB
 
 	Subdomain string
+	// tablesMeasuredKB is the DB's size when its tables were last measured, so they are measured again only once it
+	// changes
+	tablesMeasuredKB atomic.Int64
 }
 
 func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) (*SiteDB, error) {

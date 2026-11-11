@@ -588,6 +588,16 @@ func (m *Site) SetEstimatedDbSizeKb(v *int64) {
 	m.EstimatedDbSizeKb = v
 }
 
+// GetTableSizesJson returns the TableSizesJson value.
+func (m Site) GetTableSizesJson() types.TableSizes {
+	return m.TableSizesJson
+}
+
+// SetTableSizesJson sets the TableSizesJson value and returns the updated Site.
+func (m *Site) SetTableSizesJson(v types.TableSizes) {
+	m.TableSizesJson = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m Site) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
@@ -5315,6 +5325,26 @@ func (m UpdateSiteDateFlagsParams) GetID() string {
 
 // SetID sets the ID value and returns the updated UpdateSiteDateFlagsParams.
 func (m *UpdateSiteDateFlagsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetTableSizesJson returns the TableSizesJson value.
+func (m UpdateSiteTableSizesParams) GetTableSizesJson() types.TableSizes {
+	return m.TableSizesJson
+}
+
+// SetTableSizesJson sets the TableSizesJson value and returns the updated UpdateSiteTableSizesParams.
+func (m *UpdateSiteTableSizesParams) SetTableSizesJson(v types.TableSizes) {
+	m.TableSizesJson = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteTableSizesParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteTableSizesParams.
+func (m *UpdateSiteTableSizesParams) SetID(v string) {
 	m.ID = v
 }
 

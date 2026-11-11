@@ -116,6 +116,10 @@ overrides:
       - column: "sites.alarm_device_battery_low_enabled"
         go_type:
           type: "*bool"
+      - column: "sites.table_sizes_json"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "TableSizes"
       - column: "sites.alarm_device_battery_low_devices_json"
         go_type:
           import: "nighttroop.t1d.nz/data/types"

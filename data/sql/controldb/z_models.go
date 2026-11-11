@@ -84,6 +84,7 @@ type Site struct {
 	CreatedAt                        int64
 	MaxDbSizeKbLimit                 *int64
 	EstimatedDbSizeKb                *int64
+	TableSizesJson                   types.TableSizes
 	LastSeenAt                       *int64
 	LastWriteAt                      *int64
 	State                            string

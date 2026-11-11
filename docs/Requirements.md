@@ -111,7 +111,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
     its tables, and with neither it says it is not measured yet;
   - the bar is split into its five largest tables, indexes counted with their table, darkest first, and the rest as
     Other, with a key under it naming each one with its records in thousands, size in MB and share of the DB (as
-    `7.9k · 6.11 MB · 54%`, Other's records its tables' together); hovering a part names it too;
+    `7.9k · 6.11 MB · 54%`, Other's records its tables' together); hovering a part names it too. Its tables are as
+    last measured, kept on the site's record: when it was made, by the resource check every 5 minutes once its DB's
+    size changes, and when it is truncated, so opening the page does not read its whole DB;
   - tiles of when it was last seen and last written to, how many identities it has (people and devices), and how
     long since its last error;
   - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
@@ -1171,8 +1173,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   already has for the identity is not added again, and an identity has at most 10.
 - "Remove" (after asking) removes one of the identity's own passkeys, as for a lost device, so it signs in no more.
 - An admin's My Account also shows the site's DB size, measured as it opens, against its limit, and where its data
-  builds up: a bar and a key of its largest tables, each with its records, size and share, the rest as Other, as the
-  control site's page of the site does. Others' My Account, and control's, do not.
+  builds up: a bar and a key of its largest tables, each with its records, size and share, the rest as Other, as last
+  measured, as the control site's page of the site does. Others' My Account, and control's, do not.
 - Its Truncate, after asking, truncates the site as control's Truncate does: the loop's status and pump as sent are
   cleared from all but each device's newest report, device reports are thinned and those over 30 days old deleted,
   loop settings no profile or device status refers to any more are deleted, but each app's last seen, and the DB is
