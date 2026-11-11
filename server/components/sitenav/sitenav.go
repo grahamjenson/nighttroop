@@ -19,19 +19,20 @@ import (
 type Hub string
 
 const (
-	Data     Hub = "site.nav.hubs.data"
-	Reports  Hub = "site.nav.hubs.reports"
-	Settings Hub = "site.nav.hubs.settings"
-	Alarms   Hub = "site.nav.hubs.alarms"
-	Logs     Hub = "site.nav.hubs.logs"
-	Usage    Hub = "site.nav.hubs.usage"
+	Data       Hub = "site.nav.hubs.data"
+	Reports    Hub = "site.nav.hubs.reports"
+	Settings   Hub = "site.nav.hubs.settings"
+	Connectors Hub = "site.nav.hubs.connectors"
+	Alarms     Hub = "site.nav.hubs.alarms"
+	Logs       Hub = "site.nav.hubs.logs"
+	Usage      Hub = "site.nav.hubs.usage"
 )
 
 // HeaderHubs are the hubs the header links to, in its order
 var HeaderHubs = []Hub{Data, Reports}
 
 // MenuHubs are the hubs the account menu opens, in its order
-var MenuHubs = []Hub{Settings, Alarms, Logs, Usage}
+var MenuHubs = []Hub{Settings, Connectors, Alarms, Logs, Usage}
 
 // Slug is the last part of the hub's message id, naming it in IDs, e.g. site--nav--menu--logs
 func (h Hub) Slug() string {
@@ -82,10 +83,12 @@ var Pages = []Page{
 		Store: "identity_settings", Within: []string{"/settings/site", "/settings/identity"}},
 	{Hub: Settings, Group: "site.nav.groups.people_devices", Label: "site.nav.pages.users_devices", Path: "/settings/identities", ID: "site--settings--identities-button", Icon: icon.Users,
 		Store: "identities", Within: []string{"/settings/identities", "/settings/identity-settings"}},
-	{Hub: Settings, Group: "site.nav.groups.people_devices", Label: "site.nav.pages.push_devices", Path: "/settings/push-devices", ID: "site--settings--push-devices-button", Icon: icon.Send,
+	{Hub: Settings, Group: "site.nav.groups.push", Label: "site.nav.pages.push_devices", Path: "/settings/push-devices", ID: "site--settings--push-devices-button", Icon: icon.Send,
 		Store: "push_registrations", Within: []string{"/settings/push-devices", "/settings/push-registrations"}},
-	{Hub: Settings, Group: "site.nav.groups.connections", Label: "site.nav.pages.connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},
-	{Hub: Settings, Group: "site.nav.groups.connections", Label: "site.nav.pages.push_notifications", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
+	{Hub: Settings, Group: "site.nav.groups.push", Label: "site.nav.pages.push_certificates", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
+
+	// Connectors is a hub of its own page, where the site's data comes from, for its admins
+	{Hub: Connectors, Label: "site.nav.pages.connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},
 
 	// Alarms is a hub of its own page, so it has no tabs
 	{Hub: Alarms, Label: "site.nav.pages.alarms", Path: "/settings/alarms", ID: "site--settings--alarms-button", Icon: icon.BellRing, Store: "alarm_settings"},

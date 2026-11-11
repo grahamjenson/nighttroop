@@ -35,8 +35,7 @@ ASSERT_VISIBLE #site--reports--tdd-menu-button[aria-current="page"]
 // Virtual connector writes its last 30 minutes, then each backfill the day before its oldest reading (tests backfill a
 // day), with doses and the basal in force, so three backfills fill the last three days
 CLICK #site--settings-menu
-CLICK #site--nav--menu--settings
-CLICK #site--settings--connectors-button
+CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit

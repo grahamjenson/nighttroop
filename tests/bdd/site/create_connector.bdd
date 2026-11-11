@@ -26,10 +26,8 @@ ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 
 CLICK #site--settings-menu
-CLICK #site--nav--menu--settings
-ASSERT_VISIBLE #site--settings--connectors-button
-
-CLICK #site--settings--connectors-button
+ASSERT_VISIBLE #site--nav--menu--connectors
+CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /settings/connectors

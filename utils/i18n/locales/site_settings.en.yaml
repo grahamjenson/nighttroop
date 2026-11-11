@@ -239,7 +239,7 @@ site:
           step_2: "Set *Nightscout URL* to {url}"
           step_3: "Set its *token* to {token}"
     push_credentials:
-      title: "Push Notifications"
+      title: "Push Certificates"
       about: "The keys pushes are sent to your own builds of apps with, such as an Apple push key (.p8) for the Loop you build with your Apple developer account. Only your site uses them, and a key is never shown again once added."
       add: "Add Push Credential"
       empty: "No push credentials yet."

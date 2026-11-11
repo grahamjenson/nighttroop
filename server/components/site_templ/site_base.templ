@@ -124,7 +124,7 @@ templ Header(path string) {
 							<span class="sr-only">{ i18n.T(ctx, "site.base.open_user_menu") }</span>
 						</button>
 					}
-					@dropdown.Content(dropdown.ContentProps{Class: "w-56"}) {
+					@dropdown.Content(dropdown.ContentProps{Class: "w-56 max-h-[80vh]"}) {
 						if name := identityName(ctx); name != "" {
 							<div class="px-2 py-1.5 text-sm text-gray-500">
 								{ i18n.T(ctx, "site.base.signed_in_as") } <span class="font-semibold text-gray-900">{ name }</span>

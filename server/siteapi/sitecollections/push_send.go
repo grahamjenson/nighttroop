@@ -77,7 +77,7 @@ func PushTestHandler(w http.ResponseWriter, r *http.Request) {
 		Body: "Pushes from " + siteContext.SiteDB.URL() + " reach this device"})
 	switch {
 	case errors.Is(err, push.ErrNoCredential):
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(err.Error()+": add one in Push Notifications"))
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(err.Error()+": add one in Push Certificates"))
 		return
 	case errors.Is(err, push.ErrTokenGone):
 		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusGone, Message: "The app is no longer registered on this device, so its registration is deleted"})
