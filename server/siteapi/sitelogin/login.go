@@ -250,6 +250,8 @@ func loginTheUserPasswordOnly(ctx context.Context, controlDB *db.ControlDB, secu
 		Name:   formName,
 	})
 	if err != nil {
+		// Checked anyway, so a name with no identity is refused as slowly as a wrong password
+		securityConfig.VerifyNoOnesPassword(formPassword)
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 

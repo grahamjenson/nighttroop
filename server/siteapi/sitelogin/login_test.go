@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -132,6 +133,48 @@ func TestLoginRateLimitedSaysToWait(t *testing.T) {
 			POSTLogin(nil, testConfig)(w, r)
 			require.Equal(t, http.StatusTooManyRequests, w.Code)
 			require.Contains(t, w.Body.String(), "Too many login attempts. Wait a minute, then try again.")
+		})
+	}
+}
+
+// A name with no identity is refused as a wrong password is, with a password checked, so neither its answer nor how
+// long it takes tells which names exist
+func TestLoginMissingNameIsLikeWrongPassword(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	tests := []struct {
+		name        string
+		contentType string
+		accept      string
+		body        func(name string) string
+	}{
+		{"api", "application/json", "application/json", func(name string) string { return `{"name":"` + name + `","password":"wrong"}` }},
+		{"page", "application/x-www-form-urlencoded", "text/htmx", func(name string) string { return "name=" + name + "&password=wrong" }},
+	}
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			site, err := controlDB.CreateSite(t.Context())
+			require.NoError(t, err)
+			siteID := site.SiteDB.Subdomain
+			// Each from its own IP, as login attempts are limited to one for each IP
+			login := func(ip string, name string) (int, string) {
+				r := httptest.NewRequest("POST", "/login", strings.NewReader(tt.body(name)))
+				r.RemoteAddr = ip + ":1234"
+				r.Header.Set("Content-Type", tt.contentType)
+				r.Header.Set("Accept", tt.accept)
+				ctx := httputils.CreateSiteContext(httputils.WithClientIP(r), testConfig, controlDB, site.SiteDB, nil, siteID, ip, httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+				before := testConfig.Security.PasswordsVerified()
+				w := httptest.NewRecorder()
+				POSTLogin(controlDB, testConfig)(w, r.WithContext(ctx))
+				require.Equal(t, int64(1), testConfig.Security.PasswordsVerified()-before, "passwords checked logging in as %s", name)
+				// A toast has an ID of its own each time
+				return w.Code, regexp.MustCompile(`id="id-[A-Z0-9]+"`).ReplaceAllString(w.Body.String(), "")
+			}
+
+			wrongStatus, wrongBody := login(fmt.Sprintf("192.0.2.%d", 10+2*i), consts.FIRST_ADMIN_NAME)
+			missingStatus, missingBody := login(fmt.Sprintf("192.0.2.%d", 11+2*i), "nosuchname")
+			require.Equal(t, http.StatusUnauthorized, wrongStatus)
+			require.Equal(t, wrongStatus, missingStatus)
+			require.Equal(t, wrongBody, missingBody)
 		})
 	}
 }

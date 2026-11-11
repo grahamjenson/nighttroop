@@ -5,6 +5,7 @@ package security
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"sync/atomic"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -18,6 +19,8 @@ type passwordCacheEntry struct {
 type PasswordVerifier struct {
 	cache *lru.Cache[string, passwordCacheEntry]
 	ttl   time.Duration
+	// verified counts the passwords VerifyPassword checked
+	verified atomic.Int64
 }
 
 func NewPasswordVerifier() *PasswordVerifier {
@@ -33,6 +36,7 @@ func NewPasswordVerifier() *PasswordVerifier {
 }
 
 func (p *PasswordVerifier) VerifyPassword(plainPassword, storedHash string) bool {
+	p.verified.Add(1)
 	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(plainPassword))
 	return err == nil
 }
