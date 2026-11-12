@@ -8,6 +8,7 @@ INSERT INTO temp_basals (
     rate,
     multiplier,
     type,
+    insulin_type,
     notes,
     reason,
 
@@ -18,7 +19,7 @@ INSERT INTO temp_basals (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -84,6 +85,7 @@ UPDATE temp_basals SET
     rate = COALESCE(sqlc.narg('Rate'), rate),
     multiplier = COALESCE(sqlc.narg('Multiplier'), multiplier),
     type = COALESCE(sqlc.narg('Type'), type),
+    insulin_type = COALESCE(NULLIF(CAST(sqlc.narg('InsulinType') AS TEXT), ''), insulin_type),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

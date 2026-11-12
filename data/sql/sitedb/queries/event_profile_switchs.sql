@@ -20,6 +20,7 @@ INSERT INTO profile_switches (
     original_percentage,
     original_duration_ms,
     original_end,
+    icfg_json,
 
     carb_ratios_json,
     insulin_sensitivities_json,
@@ -54,6 +55,7 @@ VALUES (
     sqlc.narg('OriginalPercentage'),
     sqlc.narg('OriginalDurationMs'),
     sqlc.narg('OriginalEnd'),
+    sqlc.narg('IcfgJson'),
     sqlc.arg('CarbRatiosJson'),
     sqlc.arg('InsulinSensitivitiesJson'),
     sqlc.arg('BasalRatesJson'),
@@ -141,6 +143,7 @@ UPDATE profile_switches SET
     original_percentage = COALESCE(sqlc.narg('OriginalPercentage'), original_percentage),
     original_duration_ms = COALESCE(sqlc.narg('OriginalDurationMs'), original_duration_ms),
     original_end = COALESCE(sqlc.narg('OriginalEnd'), original_end),
+    icfg_json = COALESCE(sqlc.narg('IcfgJson'), icfg_json),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

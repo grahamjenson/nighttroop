@@ -1,0 +1,48 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS downloads treatments made elsewhere, such as in Nightscout's careportal, through API v3 and its storage socket,
+// and reads each as a RemoteTreatment, whose timestamp is a number: a treatment with any other timestamp is dropped,
+// and so is the whole page it is in. So API v3 gives no timestamp, while API v1 still does, for Loop's NightscoutKit.
+
+NAME careportal_meal_bolus
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Meal Bolus", "created_at": "{{ time 30 }}", "insulin": 1, "carbs": 15, "enteredBy": "careportal"}
+ASSERT_STATUS 200
+
+NAME careportal_temp_target
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Temporary Target", "created_at": "{{ time 20 }}", "targetTop": 100, "targetBottom": 100, "units": "mg/dl", "duration": 30, "enteredBy": "careportal"}
+ASSERT_STATUS 200
+
+NAME careportal_carb_correction
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Carb Correction", "created_at": "{{ time 10 }}", "carbs": 10, "enteredBy": "careportal"}
+ASSERT_STATUS 200
+
+NAME aaps_reads_history
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result"
+ASSERT_EQUALS null "@result.0.timestamp"
+ASSERT_EQUALS null "@result.1.timestamp"
+ASSERT_EQUALS null "@result.2.timestamp"
+ASSERT_EXISTS "@result.0.date"
+
+NAME aaps_reads_one
+GET http://{{ site }}/api/v3/treatments/{{ dig "careportal_meal_bolus.0._id" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.timestamp"
+ASSERT_EQUALS 15 "@result.carbs"
+
+NAME loop_reads_v1
+GET http://{{ site }}/api/v1/treatments.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_LENGTH 24 "@0.timestamp"

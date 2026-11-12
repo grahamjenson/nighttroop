@@ -58,24 +58,23 @@ func TestDeviceTokenString(t *testing.T) {
 	}
 }
 
-// Notes keep the white space around them as sent, as Trio's carbs' notes end with a new line, while only white space,
-// or only tags, is none and tags are stripped
+// A note is kept as sent, HTML, entities and the white space around it too, as xDrip+ grows its own note with any that
+// comes back changed; one only of white space is none, and one too long is cut at a character, not inside one
 func TestSanitizedString(t *testing.T) {
+	long := strings.Repeat("é", 1030)
 	tests := []struct {
-		name  string
-		notes string
-		want  string
+		name, sent, want string
 	}{
 		{"plain", "Pasta", "Pasta"},
-		{"a new line at the end", "Pasta\n", "Pasta\n"},
-		{"white space around", "  Pasta \t", "  Pasta \t"},
+		{"xDrip+'s note", `xDrip note <b>bold</b> & "quoted" 100%% <script>x</script>`, `xDrip note <b>bold</b> & "quoted" 100%% <script>x</script>`},
+		{"entities as typed", "a &amp; b &lt;c&gt;", "a &amp; b &lt;c&gt;"},
+		{"white space around", "  Pasta\n", "  Pasta\n"},
 		{"only white space", " \n\t ", ""},
-		{"tags", " <b>pie</b> & chips\n", " pie & chips\n"},
-		{"only tags", "<b></b>\n", ""},
+		{"too long", long, strings.Repeat("é", 1024)},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(tt.notes)
+			data, err := json.Marshal(tt.sent)
 			assert.NoError(t, err)
 			var got types.SanitizedString
 			assert.NoError(t, json.Unmarshal(data, &got))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -119,26 +120,44 @@ var (
 	ErrCannotChangeModifiedBy = &HTTPError{Status: http.StatusBadRequest, Message: "Field modifiedBy cannot be modified by the client"}
 )
 
+// GetSQLTranslatedError is the response to the database refusing a value, or nil for any other error. The driver's
+// words are logged, not sent, as they say how the data is kept: the client is told the column and why.
 func GetSQLTranslatedError(err error) *HTTPError {
+	reason := ""
+	switch {
+	case utilerrors.IsSQLUniqueViolationError(err):
+		reason = "is already used"
+	case utilerrors.IsSQLConstraintNotNull(err):
+		reason = "is required"
+	case utilerrors.IsSQLConstraintCheck(err) && strings.Contains(err.Error(), "length("):
+		reason = "is too long"
+	case utilerrors.IsSQLConstraintCheck(err):
+		reason = "is out of range"
+	case utilerrors.IsSQLConstraintForeignKey(err):
+		reason = "refers to a record that does not exist"
+	default:
+		return nil
+	}
+	slog.Warn("database refused a value", "error", err)
+	return BadDataBodyErrorWithHint(constraintColumn(err.Error()) + " " + reason)
+}
 
-	if utilerrors.IsSQLUniqueViolationError(err) {
-		return BadDataBodyErrorWithHint(err.Error())
-	}
-	if utilerrors.IsSQLConstraintNotNull(err) {
-		return BadDataBodyErrorWithHint(err.Error())
-	}
-	if utilerrors.IsSQLConstraintCheck(err) {
-		concat := strings.TrimPrefix(err.Error(), "CHECK constraint failed: ")
-		return BadDataBodyErrorWithHint(concat)
-	}
-	if utilerrors.IsSQLConstraintForeignKey(err) {
-		slog.Warn("Foreign key constraint violation", "error", err)
-		return BadDataBodyErrorWithHint(err.Error())
-	}
-	if utilerrors.IsSQLConstraintPrimaryKey(err) {
-		slog.Warn("Primary key constraint violation", "error", err)
-		return BadDataBodyErrorWithHint(err.Error())
-	}
+var (
+	sqlFunctionOrTable = regexp.MustCompile(`\w+[(.]`)
+	sqlColumn          = regexp.MustCompile(`[a-z_][a-z0-9_]*`)
+)
 
-	return nil
+// constraintColumn is the first column named by the constraint the driver says failed, e.g. dose for "constraint
+// failed: CHECK constraint failed: dose BETWEEN -500 AND 500 (275)" or "NOT NULL constraint failed: insulin_doses.dose",
+// or "a value" when it names none, as a foreign key's does not
+func constraintColumn(message string) string {
+	const failed = "constraint failed"
+	i := strings.LastIndex(message, failed)
+	if i < 0 {
+		return "a value"
+	}
+	if column := sqlColumn.FindString(sqlFunctionOrTable.ReplaceAllString(message[i+len(failed):], "")); column != "" {
+		return column
+	}
+	return "a value"
 }

@@ -12,7 +12,7 @@ import (
 
 const allTempTargets = `-- name: AllTempTargets :many
 
-SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets
+SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, duration_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -42,6 +42,7 @@ func (q *Queries) AllTempTargets(ctx context.Context, arg AllTempTargetsParams) 
 			&i.HighTargetMgdl,
 			&i.LowTargetMgdl,
 			&i.InsulinNeedsScaleFactor,
+			&i.DurationType,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -76,6 +77,7 @@ INSERT INTO temp_targets (
     high_target_mgdl,
     low_target_mgdl,
     insulin_needs_scale_factor,
+    duration_type,
     notes,
     reason,
     utc_offset_minutes,
@@ -85,8 +87,8 @@ INSERT INTO temp_targets (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, duration_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateTempTargetParams struct {
@@ -95,6 +97,7 @@ type CreateTempTargetParams struct {
 	HighTargetMgdl          float64
 	LowTargetMgdl           float64
 	InsulinNeedsScaleFactor *float64
+	DurationType            *string
 	Notes                   *string
 	Reason                  *string
 	UtcOffsetMinutes        *int64
@@ -115,6 +118,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		arg.HighTargetMgdl,
 		arg.LowTargetMgdl,
 		arg.InsulinNeedsScaleFactor,
+		arg.DurationType,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -131,6 +135,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		&i.HighTargetMgdl,
 		&i.LowTargetMgdl,
 		&i.InsulinNeedsScaleFactor,
+		&i.DurationType,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -149,7 +154,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 }
 
 const getTempTarget = `-- name: GetTempTarget :one
-SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, duration_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetTempTargetParams struct {
@@ -166,6 +171,7 @@ func (q *Queries) GetTempTarget(ctx context.Context, arg GetTempTargetParams) (*
 		&i.HighTargetMgdl,
 		&i.LowTargetMgdl,
 		&i.InsulinNeedsScaleFactor,
+		&i.DurationType,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -196,7 +202,7 @@ func (q *Queries) HardDeleteTempTarget(ctx context.Context, arg HardDeleteTempTa
 }
 
 const searchTempTargets = `-- name: SearchTempTargets :many
-SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets
+SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, duration_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -298,6 +304,7 @@ func (q *Queries) SearchTempTargets(ctx context.Context, arg SearchTempTargetsPa
 			&i.HighTargetMgdl,
 			&i.LowTargetMgdl,
 			&i.InsulinNeedsScaleFactor,
+			&i.DurationType,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -372,21 +379,23 @@ UPDATE temp_targets SET
     duration_minutes = COALESCE(?1, duration_minutes),
     high_target_mgdl = COALESCE(?2, high_target_mgdl),
     low_target_mgdl = COALESCE(?3, low_target_mgdl),
+    duration_type = COALESCE(?4, duration_type),
 
-    notes = COALESCE(?4, notes),
-    reason = COALESCE(?5, reason),
+    notes = COALESCE(?5, notes),
+    reason = COALESCE(?6, reason),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?6,
-    updated_by_identity_name = ?7
-WHERE id = ?8 AND deleted_at IS NULL
-RETURNING id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?7,
+    updated_by_identity_name = ?8
+WHERE id = ?9 AND deleted_at IS NULL
+RETURNING id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, duration_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateTempTargetParams struct {
 	DurationMinutes       *int64
 	HighTargetMgdl        *float64
 	LowTargetMgdl         *float64
+	DurationType          *string
 	Notes                 *string
 	Reason                *string
 	UpdatedByIdentityID   *int64
@@ -402,6 +411,7 @@ func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetPara
 		arg.DurationMinutes,
 		arg.HighTargetMgdl,
 		arg.LowTargetMgdl,
+		arg.DurationType,
 		arg.Notes,
 		arg.Reason,
 		arg.UpdatedByIdentityID,
@@ -415,6 +425,7 @@ func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetPara
 		&i.HighTargetMgdl,
 		&i.LowTargetMgdl,
 		&i.InsulinNeedsScaleFactor,
+		&i.DurationType,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,

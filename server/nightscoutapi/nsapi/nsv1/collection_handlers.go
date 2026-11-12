@@ -1,6 +1,7 @@
 package nsv1
 
 import (
+	"cmp"
 	"log/slog"
 	"net/http"
 
@@ -16,6 +17,10 @@ func Search(store nsutils.Store) http.HandlerFunc {
 		collection, query, ok := nsutils.ReadCollectionAndQuery(w, r)
 		if !ok {
 			return
+		}
+		// With no count, a profile search is Nightscout's default count of the newest stores, as if it were sent
+		if collection == nsutils.Profile && !query.CountGiven {
+			query.Limit, query.CountGiven = consts.ProfilesDefaultCount, true
 		}
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
 		if identifierOrType != "" {
@@ -54,6 +59,10 @@ func Search(store nsutils.Store) http.HandlerFunc {
 		nsutils.WriteRecordsV1(w, records, query.Fields)
 	}
 }
+
+// maxBadEntriesLeftOut is how many entries with a problem, other than a reading out of range, a batch can leave out
+// before it is refused
+const maxBadEntriesLeftOut = 10
 
 func Create(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -95,16 +104,15 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		// Loop over the array of models sent
+		// Loop over the array of models sent. An entries batch leaves out a reading it cannot store and stores the rest,
+		// as xDrip+ sends a failed batch again with every new reading added, and its device status and treatments only
+		// after it is taken, and Nightscout stores them all
 		_, isBatch := body.([]any)
-		leftOut := false
+		isEntriesBatch := isBatch && collection == nsutils.Entries
+		outOfRange, bad := 0, 0
+		var badErr *nsutils.HTTPError
 		for _, item := range arrayOfModels {
 			doc, ok := item.(map[string]any)
-
-			if !ok {
-				nsutils.WriteError(w, nsutils.BadDataBodyError)
-				return
-			}
 			// xDrip+ and xDrip4iOS send their sensor calibrations (type cal) in the same batch as their readings.
 			// They are not kept, so the readings still are.
 			if collection == nsutils.Entries && doc["type"] == "cal" {
@@ -114,17 +122,20 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			// As in Nightscout, a document sent with an _id replaces the one with it, as Loop sends an override again
 			// with its _id when it changes
 			var record nsutils.Document
-			var err *nsutils.HTTPError
-			if id, ok := doc["_id"].(string); ok && nsutils.ValidateIdentifierIsntBad(id) == nil {
+			err := nsutils.BadDataBodyError
+			if id, isID := doc["_id"].(string); ok && isID && nsutils.ValidateIdentifierIsntBad(id) == nil {
 				record, _, err = store.Replace(r.Context(), collection, id, doc, true)
-			} else {
+			} else if ok {
 				record, _, err = store.Create(r.Context(), collection, doc)
 			}
-			// A reading out of range in a batch is left out so the rest are stored, as xDrip+ sends a failed batch
-			// again with every new reading added, and Nightscout stores them all
-			if err == nsutils.BadGlucoseError && isBatch {
-				slog.InfoContext(r.Context(), "left out an entry with glucose out of range from a batch")
-				leftOut = true
+			// A sensor sends 0 for hours, so any number of readings out of range are left out, but each other problem
+			// can log an error, so only a few are
+			if isEntriesBatch && err == nsutils.BadGlucoseError {
+				outOfRange++
+				continue
+			}
+			if isEntriesBatch && err != nil && err.Status == http.StatusBadRequest && bad < maxBadEntriesLeftOut {
+				bad, badErr = bad+1, cmp.Or(badErr, err)
 				continue
 			}
 			if err != nil {
@@ -133,9 +144,12 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			}
 			created = append(created, record)
 		}
-		// A batch with only readings out of range is refused, so the client is told
-		if leftOut && len(created) == 0 {
-			nsutils.WriteError(w, nsutils.BadGlucoseError)
+		if outOfRange+bad > 0 {
+			slog.InfoContext(r.Context(), "left out entries from a batch", "out_of_range", outOfRange, "bad", bad, "stored", len(created))
+		}
+		// A batch with nothing stored and an entry with another problem is refused with it, so the client is told
+		if len(created) == 0 && badErr != nil {
+			nsutils.WriteError(w, badErr)
 			return
 		}
 

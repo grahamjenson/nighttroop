@@ -1,0 +1,58 @@
+# xDrip+ marks a treatment it is refused with a 400 as uploaded and drops it, with every treatment queued after it, so
+# a value that cannot be stored is refused saying which field, its range and what was sent, never in the database's
+# words. The bodies are as NightscoutUploader.postTreatments builds them, see docs/clients/xdrip.md.
+
+INCLUDE steps/new_ns_site.steps
+
+NAME xdrip_insulin_too_large
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "9d3e5f7a-1b2c-4d6e-8f0a-1b2c3d4e5f6a",
+   "_id": "9d3e5f7a1b2c4d6e8f0a1b2c", "insulin": 8882.5,
+   "carbs": 0, "created_at": "{{ time 5 }}"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 U (was 8882.5)" "@message"
+
+NAME xdrip_insulin_just_too_large
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "0a4f6b8c-2d3e-4f5a-9b1c-2d3e4f5a6b7c",
+   "_id": "0a4f6b8c2d3e4f5a9b1c2d3e", "insulin": 501,
+   "carbs": 0, "created_at": "{{ time 6 }}"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 U (was 501)" "@message"
+
+NAME xdrip_carbs_too_many
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "1b5a7c9d-3e4f-4a6b-8c2d-3e4f5a6b7c8d",
+   "_id": "1b5a7c9d3e4f4a6b8c2d3e4f", "insulin": 0,
+   "carbs": 1500, "created_at": "{{ time 7 }}"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing body: carbs must be between -1000 and 1000 g (was 1500)" "@message"
+
+// No refused treatment is stored
+NAME xdrip_refused_not_stored
+GET http://{{ site }}/api/v1/treatments.json?find[enteredBy]=xdrip
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// The largest dose is kept, and a negative one, which takes back too much entered, as everywhere on a site
+NAME xdrip_insulin_largest
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "2c6b8d0e-4f5a-4b7c-9d3e-4f5a6b7c8d9e",
+   "_id": "2c6b8d0e4f5a4b7c9d3e4f5a", "insulin": 500,
+   "carbs": 0, "created_at": "{{ time 8 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 500 "@insulin"
+
+NAME xdrip_insulin_negative
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "3d7c9e1f-5a6b-4c8d-8e4f-5a6b7c8d9e0f",
+   "_id": "3d7c9e1f5a6b4c8d8e4f5a6b", "insulin": -5,
+   "carbs": 0, "created_at": "{{ time 9 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS -5 "@insulin"

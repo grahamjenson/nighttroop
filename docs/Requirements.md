@@ -885,14 +885,19 @@ Connectors are a site's third party integrations, each syncing from one service.
   that date; a replace sent with none keeps the offset of the document it replaces.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A document's `created_at` is written as Nightscout writes it, as JavaScript's `toISOString` does, in UTC with three
-  fractional digits: `…23.940Z` sent comes back as is, not `…23.94Z`, and `…23Z` comes back as `…23.000Z`. Dates kept
-  as sent, such as a device status's `pump.clock`, which LoopFollow reads without fractional seconds, are not changed.
+  fractional digits: `…23.940Z` sent comes back as is, not `…23.94Z`, and `…23Z` comes back as `…23.000Z`. So are a
+  treatment's `timestamp`, an entry's `dateString` and a profile's `startDate`, in their UTC offset, so an entry is
+  found and deleted by the `.SSS` `dateString` sent, as Trio's deleteGlucose does. Dates kept as sent, such as a
+  device status's `pump.clock`, which LoopFollow reads without fractional seconds, are not changed.
 - A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its
   `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any
   other search is the newest first. With a filter other than the date, a page is those that match of the page the
   dates alone would give, so it can have fewer than its `limit`, still in order.
 - A v1 or v3 search's `skip` is at most 32000, enough for Nightguard's 32 pages of 1000, and a negative one is 0.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
+- A v1 `find[field]` with no operator is its `$eq`, as in Nightscout, for every field with a `$eq`, its value read
+  the same: `find[date]=<ms>` finds the entry at that date, as xDrip+ asks, and `find[created_at]=<ISO time>` the
+  treatment at that time; a field with no `$eq`, such as `find[srvCreated]`, still finds nothing.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
@@ -903,6 +908,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   storage, to an identity that can change the site's data, as LoopFollow sending remote commands is; a read only
   user or device gets the profile without them, and the socket's `dataUpdate`, sent to every reader, has none.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
+- A profile switch's `timeshift` is in minutes, but in milliseconds for one sent with an `originalProfileName`, as AAPS
+  sends and reads it, so AAPS's time shifted switches are kept and returned as sent.
 - A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
   from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
   `originalDuration` and `originalEnd`, and returns them as sent through v1 and v3, so AAPS's followers read an
@@ -924,9 +931,11 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A value sent that means none is not stored, and comes back left out, as one not sent does: an empty string, a
   CGM's `noise` or `rssi` of 0, and a heart rate of 0. An update with one keeps the value stored. `false`, and other
   zeros, such as a combo bolus's split, are kept.
-- A treatment's `notes` and `reasons`, and an activity's `notes` and `reason`, keep the white space around them as sent,
-  as its `foodType` does, e.g. Trio's carbs' `Pasta\n` for both; ones only of white space are none, and HTML tags are
-  removed.
+- A treatment's or activity's `notes`, and its `reason` and `reasons`, come back exactly as sent, HTML, entities and
+  the white space around them too, as xDrip+ appends any note that comes back changed to its own; one only of white
+  space is none, and one over 1024 characters is cut at a character. The site, its pages and its API, gets every
+  note, reason and notification without its HTML tags or the contents of a script, so no app's text can put a script
+  on the site's pages.
 - An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
   keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a
@@ -962,7 +971,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A device status keeps Trio's pump `bolusIncrement`, LoopFollow's remote bolus step, while the status as sent is kept.
 - A Nightscout treatment comes back with its `created_at` as `timestamp`, a bolus with its insulin as `programmed`,
   and a temp basal with `temp` `absolute`, as Loop's NightscoutKit drops treatments without them; a `timestamp`
-  sent is not read.
+  sent is not read. The `timestamp` is only given through API v1 and its sockets: API v3 and its storage socket leave
+  it out, as AAPS reads it as a number and drops a treatment, or a page of them, whose `timestamp` is a date.
 - A treatment's `durationInMilliseconds` is kept, created or updated, and given back as sent, as AAPS ends a temp
   target early to the millisecond and sends extended carbs and therapy events with it, while it is within a minute of
   the `duration` kept, so not once that is changed on the site; one sent with no `duration` is in minutes too, the
@@ -980,8 +990,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it, and
   `null` on a site with none, as in Nightscout.
-- A profile search with no filters is the newest profile set, or with a `count` that many, newest first by when each
-  starts.
+- A v1 profile search with no `count` gives the newest 10 profile sets, as Nightscout's default does, or with a `count`
+  that many (at most 1000), newest first by when each starts; v3 and the socket with no filters and no limit give the
+  newest.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ and Loop send it; a
   password reset stops the old token's SHA1 working.
 - A treatment's `eventTime`, as xDrip4iOS and Nightscout's careportal send it, is its `created_at`; an eventType of
@@ -997,8 +1008,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
   entries is left out and the readings with it kept; a reading out of range (0 or less, or over 1000 mg/dL) in a
-  batch is left out and the rest stored, and a batch with only readings out of range is refused; an uploader battery
-  that is not a number is left out of its device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
+  batch is left out and the rest stored, and a batch with only readings out of range is taken (200, `[]`) with nothing
+  stored, though one reading sent on its own is refused; up to 10 entries with another problem (such as an unknown
+  `type`) in a batch are left out and the rest stored, and a batch with nothing else stored is refused with the
+  problem; an uploader battery that is not a number is left out of its device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
   automatic bolus as an SMB and leaves it out of its bolus stats.
@@ -1007,6 +1020,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   `userEnteredAt` (in UTC) and a bolus's `unabsorbed`.
 - xDrip+'s `Sensor Stop` treatments are kept as an event group, with their event type, so the treatments it uploads
   after one are kept too; the site can add a Sensor Stop event group.
+- A treatment with insulin or carbs past their limits (500 U, 1000 g, either way) is refused (400) saying the field,
+  its range and what was sent, e.g. `insulin must be between -500 and 500 U (was 8882.5)`, as xDrip+ drops a refused
+  treatment and every one queued after it; a negative one, taking back too much entered, is kept.
+- A value the database refuses through the Nightscout API is refused (400) naming its column and why, e.g. `dose is
+  out of range` or `direction is too long`, never in the database's words, which are logged.
 - A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
   profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.

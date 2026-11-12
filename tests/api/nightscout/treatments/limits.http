@@ -6,13 +6,13 @@ NAME bolus_too_large
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Correction Bolus", "created_at": "{{ time 0 }}", "insulin": 1000 }
 ASSERT_STATUS 400
-ASSERT_CONTAINS "dose BETWEEN -500 AND 500" "@message"
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 U (was 1000)" "@message"
 
 NAME carbs_too_many
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Carb Correction", "created_at": "{{ time 0 }}", "carbs": 10000 }
 ASSERT_STATUS 400
-ASSERT_CONTAINS "carbs BETWEEN -1000 AND 1000" "@message"
+ASSERT_EQUALS "Bad or missing body: carbs must be between -1000 and 1000 g (was 10000)" "@message"
 
 // Negative insulin and carbs take back too much, so they are kept
 NAME negative_bolus

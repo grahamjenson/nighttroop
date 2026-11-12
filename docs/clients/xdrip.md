@@ -155,9 +155,12 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `POST entries`, a careportal `BG Check` sent back as an `mbg` with device `careportal via Nightscout` | Fixed: kept once. It was kept twice, as a reading with another device |
 | `POST entries` with a `cal` | Fixed in #512: the calibration is left out, so the batch is not refused |
 | `POST entries` with a reading of 0 or less (or over 1000 mg/dL) | Fixed: the reading is left out and the rest stored. It refused the whole batch, which xDrip+ sends again with each new reading, so nothing more uploaded |
+| `POST entries` of only readings of 0, as a failing sensor sends | Fixed: taken as `200 []` with nothing stored. It was refused, so the device status and treatments (a bolus) after it were not sent while the sensor sent 0s |
+| `POST entries` with an entry of a type Nighttroop does not know | Fixed: left out and the rest stored (up to 10 in a batch). A batch with nothing else stored is still refused |
 | `POST devicestatus`, phone and bridge battery | Fixed in #512: `uploader.battery` was only kept for Loop |
 | `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |
 | `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
+| A treatment's `notes` with HTML, e.g. `<b>bold</b>` | Fixed in this PR: given back exactly as sent. Tags were removed, so xDrip+ appended the changed note to its own with each download |
 | `PUT treatments`, `Sensor Start`, and again to update | Works |
 | `PUT treatments`, `Sensor Stop` | Works: kept as a sensor change, and the treatments queued after it upload (it was refused, and they were lost) |
 | `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted. Any other unknown `find[...]` now gives nothing, so it deletes nothing |

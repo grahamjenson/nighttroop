@@ -398,6 +398,13 @@ func (t Treatment) GetSubject() *string {
 	return t.Subject.Stringp()
 }
 
+// V1OnlyFields are given back only through API v1 and its sockets, not API v3 and its storage socket: Loop's
+// NightscoutKit reads v1 and drops a treatment without a timestamp, but AAPS reads v3 and drops one whose timestamp is
+// not a number
+func (t Treatment) V1OnlyFields() []string {
+	return []string{"timestamp"}
+}
+
 func (t Treatment) GetDate() *int64 {
 	return t.Date.Int64p()
 }
