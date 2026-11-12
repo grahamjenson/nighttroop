@@ -906,16 +906,6 @@ func (m *EventGroup) SetPumpID(v *string) {
 	m.PumpID = v
 }
 
-// GetPumpIDIsNumber returns the PumpIDIsNumber value.
-func (m EventGroup) GetPumpIDIsNumber() *bool {
-	return m.PumpIDIsNumber
-}
-
-// SetPumpIDIsNumber sets the PumpIDIsNumber value and returns the updated EventGroup.
-func (m *EventGroup) SetPumpIDIsNumber(v *bool) {
-	m.PumpIDIsNumber = v
-}
-
 // GetPumpSerial returns the PumpSerial value.
 func (m EventGroup) GetPumpSerial() *string {
 	return m.PumpSerial
@@ -8706,16 +8696,6 @@ func (m *CreateEventGroupParams) SetPumpID(v *string) {
 	m.PumpID = v
 }
 
-// GetPumpIDIsNumber returns the PumpIDIsNumber value.
-func (m CreateEventGroupParams) GetPumpIDIsNumber() *bool {
-	return m.PumpIDIsNumber
-}
-
-// SetPumpIDIsNumber sets the PumpIDIsNumber value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetPumpIDIsNumber(v *bool) {
-	m.PumpIDIsNumber = v
-}
-
 // GetPumpSerial returns the PumpSerial value.
 func (m CreateEventGroupParams) GetPumpSerial() *string {
 	return m.PumpSerial
@@ -9944,16 +9924,6 @@ func (m UpdateEventGroupParams) GetPumpID() *string {
 // SetPumpID sets the PumpID value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetPumpID(v *string) {
 	m.PumpID = v
-}
-
-// GetPumpIDIsNumber returns the PumpIDIsNumber value.
-func (m UpdateEventGroupParams) GetPumpIDIsNumber() *bool {
-	return m.PumpIDIsNumber
-}
-
-// SetPumpIDIsNumber sets the PumpIDIsNumber value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetPumpIDIsNumber(v *bool) {
-	m.PumpIDIsNumber = v
 }
 
 // GetPumpSerial returns the PumpSerial value.

@@ -108,7 +108,6 @@ type EventGroup struct {
 	DurationType              *string
 	SentHash                  *string
 	PumpID                    *string
-	PumpIDIsNumber            *bool
 	PumpSerial                *string
 	PumpType                  *string
 	SensorCode                *string

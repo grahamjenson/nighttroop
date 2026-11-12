@@ -204,7 +204,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | EventGroupEnteredBy
 	// goverter:map Uuid UUID
-	// goverter:map . PumpID | EventGroupPumpID
 	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	// goverter:map BolusCalculatorResultJson BolusCalculatorResult
 	// goverter:map CreatedByAppName App
@@ -402,8 +401,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ActivityID NotificationEventID
 	// goverter:map EventType GroupType
 	// goverter:map UUID Uuid
-	// goverter:map PumpID PumpID | PumpIDText
-	// goverter:map PumpID PumpIDIsNumber | PumpIDIsNumber
 	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map SentJSON SentHash | SentHash
@@ -491,30 +488,6 @@ func EventGroupEnteredBy(source sitedb.EventGroup) *types.ShortString {
 		return (*types.ShortString)(source.EnteredBy)
 	}
 	return (*types.ShortString)(&source.CreatedByIdentityName)
-}
-
-// PumpIDText is the pump's ID as it is stored, nil when there is none
-func PumpIDText(source *types.ShortNumberOrString) *string {
-	if source == nil || source.Text == "" {
-		return nil
-	}
-	return &source.Text
-}
-
-// PumpIDIsNumber is whether the pump's ID was sent as a number, nil when there is none
-func PumpIDIsNumber(source *types.ShortNumberOrString) *bool {
-	if PumpIDText(source) == nil {
-		return nil
-	}
-	return &source.IsNumber
-}
-
-// EventGroupPumpID is the group's pump ID as it was sent, a number or a string
-func EventGroupPumpID(source sitedb.EventGroup) *types.ShortNumberOrString {
-	if source.PumpID == nil {
-		return nil
-	}
-	return &types.ShortNumberOrString{Text: *source.PumpID, IsNumber: source.PumpIDIsNumber != nil && *source.PumpIDIsNumber}
 }
 
 // InsulinConfigToJSON is the insulin config as it is stored, with only its fields

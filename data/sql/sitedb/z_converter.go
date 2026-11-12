@@ -395,10 +395,6 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring17 := *source.PumpID
 		sitedbCreateEventGroupParams.PumpID = &xstring17
 	}
-	if source.PumpIDIsNumber != nil {
-		xbool2 := *source.PumpIDIsNumber
-		sitedbCreateEventGroupParams.PumpIDIsNumber = &xbool2
-	}
 	if source.PumpSerial != nil {
 		xstring18 := *source.PumpSerial
 		sitedbCreateEventGroupParams.PumpSerial = &xstring18
@@ -525,10 +521,6 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 	if source.PumpID != nil {
 		xstring17 := *source.PumpID
 		sitedbUpdateEventGroupParams.PumpID = &xstring17
-	}
-	if source.PumpIDIsNumber != nil {
-		xbool2 := *source.PumpIDIsNumber
-		sitedbUpdateEventGroupParams.PumpIDIsNumber = &xbool2
 	}
 	if source.PumpSerial != nil {
 		xstring18 := *source.PumpSerial
@@ -2316,10 +2308,6 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 	if source.PumpID != nil {
 		xstring15 := *source.PumpID
 		sitedbEventGroup.PumpID = &xstring15
-	}
-	if source.PumpIDIsNumber != nil {
-		xbool2 := *source.PumpIDIsNumber
-		sitedbEventGroup.PumpIDIsNumber = &xbool2
 	}
 	if source.PumpSerial != nil {
 		xstring16 := *source.PumpSerial

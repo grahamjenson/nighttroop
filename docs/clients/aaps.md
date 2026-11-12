@@ -142,8 +142,7 @@ AAPS uses socket.io-client-java 2.1.2 (an `EIO=4` client) on two namespaces of t
 
 - A 400 from a create is skipped for good, so anything Nighttroop refuses is lost to it.
 - A PATCH or DELETE that answers 404 is taken as done; any other status stops the upload queue until it works.
-- `pumpId` comes back from Nighttroop as it was sent, a number from AAPS; AAPS would read a string of digits into its
-  `Long` too.
+- `pumpId` comes back from Nighttroop as a string; AAPS reads it into its `Long` anyway.
 - `programmed`, which Nighttroop adds to a bolus for Loop, is not a field of `RemoteTreatment`, so AAPS ignores it
   (`ignoreUnknownKeys`, `core/nssdk/.../NsSdkJson.kt`).
 - A create's `identifier` must be at the top level of the answer, not only in `result`.

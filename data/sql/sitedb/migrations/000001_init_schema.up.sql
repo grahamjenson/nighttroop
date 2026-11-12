@@ -321,9 +321,8 @@ CREATE TABLE event_groups (
     -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
-    -- (sensor_code, transmitter_id), whether the pump's ID was sent as a number, to give it back as one
-    -- (pump_id_is_number), the insulin AAPS says a bolus or profile switch was given with (icfg_json), and AAPS's Bolus
-    -- Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json)
+    -- (sensor_code, transmitter_id), the insulin AAPS says a bolus or profile switch was given with (icfg_json), and
+    -- AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -332,7 +331,6 @@ CREATE TABLE event_groups (
     duration_type TEXT CHECK(length(duration_type) <= 16),
     sent_hash TEXT CHECK(length(sent_hash) <= 32),
     pump_id TEXT CHECK(length(pump_id) <= 32),
-    pump_id_is_number INTEGER CHECK(pump_id_is_number IN (0, 1)),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
     pump_type TEXT CHECK(length(pump_type) <= 64),
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
