@@ -50,6 +50,9 @@ type Treatment struct {
 	// given with, given back as sent, as AAPS takes a bolus without them as not basal, of the insulin in its settings
 	IsBasalInsulin *bool          `json:"isBasalInsulin,omitempty"`
 	ICfg           *InsulinConfig `json:"icfg,omitempty"`
+	// BolusCalculatorResult is AAPS's Bolus Wizard calculation, JSON text given back as sent, as AAPS restores the
+	// record from it
+	BolusCalculatorResult *types.JSONTextString `json:"bolusCalculatorResult,omitempty"`
 
 	// Exercise
 	ActivityType *types.ShortString   `json:"activityType,omitempty"` // Type of activity

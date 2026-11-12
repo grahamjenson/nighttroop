@@ -206,6 +206,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Uuid UUID
 	// goverter:map . PumpID | EventGroupPumpID
 	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
+	// goverter:map BolusCalculatorResultJson BolusCalculatorResult
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -404,6 +405,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map PumpID PumpID | PumpIDText
 	// goverter:map PumpID PumpIDIsNumber | PumpIDIsNumber
 	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
+	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map SentJSON SentHash | SentHash
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }

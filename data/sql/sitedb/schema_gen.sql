@@ -22,6 +22,8 @@ CREATE INDEX food_presets_created_at_idx ON food_presets(created_at);
 
 CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
 
+CREATE INDEX general_settings_updated_at_idx ON general_settings(updated_at);
+
 CREATE INDEX glucose_readings_occurred_at_idx ON glucose_readings(occurred_at);
 
 CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(reading_type, occurred_at);
@@ -172,7 +174,8 @@ CREATE TABLE event_groups (
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
     -- (sensor_code, transmitter_id), whether the pump's ID was sent as a number, to give it back as one
-    -- (pump_id_is_number), and the insulin AAPS says a bolus or profile switch was given with (icfg_json)
+    -- (pump_id_is_number), the insulin AAPS says a bolus or profile switch was given with (icfg_json), and AAPS's Bolus
+    -- Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -187,6 +190,7 @@ CREATE TABLE event_groups (
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
     icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
+    bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -278,6 +282,15 @@ CREATE TABLE food_presets (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
+) STRICT;
+
+CREATE TABLE general_settings (
+    key TEXT PRIMARY KEY CHECK(length(key) <= 128),
+    type TEXT NOT NULL CHECK(type IN ('aaps', 'aaps_clientcontrol')),
+    value_json TEXT NOT NULL CHECK(length(value_json) <= 262144 AND json_valid(value_json)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
 CREATE TABLE glucose_readings (

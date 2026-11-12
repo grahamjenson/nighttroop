@@ -190,6 +190,33 @@ func (s ShortNumberOrString) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.Text)
 }
 
+// MaxJSONTextLength is the longest JSON text a JSONTextString keeps, four times AAPS's Bolus Wizard calculation
+const MaxJSONTextLength = 4096
+
+// JSONTextString is JSON text sent as a string, as AAPS sends its Bolus Wizard's calculation, kept exactly as sent. One
+// that is not JSON or is longer than MaxJSONTextLength is empty, which is not stored, rather than refuse the upload
+type JSONTextString string
+
+func (s *JSONTextString) Stringp() *string {
+	if s == nil {
+		return nil
+	}
+	str := string(*s)
+	return &str
+}
+
+func (s *JSONTextString) UnmarshalJSON(data []byte) error {
+	var v string
+	if err := json.Unmarshal(data, &v); err != nil {
+		return fmt.Errorf("expected a JSON string, got %s", data)
+	}
+	if len(v) > MaxJSONTextLength || !json.Valid([]byte(v)) {
+		v = ""
+	}
+	*s = JSONTextString(v)
+	return nil
+}
+
 type IdentifierString string
 
 func (i *IdentifierString) String() string {

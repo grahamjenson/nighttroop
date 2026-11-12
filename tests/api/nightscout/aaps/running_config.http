@@ -1,0 +1,113 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS keeps its running config in the settings collection, as signed documents under `aaps` and `aaps-state`, and
+// AAPS and AAPSClient send each other messages there under `aaps_clientcontrol_...`
+// (plugins/sync/nsclientV3/SettingsIdentifiers.kt, clientcontrol/ClientControlPublisher.kt). Nighttroop keeps these
+// documents as sent, shared by the site's identities. See docs/clients/aaps.md
+
+// As AAPS sends its active scene, with a body that has no value
+NAME put_state
+PUT http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800001,"schemaVersion":2,"signature":"7qyxvbyOJykw4rN+S6Hq/Z9OWRK41wwy+aqg1U5oZ2dv/u+G+LyKMUlxrZ2fSPpxfC0jOe7N8NkcwR8Ws+eXYg==","signed":"{\"signedAt\":1794455990739,\"runningConfig\":{}}","utcOffset":0}
+ASSERT_STATUS 201
+
+// It reads back as sent, with the server's fields
+NAME get_state
+GET http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps-state" "@result.identifier"
+ASSERT_EQUALS "7qyxvbyOJykw4rN+S6Hq/Z9OWRK41wwy+aqg1U5oZ2dv/u+G+LyKMUlxrZ2fSPpxfC0jOe7N8NkcwR8Ws+eXYg==" "@result.signature"
+ASSERT_EQUALS "{\"signedAt\":1794455990739,\"runningConfig\":{}}" "@result.signed"
+ASSERT_EQUALS 2 "@result.schemaVersion"
+ASSERT_EQUALS 946684800001 "@result.date"
+ASSERT_EQUALS true "@result.isValid"
+ASSERT_EXISTS "@result.srvModified"
+
+// Sent again it replaces the one kept
+NAME put_state_again
+PUT http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800001,"schemaVersion":2,"signature":"second","signed":"{}","utcOffset":0}
+ASSERT_STATUS 200
+
+NAME get_state_again
+GET http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "second" "@result.signature"
+
+// The settings' last modified is when a kept document last changed, so AAPS knows to load it again
+NAME last_modified
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.collections.settings"
+
+NAME history_from_last_modified
+GET http://{{ site }}/api/v3/settings/history/{{ dig "last_modified.result.collections.settings" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps-state" "@result.0.identifier"
+ASSERT_EQUALS "second" "@result.0.signature"
+
+// A client control message is created, patched and found in the settings' search and history, the kept documents
+// newest first, before the identity's own settings
+NAME create_hello
+POST http://{{ site }}/api/v3/settings
+H Authorization: Bearer {{ jwt }}
+B {"identifier":"aaps_clientcontrol_hello_phone2","app":"AAPS","date":946684800001,"schemaVersion":1,"envelope":"abc"}
+ASSERT_STATUS 201
+
+NAME patch_hello
+PATCH http://{{ site }}/api/v3/settings/aaps_clientcontrol_hello_phone2
+H Authorization: Bearer {{ jwt }}
+B {"envelope":"def"}
+ASSERT_STATUS 200
+
+NAME get_hello
+GET http://{{ site }}/api/v3/settings/aaps_clientcontrol_hello_phone2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "def" "@result.envelope"
+ASSERT_EQUALS 1 "@result.schemaVersion"
+
+NAME search_settings
+GET http://{{ site }}/api/v3/settings
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps_clientcontrol_hello_phone2" "@result.0.identifier"
+ASSERT_EQUALS "aaps-state" "@result.1.identifier"
+ASSERT_EQUALS "units" "@result.2.identifier"
+
+NAME history_settings
+GET http://{{ site }}/api/v3/settings/history/{{ itime 60 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps_clientcontrol_hello_phone2" "@result.0.identifier"
+
+// Deleted, it is gone
+NAME delete_hello
+DELETE http://{{ site }}/api/v3/settings/aaps_clientcontrol_hello_phone2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_deleted_hello
+GET http://{{ site }}/api/v3/settings/aaps_clientcontrol_hello_phone2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+// A document over 256 KiB is refused
+NAME put_too_large
+PUT http://{{ site }}/api/v3/settings/aaps
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800001,"signed":"{{ repeat "x" 262144 }}"}
+ASSERT_STATUS 400
+
+// Any other key is still one of the site's own settings, which needs a value
+NAME put_other_key
+PUT http://{{ site }}/api/v3/settings/not-a-setting
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800001,"signed":"{}"}
+ASSERT_STATUS 400

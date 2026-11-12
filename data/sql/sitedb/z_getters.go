@@ -966,6 +966,16 @@ func (m *EventGroup) SetIcfgJson(v *string) {
 	m.IcfgJson = v
 }
 
+// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
+func (m EventGroup) GetBolusCalculatorResultJson() *string {
+	return m.BolusCalculatorResultJson
+}
+
+// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated EventGroup.
+func (m *EventGroup) SetBolusCalculatorResultJson(v *string) {
+	m.BolusCalculatorResultJson = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -1834,6 +1844,66 @@ func (m FoodPreset) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated FoodPreset.
 func (m *FoodPreset) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetKey returns the Key value.
+func (m GeneralSetting) GetKey() string {
+	return m.Key
+}
+
+// SetKey sets the Key value and returns the updated GeneralSetting.
+func (m *GeneralSetting) SetKey(v string) {
+	m.Key = v
+}
+
+// GetType returns the Type value.
+func (m GeneralSetting) GetType() string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated GeneralSetting.
+func (m *GeneralSetting) SetType(v string) {
+	m.Type = v
+}
+
+// GetValueJson returns the ValueJson value.
+func (m GeneralSetting) GetValueJson() string {
+	return m.ValueJson
+}
+
+// SetValueJson sets the ValueJson value and returns the updated GeneralSetting.
+func (m *GeneralSetting) SetValueJson(v string) {
+	m.ValueJson = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m GeneralSetting) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated GeneralSetting.
+func (m *GeneralSetting) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m GeneralSetting) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated GeneralSetting.
+func (m *GeneralSetting) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m GeneralSetting) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated GeneralSetting.
+func (m *GeneralSetting) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetID returns the ID value.
@@ -8696,6 +8766,16 @@ func (m *CreateEventGroupParams) SetIcfgJson(v *string) {
 	m.IcfgJson = v
 }
 
+// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
+func (m CreateEventGroupParams) GetBolusCalculatorResultJson() *string {
+	return m.BolusCalculatorResultJson
+}
+
+// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
+	m.BolusCalculatorResultJson = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -9924,6 +10004,16 @@ func (m UpdateEventGroupParams) GetIcfgJson() *string {
 // SetIcfgJson sets the IcfgJson value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetIcfgJson(v *string) {
 	m.IcfgJson = v
+}
+
+// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
+func (m UpdateEventGroupParams) GetBolusCalculatorResultJson() *string {
+	return m.BolusCalculatorResultJson
+}
+
+// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
+	m.BolusCalculatorResultJson = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -13004,6 +13094,106 @@ func (m UpdateTempTargetParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateTempTargetParams.
 func (m *UpdateTempTargetParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetKey returns the Key value.
+func (m DeleteGeneralSettingParams) GetKey() string {
+	return m.Key
+}
+
+// SetKey sets the Key value and returns the updated DeleteGeneralSettingParams.
+func (m *DeleteGeneralSettingParams) SetKey(v string) {
+	m.Key = v
+}
+
+// GetType returns the Type value.
+func (m DeleteGeneralSettingsBeforeParams) GetType() string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated DeleteGeneralSettingsBeforeParams.
+func (m *DeleteGeneralSettingsBeforeParams) SetType(v string) {
+	m.Type = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m DeleteGeneralSettingsBeforeParams) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated DeleteGeneralSettingsBeforeParams.
+func (m *DeleteGeneralSettingsBeforeParams) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
+// GetKey returns the Key value.
+func (m GetGeneralSettingParams) GetKey() string {
+	return m.Key
+}
+
+// SetKey sets the Key value and returns the updated GetGeneralSettingParams.
+func (m *GetGeneralSettingParams) SetKey(v string) {
+	m.Key = v
+}
+
+// GetUpdatedAtGTE returns the UpdatedAtGTE value.
+func (m SearchGeneralSettingsParams) GetUpdatedAtGTE() int64 {
+	return m.UpdatedAtGTE
+}
+
+// SetUpdatedAtGTE sets the UpdatedAtGTE value and returns the updated SearchGeneralSettingsParams.
+func (m *SearchGeneralSettingsParams) SetUpdatedAtGTE(v int64) {
+	m.UpdatedAtGTE = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchGeneralSettingsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchGeneralSettingsParams.
+func (m *SearchGeneralSettingsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetKey returns the Key value.
+func (m UpsertGeneralSettingParams) GetKey() string {
+	return m.Key
+}
+
+// SetKey sets the Key value and returns the updated UpsertGeneralSettingParams.
+func (m *UpsertGeneralSettingParams) SetKey(v string) {
+	m.Key = v
+}
+
+// GetType returns the Type value.
+func (m UpsertGeneralSettingParams) GetType() string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpsertGeneralSettingParams.
+func (m *UpsertGeneralSettingParams) SetType(v string) {
+	m.Type = v
+}
+
+// GetValueJson returns the ValueJson value.
+func (m UpsertGeneralSettingParams) GetValueJson() string {
+	return m.ValueJson
+}
+
+// SetValueJson sets the ValueJson value and returns the updated UpsertGeneralSettingParams.
+func (m *UpsertGeneralSettingParams) SetValueJson(v string) {
+	m.ValueJson = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m UpsertGeneralSettingParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated UpsertGeneralSettingParams.
+func (m *UpsertGeneralSettingParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
 }
 
 // GetID returns the ID value.

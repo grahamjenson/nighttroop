@@ -32,6 +32,7 @@ INSERT INTO event_groups (
     sensor_code,
     transmitter_id,
     icfg_json,
+    bolus_calculator_result_json,
 
     occurred_at,
     utc_offset_minutes,
@@ -69,6 +70,7 @@ VALUES (
     NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     sqlc.narg('IcfgJson'),
+    NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sqlc.arg('OccurredAt'),
     sqlc.arg('UtcOffsetMinutes'),
     sqlc.arg('CreatedByAppName'),
@@ -304,6 +306,7 @@ UPDATE event_groups SET
     sensor_code = COALESCE(NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''), sensor_code),
     transmitter_id = COALESCE(NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''), transmitter_id),
     icfg_json = COALESCE(sqlc.narg('IcfgJson'), icfg_json),
+    bolus_calculator_result_json = COALESCE(NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''), bolus_calculator_result_json),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
