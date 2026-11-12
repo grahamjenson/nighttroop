@@ -45,4 +45,4 @@ GET http://{{ site }}/api/v1/treatments.json?count=10
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 3 "@"
-ASSERT_LENGTH 20 "@0.timestamp"
+ASSERT_LENGTH 24 "@0.timestamp"
