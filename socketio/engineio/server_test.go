@@ -402,13 +402,14 @@ func TestUpgradeEndsTheWaitingPoll(t *testing.T) {
 	require.Equal(t, "6", <-polled)
 	require.Less(t, time.Since(start), time.Second)
 
-	// Polling is over, and the websocket carries the messages
-	status, _ := get(t, url)
-	require.Equal(t, http.StatusBadRequest, status)
+	// The websocket carries the messages, and polling is over. The echo comes once the server has the upgrade packet,
+	// which the probe's noop can end the waiting poll before, so polling is checked after it
 	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "hello"}))
 	p, err := ws.ReadPacket()
 	require.NoError(t, err)
 	require.Equal(t, Packet{Type: Message, Data: "hello"}, p)
+	status, _ := get(t, url)
+	require.Equal(t, http.StatusBadRequest, status)
 
 	// A session upgrades once
 	_, err = DialWebSocket(context.Background(), ts.URL, V4, sid)
