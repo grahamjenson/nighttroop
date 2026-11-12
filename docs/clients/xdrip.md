@@ -152,6 +152,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | Old API (`/api/` without `/v1/`, no secret, `doLegacyRESTUploadTo`) | Not supported: Nighttroop refuses writes without a token |
 | `GET status.json` | Works (no `version`, read as allowed) |
 | `POST entries` of `sgv` and `mbg` | Works, duplicates ignored |
+| `POST entries`, a careportal `BG Check` sent back as an `mbg` with device `careportal via Nightscout` | Fixed: kept once. It was kept twice, as a reading with another device |
 | `POST entries` with a `cal` | Fixed in #512: the calibration is left out, so the batch is not refused |
 | `POST devicestatus`, phone and bridge battery | Fixed in #512: `uploader.battery` was only kept for Loop |
 | `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |

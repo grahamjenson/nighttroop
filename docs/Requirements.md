@@ -918,6 +918,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
+- A meter reading (`mbg`) uploaded with the date of one stored is the same finger prick whatever its device, so a
+  careportal BG Check that xDrip+ downloads and uploads again as its own is stored once.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC. So does one given only to
   the minute, such as `find[created_at][$gte]=2026-11-06T04:46`, as some clients send it; to the minute with a zone,
   it is that time in its zone.

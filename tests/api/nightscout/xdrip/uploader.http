@@ -315,3 +315,34 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS 75 "@0.heartRate"
+
+######
+# FINGER PRICKS: a careportal BG Check is a meter reading, which xDrip+ downloads and uploads again as its own
+######
+
+NAME xdrip_careportal_bg_check
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "BG Check", "glucose": 118, "glucoseType": "Finger", "units": "mg/dl", "created_at": "{{ time 2 }}",
+   "enteredBy": "careportal"}
+ASSERT_STATUS 200
+
+NAME xdrip_bg_check_reading
+GET http://{{ site }}/api/v1/entries.json?find[type]=mbg&find[mbg]=118
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+// The same finger prick sent back with xDrip+'s device is not stored twice
+NAME xdrip_upload_bg_check_back
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "careportal via Nightscout", "type": "mbg", "date": {{ dig "xdrip_bg_check_reading.0.date" }},
+    "mbg": 118.0}]
+ASSERT_STATUS 200
+
+NAME xdrip_bg_check_stored_once
+GET http://{{ site }}/api/v1/entries.json?find[type]=mbg&find[mbg]=118
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
