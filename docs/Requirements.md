@@ -848,15 +848,24 @@ Connectors are a site's third party integrations, each syncing from one service.
   (an IPv6 /64) may hold at most 10 of a site's live sessions not yet given access
   (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`); its next is refused with 429, so it cannot take them all.
 - Glucose is stored in mg/dL and always returned in mg/dL, whatever the identity's or site's units, as Nightscout's
-  clients read `sgv`, `mbg`, a treatment's `glucose` and a profile's targets as mg/dL: entries, treatments, profiles
-  and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
+  clients read `sgv`, `mbg`, a treatment's `glucose`, a temp target's `targetTop` and `targetBottom` and a profile's
+  targets as mg/dL: entries, treatments, profiles and their `units`, over HTTP and Socket.IO. It is accepted in the
+  units sent with it, or guessed from its value. Every treatment comes back with `units`, a temp target and a therapy
+  event (e.g. a Note or Sensor Change) too, so a follower on an mmol/L site does not read a target of 90 as mmol/L.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
   identity's own, units included.
+- The v3 settings also keep AAPS's own documents as sent, shared by every identity of the site: its running config
+  (`aaps`, `aaps-state`) and the messages AAPS and AAPSClient pair and control it with (`aaps_clientcontrol_...`).
+  Each is created, replaced, patched, read, searched, deleted and sent to `/storage` sockets as any document is,
+  and the settings' last modified is when one last changed. A document over 256 KiB, or a new one once the site
+  keeps 100, is refused; client control messages left unchanged a week are deleted to make room.
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
   `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these
   is read.
+- A v3 replace or patch of a setting answers with the setting as stored; a read, replace, patch or delete of an
+  identifier that is not one of Nighttroop's settings is a 404, and a create of one a 400, rather than an empty setting.
 - The v1 status has `authorized` with a JWT and the token's permissions, with `api:treatments:create` for one that
   can write, so LoopFollow shows a read token as "Read" and a write token as "Read & Write".
 - The v3 version needs no token, so an app can check for v3 before it signs in.
@@ -864,6 +873,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An `mbg` entry keeps AAPS's `isCalibration` and `sensorMgdlAtPairing` (in mg/dL) and returns them as sent through
   v1 and v3, so AAPS's followers read a calibration as one; an update without them keeps them.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
+- A document sent with a date but no `utcOffset`, as AAPS sends a device status, takes the site timezone's offset at
+  that date; a replace sent with none keeps the offset of the document it replaces.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its
   `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any
@@ -898,9 +909,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The summary's basal during a temp basal is its rate.
 - Duplicate uploads are ignored; values far outside real use are refused.
 - A value sent that means none is not stored, and comes back left out, as one not sent does: an empty string, a
-  CGM's raw signal (`noise`, `filtered`, `unfiltered`, `rssi`) of 0, as AAPS sends with every reading, and a heart
-  rate of 0. An update with one keeps the value stored. `false`, and other zeros, such as a combo bolus's split, are
-  kept.
+  CGM's `noise` or `rssi` of 0, and a heart rate of 0. An update with one keeps the value stored. `false`, and other
+  zeros, such as a combo bolus's split, are kept.
+- An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, replaces it, keeping its
   `_id`, as Loop sends a temp basal or bolus again when it ends and Trio a temp target or override run; followers get
   it as changed, and one sent again as it was stored changes nothing.
@@ -913,6 +924,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
   returned as sent.
+- An AAPS Bolus Wizard's `bolusCalculatorResult`, the JSON text of its calculation, is kept with the treatment and
+  returned exactly as sent, as AAPS restores the record from it; one that is not JSON or is over 4096 characters is
+  left out, and the rest of the treatment kept.
 - A treatment's `sensorCode` and `transmitterId`, as xDrip+ sends with a sensor change, are kept with it and returned
   as sent. A sensor, site or pump part change (e.g. `Sensor Change`, `Site Change`) is an event group with no events, of
   its type, which the Nightscout v2 properties' ages (`sage`, `cage`, `iage`, `bage`) and the summary read.
@@ -1159,8 +1173,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer or Other.
   Its credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
   Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
-  set to mg/dL. One for xDrip4iOS also has the Nightscout API write mg/dL as `mg/dl`, as it reads a BG check's glucose
-  as mg/dL only when its units are exactly that.
+  set to mg/dL. One for xDrip4iOS or AAPS also has the Nightscout API write mg/dL as `mg/dl`, as xDrip4iOS reads a BG
+  check's glucose as mg/dL only when its units are exactly that, and AAPS writes them so.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - A device keeps the client it was added for, e.g. `loop` or `other`, given back as its `client`, so its settings can

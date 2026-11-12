@@ -22,6 +22,8 @@ CREATE INDEX food_presets_created_at_idx ON food_presets(created_at);
 
 CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
 
+CREATE INDEX general_settings_updated_at_idx ON general_settings(updated_at);
+
 CREATE INDEX glucose_readings_occurred_at_idx ON glucose_readings(occurred_at);
 
 CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(reading_type, occurred_at);
@@ -171,7 +173,8 @@ CREATE TABLE event_groups (
     -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
-    -- (sensor_code, transmitter_id)
+    -- (sensor_code, transmitter_id), and AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to
+    -- restore the record (bolus_calculator_result_json)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -184,6 +187,7 @@ CREATE TABLE event_groups (
     pump_type TEXT CHECK(length(pump_type) <= 64),
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
+    bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -280,6 +284,15 @@ CREATE TABLE food_presets (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
+CREATE TABLE general_settings (
+    key TEXT PRIMARY KEY CHECK(length(key) <= 128),
+    type TEXT NOT NULL CHECK(type IN ('aaps', 'aaps_clientcontrol')),
+    value_json TEXT NOT NULL CHECK(length(value_json) <= 262144 AND json_valid(value_json)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;
+
 CREATE TABLE glucose_readings (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     
@@ -293,7 +306,8 @@ CREATE TABLE glucose_readings (
     direction TEXT CHECK(length(direction) <= 16),
 
     -- What only some apps send, NULL for most readings: a CGM's raw signal, from xDrip+ and its followers (noise,
-    -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), 0 meaning none and stored as NULL,
+    -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), a noise or rssi of 0 meaning none
+    -- and stored as NULL, though filtered and unfiltered are kept as sent, 0 too, as AAPS sends them,
     -- and an mbg AAPS calibrated its sensor with (is_calibration), and the sensor's reading then (sensor_mgdl_at_pairing)
     noise REAL CHECK(noise BETWEEN -1000 AND 1000),
     filtered REAL CHECK(filtered BETWEEN 0 AND 10000000),

@@ -33,8 +33,9 @@ var identityRoles = []consts.IdentityRole{
 var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel", "t1dcarer"}
 
 // clientMgdlLabels are how a client needs the Nightscout API to write mg/dL, where it is not mg/dL: xDrip4iOS reads a
-// BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again
-var clientMgdlLabels = map[string]string{"xdrip4ios": "mg/dl"}
+// BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again, and AAPS writes
+// them mg/dl, the only spelling of mg/dL its NsUnits reads exactly
+var clientMgdlLabels = map[string]string{"xdrip4ios": "mg/dl", "aaps": "mg/dl"}
 
 // ////
 // Shared

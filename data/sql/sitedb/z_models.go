@@ -89,44 +89,45 @@ type DeviceReport struct {
 }
 
 type EventGroup struct {
-	ID                    string
-	GroupType             string
-	GlucoseReadingID      *string
-	InsulinDoseID         *string
-	FoodIntakeID          *string
-	TempBasalID           *string
-	TempTargetID          *string
-	ProfileSwitchID       *string
-	ActivityID            *string
-	NotificationEventID   *string
-	EnteredBy             *string
-	Uuid                  *string
-	Mode                  *string
-	AutoForced            *bool
-	Reasons               *string
-	OriginalDurationMs    *int64
-	DurationType          *string
-	SentHash              *string
-	PumpID                *string
-	PumpSerial            *string
-	PumpType              *string
-	SensorCode            *string
-	TransmitterID         *string
-	Notes                 *string
-	Reason                *string
-	DurationMinutes       *int64
-	DurationMs            *int64
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	CreatedByIdentityID   *int64
-	CreatedByIdentityName string
+	ID                        string
+	GroupType                 string
+	GlucoseReadingID          *string
+	InsulinDoseID             *string
+	FoodIntakeID              *string
+	TempBasalID               *string
+	TempTargetID              *string
+	ProfileSwitchID           *string
+	ActivityID                *string
+	NotificationEventID       *string
+	EnteredBy                 *string
+	Uuid                      *string
+	Mode                      *string
+	AutoForced                *bool
+	Reasons                   *string
+	OriginalDurationMs        *int64
+	DurationType              *string
+	SentHash                  *string
+	PumpID                    *string
+	PumpSerial                *string
+	PumpType                  *string
+	SensorCode                *string
+	TransmitterID             *string
+	BolusCalculatorResultJson *string
+	Notes                     *string
+	Reason                    *string
+	DurationMinutes           *int64
+	DurationMs                *int64
+	DeletedAt                 *int64
+	UtcOffsetMinutes          *int64
+	OccurredAt                int64
+	CreatedAt                 int64
+	UpdatedAt                 int64
+	CreatedByAppName          *string
+	CreatedByDeviceName       *string
+	UpdatedByIdentityID       *int64
+	UpdatedByIdentityName     *string
+	CreatedByIdentityID       *int64
+	CreatedByIdentityName     string
 }
 
 type FoodIntake struct {
@@ -209,6 +210,15 @@ type FoodPreset struct {
 	UpdatedByIdentityName *string
 	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
+}
+
+type GeneralSetting struct {
+	Key                   string
+	Type                  string
+	ValueJson             string
+	CreatedByIdentityName string
+	CreatedAt             int64
+	UpdatedAt             int64
 }
 
 type GlucoseReading struct {

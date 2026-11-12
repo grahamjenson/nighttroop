@@ -46,6 +46,9 @@ type Treatment struct {
 	Type *types.ShortString `json:"type,omitempty"`
 	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
 	Automatic *bool `json:"automatic,omitempty"`
+	// BolusCalculatorResult is AAPS's Bolus Wizard calculation, JSON text given back as sent, as AAPS restores the
+	// record from it
+	BolusCalculatorResult *types.JSONTextString `json:"bolusCalculatorResult,omitempty"`
 
 	// Exercise
 	ActivityType *types.ShortString   `json:"activityType,omitempty"` // Type of activity
