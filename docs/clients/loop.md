@@ -228,6 +228,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | Device status uploader `name`, `timestamp`, `isCharging` | Fixed in this PR: `isCharging` is kept, `name` and `timestamp` while the status as sent is kept |
 | `POST /api/v1/profile`, `loopSettings` and `store` | Works |
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, and had no `enteredBy`) |
+| A profile's `enteredBy` `Loop` given back as sent | Fixed in this PR (was the uploading identity, e.g. `pwd_phone`) |
 | NightscoutKit `find[created_at]` on treatments and device statuses | Works since #514 (it was the upload time, not when they happened) |
 | NightscoutKit `fetchGlucose` | Works for an identity in mg/dL, as a device added for Loop is (#524); in mmol/L `sgv` is in mmol/L. TODO P1 |
 | NightscoutKit `fetchTreatments` reading bolus and temp basal fields and `timestamp` | Fixed in this PR: `timestamp` is `created_at`, `programmed` the insulin given, and `temp` `absolute` |

@@ -430,6 +430,8 @@ CREATE TABLE profile_presets (
     -- The loop_settings the profile was sent with: Loop's settings, and Trio's remote control settings
     loop_settings_id TEXT CHECK(length(loop_settings_id) = 64),
     remote_settings_id TEXT CHECK(length(remote_settings_id) = 64),
+    -- Who the app said uploaded it (enteredBy), e.g. Loop, as tools pick a loop's profiles by it
+    entered_by TEXT CHECK(length(entered_by) <= 64),
 
     -- Default Stuff
 

@@ -396,6 +396,7 @@ type ProfilePreset struct {
 	TargetsLowJson           *string
 	LoopSettingsID           *string
 	RemoteSettingsID         *string
+	EnteredBy                *string
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64
 	CreatedAt                int64

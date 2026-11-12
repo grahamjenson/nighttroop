@@ -985,7 +985,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   automatic bolus as an SMB and leaves it out of its bolus stats.
 - xDrip+'s `Sensor Stop` treatments are kept as an event group, with their event type, so the treatments it uploads
   after one are kept too; the site can add a Sensor Stop event group.
-- A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
+- A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
+  profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
 - A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and

@@ -3426,6 +3426,16 @@ func (m *ProfilePreset) SetRemoteSettingsID(v *string) {
 	m.RemoteSettingsID = v
 }
 
+// GetEnteredBy returns the EnteredBy value.
+func (m ProfilePreset) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetEnteredBy(v *string) {
+	m.EnteredBy = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m ProfilePreset) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
@@ -14274,6 +14284,16 @@ func (m CreateProfilePresetParams) GetRemoteSettingsID() *string {
 // SetRemoteSettingsID sets the RemoteSettingsID value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetRemoteSettingsID(v *string) {
 	m.RemoteSettingsID = v
+}
+
+// GetEnteredBy returns the EnteredBy value.
+func (m CreateProfilePresetParams) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetEnteredBy(v *string) {
+	m.EnteredBy = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
