@@ -140,8 +140,8 @@ func secret(key string) bool {
 			return true
 		}
 	}
-	// A TOTP code, or a Libre sensor's, but not a key only ending in code, as encode
-	return key == "code" || strings.HasSuffix(key, "_code")
+	// A TOTP code, or a Libre sensor's, but not a key only ending in code, as encode, and an Engine.IO session's ID
+	return key == "code" || strings.HasSuffix(key, "_code") || key == "sid"
 }
 
 func redactHeaders(header http.Header) map[string][]string {

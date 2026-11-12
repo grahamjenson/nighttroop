@@ -119,7 +119,7 @@ func TestSecret(t *testing.T) {
 		{"password", true}, {"admin_password", true}, {"jwt", true}, {"url_or_username", true}, {"pwd_ns_url", true},
 		{"url", true}, {"backup_key", true}, {"api_key", true}, {"X-Api-Key", true}, {"private_key", true},
 		{"totp", true}, {"totp_secret", true}, {"code", true}, {"sensor_code", true}, {"client_email", true},
-		{"Referer", true}, {"Hx-Current-Url", true}, {"credentials", true}, {"session", true}, {"pwd", true},
+		{"Referer", true}, {"Hx-Current-Url", true}, {"credentials", true}, {"session", true}, {"pwd", true}, {"sid", true},
 		{"User-Agent", false}, {"Content-Type", false}, {"eventType", false}, {"insulin", false}, {"enabled", false},
 		{"name", false}, {"region", false}, {"type", false}, {"language", false}, {"count", false}, {"encode", false},
 	}

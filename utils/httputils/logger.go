@@ -54,8 +54,9 @@ type Config struct {
 	WithCustomMessage  func(w http.ResponseWriter, r *http.Request) string
 }
 
-// credentialParams are query and route params that carry tokens; the Nightscout API takes a token as secret too
-var credentialParams = []string{"token", "secret"}
+// credentialParams are query and route params that carry tokens; the Nightscout API takes a token as secret too, and
+// Engine.IO's sid is all a Socket.IO session's polls and posts carry once it is authorized
+var credentialParams = []string{"token", "secret", "sid"}
 
 // authorizationRequestPath is where a Nightscout authorization request's path ends in its token
 const authorizationRequestPath = "/authorization/request/"
