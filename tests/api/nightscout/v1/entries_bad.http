@@ -67,6 +67,28 @@ GET http://{{ site }}/api/v1/entries?token={{ token }}&find[date][$gte]={{ itime
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 
+// xDrip+ sends a failed batch again with each new reading added, so a reading out of range in a batch is left out and
+// the rest are stored
+NAME create_batch_with_bad_entry_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":0,"date":{{ itime 22 }}},{"type":"sgv","sgv":128,"date":{{ itime 21 }}},{"type":"mbg","mbg":135,"date":{{ itime 20 }}}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 128 "@0.sgv"
+ASSERT_EQUALS 135 "@1.mbg"
+
+NAME batch_bad_entry_not_stored_v1
+GET http://{{ site }}/api/v1/entries?token={{ token }}&find[date][$gte]={{ itime 23 }}&find[date][$lte]={{ itime 19 }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+// A batch of only readings out of range is refused, so the client is told
+NAME create_batch_only_bad_entries_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":0,"date":{{ itime 25 }}},{"type":"sgv","sgv":-5,"date":{{ itime 24 }}}]
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 1000 mg/dL" "@message"
+
 /////
 // Read
 /////

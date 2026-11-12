@@ -96,6 +96,8 @@ func Create(store nsutils.Store) http.HandlerFunc {
 		}
 
 		// Loop over the array of models sent
+		_, isBatch := body.([]any)
+		leftOut := false
 		for _, item := range arrayOfModels {
 			doc, ok := item.(map[string]any)
 
@@ -118,11 +120,23 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			} else {
 				record, _, err = store.Create(r.Context(), collection, doc)
 			}
+			// A reading out of range in a batch is left out so the rest are stored, as xDrip+ sends a failed batch
+			// again with every new reading added, and Nightscout stores them all
+			if err == nsutils.BadGlucoseError && isBatch {
+				slog.InfoContext(r.Context(), "left out an entry with glucose out of range from a batch")
+				leftOut = true
+				continue
+			}
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
 			}
 			created = append(created, record)
+		}
+		// A batch with only readings out of range is refused, so the client is told
+		if leftOut && len(created) == 0 {
+			nsutils.WriteError(w, nsutils.BadGlucoseError)
+			return
 		}
 
 		nsutils.WriteRecordsV1(w, created, nil)
