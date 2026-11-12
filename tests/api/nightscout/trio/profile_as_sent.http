@@ -1,0 +1,36 @@
+// Trio's profile upload comes back as it sent it, as Nightscout stores it: its mills, and its override presets even
+// when it has none. Trio v1.0.2's body, see docs/clients/trio.md
+INCLUDE steps/new_ns_site.steps
+
+NAME trio_upload_profile_no_presets
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"defaultProfile":"default","startDate":"2026-11-12T07:30:00.000Z","mills":1794468600000,"units":"mmol","enteredBy":"Trio","store":{"default":{"dia":10,"carbs_hr":28,"delay":0,"timezone":"Pacific/Auckland","units":"mmol","target_low":[{"time":"00:00","value":5.5,"timeAsSeconds":0}],"target_high":[{"time":"00:00","value":5.5,"timeAsSeconds":0}],"sens":[{"time":"00:00","value":2.8,"timeAsSeconds":0},{"time":"06:00","value":2.2,"timeAsSeconds":21600}],"basal":[{"time":"00:00","value":0.8,"timeAsSeconds":0},{"time":"06:00","value":1.0,"timeAsSeconds":21600}],"carbratio":[{"time":"00:00","value":10,"timeAsSeconds":0}]}},"bundleIdentifier":"org.nightscout.ABCDE.trio","deviceToken":"seeddevicetoken","isAPNSProduction":false,"overridePresets":[],"teamID":"ABCDE12345","expirationDate":"2027-11-12T00:00:00.000Z"}
+ASSERT_STATUS 200
+
+NAME trio_import_profile_no_presets
+GET http://{{ site }}/api/v1/profile.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1794468600000 "@0.mills"
+ASSERT_EQUALS "2026-11-12T07:30:00Z" "@0.startDate"
+ASSERT_LENGTH 0 "@0.overridePresets"
+ASSERT_EQUALS "seeddevicetoken" "@0.deviceToken"
+
+// A later upload with presets keeps them, and its mills, which Trio sends in whole seconds, as sent rather than
+// startDate's
+NAME trio_upload_profile_presets
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"defaultProfile":"default","startDate":"2026-11-12T08:30:00.456Z","mills":1794472200000,"units":"mmol","enteredBy":"Trio","store":{"default":{"dia":10,"carbs_hr":28,"delay":0,"timezone":"Pacific/Auckland","units":"mmol","basal":[{"time":"00:00","value":0.8,"timeAsSeconds":0}]}},"bundleIdentifier":"org.nightscout.ABCDE.trio","deviceToken":"seeddevicetoken","isAPNSProduction":false,"overridePresets":[{"name":"Sport","duration":60,"percentage":80,"target":140}],"teamID":"ABCDE12345","expirationDate":"2027-11-12T00:00:00.000Z"}
+ASSERT_STATUS 200
+
+NAME trio_import_profile_presets
+GET http://{{ site }}/api/v1/profile.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1794472200000 "@0.mills"
+ASSERT_LENGTH 1 "@0.overridePresets"
+ASSERT_EQUALS "Sport" "@0.overridePresets.0.name"

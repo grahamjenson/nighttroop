@@ -517,6 +517,8 @@ CREATE TABLE profile_presets (
     remote_settings_id TEXT CHECK(length(remote_settings_id) = 64),
     -- Who the app said uploaded it (enteredBy), e.g. Loop, as tools pick a loop's profiles by it
     entered_by TEXT CHECK(length(entered_by) <= 64),
+    -- The mills the app sent, kept as sent, as Nightscout does, though they can differ from startDate
+    mills INTEGER CHECK(mills BETWEEN 0 AND 253402300799999),
 
     -- Default Stuff
 

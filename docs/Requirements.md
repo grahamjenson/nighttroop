@@ -968,7 +968,7 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A device status keeps its uploader's `isCharging`, `name` and `timestamp`, and, while the status as sent is kept,
   Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
-  override presets, for LoopFollow's Trio Remote Control.
+  override presets, for LoopFollow's Trio Remote Control; `overridePresets: []` comes back as an empty list.
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
   override again with its `_id` when it changes, and deletes it by that `_id`.
 - Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
@@ -1006,6 +1006,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   after one are kept too; the site can add a Sensor Stop event group.
 - A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
   profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
+- A profile's `mills` comes back as sent, though Trio sends them in whole seconds and its `startDate` not, else when it
+  starts.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
 - A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and

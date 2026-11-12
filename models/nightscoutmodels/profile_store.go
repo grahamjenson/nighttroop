@@ -303,7 +303,7 @@ type RemoteSettings struct {
 	IsAPNSProduction *types.FlexibleBool      `json:"isAPNSProduction,omitempty"`
 	TeamID           *types.ShortString       `json:"teamID,omitempty"`
 	ExpirationDate   *types.DateString        `json:"expirationDate,omitempty"`
-	OverridePresets  []*TrioOverridePreset    `json:"overridePresets,omitempty"`
+	OverridePresets  []*TrioOverridePreset    `json:"overridePresets,omitzero"` // as sent, so none is an empty list
 }
 
 // TrioOverridePreset is one of Trio's override presets, with its target in mg/dL
