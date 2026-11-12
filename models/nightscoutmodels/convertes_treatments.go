@@ -206,6 +206,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Uuid UUID
 	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	// goverter:map BolusCalculatorResultJson BolusCalculatorResult
+	// goverter:map UserEnteredAt UserEnteredAt | MillisToDateString
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -404,6 +405,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map DurationInMilliseconds DurationMs
 	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
+	// goverter:map UserEnteredAt UserEnteredAt | DateStringToMillis
 	// goverter:map SentJSON SentHash | SentHash
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
@@ -507,4 +509,20 @@ func JSONToInsulinConfig(source *string) *InsulinConfig {
 		return nil
 	}
 	return &config
+}
+
+// DateStringToMillis is a date in milliseconds, nil when there is none
+func DateStringToMillis(source *types.DateString) *int64 {
+	if source == nil {
+		return nil
+	}
+	return source.UnixMillip()
+}
+
+// MillisToDateString is a date in milliseconds as a UTC date string, nil when there is none
+func MillisToDateString(source *int64) *types.DateString {
+	if source == nil {
+		return nil
+	}
+	return new(types.DateStringFromInt64AndUTCOffset(*source, nil))
 }

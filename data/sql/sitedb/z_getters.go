@@ -996,6 +996,46 @@ func (m *EventGroup) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
 }
 
+// GetSyncIdentifier returns the SyncIdentifier value.
+func (m EventGroup) GetSyncIdentifier() *string {
+	return m.SyncIdentifier
+}
+
+// SetSyncIdentifier sets the SyncIdentifier value and returns the updated EventGroup.
+func (m *EventGroup) SetSyncIdentifier(v *string) {
+	m.SyncIdentifier = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m EventGroup) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated EventGroup.
+func (m *EventGroup) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m EventGroup) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated EventGroup.
+func (m *EventGroup) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m EventGroup) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated EventGroup.
+func (m *EventGroup) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -8846,6 +8886,46 @@ func (m *CreateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
 }
 
+// GetSyncIdentifier returns the SyncIdentifier value.
+func (m CreateEventGroupParams) GetSyncIdentifier() *string {
+	return m.SyncIdentifier
+}
+
+// SetSyncIdentifier sets the SyncIdentifier value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetSyncIdentifier(v *string) {
+	m.SyncIdentifier = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m CreateEventGroupParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m CreateEventGroupParams) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m CreateEventGroupParams) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -10094,6 +10174,46 @@ func (m UpdateEventGroupParams) GetBolusCalculatorResultJson() *string {
 // SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
+}
+
+// GetSyncIdentifier returns the SyncIdentifier value.
+func (m UpdateEventGroupParams) GetSyncIdentifier() *string {
+	return m.SyncIdentifier
+}
+
+// SetSyncIdentifier sets the SyncIdentifier value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetSyncIdentifier(v *string) {
+	m.SyncIdentifier = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m UpdateEventGroupParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m UpdateEventGroupParams) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m UpdateEventGroupParams) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.

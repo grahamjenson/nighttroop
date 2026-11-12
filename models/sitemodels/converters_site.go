@@ -248,6 +248,8 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// The site does not set AAPS's running mode, nor the pump, nor its insulin, nor a Bolus Wizard's calculation
 	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs DurationType SentHash PumpID PumpSerial PumpType IcfgJson BolusCalculatorResultJson
+	// nor Loop's ids, insulin, carb entry time and unabsorbed insulin
+	// goverter:ignore SyncIdentifier InsulinType UserEnteredAt Unabsorbed
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
 
 	// goverter:context siteContext
