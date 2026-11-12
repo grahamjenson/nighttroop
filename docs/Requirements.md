@@ -1327,6 +1327,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   ID, expiring in 5 minutes, and is answered 200 `OK`. Who sent it is its identity, not its IP address. A bolus over
   30 U, carbs over 250 g or absorbing over 24 hours, an override over a week or without a name, or another event type
   is refused (400), as is a command to a site with no Loop or no credential for it, saying which.
+  Remote carbs sent with a `foodType` (e.g. 🍕) are pushed with it as Loop's `food-type`.
 - An FCM push is sent with the Firebase service account's OAuth token, got with a JWT its key signs from Google's
   token endpoint, never the `token_uri` in its JSON, and used again until five minutes before it expires; the key and
   tokens are never logged or shown. A service account Google refuses says Google's reason (502).

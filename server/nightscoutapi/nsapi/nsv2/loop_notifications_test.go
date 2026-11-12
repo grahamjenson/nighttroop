@@ -36,6 +36,8 @@ func TestLoopCommandAlert(t *testing.T) {
 			data: with(map[string]any{"carbs-entry": 20.0, "absorption-time": 2.5, "otp": "654321", "start-time": "2026-11-12T05:55:00.000Z"})},
 		{name: "carbs absorb in 3 hours unless said", body: `{"eventType": "Remote Carbs Entry", "remoteCarbs": 10, "remoteAbsorption": "0"}`,
 			title: "Remote Carbs Entry: 10 grams", alertBody: "Absorption Time: 3 hours - carer", data: with(map[string]any{"carbs-entry": 10.0, "absorption-time": 3.0})},
+		{name: "carbs with a food type", body: `{"eventType": "Remote Carbs Entry", "remoteCarbs": "15", "remoteAbsorption": "2", "foodType": "🍕"}`,
+			title: "Remote Carbs Entry: 15 grams", alertBody: "Absorption Time: 2 hours - carer", data: with(map[string]any{"carbs-entry": 15.0, "absorption-time": 2.0, "food-type": "🍕"})},
 		{name: "override", body: `{"eventType": "Temporary Override", "reason": "Running", "reasonDisplay": "🏃 Running", "duration": "60.0", "notes": ""}`,
 			title: "🏃 Running Temporary Override", alertBody: "carer", data: with(map[string]any{"override-name": "Running", "override-duration-minutes": int64(60)})},
 		{name: "override until cancelled", body: `{"eventType": "Temporary Override", "reason": "Running", "duration": "0"}`,
