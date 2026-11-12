@@ -130,6 +130,8 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// Only a loop's upload says an override has no end
+	// goverter:ignore DurationType
 	TempTargetToCreate(source *SiteTempTarget, siteContext *httputils.SiteContext) sitedb.CreateTempTargetParams
 
 	// goverter:context siteContext
@@ -138,6 +140,7 @@ type SiteConverter interface {
 	// goverter:map LowTarget LowTargetMgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore DurationType
 	TempTargetToUpdate(source *SiteTempTarget, siteContext *httputils.SiteContext) sitedb.UpdateTempTargetParams
 
 	///////
@@ -247,7 +250,7 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// The site does not set AAPS's running mode, nor the pump, nor its insulin, nor a Bolus Wizard's calculation
-	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs DurationType SentHash PumpID PumpSerial PumpType IcfgJson BolusCalculatorResultJson
+	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs SentHash PumpID PumpSerial PumpType IcfgJson BolusCalculatorResultJson
 	// nor Loop's ids, insulin, carb entry time and unabsorbed insulin
 	// goverter:ignore SyncIdentifier InsulinType UserEnteredAt Unabsorbed
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams

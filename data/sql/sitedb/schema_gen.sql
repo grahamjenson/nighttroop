@@ -173,7 +173,7 @@ CREATE TABLE event_groups (
     -- What only some apps send, NULL for most treatments: the app's own id for it, given back as sent, e.g. xDrip+'s
     -- uuid, and AAPS's running mode (an OpenAPS Offline), e.g. DISCONNECTED_PUMP, whether the loop forced it
     -- (auto_forced) and why (reasons), how long it was to last in milliseconds, at most a year (original_duration_ms),
-    -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
+    -- and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
     -- (sensor_code, transmitter_id), the insulin AAPS says a bolus or profile switch was given with (icfg_json), and
@@ -185,7 +185,6 @@ CREATE TABLE event_groups (
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
     reasons TEXT CHECK(length(reasons) <= 1024),
     original_duration_ms INTEGER CHECK(original_duration_ms BETWEEN 0 AND 31536000000),
-    duration_type TEXT CHECK(length(duration_type) <= 16),
     sent_hash TEXT CHECK(length(sent_hash) <= 32),
     pump_id TEXT CHECK(length(pump_id) <= 32),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
@@ -587,6 +586,8 @@ CREATE TABLE temp_targets (
     high_target_mgdl REAL NOT NULL CHECK(high_target_mgdl BETWEEN 0 AND 1000), -- a cancel can have no targets
     low_target_mgdl REAL NOT NULL CHECK(low_target_mgdl BETWEEN 0 AND 1000),
     insulin_needs_scale_factor REAL CHECK(insulin_needs_scale_factor BETWEEN 0 AND 10),
+    -- Loop's and Trio's "indefinite" for an override with no end, kept a week long, as LoopFollow shows it so
+    duration_type TEXT CHECK(length(duration_type) <= 16),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
