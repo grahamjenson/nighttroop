@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi"
 	"nighttroop.t1d.nz/server/siteapi"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -126,12 +127,13 @@ func globalWithinRateLimit(config *config.ServerConfig, routeTarget RouteTarget,
 
 // serveSite serves a request for a site with its context: 404 for a site there is not, but 503 when it cannot be
 // looked up, as when the server is too busy to answer in time, so an uploader tries again rather than take its URL as
-// wrong
+// wrong. The 404 says, in JSON as Nightscout's errors are, that the site does not exist, so an app can tell its user
+// rather than take it for a wrong path.
 func serveSite(ctx context.Context, w http.ResponseWriter, r *http.Request, router http.Handler, config *config.ServerConfig, controlDB *db.ControlDB, subdomain string, ipAddress string) {
 	siteDB, siteModel, err := controlDB.GetSite(ctx, subdomain)
 	if errors.Is(err, db.ErrSiteNotFound) {
 		slog.InfoContext(ctx, "Main router 404 for subdomain", "subdomain", subdomain, "error", err)
-		http.NotFound(w, r)
+		apiutils.WriteJSON(w, http.StatusNotFound, map[string]any{"status": http.StatusNotFound, "message": "site does not exist"})
 		return
 	}
 	if err != nil {
