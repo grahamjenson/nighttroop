@@ -226,12 +226,25 @@ func DateStringFromTime(t time.Time) DateString {
 }
 
 func DateStringFromInt64AndUTCOffset(dateInt int64, offsetMinutes *int64) DateString {
+	return DateStringFromTime(timeInUTCOffset(dateInt, offsetMinutes))
+}
+
+// ISOOffsetLayout is ISOLayout in the time's own zone, so with three fractional digits and its UTC offset, e.g.
+// 2026-11-12T08:01:23.940Z in UTC or 2026-11-12T21:01:23.940+13:00
+const ISOOffsetLayout = "2006-01-02T15:04:05.000Z07:00"
+
+// ISODateStringFromInt64AndUTCOffset is the date as toISOString writes it, with three fractional digits, in its UTC
+// offset, so a dateString is as Nightscout gives one back and fixed-format (.SSS) parsers read it
+func ISODateStringFromInt64AndUTCOffset(dateInt int64, offsetMinutes *int64) DateString {
+	return DateString(timeInUTCOffset(dateInt, offsetMinutes).Format(ISOOffsetLayout))
+}
+
+// timeInUTCOffset is the date in milliseconds in the UTC offset in minutes, or in UTC when there is none
+func timeInUTCOffset(dateInt int64, offsetMinutes *int64) time.Time {
 	if offsetMinutes == nil {
-		t := time.UnixMilli(dateInt).UTC()
-		return DateStringFromTime(t)
+		return time.UnixMilli(dateInt).UTC()
 	}
-	t := time.UnixMilli(dateInt).In(LocationFromUTCOffsetMinutes(int(*offsetMinutes)))
-	return DateStringFromTime(t)
+	return time.UnixMilli(dateInt).In(LocationFromUTCOffsetMinutes(int(*offsetMinutes)))
 }
 
 func LocationFromUTCOffsetMinutes(offsetMin int) *time.Location {
