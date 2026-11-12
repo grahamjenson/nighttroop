@@ -95,3 +95,49 @@ ASSERT_EQUALS 125 "@0.sgv"
 NAME read_token_cannot_delete
 DELETE http://{{ site }}/api/v1/treatments.json?find[id][$eq]=A1B2C3D4-0000-0000-0000-000000000006&token={{ .create_new_site.read_only_nstoken }}
 ASSERT_STATUS 403
+
+// Nighttroop writes created_at as Nightscout's toISOString does, in UTC with three fractional digits, so a
+// fixed-format (.SSS) parser reads it and Trio finds and deletes a treatment by the created_at it sent
+NAME trio_upload_millis
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "Note", "created_at" : "{{ date -1 }}T08:01:23.940Z", "enteredBy" : "Trio", "notes" : "millis" },
+  { "eventType" : "Note", "created_at" : "{{ date -1 }}T08:02:00Z", "enteredBy" : "Trio", "notes" : "whole seconds" },
+  { "eventType" : "Note", "created_at" : "{{ date -1 }}T21:03:00.5+13:00", "enteredBy" : "Trio", "notes" : "offset" }
+]
+ASSERT_STATUS 200
+ASSERT_CONTAINS "T08:01:23.940Z" "@0.created_at"
+ASSERT_LENGTH 24 "@0.created_at"
+ASSERT_CONTAINS "T08:02:00.000Z" "@1.created_at"
+ASSERT_CONTAINS "T08:03:00.500Z" "@2.created_at"
+
+NAME trio_find_millis
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$eq]={{ date -1 }}T08:01:23.940Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "millis" "@0.notes"
+ASSERT_CONTAINS "T08:01:23.940Z" "@0.created_at"
+ASSERT_LENGTH 24 "@0.created_at"
+
+NAME trio_find_since_millis
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ date -1 }}T08:01:23.940Z&find[created_at][$lt]={{ date -1 }}T08:03:00.500Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "whole seconds" "@0.notes"
+ASSERT_EQUALS "millis" "@1.notes"
+
+NAME trio_delete_millis
+DELETE http://{{ site }}/api/v1/treatments.json?find[created_at][$eq]={{ date -1 }}T08:01:23.940Z&find[eventType][$eq]=Note
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME trio_millis_deleted
+GET http://{{ site }}/api/v1/treatments.json?find[notes]=millis
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"

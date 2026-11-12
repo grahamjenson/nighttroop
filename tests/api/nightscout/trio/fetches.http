@@ -64,7 +64,7 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EXISTS "@0._id"
-ASSERT_CONTAINS "T12:10:00Z" "@0.created_at"
+ASSERT_CONTAINS "T12:10:00.000Z" "@0.created_at"
 ASSERT_EQUALS 20 "@0.carbs"
 ASSERT_EQUALS 1 "@0.fat"
 ASSERT_EQUALS 2 "@0.protein"

@@ -143,7 +143,7 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 8 "@"
 ASSERT_EQUALS "Note" "@0.eventType"
 ASSERT_EQUALS "Pizza night" "@0.notes"
-ASSERT_LENGTH 20 "@0.created_at"
+ASSERT_LENGTH 24 "@0.created_at"
 # timestamp is optional, but force cast to a String when there
 ASSERT_LENGTH 20 "@0.timestamp"
 # Overrides.swift: correctionRange as [Int] or targetBottom/targetTop as Int, insulinNeedsScaleFactor and duration
@@ -175,7 +175,7 @@ ASSERT_EQUALS 0.5 "@5.absolute"
 ASSERT_EQUALS 30 "@5.duration"
 ASSERT_EQUALS "Resume Pump" "@6.eventType"
 ASSERT_EQUALS "Suspend Pump" "@7.eventType"
-ASSERT_LENGTH 20 "@7.created_at"
+ASSERT_LENGTH 24 "@7.created_at"
 
 # automatic is as sent through API v3 too
 NAME treatments_v3_automatic
@@ -194,7 +194,7 @@ NAME cage
 GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Site%20Change&find[created_at][$lte]={{ utctime 0 }}&count=1
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_LENGTH 20 "@0.created_at"
+ASSERT_LENGTH 24 "@0.created_at"
 
 # IAge.swift and SAge.swift: the latest insulin change and sensor start in 60 days
 NAME iage
@@ -264,7 +264,7 @@ NAME devicestatus_near_treatment
 GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&find[created_at][$gte]={{ utctime 32 }}.000Z&find[created_at][$lte]={{ utctime -28 }}.000Z&count=30
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_LENGTH 20 "@0.created_at"
+ASSERT_LENGTH 24 "@0.created_at"
 ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
 
 ######
