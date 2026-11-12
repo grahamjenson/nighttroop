@@ -34,7 +34,7 @@ ASSERT_TEXT_VISIBLE Required
 // Its multiplier of the profile's insulin is typed in as a percent above 0, as it is by default
 ASSERT_VISIBLE #site--profile-switch--create--multiplier[value="100"][min="10"][max="500"]
 ASSERT_TEXT_VISIBLE Insulin (%)
-ASSERT_TEXT_VISIBLE A percent above 0: 100% is as it is, 120% is 1.2 times.
+ASSERT_TEXT_VISIBLE A percent above 0: 100% is unchanged, 120% is 1.2 times.
 SCREENSHOT profile_switch_add
 INPUT #site--profile-switch--create--name Sick Day
 INPUT #site--profile-switch--create--multiplier 120

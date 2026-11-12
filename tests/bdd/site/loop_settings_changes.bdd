@@ -37,5 +37,5 @@ ASSERT_NOT_VISIBLE #presets--loop-settings--details
 
 // The first settings have none before them to compare
 CLICK #loopSettingsTable tbody tr >> nth=1
-ASSERT_VISIBLE #presets--loop-settings--changes >> text=These are the first of Loop's settings kept
+ASSERT_VISIBLE #presets--loop-settings--changes >> text=These are the first Loop settings kept
 ASSERT_NOT_VISIBLE #presets--loop-settings--changes li

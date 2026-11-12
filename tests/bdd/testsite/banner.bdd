@@ -3,7 +3,7 @@ GOTO {{ server_url }}/
 ASSERT_STATUS 200
 ASSERT_VISIBLE #test-site-banner
 ASSERT_TEXT_VISIBLE This is a test site
-ASSERT_TEXT_VISIBLE All data here is frequently wiped
+ASSERT_TEXT_VISIBLE Data here is wiped often
 SCREENSHOT public
 
 // A new site's pages show it too

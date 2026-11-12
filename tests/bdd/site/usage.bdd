@@ -25,7 +25,7 @@ ASSERT_VISIBLE #site--usage--db-table--Other
 ASSERT_VISIBLE #site--usage--db-table--device_reports
 ASSERT_VISIBLE #site--usage--truncate-card >> text=Readings, treatments, profiles and everything else are kept.
 // It has Download Data, a link to a snapshot of the site's DB, to look through its data
-ASSERT_VISIBLE #site--usage--download >> text=A copy of all the site's data
+ASSERT_VISIBLE #site--usage--download >> text=All the site's data as it is now
 ASSERT_VISIBLE #site--usage--download-data[href="/usage/download"][download]
 SCREENSHOT usage
 // The user menu marks Usage as the page shown
