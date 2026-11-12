@@ -871,6 +871,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An `mbg` entry keeps AAPS's `isCalibration` and `sensorMgdlAtPairing` (in mg/dL) and returns them as sent through
   v1 and v3, so AAPS's followers read a calibration as one; an update without them keeps them.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
+- A document sent with a date but no `utcOffset`, as AAPS sends a device status, takes the site timezone's offset at
+  that date; a replace sent with none keeps the offset of the document it replaces.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its
   `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any
