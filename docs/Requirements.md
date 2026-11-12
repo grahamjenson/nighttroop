@@ -827,6 +827,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
+- A Socket.IO client polling upgrades to a websocket at once: the probe ends its waiting poll, as the JavaScript client
+  that AAPS and Nightscout's pages use waits for it before upgrading, rather than reconnecting every minute.
 - A Nightscout food has `type` `food`, as AAPS loads only foods of that type.
 - The Nightscout host's root, which LoopFollow's Nightscout tab opens, goes to the site's own pages.
 - A live update sent to a site's sockets is in the site's own settings, such as its time zone, as it goes to every
