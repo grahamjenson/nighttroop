@@ -84,7 +84,7 @@ create, and `identifier` is sent on an update. Every treatment has `date` (ms), 
 - **Temporary Target**: `targetTop`, `targetBottom` in mg/dL with `units: "mg/dl"`, `reason`, `duration`,
   `durationInMilliseconds`.
 - **Profile Switch**: `profile`, `profileJson` (a JSON string), `originalProfileName`, `originalDuration`,
-  `duration`, `durationInMilliseconds`, `timeshift` (h), `percentage` (Int).
+  `duration`, `durationInMilliseconds`, `timeshift` (ms), `percentage` (Int).
 - **Effective profile switch**: a `Note` with `profileJson`, `originalProfileName`, `originalCustomizedName`,
   `originalTimeshift`, `originalPercentage`, `originalDuration`, `originalEnd`. AAPS reads it back as one only with
   all of them (`TreatmentMapper.kt:198`).

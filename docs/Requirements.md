@@ -903,6 +903,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   storage, to an identity that can change the site's data, as LoopFollow sending remote commands is; a read only
   user or device gets the profile without them, and the socket's `dataUpdate`, sent to every reader, has none.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
+- A profile switch's `timeshift` is in minutes, but in milliseconds for one sent with an `originalProfileName`, as AAPS
+  sends and reads it, so AAPS's time shifted switches are kept and returned as sent.
 - A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
   from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
   `originalDuration` and `originalEnd`, and returns them as sent through v1 and v3, so AAPS's followers read an
