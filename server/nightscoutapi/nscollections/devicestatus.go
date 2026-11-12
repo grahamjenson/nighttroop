@@ -295,7 +295,7 @@ func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmod
 	}
 }
 
-// withoutUnknownLevels leaves out the phone's and pump's battery and the pump's reservoir when out of their columns
+// withoutUnknownLevels leaves out the phone's and pump's battery and the pump's reservoir when out of their columns'
 // ranges, as when a phone does not know them, like the uploader battery -100 Trio sends when iOS does not know the
 // phone's (its batteryLevel -1 x 100), rather than refusing the whole device status. Its pump and uploader are copied,
 // so what was sent is not changed.
