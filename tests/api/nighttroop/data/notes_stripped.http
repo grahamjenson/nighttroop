@@ -1,0 +1,24 @@
+// A note an app sends is kept, and given back through the Nightscout API, exactly as sent, as xDrip+ needs. The site,
+// its pages and its API, gets it without its HTML tags or scripts, so no app's note can put a script on them.
+INCLUDE steps/new_site_admin.steps
+
+NAME xdrip_note_with_html
+PUT http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "31111111-2222-3333-4444-555555555555", "_id": "311111112222333344445555", "notes": "pie <b>bold</b> & chips <script>alert(1)</script><img src=x onerror=alert(2)>", "insulin": 1, "created_at": "{{ time 5 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "pie <b>bold</b> & chips <script>alert(1)</script><img src=x onerror=alert(2)>" "@notes"
+
+NAME site_event_group_note_stripped
+GET http://{{ site }}/data/event-groups/311111112222333344445555
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "pie bold & chips " "@result.notes"
+
+NAME nightscout_note_as_sent
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[uuid]=31111111-2222-3333-4444-555555555555
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "pie <b>bold</b> & chips <script>alert(1)</script><img src=x onerror=alert(2)>" "@0.notes"

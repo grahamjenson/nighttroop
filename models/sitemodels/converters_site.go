@@ -91,6 +91,9 @@ type SiteConverter interface {
 	// goverter:map Mgdl Reading | MgdlToSettingsUnits
 	// goverter:map Units OriginalUnits
 	// goverter:map Units | ContextUnits
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *SiteGlucoseReading
 
 	// goverter:context siteContext
@@ -121,6 +124,9 @@ type SiteConverter interface {
 	// goverter:map HighTargetMgdl HighTarget | MgdlToSettingsUnits
 	// goverter:map LowTargetMgdl LowTarget | MgdlToSettingsUnits
 	// goverter:map . Units | ContextUnits
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	TempTargetFromDB(source *sitedb.TempTarget, siteContext *httputils.SiteContext) *SiteTempTarget
 
 	// goverter:context siteContext
@@ -147,6 +153,9 @@ type SiteConverter interface {
 	// TEMP BASALS
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal
 
 	// goverter:context siteContext
@@ -169,6 +178,9 @@ type SiteConverter interface {
 	// ACTIVITIES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	ActivityFromDB(source *sitedb.Activity) *SiteActivity
 
 	// goverter:context siteContext
@@ -188,6 +200,11 @@ type SiteConverter interface {
 	// NOTIFICATION EVENTS
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
+	// goverter:map Content | StripTags
+	// goverter:map Title | StripTagsValue
 	NotificationEventFromDB(source *sitedb.NotificationEvent) *SiteNotificationEvent
 
 	// goverter:context siteContext
@@ -209,6 +226,9 @@ type SiteConverter interface {
 	// PROFILE SWITCHES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch
 
 	// goverter:context siteContext
@@ -242,6 +262,9 @@ type SiteConverter interface {
 	// goverter:map EventGroup.FoodIntakeID FoodIntakeID
 	// goverter:map EventGroup.TempBasalID TempBasalID
 	// goverter:map EventGroup.TempTargetID TempTargetID
+	// App's text is shown without its tags
+	// goverter:map EventGroup.Notes Notes | StripTags
+	// goverter:map EventGroup.Reason Reason | StripTags
 	EventGroupFromDB(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) *SiteEventGroup
 
 	// goverter:context siteContext
@@ -266,6 +289,9 @@ type SiteConverter interface {
 	// INSULIN DOSES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose
 
 	// goverter:context siteContext
@@ -291,6 +317,9 @@ type SiteConverter interface {
 	// FOOD INTAKES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake
 
 	// goverter:context siteContext

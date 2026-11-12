@@ -160,6 +160,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `POST devicestatus`, phone and bridge battery | Fixed in #512: `uploader.battery` was only kept for Loop |
 | `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |
 | `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
+| A treatment's `notes` with HTML, e.g. `<b>bold</b>` | Fixed in this PR: given back exactly as sent. Tags were removed, so xDrip+ appended the changed note to its own with each download |
 | `PUT treatments`, `Sensor Start`, and again to update | Works |
 | `PUT treatments`, `Sensor Stop` | Works: kept as a sensor change, and the treatments queued after it upload (it was refused, and they were lost) |
 | `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted. Any other unknown `find[...]` now gives nothing, so it deletes nothing |
