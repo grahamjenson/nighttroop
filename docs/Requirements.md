@@ -857,8 +857,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   targets as mg/dL: entries, treatments, profiles and their `units`, over HTTP and Socket.IO. It is accepted in the
   units sent with it, or guessed from its value.
 - A profile, or a profile switch's `profileJson`, sent in mmol/L comes back in mg/dL in every glucose: its `sens`,
-  `target_low` and `target_high`, and Loop's `loopSettings` `minimumBGGuard`, `preMealTargetRange` and each override
-  preset's `targetRange`, so a reader never sees an mmol/L sensitivity or suspend threshold labelled mg/dL. Every treatment comes back with `units`, a temp target and a therapy
+  `target_low` and `target_high`, and Loop's `loopSettings` `minimumBGGuard`, `preMealTargetRange`, each override
+  preset's `targetRange` and its running `scheduleOverride`'s `targetRange`, so a reader never sees an mmol/L sensitivity or suspend threshold labelled mg/dL. Every treatment comes back with `units`, a temp target and a therapy
   event (e.g. a Note or Sensor Change) too, so a follower on an mmol/L site does not read a target of 90 as mmol/L.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
@@ -902,6 +902,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
+- A profile from Loop keeps its `loopSettings.scheduleOverride`, the override running when it was sent, as an
+  override preset is (its `duration` in seconds), so Loop reads it back.
 - A profile keeps Loop's and Trio's `deviceToken` whole, up to 256 characters, as Apple's are of no fixed length
   (Trio's are 160 hex characters), and registers it whole; a longer one is kept empty and not registered.
 - A profile's Loop `loopSettings.deviceToken` and Trio `deviceToken` are only given back, in v1, v3 and the socket's

@@ -294,6 +294,8 @@ type LoopSettings struct {
 	BundleIdentifier        *types.ShortString       `json:"bundleIdentifier,omitempty"`
 	PreMealTargetRange      []*types.FlexibleFloat64 `json:"preMealTargetRange,omitempty"`
 	OverridePresets         []*OverridePreset        `json:"overridePresets,omitempty"`
+	// ScheduleOverride is the override running when Loop sent its settings, as a preset is, its duration in seconds
+	ScheduleOverride *OverridePreset `json:"scheduleOverride,omitempty"`
 }
 
 // RemoteSettings are where and how LoopFollow sends Trio its remote commands, and Trio's override presets
@@ -351,8 +353,8 @@ func (p *Profile) ConvertToMGDL() {
 	p.TargetHigh = ScheduleValuesToJSONWithUnitConversionToMGDL(p.TargetHigh, p.Units)
 }
 
-// WithGlucose is a copy of Loop's settings with each glucose in them, its suspend threshold, pre-meal range and
-// override presets' ranges, converted, as Loop sends them in its profile's units
+// WithGlucose is a copy of Loop's settings with each glucose in them, its suspend threshold, pre-meal range, override
+// presets' ranges and running override's range, converted, as Loop sends them in its profile's units
 func (l *LoopSettings) WithGlucose(convert func(float64) float64) *LoopSettings {
 	if l == nil {
 		return nil
@@ -374,16 +376,21 @@ func (l *LoopSettings) WithGlucose(convert func(float64) float64) *LoopSettings 
 		converted.MinimumBGGuard = new(types.FlexibleFloat64(convert(l.MinimumBGGuard.Float64())))
 	}
 	converted.PreMealTargetRange = glucose(l.PreMealTargetRange)
+	preset := func(preset *OverridePreset) *OverridePreset {
+		if preset == nil {
+			return nil
+		}
+		p := *preset
+		p.TargetRange = glucose(preset.TargetRange)
+		return &p
+	}
 	if l.OverridePresets != nil {
 		converted.OverridePresets = make([]*OverridePreset, len(l.OverridePresets))
-		for i, preset := range l.OverridePresets {
-			if preset != nil {
-				p := *preset
-				p.TargetRange = glucose(preset.TargetRange)
-				converted.OverridePresets[i] = &p
-			}
+		for i, p := range l.OverridePresets {
+			converted.OverridePresets[i] = preset(p)
 		}
 	}
+	converted.ScheduleOverride = preset(l.ScheduleOverride)
 	return &converted
 }
 
