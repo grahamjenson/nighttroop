@@ -81,6 +81,7 @@ ASSERT_EQUALS 1.5 "@0.insulin"
 ASSERT_EQUALS "Temp Basal" "@1.eventType"
 ASSERT_EQUALS 0.5 "@1.absolute"
 ASSERT_EQUALS 30 "@1.duration"
+ASSERT_EQUALS true "@1.automatic"
 ASSERT_EQUALS "suspend" "@2.reason"
 ASSERT_EQUALS 0 "@2.absolute"
 ASSERT_EQUALS "Site Change" "@3.eventType"
@@ -188,8 +189,8 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result"
 
-# A dose's syncIdentifier is given back as sent, though its _id is a hash of an Omnipod one, as are its insulinType and
-# a bolus's unabsorbed
+# A dose's syncIdentifier is given back as sent, though its _id is a hash of an Omnipod one, as are its insulinType,
+# a bolus's unabsorbed and a temp basal's automatic, which tells a temp basal Loop set from one the user set
 NAME loop_create_doses_as_sent
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -197,7 +198,7 @@ H Content-Type: application/json
 H Accept: application/json
 B [
     {"created_at": "{{ time 250 }}", "timestamp": "{{ time 250 }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 1, "programmed": 1, "unabsorbed": 0, "duration": 1.6666666666666667, "automatic": false, "syncIdentifier": "626f6c757320312e3020323032362d31312d30325430343a30303a30305a", "insulinType": "Novolog"},
-    {"created_at": "{{ time 249 }}", "timestamp": "{{ time 249 }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 0, "absolute": 0, "duration": 1.1747, "automatic": true, "syncIdentifier": "73757370656e6420302e3020323032362d31312d30325430343a30313a30305a", "reason": "suspend", "insulinType": "Novolog"},
+    {"created_at": "{{ time 249 }}", "timestamp": "{{ time 249 }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 0, "absolute": 0, "duration": 1.1747, "automatic": false, "syncIdentifier": "73757370656e6420302e3020323032362d31312d30325430343a30313a30305a", "reason": "suspend", "insulinType": "Novolog"},
     {"created_at": "{{ time 248 }}", "timestamp": "{{ time 248 }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 0.05, "programmed": 0.05, "unabsorbed": 0, "duration": 0.667, "automatic": true, "syncIdentifier": "626f6c757320302e303520323032362d31312d30325430343a30323a30305a", "insulinType": "Novolog"}
   ]
 ASSERT_STATUS 200
@@ -216,6 +217,7 @@ ASSERT_LENGTH 3 "@"
 ASSERT_EQUALS "626f6c757320302e303520323032362d31312d30325430343a30323a30305a" "@0.syncIdentifier"
 ASSERT_EQUALS "73757370656e6420302e3020323032362d31312d30325430343a30313a30305a" "@1.syncIdentifier"
 ASSERT_EQUALS "Novolog" "@1.insulinType"
+ASSERT_EQUALS false "@1.automatic"
 ASSERT_EQUALS "626f6c757320312e3020323032362d31312d30325430343a30303a30305a" "@2.syncIdentifier"
 ASSERT_EQUALS "Novolog" "@2.insulinType"
 ASSERT_EQUALS 0 "@2.unabsorbed"

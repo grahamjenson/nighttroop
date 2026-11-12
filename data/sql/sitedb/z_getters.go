@@ -4676,6 +4676,16 @@ func (m *TempBasal) SetInsulinType(v *string) {
 	m.InsulinType = v
 }
 
+// GetAutomatic returns the Automatic value.
+func (m TempBasal) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated TempBasal.
+func (m *TempBasal) SetAutomatic(v *bool) {
+	m.Automatic = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempBasal) GetNotes() *string {
 	return m.Notes
@@ -4864,6 +4874,16 @@ func (m TempBasalsVw) GetInsulinType() *string {
 // SetInsulinType sets the InsulinType value and returns the updated TempBasalsVw.
 func (m *TempBasalsVw) SetInsulinType(v *string) {
 	m.InsulinType = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m TempBasalsVw) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.
@@ -12386,6 +12406,16 @@ func (m *CreateTempBasalParams) SetInsulinType(v *string) {
 	m.InsulinType = v
 }
 
+// GetAutomatic returns the Automatic value.
+func (m CreateTempBasalParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated CreateTempBasalParams.
+func (m *CreateTempBasalParams) SetAutomatic(v *bool) {
+	m.Automatic = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateTempBasalParams) GetNotes() *string {
 	return m.Notes
@@ -12814,6 +12844,16 @@ func (m UpdateTempBasalParams) GetInsulinType() *string {
 // SetInsulinType sets the InsulinType value and returns the updated UpdateTempBasalParams.
 func (m *UpdateTempBasalParams) SetInsulinType(v *string) {
 	m.InsulinType = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m UpdateTempBasalParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated UpdateTempBasalParams.
+func (m *UpdateTempBasalParams) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.

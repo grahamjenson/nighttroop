@@ -99,7 +99,8 @@ All treatments have `created_at` and `timestamp` (the same ISO date), `enteredBy
 `enteredBy` is `loop://<iPhone name>`, or `Loop` / `Loop (via remote command)` for an override.
 
 A bolus's `automatic` is kept with its insulin dose and given back as sent, through API v1 and v3, as LoopFollow
-shows an automatic bolus as an SMB. A temp basal's is not kept.
+shows an automatic bolus as an SMB. A temp basal's is kept with it and given back as sent too, as it tells a temp
+basal Loop set from one the user set.
 
 A treatment's `syncIdentifier` (up to 256 characters) is kept with its event group, a bolus's or temp basal's
 `insulinType` with its insulin dose or temp basal, a bolus's `unabsorbed` with its insulin dose, and a carb entry's
@@ -230,6 +231,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | A dose posted again when it ends, with its final duration or amount | Fixed in this PR: it replaces the first upload, as in Nightscout; test in `loop/treatments.http` |
 | Omnipod `syncIdentifier`s once creates dedup by identifier | Works since #515: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | A treatment's `syncIdentifier`, `insulinType`, a carb entry's `userEnteredAt`, a bolus's `unabsorbed` | Fixed in this PR: kept and given back as sent, through API v1 and v3 (they were dropped); test in `loop/treatments.http` |
+| A temp basal's `automatic` | Fixed in this PR: kept and given back as sent, through API v1 and v3 (it was dropped); test in `loop/treatments.http` |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
 | Device status `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
 | Device status pump `pumpID`, `suspended`, `bolusing` | Fixed in this PR: kept once the status as sent is cleared (they were dropped then); test in `loop/devicestatus.http` |

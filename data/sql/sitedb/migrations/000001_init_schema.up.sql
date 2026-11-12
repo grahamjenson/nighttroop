@@ -205,6 +205,7 @@ CREATE TABLE temp_basals (
     multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal at its start, so 0.5 is half and 0 a zero temp; optional, but rate is not
     type TEXT CHECK(length(type) <= 64), -- AAPS's kind of temp basal, e.g. NORMAL, or PUMP_SUSPEND for a suspended pump
     insulin_type TEXT CHECK(length(insulin_type) <= 64), -- the insulin it is of, Loop's, e.g. Novolog
+    automatic INTEGER CHECK(automatic IN (0, 1)), -- whether the loop set it, Loop's, rather than the user
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
