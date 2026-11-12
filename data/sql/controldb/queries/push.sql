@@ -109,6 +109,13 @@ WHERE push_registrations.site_id = COALESCE(sqlc.narg('SiteID'), push_registrati
 ORDER BY push_registrations.id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
+-- name: NewestPushRegistrationForApp :one
+-- A site's registration for the app last registered or registered again, as Loop's is with each profile it uploads
+SELECT * FROM push_registrations
+WHERE site_id = sqlc.arg('SiteID') AND app = sqlc.arg('App')
+ORDER BY updated_at DESC, id DESC
+LIMIT 1;
+
 -- name: GetAnySitePushRegistration :one
 -- Any site's registration, for the control site
 SELECT * FROM push_registrations WHERE id = sqlc.arg('ID');

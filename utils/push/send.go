@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -20,6 +21,9 @@ var ErrNoCredential = errors.New("there is no push credential for the app")
 type Alert struct {
 	Title string `json:"title"`
 	Body  string `json:"body"`
+	// Data is given to the app with the alert, at the top of an APNs push, as Loop reads a remote command from it.
+	// A push with data wakes the app to act on it, and shows even in a Focus mode, as Nightscout's to Loop does.
+	Data map[string]any `json:"-"`
 }
 
 // Send shows the alert on the registration's device, with the credential PushCredentialFor finds for its app: the
@@ -81,7 +85,16 @@ func send(ctx context.Context, sec *security.SecurityConfig, credential *control
 	if err != nil {
 		return err
 	}
-	payload, _ := json.Marshal(map[string]any{"aps": map[string]any{"alert": alert, "sound": "default"}})
+	aps := map[string]any{"alert": alert, "sound": "default"}
+	if alert.Data != nil {
+		aps["content-available"], aps["interruption-level"] = 1, "time-sensitive"
+	}
+	body := maps.Clone(alert.Data)
+	if body == nil {
+		body = map[string]any{}
+	}
+	body["aps"] = aps
+	payload, _ := json.Marshal(body)
 	signer := Signer{ID: credential.ID, TeamID: credential.TeamOrProjectID, KeyID: *credential.KeyID, Key: key}
 	return DefaultAPNs.Send(ctx, signer, token, registration.BundleID, registration.Production, payload)
 }

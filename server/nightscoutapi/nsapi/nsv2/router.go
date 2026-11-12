@@ -16,6 +16,8 @@ func NewNightscoutV2Router(store nsutils.Store) http.Handler {
 
 	registerPropertiesRoutes(r, store)
 	r.Get("/authorization/debug/check/{permission}", CheckPermission)
+	// Nightscout needs notifications:loop:push; here, as a remote command makes a treatment, an identity that can write them
+	r.Post("/notifications/loop", nsutils.Require("api:treatments:create", false, LoopNotification))
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", r.URL.Path)
