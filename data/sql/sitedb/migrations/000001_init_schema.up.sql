@@ -519,6 +519,19 @@ CREATE TABLE profile_presets (
 
 
 
+-- general_settings are the documents apps keep in the Nightscout settings collection under the keys Nighttroop keeps
+-- for them, shared by every identity of the site: its key, the kind of key it is (AAPS's running config, aaps and
+-- aaps-state, or a message between AAPS and AAPSClient, aaps_clientcontrol_...), the document as sent, and who first
+-- sent it
+CREATE TABLE general_settings (
+    key TEXT PRIMARY KEY CHECK(length(key) <= 128),
+    type TEXT NOT NULL CHECK(type IN ('aaps', 'aaps_clientcontrol')),
+    value_json TEXT NOT NULL CHECK(length(value_json) <= 262144 AND json_valid(value_json)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;
+
 --
 -- INDEXES
 --
@@ -616,3 +629,6 @@ CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(r
 CREATE INDEX event_groups_group_type_occurred_at_idx ON event_groups(group_type, occurred_at);
 CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
 CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_store_id);
+
+-- A settings search or history finds the general settings changed since
+CREATE INDEX general_settings_updated_at_idx ON general_settings(updated_at);

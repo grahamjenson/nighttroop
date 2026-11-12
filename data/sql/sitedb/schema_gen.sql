@@ -22,6 +22,8 @@ CREATE INDEX food_presets_created_at_idx ON food_presets(created_at);
 
 CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
 
+CREATE INDEX general_settings_updated_at_idx ON general_settings(updated_at);
+
 CREATE INDEX glucose_readings_occurred_at_idx ON glucose_readings(occurred_at);
 
 CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(reading_type, occurred_at);
@@ -275,6 +277,15 @@ CREATE TABLE food_presets (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
+) STRICT;
+
+CREATE TABLE general_settings (
+    key TEXT PRIMARY KEY CHECK(length(key) <= 128),
+    type TEXT NOT NULL CHECK(type IN ('aaps', 'aaps_clientcontrol')),
+    value_json TEXT NOT NULL CHECK(length(value_json) <= 262144 AND json_valid(value_json)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
 CREATE TABLE glucose_readings (

@@ -68,7 +68,7 @@ page, and AAPS then asks for the same page again for ever.
 | First load of profiles | `GET /api/v3/profile?sort$desc=date&limit=1` | the store as JSON: `defaultProfile`, `startDate`, `store`, `srvModified` (`workers/LoadProfileStoreRunner.kt`) |
 | Later loads | `GET /api/v3/profile/history/<ms>?limit=10` | **the last** in the list, as the newest |
 | Profile changed | `POST /api/v3/profile` with `app: AAPS` added | 200 or 201 |
-| Client control (4.0) | `GET/POST/PATCH/PUT/DELETE /api/v3/settings[/<id>]` for `aaps`, `aaps-state` and `clientcontrol-*` documents; `/api/v2/authorization/roles` and `/subjects` with an admin token | used for pairing clients and remote commands |
+| Client control (4.0) | `GET/POST/PATCH/PUT/DELETE /api/v3/settings[/<id>]` for `aaps`, `aaps-state` and `aaps_clientcontrol_*` documents; `/api/v2/authorization/roles` and `/subjects` with an admin token | used for pairing clients and remote commands |
 
 ### Bodies AAPS sends
 
@@ -195,7 +195,8 @@ SHA1, as AAPS does.
 | `/storage` subscribe, `create`, `update`, `delete` | works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | works | `alarm.sio`, `aaps_alarm.sio` |
 | `/alarm` `announcement` | fixed in #511 (was never sent) | `aaps_alarm.sio` |
-| Client control: `settings` documents, v2 roles and subjects | not supported; TODO P4 | — |
+| Client control: `settings` documents | kept as sent, shared by the site's identities | `running_config.http` |
+| Client control: v2 roles and subjects | not supported; TODO P4 | — |
 | v1 `authorize` with the SHA1 of the secret | works (#512) | `aaps_v1.sio` |
 | v1 `authorize` payload, `dataUpdate`, `dbAdd`, `dbUpdate` | works | `aaps_v1.sio`, `db_writes.sio` |
 | `POST treatments` with `eventType` `SettingsExport` | kept as a Note (was a 400 on every sync) | `settings_export.http` |

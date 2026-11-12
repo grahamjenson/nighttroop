@@ -210,6 +210,15 @@ type FoodPreset struct {
 	CreatedByIdentityName string
 }
 
+type GeneralSetting struct {
+	Key                   string
+	Type                  string
+	ValueJson             string
+	CreatedByIdentityName string
+	CreatedAt             int64
+	UpdatedAt             int64
+}
+
 type GlucoseReading struct {
 	ID                    string
 	Mgdl                  float64
