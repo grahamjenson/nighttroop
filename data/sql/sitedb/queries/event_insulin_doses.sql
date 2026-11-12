@@ -10,6 +10,8 @@ INSERT INTO insulin_doses (
     split_ext,
     automatic,
     is_basal_insulin,
+    insulin_type,
+    unabsorbed,
     icfg_json,
 
     notes,
@@ -22,7 +24,7 @@ INSERT INTO insulin_doses (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -96,6 +98,8 @@ UPDATE insulin_doses SET
     split_ext = COALESCE(sqlc.narg('SplitExt'), split_ext),
     automatic = COALESCE(sqlc.narg('Automatic'), automatic),
     is_basal_insulin = COALESCE(sqlc.narg('IsBasalInsulin'), is_basal_insulin),
+    insulin_type = COALESCE(NULLIF(CAST(sqlc.narg('InsulinType') AS TEXT), ''), insulin_type),
+    unabsorbed = COALESCE(sqlc.narg('Unabsorbed'), unabsorbed),
     icfg_json = COALESCE(sqlc.narg('IcfgJson'), icfg_json),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

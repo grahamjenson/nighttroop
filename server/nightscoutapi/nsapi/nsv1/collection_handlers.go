@@ -17,6 +17,10 @@ func Search(store nsutils.Store) http.HandlerFunc {
 		if !ok {
 			return
 		}
+		// With no count, a profile search is Nightscout's default count of the newest stores, as if it were sent
+		if collection == nsutils.Profile && !query.CountGiven {
+			query.Limit, query.CountGiven = consts.ProfilesDefaultCount, true
+		}
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
 		if identifierOrType != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.

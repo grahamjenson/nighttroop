@@ -177,8 +177,7 @@ CREATE TABLE event_groups (
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
     -- (sensor_code, transmitter_id), and AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json),
-    -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier), the insulin it says a dose
-    -- is of (insulin_type), when a carb entry was entered (user_entered_at) and a bolus's insulin not absorbed (unabsorbed)
+    -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -193,9 +192,6 @@ CREATE TABLE event_groups (
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
     bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
     sync_identifier TEXT CHECK(length(sync_identifier) <= 256),
-    insulin_type TEXT CHECK(length(insulin_type) <= 64),
-    user_entered_at INTEGER CHECK(user_entered_at BETWEEN 0 AND 253402300799999),
-    unabsorbed REAL CHECK(unabsorbed BETWEEN 0 AND 500),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -230,7 +226,8 @@ CREATE TABLE food_intakes (
     carbs REAL CHECK(carbs BETWEEN -1000 AND 1000), -- grams, negative takes back too much
 
     -- What only some apps send, NULL for most food: Nightscout's food fields, its category and subcategory, the grams
-    -- of fat, protein and fibre, the energy (kcal or kJ), the portions, and the minutes bolused before eating (pre_bolus)
+    -- of fat, protein and fibre, the energy (kcal or kJ), the portions, the minutes bolused before eating (pre_bolus),
+    -- and when it was entered (user_entered_at, Loop's)
     category TEXT CHECK(length(category) <= 64),
     subcategory TEXT CHECK(length(subcategory) <= 64),
     fat REAL CHECK(fat BETWEEN -1000 AND 1000),
@@ -239,6 +236,7 @@ CREATE TABLE food_intakes (
     energy REAL CHECK(energy BETWEEN -20000 AND 20000),
     portions REAL CHECK(portions BETWEEN -1000 AND 1000),
     pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440),
+    user_entered_at INTEGER CHECK(user_entered_at BETWEEN 0 AND 253402300799999),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -351,12 +349,15 @@ CREATE TABLE insulin_doses (
 
     -- What only some apps send, NULL for most doses: a combo bolus's split, the fraction given at once (split_now,
     -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), whether a loop gave it
-    -- (automatic, Loop's, as LoopFollow shows it as an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), and
-    -- the insulin AAPS says it was given with, its label, peak and end times and concentration (icfg_json)
+    -- (automatic, Loop's, as LoopFollow shows it as an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), the
+    -- insulin it is of (insulin_type, Loop's, e.g. Novolog), a bolus's units not absorbed (unabsorbed, Loop's), and the
+    -- insulin AAPS says it was given with, its label, peak and end times and concentration (icfg_json)
     split_now REAL CHECK(split_now BETWEEN 0 AND 1),
     split_ext REAL CHECK(split_ext BETWEEN 0 AND 1),
     automatic INTEGER CHECK(automatic IN (0, 1)),
     is_basal_insulin INTEGER CHECK(is_basal_insulin IN (0, 1)),
+    insulin_type TEXT CHECK(length(insulin_type) <= 64),
+    unabsorbed REAL CHECK(unabsorbed BETWEEN 0 AND 500),
     icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
 
     -- Default Stuff
@@ -563,6 +564,7 @@ CREATE TABLE temp_basals (
     rate REAL NOT NULL CHECK(rate BETWEEN 0 AND 100), -- the units an hour given while it runs
     multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal at its start, so 0.5 is half and 0 a zero temp; optional, but rate is not
     type TEXT CHECK(length(type) <= 64), -- AAPS's kind of temp basal, e.g. NORMAL, or PUMP_SUSPEND for a suspended pump
+    insulin_type TEXT CHECK(length(insulin_type) <= 64), -- the insulin it is of, Loop's, e.g. Novolog
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

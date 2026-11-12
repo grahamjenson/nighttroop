@@ -78,6 +78,8 @@ ASSERT_EQUALS "Temp Basal" "@doc.eventType"
 ASSERT_EQUALS 0.5 "@doc.absolute"
 ASSERT_EQUALS 1800000 "@doc.durationInMilliseconds"
 ASSERT_EXISTS "@doc.srvModified"
+# No timestamp, which AAPS reads as a number (RemoteTreatment.timestamp) and drops the treatment when it is not
+ASSERT_EQUALS null "@doc.timestamp"
 
 NAME bye
 DISCONNECT
