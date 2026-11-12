@@ -46,7 +46,7 @@ func NewSetting[T any](definition *SettingDefinition[T], value *T, createdAt *in
 	}
 
 	if createdAt == nil {
-		now := time.Now().Unix()
+		now := time.Now().UnixMilli()
 		createdAt = &now
 	}
 
@@ -69,7 +69,7 @@ func NewDefaultSetting[T any](definition *SettingDefinition[T]) *Setting[T] {
 	setting := &Setting[T]{
 		definition: definition,
 		Value:      definition.Default,
-		CreatedAt:  time.Now().Unix(),
+		CreatedAt:  time.Now().UnixMilli(),
 		Subject:    "default",
 	}
 
