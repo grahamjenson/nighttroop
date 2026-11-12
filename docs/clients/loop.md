@@ -101,8 +101,9 @@ All treatments have `created_at` and `timestamp` (the same ISO date), `enteredBy
 A bolus's `automatic` is kept with its insulin dose and given back as sent, through API v1 and v3, as LoopFollow
 shows an automatic bolus as an SMB. A temp basal's is not kept.
 
-A treatment's `syncIdentifier` (up to 256 characters), `insulinType`, a carb entry's `userEnteredAt` (given back in
-UTC) and a bolus's `unabsorbed` are kept with its event group and given back as sent, through API v1 and v3.
+A treatment's `syncIdentifier` (up to 256 characters) is kept with its event group, a bolus's or temp basal's
+`insulinType` with its insulin dose or temp basal, a bolus's `unabsorbed` with its insulin dose, and a carb entry's
+`userEnteredAt` with its food intake (given back in UTC). Each is given back as sent, through API v1 and v3.
 `userLastModifiedAt` is not kept.
 
 How each is changed or removed:

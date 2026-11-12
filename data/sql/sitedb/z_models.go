@@ -118,9 +118,6 @@ type EventGroup struct {
 	IcfgJson                  *string
 	BolusCalculatorResultJson *string
 	SyncIdentifier            *string
-	InsulinType               *string
-	UserEnteredAt             *int64
-	Unabsorbed                *float64
 	Notes                     *string
 	Reason                    *string
 	DurationMinutes           *int64
@@ -152,6 +149,7 @@ type FoodIntake struct {
 	Energy                *float64
 	Portions              *float64
 	PreBolus              *float64
+	UserEnteredAt         *int64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -181,6 +179,7 @@ type FoodIntakesVw struct {
 	Energy                *float64
 	Portions              *float64
 	PreBolus              *float64
+	UserEnteredAt         *int64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -295,6 +294,8 @@ type InsulinDose struct {
 	SplitExt              *float64
 	Automatic             *bool
 	IsBasalInsulin        *bool
+	InsulinType           *string
+	Unabsorbed            *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -318,6 +319,8 @@ type InsulinDosesVw struct {
 	SplitExt              *float64
 	Automatic             *bool
 	IsBasalInsulin        *bool
+	InsulinType           *string
+	Unabsorbed            *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -528,6 +531,7 @@ type TempBasal struct {
 	Rate                  float64
 	Multiplier            *float64
 	Type                  *string
+	InsulinType           *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -549,6 +553,7 @@ type TempBasalsVw struct {
 	Rate                  *float64
 	Multiplier            *float64
 	Type                  *string
+	InsulinType           *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
