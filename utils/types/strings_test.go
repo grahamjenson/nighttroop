@@ -57,3 +57,29 @@ func TestDeviceTokenString(t *testing.T) {
 		})
 	}
 }
+
+// Notes keep the white space around them as sent, as Trio's carbs' notes end with a new line, while only white space,
+// or only tags, is none and tags are stripped
+func TestSanitizedString(t *testing.T) {
+	tests := []struct {
+		name  string
+		notes string
+		want  string
+	}{
+		{"plain", "Pasta", "Pasta"},
+		{"a new line at the end", "Pasta\n", "Pasta\n"},
+		{"white space around", "  Pasta \t", "  Pasta \t"},
+		{"only white space", " \n\t ", ""},
+		{"tags", " <b>pie</b> & chips\n", " pie & chips\n"},
+		{"only tags", "<b></b>\n", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data, err := json.Marshal(tt.notes)
+			assert.NoError(t, err)
+			var got types.SanitizedString
+			assert.NoError(t, json.Unmarshal(data, &got))
+			assert.Equal(t, tt.want, string(got))
+		})
+	}
+}

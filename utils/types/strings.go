@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"golang.org/x/net/html"
 )
@@ -92,7 +93,7 @@ func StripAllTags(input string) string {
 }
 
 func (n *SanitizedString) UnmarshalJSON(data []byte) error {
-	// We are going to sanitize notes here, no html allowed, trim white space, convert to string
+	// We are going to sanitize notes here, no html allowed, convert to string
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
 		return fmt.Errorf("expected notes string, got %s", data)
@@ -109,14 +110,18 @@ func (n *SanitizedString) UnmarshalJSON(data []byte) error {
 		str = fmt.Sprintf("%v", v)
 	}
 
-	// Trim white space
-	str = strings.TrimSpace(str)
 	// Concat to 1024 characters
 	if len(str) > 1024 {
 		str = str[:1024]
 	}
-	// Strip all tags
-	str = StripAllTags(str)
+	// Strip all tags between the white space around the text, which parsing it as HTML would drop
+	start := len(str) - len(strings.TrimLeftFunc(str, unicode.IsSpace))
+	end := start + len(strings.TrimRightFunc(str[start:], unicode.IsSpace))
+	str = str[:start] + StripAllTags(str[start:end]) + str[end:]
+	// Only white space is none; other white space around the text is kept as sent, as Nightscout keeps it
+	if strings.TrimSpace(str) == "" {
+		str = ""
+	}
 
 	*n = SanitizedString(str)
 	return nil
