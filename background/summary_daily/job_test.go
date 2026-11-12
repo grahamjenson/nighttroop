@@ -297,7 +297,9 @@ func TestMarkStaleMarksEveryPeriodATimeIsIn(t *testing.T) {
 func TestRebuildStaleBuildsWhatWasWrittenBeforeARestart(t *testing.T) {
 	r := newRig(t)
 	ctx, now := t.Context(), time.Now().UTC()
-	built, never := now.AddDate(0, 0, -3), now.AddDate(0, 0, -4)
+	// At midday, so a reading an hour after is on the same day whatever the time the test runs
+	y, m, d := now.Date()
+	built, never := time.Date(y, m, d-3, 12, 0, 0, 0, time.UTC), time.Date(y, m, d-4, 12, 0, 0, 0, time.UTC)
 	r.reading("built", built, now)
 	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
 	require.True(t, r.built(built.Format(time.DateOnly)))
