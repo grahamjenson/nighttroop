@@ -68,7 +68,7 @@ page, and AAPS then asks for the same page again for ever.
 | First load of profiles | `GET /api/v3/profile?sort$desc=date&limit=1` | the store as JSON: `defaultProfile`, `startDate`, `store`, `srvModified` (`workers/LoadProfileStoreRunner.kt`) |
 | Later loads | `GET /api/v3/profile/history/<ms>?limit=10` | **the last** in the list, as the newest |
 | Profile changed | `POST /api/v3/profile` with `app: AAPS` added | 200 or 201 |
-| Client control (4.0) | `GET/POST/PATCH/PUT/DELETE /api/v3/settings[/<id>]` for `aaps`, `aaps-state` and `clientcontrol-*` documents; `/api/v2/authorization/roles` and `/subjects` with an admin token | used for pairing clients and remote commands |
+| Client control (4.0) | `GET/POST/PATCH/PUT/DELETE /api/v3/settings[/<id>]` for `aaps`, `aaps-state` and `aaps_clientcontrol_*` documents; `/api/v2/authorization/roles` and `/subjects` with an admin token | used for pairing clients and remote commands |
 
 ### Bodies AAPS sends
 
@@ -182,6 +182,8 @@ SHA1, as AAPS does.
 | First loads over 500 documents | works: a search sorted by date is the oldest first | `first_load_paging.http` |
 | History over 500 documents, and profile history's newest | works: history is the oldest `srvModified` first | `history_paging.http` |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
+| Bolus Wizard `bolusCalculatorResult`, which AAPS restores the record from and without which it drops it (`TreatmentMapper.kt:270`) | works: kept and returned exactly as sent; one not JSON or over 4096 characters is left out | `bolus_wizard.http` |
+| `units` written as AAPS writes them | works for a device added for AAPS, whose Nightscout API writes mg/dL as `mg/dl`; another device writes `mg/dL`, which AAPS also reads as mg/dL | `bolus_wizard.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Profile switch and effective profile switch `original*` | works: kept with the switch and returned as sent, so a follower reads an effective profile switch as one, not a Note | `sync_v3.http` |
 | Temp basal `type` (e.g. `PUMP_SUSPEND`) | works: kept and returned as sent, so a follower shows a suspended pump as one | `sync_v3.http` |
@@ -195,7 +197,8 @@ SHA1, as AAPS does.
 | `/storage` subscribe, `create`, `update`, `delete` | works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | works | `alarm.sio`, `aaps_alarm.sio` |
 | `/alarm` `announcement` | fixed in #511 (was never sent) | `aaps_alarm.sio` |
-| Client control: `settings` documents, v2 roles and subjects | not supported; TODO P4 | — |
+| Client control: `settings` documents | kept as sent, shared by the site's identities | `running_config.http` |
+| Client control: v2 roles and subjects | not supported; TODO P4 | — |
 | v1 `authorize` with the SHA1 of the secret | works (#512) | `aaps_v1.sio` |
 | v1 `authorize` payload, `dataUpdate`, `dbAdd`, `dbUpdate` | works | `aaps_v1.sio`, `db_writes.sio` |
 | `POST treatments` with `eventType` `SettingsExport` | kept as a Note (was a 400 on every sync) | `settings_export.http` |
