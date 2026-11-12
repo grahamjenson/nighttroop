@@ -9,6 +9,7 @@ INSERT INTO insulin_doses (
     split_now,
     split_ext,
     automatic,
+    is_basal_insulin,
 
     notes,
     reason,
@@ -20,7 +21,7 @@ INSERT INTO insulin_doses (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -93,6 +94,7 @@ UPDATE insulin_doses SET
     split_now = COALESCE(sqlc.narg('SplitNow'), split_now),
     split_ext = COALESCE(sqlc.narg('SplitExt'), split_ext),
     automatic = COALESCE(sqlc.narg('Automatic'), automatic),
+    is_basal_insulin = COALESCE(sqlc.narg('IsBasalInsulin'), is_basal_insulin),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

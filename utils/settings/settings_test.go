@@ -3,6 +3,7 @@ package settings_test
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/types"
@@ -173,4 +174,17 @@ func TestLoadLocation(t *testing.T) {
 			require.Same(t, first, again, "a timezone is loaded once and then kept")
 		})
 	}
+}
+
+// TestCreatedAtIsMilliseconds checks a default setting, and one set with no time, are created at now in milliseconds,
+// as every time the API gives, not in seconds, which reads as January 1970
+func TestCreatedAtIsMilliseconds(t *testing.T) {
+	before := time.Now().Add(-time.Hour).UnixMilli()
+	for _, setting := range settings.DefaultCombinedSettingsMap().GetAllSettingAnyTypes() {
+		require.Greater(t, setting.CreatedAt, before, setting.Identifier)
+	}
+
+	set := &settings.SettingMap{}
+	require.NoError(t, set.SetSettingByName("units", "mg/dL", nil, nil))
+	require.Greater(t, set.Units.CreatedAt, before)
 }

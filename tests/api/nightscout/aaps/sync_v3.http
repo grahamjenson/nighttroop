@@ -181,6 +181,7 @@ B {
     "insulin": 0.3,
     "type": "SMB",
     "isBasalInsulin": false,
+    "icfg": {"insulinLabel": "Fiasp", "insulinEndTime": 18000000, "insulinPeakTime": 3300000, "concentration": 1.0},
     "app": "AAPS"
  }
 ASSERT_STATUS 201
@@ -306,6 +307,13 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 0.3 "@result.insulin"
 ASSERT_EQUALS "SMB" "@result.type"
 ASSERT_EQUALS "4103" "@result.pumpId"
+// The insulin it was given with, which AAPS takes from its own settings without it, and whether it is basal insulin,
+// which AAPS takes as false without it, come back as sent
+ASSERT_EQUALS false "@result.isBasalInsulin"
+ASSERT_EQUALS "Fiasp" "@result.icfg.insulinLabel"
+ASSERT_EQUALS 18000000 "@result.icfg.insulinEndTime"
+ASSERT_EQUALS 3300000 "@result.icfg.insulinPeakTime"
+ASSERT_EQUALS 1 "@result.icfg.concentration"
 
 NAME get_extended_carbs
 GET http://{{ site }}/api/v3/treatments/{{ .add_extended_carbs.identifier }}

@@ -46,6 +46,10 @@ type Treatment struct {
 	Type *types.ShortString `json:"type,omitempty"`
 	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
 	Automatic *bool `json:"automatic,omitempty"`
+	// IsBasalInsulin is AAPS's bolus of basal insulin, and ICfg the insulin AAPS says a bolus or profile switch was
+	// given with, given back as sent, as AAPS takes a bolus without them as not basal, of the insulin in its settings
+	IsBasalInsulin *bool          `json:"isBasalInsulin,omitempty"`
+	ICfg           *InsulinConfig `json:"icfg,omitempty"`
 	// BolusCalculatorResult is AAPS's Bolus Wizard calculation, JSON text given back as sent, as AAPS restores the
 	// record from it
 	BolusCalculatorResult *types.JSONTextString `json:"bolusCalculatorResult,omitempty"`
@@ -123,6 +127,14 @@ type Treatment struct {
 
 	// SentJSON is the JSON it was sent as, to tell one sent again with changes from one sent the same
 	SentJSON string `json:"-"`
+}
+
+// InsulinConfig is AAPS's insulin, its times in milliseconds
+type InsulinConfig struct {
+	InsulinLabel    *types.ShortString     `json:"insulinLabel,omitempty"`
+	InsulinEndTime  *types.FlexibleInt64   `json:"insulinEndTime,omitempty"`
+	InsulinPeakTime *types.FlexibleInt64   `json:"insulinPeakTime,omitempty"`
+	Concentration   *types.FlexibleFloat64 `json:"concentration,omitempty"`
 }
 
 func (t *Treatment) UnmarshalJSON(data []byte) error {

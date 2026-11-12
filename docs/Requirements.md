@@ -854,7 +854,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   event (e.g. a Note or Sensor Change) too, so a follower on an mmol/L site does not read a target of 90 as mmol/L.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
-  identity's own, units included.
+  identity's own, units included, and each, a default too, has its `srvCreated` and `date` in milliseconds.
 - The v3 settings also keep AAPS's own documents as sent, shared by every identity of the site: its running config
   (`aaps`, `aaps-state`) and the messages AAPS and AAPSClient pair and control it with (`aaps_clientcontrol_...`).
   Each is created, replaced, patched, read, searched, deleted and sent to `/storage` sockets as any document is,
@@ -924,6 +924,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
   returned as sent.
+- An AAPS bolus's `isBasalInsulin`, and the insulin a bolus or profile switch was given with, its `icfg`
+  (`insulinLabel`, `insulinEndTime` and `insulinPeakTime` in ms, `concentration`), are kept and returned as sent; other
+  fields of an `icfg` are left out.
 - An AAPS Bolus Wizard's `bolusCalculatorResult`, the JSON text of its calculation, is kept with the treatment and
   returned exactly as sent, as AAPS restores the record from it; one that is not JSON or is over 4096 characters is
   left out, and the rest of the treatment kept.

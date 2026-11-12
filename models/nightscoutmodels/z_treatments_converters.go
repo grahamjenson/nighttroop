@@ -199,9 +199,13 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring21 := *source.TransmitterID
 		sitedbCreateEventGroupParams.TransmitterID = &xstring21
 	}
+	if source.IcfgJson != nil {
+		xstring22 := *source.IcfgJson
+		sitedbCreateEventGroupParams.IcfgJson = &xstring22
+	}
 	if source.BolusCalculatorResultJson != nil {
-		xstring22 := *source.BolusCalculatorResultJson
-		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring22
+		xstring23 := *source.BolusCalculatorResultJson
+		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring23
 	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
@@ -209,12 +213,12 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint644
 	}
 	if source.CreatedByAppName != nil {
-		xstring23 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring23
+		xstring24 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring24
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring24 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring24
+		xstring25 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring25
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateEventGroupParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -226,6 +230,7 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 	nightscoutmodelsTreatment.Identifier = &pTypesIdentifierString
 	pNightscoutmodelsTreatmentEventType := TreatmentEventType(source.GroupType)
 	nightscoutmodelsTreatment.EventType = &pNightscoutmodelsTreatmentEventType
+	nightscoutmodelsTreatment.ICfg = JSONToInsulinConfig(source.IcfgJson)
 	if source.BolusCalculatorResultJson != nil {
 		typesJSONTextString := types.JSONTextString(*source.BolusCalculatorResultJson)
 		nightscoutmodelsTreatment.BolusCalculatorResult = &typesJSONTextString
@@ -408,9 +413,13 @@ func EventGroupUpdate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring21 := *source.TransmitterID
 		sitedbUpdateEventGroupParams.TransmitterID = &xstring21
 	}
+	if source.IcfgJson != nil {
+		xstring22 := *source.IcfgJson
+		sitedbUpdateEventGroupParams.IcfgJson = &xstring22
+	}
 	if source.BolusCalculatorResultJson != nil {
-		xstring22 := *source.BolusCalculatorResultJson
-		sitedbUpdateEventGroupParams.BolusCalculatorResultJson = &xstring22
+		xstring23 := *source.BolusCalculatorResultJson
+		sitedbUpdateEventGroupParams.BolusCalculatorResultJson = &xstring23
 	}
 	sitedbUpdateEventGroupParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateEventGroupParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -692,6 +701,10 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		xbool := *source.Automatic
 		sitedbCreateInsulinDoseParams.Automatic = &xbool
 	}
+	if source.IsBasalInsulin != nil {
+		xbool2 := *source.IsBasalInsulin
+		sitedbCreateInsulinDoseParams.IsBasalInsulin = &xbool2
+	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbCreateInsulinDoseParams.Notes = &xstring2
@@ -736,6 +749,10 @@ func InsulinDoseUpdate(source sitedb.InsulinDose, context ConverterContext) site
 	if source.Automatic != nil {
 		xbool := *source.Automatic
 		sitedbUpdateInsulinDoseParams.Automatic = &xbool
+	}
+	if source.IsBasalInsulin != nil {
+		xbool2 := *source.IsBasalInsulin
+		sitedbUpdateInsulinDoseParams.IsBasalInsulin = &xbool2
 	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes
@@ -975,6 +992,10 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 	if source.Automatic != nil {
 		xbool := *source.Automatic
 		sitedbInsulinDose.Automatic = &xbool
+	}
+	if source.IsBasalInsulin != nil {
+		xbool2 := *source.IsBasalInsulin
+		sitedbInsulinDose.IsBasalInsulin = &xbool2
 	}
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
@@ -1496,6 +1517,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xstring10 := ShortStringToString(*source.TransmitterID)
 		sitedbEventGroup.TransmitterID = &xstring10
 	}
+	sitedbEventGroup.IcfgJson = InsulinConfigToJSON(source.ICfg)
 	if source.BolusCalculatorResult != nil {
 		xstring11 := string(*source.BolusCalculatorResult)
 		sitedbEventGroup.BolusCalculatorResultJson = &xstring11
@@ -1669,6 +1691,10 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 		if source.Automatic != nil {
 			xbool := *source.Automatic
 			target.Automatic = &xbool
+		}
+		if source.IsBasalInsulin != nil {
+			xbool2 := *source.IsBasalInsulin
+			target.IsBasalInsulin = &xbool2
 		}
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
@@ -1962,17 +1988,21 @@ func UpdateToEventGroup(source sitedb.EventGroup, target *sitedb.EventGroup) {
 		xstring19 := *source.TransmitterID
 		target.TransmitterID = &xstring19
 	}
+	if source.IcfgJson != nil {
+		xstring20 := *source.IcfgJson
+		target.IcfgJson = &xstring20
+	}
 	if source.BolusCalculatorResultJson != nil {
-		xstring20 := *source.BolusCalculatorResultJson
-		target.BolusCalculatorResultJson = &xstring20
+		xstring21 := *source.BolusCalculatorResultJson
+		target.BolusCalculatorResultJson = &xstring21
 	}
 	if source.Notes != nil {
-		xstring21 := *source.Notes
-		target.Notes = &xstring21
+		xstring22 := *source.Notes
+		target.Notes = &xstring22
 	}
 	if source.Reason != nil {
-		xstring22 := *source.Reason
-		target.Reason = &xstring22
+		xstring23 := *source.Reason
+		target.Reason = &xstring23
 	}
 	if source.DurationMinutes != nil {
 		xint642 := *source.DurationMinutes
@@ -1994,20 +2024,20 @@ func UpdateToEventGroup(source sitedb.EventGroup, target *sitedb.EventGroup) {
 	target.CreatedAt = source.CreatedAt
 	target.UpdatedAt = source.UpdatedAt
 	if source.CreatedByAppName != nil {
-		xstring23 := *source.CreatedByAppName
-		target.CreatedByAppName = &xstring23
+		xstring24 := *source.CreatedByAppName
+		target.CreatedByAppName = &xstring24
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring24 := *source.CreatedByDeviceName
-		target.CreatedByDeviceName = &xstring24
+		xstring25 := *source.CreatedByDeviceName
+		target.CreatedByDeviceName = &xstring25
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint646 := *source.UpdatedByIdentityID
 		target.UpdatedByIdentityID = &xint646
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring25 := *source.UpdatedByIdentityName
-		target.UpdatedByIdentityName = &xstring25
+		xstring26 := *source.UpdatedByIdentityName
+		target.UpdatedByIdentityName = &xstring26
 	}
 	if source.CreatedByIdentityID != nil {
 		xint647 := *source.CreatedByIdentityID
@@ -2208,6 +2238,10 @@ func UpdateToInsulinDose(source *sitedb.InsulinDose, target *sitedb.InsulinDose)
 		if source.Automatic != nil {
 			xbool := *source.Automatic
 			target.Automatic = &xbool
+		}
+		if source.IsBasalInsulin != nil {
+			xbool2 := *source.IsBasalInsulin
+			target.IsBasalInsulin = &xbool2
 		}
 		if source.Notes != nil {
 			xstring2 := *source.Notes

@@ -204,6 +204,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | EventGroupEnteredBy
 	// goverter:map Uuid UUID
+	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	// goverter:map BolusCalculatorResultJson BolusCalculatorResult
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
@@ -401,6 +402,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map EventType GroupType
 	// goverter:map UUID Uuid
 	// goverter:map DurationInMilliseconds DurationMs
+	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map SentJSON SentHash | SentHash
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
@@ -487,4 +489,22 @@ func EventGroupEnteredBy(source sitedb.EventGroup) *types.ShortString {
 		return (*types.ShortString)(source.EnteredBy)
 	}
 	return (*types.ShortString)(&source.CreatedByIdentityName)
+}
+
+// InsulinConfigToJSON is the insulin config as it is stored, with only its fields
+func InsulinConfigToJSON(source *InsulinConfig) *string {
+	if source == nil {
+		return nil
+	}
+	raw, _ := json.Marshal(source)
+	return new(string(raw))
+}
+
+// JSONToInsulinConfig is the stored insulin config, nil when there is none
+func JSONToInsulinConfig(source *string) *InsulinConfig {
+	var config InsulinConfig
+	if source == nil || json.Unmarshal([]byte(*source), &config) != nil {
+		return nil
+	}
+	return &config
 }
