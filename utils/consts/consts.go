@@ -201,3 +201,7 @@ const MaxV1BatchRecords = 5000
 
 // MaxProfilesPerStore caps the profiles in one profile store, far above any real set of presets
 const MaxProfilesPerStore = 20
+
+// ProfilesDefaultCount is how many profile stores a v1 profile search gives with no count, Nightscout's
+// PROFILES_DEFAULT_COUNT
+const ProfilesDefaultCount = 10
