@@ -388,6 +388,10 @@ func EventGroupUpdate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring21 := *source.TransmitterID
 		sitedbUpdateEventGroupParams.TransmitterID = &xstring21
 	}
+	if source.DurationMinutes != nil {
+		xint642 := *source.DurationMinutes
+		sitedbUpdateEventGroupParams.DurationMinutes = &xint642
+	}
 	sitedbUpdateEventGroupParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateEventGroupParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateEventGroupParams.ID = source.ID

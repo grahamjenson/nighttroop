@@ -298,6 +298,7 @@ UPDATE event_groups SET
     pump_type = COALESCE(NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''), pump_type),
     sensor_code = COALESCE(NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''), sensor_code),
     transmitter_id = COALESCE(NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''), transmitter_id),
+    duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),

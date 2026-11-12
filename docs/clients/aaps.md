@@ -182,6 +182,7 @@ SHA1, as AAPS does.
 | First loads over 500 documents | works: a search sorted by date is the oldest first | `first_load_paging.http` |
 | History over 500 documents, and profile history's newest | works: history is the oldest `srvModified` first | `history_paging.http` |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
+| Bolus Wizard's bolus and carbs, two Meal Boluses at the same `date` | fixed: the carbs, a duplicate of the bolus, are merged into it, so it keeps its insulin, where Nightscout replaces it with them | `wizard_dedup_v3.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Profile switch and effective profile switch `original*` | works: kept with the switch and returned as sent, so a follower reads an effective profile switch as one, not a Note | `sync_v3.http` |
 | Temp basal `type` (e.g. `PUMP_SUSPEND`) | works: kept and returned as sent, so a follower shows a suspended pump as one | `sync_v3.http` |
