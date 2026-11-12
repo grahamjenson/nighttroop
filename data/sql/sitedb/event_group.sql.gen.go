@@ -13,7 +13,7 @@ const allEventGroups = `-- name: AllEventGroups :many
 SELECT 
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.mode, eg.auto_forced, eg.reasons, eg.original_duration_ms, eg.duration_type, eg.sent_hash, eg.pump_id, eg.pump_serial, eg.pump_type, eg.sensor_code, eg.transmitter_id, eg.icfg_json, eg.bolus_calculator_result_json, eg.notes, eg.reason, eg.duration_minutes, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.mode, eg.auto_forced, eg.reasons, eg.original_duration_ms, eg.duration_type, eg.sent_hash, eg.pump_id, eg.pump_serial, eg.pump_type, eg.sensor_code, eg.transmitter_id, eg.icfg_json, eg.bolus_calculator_result_json, eg.notes, eg.reason, eg.duration_minutes, eg.duration_ms, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
     
     gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.is_calibration, gr.sensor_mgdl_at_pairing, gr.notes, gr.reason, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.automatic, idose.is_basal_insulin, idose.notes, idose.reason, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
@@ -98,6 +98,7 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.EventGroup.Notes,
 			&i.EventGroup.Reason,
 			&i.EventGroup.DurationMinutes,
+			&i.EventGroup.DurationMs,
 			&i.EventGroup.DeletedAt,
 			&i.EventGroup.UtcOffsetMinutes,
 			&i.EventGroup.OccurredAt,
@@ -319,6 +320,7 @@ INSERT INTO event_groups (
     notes,
     reason,
     duration_minutes,
+    duration_ms,
     entered_by,
     uuid,
     mode,
@@ -357,28 +359,29 @@ VALUES (
     ?12,
     ?13,
     ?14,
-    NULLIF(CAST(?15 AS TEXT), ''),
+    ?15,
     NULLIF(CAST(?16 AS TEXT), ''),
-    ?17,
-    NULLIF(CAST(?18 AS TEXT), ''),
-    ?19,
-    NULLIF(CAST(?20 AS TEXT), ''),
+    NULLIF(CAST(?17 AS TEXT), ''),
+    ?18,
+    NULLIF(CAST(?19 AS TEXT), ''),
+    ?20,
     NULLIF(CAST(?21 AS TEXT), ''),
     NULLIF(CAST(?22 AS TEXT), ''),
     NULLIF(CAST(?23 AS TEXT), ''),
     NULLIF(CAST(?24 AS TEXT), ''),
     NULLIF(CAST(?25 AS TEXT), ''),
     NULLIF(CAST(?26 AS TEXT), ''),
-    ?27,
-    NULLIF(CAST(?28 AS TEXT), ''),
-    ?29,
+    NULLIF(CAST(?27 AS TEXT), ''),
+    ?28,
+    NULLIF(CAST(?29 AS TEXT), ''),
     ?30,
     ?31,
     ?32,
     ?33,
-    ?34
+    ?34,
+    ?35
 )
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateEventGroupParams struct {
@@ -395,6 +398,7 @@ type CreateEventGroupParams struct {
 	Notes                     *string
 	Reason                    *string
 	DurationMinutes           *int64
+	DurationMs                *int64
 	EnteredBy                 *string
 	Uuid                      *string
 	Mode                      *string
@@ -436,6 +440,7 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 		arg.Notes,
 		arg.Reason,
 		arg.DurationMinutes,
+		arg.DurationMs,
 		arg.EnteredBy,
 		arg.Uuid,
 		arg.Mode,
@@ -488,6 +493,7 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 		&i.Notes,
 		&i.Reason,
 		&i.DurationMinutes,
+		&i.DurationMs,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -707,7 +713,7 @@ const getEventGroup = `-- name: GetEventGroup :one
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.mode, eg.auto_forced, eg.reasons, eg.original_duration_ms, eg.duration_type, eg.sent_hash, eg.pump_id, eg.pump_serial, eg.pump_type, eg.sensor_code, eg.transmitter_id, eg.icfg_json, eg.bolus_calculator_result_json, eg.notes, eg.reason, eg.duration_minutes, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.mode, eg.auto_forced, eg.reasons, eg.original_duration_ms, eg.duration_type, eg.sent_hash, eg.pump_id, eg.pump_serial, eg.pump_type, eg.sensor_code, eg.transmitter_id, eg.icfg_json, eg.bolus_calculator_result_json, eg.notes, eg.reason, eg.duration_minutes, eg.duration_ms, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
     
     gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.is_calibration, gr.sensor_mgdl_at_pairing, gr.notes, gr.reason, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.automatic, idose.is_basal_insulin, idose.notes, idose.reason, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
@@ -780,6 +786,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.EventGroup.Notes,
 		&i.EventGroup.Reason,
 		&i.EventGroup.DurationMinutes,
+		&i.EventGroup.DurationMs,
 		&i.EventGroup.DeletedAt,
 		&i.EventGroup.UtcOffsetMinutes,
 		&i.EventGroup.OccurredAt,
@@ -976,7 +983,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 }
 
 const getEventGroupOfTypeWithoutJoins = `-- name: GetEventGroupOfTypeWithoutJoins :many
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name from event_groups WHERE group_type = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name from event_groups WHERE group_type = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER)
 `
@@ -1025,6 +1032,7 @@ func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEv
 			&i.Notes,
 			&i.Reason,
 			&i.DurationMinutes,
+			&i.DurationMs,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -1052,7 +1060,7 @@ func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEv
 
 const getEventGroupWithoutJoins = `-- name: GetEventGroupWithoutJoins :one
 
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name from event_groups WHERE id = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name from event_groups WHERE id = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
 `
 
 type GetEventGroupWithoutJoinsParams struct {
@@ -1095,6 +1103,7 @@ func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGro
 		&i.Notes,
 		&i.Reason,
 		&i.DurationMinutes,
+		&i.DurationMs,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -1111,7 +1120,7 @@ func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGro
 }
 
 const hardDeleteEventGroup = `-- name: HardDeleteEventGroup :one
-DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type HardDeleteEventGroupParams struct {
@@ -1150,6 +1159,7 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 		&i.Notes,
 		&i.Reason,
 		&i.DurationMinutes,
+		&i.DurationMs,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -1166,7 +1176,7 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 }
 
 const hardDeleteEventGroupsByType = `-- name: HardDeleteEventGroupsByType :many
-DELETE FROM event_groups WHERE group_type = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+DELETE FROM event_groups WHERE group_type = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type HardDeleteEventGroupsByTypeParams struct {
@@ -1211,6 +1221,7 @@ func (q *Queries) HardDeleteEventGroupsByType(ctx context.Context, arg HardDelet
 			&i.Notes,
 			&i.Reason,
 			&i.DurationMinutes,
+			&i.DurationMs,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -1256,7 +1267,7 @@ UPDATE event_groups SET
     updated_by_identity_id = ?15,
     updated_by_identity_name = ?16
 WHERE id = ?17 AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type RegroupEventGroupParams struct {
@@ -1331,6 +1342,7 @@ func (q *Queries) RegroupEventGroup(ctx context.Context, arg RegroupEventGroupPa
 		&i.Notes,
 		&i.Reason,
 		&i.DurationMinutes,
+		&i.DurationMs,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -1350,7 +1362,7 @@ const searchEventGroups = `-- name: SearchEventGroups :many
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.mode, eg.auto_forced, eg.reasons, eg.original_duration_ms, eg.duration_type, eg.sent_hash, eg.pump_id, eg.pump_serial, eg.pump_type, eg.sensor_code, eg.transmitter_id, eg.icfg_json, eg.bolus_calculator_result_json, eg.notes, eg.reason, eg.duration_minutes, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.mode, eg.auto_forced, eg.reasons, eg.original_duration_ms, eg.duration_type, eg.sent_hash, eg.pump_id, eg.pump_serial, eg.pump_type, eg.sensor_code, eg.transmitter_id, eg.icfg_json, eg.bolus_calculator_result_json, eg.notes, eg.reason, eg.duration_minutes, eg.duration_ms, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
     
     gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.is_calibration, gr.sensor_mgdl_at_pairing, gr.notes, gr.reason, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.automatic, idose.is_basal_insulin, idose.notes, idose.reason, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
@@ -1599,6 +1611,7 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.EventGroup.Notes,
 			&i.EventGroup.Reason,
 			&i.EventGroup.DurationMinutes,
+			&i.EventGroup.DurationMs,
 			&i.EventGroup.DeletedAt,
 			&i.EventGroup.UtcOffsetMinutes,
 			&i.EventGroup.OccurredAt,
@@ -1811,7 +1824,7 @@ UPDATE event_groups SET
     updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?1
 WHERE id = ?2 AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type SoftDeleteEventGroupParams struct {
@@ -1854,6 +1867,7 @@ func (q *Queries) SoftDeleteEventGroup(ctx context.Context, arg SoftDeleteEventG
 		&i.Notes,
 		&i.Reason,
 		&i.DurationMinutes,
+		&i.DurationMs,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -1875,7 +1889,7 @@ UPDATE event_groups SET
     updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?
 WHERE group_type = ? AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type SoftDeleteEventGroupsByTypeParams struct {
@@ -1921,6 +1935,7 @@ func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDelet
 			&i.Notes,
 			&i.Reason,
 			&i.DurationMinutes,
+			&i.DurationMs,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -1961,27 +1976,28 @@ UPDATE event_groups SET
     notes = COALESCE(?9, notes),
     reason = COALESCE(?10, reason),
     entered_by = COALESCE(?11, entered_by),
-    uuid = COALESCE(NULLIF(CAST(?12 AS TEXT), ''), uuid),
-    mode = COALESCE(NULLIF(CAST(?13 AS TEXT), ''), mode),
-    auto_forced = COALESCE(?14, auto_forced),
-    reasons = COALESCE(NULLIF(CAST(?15 AS TEXT), ''), reasons),
-    original_duration_ms = COALESCE(?16, original_duration_ms),
-    duration_type = COALESCE(NULLIF(CAST(?17 AS TEXT), ''), duration_type),
-    sent_hash = COALESCE(NULLIF(CAST(?18 AS TEXT), ''), sent_hash),
-    pump_id = COALESCE(NULLIF(CAST(?19 AS TEXT), ''), pump_id),
-    pump_serial = COALESCE(NULLIF(CAST(?20 AS TEXT), ''), pump_serial),
-    pump_type = COALESCE(NULLIF(CAST(?21 AS TEXT), ''), pump_type),
-    sensor_code = COALESCE(NULLIF(CAST(?22 AS TEXT), ''), sensor_code),
-    transmitter_id = COALESCE(NULLIF(CAST(?23 AS TEXT), ''), transmitter_id),
-    duration_minutes = COALESCE(?24, duration_minutes),
-    icfg_json = COALESCE(?25, icfg_json),
-    bolus_calculator_result_json = COALESCE(NULLIF(CAST(?26 AS TEXT), ''), bolus_calculator_result_json),
+    duration_minutes = COALESCE(?12, duration_minutes),
+    duration_ms = COALESCE(?13, duration_ms),
+    uuid = COALESCE(NULLIF(CAST(?14 AS TEXT), ''), uuid),
+    mode = COALESCE(NULLIF(CAST(?15 AS TEXT), ''), mode),
+    auto_forced = COALESCE(?16, auto_forced),
+    reasons = COALESCE(NULLIF(CAST(?17 AS TEXT), ''), reasons),
+    original_duration_ms = COALESCE(?18, original_duration_ms),
+    duration_type = COALESCE(NULLIF(CAST(?19 AS TEXT), ''), duration_type),
+    sent_hash = COALESCE(NULLIF(CAST(?20 AS TEXT), ''), sent_hash),
+    pump_id = COALESCE(NULLIF(CAST(?21 AS TEXT), ''), pump_id),
+    pump_serial = COALESCE(NULLIF(CAST(?22 AS TEXT), ''), pump_serial),
+    pump_type = COALESCE(NULLIF(CAST(?23 AS TEXT), ''), pump_type),
+    sensor_code = COALESCE(NULLIF(CAST(?24 AS TEXT), ''), sensor_code),
+    transmitter_id = COALESCE(NULLIF(CAST(?25 AS TEXT), ''), transmitter_id),
+    icfg_json = COALESCE(?26, icfg_json),
+    bolus_calculator_result_json = COALESCE(NULLIF(CAST(?27 AS TEXT), ''), bolus_calculator_result_json),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?27,
-    updated_by_identity_name = ?28
-WHERE id = ?29 AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?28,
+    updated_by_identity_name = ?29
+WHERE id = ?30 AND deleted_at IS NULL
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateEventGroupParams struct {
@@ -1996,6 +2012,8 @@ type UpdateEventGroupParams struct {
 	Notes                     *string
 	Reason                    *string
 	EnteredBy                 *string
+	DurationMinutes           *int64
+	DurationMs                *int64
 	Uuid                      *string
 	Mode                      *string
 	AutoForced                *bool
@@ -2008,7 +2026,6 @@ type UpdateEventGroupParams struct {
 	PumpType                  *string
 	SensorCode                *string
 	TransmitterID             *string
-	DurationMinutes           *int64
 	IcfgJson                  *string
 	BolusCalculatorResultJson *string
 	UpdatedByIdentityID       *int64
@@ -2032,6 +2049,8 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		arg.Notes,
 		arg.Reason,
 		arg.EnteredBy,
+		arg.DurationMinutes,
+		arg.DurationMs,
 		arg.Uuid,
 		arg.Mode,
 		arg.AutoForced,
@@ -2044,7 +2063,6 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		arg.PumpType,
 		arg.SensorCode,
 		arg.TransmitterID,
-		arg.DurationMinutes,
 		arg.IcfgJson,
 		arg.BolusCalculatorResultJson,
 		arg.UpdatedByIdentityID,
@@ -2081,6 +2099,7 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		&i.Notes,
 		&i.Reason,
 		&i.DurationMinutes,
+		&i.DurationMs,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,

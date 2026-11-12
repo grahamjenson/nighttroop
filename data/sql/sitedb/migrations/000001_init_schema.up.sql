@@ -343,6 +343,9 @@ CREATE TABLE event_groups (
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
     duration_minutes INTEGER CHECK(duration_minutes BETWEEN 0 AND 525600), -- at most a year; this is needed for notes, and is common enough
+    -- the duration to the millisecond, as sent (durationInMilliseconds), at most a year, as AAPS ends a temp target early
+    -- to the millisecond and reads it back before the minutes
+    duration_ms INTEGER CHECK(duration_ms BETWEEN 0 AND 31536000000),
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),

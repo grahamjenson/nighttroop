@@ -996,6 +996,16 @@ func (m *EventGroup) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
+// GetDurationMs returns the DurationMs value.
+func (m EventGroup) GetDurationMs() *int64 {
+	return m.DurationMs
+}
+
+// SetDurationMs sets the DurationMs value and returns the updated EventGroup.
+func (m *EventGroup) SetDurationMs(v *int64) {
+	m.DurationMs = v
+}
+
 // GetDeletedAt returns the DeletedAt value.
 func (m EventGroup) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -8606,6 +8616,16 @@ func (m *CreateEventGroupParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
+// GetDurationMs returns the DurationMs value.
+func (m CreateEventGroupParams) GetDurationMs() *int64 {
+	return m.DurationMs
+}
+
+// SetDurationMs sets the DurationMs value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetDurationMs(v *int64) {
+	m.DurationMs = v
+}
+
 // GetEnteredBy returns the EnteredBy value.
 func (m CreateEventGroupParams) GetEnteredBy() *string {
 	return m.EnteredBy
@@ -9846,6 +9866,26 @@ func (m *UpdateEventGroupParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
+// GetDurationMinutes returns the DurationMinutes value.
+func (m UpdateEventGroupParams) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
+// GetDurationMs returns the DurationMs value.
+func (m UpdateEventGroupParams) GetDurationMs() *int64 {
+	return m.DurationMs
+}
+
+// SetDurationMs sets the DurationMs value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetDurationMs(v *int64) {
+	m.DurationMs = v
+}
+
 // GetUuid returns the Uuid value.
 func (m UpdateEventGroupParams) GetUuid() *string {
 	return m.Uuid
@@ -9964,16 +10004,6 @@ func (m UpdateEventGroupParams) GetTransmitterID() *string {
 // SetTransmitterID sets the TransmitterID value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
-}
-
-// GetDurationMinutes returns the DurationMinutes value.
-func (m UpdateEventGroupParams) GetDurationMinutes() *int64 {
-	return m.DurationMinutes
-}
-
-// SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetDurationMinutes(v *int64) {
-	m.DurationMinutes = v
 }
 
 // GetIcfgJson returns the IcfgJson value.
