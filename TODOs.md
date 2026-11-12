@@ -94,6 +94,8 @@
     1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
     1. P4: Support v2 authorization roles and subjects, which AAPS 4's client control (pairing and remote commands)
        uses with an admin token, beside the `settings` documents now kept
+    1. P3: Count an AAPS bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal in the
+       summaries, reports and IOB, as it is kept and given back but still counted as a bolus
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
