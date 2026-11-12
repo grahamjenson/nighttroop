@@ -946,6 +946,16 @@ func (m *EventGroup) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
+// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
+func (m EventGroup) GetBolusCalculatorResultJson() *string {
+	return m.BolusCalculatorResultJson
+}
+
+// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated EventGroup.
+func (m *EventGroup) SetBolusCalculatorResultJson(v *string) {
+	m.BolusCalculatorResultJson = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -8696,6 +8706,16 @@ func (m *CreateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
+// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
+func (m CreateEventGroupParams) GetBolusCalculatorResultJson() *string {
+	return m.BolusCalculatorResultJson
+}
+
+// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
+	m.BolusCalculatorResultJson = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -9904,6 +9924,16 @@ func (m UpdateEventGroupParams) GetTransmitterID() *string {
 // SetTransmitterID sets the TransmitterID value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
+}
+
+// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
+func (m UpdateEventGroupParams) GetBolusCalculatorResultJson() *string {
+	return m.BolusCalculatorResultJson
+}
+
+// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
+	m.BolusCalculatorResultJson = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.

@@ -920,6 +920,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
   returned as sent.
+- An AAPS Bolus Wizard's `bolusCalculatorResult`, the JSON text of its calculation, is kept with the treatment and
+  returned exactly as sent, as AAPS restores the record from it; one that is not JSON or is over 4096 characters is
+  left out, and the rest of the treatment kept.
 - A treatment's `sensorCode` and `transmitterId`, as xDrip+ sends with a sensor change, are kept with it and returned
   as sent. A sensor, site or pump part change (e.g. `Sensor Change`, `Site Change`) is an event group with no events, of
   its type, which the Nightscout v2 properties' ages (`sage`, `cage`, `iage`, `bage`) and the summary read.
@@ -1162,8 +1165,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer or Other.
   Its credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
   Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
-  set to mg/dL. One for xDrip4iOS also has the Nightscout API write mg/dL as `mg/dl`, as it reads a BG check's glucose
-  as mg/dL only when its units are exactly that.
+  set to mg/dL. One for xDrip4iOS or AAPS also has the Nightscout API write mg/dL as `mg/dl`, as xDrip4iOS reads a BG
+  check's glucose as mg/dL only when its units are exactly that, and AAPS writes them so.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - A device keeps the client it was added for, e.g. `loop` or `other`, given back as its `client`, so its settings can

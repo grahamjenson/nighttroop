@@ -1,0 +1,93 @@
+INCLUDE steps/new_site_admin.steps
+
+// AAPS's Bolus Wizard record, as BCR.toNSBolusWizard (plugins/sync nsclientV3/extensions) writes it: the whole
+// calculation is a JSON string in bolusCalculatorResult, which AAPS reads back (NSBolusWizard.toBolusCalculatorResult)
+// to restore the record, and RemoteTreatment.toTreatment drops a Bolus Wizard without it
+
+// A device added for AAPS writes mg/dL as AAPS does, mg/dl, which is all its NsUnits reads exactly
+NAME create_aaps
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "aaps", "client": "aaps"}
+ASSERT_STATUS 201
+SET aaps_token {{ .create_aaps.result.ns_token }}
+
+NAME aaps_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/{{ .aaps_token }}
+ASSERT_STATUS 200
+SET aaps_jwt {{ .aaps_jwt.token }}
+
+NAME add_bolus_wizard
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ .aaps_jwt }}
+B {
+    "eventType": "Bolus Wizard",
+    "date": {{ itime 30 }},
+    "utcOffset": 720,
+    "isValid": true,
+    "isReadOnly": false,
+    "units": "mg/dl",
+    "glucose": 130.0,
+    "notes": "",
+    "bolusCalculatorResult": "{\"basalIOB\":-0.25,\"bolusIOB\":-1.5,\"carbs\":20.0,\"carbsInsulin\":2.0,\"cob\":0.0,\"glucoseValue\":130.0,\"ic\":10.0,\"isf\":50.0,\"note\":\"\",\"profileName\":\"Default\",\"targetBGHigh\":100.0,\"targetBGLow\":100.0,\"timestamp\":1700000000000,\"totalInsulin\":0.4,\"wasCOBUsed\":true,\"ids\":{\"pumpId\":1700000000001}}",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+SET wizard_id {{ .add_bolus_wizard.identifier }}
+
+// The calculation comes back exactly as sent, and its units as AAPS writes them
+NAME get_bolus_wizard
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .wizard_id }}
+H Authorization: Bearer {{ .aaps_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Bolus Wizard" "@result.eventType"
+ASSERT_EQUALS "{\"basalIOB\":-0.25,\"bolusIOB\":-1.5,\"carbs\":20.0,\"carbsInsulin\":2.0,\"cob\":0.0,\"glucoseValue\":130.0,\"ic\":10.0,\"isf\":50.0,\"note\":\"\",\"profileName\":\"Default\",\"targetBGHigh\":100.0,\"targetBGLow\":100.0,\"timestamp\":1700000000000,\"totalInsulin\":0.4,\"wasCOBUsed\":true,\"ids\":{\"pumpId\":1700000000001}}" "@result.bolusCalculatorResult"
+ASSERT_EQUALS 130 "@result.glucose"
+ASSERT_EQUALS "mg/dl" "@result.units"
+
+// So does the history AAPS syncs from
+NAME bolus_wizard_in_history
+GET http://{{ .ns_site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ .aaps_jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_CONTAINS "\"totalInsulin\":0.4" "@result.0.bolusCalculatorResult"
+
+// One that is not JSON, or longer than 4096 characters, is left out, and the rest of the record kept
+NAME add_bolus_wizard_not_json
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ .aaps_jwt }}
+B {"eventType": "Bolus Wizard", "date": {{ itime 20 }}, "glucose": 120.0, "units": "mg/dl", "bolusCalculatorResult": "not json", "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME get_bolus_wizard_not_json
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .add_bolus_wizard_not_json.identifier }}
+H Authorization: Bearer {{ .aaps_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@result.glucose"
+ASSERT_EQUALS null "@result.bolusCalculatorResult"
+
+NAME add_bolus_wizard_too_long
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ .aaps_jwt }}
+B {"eventType": "Bolus Wizard", "date": {{ itime 10 }}, "glucose": 110.0, "units": "mg/dl", "bolusCalculatorResult": "{\"note\":\"{{ repeat "a" 4100 }}\"}", "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME get_bolus_wizard_too_long
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .add_bolus_wizard_too_long.identifier }}
+H Authorization: Bearer {{ .aaps_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 110 "@result.glucose"
+ASSERT_EQUALS null "@result.bolusCalculatorResult"
+
+// Another device reads its units as Nighttroop writes them
+NAME pwd_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/{{ token }}
+ASSERT_STATUS 200
+
+NAME other_device_reads_mg_dL
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .wizard_id }}
+H Authorization: Bearer {{ .pwd_jwt.token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
