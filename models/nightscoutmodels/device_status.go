@@ -1,6 +1,7 @@
 package nightscoutmodels
 
 import (
+	"cmp"
 	"encoding/json"
 	"log/slog"
 	"nighttroop.t1d.nz/utils/types"
@@ -63,8 +64,13 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
 	if t.CreatedAt != nil {
 		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+			date, offset := t.CreatedAt.MillisSentOffset()
+			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
 		}
+	}
+	// Loop's pump says the phone's offset, where its UTC times do not
+	if t.UtcOffsetMinutes == nil && t.Pump != nil && t.Pump.SecondsFromGMT != nil && max(*t.Pump.SecondsFromGMT, -*t.Pump.SecondsFromGMT) <= 24*60*60 {
+		t.UtcOffsetMinutes = new(*t.Pump.SecondsFromGMT / 60)
 	}
 
 	// Lets do the other bits

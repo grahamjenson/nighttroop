@@ -2,6 +2,7 @@ package nightscoutmodels
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -55,7 +56,8 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 
 	if t.StartDate != nil {
 		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			t.Date, t.UtcOffsetMinutes = t.StartDate.MillisUTCOffset()
+			date, offset := t.StartDate.MillisSentOffset()
+			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
 		}
 	}
 

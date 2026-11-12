@@ -887,6 +887,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
 - A document sent with a date but no `utcOffset`, as AAPS sends a device status, takes the site timezone's offset at
   that date; a replace sent with none keeps the offset of the document it replaces.
+- A treatment's `created_at`, a device status's `created_at` or a profile's `startDate` written in UTC, with `Z`, as
+  Loop writes every time, says when, not where, so with no `utcOffset` sent it takes the site timezone's offset too; a
+  Loop device status takes its pump's `secondsFromGMT` (the phone's offset) instead; a time written with its offset,
+  e.g. `+13:00`, keeps it, and a `utcOffset` sent is kept.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A document's `created_at` is written as Nightscout writes it, as JavaScript's `toISOString` does, in UTC with three
   fractional digits: `…23.940Z` sent comes back as is, not `…23.94Z`, and `…23Z` comes back as `…23.000Z`. So are a
