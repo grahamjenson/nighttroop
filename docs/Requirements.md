@@ -995,6 +995,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   override again with its `_id` when it changes, and deletes it by that `_id`.
 - Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
   indefinite one lasts a week, and is given back with `durationType` `indefinite` while the override as sent is kept.
+  One sent `indefinite` with a `duration` of 0, or a `Temporary Override` of 0 minutes, as Nightscout's careportal
+  sends one until cancelled, is indefinite too, not ended as it starts; a `Temporary Target` of 0 minutes still
+  cancels the one running.
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it, and

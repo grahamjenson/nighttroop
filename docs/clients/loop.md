@@ -227,6 +227,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `DELETE /api/v1/treatments/<_id>` | Works |
 | `POST` a `Temporary Override` | Works since #515 (was a 400, unknown event type); kept as a temp target, indefinite as a week, given back with `durationType` `indefinite` |
 | An override's UUID `_id`, posted again when it changes, deleted by it | Works since #515: a v1 POST with an `_id` replaces the one with it, or is created with it |
+| A `Temporary Override` with `durationType` `indefinite` and `duration` 0, or of 0 minutes | Fixed in this PR: indefinite, as one with no `duration` is (it was kept as 0 minutes); test in `loop/override_indefinite.http` |
 | A dose posted again when it ends, with its final duration or amount | Fixed in this PR: it replaces the first upload, as in Nightscout; test in `loop/treatments.http` |
 | Omnipod `syncIdentifier`s once creates dedup by identifier | Works since #515: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | A treatment's `syncIdentifier`, `insulinType`, a carb entry's `userEnteredAt`, a bolus's `unabsorbed` | Fixed in this PR: kept and given back as sent, through API v1 and v3 (they were dropped); test in `loop/treatments.http` |
