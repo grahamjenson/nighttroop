@@ -959,7 +959,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A device status keeps Trio's pump `bolusIncrement`, LoopFollow's remote bolus step, while the status as sent is kept.
 - A Nightscout treatment comes back with its `created_at` as `timestamp`, a bolus with its insulin as `programmed`,
   and a temp basal with `temp` `absolute`, as Loop's NightscoutKit drops treatments without them; a `timestamp`
-  sent is not read.
+  sent is not read. The `timestamp` is only given through API v1 and its sockets: API v3 and its storage socket leave
+  it out, as AAPS reads it as a number and drops a treatment, or a page of them, whose `timestamp` is a date.
 - A treatment's `durationInMilliseconds` is kept, created or updated, and given back as sent, as AAPS ends a temp
   target early to the millisecond and sends extended carbs and therapy events with it, while it is within a minute of
   the `duration` kept, so not once that is changed on the site; one sent with no `duration` is in minutes too, the
