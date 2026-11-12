@@ -12,7 +12,7 @@ import (
 
 const allFoodIntakes = `-- name: AllFoodIntakes :many
 
-SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
+SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -50,6 +50,7 @@ func (q *Queries) AllFoodIntakes(ctx context.Context, arg AllFoodIntakesParams) 
 			&i.Energy,
 			&i.Portions,
 			&i.PreBolus,
+			&i.UserEnteredAt,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -93,6 +94,7 @@ INSERT INTO food_intakes (
     energy,
     portions,
     pre_bolus,
+    user_entered_at,
 
     notes,
     reason,
@@ -125,9 +127,10 @@ VALUES (
     ?18,
     ?19,
     ?20,
-    ?21
+    ?21,
+    ?22
 )
-RETURNING id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateFoodIntakeParams struct {
@@ -144,6 +147,7 @@ type CreateFoodIntakeParams struct {
 	Energy                *float64
 	Portions              *float64
 	PreBolus              *float64
+	UserEnteredAt         *int64
 	Notes                 *string
 	Reason                *string
 	UtcOffsetMinutes      *int64
@@ -172,6 +176,7 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 		arg.Energy,
 		arg.Portions,
 		arg.PreBolus,
+		arg.UserEnteredAt,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -196,6 +201,7 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 		&i.Energy,
 		&i.Portions,
 		&i.PreBolus,
+		&i.UserEnteredAt,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -234,7 +240,7 @@ func (q *Queries) FoodIntakeTotals(ctx context.Context) (*FoodIntakeTotalsRow, e
 }
 
 const getFoodIntake = `-- name: GetFoodIntake :one
-SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetFoodIntakeParams struct {
@@ -259,6 +265,7 @@ func (q *Queries) GetFoodIntake(ctx context.Context, arg GetFoodIntakeParams) (*
 		&i.Energy,
 		&i.Portions,
 		&i.PreBolus,
+		&i.UserEnteredAt,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -301,7 +308,7 @@ func (q *Queries) HardDeleteFoodIntakesByType(ctx context.Context, arg HardDelet
 }
 
 const searchFoodIntakes = `-- name: SearchFoodIntakes :many
-SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
+SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -428,6 +435,7 @@ func (q *Queries) SearchFoodIntakes(ctx context.Context, arg SearchFoodIntakesPa
 			&i.Energy,
 			&i.Portions,
 			&i.PreBolus,
+			&i.UserEnteredAt,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -509,16 +517,17 @@ UPDATE food_intakes SET
     energy = COALESCE(?10, energy),
     portions = COALESCE(?11, portions),
     pre_bolus = COALESCE(?12, pre_bolus),
+    user_entered_at = COALESCE(?13, user_entered_at),
 
-    notes = COALESCE(?13, notes),
-    reason = COALESCE(?14, reason),
+    notes = COALESCE(?14, notes),
+    reason = COALESCE(?15, reason),
 
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?15,
-    updated_by_identity_name = ?16
-WHERE id = ?17 AND deleted_at IS NULL
-RETURNING id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?16,
+    updated_by_identity_name = ?17
+WHERE id = ?18 AND deleted_at IS NULL
+RETURNING id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateFoodIntakeParams struct {
@@ -534,6 +543,7 @@ type UpdateFoodIntakeParams struct {
 	Energy                *float64
 	Portions              *float64
 	PreBolus              *float64
+	UserEnteredAt         *int64
 	Notes                 *string
 	Reason                *string
 	UpdatedByIdentityID   *int64
@@ -558,6 +568,7 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 		arg.Energy,
 		arg.Portions,
 		arg.PreBolus,
+		arg.UserEnteredAt,
 		arg.Notes,
 		arg.Reason,
 		arg.UpdatedByIdentityID,
@@ -579,6 +590,7 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 		&i.Energy,
 		&i.Portions,
 		&i.PreBolus,
+		&i.UserEnteredAt,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,

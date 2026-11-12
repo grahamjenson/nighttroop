@@ -1006,36 +1006,6 @@ func (m *EventGroup) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
-// GetInsulinType returns the InsulinType value.
-func (m EventGroup) GetInsulinType() *string {
-	return m.InsulinType
-}
-
-// SetInsulinType sets the InsulinType value and returns the updated EventGroup.
-func (m *EventGroup) SetInsulinType(v *string) {
-	m.InsulinType = v
-}
-
-// GetUserEnteredAt returns the UserEnteredAt value.
-func (m EventGroup) GetUserEnteredAt() *int64 {
-	return m.UserEnteredAt
-}
-
-// SetUserEnteredAt sets the UserEnteredAt value and returns the updated EventGroup.
-func (m *EventGroup) SetUserEnteredAt(v *int64) {
-	m.UserEnteredAt = v
-}
-
-// GetUnabsorbed returns the Unabsorbed value.
-func (m EventGroup) GetUnabsorbed() *float64 {
-	return m.Unabsorbed
-}
-
-// SetUnabsorbed sets the Unabsorbed value and returns the updated EventGroup.
-func (m *EventGroup) SetUnabsorbed(v *float64) {
-	m.Unabsorbed = v
-}
-
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -1316,6 +1286,16 @@ func (m *FoodIntake) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m FoodIntake) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated FoodIntake.
+func (m *FoodIntake) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
 // GetNotes returns the Notes value.
 func (m FoodIntake) GetNotes() *string {
 	return m.Notes
@@ -1574,6 +1554,16 @@ func (m FoodIntakesVw) GetPreBolus() *float64 {
 // SetPreBolus sets the PreBolus value and returns the updated FoodIntakesVw.
 func (m *FoodIntakesVw) SetPreBolus(v *float64) {
 	m.PreBolus = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m FoodIntakesVw) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
 }
 
 // GetNotes returns the Notes value.
@@ -2566,6 +2556,26 @@ func (m *InsulinDose) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
 }
 
+// GetInsulinType returns the InsulinType value.
+func (m InsulinDose) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated InsulinDose.
+func (m *InsulinDose) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m InsulinDose) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated InsulinDose.
+func (m *InsulinDose) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
 // GetNotes returns the Notes value.
 func (m InsulinDose) GetNotes() *string {
 	return m.Notes
@@ -2764,6 +2774,26 @@ func (m InsulinDosesVw) GetIsBasalInsulin() *bool {
 // SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m InsulinDosesVw) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m InsulinDosesVw) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
 }
 
 // GetNotes returns the Notes value.
@@ -4616,6 +4646,16 @@ func (m *TempBasal) SetType(v *string) {
 	m.Type = v
 }
 
+// GetInsulinType returns the InsulinType value.
+func (m TempBasal) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated TempBasal.
+func (m *TempBasal) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempBasal) GetNotes() *string {
 	return m.Notes
@@ -4794,6 +4834,16 @@ func (m TempBasalsVw) GetType() *string {
 // SetType sets the Type value and returns the updated TempBasalsVw.
 func (m *TempBasalsVw) SetType(v *string) {
 	m.Type = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m TempBasalsVw) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetInsulinType(v *string) {
+	m.InsulinType = v
 }
 
 // GetNotes returns the Notes value.
@@ -7036,6 +7086,16 @@ func (m *CreateFoodIntakeParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m CreateFoodIntakeParams) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateFoodIntakeParams) GetNotes() *string {
 	return m.Notes
@@ -7614,6 +7674,16 @@ func (m UpdateFoodIntakeParams) GetPreBolus() *float64 {
 // SetPreBolus sets the PreBolus value and returns the updated UpdateFoodIntakeParams.
 func (m *UpdateFoodIntakeParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m UpdateFoodIntakeParams) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
 }
 
 // GetNotes returns the Notes value.
@@ -8896,36 +8966,6 @@ func (m *CreateEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
-// GetInsulinType returns the InsulinType value.
-func (m CreateEventGroupParams) GetInsulinType() *string {
-	return m.InsulinType
-}
-
-// SetInsulinType sets the InsulinType value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetInsulinType(v *string) {
-	m.InsulinType = v
-}
-
-// GetUserEnteredAt returns the UserEnteredAt value.
-func (m CreateEventGroupParams) GetUserEnteredAt() *int64 {
-	return m.UserEnteredAt
-}
-
-// SetUserEnteredAt sets the UserEnteredAt value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetUserEnteredAt(v *int64) {
-	m.UserEnteredAt = v
-}
-
-// GetUnabsorbed returns the Unabsorbed value.
-func (m CreateEventGroupParams) GetUnabsorbed() *float64 {
-	return m.Unabsorbed
-}
-
-// SetUnabsorbed sets the Unabsorbed value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetUnabsorbed(v *float64) {
-	m.Unabsorbed = v
-}
-
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -10186,36 +10226,6 @@ func (m *UpdateEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
-// GetInsulinType returns the InsulinType value.
-func (m UpdateEventGroupParams) GetInsulinType() *string {
-	return m.InsulinType
-}
-
-// SetInsulinType sets the InsulinType value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetInsulinType(v *string) {
-	m.InsulinType = v
-}
-
-// GetUserEnteredAt returns the UserEnteredAt value.
-func (m UpdateEventGroupParams) GetUserEnteredAt() *int64 {
-	return m.UserEnteredAt
-}
-
-// SetUserEnteredAt sets the UserEnteredAt value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetUserEnteredAt(v *int64) {
-	m.UserEnteredAt = v
-}
-
-// GetUnabsorbed returns the Unabsorbed value.
-func (m UpdateEventGroupParams) GetUnabsorbed() *float64 {
-	return m.Unabsorbed
-}
-
-// SetUnabsorbed sets the Unabsorbed value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetUnabsorbed(v *float64) {
-	m.Unabsorbed = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateEventGroupParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -10344,6 +10354,26 @@ func (m CreateInsulinDoseParams) GetIsBasalInsulin() *bool {
 // SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated CreateInsulinDoseParams.
 func (m *CreateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m CreateInsulinDoseParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m CreateInsulinDoseParams) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
 }
 
 // GetNotes returns the Notes value.
@@ -10824,6 +10854,26 @@ func (m UpdateInsulinDoseParams) GetIsBasalInsulin() *bool {
 // SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated UpdateInsulinDoseParams.
 func (m *UpdateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m UpdateInsulinDoseParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m UpdateInsulinDoseParams) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
 }
 
 // GetNotes returns the Notes value.
@@ -12286,6 +12336,16 @@ func (m *CreateTempBasalParams) SetType(v *string) {
 	m.Type = v
 }
 
+// GetInsulinType returns the InsulinType value.
+func (m CreateTempBasalParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated CreateTempBasalParams.
+func (m *CreateTempBasalParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateTempBasalParams) GetNotes() *string {
 	return m.Notes
@@ -12704,6 +12764,16 @@ func (m UpdateTempBasalParams) GetType() *string {
 // SetType sets the Type value and returns the updated UpdateTempBasalParams.
 func (m *UpdateTempBasalParams) SetType(v *string) {
 	m.Type = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m UpdateTempBasalParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated UpdateTempBasalParams.
+func (m *UpdateTempBasalParams) SetInsulinType(v *string) {
+	m.InsulinType = v
 }
 
 // GetNotes returns the Notes value.

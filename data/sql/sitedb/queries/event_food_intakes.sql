@@ -17,6 +17,7 @@ INSERT INTO food_intakes (
     energy,
     portions,
     pre_bolus,
+    user_entered_at,
 
     notes,
     reason,
@@ -42,6 +43,7 @@ VALUES (
     sqlc.narg('Energy'),
     sqlc.narg('Portions'),
     sqlc.narg('PreBolus'),
+    sqlc.narg('UserEnteredAt'),
     sqlc.arg('Notes'),
     sqlc.arg('Reason'),
     sqlc.arg('UtcOffsetMinutes'),
@@ -132,6 +134,7 @@ UPDATE food_intakes SET
     energy = COALESCE(sqlc.narg('Energy'), energy),
     portions = COALESCE(sqlc.narg('Portions'), portions),
     pre_bolus = COALESCE(sqlc.narg('PreBolus'), pre_bolus),
+    user_entered_at = COALESCE(sqlc.narg('UserEnteredAt'), user_entered_at),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
