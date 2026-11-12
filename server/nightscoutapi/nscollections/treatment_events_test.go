@@ -50,3 +50,30 @@ func TestDurationInMilliseconds(t *testing.T) {
 		})
 	}
 }
+
+// A treatment kept with a duration in only minutes or only milliseconds is given back with both, as a client may read
+// either
+func TestDurationGivenBackInMinutesAndMilliseconds(t *testing.T) {
+	tests := []struct {
+		name            string
+		minutes, ms     *int64
+		expectedMinutes int64
+		expectedMs      int64
+	}{
+		{"minutes only", new(int64(45)), nil, 45, 2700000},
+		{"milliseconds only", nil, new(int64(2700000)), 45, 2700000},
+		{"milliseconds only, rounded to the nearest minute", nil, new(int64(359587)), 6, 359587},
+		{"both", new(int64(5)), new(int64(359587)), 5, 359587},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			bundle := sitedb.EventGroupsBundle{
+				EventGroup: sitedb.EventGroup{GroupType: string(nightscoutmodels.Note), DurationMinutes: test.minutes, DurationMs: test.ms},
+			}
+			site := &httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh"}}
+			treatment := DBModelToTreatment(&bundle, site)
+			require.Equal(t, test.expectedMinutes, treatment.DurationMinutes.Int64())
+			require.Equal(t, test.expectedMs, treatment.DurationInMilliseconds.Int64())
+		})
+	}
+}

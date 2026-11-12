@@ -316,6 +316,13 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 			treatment.DurationInMilliseconds = new(types.FlexibleInt64(*ms))
 		}
 	}
+	// A duration is given back both in minutes and in milliseconds, whichever was kept, as a client may read either
+	if treatment.DurationInMilliseconds == nil && treatment.DurationMinutes != nil {
+		treatment.DurationInMilliseconds = new(*treatment.DurationMinutes * 60_000)
+	}
+	if treatment.DurationMinutes == nil && treatment.DurationInMilliseconds != nil {
+		treatment.DurationMinutes = new((*treatment.DurationInMilliseconds + 30_000) / 60_000)
+	}
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
 	treatment.Timestamp = treatment.CreatedAt
 	treatment.Programmed = treatment.Insulin
