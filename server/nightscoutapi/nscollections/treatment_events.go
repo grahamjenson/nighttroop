@@ -247,25 +247,31 @@ var (
 			return isAssigned(source.HighTarget, source.LowTarget, source.DurationMinutes)
 		},
 		partial: nightscoutmodels.PartialTreatmentToTempTarget,
+		// The targets are kept in mg/dL, converted from the units sent, or guessed from them as glucose is, as AAPS sends
+		// "mmol" and Nightscout reads one under 20 with no units as mmol/L
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.TempTarget) {
 			if source.HighTarget != nil {
-				target.HighTargetMgdl = source.HighTarget.Float64()
+				target.HighTargetMgdl = source.Units.ToMGDL(source.HighTarget.Float64())
 			} else if source.LowTarget != nil {
 				// If Target Top is missing then we assume both targets are the same
-				target.HighTargetMgdl = source.LowTarget.Float64()
+				target.HighTargetMgdl = source.Units.ToMGDL(source.LowTarget.Float64())
 			}
 
 			if source.LowTarget != nil {
-				target.LowTargetMgdl = source.LowTarget.Float64()
+				target.LowTargetMgdl = source.Units.ToMGDL(source.LowTarget.Float64())
 			} else if source.HighTarget != nil {
 				// If Target Bottom is missing then we assume both targets are the same
-				target.LowTargetMgdl = source.HighTarget.Float64()
+				target.LowTargetMgdl = source.Units.ToMGDL(source.HighTarget.Float64())
 			}
 		},
 		// One a week long is given back as indefinite when it was sent so, as LoopFollow shows Loop's that way, from its
 		// group's duration_type; one changed since to end sooner is not
 		toTreatment: func(event *sitedb.TempTarget, _ *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
 			nightscoutmodels.UpdateTempTargetToTreatment(event, treatment)
+			// Its targets are given back in mg/dL, whatever the site's units
+			if event != nil {
+				treatment.Units = new(consts.UnitsMGDL)
+			}
 			if event == nil || event.DurationMinutes != indefiniteMinutes || treatment.DurationType == nil || *treatment.DurationType != indefinite {
 				treatment.DurationType = nil
 			}

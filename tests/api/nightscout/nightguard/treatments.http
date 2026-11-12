@@ -76,8 +76,8 @@ ASSERT_EQUALS "Temporary Target" "@result.0.eventType"
 ASSERT_EQUALS 130 "@result.0.targetTop"
 ASSERT_EQUALS 130 "@result.0.targetBottom"
 ASSERT_EQUALS 60 "@result.0.duration"
-// Targets come back in mg/dL with no units, which Nightguard takes as mg/dL
-ASSERT_EQUALS null "@result.0.units"
+// Targets come back in mg/dL, with units saying so, which Nightguard takes as mg/dL as it has no "mol" in it
+ASSERT_EQUALS "mg/dL" "@result.0.units"
 ASSERT_EQUALS ".nightguard_v3_create_temp_target.result.created_at" "@result.0.created_at"
 
 // readLastTreatementEventTimestamp, for the cannula (5 days back), sensor (14) and battery (40) ages

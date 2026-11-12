@@ -159,6 +159,93 @@ ASSERT_STATUS 201
 ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 70 "@result.glucose"
 
+### Temp Targets and therapy events
+
+# A temp target's targets are kept and given back in mg/dL, with units saying so, as a client reading one with no
+# units on an mmol/L site would read 90 as mmol/L; one sent in mmol/L is converted
+
+NAME create_mmol_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 5 }},
+    "eventType": "Temporary Target",
+    "duration": 60,
+    "reason": "Activity",
+    "targetBottom": 6,
+    "targetTop": 8,
+    "units": "mmol",
+    "created_at": "{{ time 5 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 108.108 "@result.targetBottom"
+ASSERT_EQUALS 144.144 "@result.targetTop"
+
+NAME create_mgdl_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 6 }},
+    "eventType": "Temporary Target",
+    "duration": 60,
+    "reason": "Automation",
+    "targetBottom": 90,
+    "targetTop": 90,
+    "units": "mg/dl",
+    "created_at": "{{ time 6 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 90 "@result.targetBottom"
+ASSERT_EQUALS 90 "@result.targetTop"
+
+NAME create_unlabeled_mmol_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 7 }},
+    "eventType": "Temporary Target",
+    "duration": 60,
+    "targetBottom": 6,
+    "targetTop": 8,
+    "created_at": "{{ time 7 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 108.108 "@result.targetBottom"
+ASSERT_EQUALS 144.144 "@result.targetTop"
+
+NAME create_mmol_sensor_change
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 8 }},
+    "eventType": "Sensor Change",
+    "units": "mmol",
+    "created_at": "{{ time 8 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME create_mgdl_note
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 9 }},
+    "eventType": "Note",
+    "notes": "A note",
+    "units": "mg/dl",
+    "created_at": "{{ time 9 }}"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "mg/dL" "@result.units"
+
 # GET
 
 ######
@@ -231,3 +318,26 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 70 "@result.glucose"
+
+# Temp targets and therapy events
+
+NAME get_temp_target_mmol
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_temp_target.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 108.108 "@result.targetBottom"
+ASSERT_EQUALS 144.144 "@result.targetTop"
+
+NAME get_temp_target_mgdl
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_temp_target.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 90 "@result.targetBottom"
+
+NAME get_sensor_change_mmol
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_sensor_change.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
