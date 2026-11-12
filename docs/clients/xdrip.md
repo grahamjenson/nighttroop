@@ -153,6 +153,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `GET status.json` | Works (no `version`, read as allowed) |
 | `POST entries` of `sgv` and `mbg` | Works, duplicates ignored |
 | `POST entries` with a `cal` | Fixed in #512: the calibration is left out, so the batch is not refused |
+| `POST entries` with a reading of 0 or less (or over 1000 mg/dL) | Fixed: the reading is left out and the rest stored. It refused the whole batch, which xDrip+ sends again with each new reading, so nothing more uploaded |
 | `POST devicestatus`, phone and bridge battery | Fixed in #512: `uploader.battery` was only kept for Loop |
 | `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |
 | `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
