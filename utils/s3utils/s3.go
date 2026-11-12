@@ -247,11 +247,6 @@ func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Re
 	if !c.ServerConfig.Status.S3Working {
 		return nil
 	}
-	if len(paths) == 0 {
-		slog.ErrorContext(ctx, "No files to sync", "key", key)
-		return nil
-	}
-
 	// The upload finishes even if what asked for it is cancelled, logging with its job, request or site
 	ctx = context.WithoutCancel(ctx)
 

@@ -87,7 +87,7 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "SMB" "@0.eventType"
 ASSERT_EQUALS 0.3 "@0.insulin"
-ASSERT_CONTAINS "T12:01:00Z" "@0.created_at"
+ASSERT_CONTAINS "T12:01:00.000Z" "@0.created_at"
 
 // uploadCarbs posts carbs and fat and protein units (CarbsStorage.swift), and the CGM sensor start
 // (GlucoseStorage.swift) goes with the glucose
@@ -216,6 +216,42 @@ ASSERT_EQUALS false "@0.pump.battery.display"
 ASSERT_EQUALS false "@0.pump.status.bolusing"
 ASSERT_EQUALS false "@0.pump.status.suspended"
 ASSERT_EQUALS false "@0.uploader.isCharging"
+
+// Trio sends uploader.battery -100 when iOS does not know the phone's battery level (batteryLevel -1 x 100), and a
+// pump's battery or reservoir can be as wrong; each is left out and the rest of the device status kept
+NAME trio_upload_devicestatus_unknown_battery
+POST http://{{ site }}/api/v1/devicestatus.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "device" : "Trio unknown battery",
+  "openaps" : {
+    "iob" : { "iob" : 2.5, "basaliob" : 0.5, "time" : "{{ date -1 }}T12:20:00.000Z" },
+    "suggested" : { "COB" : 12, "eventualBG" : 105, "timestamp" : "{{ date -1 }}T12:20:00.000Z" }
+  },
+  "pump" : { "battery" : { "percent" : -1, "string" : "normal" }, "reservoir" : -5, "clock" : "{{ date -1 }}T12:20:03.000Z" },
+  "uploader" : { "battery" : -100, "isCharging" : true }
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@0.openaps.iob.iob"
+ASSERT_EQUALS 105 "@0.openaps.suggested.eventualBG"
+ASSERT_EQUALS null "@0.uploader.battery"
+ASSERT_EQUALS true "@0.uploader.isCharging"
+ASSERT_EQUALS null "@0.pump.battery.percent"
+ASSERT_EQUALS "normal" "@0.pump.battery.string"
+ASSERT_EQUALS null "@0.pump.reservoir"
+
+NAME trio_unknown_battery_devicestatus_stored
+GET http://{{ site }}/api/v1/devicestatus.json?find[device]=Trio%20unknown%20battery&count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 2.5 "@0.openaps.iob.iob"
+ASSERT_EQUALS 12 "@0.openaps.suggested.COB"
+ASSERT_EQUALS null "@0.uploader.battery"
+ASSERT_EQUALS true "@0.uploader.isCharging"
+ASSERT_EQUALS null "@0.pump.battery.percent"
+ASSERT_EQUALS null "@0.pump.reservoir"
 
 // uploadProfiles posts the default profile with Trio's own push notification fields, and needs exactly a 200
 NAME trio_upload_profile

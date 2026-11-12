@@ -258,17 +258,29 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xstring7 := *source.PumpModel
 		sitedbCreateDeviceReportParams.PumpModel = &xstring7
 	}
+	if source.PumpID != nil {
+		xstring8 := *source.PumpID
+		sitedbCreateDeviceReportParams.PumpID = &xstring8
+	}
+	if source.PumpSuspended != nil {
+		xbool2 := *source.PumpSuspended
+		sitedbCreateDeviceReportParams.PumpSuspended = &xbool2
+	}
+	if source.PumpBolusing != nil {
+		xbool3 := *source.PumpBolusing
+		sitedbCreateDeviceReportParams.PumpBolusing = &xbool3
+	}
 	if source.OverrideJson != nil {
-		xstring8 := *source.OverrideJson
-		sitedbCreateDeviceReportParams.OverrideJson = &xstring8
+		xstring9 := *source.OverrideJson
+		sitedbCreateDeviceReportParams.OverrideJson = &xstring9
 	}
 	if source.PumpJson != nil {
-		xstring9 := *source.PumpJson
-		sitedbCreateDeviceReportParams.PumpJson = &xstring9
+		xstring10 := *source.PumpJson
+		sitedbCreateDeviceReportParams.PumpJson = &xstring10
 	}
 	if source.UploaderJson != nil {
-		xstring10 := *source.UploaderJson
-		sitedbCreateDeviceReportParams.UploaderJson = &xstring10
+		xstring11 := *source.UploaderJson
+		sitedbCreateDeviceReportParams.UploaderJson = &xstring11
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint642 := *source.UtcOffsetMinutes
@@ -276,12 +288,12 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 	}
 	sitedbCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.CreatedByAppName != nil {
-		xstring11 := *source.CreatedByAppName
-		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring11
+		xstring12 := *source.CreatedByAppName
+		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring12
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring12 := *source.CreatedByDeviceName
-		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring12
+		xstring13 := *source.CreatedByDeviceName
+		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring13
 	}
 	sitedbCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -1535,18 +1547,22 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 		xstring8 := *source.RemoteSettingsID
 		sitedbCreateProfilePresetParams.RemoteSettingsID = &xstring8
 	}
+	if source.EnteredBy != nil {
+		xstring9 := *source.EnteredBy
+		sitedbCreateProfilePresetParams.EnteredBy = &xstring9
+	}
 	sitedbCreateProfilePresetParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.CreatedByAppName != nil {
-		xstring9 := *source.CreatedByAppName
-		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring9
+		xstring10 := *source.CreatedByAppName
+		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring10
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring10 := *source.CreatedByDeviceName
-		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring10
+		xstring11 := *source.CreatedByDeviceName
+		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring11
 	}
 	sitedbCreateProfilePresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {

@@ -72,6 +72,9 @@ type DeviceReport struct {
 	PumpClock             *int64
 	PumpManufacturer      *string
 	PumpModel             *string
+	PumpID                *string
+	PumpSuspended         *bool
+	PumpBolusing          *bool
 	OverrideJson          *string
 	PumpJson              *string
 	UploaderJson          *string
@@ -396,6 +399,7 @@ type ProfilePreset struct {
 	TargetsLowJson           *string
 	LoopSettingsID           *string
 	RemoteSettingsID         *string
+	EnteredBy                *string
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64
 	CreatedAt                int64

@@ -186,6 +186,26 @@ func (s *JSONTextString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MaxDeviceTokenLength is the longest device token kept: Apple's APNs tokens are of no fixed length, 64 hex characters
+// once and 160 from Trio now
+const MaxDeviceTokenLength = 256
+
+// DeviceTokenString is the token of an app on a device, as Loop and Trio send their APNs token, kept whole. One longer
+// than MaxDeviceTokenLength is empty, which is not registered for pushes, rather than cut or refuse the upload
+type DeviceTokenString string
+
+func (s *DeviceTokenString) UnmarshalJSON(data []byte) error {
+	var v string
+	if err := json.Unmarshal(data, &v); err != nil {
+		return fmt.Errorf("expected a device token string, got %s", data)
+	}
+	if len(v) > MaxDeviceTokenLength {
+		v = ""
+	}
+	*s = DeviceTokenString(v)
+	return nil
+}
+
 type IdentifierString string
 
 func (i *IdentifierString) String() string {

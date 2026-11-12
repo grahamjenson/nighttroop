@@ -174,6 +174,11 @@ RETURNING id;
 SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
 
 
+-- name: BatchHadSites :one
+-- Whether any site, in any state, was ever in the batch, so the batch may have a backup with sites in it
+SELECT CAST(EXISTS(SELECT 1 FROM sites WHERE batch = ?) AS BOOLEAN);
+
+
 -- name: GetSitesToDeleteInBatch :many
 -- finds deleted_at is null sites where 
 --    last_seen_at is null and created_at is more than minutes ago and 

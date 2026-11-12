@@ -65,6 +65,18 @@ func TestBackupRoundTrip(t *testing.T) {
 	}
 }
 
+// A backup of no files, a batch whose last site went, unpacks to nothing
+func TestEmptyBackupRoundTrip(t *testing.T) {
+	c, dst := testClient(t), t.TempDir()
+	var backup bytes.Buffer
+	_, err := c.createTarLZ4(nil, &backup, testKey)
+	require.NoError(t, err)
+	require.NoError(t, c.ExtractTarLZ4(&backup, dst, testKey))
+	entries, err := os.ReadDir(dst)
+	require.NoError(t, err)
+	require.Empty(t, entries)
+}
+
 // A backup that has been tampered with, or is not a backup, is refused rather than unpacked
 func TestBackupRefusesTampering(t *testing.T) {
 	c := testClient(t)

@@ -22,8 +22,6 @@ const (
 	Activity     Collection = "activity"
 )
 
-const DATE_FORMAT_STRING = "2006-01-02T15:04:05.000Z"
-
 func ParseCollection(s string) (Collection, error) {
 
 	// Validate and normalize

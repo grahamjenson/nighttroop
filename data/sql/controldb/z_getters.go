@@ -5008,6 +5008,16 @@ func (m *ArchiveSitesParams) SetJsonEach(v interface{}) {
 	m.JsonEach = v
 }
 
+// GetBatch returns the Batch value.
+func (m BatchHadSitesParams) GetBatch() string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated BatchHadSitesParams.
+func (m *BatchHadSitesParams) SetBatch(v string) {
+	m.Batch = v
+}
+
 // GetSince returns the Since value.
 func (m CountActiveSitesParams) GetSince() *int64 {
 	return m.Since

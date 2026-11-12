@@ -91,9 +91,9 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case RouteTargetNightscout:
 			// so <siteid>.ns.domain routes to the nightscout compatible API
-			serveSite(ctx, w, r, nightscoutRouter, config, controlDB, siteSubdomain, ipAddress)
+			serveSite(ctx, w, r, nightscoutRouter, config, controlDB, siteSubdomain, ipAddress, http.StatusGone)
 		case RouteTargetSite:
-			serveSite(ctx, w, r, siteRouter, config, controlDB, siteSubdomain, ipAddress)
+			serveSite(ctx, w, r, siteRouter, config, controlDB, siteSubdomain, ipAddress, http.StatusNotFound)
 		default:
 			slog.InfoContext(r.Context(), "Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
@@ -125,15 +125,17 @@ func globalWithinRateLimit(config *config.ServerConfig, routeTarget RouteTarget,
 	return controlapi.SignedIn(config, r) || config.RateLimiters.ControlRateLimiter.Allow()
 }
 
-// serveSite serves a request for a site with its context: 404 for a site there is not, but 503 when it cannot be
-// looked up, as when the server is too busy to answer in time, so an uploader tries again rather than take its URL as
-// wrong. The 404 says, in JSON as Nightscout's errors are, that the site does not exist, so an app can tell its user
-// rather than take it for a wrong path.
-func serveSite(ctx context.Context, w http.ResponseWriter, r *http.Request, router http.Handler, config *config.ServerConfig, controlDB *db.ControlDB, subdomain string, ipAddress string) {
+// serveSite serves a request for a site with its context: missingStatus for a site there is not, but 503 when it cannot
+// be looked up, as when the server is too busy to answer in time, so an uploader tries again rather than take its URL as
+// wrong. The missing site's answer says, in JSON as Nightscout's errors are, that the site does not exist, so an app can
+// tell its user rather than take it for a wrong path: the Nightscout API's is 410 Gone, so an uploader can tell it from
+// a route there is not. A disabled, archived or deleted site is answered just as one that never was, so the answer
+// tells nothing about it.
+func serveSite(ctx context.Context, w http.ResponseWriter, r *http.Request, router http.Handler, config *config.ServerConfig, controlDB *db.ControlDB, subdomain string, ipAddress string, missingStatus int) {
 	siteDB, siteModel, err := controlDB.GetSite(ctx, subdomain)
 	if errors.Is(err, db.ErrSiteNotFound) {
-		slog.InfoContext(ctx, "Main router 404 for subdomain", "subdomain", subdomain, "error", err)
-		apiutils.WriteJSON(w, http.StatusNotFound, map[string]any{"status": http.StatusNotFound, "message": "site does not exist"})
+		slog.InfoContext(ctx, "Main router site does not exist", "subdomain", subdomain, "status", missingStatus, "error", err)
+		apiutils.WriteJSON(w, missingStatus, map[string]any{"status": missingStatus, "message": "site does not exist"})
 		return
 	}
 	if err != nil {

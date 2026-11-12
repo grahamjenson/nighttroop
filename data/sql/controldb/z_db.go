@@ -33,6 +33,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.archiveSitesStmt, err = db.PrepareContext(ctx, archiveSites); err != nil {
 		return nil, fmt.Errorf("error preparing query ArchiveSites: %w", err)
 	}
+	if q.batchHadSitesStmt, err = db.PrepareContext(ctx, batchHadSites); err != nil {
+		return nil, fmt.Errorf("error preparing query BatchHadSites: %w", err)
+	}
 	if q.countActiveIdentitiesStmt, err = db.PrepareContext(ctx, countActiveIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query CountActiveIdentities: %w", err)
 	}
@@ -345,6 +348,11 @@ func (q *Queries) Close() error {
 	if q.archiveSitesStmt != nil {
 		if cerr := q.archiveSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing archiveSitesStmt: %w", cerr)
+		}
+	}
+	if q.batchHadSitesStmt != nil {
+		if cerr := q.batchHadSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing batchHadSitesStmt: %w", cerr)
 		}
 	}
 	if q.countActiveIdentitiesStmt != nil {
@@ -879,6 +887,7 @@ type Queries struct {
 	allControlIdentitiesStmt                *sql.Stmt
 	allSiteIdentitiesStmt                   *sql.Stmt
 	archiveSitesStmt                        *sql.Stmt
+	batchHadSitesStmt                       *sql.Stmt
 	countActiveIdentitiesStmt               *sql.Stmt
 	countActiveSitesStmt                    *sql.Stmt
 	countControlAdminsStmt                  *sql.Stmt
@@ -986,6 +995,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allControlIdentitiesStmt:                q.allControlIdentitiesStmt,
 		allSiteIdentitiesStmt:                   q.allSiteIdentitiesStmt,
 		archiveSitesStmt:                        q.archiveSitesStmt,
+		batchHadSitesStmt:                       q.batchHadSitesStmt,
 		countActiveIdentitiesStmt:               q.countActiveIdentitiesStmt,
 		countActiveSitesStmt:                    q.countActiveSitesStmt,
 		countControlAdminsStmt:                  q.countControlAdminsStmt,

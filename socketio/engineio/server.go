@@ -298,6 +298,7 @@ type Session struct {
 	queue     []Packet
 	queued    int // bytes in queue
 	polling   bool
+	probing   bool // the client is upgrading, so a poll is ended at once, as it waits for its poll to end to upgrade
 	posting   bool
 	closed    bool
 	onMessage func(data string)
@@ -481,7 +482,7 @@ func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 		if !upgraded {
 			packets, s.queue, s.queued = s.queue, nil, 0
 		}
-		closed := s.closed
+		closed, probing := s.closed, s.probing
 		s.mu.Unlock()
 		switch {
 		case upgraded:
@@ -494,6 +495,9 @@ func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 			return
 		case closed:
 			writePayload(w, []Packet{{Type: Close}}, s.version)
+			return
+		case probing:
+			writePayload(w, []Packet{{Type: Noop}}, s.version)
 			return
 		}
 		select {
@@ -602,8 +606,21 @@ func (s *Session) probe(ws *WebSocket) bool {
 	if err != nil || p.Type != Ping || p.Data != "probe" || ws.WritePacket(Packet{Type: Pong, Data: "probe"}) != nil {
 		return false
 	}
+	// The client pauses polling, waiting for its poll to end, before it sends upgrade, so the waiting poll is ended
+	// with a noop, as the JavaScript server does
+	s.setProbing(true)
+	defer s.setProbing(false)
 	p, err = ws.ReadPacket()
 	return err == nil && p.Type == Upgrade
+}
+
+func (s *Session) setProbing(probing bool) {
+	s.mu.Lock()
+	s.probing = probing
+	s.mu.Unlock()
+	if probing {
+		signal(s.notify)
+	}
 }
 
 // runWebSocket moves the session onto the websocket: a waiting poll is ended with a noop, queued packets are sent

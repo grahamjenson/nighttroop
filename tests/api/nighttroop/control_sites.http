@@ -106,10 +106,12 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "disabled" "@result.state"
 ASSERT_EXISTS "@result.disabled_at"
 
-// A disabled site is no longer served, but the control API still sees it
+// A disabled site is no longer served, answered as a site that never was, but the control API still sees it
 NAME site_not_served_after_disable
 GET http://{{ .site_id }}.ns.localhost/api/v1/status.json?token={{ token }}
-ASSERT_STATUS 404
+ASSERT_STATUS 410
+ASSERT_EQUALS 410 "@status"
+ASSERT_EQUALS "site does not exist" "@message"
 
 NAME disabled_site_still_listed
 GET http://control.localhost/sites/{{ .site_id }}

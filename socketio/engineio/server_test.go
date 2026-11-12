@@ -415,6 +415,42 @@ func TestUpgradeEndsTheWaitingPoll(t *testing.T) {
 	require.ErrorContains(t, err, "400")
 }
 
+// The JavaScript client, as AAPS's and Nightscout's pages use, pauses polling after the probe and sends upgrade only
+// once its waiting poll ends, so the probe ends the waiting poll with a noop at once
+func TestProbeEndsTheWaitingPoll(t *testing.T) {
+	_, ts, _ := echoServer(t, Config{})
+	sid := handshake(t, ts.URL, "4")
+	url := ts.URL + "/?EIO=4&transport=polling&sid=" + sid
+
+	polled := make(chan string)
+	go func() {
+		_, body := get(t, url)
+		polled <- body
+	}()
+	time.Sleep(50 * time.Millisecond)
+	ws, err := DialWebSocket(context.Background(), ts.URL, V4, sid)
+	require.NoError(t, err)
+	t.Cleanup(func() { ws.Close() })
+	require.NoError(t, ws.WritePacket(Packet{Type: Ping, Data: "probe"}))
+	p, err := ws.ReadPacket()
+	require.NoError(t, err)
+	require.Equal(t, Packet{Type: Pong, Data: "probe"}, p)
+
+	select {
+	case body := <-polled:
+		require.Equal(t, "6", body)
+	case <-time.After(time.Second):
+		t.Fatal("the waiting poll was not ended by the probe")
+	}
+
+	// Then the upgrade completes, and the websocket carries the messages
+	require.NoError(t, ws.WritePacket(Packet{Type: Upgrade}))
+	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "hello"}))
+	p, err = ws.ReadPacket()
+	require.NoError(t, err)
+	require.Equal(t, Packet{Type: Message, Data: "hello"}, p)
+}
+
 // After an upgrade a POST over polling is refused, so its packets are not handled alongside the websocket's
 func TestUpgradedSessionRefusesPosts(t *testing.T) {
 	_, ts, _ := echoServer(t, Config{})

@@ -97,7 +97,7 @@ func loopCommandAlert(c loopCommand, identityName string, now time.Time) (push.A
 		enteredBy = identityName
 	}
 	data := map[string]any{"remote-address": identityName, "entered-by": enteredBy,
-		"sent-at": isoMillis(now), "expiration": isoMillis(now.Add(loopCommandExpiration))}
+		"sent-at": types.ISOString(now), "expiration": types.ISOString(now.Add(loopCommandExpiration))}
 	if c.Notes != "" {
 		data["notes"] = c.Notes.String()
 	}
@@ -136,7 +136,7 @@ func loopCommandAlert(c loopCommand, identityName string, now time.Time) (push.A
 		}
 		data["carbs-entry"], data["absorption-time"] = carbs, absorption
 		if c.CreatedAt != nil {
-			data["start-time"] = isoMillis(c.CreatedAt.Time())
+			data["start-time"] = types.ISOString(c.CreatedAt.Time())
 		}
 		title, body = fmt.Sprintf("Remote Carbs Entry: %g grams", carbs), fmt.Sprintf("Absorption Time: %g hours", absorption)
 	case "Remote Bolus Entry":
@@ -155,11 +155,6 @@ func loopCommandAlert(c loopCommand, identityName string, now time.Time) (push.A
 		}
 	}
 	return push.Alert{Title: title, Body: body, Data: data}, nil
-}
-
-// isoMillis is a time as JavaScript's toISOString gives it, as Nightscout sends Loop its times
-func isoMillis(t time.Time) string {
-	return t.UTC().Format("2006-01-02T15:04:05.000Z")
 }
 
 // value is a number sent, or 0 when it is not

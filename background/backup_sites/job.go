@@ -171,9 +171,6 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 	if err != nil {
 		return fmt.Errorf("cannot get site batch: %w", err)
 	}
-	if len(sites) == 0 {
-		return nil
-	}
 
 	siteIDs, paths := []string{}, []string{}
 	for _, backupSite := range sites {
@@ -196,6 +193,13 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 	batchSites := strings.Join(slices.Sorted(slices.Values(siteIDs)), ",")
 	if last, ok := b.uploaded.Load(char); ok && last == batchSites {
 		return nil
+	}
+	// A batch whose last site was deleted or archived is uploaded empty, or S3's latest backup of it keeps that site's
+	// data for good; one that never had a site has no backup to replace
+	if len(siteIDs) == 0 {
+		if had, err := b.controlDB.Queries.BatchHadSites(ctx, controldb.BatchHadSitesParams{Batch: char}); err != nil || !had {
+			return err
+		}
 	}
 	slog.InfoContext(ctx, "Backing up site DBs", "sites", siteIDs)
 

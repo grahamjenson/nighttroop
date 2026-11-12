@@ -38,8 +38,9 @@ with a time zone, with or without fractional seconds (`2026-11-01T12:00:00Z`, `2
 or a date without a zone, fails. It writes dates with milliseconds and `Z`. Numbers are Swift `Decimal` or `Int`;
 one field of the wrong type, or one required field missing, fails the whole list.
 
-Nighttroop writes `created_at`, `dateString` and `startDate` as ISO 8601 with `Z`, leaving out zero milliseconds,
-which Trio reads.
+Nighttroop writes `created_at` as Nightscout does, as JavaScript's `toISOString` writes it: in UTC with three
+fractional digits, e.g. `2026-11-01T12:00:00.000Z`; `dateString` and `startDate` are ISO 8601 with `Z`, leaving out
+zero milliseconds. Trio reads both.
 
 ## Uploads
 
@@ -122,7 +123,8 @@ arrives):
 Works, and `openaps` comes back whole. The pump comes back with its `clock`, `reservoir`, `battery` (`percent`,
 `voltage`, `string`, `display`), `status` (`status`, `bolusing`, `suspended`, `timestamp`) and `bolusIncrement`
 while the JSON it was sent in is kept (then only the clock, battery percent and reservoir), and `uploader` with its
-`battery` and `isCharging`. Trio does not read them back, but its followers do.
+`battery` and `isCharging`. Trio does not read them back, but its followers do. When iOS does not know the phone's
+battery Trio sends `uploader.battery` -100 (its `batteryLevel` -1 x 100); the device status is kept without it.
 
 ### Profile: `POST /api/v1/profile.json`
 

@@ -46,7 +46,7 @@ GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[e
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_CONTAINS "T12:30:00Z" "@0.created_at"
+ASSERT_CONTAINS "T12:30:00.000Z" "@0.created_at"
 ASSERT_EXISTS "@0.enteredBy"
 ASSERT_EQUALS "looping: false" "@0.notes"
 ASSERT_EQUALS "remote" "@0.enteredBy"

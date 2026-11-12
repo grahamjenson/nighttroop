@@ -48,6 +48,22 @@ func (q *Queries) ArchiveSites(ctx context.Context, arg ArchiveSitesParams) ([]s
 	return items, nil
 }
 
+const batchHadSites = `-- name: BatchHadSites :one
+SELECT CAST(EXISTS(SELECT 1 FROM sites WHERE batch = ?) AS BOOLEAN)
+`
+
+type BatchHadSitesParams struct {
+	Batch string
+}
+
+// Whether any site, in any state, was ever in the batch, so the batch may have a backup with sites in it
+func (q *Queries) BatchHadSites(ctx context.Context, arg BatchHadSitesParams) (bool, error) {
+	row := q.queryRow(ctx, q.batchHadSitesStmt, batchHadSites, arg.Batch)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const countActiveSites = `-- name: CountActiveSites :one
 SELECT COUNT(*) FROM sites WHERE state = 'live' AND last_seen_at >= ?1
 `

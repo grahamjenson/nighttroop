@@ -183,7 +183,7 @@ ASSERT_EQUALS ".loop_upload_settings.0._id" "@_id"
 ASSERT_EQUALS ".loop_upload_settings.0.startDate" "@startDate"
 ASSERT_EQUALS "mg/dL" "@units"
 ASSERT_EQUALS "Default" "@defaultProfile"
-ASSERT_EXISTS "@enteredBy"
+ASSERT_EQUALS "Loop" "@enteredBy"
 ASSERT_EQUALS true "@loopSettings.dosingEnabled"
 ASSERT_EQUALS "Running" "@loopSettings.overridePresets.0.name"
 ASSERT_EQUALS 3600 "@loopSettings.overridePresets.0.duration"
@@ -204,7 +204,7 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS ".loop_upload_settings.0._id" "@0._id"
-ASSERT_EXISTS "@0.enteredBy"
+ASSERT_EQUALS "Loop" "@0.enteredBy"
 
 
 ######
@@ -240,3 +240,11 @@ ASSERT_EQUALS 140.54 "@loopSettings.overridePresets.0.targetRange.0"
 ASSERT_EQUALS 160.36 "@loopSettings.overridePresets.0.targetRange.1"
 ASSERT_EQUALS 0.8 "@loopSettings.overridePresets.0.insulinNeedsScaleFactor"
 ASSERT_EQUALS 4 "@loopSettings.maximumBasalRatePerHour"
+
+# A profile sent with no enteredBy says who uploaded it, the identity
+NAME upload_profile_no_entered_by
+POST http://{{ site }}/api/v1/profile
+H api-secret: {{ sha1 token }}
+B [{"defaultProfile": "Default", "startDate": "{{ time 20 }}", "units": "mg/dL", "store": {"Default": {"dia": 6, "units": "mg/dL"}}}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@0.enteredBy"
