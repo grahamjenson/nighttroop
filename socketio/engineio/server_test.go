@@ -402,8 +402,8 @@ func TestUpgradeEndsTheWaitingPoll(t *testing.T) {
 	require.Equal(t, "6", <-polled)
 	require.Less(t, time.Since(start), time.Second)
 
-	// The websocket carries the messages, and polling is over. The echo comes once the server has the upgrade packet,
-	// which the probe's noop can end the waiting poll before, so polling is checked after it
+	// The websocket carries the messages, and once it has, polling is over. The waiting poll ends at the probe, before
+	// the upgrade is read, so only a message round trip says the session is upgraded
 	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "hello"}))
 	p, err := ws.ReadPacket()
 	require.NoError(t, err)
