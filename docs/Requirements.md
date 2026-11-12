@@ -924,6 +924,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A Nightscout treatment comes back with its `created_at` as `timestamp`, a bolus with its insulin as `programmed`,
   and a temp basal with `temp` `absolute`, as Loop's NightscoutKit drops treatments without them; a `timestamp`
   sent is not read.
+- A treatment's `durationInMilliseconds` is kept, created or updated, and given back as sent, as AAPS ends a temp
+  target early to the millisecond and sends extended carbs and therapy events with it, while it is within a minute of
+  the `duration` kept, so not once that is changed on the site; one sent with no `duration` is in minutes too, the
+  nearest.
 - A device status keeps its uploader's `isCharging`, and, while the status as sent is kept, its uploader's `name` and
   `timestamp` and Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its

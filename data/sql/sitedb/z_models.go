@@ -115,6 +115,7 @@ type EventGroup struct {
 	Notes                 *string
 	Reason                *string
 	DurationMinutes       *int64
+	DurationMs            *int64
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64

@@ -399,6 +399,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ActivityID NotificationEventID
 	// goverter:map EventType GroupType
 	// goverter:map UUID Uuid
+	// goverter:map DurationInMilliseconds DurationMs
 	// goverter:map SentJSON SentHash | SentHash
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }

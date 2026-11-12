@@ -1,0 +1,114 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS sends a treatment's duration in whole minutes as duration, and to the millisecond as durationInMilliseconds,
+// which it reads back before duration (TreatmentMapper), so durationInMilliseconds is given back as sent
+
+// TT.toNSTemporaryTarget
+NAME add_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 30 }},
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Temporary Target",
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "targetTop": 140.0,
+    "targetBottom": 140.0,
+    "reason": "Activity",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// AAPS ends the temp target early with an update of its duration to the millisecond, and its whole minutes
+NAME end_temp_target
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "identifier": "{{ .add_temp_target.identifier }}",
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Temporary Target",
+    "duration": 5,
+    "durationInMilliseconds": 359587,
+    "targetTop": 140.0,
+    "targetBottom": 140.0,
+    "reason": "Activity"
+ }
+ASSERT_STATUS 200
+
+NAME get_ended_temp_target
+GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 359587 "@result.durationInMilliseconds"
+ASSERT_EQUALS 5 "@result.duration"
+ASSERT_EQUALS 140 "@result.targetTop"
+
+// Extended carbs, which have no event with a duration
+NAME add_extended_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 20 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Carb Correction",
+    "carbs": 20.0,
+    "duration": 120,
+    "durationInMilliseconds": 7200000,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS 7200000 "@result.durationInMilliseconds"
+ASSERT_EQUALS 120 "@result.duration"
+
+// TE.toNSTherapyEvent, a note with a duration
+NAME add_note
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 10 }},
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Note",
+    "notes": "Out for a run",
+    "duration": 45,
+    "durationInMilliseconds": 2700000,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS 2700000 "@result.durationInMilliseconds"
+
+// A duration sent only in milliseconds is kept, and given in minutes too, rounded
+NAME add_temp_target_ms_only
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 5 }},
+    "eventType": "Temporary Target",
+    "durationInMilliseconds": 1799000,
+    "targetTop": 120,
+    "targetBottom": 120,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS 1799000 "@result.durationInMilliseconds"
+ASSERT_EQUALS 30 "@result.duration"
+
+NAME get_temp_targets
+GET http://{{ site }}/api/v3/treatments?eventType$eq=Temporary%20Target&sort$desc=date
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 1799000 "@result.0.durationInMilliseconds"
+ASSERT_EQUALS 359587 "@result.1.durationInMilliseconds"

@@ -306,6 +306,13 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	for _, event := range treatmentEvents {
 		event.addToTreatment(source, siteContext, treatment)
 	}
+	// The duration sent in milliseconds is given back, as AAPS reads it before the minutes, while it is within a minute
+	// of the minutes kept, so not once those are changed on the site
+	if ms := source.EventGroup.DurationMs; ms != nil {
+		if minutes := treatment.DurationMinutes; minutes == nil || max(*ms-int64(*minutes)*60_000, int64(*minutes)*60_000-*ms) < 60_000 {
+			treatment.DurationInMilliseconds = new(types.FlexibleInt64(*ms))
+		}
+	}
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
 	treatment.Timestamp = treatment.CreatedAt
 	treatment.Programmed = treatment.Insulin

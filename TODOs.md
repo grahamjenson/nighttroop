@@ -86,6 +86,9 @@
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
        the temp basal in NSStatus (`nsv2/assistants.go`)
+    1. P5: Temp targets, temp basals, profile switches and activities keep their duration in whole minutes, so the
+       site's summaries end a temp target AAPS ended at 5.99 minutes at 5; only its event group keeps the
+       milliseconds, for the Nightscout API's `durationInMilliseconds`
     1. P4: The Nightscout API gives glucose only in mg/dL, so the `units_mmol_label` setting no longer changes what it
        writes. Drop it from the settings, the `sites` and `site_identities` columns and their queries
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters

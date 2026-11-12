@@ -54,7 +54,7 @@ type Treatment struct {
 	HeartRate    *types.FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
 
 	DurationMinutes        *types.FlexibleInt64 `json:"duration,omitempty"`               // minutes
-	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
+	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // milliseconds
 	DurationType           *types.ShortString   `json:"durationType,omitempty"`           // Loop's "indefinite" override
 
 	// Treatment-specific fields
@@ -157,6 +157,11 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 	if t.Identifier == nil && t.UUID != nil {
 		t.Identifier = types.ToIdentifierString(string(*t.UUID))
+	}
+
+	// A duration sent only in milliseconds is in minutes too, the nearest, as its events keep minutes
+	if t.DurationMinutes == nil && t.DurationInMilliseconds != nil {
+		t.DurationMinutes = new(types.FlexibleInt64((*t.DurationInMilliseconds + 30_000) / 60_000))
 	}
 
 	if aux.EventTime != nil {
