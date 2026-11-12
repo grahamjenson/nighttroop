@@ -158,6 +158,53 @@ func TestHasUnknownFilter(t *testing.T) {
 	}
 }
 
+// A find[field] with no operator is its $eq, as in Nightscout, so xDrip+ finds an entry by find[date]=<ms>; a field
+// with no $eq is still not known
+func TestParseFindEquals(t *testing.T) {
+	tests := []struct {
+		field string
+		value string
+		known bool
+	}{
+		{"date", "1778970005948", true},
+		{"date", "2026-05-16T22:20:05.948Z", true},
+		{"dateString", "2026-05-16T22:20:05.948Z", true},
+		{"mills", "1778970005948", true},
+		{"created_at", "2026-05-16T22:20:05.948Z", true},
+		{"created_at", "2026-05-16T22:20", true},
+		{"startDate", "1778970005948", true},
+		{"type", "sgv", true},
+		{"eventType", "Profile Switch", true},
+		{"_id", "8c5f0c3a1b2d4e6f9a7b0c1d", true},
+		{"identifier", "abc", true},
+		{"sgv", "120", true},
+		{"mbg", "110", true},
+		{"carbs", "45", true},
+		{"insulin", "4", true},
+		{"duration", "30", true},
+		{"enteredBy", "xdrip", true},
+		{"name", "Default", true},
+		{"device", "xDrip-DexcomG5", true},
+		{"notes", "x", false},
+		{"srvCreated", "1778970005948", false},
+		{"updated_at", "1778970005948", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.field+"="+tt.value, func(t *testing.T) {
+			exact, err := ParseQueryValues(url.Values{"find[" + tt.field + "]": {tt.value}})
+			require.NoError(t, err)
+			assert.Equal(t, !tt.known, exact.HasUnknownFilter())
+			if !tt.known {
+				return
+			}
+			assert.True(t, exact.HasAnyFilters())
+			eq, err := ParseQueryValues(url.Values{"find[" + tt.field + "][$eq]": {tt.value}})
+			require.NoError(t, err)
+			assert.Equal(t, QueryValueToQuery(eq), QueryValueToQuery(exact))
+		})
+	}
+}
+
 // Trio sends each enteredBy it leaves out as find[$and][n][enteredBy][$ne] and iAPS repeats find[enteredBy][$ne],
 // encoding them twice; each is one of the $nin
 func TestParseEnteredByNotIn(t *testing.T) {
