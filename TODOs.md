@@ -101,6 +101,8 @@
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
+    1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
+       with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
 
 ## Bugs
 
