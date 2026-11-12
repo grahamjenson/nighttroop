@@ -977,8 +977,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it, and
   `null` on a site with none, as in Nightscout.
-- A profile search with no filters is the newest profile set, or with a `count` that many, newest first by when each
-  starts.
+- A v1 profile search with no `count` gives the newest 10 profile sets, as Nightscout's default does, or with a `count`
+  that many (at most 1000), newest first by when each starts; v3 and the socket with no filters and no limit give the
+  newest.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ and Loop send it; a
   password reset stops the old token's SHA1 working.
 - A treatment's `eventTime`, as xDrip4iOS and Nightscout's careportal send it, is its `created_at`; an eventType of

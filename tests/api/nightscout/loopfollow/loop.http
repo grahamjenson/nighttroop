@@ -308,9 +308,10 @@ ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
 ASSERT_EQUALS 0.7 "@1.store.Default.basal.0.value"
 
-# Without a count or a filter, it is only the latest, as before
+# Without a count, it is Nightscout's default of the newest 10, newest first
 NAME profile_latest
 GET http://{{ site }}/api/v1/profiles.json?token={{ token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
+ASSERT_EQUALS 0.7 "@1.store.Default.basal.0.value"
