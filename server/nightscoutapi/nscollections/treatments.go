@@ -299,6 +299,13 @@ func softDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier str
 
 // Converts an incomming treatment to EventGroups, keeping only the events relevant to its type
 func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.Treatment) sitedb.EventGroupsBundle {
+	// A duration of 0 is until cancelled for one sent indefinite, and for a Temporary Override, as Nightscout's
+	// careportal sends one, so it is kept as indefinite rather than ended as it starts
+	isIndefinite := treatment.DurationType != nil && *treatment.DurationType == indefinite
+	if d := treatment.DurationMinutes; d != nil && *d == 0 && (isIndefinite || *treatment.EventType == nightscoutmodels.TemporaryOverride) {
+		treatment.DurationMinutes, treatment.DurationInMilliseconds = nil, nil
+		treatment.DurationType = new(types.ShortString(indefinite))
+	}
 	bundle := sitedb.EventGroupsBundle{EventGroup: nightscoutmodels.TreatmentToEventGroup(treatment)}
 	for _, event := range treatmentTypeEvents[*treatment.EventType] {
 		event.fromTreatment(treatment, &bundle)
