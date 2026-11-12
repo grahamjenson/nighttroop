@@ -125,14 +125,14 @@ ASSERT_EQUALS "SMB" "@5.eventType"
 ASSERT_EQUALS 0.3 "@5.insulin"
 ASSERT_EQUALS "Temp Basal" "@6.eventType"
 ASSERT_EQUALS 1.2 "@6.absolute"
-ASSERT_LENGTH 20 "@6.created_at"
-ASSERT_LENGTH 20 "@6.timestamp"
+ASSERT_LENGTH 24 "@6.created_at"
+ASSERT_LENGTH 24 "@6.timestamp"
 
 NAME cage
 GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Site%20Change&find[created_at][$lte]={{ utctime 0 }}&count=1
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_LENGTH 20 "@0.created_at"
+ASSERT_LENGTH 24 "@0.created_at"
 
 NAME devicestatus
 GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&count=1
@@ -141,7 +141,7 @@ ASSERT_LENGTH 1 "@"
 # device sets the looping app, which decides how overrides and remote control work
 ASSERT_EQUALS "Trio" "@0.device"
 # pump.clock is Trio's last loop time, and the reservoir is only read with it
-ASSERT_LENGTH 20 "@0.pump.clock"
+ASSERT_LENGTH 24 "@0.pump.clock"
 ASSERT_EQUALS 120.5 "@0.pump.reservoir"
 ASSERT_EQUALS 75 "@0.pump.battery.percent"
 # pump.bolusIncrement is the remote bolus step
@@ -185,7 +185,7 @@ ASSERT_EQUALS "org.nightscout.ABCDE12345.trio" "@0.bundleIdentifier"
 ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@0.deviceToken"
 ASSERT_EQUALS true "@0.isAPNSProduction"
 ASSERT_EQUALS "ABCDE12345" "@0.teamID"
-ASSERT_EQUALS "2027-01-01T00:00:00Z" "@0.expirationDate"
+ASSERT_EQUALS "2027-01-01T00:00:00.000Z" "@0.expirationDate"
 ASSERT_EQUALS "Exercise" "@0.overridePresets.0.name"
 ASSERT_EQUALS 60 "@0.overridePresets.0.duration"
 ASSERT_EQUALS 80 "@0.overridePresets.0.percentage"

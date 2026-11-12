@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // mmolSite is a site whose settings write glucose in mmol/L
@@ -56,7 +57,7 @@ func mapFields[NS any](s stored[NS], v3 bool, only []string) map[string]any {
 	if out == nil {
 		out = map[string]any{}
 	}
-	out["created_at"] = time.UnixMilli(s.occurredAt).UTC().Format(time.RFC3339Nano)
+	out["created_at"] = types.ISOString(time.UnixMilli(s.occurredAt))
 	out["utcOffset"] = s.utcOffset
 	if v3 {
 		out["identifier"], out["date"], out["srvCreated"], out["srvModified"] = s.id, s.occurredAt, s.srvCreated, s.srvModified

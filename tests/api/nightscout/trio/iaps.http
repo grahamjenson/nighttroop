@@ -21,7 +21,7 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS 125 "@0.sgv"
 ASSERT_EQUALS "FortyFiveUp" "@0.direction"
-ASSERT_CONTAINS "T12:05:00Z" "@0.dateString"
+ASSERT_CONTAINS "T12:05:00.000Z" "@0.dateString"
 ASSERT_EQUALS 120 "@1.sgv"
 
 // A remote command, as an announcement from Nightscout's careportal
@@ -46,7 +46,7 @@ GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[e
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_CONTAINS "T12:30:00Z" "@0.created_at"
+ASSERT_CONTAINS "T12:30:00.000Z" "@0.created_at"
 ASSERT_EXISTS "@0.enteredBy"
 ASSERT_EQUALS "looping: false" "@0.notes"
 ASSERT_EQUALS "remote" "@0.enteredBy"

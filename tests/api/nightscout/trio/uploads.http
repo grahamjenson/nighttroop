@@ -87,7 +87,7 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "SMB" "@0.eventType"
 ASSERT_EQUALS 0.3 "@0.insulin"
-ASSERT_CONTAINS "T12:01:00Z" "@0.created_at"
+ASSERT_CONTAINS "T12:01:00.000Z" "@0.created_at"
 
 // uploadCarbs posts carbs and fat and protein units (CarbsStorage.swift), and the CGM sensor start
 // (GlucoseStorage.swift) goes with the glucose

@@ -169,6 +169,25 @@ func (d *DateString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ISOLayout is how JavaScript's toISOString writes a time, and so how Nightscout writes its dates: in UTC with
+// exactly three fractional digits, e.g. 2026-11-12T08:01:23.940Z or 2026-11-12T08:01:23.000Z
+const ISOLayout = "2006-01-02T15:04:05.000Z"
+
+// ISOString is the time as toISOString writes it
+func ISOString(t time.Time) string {
+	return t.UTC().Format(ISOLayout)
+}
+
+// MarshalJSON writes it as toISOString does, as Nightscout does, so clients that read dates with a fixed layout
+// (.SSS) can. It is kept in the zone it was sent in, as that gives its UTC offset.
+func (d DateString) MarshalJSON() ([]byte, error) {
+	t, err := time.Parse(time.RFC3339Nano, string(d))
+	if err != nil {
+		return json.Marshal(string(d))
+	}
+	return json.Marshal(ISOString(t))
+}
+
 func (d *DateString) Time() time.Time {
 	if d == nil {
 		return time.Time{}

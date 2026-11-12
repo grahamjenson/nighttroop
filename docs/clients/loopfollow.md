@@ -88,7 +88,8 @@ field, except for the force casts below, which crash the app.
   either side, with fractional seconds, and `count=30`.
 - Response: the first record, read with `JSONSerialization`. `pump`, `loop` and `openaps` are force cast to objects,
   so each must be an object or missing, never null.
-  - `pump.clock` (ISO, no fractional seconds) is the last loop time; the reservoir is only read with it.
+  - `pump.clock` (ISO, read by an `ISO8601DateFormatter` with no zone or fractional seconds) is the last loop time;
+    the reservoir is only read with it.
     `pump.reservoir`, `pump.manufacturer`, `pump.model` and `pump.pumpID` give the reservoir (an Omnipod above 50U
     shows "50+"), `pump.battery.percent` the pump battery, and `pump.bolusIncrement` or a `Dash` model the bolus
     step.

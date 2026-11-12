@@ -42,3 +42,30 @@ func TestStringToTimeToTheMinute(t *testing.T) {
 		require.True(t, want.Equal(got), "%s is %s", value, got)
 	}
 }
+
+// A date string is written as JavaScript's toISOString writes it, as Nightscout does: in UTC with three fractional
+// digits, whatever it was sent with, while it keeps the offset it was sent with
+func TestDateStringMarshalAsISOString(t *testing.T) {
+	tests := []struct {
+		sent       string
+		want       string
+		wantOffset int64
+	}{
+		{`"2026-11-12T08:01:23.940Z"`, `"2026-11-12T08:01:23.940Z"`, 0},
+		{`"2026-11-12T08:01:23Z"`, `"2026-11-12T08:01:23.000Z"`, 0},
+		{`"2026-11-12T08:01:23.123456Z"`, `"2026-11-12T08:01:23.123Z"`, 0},
+		{`"2026-11-12T21:01:23.5+13:00"`, `"2026-11-12T08:01:23.500Z"`, 780},
+		{`1794470483940`, `"2026-11-12T08:01:23.940Z"`, 0},
+	}
+	for _, test := range tests {
+		t.Run(test.sent, func(t *testing.T) {
+			var date types.DateString
+			require.NoError(t, json.Unmarshal([]byte(test.sent), &date))
+			written, err := json.Marshal(&date)
+			require.NoError(t, err)
+			require.Equal(t, test.want, string(written))
+			_, offset := date.MillisUTCOffset()
+			require.Equal(t, test.wantOffset, int64(*offset))
+		})
+	}
+}
