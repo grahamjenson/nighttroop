@@ -41,7 +41,7 @@ ASSERT_TEXT_VISIBLE Required
 ASSERT_VISIBLE #site--temp-basal--create--multiplier
 // Its multiplier of the scheduled basal is typed in as a percent above 0, so a temp basal under it is under 100%
 ASSERT_TEXT_VISIBLE Basal (%)
-ASSERT_TEXT_VISIBLE A percent above 0: 100% is as it is, 120% is 1.2 times.
+ASSERT_TEXT_VISIBLE A percent above 0: 100% is unchanged, 120% is 1.2 times.
 ASSERT_VISIBLE #site--temp-basal--create--multiplier[min="1"][max="1100"]
 INPUT #site--temp-basal--create--rate 1.25
 INPUT #site--temp-basal--create--duration-minutes 45
