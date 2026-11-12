@@ -109,8 +109,6 @@
     1. P2: Keep what Loop sends in its treatments that is dropped: `syncIdentifier` (a bolus's and temp basal's `_id`
        is a hash of it, and Loop finds its own documents by it), `insulinType`, a carb entry's `userEnteredAt`, a
        bolus's `unabsorbed`, and a duration's fraction of a minute (a 1.67 minute bolus is kept as 1, 0.67 as 0)
-    1. P3: Keep a Loop profile's `enteredBy` (`Loop`) as sent, as a treatment's is, not the token's subject, so a
-       tool picking profiles by it finds Loop's
 
 ## Bugs
 

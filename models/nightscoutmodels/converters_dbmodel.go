@@ -88,7 +88,7 @@ type DBModelConverter interface {
 	// goverter:context siteContext
 	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
-	// goverter:map CreatedByIdentityName EnteredBy
+	// goverter:map . EnteredBy | ProfilePresetEnteredBy
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
@@ -222,6 +222,15 @@ func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteCon
 		}
 	}
 	return result
+}
+
+// ProfilePresetEnteredBy is who the app said uploaded a profile, e.g. Loop, as tools pick a loop's profiles by it, else
+// the identity that uploaded it
+func ProfilePresetEnteredBy(source *sitedb.ProfilePreset) *types.ShortString {
+	if source.EnteredBy != nil {
+		return (*types.ShortString)(source.EnteredBy)
+	}
+	return (*types.ShortString)(&source.CreatedByIdentityName)
 }
 
 // ProfilePresetSensitivities are a profile's sensitivities, stored in its own units, in the settings' units
