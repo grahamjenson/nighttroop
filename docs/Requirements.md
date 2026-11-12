@@ -974,6 +974,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Entries of type `cal` (a CGM calibration's slope and intercept) are accepted and not stored, so the finger pricks
   sent with them are kept.
 - A device status's `uploader.battery` is its uploader's battery when it has no `uploaderBattery`.
+- A device status with a battery or reservoir level out of range (an uploader or pump battery below 0 or over 100%, a
+  reservoir below 0 or over 10000 U), like the `uploader.battery` -100 Trio sends when the phone does not know its
+  battery, is stored without that level, and the rest of it kept.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ sends the token in its
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of

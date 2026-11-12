@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -28,6 +29,7 @@ func (c DeviceStatusCollection) Validate(nsModel nightscoutmodels.DeviceStatus, 
 }
 
 func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
+	nsModel = withoutUnknownLevels(ctx, nsModel)
 	createParams := NightscoutToDBCreateDeviceReport(nsModel, cc)
 
 	if overrideIdentifier != nil {
@@ -61,6 +63,7 @@ func (c DeviceStatusCollection) Delete(q *sitedb.Queries, ctx context.Context, i
 }
 
 func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
+	nsModel = withoutUnknownLevels(ctx, nsModel)
 	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
 	// An update changes its pump and uploader, kept as sent; its columns are as it was made
@@ -290,6 +293,39 @@ func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmod
 	if loop.COB != nil {
 		params.LoopCob = loop.COB.COB.Float64p()
 	}
+}
+
+// withoutUnknownLevels leaves out the phone's and pump's battery and the pump's reservoir when out of their columns'
+// ranges, as when a phone does not know them, like the uploader battery -100 Trio sends when iOS does not know the
+// phone's (its batteryLevel -1 x 100), rather than refusing the whole device status. Its pump and uploader are copied,
+// so what was sent is not changed.
+func withoutUnknownLevels(ctx context.Context, status nightscoutmodels.DeviceStatus) nightscoutmodels.DeviceStatus {
+	status.UploaderBattery = inRange(ctx, "uploaderBattery", status.UploaderBattery, 0, 100)
+	if status.Uploader != nil {
+		uploader := *status.Uploader
+		uploader.Battery = inRange(ctx, "uploader.battery", uploader.Battery, 0, 100)
+		status.Uploader = &uploader
+	}
+	if status.Pump != nil {
+		pump := *status.Pump
+		pump.Reservoir = inRange(ctx, "pump.reservoir", pump.Reservoir, 0, 10000)
+		if pump.Battery != nil {
+			battery := *pump.Battery
+			battery.Percent = inRange(ctx, "pump.battery.percent", battery.Percent, 0, 100)
+			pump.Battery = &battery
+		}
+		status.Pump = &pump
+	}
+	return status
+}
+
+// inRange is value when it is between low and high, and nil, logged as a warning, when it is not
+func inRange[T ~float64 | ~int64](ctx context.Context, field string, value *T, low, high float64) *T {
+	if value == nil || (float64(*value) >= low && float64(*value) <= high) {
+		return value
+	}
+	slog.WarnContext(ctx, "device status value out of range left out", "collection", nsutils.Devicestatus, "field", field, "value", float64(*value))
+	return nil
 }
 
 // jsonp is v as JSON, nil when it is

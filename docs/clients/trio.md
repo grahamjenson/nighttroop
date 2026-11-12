@@ -122,7 +122,8 @@ arrives):
 Works, and `openaps` comes back whole. The pump comes back with its `clock`, `reservoir`, `battery` (`percent`,
 `voltage`, `string`, `display`), `status` (`status`, `bolusing`, `suspended`, `timestamp`) and `bolusIncrement`
 while the JSON it was sent in is kept (then only the clock, battery percent and reservoir), and `uploader` with its
-`battery` and `isCharging`. Trio does not read them back, but its followers do.
+`battery` and `isCharging`. Trio does not read them back, but its followers do. When iOS does not know the phone's
+battery Trio sends `uploader.battery` -100 (its `batteryLevel` -1 x 100); the device status is kept without it.
 
 ### Profile: `POST /api/v1/profile.json`
 
