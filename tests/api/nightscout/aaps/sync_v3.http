@@ -323,7 +323,7 @@ ASSERT_EQUALS 20 "@result.carbs"
 // Without durationInMilliseconds AAPS takes the duration in minutes
 ASSERT_EQUALS 60 "@result.duration"
 
-// A temp target has no units, which AAPS (NSTreatment.asMgdl) takes as mg/dL, as here
+// A temp target comes back in mg/dL, with units saying so, which AAPS (NsUnits.fromString) takes as mg/dL, as here
 NAME get_temp_target
 GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
 H Authorization: Bearer {{ jwt }}
@@ -332,7 +332,7 @@ ASSERT_EQUALS 140 "@result.targetTop"
 ASSERT_EQUALS 140 "@result.targetBottom"
 ASSERT_EQUALS 3600000 "@result.durationInMilliseconds"
 ASSERT_EQUALS "Activity" "@result.reason"
-ASSERT_EQUALS null "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 
 NAME get_profile_switch
 GET http://{{ site }}/api/v3/treatments/{{ .add_profile_switch.identifier }}

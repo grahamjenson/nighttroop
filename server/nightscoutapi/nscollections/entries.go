@@ -82,8 +82,8 @@ func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, 
 func (c EntriesCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, bool, error) {
 	p := nightscoutmodels.EntryToUpdate(nsModel, cc)
 	if nightscoutmodels.SetReadingType(nsModel) != stored.ReadingType || (kept(p.Mgdl, &stored.Mgdl) && kept(p.Delta, stored.Delta) &&
-		kept(p.Direction, stored.Direction) && kept(signal(p.Noise), stored.Noise) && kept(signal(p.Filtered), stored.Filtered) &&
-		kept(signal(p.Unfiltered), stored.Unfiltered) && kept(signal(p.Rssi), stored.Rssi)) {
+		kept(p.Direction, stored.Direction) && kept(signal(p.Noise), stored.Noise) && kept(p.Filtered, stored.Filtered) &&
+		kept(p.Unfiltered, stored.Unfiltered) && kept(signal(p.Rssi), stored.Rssi)) {
 		return stored, false, nil
 	}
 	p.ID = stored.ID
@@ -96,8 +96,7 @@ func kept[T comparable](sent *T, stored *T) bool {
 	return sent == nil || (stored != nil && *sent == *stored)
 }
 
-// signal is a CGM's raw signal sent, nil for 0, which means it has none and is stored as NULL, as AAPS sends
-// unfiltered for every reading
+// signal is a CGM's noise or rssi sent, nil for 0, which means it has none and is stored as NULL
 func signal(sent *float64) *float64 {
 	if sent != nil && *sent == 0 {
 		return nil

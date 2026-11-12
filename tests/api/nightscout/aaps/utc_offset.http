@@ -1,0 +1,81 @@
+INCLUDE steps/new_site_admin.steps
+
+# AAPS sends a device status with a date but no utcOffset. A document sent with none is in the site's timezone, so
+# it takes that timezone's offset at its date, as Nightscout takes the server's. Tokyo keeps no daylight saving, so
+# its offset is 540 minutes at any date.
+
+NAME set_site_timezone
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"timezone": "Asia/Tokyo"}
+ASSERT_STATUS 200
+
+NAME ns_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .ns_jwt.token }}
+
+NAME device_status_without_offset
+POST http://{{ .ns_site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B {"app": "AAPS", "date": {{ itime 5 }}, "device": "openaps://Test Phone", "uploaderBattery": 87}
+ASSERT_STATUS 201
+
+NAME device_status_has_site_offset
+GET http://{{ .ns_site }}/api/v3/devicestatus/{{ .device_status_without_offset.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@result.utcOffset"
+
+NAME entry_without_offset
+POST http://{{ .ns_site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {"app": "AAPS", "date": {{ itime 5 }}, "type": "sgv", "sgv": 123, "device": "AAPS-Test"}
+ASSERT_STATUS 201
+
+NAME entry_has_site_offset
+GET http://{{ .ns_site }}/api/v3/entries/{{ .entry_without_offset.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@result.utcOffset"
+
+NAME treatment_without_offset
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"app": "AAPS", "date": {{ itime 5 }}, "eventType": "Note", "notes": "no offset"}
+ASSERT_STATUS 201
+
+NAME treatment_has_site_offset
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .treatment_without_offset.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@result.utcOffset"
+
+# One sent with its offset keeps it
+SET status_date {{ itime 4 }}
+NAME device_status_with_offset
+POST http://{{ .ns_site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B {"app": "AAPS", "date": {{ .status_date }}, "utcOffset": 780, "device": "openaps://Test Phone", "uploaderBattery": 86}
+ASSERT_STATUS 201
+
+NAME device_status_keeps_its_offset
+GET http://{{ .ns_site }}/api/v3/devicestatus/{{ .device_status_with_offset.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@result.utcOffset"
+
+# A replace sent with none keeps the offset of the document it replaces, rather than refusing a change to it
+NAME replace_device_status_without_offset
+PUT http://{{ .ns_site }}/api/v3/devicestatus/{{ .device_status_with_offset.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"app": "AAPS", "date": {{ .status_date }}, "device": "openaps://Test Phone", "uploaderBattery": 85}
+ASSERT_STATUS 200
+
+NAME replaced_keeps_its_offset
+GET http://{{ .ns_site }}/api/v3/devicestatus/{{ .device_status_with_offset.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@result.utcOffset"
+ASSERT_EQUALS 85 "@result.uploaderBattery"

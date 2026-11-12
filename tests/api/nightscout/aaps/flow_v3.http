@@ -62,9 +62,9 @@ ASSERT_EXISTS "@result.date"
 ASSERT_EQUALS "AAPS" "@result.app"
 ASSERT_EQUALS "Random" "@result.device"
 ASSERT_EQUALS "FortyFiveUp" "@result.direction"
-// AAPS sends no raw signal as 0, which is not stored
-ASSERT_EQUALS null "@result.filtered"
-ASSERT_EQUALS null "@result.unfiltered"
+// AAPS sends no raw signal as 0, which is given back as sent, as Nightscout does
+ASSERT_EQUALS 0 "@result.filtered"
+ASSERT_EQUALS 0 "@result.unfiltered"
 ASSERT_EQUALS true "@result.isValid"
 ASSERT_EQUALS false "@result.isReadOnly"
 ASSERT_EQUALS "mg/dL" "@result.units"

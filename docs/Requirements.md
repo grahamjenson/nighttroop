@@ -848,8 +848,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   (an IPv6 /64) may hold at most 10 of a site's live sessions not yet given access
   (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`); its next is refused with 429, so it cannot take them all.
 - Glucose is stored in mg/dL and always returned in mg/dL, whatever the identity's or site's units, as Nightscout's
-  clients read `sgv`, `mbg`, a treatment's `glucose` and a profile's targets as mg/dL: entries, treatments, profiles
-  and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
+  clients read `sgv`, `mbg`, a treatment's `glucose`, a temp target's `targetTop` and `targetBottom` and a profile's
+  targets as mg/dL: entries, treatments, profiles and their `units`, over HTTP and Socket.IO. It is accepted in the
+  units sent with it, or guessed from its value. Every treatment comes back with `units`, a temp target and a therapy
+  event (e.g. a Note or Sensor Change) too, so a follower on an mmol/L site does not read a target of 90 as mmol/L.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
   identity's own, units included.
@@ -871,6 +873,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An `mbg` entry keeps AAPS's `isCalibration` and `sensorMgdlAtPairing` (in mg/dL) and returns them as sent through
   v1 and v3, so AAPS's followers read a calibration as one; an update without them keeps them.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
+- A document sent with a date but no `utcOffset`, as AAPS sends a device status, takes the site timezone's offset at
+  that date; a replace sent with none keeps the offset of the document it replaces.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its
   `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any
@@ -905,9 +909,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The summary's basal during a temp basal is its rate.
 - Duplicate uploads are ignored; values far outside real use are refused.
 - A value sent that means none is not stored, and comes back left out, as one not sent does: an empty string, a
-  CGM's raw signal (`noise`, `filtered`, `unfiltered`, `rssi`) of 0, as AAPS sends with every reading, and a heart
-  rate of 0. An update with one keeps the value stored. `false`, and other zeros, such as a combo bolus's split, are
-  kept.
+  CGM's `noise` or `rssi` of 0, and a heart rate of 0. An update with one keeps the value stored. `false`, and other
+  zeros, such as a combo bolus's split, are kept.
+- An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, replaces it, keeping its
   `_id`, as Loop sends a temp basal or bolus again when it ends and Trio a temp target or override run; followers get
   it as changed, and one sent again as it was stored changes nothing.
