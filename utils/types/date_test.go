@@ -60,3 +60,26 @@ func TestISOString(t *testing.T) {
 		})
 	}
 }
+
+// A dateString is written with three fractional digits, as toISOString does, in its UTC offset, which it gives
+func TestISODateStringFromInt64AndUTCOffset(t *testing.T) {
+	zero, nz, newfoundland := int64(0), int64(780), int64(-210)
+	tests := []struct {
+		at     int64
+		offset *int64
+		want   string
+	}{
+		{1794507802510, nil, "2026-11-12T18:23:22.510Z"},
+		{1794507802000, nil, "2026-11-12T18:23:22.000Z"},
+		{1794507802940, &zero, "2026-11-12T18:23:22.940Z"},
+		{1794507802500, &nz, "2026-11-13T07:23:22.500+13:00"},
+		{1794507802000, &newfoundland, "2026-11-12T14:53:22.000-03:30"},
+	}
+	for _, test := range tests {
+		t.Run(test.want, func(t *testing.T) {
+			got := types.ISODateStringFromInt64AndUTCOffset(test.at, test.offset)
+			require.Equal(t, test.want, string(got))
+			require.Equal(t, test.at, got.UnixMilli())
+		})
+	}
+}

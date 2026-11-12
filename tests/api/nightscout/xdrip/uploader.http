@@ -58,6 +58,46 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
 
+// A sensor sending only 0s is taken with nothing stored, as a failed upload stops xDrip+ sending its device status
+// and treatments, and it sends the batch again with each new 0 added
+NAME xdrip_upload_only_zeros
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"type": "sgv", "sgv": 0, "date": {{ itime 31 }}, "dateString": "{{ javatime 31 }}", "device": "xDrip-DexcomG6",
+    "direction": "NONE"},
+   {"type": "sgv", "sgv": 0, "date": {{ itime 30 }}, "dateString": "{{ javatime 30 }}", "device": "xDrip-DexcomG6",
+    "direction": "NONE"}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// An entry of a type Nighttroop does not know is left out, and the reading with it stored
+NAME xdrip_upload_unknown_type
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"type": "rawbg", "sgv": 130, "date": {{ itime 33 }}, "dateString": "{{ javatime 33 }}",
+    "device": "xDrip-DexcomG6", "direction": "NONE"},
+   {"type": "sgv", "sgv": 125, "date": {{ itime 32 }}, "dateString": "{{ javatime 32 }}", "device": "xDrip-DexcomG6",
+    "direction": "Flat"}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 125 "@0.sgv"
+
+NAME xdrip_left_out_not_stored
+GET http://{{ site }}/api/v1/entries.json?find[date][$gte]={{ itime 34 }}&find[date][$lte]={{ itime 29 }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 125 "@0.sgv"
+
+// One reading sent on its own, not in an array, is still refused when out of range
+NAME xdrip_upload_single_zero
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B {"type": "sgv", "sgv": 0, "date": {{ itime 28 }}, "dateString": "{{ javatime 28 }}", "device": "xDrip-DexcomG6",
+   "direction": "NONE"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 1000 mg/dL" "@message"
+
 ######
 # DEVICE STATUS: postDeviceStatus sends one for each battery xDrip+ knows (NightscoutBatteryDevice)
 ######

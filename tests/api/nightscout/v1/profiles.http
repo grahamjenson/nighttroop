@@ -385,6 +385,27 @@ ASSERT_EQUALS 0.35 "@0.store.Default.basal.0.value"
 ASSERT_EQUALS 100 "@0.store.Default.target_low.0.value"
 ASSERT_EQUALS "Pacific/Honolulu" "@0.store.Work.timezone"
 
+// With no count, Nightscout gives its default count (10) of the newest stores, not only the latest
+NAME get_profiles_no_count_v1
+GET http://{{ site }}/api/v1/profile.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+ASSERT_EQUALS "TestDash-2025" "@1.defaultProfile"
+
+NAME get_profiles_no_count_no_json_v1
+GET http://{{ site }}/api/v1/profile?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+
+// count=1, as Trio's import reads it, is still only the newest
+NAME get_profiles_count_one_v1
+GET http://{{ site }}/api/v1/profile.json?count=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+
 /////
 // UPDATE
 /////

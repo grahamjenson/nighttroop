@@ -38,9 +38,9 @@ with a time zone, with or without fractional seconds (`2026-11-01T12:00:00Z`, `2
 or a date without a zone, fails. It writes dates with milliseconds and `Z`. Numbers are Swift `Decimal` or `Int`;
 one field of the wrong type, or one required field missing, fails the whole list.
 
-Nighttroop writes `created_at` as Nightscout does, as JavaScript's `toISOString` writes it: in UTC with three
-fractional digits, e.g. `2026-11-01T12:00:00.000Z`; `dateString` and `startDate` are ISO 8601 with `Z`, leaving out
-zero milliseconds. Trio reads both.
+Nighttroop writes `created_at`, `timestamp`, `dateString` and `startDate` as Nightscout does, as JavaScript's
+`toISOString` writes them: with three fractional digits, e.g. `2026-11-01T12:00:00.000Z`, so `deleteGlucose` finds a
+reading by the `.SSS` `dateString` it sent. Trio reads them.
 
 ## Uploads
 
