@@ -96,6 +96,31 @@ func TestVirtualDocumentsMeterReadings(t *testing.T) {
 	require.Equal(t, []time.Time{day.Add(7*time.Hour + 2*time.Minute), day.Add(19*time.Hour + 2*time.Minute)}, meters)
 }
 
+// A backfill writes nothing after the end of its window, as the meter reading 2 minutes after its slot would be, so the
+// days after a backfill's oldest reading, which it fetches up to, are left as they are whatever the time it runs
+func TestVirtualBackfillDocumentsEndAtTo(t *testing.T) {
+	day := time.Date(2026, 11, 9, 0, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name  string
+		to    time.Time
+		meter bool
+	}{
+		{name: "ending in the meter reading's slot, before it", to: day.Add(7*time.Hour + time.Minute)},
+		{name: "ending just after the meter reading", to: day.Add(7*time.Hour + 3*time.Minute), meter: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			meter := false
+			for _, doc := range virtualBackfillDocuments(tt.to.Add(-time.Hour), tt.to) {
+				date, _ := doc.data["date"].(int64)
+				require.LessOrEqual(t, date, tt.to.UnixMilli(), "a %s document after the backfill's end", doc.collection)
+				meter = meter || doc.data["type"] == "mbg"
+			}
+			require.Equal(t, tt.meter, meter)
+		})
+	}
+}
+
 // Windows of any span, as a backfill's ending now is, write on the 5 minute grid, so ones that overlap, as a backfill's
 // recent days and the sync's do, write the same documents at the same times, which dedupe, rather than another of each
 // a few minutes off

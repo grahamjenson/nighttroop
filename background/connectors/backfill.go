@@ -217,5 +217,5 @@ func oldestDate(docs []map[string]any, before int64) int64 {
 
 // backfillVirtual writes the virtual source's documents from from to to into the site
 func (b *ConnectorJobManager) backfillVirtual(ctx context.Context, jobInfo *ConnectorJobInfo, from, to time.Time) (int, error) {
-	return WriteVirtualData(ctx, b.nightscoutStore, jobInfo.Site.siteContext(virtualIdentity), to, to.Sub(from))
+	return writeVirtualDocuments(ctx, b.nightscoutStore, jobInfo.Site.siteContext(virtualIdentity), virtualBackfillDocuments(from, to))
 }
