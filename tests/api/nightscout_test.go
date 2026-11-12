@@ -31,6 +31,7 @@ func TestNS(t *testing.T) {
 	t.Setenv("SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT", "1")
 	t.Setenv("SITE_UPDATE_CONNECTORS_PER_MINUTE_BURST", "10")
 
+	fakeApplePush(t)
 	config, controlDB, siteInformation := testutils.NewControlDBWithSite(t)
 
 	defaultJwt, _, err := config.Security.GenerateUserJWTToken(siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))

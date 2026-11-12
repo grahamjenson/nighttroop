@@ -103,8 +103,6 @@
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
-    1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
-       `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
        `timestamp`, once the status as sent is cleared; they are given back only while it is kept
     1. P2: Keep what Loop sends in its treatments that is dropped: `syncIdentifier` (a bolus's and temp basal's `_id`

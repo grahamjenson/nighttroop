@@ -70,6 +70,7 @@ func (fuzz *endpointFuzzer) makeRecords() {
 }
 
 func newEndpointFuzzer(tb testing.TB) *endpointFuzzer {
+	fakeApplePush(tb)
 	config, controlDB, site := testutils.NewControlDBWithSite(tb)
 	subdomain := site.SiteDB.Subdomain
 	router := server.GetMainHandler(controlDB, config)

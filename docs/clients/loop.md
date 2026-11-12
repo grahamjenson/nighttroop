@@ -170,8 +170,9 @@ the device status as it was sent until that is cleared when the record is old (#
 `[{time, value, timeAsSeconds}]`.
 
 Nighttroop registers `loopSettings.deviceToken` and `bundleIdentifier`, with `isAPNSProduction`, as a `loop` push
-registration for the identity that uploaded the profile (`/settings/push-registrations`), for remote commands once
-Nighttroop sends them.
+registration for the identity that uploaded the profile (`/settings/push-registrations`). Remote commands are pushed
+to the newest of these, with the site's APNs key for the bundle ID, which the user adds in Push Certificates, as
+Loop is built with the user's own Apple developer team.
 
 When Loop is set up from Nightscout, `fetchStoredTherapySettings` (line 370) gets `/api/v1/profile/current`, which
 it reads as one object, not an array (`fetchCurrentProfile`, line 166). `ProfileSet(rawValue:)` needs `_id`,
@@ -232,7 +233,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | NightscoutKit `fetchGlucose` | Works for an identity in mg/dL, as a device added for Loop is (#524); in mmol/L `sgv` is in mmol/L. TODO P1 |
 | NightscoutKit `fetchTreatments` reading bolus and temp basal fields and `timestamp` | Fixed in this PR: `timestamp` is `created_at`, `programmed` the insulin given, and `temp` `absolute` |
 | NightscoutKit `fetchProfiles` | Works |
-| `POST /api/v2/notifications/loop` (remote commands) | Not supported. TODO P2 |
+| `POST /api/v2/notifications/loop` (remote commands) | Fixed in this PR: pushed to the Loop that last uploaded its profile, with the site's APNs key for its bundle ID added in Push Certificates; test in `loop/remote_commands.http` |
 
 The tests are in `tests/api/nightscout/loop/`: `auth.http`, `entries.http`, `treatments.http`, `devicestatus.http`
 and `profile.http`. They send Loop's headers and bodies, and check what Loop reads back.

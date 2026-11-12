@@ -1264,6 +1264,12 @@ Connectors are a site's third party integrations, each syncing from one service.
   them why, never with the device token. Each push is
   recorded on the registration, with its error, if it had one, which the same registration again, as each upload of
   a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute.
+- A Loop remote command (`POST /api/v2/notifications/loop`: `Temporary Override`, `Temporary Override Cancel`,
+  `Remote Carbs Entry` or `Remote Bolus Entry`, with its `otp`), from an identity that can write treatments, is pushed
+  as Nightscout pushes it to the Loop that last uploaded its profile, with the site's push credential for its bundle
+  ID, expiring in 5 minutes, and is answered 200 `OK`. Who sent it is its identity, not its IP address. A bolus over
+  30 U, carbs over 250 g or absorbing over 24 hours, an override over a week or without a name, or another event type
+  is refused (400), as is a command to a site with no Loop or no credential for it, saying which.
 - An FCM push is sent with the Firebase service account's OAuth token, got with a JWT its key signs from Google's
   token endpoint, never the `token_uri` in its JSON, and used again until five minutes before it expires; the key and
   tokens are never logged or shown. A service account Google refuses says Google's reason (502).

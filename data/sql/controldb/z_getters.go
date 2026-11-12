@@ -2889,6 +2889,26 @@ func (m *GetPushRegistrationParams) SetIdentityID(v *int64) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m NewestPushRegistrationForAppParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated NewestPushRegistrationForAppParams.
+func (m *NewestPushRegistrationForAppParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetApp returns the App value.
+func (m NewestPushRegistrationForAppParams) GetApp() consts.PushApp {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated NewestPushRegistrationForAppParams.
+func (m *NewestPushRegistrationForAppParams) SetApp(v consts.PushApp) {
+	m.App = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m PushCredentialForParams) GetSiteID() *string {
 	return m.SiteID
 }

@@ -1,0 +1,71 @@
+INCLUDE steps/new_ns_site.steps
+
+# NightscoutKit's startOverride, cancelOverride, deliverBolus and deliverCarbs, as LoopFollow and Nightscout's
+# careportal use them, POST /api/v2/notifications/loop with every value a string, and need a 200. Nighttroop sends the
+# command to the Loop that last uploaded its profile as an Apple push, with the site's APNs key for its bundle ID.
+# These tests stop before Apple: the push itself is tested in utils/push and its fields in nsv2.
+
+# Before any Loop has uploaded its profile, there is no device to send to
+NAME remote_bolus_no_loop
+POST http://{{ site }}/api/v2/notifications/loop
+H api-secret: {{ sha1 token }}
+B {"eventType": "Remote Bolus Entry", "remoteBolus": "1.0", "otp": "123456"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "no Loop has uploaded its profile" "@message"
+
+NAME loop_profile
+POST http://{{ site }}/api/v1/profile
+H api-secret: {{ sha1 token }}
+B [{"defaultProfile": "Default", "startDate": "{{ time 10 }}", "units": "mg/dL", "enteredBy": "Loop", "isAPNSProduction": true,
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}]}},
+    "loopSettings": {"dosingEnabled": true, "maximumBolus": 10, "bundleIdentifier": "com.ABCDE12345.loopkit.Loop", "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0", "overridePresets": []}}]
+ASSERT_STATUS 200
+
+# Without the Loop's APNs key in Push Certificates nothing can be pushed, and it says so
+NAME remote_bolus_no_credential
+POST http://{{ site }}/api/v2/notifications/loop
+H api-secret: {{ sha1 token }}
+B {"eventType": "Remote Bolus Entry", "remoteBolus": "1.0", "otp": "123456"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "Push Certificates" "@message"
+
+NAME remote_override_no_credential
+POST http://{{ site }}/api/v2/notifications/loop
+H api-secret: {{ sha1 token }}
+B {"reason": "Running", "reasonDisplay": "🏃 Running", "eventType": "Temporary Override", "duration": "60.0", "notes": ""}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "Push Certificates" "@message"
+
+# A command Loop could not act on, or far outside real use, is refused before it is pushed
+NAME remote_bolus_too_large
+POST http://{{ site }}/api/v2/notifications/loop
+H api-secret: {{ sha1 token }}
+B {"eventType": "Remote Bolus Entry", "remoteBolus": "50", "otp": "123456"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "remoteBolus" "@message"
+
+NAME remote_carbs_none
+POST http://{{ site }}/api/v2/notifications/loop
+H api-secret: {{ sha1 token }}
+B {"eventType": "Remote Carbs Entry", "remoteCarbs": "0", "remoteAbsorption": "3.0", "otp": "123456"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "remoteCarbs" "@message"
+
+NAME remote_unknown_command
+POST http://{{ site }}/api/v2/notifications/loop
+H api-secret: {{ sha1 token }}
+B {"eventType": "Note", "notes": "hi"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "unknown eventType" "@message"
+
+# Only an identity that can write treatments sends commands: a read only device or no token cannot
+NAME remote_bolus_read_only
+POST http://{{ site }}/api/v2/notifications/loop
+H api-secret: {{ sha1 .create_new_site.read_only_nstoken }}
+B {"eventType": "Remote Bolus Entry", "remoteBolus": "1.0", "otp": "123456"}
+ASSERT_STATUS 403
+
+NAME remote_bolus_no_token
+POST http://{{ site }}/api/v2/notifications/loop
+B {"eventType": "Remote Bolus Entry", "remoteBolus": "1.0", "otp": "123456"}
+ASSERT_STATUS 401

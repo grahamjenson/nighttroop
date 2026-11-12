@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -31,15 +32,19 @@ func TestSend(t *testing.T) {
 	identities, err := q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
 	require.NoError(t, err)
 
-	// Apple's push service answers with the status a test sets, and keeps the alert pushed
+	// Apple's push service answers with the status a test sets, and keeps the alert pushed and the whole payload
 	status, reason, pushed := http.StatusOK, "", ""
+	var pushedPayload map[string]any
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var payload struct {
 			APS struct {
 				Alert push.Alert `json:"alert"`
 			} `json:"aps"`
 		}
-		_ = json.NewDecoder(r.Body).Decode(&payload)
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &payload)
+		pushedPayload = nil
+		_ = json.Unmarshal(raw, &pushedPayload)
 		pushed = r.URL.Path + " " + payload.APS.Alert.Body
 		w.WriteHeader(status)
 		_ = json.NewEncoder(w).Encode(map[string]string{"reason": reason})
@@ -82,6 +87,14 @@ func TestSend(t *testing.T) {
 	require.Equal(t, "/3/device/"+token+" Test", pushed)
 	require.NotNil(t, stored()[0].LastPushedAt)
 	require.Nil(t, stored()[0].LastError)
+	require.Equal(t, map[string]any{"alert": map[string]any{"title": "Nighttroop", "body": "Test"}, "sound": "default"}, pushedPayload["aps"])
+
+	// An alert's data, as Loop's remote command, is at the top of the push, which wakes the app and shows in a Focus
+	command := push.Alert{Title: "Remote Bolus Entry: 1 U", Data: map[string]any{"bolus-entry": 1.0, "otp": "123456"}}
+	require.NoError(t, push.Send(t.Context(), q, sec, registration, command))
+	require.Equal(t, map[string]any{"bolus-entry": 1.0, "otp": "123456", "aps": map[string]any{"sound": "default",
+		"alert": map[string]any{"title": "Remote Bolus Entry: 1 U", "body": ""}, "content-available": 1.0,
+		"interruption-level": "time-sensitive"}}, pushedPayload)
 
 	// Refused, its error is recorded
 	status, reason = http.StatusBadRequest, "TopicDisallowed"
