@@ -34,12 +34,12 @@ swap_size_mb = 512
 [http_service]
   internal_port = 3000
   force_https = true
-  # One machine, as a second would have its own volume and databases. Fly stops it once nothing has used it for a few
-  # minutes, and starts it on the next request, which waits the few seconds it takes to start; the databases stay on
-  # the volume. While stopped, nothing syncs and no background job runs.
-  auto_stop_machines = "stop"
+  # One machine, as a second would have its own volume and databases. It is kept running: stopped when idle, the next
+  # request waited 5 to 13 seconds for it to start, which alpha testers' apps (Loop, xDrip+) saw as slow uploads, and
+  # while stopped nothing synced and no background job, such as an alarm, ran
+  auto_stop_machines = "off"
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
 
   # The server only answers its own host name, so the check sends it
   [[http_service.checks]]

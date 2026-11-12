@@ -46,14 +46,13 @@ of your own domain:
 | `<site>.staging.nighttroop.nz` | Each site |
 | `<site>.ns.staging.nighttroop.nz` | Each site's Nightscout-compatible API, for apps like AAPS and Loop |
 
-- **One machine, which stops when idle.** It runs the image built from the repository's `Dockerfile`, on one shared
-  CPU with 256 MB of memory and 512 MB of swap.
-  - Fly stops it once nothing has used it for a few minutes, and starts it again on the next request. That request
-    waits for it to start: a couple of seconds for 500 sites, plus Fly booting the machine. The data stays on the
-    volume.
-  - While it is stopped nothing runs: no Dexcom, Libre or Nightscout syncs, the virtual connector, deleting inactive sites or
-    resource checks. They run again once it starts. A phone uploading every few minutes, or an open page, keeps it
-    running.
+- **One machine, always running.** It runs the image built from the repository's `Dockerfile`, on one shared CPU
+  with 256 MB of memory and 512 MB of swap.
+  - It is not stopped when idle (`auto_stop_machines = "off"`, `min_machines_running = 1`). When it was, the first
+    request after a quiet spell waited for Fly to boot it and the server to start, 5 to 13 seconds, which Loop and
+    xDrip+ saw as slow uploads; and while it was stopped nothing ran: no Dexcom, Libre or Nightscout syncs, the virtual
+    connector, alarms, deleting inactive sites or resource checks. A deploy or a restart still starts it again, which
+    takes as long. The data stays on the volume.
   - Measured with 500 sites, it uses about 50 MB with none in use, and 1.5 MB more for each site used in the last 30
     seconds, so it holds about 130 sites in use at once before it swaps.
   - Fly's proxy ends HTTPS and forwards to the server on port 3000.
@@ -259,7 +258,8 @@ the admin again from the new ones.
 - **If it is struggling:**
   - the control plane's usage page shows memory and CPU;
   - `fly scale memory 512 --app nighttroop-staging` gives it more memory;
-  - to keep it running, set `auto_stop_machines = "off"` and `min_machines_running = 1` in `fly.toml`.
+  - to save its running costs while no one is testing, set `auto_stop_machines = "stop"` and `min_machines_running = 0`
+    in `fly.toml`, so Fly stops it when idle and starts it on the next request.
 
 ## Troubleshooting
 

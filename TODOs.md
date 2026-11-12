@@ -112,8 +112,6 @@
        bolus's `unabsorbed`, and a duration's fraction of a minute (a 1.67 minute bolus is kept as 1, 0.67 as 0)
     1. P3: Keep a Loop profile's `enteredBy` (`Loop`) as sent, as a treatment's is, not the token's subject, so a
        tool picking profiles by it finds Loop's
-    1. P3: Find why the first request after a quiet spell is slow (a Loop device status took 13 s, a treatments
-       upload 5 s, the rest ~40 ms), as xDrip+ also saw
 
 ## Bugs
 
