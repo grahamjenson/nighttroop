@@ -1,12 +1,15 @@
 package types
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 type ShortString string
@@ -62,13 +65,41 @@ func (s *SanitizedString) Stringp() *string {
 	return &str
 }
 
+// StripAllTags is the text of HTML, without its tags or the contents of a script or style, and with its entities
+// decoded
+func StripAllTags(input string) string {
+	doc, err := html.Parse(strings.NewReader(input))
+	if err != nil {
+		return input
+	}
+
+	var buf bytes.Buffer
+	var f func(*html.Node)
+
+	f = func(n *html.Node) {
+		// Only keep text nodes, skip script and style contents
+		if n.Type == html.TextNode {
+			if n.Parent != nil && (n.Parent.Data == "script" || n.Parent.Data == "style") {
+				return
+			}
+			buf.WriteString(n.Data)
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+
+	return buf.String()
+}
+
 // maxNotesLength is the most characters a note keeps, as its column holds
 const maxNotesLength = 1024
 
 // UnmarshalJSON keeps a note as sent, white space and HTML too, as Nightscout gives back the text it was sent and
-// xDrip+ appends any note that comes back changed to its own, so it grows with each download. It is escaped wherever
-// it is shown, as the site's own notes are. A note longer than its column is cut at a character, and one only of white
-// space is none.
+// xDrip+ appends any note that comes back changed to its own, so it grows with each download. The site shows it
+// without its tags (sitemodels.StripTags), escaped. A note longer than its column is cut at a character, and one only
+// of white space is none.
 func (n *SanitizedString) UnmarshalJSON(data []byte) error {
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {

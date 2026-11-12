@@ -930,7 +930,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   zeros, such as a combo bolus's split, are kept.
 - A treatment's or activity's `notes`, and its `reason` and `reasons`, come back exactly as sent, HTML, entities and
   the white space around them too, as xDrip+ appends any note that comes back changed to its own; one only of white
-  space is none, one over 1024 characters is cut at a character, and the site shows them escaped, as text.
+  space is none, and one over 1024 characters is cut at a character. The site, its pages and its API, gets every
+  note, reason and notification without its HTML tags or the contents of a script, so no app's text can put a script
+  on the site's pages.
 - An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
   keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a
