@@ -334,7 +334,8 @@ func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
 	// The virtual source's 10 minutes 31 days ago are its readings, without its device statuses
 	connectorSite, err := jobs.connectorSite(ctx, siteID)
 	require.NoError(t, err)
-	_, err = WriteVirtualData(ctx, jobs.nightscoutStore, connectorSite.siteContext(virtualIdentity), time.UnixMilli(daysAgo(31)), 10*time.Minute)
+	end := time.UnixMilli(daysAgo(31))
+	_, err = writeVirtualDocuments(ctx, jobs.nightscoutStore, connectorSite.siteContext(virtualIdentity), virtualBackfillDocuments(end.Add(-10*time.Minute), end))
 	require.NoError(t, err)
 	reports, err = site.SiteDB.Queries().AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{Limit: 10})
 	require.NoError(t, err)

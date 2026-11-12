@@ -130,10 +130,13 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 	return docs
 }
 
-// WriteVirtualData writes the virtual documents for the window into the site through the Nightscout collections,
-// returning how many were new
-func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPIStore, siteContext *httputils.SiteContext, end time.Time, span time.Duration) (int, error) {
-	return writeVirtualDocuments(ctx, store, siteContext, VirtualDocuments(end, span))
+// virtualBackfillDocuments are what a backfill from from to to writes, but nothing after to, as the meter reading 2
+// minutes after its slot would be when to falls between them, so a backfill leaves the time after its window as it is
+func virtualBackfillDocuments(from, to time.Time) []virtualDoc {
+	return slices.DeleteFunc(VirtualDocuments(to, to.Sub(from)), func(doc virtualDoc) bool {
+		date, _ := doc.data["date"].(int64)
+		return date > to.UnixMilli()
+	})
 }
 
 // writeVirtualDocuments writes the documents into the site, but no device statuses older than deviceStatusBackfillAge,
