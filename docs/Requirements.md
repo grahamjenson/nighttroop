@@ -1012,6 +1012,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   `userEnteredAt` (in UTC) and a bolus's `unabsorbed`.
 - xDrip+'s `Sensor Stop` treatments are kept as an event group, with their event type, so the treatments it uploads
   after one are kept too; the site can add a Sensor Stop event group.
+- A treatment with insulin or carbs past their limits (500 U, 1000 g, either way) is refused (400) saying the field,
+  its range and what was sent, e.g. `insulin must be between -500 and 500 U (was 8882.5)`, as xDrip+ drops a refused
+  treatment and every one queued after it; a negative one, taking back too much entered, is kept.
+- A value the database refuses through the Nightscout API is refused (400) naming its column and why, e.g. `dose is
+  out of range` or `direction is too long`, never in the database's words, which are logged.
 - A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
   profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
