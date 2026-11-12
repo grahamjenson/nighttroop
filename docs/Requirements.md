@@ -909,9 +909,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The summary's basal during a temp basal is its rate.
 - Duplicate uploads are ignored; values far outside real use are refused.
 - A value sent that means none is not stored, and comes back left out, as one not sent does: an empty string, a
-  CGM's raw signal (`noise`, `filtered`, `unfiltered`, `rssi`) of 0, as AAPS sends with every reading, and a heart
-  rate of 0. An update with one keeps the value stored. `false`, and other zeros, such as a combo bolus's split, are
-  kept.
+  CGM's `noise` or `rssi` of 0, and a heart rate of 0. An update with one keeps the value stored. `false`, and other
+  zeros, such as a combo bolus's split, are kept.
+- An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, replaces it, keeping its
   `_id`, as Loop sends a temp basal or bolus again when it ends and Trio a temp target or override run; followers get
   it as changed, and one sent again as it was stored changes nothing.

@@ -303,7 +303,8 @@ CREATE TABLE glucose_readings (
     direction TEXT CHECK(length(direction) <= 16),
 
     -- What only some apps send, NULL for most readings: a CGM's raw signal, from xDrip+ and its followers (noise,
-    -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), 0 meaning none and stored as NULL,
+    -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), a noise or rssi of 0 meaning none
+    -- and stored as NULL, though filtered and unfiltered are kept as sent, 0 too, as AAPS sends them,
     -- and an mbg AAPS calibrated its sensor with (is_calibration), and the sensor's reading then (sensor_mgdl_at_pairing)
     noise REAL CHECK(noise BETWEEN -1000 AND 1000),
     filtered REAL CHECK(filtered BETWEEN 0 AND 10000000),
