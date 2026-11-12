@@ -135,6 +135,29 @@ func TestBackupSiteBatchUploadsAgainWhenItsSitesChange(t *testing.T) {
 	require.Equal(t, []string{first.BackupPath}, uploads[2])
 }
 
+// A batch whose last site is deleted or archived is uploaded empty, so S3's latest backup of it no longer has the
+// site's data, while a batch that never had a site is not uploaded
+func TestBackupSiteBatchUploadsEmptyOnceItsLastSiteGoes(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, uploads, fail := t.Context(), [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.Empty(t, uploads)
+
+	site := fileSite(t, controlDB, "qaaaaaaa")
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.Len(t, uploads, 1)
+
+	require.NoError(t, controlDB.DeleteSites(ctx, []string{site.Subdomain}))
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.Len(t, uploads, 2)
+	require.Empty(t, uploads[1])
+
+	// The empty batch is not uploaded again
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.Len(t, uploads, 2)
+}
+
 func TestBackupSiteBatchUploadsAgainAfterAFailedUpload(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, uploads, fail := t.Context(), [][]string{}, true

@@ -1059,6 +1059,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A site not written to since its last backup is not copied again, so its DB is not opened, and a batch with the same
   sites, none copied again, is not uploaded again until the server restarts; a write during a copy is copied the next
   round, and a failed upload is tried again the next round.
+- A batch whose last site is deleted or archived is uploaded empty, so S3's latest backup of it no longer has the
+  site's data and a restore brings back an empty batch; a batch that never had a site is not uploaded.
 - A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
   leaves nothing behind, so the next start downloads it again.
 - A start removes the staging folders a restore or archive killed part way left beside the DBs and backups, and nothing
