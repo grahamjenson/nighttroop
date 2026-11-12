@@ -159,6 +159,10 @@ func (c SettingsCollection) DeleteQuery(ctx context.Context, siteContext *httput
 }
 
 func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (*settings.SettingAnyType, *nsutils.HTTPError) {
+	// A setting there is not would be answered as set, with an empty document
+	if !settings.IsSetting(identifier) {
+		return nil, nsutils.ErrNotFound
+	}
 	settingsMap := siteContext.GetOwnSettings()
 	identitySettingsMap := settingsMap.IdentitySettingsMap
 

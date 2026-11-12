@@ -1,5 +1,7 @@
 package settings
 
+import "slices"
+
 // slot is where a SettingMap keeps one setting, so the setting can be read or written by its identifier
 type slot interface {
 	identifier() string
@@ -101,3 +103,8 @@ var allSettingNames = func() []string {
 	}
 	return names
 }()
+
+// IsSetting is whether there is a setting with the identifier
+func IsSetting(identifier string) bool {
+	return slices.Contains(allSettingNames, identifier)
+}

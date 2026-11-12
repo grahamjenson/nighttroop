@@ -857,6 +857,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
   `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these
   is read.
+- A v3 replace or patch of a setting answers with the setting as stored; a read, replace, patch or delete of an
+  identifier that is not one of Nighttroop's settings is a 404, and a create of one a 400, rather than an empty setting.
 - The v1 status has `authorized` with a JWT and the token's permissions, with `api:treatments:create` for one that
   can write, so LoopFollow shows a read token as "Read" and a write token as "Read & Write".
 - The v3 version needs no token, so an app can check for v3 before it signs in.
