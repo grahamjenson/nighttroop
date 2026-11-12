@@ -105,6 +105,24 @@ ASSERT_EQUALS 10 "@0.fat"
 ASSERT_EQUALS 20 "@0.protein"
 ASSERT_EQUALS "Sensor Start" "@1.eventType"
 
+// Trio's carbs' notes and foodType come from one field, which can end with a new line; both are kept as sent
+NAME trio_upload_carbs_notes_as_sent
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [ { "eventType" : "Carb Correction", "carbs" : 20, "created_at" : "{{ date -1 }}T18:03:22.940Z", "enteredBy" : "Trio", "notes" : "Pasta\n", "foodType" : "Pasta\n", "fat" : 0, "protein" : 0 } ]
+ASSERT_STATUS 200
+ASSERT_EQUALS "Pasta\n" "@0.notes"
+ASSERT_EQUALS "Pasta\n" "@0.foodType"
+
+NAME trio_read_carbs_notes_as_sent
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$eq]={{ date -1 }}T18:03:22.940Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Pasta\n" "@0.notes"
+ASSERT_EQUALS "Pasta\n" "@0.foodType"
+
 // uploadTempTargets posts a temp target, unlabeled, in mg/dL (TempTargetsStorage.swift)
 NAME trio_upload_temp_target
 POST http://{{ site }}/api/v1/treatments.json
