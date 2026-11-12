@@ -932,8 +932,11 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
   keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a
   temp target or override run; followers get it as changed, and one sent again as it was stored changes nothing.
-- A treatment with only carbs at the date and type of one with only insulin, or the other way round, is its own
-  treatment, as AAPS's Bolus Wizard sends its bolus then its carbs as two Meal Boluses and deletes either on its own.
+- A treatment sent with no id of its own (`_id`, `identifier`, xDrip+'s `uuid`, Loop's `syncIdentifier`, Trio's `id`)
+  is only one stored sent again, as in Nightscout, when the one stored has no app's id either and the same carbs and
+  insulin, a zero being none; otherwise it is its own treatment. So a careportal note in the same second as an xDrip+
+  bolus is kept beside it rather than taking it over, and AAPS's Bolus Wizard's bolus and its carbs, two Meal
+  Boluses at one date that it deletes on their own, are two treatments.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.

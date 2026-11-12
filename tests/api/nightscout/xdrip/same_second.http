@@ -1,0 +1,76 @@
+# A treatment sent with no id of its own is only taken as one stored sent again, as Nightscout takes it, when the one
+# stored has no app's id either (xDrip+'s uuid, Loop's syncIdentifier) and the same carbs and insulin. So a careportal
+# note in the same second as xDrip+'s bolus is kept beside it, rather than merged into it and taking it over.
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+SET at {{ utctime 5 }}Z
+
+# xDrip+ upserts its bolus with its uuid (NightscoutUploader.populateV1APITreatmentEntry), an <none> event type
+NAME xdrip_bolus
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "11111111-2222-3333-4444-555555555555", "_id": "111111112222333344445555", "insulin": 2, "carbs": 0, "created_at": "{{ .at }}"}
+ASSERT_STATUS 200
+
+# Nightscout's careportal posts a note in the same second, with no id
+NAME careportal_note_same_second
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"eventType": "Note", "notes": "careportal note", "enteredBy": "careportal", "created_at": "{{ .at }}"}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "careportal" "@0.enteredBy"
+ASSERT_EQUALS "careportal note" "@0.notes"
+
+NAME both_kept
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ .at }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME xdrip_bolus_kept_as_sent
+GET http://{{ site }}/api/v1/treatments.json?find[uuid]=11111111-2222-3333-4444-555555555555
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "111111112222333344445555" "@0._id"
+ASSERT_EQUALS "xdrip" "@0.enteredBy"
+ASSERT_EQUALS 2 "@0.insulin"
+
+# The same careportal note sent again, with no id and the same amounts, is still the one stored
+NAME careportal_note_sent_again
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"eventType": "Note", "notes": "careportal note", "enteredBy": "careportal", "created_at": "{{ .at }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".careportal_note_same_second.0._id" "@0._id"
+
+NAME still_two
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ .at }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+# Carbs with no id in the same second as a careportal bolus with no id are another treatment, as their amounts differ
+NAME careportal_bolus
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Meal Bolus", "insulin": 1.5, "enteredBy": "careportal", "created_at": "{{ .at }}"}
+ASSERT_STATUS 200
+
+NAME careportal_carbs_same_second
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Meal Bolus", "carbs": 20, "enteredBy": "careportal", "created_at": "{{ .at }}"}
+ASSERT_STATUS 200
+
+NAME four_kept
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ .at }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@"
