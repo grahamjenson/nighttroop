@@ -235,6 +235,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | Device status pump `pumpID`, `suspended`, `bolusing` | Fixed in this PR: kept once the status as sent is cleared (they were dropped then); test in `loop/devicestatus.http` |
 | Device status uploader `name`, `timestamp`, `isCharging` | Works: kept once the status as sent is cleared |
 | `POST /api/v1/profile`, `loopSettings` and `store` | Works |
+| A profile's `loopSettings.scheduleOverride`, the override running | Fixed in this PR: kept as an override preset is, its `targetRange` in mg/dL (it was dropped); test in `loop/profile.http` |
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, and had no `enteredBy`) |
 | A profile's `enteredBy` `Loop` given back as sent | Fixed in this PR (was the uploading identity, e.g. `pwd_phone`) |
 | NightscoutKit `find[created_at]` on treatments and device statuses | Works since #514 (it was the upload time, not when they happened) |
