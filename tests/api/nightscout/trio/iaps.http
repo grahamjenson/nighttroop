@@ -21,7 +21,7 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS 125 "@0.sgv"
 ASSERT_EQUALS "FortyFiveUp" "@0.direction"
-ASSERT_CONTAINS "T12:05:00.000Z" "@0.dateString"
+ASSERT_CONTAINS "T12:05:00Z" "@0.dateString"
 ASSERT_EQUALS 120 "@1.sgv"
 
 // A remote command, as an announcement from Nightscout's careportal

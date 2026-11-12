@@ -178,15 +178,6 @@ func ISOString(t time.Time) string {
 	return t.UTC().Format(ISOLayout)
 }
 
-// MarshalJSON writes it as toISOString does, as Nightscout does, so clients that read dates with a fixed layout
-// (.SSS) can. It is kept in the zone it was sent in, as that gives its UTC offset.
-func (d DateString) MarshalJSON() ([]byte, error) {
-	t, err := time.Parse(time.RFC3339Nano, string(d))
-	if err != nil {
-		return json.Marshal(string(d))
-	}
-	return json.Marshal(ISOString(t))
-}
 
 func (d *DateString) Time() time.Time {
 	if d == nil {

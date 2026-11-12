@@ -145,7 +145,7 @@ ASSERT_EQUALS "Note" "@0.eventType"
 ASSERT_EQUALS "Pizza night" "@0.notes"
 ASSERT_LENGTH 24 "@0.created_at"
 # timestamp is optional, but force cast to a String when there
-ASSERT_LENGTH 24 "@0.timestamp"
+ASSERT_LENGTH 20 "@0.timestamp"
 # Overrides.swift: correctionRange as [Int] or targetBottom/targetTop as Int, insulinNeedsScaleFactor and duration
 ASSERT_EQUALS "Temporary Override" "@1.eventType"
 ASSERT_EQUALS 140 "@1.correctionRange.0"
@@ -235,9 +235,9 @@ NAME devicestatus
 GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&count=1
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-# pump.clock is the last loop time, and the reservoir is only read with it, by an ISO8601DateFormatter with no zone
-# or fractional seconds, which reads the date and time of toISOString's layout, as it does from Nightscout
-ASSERT_LENGTH 24 "@0.pump.clock"
+# pump.clock is the last loop time, and the reservoir is only read with it, by an ISO8601DateFormatter with no
+# fractional seconds
+ASSERT_LENGTH 20 "@0.pump.clock"
 ASSERT_EQUALS 85.5 "@0.pump.reservoir"
 ASSERT_EQUALS "Insulet" "@0.pump.manufacturer"
 ASSERT_EQUALS "Dash" "@0.pump.model"
