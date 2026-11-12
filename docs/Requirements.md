@@ -895,6 +895,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   dates alone would give, so it can have fewer than its `limit`, still in order.
 - A v1 or v3 search's `skip` is at most 32000, enough for Nightguard's 32 pages of 1000, and a negative one is 0.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
+- A v1 `find[field]` with no operator is its `$eq`, as in Nightscout, for every field with a `$eq`, its value read
+  the same: `find[date]=<ms>` finds the entry at that date, as xDrip+ asks, and `find[created_at]=<ISO time>` the
+  treatment at that time; a field with no `$eq`, such as `find[srvCreated]`, still finds nothing.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless

@@ -1,0 +1,62 @@
+# xDrip+ finds an entry by its exact date with find[date]=<ms>, which Nightscout reads as find[date][$eq]=<ms>, so a
+# find[field] with no operator is the same as its $eq
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+SET entry_ms {{ itime 10 }}
+SET other_ms {{ itime 5 }}
+
+NAME xdrip_find_equals_entries
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [
+  {"device": "xDrip-DexcomG5", "date": {{ .entry_ms }}, "sgv": 120, "direction": "Flat", "type": "sgv"},
+  {"device": "xDrip-DexcomG5", "date": {{ .other_ms }}, "sgv": 130, "direction": "Flat", "type": "sgv"}
+ ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME xdrip_find_entry_by_date
+GET http://{{ site }}/api/v1/entries.json?find[date]={{ .entry_ms }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 120 "@0.sgv"
+
+// The same as its $eq
+NAME xdrip_find_entry_by_date_eq
+GET http://{{ site }}/api/v1/entries.json?find[date][$eq]={{ .entry_ms }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 120 "@0.sgv"
+
+// A date with no entry finds nothing
+NAME xdrip_find_entry_by_date_none
+GET http://{{ site }}/api/v1/entries.json?find[date]={{ addms .entry_ms 1 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// A treatment by its exact created_at, as an ISO time
+NAME xdrip_find_equals_treatment
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Note", "notes": "found", "created_at": "2025-03-04T10:30:00.000Z"},
+   {"eventType": "Note", "notes": "other", "created_at": "2025-03-04T10:35:00.000Z"}]
+ASSERT_STATUS 200
+
+NAME xdrip_find_treatment_by_created_at
+GET http://{{ site }}/api/v1/treatments.json?find[created_at]=2025-03-04T10:30:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "found" "@0.notes"
+
+// The forms with no operator that worked before still do
+NAME xdrip_find_treatment_by_event_type
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Note&find[created_at][$gte]=2025-03-04T10:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
