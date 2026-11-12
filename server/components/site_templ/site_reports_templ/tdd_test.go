@@ -48,7 +48,7 @@ func TestTDDStats(t *testing.T) {
 // date of the report, with no bar where a day has none, even before the first day with insulin
 func TestTDDChart(t *testing.T) {
 	days := dosed(tddDays(map[string]float64{"2026-10-31": 20, "2026-11-02": 31.5}, "2026-10-31", "2026-11-01", "2026-11-02"))
-	chart := tddChart(days, date("2026-10-30"), date("2026-11-02"), date("2026-11-03"))
+	chart := tddChart(t.Context(), days, date("2026-10-30"), date("2026-11-02"), date("2026-11-03"))
 	chart.Validate()
 	var option map[string]any
 	require.NoError(t, json.Unmarshal([]byte(chart.JSONNotEscaped()), &option))
@@ -77,7 +77,7 @@ func TestTDDChart(t *testing.T) {
 // Today's bar, not over, is paler and labelled so far, and named so for its tooltip; the days before it are not
 func TestTDDChartToday(t *testing.T) {
 	days := dosed(tddDays(map[string]float64{"2026-11-01": 20, "2026-11-02": 8}, "2026-11-01", "2026-11-02"))
-	chart := tddChart(days, date("2026-11-01"), date("2026-11-02"), date("2026-11-02"))
+	chart := tddChart(t.Context(), days, date("2026-11-01"), date("2026-11-02"), date("2026-11-02"))
 	chart.Validate()
 	var option map[string]any
 	require.NoError(t, json.Unmarshal([]byte(chart.JSONNotEscaped()), &option))
@@ -191,7 +191,7 @@ func TestTDDLinks(t *testing.T) {
 
 // The bars fill their days but for a gap of a couple of pixels, however many days there are
 func TestTDDChartBarGaps(t *testing.T) {
-	chart := tddChart(nil, date("2026-10-08"), date("2026-11-06"), date("2026-11-07"))
+	chart := tddChart(t.Context(), nil, date("2026-10-08"), date("2026-11-06"), date("2026-11-07"))
 	chart.Validate()
 	var option map[string]any
 	require.NoError(t, json.Unmarshal([]byte(chart.JSONNotEscaped()), &option))

@@ -1,6 +1,7 @@
 package site_settings_templ
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -9,18 +10,19 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Usage is the site's usage page for its admins: its storage (UsageStorage) and a download of all its data
 templ Usage(storage templ.Component) {
 	<div id="site--usage" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Usage") {
-			How much the site keeps, against its limit, and a copy of all of it to download.
+		@heading.Page(i18n.T(ctx, "site.settings.usage.title")) {
+			{ i18n.T(ctx, "site.settings.usage.about") }
 		}
 		@storage
-		@card.Card(card.Props{ID: "site--usage--download", Title: "Download Data",
-			Note: "A copy of all the site's data, as it is now, in a zip of a SQLite file, which a SQLite browser can open to look through.",
-			Action: labelled("Download Data", button.Props{ID: "site--usage--download-data", Href: "/usage/download", Variant: button.VariantOutline,
+		@card.Card(card.Props{ID: "site--usage--download", Title: i18n.T(ctx, "site.settings.usage.download_data"),
+			Note:   i18n.T(ctx, "site.settings.usage.download_note"),
+			Action: labelled(i18n.T(ctx, "site.settings.usage.download_data"), button.Props{ID: "site--usage--download-data", Href: "/usage/download", Variant: button.VariantOutline,
 				Attributes: templ.Attributes{"download": ""}})})
 	</div>
 }
@@ -30,27 +32,24 @@ templ Usage(storage templ.Component) {
 templ UsageStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) {
 	<section id="site--usage--storage" class="space-y-3">
 		@dbsize.Panel("site--usage", sizeKB, limitKB, tables)
-		@card.Card(card.Props{ID: "site--usage--truncate-card", Title: "Truncate",
-			Note: "Removes what device reports keep that nothing reads again: the loop's status and the pump as sent, from all " +
-				"but each device's newest report, and thins device reports to fewer the older they are, deleting those over " +
-				"30 days old, and deletes old loop settings no profile or device report refers to any more. Readings, " +
-				"treatments, profiles and everything else are kept. The DB is then shrunk.",
-			Action: labelled("Truncate", button.Props{ID: "site--usage--truncate", Variant: button.VariantOutline,
+		@card.Card(card.Props{ID: "site--usage--truncate-card", Title: i18n.T(ctx, "site.settings.usage.truncate"),
+			Note:   i18n.T(ctx, "site.settings.usage.truncate_note"),
+			Action: labelled(i18n.T(ctx, "site.settings.usage.truncate"), button.Props{ID: "site--usage--truncate", Variant: button.VariantOutline,
 				Attributes: templ.Attributes{"hx-post": "/usage/truncate", "hx-target": "#site--usage--storage", "hx-swap": "outerHTML",
 					"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
-					"hx-confirm": "Truncate the site's device reports? What it removes cannot be got back."}})})
+					"hx-confirm": i18n.T(ctx, "site.settings.usage.truncate_confirm")}})})
 	</section>
 }
 
 // UsageTruncated is a toast saying the site was truncated, and its size now
 templ UsageTruncated(sizeKB *int64) {
-	@successtoast.TitledOOB("Site Truncated", truncatedSize(sizeKB), 5000)
+	@successtoast.TitledOOB(i18n.T(ctx, "site.settings.usage.truncated"), truncatedSize(ctx, sizeKB), 5000)
 }
 
 // truncatedSize says the site's DB size after truncating, when it is known
-func truncatedSize(sizeKB *int64) string {
+func truncatedSize(ctx context.Context, sizeKB *int64) string {
 	if sizeKB == nil {
-		return "Its device reports were truncated."
+		return i18n.T(ctx, "site.settings.usage.truncated_reports")
 	}
-	return fmt.Sprintf("Its DB is now %.2f MB.", float64(*sizeKB)/1024)
+	return i18n.T(ctx, "site.settings.usage.truncated_size", i18n.Data{"Size": fmt.Sprintf("%.2f", float64(*sizeKB)/1024)})
 }

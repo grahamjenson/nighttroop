@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 func count(n *int64) int64 {
@@ -27,70 +28,70 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 	if source != nil {
 		<div id={ "site--settings--" + name + "-connector--status" } class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
 			<dl class="grid gap-x-4 gap-y-1 sm:grid-cols-2 md:grid-cols-3">
-				@connectorStat(name, "last-success", "Last worked") {
-					<span title={ formatIdentityDate(ctx, source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
+				@connectorStat(name, "last-success", i18n.T(ctx, "site.settings.connector_status.last_worked")) {
+					<span title={ formatIdentityDate(ctx, source.LastSuccessfulSync) }>{ display.Ago(ctx, source.LastSuccessfulSync, time.Now()) }</span>
 				}
-				@connectorStat(name, "last-failure", "Last failed") {
-					<span title={ formatIdentityDate(ctx, source.LastFailedSync) }>{ display.Ago(source.LastFailedSync, time.Now()) }</span>
+				@connectorStat(name, "last-failure", i18n.T(ctx, "site.settings.connector_status.last_failed")) {
+					<span title={ formatIdentityDate(ctx, source.LastFailedSync) }>{ display.Ago(ctx, source.LastFailedSync, time.Now()) }</span>
 				}
-				@connectorStat(name, "duration", "Last sync took") {
+				@connectorStat(name, "duration", i18n.T(ctx, "site.settings.connector_status.last_sync_took")) {
 					if source.LastSyncDuration != nil {
-						{ display.Duration(*source.LastSyncDuration) }
+						{ display.Duration(ctx, *source.LastSyncDuration) }
 					} else {
 						-
 					}
 				}
-				@connectorStat(name, "interval", "Syncs every") {
-					{ fmt.Sprintf("%s (%s)", display.Duration(source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)) }
+				@connectorStat(name, "interval", i18n.T(ctx, "site.settings.connector_status.syncs_every")) {
+					{ fmt.Sprintf("%s (%s)", display.Duration(ctx, source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)) }
 				}
-				@connectorStat(name, "totals", "Syncs") {
-					{ fmt.Sprintf("%d worked, %d failed", count(source.TotalSuccessfulSyncs), count(source.TotalFailedSyncs)) }
+				@connectorStat(name, "totals", i18n.T(ctx, "site.settings.connector_status.syncs")) {
+					{ i18n.T(ctx, "site.settings.connector_status.worked_failed", i18n.Data{"Worked": count(source.TotalSuccessfulSyncs), "Failed": count(source.TotalFailedSyncs)}) }
 					if count(source.ConsecutiveFailedSyncs) > 0 {
-						<span class="text-red-700">{ fmt.Sprintf("(the last %d in a row)", count(source.ConsecutiveFailedSyncs)) }</span>
+						<span class="text-red-700">{ i18n.T(ctx, "site.settings.connector_status.in_a_row", i18n.Data{"Failed": count(source.ConsecutiveFailedSyncs)}) }</span>
 					}
 				}
-				@connectorStat(name, "records", "Records pulled in") {
+				@connectorStat(name, "records", i18n.T(ctx, "site.settings.connector_status.records_pulled_in")) {
 					{ fmt.Sprintf("%d", source.TotalRecords) }
 				}
-				@connectorStat(name, "last-records", "Last sync pulled in") {
+				@connectorStat(name, "last-records", i18n.T(ctx, "site.settings.connector_status.last_sync_pulled_in")) {
 					if source.LastSyncRecords != nil {
-						{ fmt.Sprintf("%d records", *source.LastSyncRecords) }
+						{ i18n.T(ctx, "site.settings.connector_status.records", i18n.Data{"Records": *source.LastSyncRecords}) }
 					} else {
 						-
 					}
 				}
-				@connectorStat(name, "backfill", "Last backfill") {
+				@connectorStat(name, "backfill", i18n.T(ctx, "site.settings.connector_status.last_backfill")) {
 					if source.TotalBackfills == 0 {
-						Never
+						{ i18n.T(ctx, "site.settings.never") }
 					} else {
-						<span title={ formatIdentityDate(ctx, source.LastBackfillFinishedAt) }>{ display.Ago(source.LastBackfillFinishedAt, time.Now()) }</span>{ fmt.Sprintf(", %d records in %s", count(source.LastBackfillRecords), display.Duration(count(source.LastBackfillDuration))) }
+						<span title={ formatIdentityDate(ctx, source.LastBackfillFinishedAt) }>{ display.Ago(ctx, source.LastBackfillFinishedAt, time.Now()) }</span>{ i18n.T(ctx, "site.settings.connector_status.backfill_records", i18n.Data{"Records": count(source.LastBackfillRecords), "Duration": display.Duration(ctx, count(source.LastBackfillDuration))}) }
 						if source.LastBackfillError != nil {
 							<span class="text-red-700">: { *source.LastBackfillError }</span>
 						}
 					}
 				}
-				@connectorStat(name, "backfilled-to", "Backfilled back to") {
+				@connectorStat(name, "backfilled-to", i18n.T(ctx, "site.settings.connector_status.backfilled_back_to")) {
 					if source.TotalBackfills == 0 || source.LastBackfillFrom == nil {
 						-
 					} else {
-						{ formatIdentityDate(ctx, source.LastBackfillFrom) }<span class="text-gray-500">{ " (" + display.Ago(source.LastBackfillFrom, time.Now()) + ")" }</span>
+						{ formatIdentityDate(ctx, source.LastBackfillFrom) }<span class="text-gray-500">{ " (" + display.Ago(ctx, source.LastBackfillFrom, time.Now()) + ")" }</span>
 					}
 				}
 			</dl>
 			if len(source.RecentEvents) > 0 || len(source.RecentErrors) > 0 {
 				<details id={ "site--settings--" + name + "-connector--history" } class="mt-3">
-					<summary class="cursor-pointer text-gray-600">Recent events and errors</summary>
+					<summary class="cursor-pointer text-gray-600">{ i18n.T(ctx, "site.settings.connector_status.recent") }</summary>
 					<ul class="mt-2 space-y-1">
 						for _, event := range source.RecentEvents {
-							<li><span class="text-gray-500">{ display.Ago(&event.StartedAt, time.Now()) }</span> { display.Name(event.Name) }</li>
+							<li><span class="text-gray-500">{ display.Ago(ctx, &event.StartedAt, time.Now()) }</span> { display.Name(event.Name) }</li>
 						}
 						for _, syncError := range source.RecentErrors {
-							<li class="text-red-700"><span class="text-gray-500">{ display.Ago(&syncError.CreatedAt, time.Now()) }</span> { syncError.Message }</li>
+							<li class="text-red-700"><span class="text-gray-500">{ display.Ago(ctx, &syncError.CreatedAt, time.Now()) }</span> { syncError.Message }</li>
 						}
 					</ul>
 					<p class="mt-2">
-						<a class="text-primary underline" href={ templ.SafeURL("/logs/events?search=" + string(source.Type)) }>All events</a> ·
-						<a class="text-primary underline" href={ templ.SafeURL("/logs/errors?type=connector&search=" + string(source.Type)) }>All errors</a>
+						<a class="text-primary underline" href={ templ.SafeURL("/logs/events?search=" + string(source.Type)) }>{ i18n.T(ctx, "site.settings.connector_status.all_events") }</a> ·
+						<a class="text-primary underline" href={ templ.SafeURL("/logs/errors?type=connector&search=" + string(source.Type)) }>{ i18n.T(ctx, "site.settings.connector_status.all_errors") }</a>
 					</p>
 				</details>
 			}

@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 templ Login() {
@@ -23,13 +24,13 @@ templ Login() {
 					hx-status:4xx="target:#toaster swap:beforeend"
 					hx-status:5xx="target:#toaster swap:beforeend"
 				>
-					@authenticator.Title("Nighttroop Login")
+					@authenticator.Title(i18n.T(ctx, "control.login.title"))
 					<!-- Username -->
 					@form.Item(form.ItemProps{}) {
 						@form.Label(form.LabelProps{
 							For: "control--login--name",
 						}) {
-							Name
+							{ i18n.T(ctx, "control.login.name") }
 						}
 						@input.Input(input.Props{
 							ID:         "control--login--name",
@@ -45,7 +46,7 @@ templ Login() {
 						@form.Label(form.LabelProps{
 							For: "control--login--password",
 						}) {
-							Password
+							{ i18n.T(ctx, "control.login.password") }
 						}
 						@input.Input(input.Props{
 							ID:         "control--login--password",
@@ -60,17 +61,17 @@ templ Login() {
 						@form.Label(form.LabelProps{
 							For: "control--login--otp",
 						}) {
-							Verification Code
+							{ i18n.T(ctx, "control.login.code") }
 						}
 						@authenticator.CodeInput("control--login--otp", "otp", "totp", false)
 						@form.Description() {
-							Enter the 6-digit TOTP code
+							{ i18n.T(ctx, "control.login.code_help") }
 						}
 					}
 					<div class="mt-4"></div>
 					<!-- Submit Button -->
 					@button.Button(button.Props{ID: "control--login-button", Type: button.TypeSubmit, Size: button.SizeXl, FullWidth: true}) {
-						Log in
+						{ i18n.T(ctx, "control.login.submit") }
 					}
 				</form>
 				@site_login_templ.PasskeyLogin("control--login")

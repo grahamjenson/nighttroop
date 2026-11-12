@@ -4,6 +4,7 @@ package table
 import (
 	"strconv"
 
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
@@ -28,7 +29,7 @@ templ Heads(columns []Column) {
 			for _, column := range columns {
 				@Head(HeadProps{Class: utils.If(column.Numeric, Numeric)}) {
 					if column.Actions {
-						<span class="sr-only">Actions</span>
+						<span class="sr-only">{ i18n.T(ctx, "common.table.actions") }</span>
 					} else {
 						{ column.Label }
 					}

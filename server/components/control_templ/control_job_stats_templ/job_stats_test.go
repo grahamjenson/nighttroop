@@ -1,6 +1,7 @@
 package control_job_stats_templ
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,8 +21,8 @@ func TestDurations(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.mean, meanDuration(&tt.stats))
-			require.Equal(t, tt.std, stdDevDuration(&tt.stats))
+			require.Equal(t, tt.mean, meanDuration(context.Background(), &tt.stats))
+			require.Equal(t, tt.std, stdDevDuration(context.Background(), &tt.stats))
 		})
 	}
 }

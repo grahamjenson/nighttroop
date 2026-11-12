@@ -111,6 +111,11 @@ func (m *CombinedSettingsMap) GetTimezone() *string {
 	)
 }
 
+// GetLanguage is the identity's language, then the site's, then the default
+func (m *CombinedSettingsMap) GetLanguage() *string {
+	return first(m.IdentitySettingsMap.GetLanguage(), m.SiteSettingsMap.GetLanguage(), m.DefaultSettingsMap.GetLanguage())
+}
+
 // DateLayout is the Go layout of the date format, the identity's, then the site's, then the default, e.g. 02/01/2006
 // for DD/MM/YYYY
 func (m *CombinedSettingsMap) DateLayout() string {

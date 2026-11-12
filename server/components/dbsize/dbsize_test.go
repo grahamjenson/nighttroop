@@ -26,7 +26,7 @@ func TestDBSizeBar(t *testing.T) {
 		{"nearing it", size(2700), nil, []string{`style="width: 90%;"`, "text-amber-800", "90% of its limit used"}, true},
 		{"over it", size(4500), nil, []string{`style="width: 100%;"`, "text-red-600", "150% of its limit used"}, true},
 		{"measured by its tables", nil, tables, []string{">4.00</span>", `style="width: 100%;"`, "136% of its limit used", `id="control--site--db-part--treatments"`}, true},
-		{"not measured", nil, nil, []string{"Not measured yet", "The resource check measures each site's DB"}, false},
+		{"not measured", nil, nil, []string{"Not measured yet", "The resource check measures each site&#39;s DB"}, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var buf bytes.Buffer

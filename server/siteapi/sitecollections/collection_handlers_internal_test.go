@@ -71,7 +71,7 @@ func TestWriteErrorKeepsTheServersWordsFromToasts(t *testing.T) {
 		{"a server error, to an admin", &apiutils.HTTPError{Status: http.StatusBadGateway, Message: "Apple refused the push: 403 InvalidProviderToken"},
 			consts.IdentityRoleAdmin, []string{"Something went wrong.", `href="/logs/errors"`}, []string{"InvalidProviderToken"}},
 		{"a server error, to a user", apiutils.ErrInternalServerError, consts.IdentityRoleUser,
-			[]string{"recorded for the site's admins"}, []string{"/logs/errors", "Internal server error"}},
+			[]string{"recorded for the site&#39;s admins"}, []string{"/logs/errors", "Internal server error"}},
 		{"the database's words", apiutils.ErrDatabaseRefused(errors.New("CHECK constraint failed: length(notes) <= 1024")),
 			consts.IdentityRoleAdmin, []string{"Something went wrong.", `href="/logs/errors"`}, []string{"CHECK", "Constraint check failed"}},
 		{"a hint for users", apiutils.ErrConstraintCheckFailedWithHint("reading must be more than 0"), consts.IdentityRoleUser,

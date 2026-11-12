@@ -32,7 +32,7 @@ func TestGettingStartedSteps(t *testing.T) {
 			html := buf.String()
 			require.Equal(t, admin, bytes.Contains(buf.Bytes(), []byte(`id="site--getting-started--data"`)), html)
 			require.Equal(t, admin, bytes.Contains(buf.Bytes(), []byte(`id="site--getting-started--identities"`)), html)
-			require.Equal(t, !admin, bytes.Contains(buf.Bytes(), []byte("Your site's admin sets up")), html)
+			require.Equal(t, !admin, bytes.Contains(buf.Bytes(), []byte("Your site&#39;s admin sets up")), html)
 			require.Contains(t, html, `id="site--getting-started--settings"`)
 			require.Contains(t, html, `id="site--getting-started--alarms"`)
 		})

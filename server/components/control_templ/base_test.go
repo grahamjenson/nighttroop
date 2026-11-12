@@ -56,6 +56,6 @@ func TestResourceWarning(t *testing.T) {
 		{config.ResourceLevel{Resource: "cpu", Value: 25, Limit: 20}, "at 100% for 25 seconds, and 20 or more warns."},
 	}
 	for _, tt := range tests {
-		require.Equal(t, tt.want, resourceWarning(tt.level))
+		require.Equal(t, tt.want, resourceWarning(context.Background(), tt.level))
 	}
 }

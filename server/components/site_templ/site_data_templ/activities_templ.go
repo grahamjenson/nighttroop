@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -17,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ActivitiesTable shows one page of activities, newest first, with buttons to the pages either side
@@ -59,18 +61,18 @@ func ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit in
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "activities_table",
-			Title:       "Activities",
-			Description: "Newest first. Click an activity to see all its details.",
-			Action:      addmodal.Open("site--activity--add", "/data/activities/new", "Add Activity"),
-			Above:       searchTotals("site--activity", "activity", "activities"),
+			Title:       i18n.T(ctx, "site.data.activities.title"),
+			Description: i18n.T(ctx, "site.data.activities.about"),
+			Action:      addmodal.Open("site--activity--add", "/data/activities/new", i18n.T(ctx, "site.data.activities.add")),
+			Above:       searchTotals("site--activity", "site.data.activities.noun"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "activitiesTable",
 				EmptyID: "site--activity--empty",
-				Empty:   "No activities here.",
+				Empty:   i18n.T(ctx, "site.data.activities.empty"),
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "Type"}, {Label: "Name"}, {Label: "Minutes", Numeric: true}, {Label: "Notes"},
-					{Label: "Device"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.common.type")}, {Label: i18n.T(ctx, "site.data.common.name")}, {Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.notes")},
+					{Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
 			Pager: &pager.Props{ID: "site--activity", Path: "/data/activities", Count: len(activities), Skip: skip, Limit: limit},
@@ -100,8 +102,8 @@ func ActivityNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--activity--create", Title: "Add Activity", Path: "/data/activities", Target: "#activitiesTable tbody",
-			Submit: "Add Activity", Fields: activityFields}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--activity--create", Title: i18n.T(ctx, "site.data.activities.add"), Path: "/data/activities", Target: "#activitiesTable tbody",
+			Submit: i18n.T(ctx, "site.data.activities.add"), Fields: activityFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -110,16 +112,18 @@ func ActivityNew() templ.Component {
 }
 
 // activityFields are what an activity has that a person can type in
-var activityFields = []addmodal.Field{
-	{Name: "name", Label: "Name", Help: "What it was, e.g. a run.", Required: true, Kind: addmodal.Text, Max: "64"},
-	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "activity_type", Label: "Type", Help: "The kind of activity, exercise when left blank.", Kind: addmodal.Text, Max: "32", Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
-	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasted.", Min: "1", Max: "1440", Step: "1"},
-	{Name: "calories", Label: "Calories", Help: "Energy it burned, in kcal.", Min: "0", Max: "20000", Step: "1"},
-	{Name: "steps", Label: "Steps", Help: "Steps taken during it.", Min: "0", Max: "200000", Step: "1"},
-	{Name: "heart_rate", Label: "Heart rate", Help: "Average beats per minute.", Min: "20", Max: "250", Step: "1"},
-	{Name: "reason", Label: "Reason", Help: "Why it was done, e.g. training.", Kind: addmodal.Text, Max: "64"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func activityFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "name", Label: i18n.T(ctx, "site.data.common.name"), Help: i18n.T(ctx, "site.data.activities.name_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.activities.when_help"), Kind: addmodal.When},
+		{Name: "activity_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.activities.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
+		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.activities.duration_help"), Min: "1", Max: "1440", Step: "1"},
+		{Name: "calories", Label: i18n.T(ctx, "site.data.activities.calories"), Help: i18n.T(ctx, "site.data.activities.calories_help"), Min: "0", Max: "20000", Step: "1"},
+		{Name: "steps", Label: i18n.T(ctx, "site.data.activities.steps"), Help: i18n.T(ctx, "site.data.activities.steps_help"), Min: "0", Max: "200000", Step: "1"},
+		{Name: "heart_rate", Label: i18n.T(ctx, "site.data.activities.heart_rate"), Help: i18n.T(ctx, "site.data.activities.heart_rate_help"), Min: "20", Max: "250", Step: "1"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.activities.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // activityRow opens the activity's details when clicked.
@@ -167,7 +171,7 @@ func activityRow(activity *sitemodels.SiteActivity) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, activity.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 64, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 68, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -194,7 +198,7 @@ func activityRow(activity *sitemodels.SiteActivity) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(activity.ActivityType)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 67, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 71, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -221,7 +225,7 @@ func activityRow(activity *sitemodels.SiteActivity) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(activity.Name))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 70, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 74, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -248,7 +252,7 @@ func activityRow(activity *sitemodels.SiteActivity) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(activity.DurationMinutes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 73, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 77, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -275,7 +279,7 @@ func activityRow(activity *sitemodels.SiteActivity) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(activity.Notes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 76, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 80, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -302,7 +306,7 @@ func activityRow(activity *sitemodels.SiteActivity) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(activity.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 79, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/activities.templ`, Line: 83, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -316,7 +320,7 @@ func activityRow(activity *sitemodels.SiteActivity) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("site--activity--"+activity.ID, "/data/activities/"+activity.ID, "Delete this activity?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("site--activity--"+activity.ID, "/data/activities/"+activity.ID, i18n.T(ctx, "site.data.activities.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -341,8 +345,8 @@ func ActivityModal(activity *sitemodels.SiteActivity) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Props{ID: "site--activity--edit", Path: "/data/activities/" + activity.ID, Target: "#site--activity--" + activity.ID, Swap: "outerHTML", Submit: "Save",
-			Fields: addmodal.Edit(activityFields, activity, nil)}
+		edit := addmodal.Props{ID: "site--activity--edit", Path: "/data/activities/" + activity.ID, Target: "#site--activity--" + activity.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+			Fields: addmodal.Edit(activityFields(ctx), activity, nil)}
 		templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -432,7 +436,7 @@ func ActivityUpdated(activity *sitemodels.SiteActivity) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Activity Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.data.activities.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -457,7 +461,7 @@ func ActivityDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Activity Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.data.activities.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

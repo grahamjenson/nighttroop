@@ -1,10 +1,12 @@
 package authenticator
 
 import (
+	"context"
 	"strings"
 
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // apps are a few free authenticator apps, for iPhone and Android, that add an account from a TOTP QR code
@@ -15,14 +17,14 @@ var apps = []struct{ id, name, url string }{
 }
 
 // before is what goes before the i-th app's name in the list: a comma, or "or" before the last
-func before(i int) string {
+func before(ctx context.Context, i int) string {
 	switch {
 	case i == 0:
-		return "Scan with an authenticator app, such as "
+		return i18n.T(ctx, "common.authenticator.scan_with")
 	case i == len(apps)-1:
-		return " or "
+		return i18n.T(ctx, "common.authenticator.or_last")
 	default:
-		return ", "
+		return i18n.T(ctx, "common.authenticator.comma")
 	}
 }
 
@@ -31,7 +33,7 @@ func before(i int) string {
 templ ScanHint(id string) {
 	<p id={ id } class="max-w-xs text-center font-sans text-xs text-slate-500">
 		for i, app := range apps {
-			{ before(i) }
+			{ before(ctx, i) }
 			@footer.NewTabLink(id+"--"+app.id, app.url, "whitespace-nowrap text-primary underline hover:no-underline") {
 				{ app.name }
 			}
@@ -54,13 +56,13 @@ func inFours(secret string) string {
 // id--authenticator, and the QR code is #qrcode.
 templ Secret(id string, uri string, secret string, size int) {
 	<div class="flex flex-col items-center gap-2">
-		<a id={ id + "--totp-link" } href={ templ.SafeURL(uri) } aria-label="Add to an authenticator app" class="rounded-lg border border-slate-200 bg-white p-1.5">
+		<a id={ id + "--totp-link" } href={ templ.SafeURL(uri) } aria-label={ i18n.T(ctx, "common.authenticator.add_to_app") } class="rounded-lg border border-slate-200 bg-white p-1.5">
 			<div id="qrcode"></div>
 		</a>
 		<div class="flex items-center gap-1 font-mono text-xs text-slate-700">
 			<span id={ id + "--totp-text" } class="tracking-wider">{ inFours(secret) }</span>
 			<textarea id={ id + "--totp-value" } hidden>{ secret }</textarea>
-			@copybutton.CopyButton(copybutton.Props{ID: id + "--totp-copy", TargetID: id + "--totp-value", Label: "Copy the TOTP secret"})
+			@copybutton.CopyButton(copybutton.Props{ID: id + "--totp-copy", TargetID: id + "--totp-value", Label: i18n.T(ctx, "common.authenticator.copy_secret")})
 		</div>
 		@ScanHint(id + "--authenticator")
 		<script type="text/javascript">

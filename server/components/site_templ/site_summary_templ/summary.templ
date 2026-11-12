@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // loopValue is a value from the loop's latest status, or a dash when there is none
@@ -38,14 +39,16 @@ type treatment struct {
 
 // otherTreatments are the summary's treatments besides insulin and carbs, its temp targets and temp basals, in one
 // list, newest first
-func otherTreatments(s *sitemodels.Summary) []treatment {
+func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 	list := []treatment{}
 	for _, t := range s.TempTargets {
-		detail := fmt.Sprintf("%s–%s %s for %d min", display.Glucose(t.LowTarget, t.Units), display.Glucose(t.HighTarget, t.Units), display.Units(t.Units), t.DurationMinutes)
-		list = append(list, treatment{t.OccurredAt, "Temp Target", "/data/temp-targets", detail})
+		detail := i18n.T(ctx, "site.summary.treatments.temp_target_detail", i18n.Data{"Low": display.Glucose(t.LowTarget, t.Units), "High": display.Glucose(t.HighTarget, t.Units),
+			"Units": display.Units(t.Units), "Minutes": t.DurationMinutes})
+		list = append(list, treatment{t.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_target"), "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", display.Value(b.Rate, " U/hr"), b.DurationMinutes)})
+		detail := i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
+		list = append(list, treatment{b.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_basal"), "/data/temp-basals", detail})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
@@ -74,11 +77,11 @@ func insulinAndCarbs(s *sitemodels.Summary) []intake {
 }
 
 // ago is how long ago ms was, or a dash when it is not set
-func ago(ms *int64) string {
+func ago(ctx context.Context, ms *int64) string {
 	if ms == nil {
 		return "–"
 	}
-	return display.RoundedAgo(*ms, time.Now())
+	return display.RoundedAgo(ctx, *ms, time.Now())
 }
 
 func orDash(v *string) string {
@@ -88,11 +91,14 @@ func orDash(v *string) string {
 	return *v
 }
 
-// ranges are the time ranges the summary offers, up to the week it is capped at
+// ranges are the time ranges the summary offers, up to the week it is capped at, with the messages of their names
 var ranges = []struct {
 	Hours int64
 	Label string
-}{{6, "6h"}, {24, "24h"}, {48, "48h"}, {7 * 24, "Week"}}
+}{{6, "site.summary.ranges.six_hours"}, {24, "site.summary.ranges.one_day"}, {48, "site.summary.ranges.two_days"}, {7 * 24, "site.summary.ranges.week"}}
+
+// rangeNames are the messages of the latest glucose's range, as display.GlucoseRange names it, when it is out of range
+var rangeNames = map[string]string{"Low": "site.summary.glucose.low", "High": "site.summary.glucose.high"}
 
 // Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts.
 // It streams the summary's events, shown Live while connected, and reloads its content a second after changes stop
@@ -100,20 +106,20 @@ var ranges = []struct {
 // turns stale, so it greys then rather than at the next change. The header, with the stream, is not reloaded, so the
 // stream stays open.
 templ Summary(summary *sitemodels.Summary) {
-	@heading.Title("Summary")
+	@heading.Title(i18n.T(ctx, "site.summary.title"))
 	<div id="site--summary" class="w-full space-y-4 py-4">
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
 				<div class="flex items-center gap-2">
-					<h1 class="text-2xl font-bold">Summary</h1>
+					<h1 class="text-2xl font-bold">{ i18n.T(ctx, "site.summary.title") }</h1>
 					@badge.Live("site--summary--live", "/data/summary/events")
 				</div>
-				<span id="site--summary--hours" class="text-sm text-gray-500">{ fmt.Sprintf("Last %d hours", summary.Hours) }</span>
+				<span id="site--summary--hours" class="text-sm text-gray-500">{ i18n.T(ctx, "site.summary.last_hours", i18n.Data{"Hours": summary.Hours}) }</span>
 			</div>
 			<div class="flex gap-1">
 				for _, r := range ranges {
 					@nav.Toggle(fmt.Sprintf("site--summary--range-%d", r.Hours), fmt.Sprintf("/?hours=%d", r.Hours), button.SizeSm, summary.Hours == r.Hours) {
-						{ r.Label }
+						{ i18n.T(ctx, r.Label) }
 					}
 				}
 			</div>
@@ -141,36 +147,36 @@ templ Summary(summary *sitemodels.Summary) {
 templ summaryContent(summary *sitemodels.Summary) {
 	@glucoseHero(summary)
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@stat.Tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
-		@stat.Tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
-		@stat.Tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
-		@stat.Tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
+		@stat.Tile("site--summary--iob", i18n.T(ctx, "site.summary.iob"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
+		@stat.Tile("site--summary--cob", i18n.T(ctx, "site.summary.cob"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
+		@stat.Tile("site--summary--reservoir", i18n.T(ctx, "site.summary.reservoir"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
+		@stat.Tile("site--summary--phone-battery", i18n.T(ctx, "site.summary.phone_battery"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
 	</div>
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@stat.Tile("site--summary--time-in-range", "Time in range", display.Percent(summary.Today.TimeInRange), icon.Target) {
-			@previous("site--summary--time-in-range--yesterday", "Yesterday", display.Percent(summary.Yesterday.TimeInRange))
-			@previous("site--summary--time-in-range--last-week", "Last week", display.Percent(summary.LastWeek.TimeInRange))
-			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", display.Percent(summary.LastFortnight.TimeInRange))
-			@previous("site--summary--time-in-range--last-month", "Last month", display.Percent(summary.LastMonth.TimeInRange))
+		@stat.Tile("site--summary--time-in-range", i18n.T(ctx, "site.summary.time_in_range"), display.Percent(summary.Today.TimeInRange), icon.Target) {
+			@previous("site--summary--time-in-range--yesterday", i18n.T(ctx, "site.summary.yesterday"), display.Percent(summary.Yesterday.TimeInRange))
+			@previous("site--summary--time-in-range--last-week", i18n.T(ctx, "site.summary.last_week"), display.Percent(summary.LastWeek.TimeInRange))
+			@previous("site--summary--time-in-range--last-fortnight", i18n.T(ctx, "site.summary.last_fortnight"), display.Percent(summary.LastFortnight.TimeInRange))
+			@previous("site--summary--time-in-range--last-month", i18n.T(ctx, "site.summary.last_month"), display.Percent(summary.LastMonth.TimeInRange))
 		}
-		@stat.Tile("site--summary--total-daily-dose", "Total daily dose", display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet) {
-			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", display.PerDay(summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-week", "Last week", display.PerDay(summary.LastWeek.Days, summary.LastWeek.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-fortnight", "Last fortnight", display.PerDay(summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-month", "Last month", display.PerDay(summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U"))
+		@stat.Tile("site--summary--total-daily-dose", i18n.T(ctx, "site.summary.total_daily_dose"), display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet) {
+			@previous("site--summary--total-daily-dose--yesterday", i18n.T(ctx, "site.summary.yesterday"), display.PerDay(summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-week", i18n.T(ctx, "site.summary.last_week"), display.PerDay(summary.LastWeek.Days, summary.LastWeek.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-fortnight", i18n.T(ctx, "site.summary.last_fortnight"), display.PerDay(summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-month", i18n.T(ctx, "site.summary.last_month"), display.PerDay(summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U"))
 		}
-		@stat.Tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
-		@stat.Tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
+		@stat.Tile("site--summary--sensor-started", i18n.T(ctx, "site.summary.sensor_started"), ago(ctx, summary.SensorStartedAt), icon.Activity)
+		@stat.Tile("site--summary--site-changed", i18n.T(ctx, "site.summary.site_changed"), ago(ctx, summary.SiteChangedAt), icon.Bandage)
 	</div>
 	@card.Card(card.Props{}) {
 		@Graph(summary)
 	}
 	<div class="grid gap-4 lg:grid-cols-2">
-		@stat.Section("Insulin & Carbs", "", "", "") {
+		@stat.Section(i18n.T(ctx, "site.summary.insulin_and_carbs"), "", "", "") {
 			@insulinCarbsTable(insulinAndCarbs(summary))
 		}
-		@stat.Section("Other Treatments", "", "", "") {
-			@treatmentsTable(otherTreatments(summary))
+		@stat.Section(i18n.T(ctx, "site.summary.other_treatments"), "", "", "") {
+			@treatmentsTable(otherTreatments(ctx, summary))
 		}
 	</div>
 	<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -197,7 +203,7 @@ func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
 	if age < time.Duration(staleAfterMinutes(ctx))*time.Minute {
 		return ""
 	}
-	return display.Duration(age.Milliseconds())
+	return display.Duration(ctx, age.Milliseconds())
 }
 
 // staleTrigger is the summary content's trigger to reload once its latest reading turns stale, a second after so the
@@ -219,10 +225,10 @@ templ glucoseHero(summary *sitemodels.Summary) {
 			{{ outOfRange, stale := display.GlucoseRange(latest.Reading, summary.RangeLow, summary.RangeHigh), staleFor(ctx, latest.OccurredAt, time.Now()) }}
 			<div>
 				<div class="flex items-center gap-2">
-					<span class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</span>
+					<span class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ i18n.T(ctx, "site.summary.glucose.title") }</span>
 					if stale != "" {
 						@badge.Badge(badge.Props{ID: "site--summary--glucose--stale", Variant: badge.VariantWarning}) {
-							No reading for { stale }
+							{ i18n.T(ctx, "site.summary.glucose.stale", i18n.Data{"Duration": stale}) }
 						}
 					}
 				</div>
@@ -232,22 +238,22 @@ templ glucoseHero(summary *sitemodels.Summary) {
 					<span class="text-lg text-gray-500">{ display.Units(latest.Units) }</span>
 					<span class="ml-2 text-4xl text-gray-700">{ display.Arrow(latest.Direction) }</span>
 					if outOfRange != "" {
-						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseColours[outOfRange].Text }>{ outOfRange }</span>
+						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseColours[outOfRange].Text }>{ i18n.T(ctx, rangeNames[outOfRange]) }</span>
 					}
 				</div>
 				<div class="mt-1 flex gap-3 text-sm">
-					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</span>
+					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(ctx, latest.OccurredAt, time.Now()) }</span>
 					@nav.Link("site--summary--all-readings", "/data/glucose", "text-primary underline") {
-						All readings
+						{ i18n.T(ctx, "site.summary.glucose.all_readings") }
 					}
 				</div>
 			</div>
 		} else {
 			<div>
-				<div class="text-2xl font-bold text-gray-900">No glucose readings in this time</div>
+				<div class="text-2xl font-bold text-gray-900">{ i18n.T(ctx, "site.summary.glucose.none") }</div>
 				<div class="mt-1 text-sm text-gray-500">
-					Upload from your phone, or connect a source in
-					<a id="site--summary--connectors-link" href="/settings/connectors" { nav.Attributes("/settings/connectors")... } class="text-primary underline">Connectors</a>.
+					{ i18n.T(ctx, "site.summary.glucose.connect") }
+					<a id="site--summary--connectors-link" href="/settings/connectors" { nav.Attributes("/settings/connectors")... } class="text-primary underline">{ i18n.T(ctx, "site.summary.glucose.connectors") }</a>.
 				</div>
 			</div>
 		}
@@ -270,12 +276,12 @@ templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 	>
 		<div class="flex items-baseline justify-between gap-2">
 			<span class="truncate font-semibold text-brand-night">{ orDash(status.CreatedByDeviceName) }</span>
-			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(status.OccurredAt, time.Now()) }</span>
+			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(ctx, status.OccurredAt, time.Now()) }</span>
 		</div>
 		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
-			@detail("Phone", display.Value(status.DeviceBatteryPercent, "%"))
-			@detail("Reservoir", display.Value(status.PumpReservoir, " U"))
-			@detail("Pump", display.Value(status.PumpBatteryPercent, "%"))
+			@detail(i18n.T(ctx, "site.summary.device.phone"), display.Value(status.DeviceBatteryPercent, "%"))
+			@detail(i18n.T(ctx, "site.summary.device.reservoir"), display.Value(status.PumpReservoir, " U"))
+			@detail(i18n.T(ctx, "site.summary.device.pump"), display.Value(status.PumpBatteryPercent, "%"))
 			@detail("IOB", display.Value(status.LoopIob, " U"))
 			@detail("COB", display.Value(status.LoopCob, " g"))
 		</dl>
@@ -295,12 +301,12 @@ templ treatmentsTable(list []treatment) {
 	@table.Table(table.Props{ID: "site--summary--treatments"}) {
 		@table.Body() {
 			if len(list) == 0 {
-				<tr><td class="p-4 text-sm text-gray-500">No temp targets or temp basals in this time.</td></tr>
+				<tr><td class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "site.summary.treatments.none") }</td></tr>
 			}
 			for _, t := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
+						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(ctx, t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
 						@nav.Link("", t.Path, "font-medium text-primary underline") {
@@ -322,24 +328,24 @@ templ insulinCarbsTable(list []intake) {
 		@table.Header() {
 			@table.Row() {
 				@table.Head() {
-					When
+					{ i18n.T(ctx, "site.summary.intake.when") }
 				}
 				@table.Head(table.HeadProps{Class: "text-right"}) {
-					Insulin
+					{ i18n.T(ctx, "site.summary.intake.insulin") }
 				}
 				@table.Head(table.HeadProps{Class: "text-right"}) {
-					Carbs
+					{ i18n.T(ctx, "site.summary.intake.carbs") }
 				}
 			}
 		}
 		@table.Body() {
 			if len(list) == 0 {
-				<tr><td colspan="3" class="p-4 text-sm text-gray-500">No insulin or carbs in this time.</td></tr>
+				<tr><td colspan="3" class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "site.summary.intake.none") }</td></tr>
 			}
 			for _, i := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(i.At, time.Now()) }</span>
+						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(ctx, i.At, time.Now()) }</span>
 					}
 					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
 						if i.SMB {

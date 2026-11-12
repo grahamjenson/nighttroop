@@ -21,38 +21,43 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
-// view shows each row's site, and links its request and job to the rows with them
-var view = controlView(true)
-
-// controlView shows rows on control, with the site of each when withSite, as one site's own page does not need
-func controlView(withSite bool) logview.View {
+// controlView shows rows on control, with the site of each when withSite, as one site's own page does not need, and
+// links each row's request and job to the rows with them
+func controlView(ctx context.Context, withSite bool) logview.View {
 	v := logview.View{Prefix: "control", Links: true, Date: func(_ context.Context, ms int64) string { return display.DateTime(&ms) }}
 	if withSite {
-		v.About = "Site"
+		v.About = i18n.T(ctx, "control.logs.site")
 	}
 	return v
 }
 
 // orServer is the row's site, or that it is the server's own
-func orServer(siteID *string) string {
+func orServer(ctx context.Context, siteID *string) string {
 	if siteID == nil {
-		return "server"
+		return i18n.T(ctx, "control.logs.server")
 	}
 	return *siteID
 }
 
-func eventRow(e *controlmodels.Event) logview.Row {
-	return logview.Row{ID: e.ID, Name: e.Name, About: orServer(e.SiteID), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+func eventRow(ctx context.Context) func(*controlmodels.Event) logview.Row {
+	return func(e *controlmodels.Event) logview.Row {
+		return logview.Row{ID: e.ID, Name: e.Name, About: orServer(ctx, e.SiteID), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+	}
 }
 
-func errorRow(e *controlmodels.Error) logview.Row {
-	return logview.Row{ID: e.ID, Message: e.Message, About: orServer(e.SiteID), At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+func errorRow(ctx context.Context) func(*controlmodels.Error) logview.Row {
+	return func(e *controlmodels.Error) logview.Row {
+		return logview.Row{ID: e.ID, Message: e.Message, About: orServer(ctx, e.SiteID), At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+	}
 }
 
-func logRow(l *controlmodels.Log) logview.Row {
-	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, About: orServer(l.SiteID), At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+func logRow(ctx context.Context) func(*controlmodels.Log) logview.Row {
+	return func(l *controlmodels.Log) logview.Row {
+		return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, About: orServer(ctx, l.SiteID), At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+	}
 }
 
 // download is, for an admin, a download of the whole logs DB
@@ -86,7 +91,12 @@ func download() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "Download Logs DB")
+				var templ_7745c5c3_Var3 string
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.logs.download"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_logs_templ/logs.templ`, Line: 65, Col: 41}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -96,7 +106,7 @@ func download() templ.Component {
 				ID:         "control--logs-db--download",
 				Href:       "/logs-db",
 				Variant:    button.VariantOutline,
-				Attributes: templ.Attributes{"download": "", "title": "A copy of the logs DB, with every site's events, errors and logs, as one SQLite file"},
+				Attributes: templ.Attributes{"download": "", "title": i18n.T(ctx, "control.logs.download_title")},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -107,8 +117,12 @@ func download() templ.Component {
 }
 
 // ids are the site, request and job a page's rows can be narrowed to
-func ids(q *apiquery.Query) []filter.ID {
-	return []filter.ID{{Name: "site_id", Label: "Site ID", Value: q.SiteID}, {Name: "request_id", Label: "Request ID", Value: q.RequestID}, {Name: "job_id", Label: "Job ID", Value: q.JobID}}
+func ids(ctx context.Context, q *apiquery.Query) []filter.ID {
+	return []filter.ID{
+		{Name: "site_id", Label: i18n.T(ctx, "control.logs.site_id"), Value: q.SiteID},
+		{Name: "request_id", Label: i18n.T(ctx, "control.logs.request_id"), Value: q.RequestID},
+		{Name: "job_id", Label: i18n.T(ctx, "control.logs.job_id"), Value: q.JobID},
+	}
 }
 
 // EventsTable shows one page of events, the newest first
@@ -133,7 +147,7 @@ func EventsTable(events []*controlmodels.Event, q *apiquery.Query) templ.Compone
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var5 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -145,7 +159,7 @@ func EventsTable(events []*controlmodels.Event, q *apiquery.Query) templ.Compone
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(q)}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: i18n.T(ctx, "control.logs.all_events"), Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -155,7 +169,7 @@ func EventsTable(events []*controlmodels.Event, q *apiquery.Query) templ.Compone
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "events_table", Title: "Events", Description: "What happened to each site and the server, newest first. Click an event to see its details.", Pager: "control--events", Path: filter.PagePath("/events", q.Type, q.Search, ids(q)...), Count: len(events), Skip: q.Skip, Limit: q.Limit, Action: download()}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "events_table", Title: i18n.T(ctx, "control.logs.events_title"), Description: i18n.T(ctx, "control.logs.events_intro"), Pager: "control--events", Path: filter.PagePath("/events", q.Type, q.Search, ids(ctx, q)...), Count: len(events), Skip: q.Skip, Limit: q.Limit, Action: download()}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -182,7 +196,7 @@ func EventsList(id string, events []*controlmodels.Event, withSite bool) templ.C
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = logview.EventsTable(controlView(withSite), id, logview.Rows(events, eventRow)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.EventsTable(controlView(ctx, withSite), id, logview.Rows(events, eventRow(ctx))).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -207,7 +221,7 @@ func EventModal(event *controlmodels.Event) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = logview.EventModal(view, eventRow(event)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.EventModal(controlView(ctx, true), eventRow(ctx)(event)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -233,7 +247,7 @@ func ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) templ.Compone
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var9 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -245,7 +259,7 @@ func ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) templ.Compone
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(q)}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: i18n.T(ctx, "control.logs.all_errors"), Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -255,7 +269,7 @@ func ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) templ.Compone
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "errors_table", Title: "Errors", Description: "What failed for each site and the server, newest first. Click an error to see its details.", Pager: "control--errors", Path: filter.PagePath("/errors", q.Type, q.Search, ids(q)...), Count: len(errors), Skip: q.Skip, Limit: q.Limit, Action: download()}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "errors_table", Title: i18n.T(ctx, "control.logs.errors_title"), Description: i18n.T(ctx, "control.logs.errors_intro"), Pager: "control--errors", Path: filter.PagePath("/errors", q.Type, q.Search, ids(ctx, q)...), Count: len(errors), Skip: q.Skip, Limit: q.Limit, Action: download()}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -282,7 +296,7 @@ func ErrorsList(id string, errors []*controlmodels.Error, withSite bool) templ.C
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = logview.ErrorsTable(controlView(withSite), id, logview.Rows(errors, errorRow)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.ErrorsTable(controlView(ctx, withSite), id, logview.Rows(errors, errorRow(ctx))).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -307,7 +321,7 @@ func ErrorModal(e *controlmodels.Error) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = logview.ErrorModal(view, errorRow(e)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.ErrorModal(controlView(ctx, true), errorRow(ctx)(e)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -333,7 +347,7 @@ func LogsTable(logs []*controlmodels.Log, q *apiquery.Query) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var12 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var13 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -345,17 +359,17 @@ func LogsTable(logs []*controlmodels.Log, q *apiquery.Query) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: q.Search, IDs: ids(q)}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: q.Search, IDs: ids(ctx, q)}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = logview.LogsTable(view, "controlLogsTable", logview.Rows(logs, logRow)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = logview.LogsTable(controlView(ctx, true), "controlLogsTable", logview.Rows(logs, logRow(ctx))).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "logs_table", Title: "Logs", Description: "Messages logged for each site and the server, newest first. Click a log to see its details.", Pager: "control--logs", Path: filter.PagePath("/logs", nil, q.Search, ids(q)...), Count: len(logs), Skip: q.Skip, Limit: q.Limit, Action: download()}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.Page(logview.PageProps{ID: "logs_table", Title: i18n.T(ctx, "control.logs.logs_title"), Description: i18n.T(ctx, "control.logs.logs_intro"), Pager: "control--logs", Path: filter.PagePath("/logs", nil, q.Search, ids(ctx, q)...), Count: len(logs), Skip: q.Skip, Limit: q.Limit, Action: download()}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -380,7 +394,7 @@ func LogModal(log *controlmodels.Log) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = logview.LogModal(view, logRow(log)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.LogModal(controlView(ctx, true), logRow(ctx)(log)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

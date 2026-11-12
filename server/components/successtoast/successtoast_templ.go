@@ -7,7 +7,10 @@ package successtoast
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "nighttroop.t1d.nz/server/components/ui/toast"
+import (
+	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 // Toast says an action worked, as every page says it: at the top, for five seconds, with a bar of the time left
 func Toast(description string) templ.Component {
@@ -27,7 +30,7 @@ func Toast(description string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = Titled("Success", description, 5000).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Titled(i18n.T(ctx, "common.success_toast.title"), description, 5000).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -88,7 +91,7 @@ func OOB(description string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = TitledOOB("Success", description, 5000).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = TitledOOB(i18n.T(ctx, "common.success_toast.title"), description, 5000).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

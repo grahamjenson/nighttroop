@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Report is the AGP report of a day, week, fortnight or month, as the international consensus lays one out: its time
@@ -28,42 +29,41 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 templ agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod, links bool) {
 	{{ low, high := site_data_templ.RangeBounds(ctx) }}
 		<div class="grid gap-4 lg:grid-cols-2 print:grid-cols-2">
-			@card.Card(card.Props{ID: "site--agp--ranges", Title: "Time in ranges", Note: "Goals for type 1 and type 2 diabetes"}) {
+			@card.Card(card.Props{ID: "site--agp--ranges", Title: i18n.T(ctx, "site.reports.agp.time_in_ranges"), Note: i18n.T(ctx, "site.reports.agp.goals_for")}) {
 				@rangesWithGoals(p, previous)
 				<ul class="mt-3 space-y-0.5 text-xs text-gray-600">
-					<li id="site--agp--target"><span class="font-semibold">{ "Target range: " }</span>{ display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }</li>
-					<li><span class="font-semibold">{ "Very high: " }</span>above { display.Glucose(p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units) } { display.Units(p.Units) }</li>
-					<li><span class="font-semibold">{ "Very low: " }</span>below { display.Glucose(p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units) } { display.Units(p.Units) }</li>
+					<li id="site--agp--target"><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.target_range") + " " }</span>{ display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }</li>
+					<li><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.very_high") + " " }</span>{ i18n.T(ctx, "site.reports.agp.above", i18n.Data{"Glucose": display.Glucose(p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units), "Units": display.Units(p.Units)}) }</li>
+					<li><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.very_low") + " " }</span>{ i18n.T(ctx, "site.reports.agp.below", i18n.Data{"Glucose": display.Glucose(p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units), "Units": display.Units(p.Units)}) }</li>
 				</ul>
-				<p class="mt-2 text-xs text-gray-500">Each 5% more time in range is clinically beneficial. Each 1% is about 15 minutes a day.</p>
+				<p class="mt-2 text-xs text-gray-500">{ i18n.T(ctx, "site.reports.agp.five_percent") }</p>
 			}
-			@card.Card(card.Props{ID: "site--agp--metrics", Title: "Glucose metrics"}) {
+			@card.Card(card.Props{ID: "site--agp--metrics", Title: i18n.T(ctx, "site.reports.agp.glucose_metrics")}) {
 				<dl class="divide-y divide-gray-200">
-					@metric("site--reports--mean", "Average glucose", "Goal: "+goalGlucose(p.Units), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units)) {
-						@statChange("site--reports--mean", p, glucoseChange(p, previous))
+					@metric("site--reports--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": goalGlucose(p.Units)}), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units)) {
+						@statChange("site--reports--mean", p, glucoseChange(ctx, p, previous))
 					}
-					@metric("site--reports--gmi", "Glucose management indicator (GMI)", "Goal: <7%", oneDecimal(p.GMI), "%") {
-						@statChange("site--reports--gmi", p, change(p.GMI, previousOf(previous).GMI, 1, "%"))
+					@metric("site--reports--gmi", i18n.T(ctx, "site.reports.agp.gmi"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": "<7%"}), oneDecimal(p.GMI), "%") {
+						@statChange("site--reports--gmi", p, change(ctx, p.GMI, previousOf(previous).GMI, 1, "%"))
 					}
-					@metric("site--reports--cv", "Coefficient of variation", "Goal: ≤36%", oneDecimal(p.CV), "%") {
-						@statChange("site--reports--cv", p, change(p.CV, previousOf(previous).CV, 1, "%"))
+					@metric("site--reports--cv", i18n.T(ctx, "site.reports.metrics.coefficient_of_variation"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": "≤36%"}), oneDecimal(p.CV), "%") {
+						@statChange("site--reports--cv", p, change(ctx, p.CV, previousOf(previous).CV, 1, "%"))
 					}
-					@metric("site--reports--cgm-active", "Time CGM active", "Goal: >70%", display.Percent(p.CGMActive), "") {
-						@statChange("site--reports--cgm-active", p, change(p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
+					@metric("site--reports--cgm-active", i18n.T(ctx, "site.reports.metrics.time_cgm_active"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": ">70%"}), display.Percent(p.CGMActive), "") {
+						@statChange("site--reports--cgm-active", p, change(ctx, p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
 					}
-					@metric("site--reports--days", "Days with data", "", fmt.Sprint(p.Days), "")
-					@metric("site--reports--daily-dose", "Daily dose", "", display.PerDay(p.Days, p.TotalDailyDose, ""), "U")
-					@metric("site--reports--daily-carbs", "Daily carbs", "", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g")
+					@metric("site--reports--days", i18n.T(ctx, "site.reports.metrics.days_with_data"), "", fmt.Sprint(p.Days), "")
+					@metric("site--reports--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), "", display.PerDay(p.Days, p.TotalDailyDose, ""), "U")
+					@metric("site--reports--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), "", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g")
 				</dl>
 			}
 		</div>
-		@card.Card(card.Props{Title: "Ambulatory glucose profile"}) {
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.reports.agp.profile")}) {
 			<p class="mb-2 text-sm text-gray-600">
-				The median (50%) and other percentiles of
 				if p.Period == "day" {
-					the 7 days to this one, as if they were one day, with this day's own glucose over them.
+					{ i18n.T(ctx, "site.reports.agp.profile_of_day") }
 				} else {
-					these { fmt.Sprint(periodDays(p, time.Now(), reportLocation(ctx))) } days' glucose, as if they were one day.
+					{ i18n.T(ctx, "site.reports.agp.profile_of_days", i18n.Data{"Days": periodDays(p, time.Now(), reportLocation(ctx))}) }
 				}
 			</p>
 			if hasGlucose(p) {
@@ -72,11 +72,11 @@ templ agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 				@noGlucose("site--reports--no-glucose", p.Period)
 			}
 		}
-		{{ note := "Each runs from midnight to midnight." }}
+		{{ note := i18n.T(ctx, "site.reports.agp.each_runs") }}
 		if links {
-			{{ note = "Each runs from midnight to midnight, and opens that day's report." }}
+			{{ note = i18n.T(ctx, "site.reports.agp.each_runs_and_opens") }}
 		}
-		@card.Card(card.Props{ID: "site--agp--daily", Title: "Daily glucose profiles", Note: note}) {
+		@card.Card(card.Props{ID: "site--agp--daily", Title: i18n.T(ctx, "site.reports.agp.daily_profiles"), Note: note}) {
 			@dailyProfiles(p, daily, low, high, links)
 		}
 }
@@ -110,9 +110,9 @@ templ rangesWithGoals(p, previous *sitemodels.SiteSummaryPeriod) {
 			@rangeGroup("site--reports--above", all[0], all[1], "<5%", sum(p.TimeHigh, p.TimeVeryHigh), "<25%")
 			<div id={ "site--reports--range-" + all[2].ID }>
 				<span class="text-2xl font-semibold tabular-nums">{ display.Percent(all[2].Percent) }</span>
-				<span class="text-lg font-semibold">{ all[2].Label }</span>
-				<span class="block text-xs text-gray-500">Goal: >70%</span>
-				@statChange("site--reports--in-range", p, change(p.TimeInRange, previousOf(previous).TimeInRange, 0, "%"))
+				<span class="text-lg font-semibold">{ i18n.T(ctx, all[2].Label) }</span>
+				<span class="block text-xs text-gray-500">{ i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": ">70%"}) }</span>
+				@statChange("site--reports--in-range", p, change(ctx, p.TimeInRange, previousOf(previous).TimeInRange, 0, "%"))
 			</div>
 			@rangeGroup("site--reports--below", all[3], all[4], "<1%", sum(p.TimeLow, p.TimeVeryLow), "<4%")
 		</div>
@@ -125,9 +125,9 @@ templ rangeGroup(id string, top, bottom band, outerGoal string, total *float64, 
 		<ul class="flex-1 space-y-1">
 			for _, b := range []band{top, bottom} {
 				<li id={ "site--reports--range-" + b.ID }>
-					<span class="tabular-nums">{ display.Percent(b.Percent) }</span> { b.Label }
+					<span class="tabular-nums">{ display.Percent(b.Percent) }</span> { i18n.T(ctx, b.Label) }
 					if (b.ID == "very-high" || b.ID == "very-low") {
-						<span class="block text-xs text-gray-500">Goal: { outerGoal }</span>
+						<span class="block text-xs text-gray-500">{ i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": outerGoal}) }</span>
 					}
 				</li>
 			}
@@ -135,7 +135,7 @@ templ rangeGroup(id string, top, bottom band, outerGoal string, total *float64, 
 		<div class="w-3 shrink-0 rounded-r-md border-y border-r border-gray-400"></div>
 		<div class="flex w-20 shrink-0 flex-col justify-center">
 			<span id={ id } class="text-xl font-semibold tabular-nums">{ display.Percent(total) }</span>
-			<span class="text-xs text-gray-500">Goal: { goal }</span>
+			<span class="text-xs text-gray-500">{ i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": goal}) }</span>
 		</div>
 	</div>
 }
@@ -148,7 +148,7 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 	{{ g := newAGPGraph(p) }}
 	{{ lastSlot, last := lastPercentiles(p.AGP) }}
 	<div class="relative overflow-x-auto">
-		<svg id="site--reports--agp" class="h-auto w-full min-w-[40rem] text-[11px] print:max-h-72" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label="Ambulatory glucose profile: the left and right arrow keys move along its times" aria-describedby="site--reports--agp--tooltip" tabindex="0">
+		<svg id="site--reports--agp" class="h-auto w-full min-w-[40rem] text-[11px] print:max-h-72" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label={ i18n.T(ctx, "site.reports.agp.graph") } aria-describedby="site--reports--agp--tooltip" tabindex="0">
 			<defs>
 				for _, r := range regions {
 					<clipPath id={ "site--reports--agp--" + r.Suffix }>
@@ -200,7 +200,7 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 		</div>
 	</div>
 	@legend(agpLegend(p))
-	<p class="mt-1 text-xs text-gray-500 print:hidden">Point at or tap a time, or move along them with the arrow keys, to see each percentile's glucose then.</p>
+	<p class="mt-1 text-xs text-gray-500 print:hidden">{ i18n.T(ctx, "site.reports.agp.point_at") }</p>
 	@templ.JSONScript("site--reports--agp--points", agpPoints(ctx, g, p.AGP))
 	<script>
 		(() => {

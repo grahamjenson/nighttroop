@@ -13,49 +13,49 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // MyAccount is the signed in identity's, or control admin's, own page at path: who it is, and up to most passkeys it
 // adds, on its own address, and removes. A site identity's, with guide, also opens the guide to setting the site up.
 templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string, guide bool) {
 	<div id="site--account" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("My Account") {
-			You are signed in as { name }, with the { role } role. A passkey signs you in with your fingerprint, face or device PIN, with
-			no password or code. It is named { name }, and nothing about you is asked for or kept.
+		@heading.Page(i18n.T(ctx, "site.settings.account.title")) {
+			{ i18n.T(ctx, "site.settings.account.about", i18n.Data{"Name": name, "Role": role}) }
 		}
 		if guide {
-			@card.Card(card.Props{ID: "site--account--getting-started", Title: "Getting Started",
-				Note: "The guide to setting up the site: getting glucose in, adding people and devices, settings and alarms.",
-				Action: labelled("Open the guide", button.Props{ID: "site--getting-started-button", Variant: button.VariantOutline, Size: button.SizeSm,
+			@card.Card(card.Props{ID: "site--account--getting-started", Title: i18n.T(ctx, "site.settings.account.getting_started"),
+				Note:   i18n.T(ctx, "site.settings.account.getting_started_note"),
+				Action: labelled(i18n.T(ctx, "site.settings.account.open_guide"), button.Props{ID: "site--getting-started-button", Variant: button.VariantOutline, Size: button.SizeSm,
 					Attributes: nav.Attributes("/getting-started")})})
 		}
-		@card.Card(card.Props{Title: "Passkeys", Action: labelled("Add a passkey", button.Props{ID: "site--account--add-passkey", Type: button.TypeButton, Size: button.SizeSm,
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.account.passkeys"), Action: labelled(i18n.T(ctx, "site.settings.account.add_passkey"), button.Props{ID: "site--account--add-passkey", Type: button.TypeButton, Size: button.SizeSm,
 			Disabled: len(passkeys) >= most, Attributes: templ.Attributes{"data-passkey-begin": path + "/passkeys/begin", "data-passkey-finish": path + "/passkeys/finish",
 				"data-passkey-error": "site--account--passkey-error"}})}) {
 			<p id="site--account--passkey-error" class="text-sm text-red-600"></p>
 			@table.Table(table.Props{ID: "site--account--passkeys"}) {
 				@table.Body() {
 					if len(passkeys) == 0 {
-						<tr><td class="p-4 text-sm text-gray-500">No passkeys yet.</td></tr>
+						<tr><td class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "site.settings.account.no_passkeys") }</td></tr>
 					}
 					for _, passkey := range passkeys {
 						@table.Row() {
 							@table.Cell() {
-								Added <span title={ site_data_templ.FormatDate(ctx, passkey.CreatedAt) }>{ display.RoundedAgo(passkey.CreatedAt, time.Now()) }</span>
+								{ i18n.T(ctx, "site.settings.account.added") } <span title={ site_data_templ.FormatDate(ctx, passkey.CreatedAt) }>{ display.RoundedAgo(ctx, passkey.CreatedAt, time.Now()) }</span>
 							}
 							@table.Cell(table.CellProps{Class: "text-gray-500"}) {
 								if passkey.LastUsedAt != nil {
-									Last used { display.RoundedAgo(*passkey.LastUsedAt, time.Now()) }
+									{ i18n.T(ctx, "site.settings.account.last_used", i18n.Data{"Ago": display.RoundedAgo(ctx, *passkey.LastUsedAt, time.Now())}) }
 								} else {
-									Not used yet
+									{ i18n.T(ctx, "site.settings.account.not_used") }
 								}
 							}
 							@table.Cell(table.CellProps{Class: "text-right"}) {
 								@button.Button(button.Props{ID: fmt.Sprintf("site--account--remove-passkey-%d", passkey.ID), Variant: button.VariantOutline, Size: button.SizeSm,
 									Attributes: templ.Attributes{"hx-delete": fmt.Sprintf("%s/passkeys/%d", path, passkey.ID), "hx-target": "#site--account",
-										"hx-swap": "outerHTML", "hx-confirm": "Remove this passkey? It will no longer sign you in.",
-										"data-confirm-delete": "Remove"}}) {
-									Remove
+										"hx-swap": "outerHTML", "hx-confirm": i18n.T(ctx, "site.settings.account.remove_confirm"),
+										"data-confirm-delete": i18n.T(ctx, "site.settings.account.remove")}}) {
+									{ i18n.T(ctx, "site.settings.account.remove") }
 								}
 							}
 						}

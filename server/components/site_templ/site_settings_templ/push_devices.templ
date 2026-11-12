@@ -1,6 +1,7 @@
 package site_settings_templ
 
 import (
+	"context"
 	"strconv"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -8,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // PushDevices is the apps on devices that pushes are sent to, with whose they are and buttons to test and delete each:
@@ -15,14 +17,15 @@ import (
 templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
 	@listpage.Page(listpage.Props{
 		ID:          "push_devices_table",
-		Title:       "Push Devices",
-		Description: pushDevicesDescription(admin),
+		Title:       i18n.T(ctx, "site.settings.push_devices.title"),
+		Description: pushDevicesDescription(ctx, admin),
 		Table: listpage.TableProps{
 			ID:      "pushDevicesTable",
 			EmptyID: "site--push-device--empty",
-			Empty:   "No apps have registered for pushes yet.",
+			Empty:   i18n.T(ctx, "site.settings.push_devices.empty"),
 			Columns: []table.Column{
-				{Label: "Identity"}, {Label: "App"}, {Label: "Bundle ID"}, {Label: "Registered"}, {Label: "Last Push"},
+				{Label: i18n.T(ctx, "site.settings.push_devices.identity")}, {Label: i18n.T(ctx, "site.settings.push_devices.app")}, {Label: i18n.T(ctx, "site.settings.push_devices.bundle_id")}, {Label: i18n.T(ctx, "site.settings.push_devices.registered")},
+				{Label: i18n.T(ctx, "site.settings.push_devices.last_push")},
 				{Actions: true},
 			},
 		},
@@ -35,13 +38,11 @@ templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
 
 // pushDevicesDescription says whose push devices are shown: the site's for an admin, and the identity's own for anyone
 // else
-func pushDevicesDescription(admin bool) string {
+func pushDevicesDescription(ctx context.Context, admin bool) string {
 	if admin {
-		return "The apps on your site's phones that pushes are sent to, for every user and device. Test one to send it a " +
-			"notification and see it arrives, or delete one to stop pushes to it."
+		return i18n.T(ctx, "site.settings.push_devices.about_admin")
 	}
-	return "The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives, or " +
-		"delete one to stop pushes to it."
+	return i18n.T(ctx, "site.settings.push_devices.about")
 }
 
 // PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it
@@ -58,7 +59,7 @@ templ PushDeviceRow(registration *sitemodels.PushRegistration) {
 		@table.Cell() {
 			{ registration.BundleID }
 			if !registration.Production {
-				<span class="block text-xs text-gray-500">Development build</span>
+				<span class="block text-xs text-gray-500">{ i18n.T(ctx, "site.settings.push_devices.development_build") }</span>
 			}
 		}
 		@table.Cell() {
@@ -79,10 +80,10 @@ templ PushDeviceRow(registration *sitemodels.PushRegistration) {
 						"hx-status:5xx": "target:#toaster swap:beforeend",
 					},
 				}) {
-					Test
+					{ i18n.T(ctx, "site.settings.push_devices.test") }
 				}
 				@table.DeleteButton(id+"--delete", "/settings/push-registrations/"+strconv.FormatInt(registration.ID, 10),
-					"Delete this push device? Pushes to it will stop until its app registers again.")
+					i18n.T(ctx, "site.settings.push_devices.delete_confirm"))
 			</div>
 		}
 	}
@@ -101,9 +102,9 @@ templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
 // PushDeviceTested is the registration's status after a test push reached its push service, and a toast saying so
 templ PushDeviceTested(registration *sitemodels.PushRegistration) {
 	@pushDeviceStatus(registration)
-	@successtoast.OOB("Test push sent to " + string(registration.App))
+	@successtoast.OOB(i18n.T(ctx, "site.settings.push_devices.test_sent", i18n.Data{"App": string(registration.App)}))
 }
 
 templ PushDeviceDeleted() {
-	@successtoast.Toast("Push Device Deleted")
+	@successtoast.Toast(i18n.T(ctx, "site.settings.push_devices.deleted"))
 }

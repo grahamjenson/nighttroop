@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // isNew is a summary of a site with no glucose for over a month, or ever, so the summary would be empty and guides
@@ -38,7 +39,7 @@ func nsURL(ctx context.Context) string {
 
 // GettingStartedPage is the guide to setting up the site on a page of its own, from My Account
 templ GettingStartedPage() {
-	@heading.Title("Getting Started")
+	@heading.Title(i18n.T(ctx, "site.summary.getting_started.title"))
 	<div class="w-full py-4">
 		@GettingStarted()
 	</div>
@@ -49,43 +50,41 @@ templ GettingStartedPage() {
 templ GettingStarted() {
 	<div id="site--getting-started" class="space-y-6">
 		<section class="rounded-xl bg-brand-night p-6 text-white shadow-sm">
-			<h2 class="text-2xl font-bold">Welcome to your Nighttroop site</h2>
+			<h2 class="text-2xl font-bold">{ i18n.T(ctx, "site.summary.getting_started.welcome") }</h2>
 			<p class="mt-2 max-w-2xl text-white/80">
-				Here is how to set it up. Once readings arrive the summary shows them here, and this guide is always in
-				the menu under your name, at the top right.
+				{ i18n.T(ctx, "site.summary.getting_started.intro") }
 			</p>
 		</section>
 		<ol class="grid gap-4 md:grid-cols-2">
 			if isAdmin(ctx) {
-				@step("site--getting-started--data", "1", icon.Droplet, "Get your glucose in") {
+				@step("site--getting-started--data", "1", icon.Droplet, i18n.T(ctx, "site.summary.getting_started.data")) {
 					<p>
-						<strong>From your phone:</strong> in AAPS, Trio or xDrip+, set the Nightscout URL to
+						<strong>{ i18n.T(ctx, "site.summary.getting_started.from_phone") }</strong> { i18n.T(ctx, "site.summary.getting_started.set_url") }
 						<code id="site--getting-started--ns-url" class="my-1 block break-all rounded bg-gray-100 px-2 py-1 text-gray-900">{ nsURL(ctx) }</code>
-						with a device's token from Users &amp; Devices.
+						{ i18n.T(ctx, "site.summary.getting_started.with_token") }
 					</p>
-					<p class="mt-2"><strong>From the cloud:</strong> pull from Dexcom Share, LibreLinkUp or another Nightscout site.</p>
-					@stepLink("site--getting-started--connectors-link", "/settings/connectors", "Set up a connector")
+					<p class="mt-2"><strong>{ i18n.T(ctx, "site.summary.getting_started.from_cloud") }</strong> { i18n.T(ctx, "site.summary.getting_started.pull_from") }</p>
+					@stepLink("site--getting-started--connectors-link", "/settings/connectors", i18n.T(ctx, "site.summary.getting_started.connectors_link"))
 				}
-				@step("site--getting-started--identities", "2", icon.Users, "Add people and devices") {
-					<p>Give family and friends their own login, and each phone or watch its own token, so you can see and take away each one's access.</p>
-					@stepLink("site--getting-started--identities-link", "/settings/identities", "Open Users & Devices")
+				@step("site--getting-started--identities", "2", icon.Users, i18n.T(ctx, "site.summary.getting_started.identities")) {
+					<p>{ i18n.T(ctx, "site.summary.getting_started.identities_text") }</p>
+					@stepLink("site--getting-started--identities-link", "/settings/identities", i18n.T(ctx, "site.summary.getting_started.identities_link"))
 				}
 			}
-			@step("site--getting-started--settings", "", icon.SlidersHorizontal, "Make it yours") {
-				<p>Choose your units, time zone, language, and date and time formats.</p>
-				@stepLink("site--getting-started--settings-link", "/settings", "Open Settings")
+			@step("site--getting-started--settings", "", icon.SlidersHorizontal, i18n.T(ctx, "site.summary.getting_started.settings")) {
+				<p>{ i18n.T(ctx, "site.summary.getting_started.settings_text") }</p>
+				@stepLink("site--getting-started--settings-link", "/settings", i18n.T(ctx, "site.summary.getting_started.settings_link"))
 			}
-			@step("site--getting-started--alarms", "", icon.BellRing, "Set up alarms") {
-				<p>Every alarm starts off. Turn on the ones you want, like lows, highs and no data, and set when each goes off.</p>
-				@stepLink("site--getting-started--alarms-link", "/settings/alarms", "Open Alarms")
+			@step("site--getting-started--alarms", "", icon.BellRing, i18n.T(ctx, "site.summary.getting_started.alarms")) {
+				<p>{ i18n.T(ctx, "site.summary.getting_started.alarms_text") }</p>
+				@stepLink("site--getting-started--alarms-link", "/settings/alarms", i18n.T(ctx, "site.summary.getting_started.alarms_link"))
 			}
 		</ol>
 		<p class="text-sm text-gray-600">
 			if !isAdmin(ctx) {
-				Your site's admin sets up where its data comes from and who can use it.
+				{ i18n.T(ctx, "site.summary.getting_started.not_admin") }
 			}
-			Your readings, treatments and presets are under Data at the top of every page, your reports under Reports, and
-			the site's settings, alarms, and logs and events in the menu under your name. Search there finds any page by name.
+			{ i18n.T(ctx, "site.summary.getting_started.where") }
 		</p>
 	</div>
 }
