@@ -67,8 +67,8 @@ func LoopSettingsFor(identity *controldb.SiteIdentity, settings json.RawMessage)
 	return hidden
 }
 
-// loopGlucoseSettings are the settings Loop and Trio send glucose in, Loop's in its profile's units and Trio's in
-// mg/dL; AAPS's configuration has none
+// loopGlucoseSettings are the settings Loop and Trio send glucose in, Loop's in its profile's units, kept in mg/dL,
+// and Trio's in mg/dL; AAPS's configuration has none
 var loopGlucoseSettings = map[string]bool{"minimumBGGuard": true, "preMealTargetRange": true, "targetRange": true, "target": true}
 
 // LoopSettingsChanges are the settings that differ between two of an app's sets, by field, with glucose in units
@@ -150,7 +150,8 @@ func loopSettingText(glucose bool, value any, units *consts.Units) string {
 			texts = nil
 			break
 		}
-		// Loop sends glucose in its profile's units, which are not kept with it, so they are guessed from its size
+		// Loop's glucose is kept in mg/dL, but sets kept before were in its profile's units, so it is guessed from
+		// its size
 		var sentIn *consts.Units
 		texts = append(texts, display.Glucose(units.FromMGDL(sentIn.ToMGDL(mgdl)), units))
 	}

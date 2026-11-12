@@ -246,7 +246,7 @@ func DBModelToProfile(source *sitedb.ProfilePreset, context *httputils.SiteConte
 			typesTimezone := types.Timezone(*(*source).Timezone)
 			nightscoutmodelsProfile.Timezone = &typesTimezone
 		}
-		nightscoutmodelsProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
+		nightscoutmodelsProfile.Sens = ProfilePresetSensitivities(source, context)
 		nightscoutmodelsProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)
 		nightscoutmodelsProfile.Basal = JSONToScheduleValueSlice((*source).BasalRatesJson)
 		nightscoutmodelsProfile.TargetLow = JSONToScheduleValueSliceWithUnitConversionFromMGDL((*source).TargetsLowJson, context)

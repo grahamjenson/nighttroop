@@ -39,9 +39,11 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 }
 
 func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
-	// Loop's and Trio's settings are kept once in loop_settings, and each profile refers to them
+	// Loop's and Trio's settings are kept once in loop_settings, and each profile refers to them. Loop's glucose is
+	// kept in mg/dL, as it sends it in its profile's units; Trio's is in mg/dL.
 	sent := nightscoutmodels.PartialProfileStoreToCreate(nsModel, cc)
-	loopID, err := recordLoopSettings(q, ctx, loopApp, fromProfile, nsModel.LoopSettings, sent.OccurredAt, sent.CreatedByDeviceName)
+	loopSettings := nsModel.LoopSettings.WithGlucose(nsModel.Units.ToMGDL)
+	loopID, err := recordLoopSettings(q, ctx, loopApp, fromProfile, loopSettings, sent.OccurredAt, sent.CreatedByDeviceName)
 	if err != nil {
 		return nil, err
 	}
@@ -144,9 +146,12 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	profileStore.Store = make(map[types.ShortString]nightscoutmodels.Profile)
 	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
 	profileStore.Units = settingsUnits
-	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted
+	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted. Loop's glucose
+	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent.
 	if loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID); loop != nil {
-		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop)))
+		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop))).WithGlucose(func(glucose float64) float64 {
+			return settingsUnits.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
+		})
 	}
 	if remote := loopSettingsJSON(context.Background(), siteContext, defaultProfile.RemoteSettingsID); remote != nil {
 		profileStore.RemoteSettings = nightscoutmodels.JSONToRemoteSettings(ptr(string(remote)))

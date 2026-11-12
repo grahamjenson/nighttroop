@@ -351,6 +351,42 @@ func (p *Profile) ConvertToMGDL() {
 	p.TargetHigh = ScheduleValuesToJSONWithUnitConversionToMGDL(p.TargetHigh, p.Units)
 }
 
+// WithGlucose is a copy of Loop's settings with each glucose in them, its suspend threshold, pre-meal range and
+// override presets' ranges, converted, as Loop sends them in its profile's units
+func (l *LoopSettings) WithGlucose(convert func(float64) float64) *LoopSettings {
+	if l == nil {
+		return nil
+	}
+	converted := *l
+	glucose := func(values []*types.FlexibleFloat64) []*types.FlexibleFloat64 {
+		if values == nil {
+			return nil
+		}
+		out := make([]*types.FlexibleFloat64, len(values))
+		for i, v := range values {
+			if v != nil {
+				out[i] = new(types.FlexibleFloat64(convert(v.Float64())))
+			}
+		}
+		return out
+	}
+	if l.MinimumBGGuard != nil {
+		converted.MinimumBGGuard = new(types.FlexibleFloat64(convert(l.MinimumBGGuard.Float64())))
+	}
+	converted.PreMealTargetRange = glucose(l.PreMealTargetRange)
+	if l.OverridePresets != nil {
+		converted.OverridePresets = make([]*OverridePreset, len(l.OverridePresets))
+		for i, preset := range l.OverridePresets {
+			if preset != nil {
+				p := *preset
+				p.TargetRange = glucose(preset.TargetRange)
+				converted.OverridePresets[i] = &p
+			}
+		}
+	}
+	return &converted
+}
+
 func ScheduleValuesToJSONWithUnitConversionToMGDL(svs []*ScheduleValue, units *consts.Units) []*ScheduleValue {
 	if len(svs) == 0 {
 		return svs
