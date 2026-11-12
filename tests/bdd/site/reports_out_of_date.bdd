@@ -1,7 +1,8 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The virtual connector fills its last 30 minutes, which are today's, so yesterday's report is up to date
+// The virtual connector fills its last 30 minutes, which never reach two days ago, so that day's report is up to date;
+// yesterday's can be out of date already, in the half hour after midnight
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
@@ -9,7 +10,7 @@ CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
-GOTO /reports/overview/day-{{ date -1 }}
+GOTO /reports/overview/day-{{ date -2 }}
 ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #site--reports--out-of-date
 
