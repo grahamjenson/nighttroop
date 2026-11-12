@@ -95,7 +95,7 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Date
 	//
 	// goverter:ignore Store
-	// goverter:map . Mills | ProfilePresetMills
+	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
 	// goverter:ignore LoopSettings RemoteSettings
 	DBModelToProfileStore(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
@@ -232,14 +232,6 @@ func ProfilePresetEnteredBy(source *sitedb.ProfilePreset) *types.ShortString {
 		return (*types.ShortString)(source.EnteredBy)
 	}
 	return (*types.ShortString)(&source.CreatedByIdentityName)
-}
-
-// ProfilePresetMills are the mills the app sent, as Nightscout keeps them, else when the profile starts
-func ProfilePresetMills(source *sitedb.ProfilePreset) *types.DateInt {
-	if source.Mills != nil {
-		return (*types.DateInt)(source.Mills)
-	}
-	return (*types.DateInt)(&source.OccurredAt)
 }
 
 // ProfilePresetSensitivities are a profile's sensitivities, stored in its own units, in the settings' units

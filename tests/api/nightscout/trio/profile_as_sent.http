@@ -1,5 +1,5 @@
-// Trio's profile upload comes back as it sent it, as Nightscout stores it: its mills, and its override presets even
-// when it has none. Trio v1.0.2's body, see docs/clients/trio.md
+// Trio's profile upload comes back with its override presets as sent, even when it has none, and its mills a number,
+// as Trio's import needs. Trio v1.0.2's body, see docs/clients/trio.md
 INCLUDE steps/new_ns_site.steps
 
 NAME trio_upload_profile_no_presets
@@ -18,8 +18,7 @@ ASSERT_EQUALS "2026-11-12T07:30:00.000Z" "@0.startDate"
 ASSERT_LENGTH 0 "@0.overridePresets"
 ASSERT_EQUALS "seeddevicetoken" "@0.deviceToken"
 
-// A later upload with presets keeps them, and its mills, which Trio sends in whole seconds, as sent rather than
-// startDate's
+// A later upload with presets keeps them
 NAME trio_upload_profile_presets
 POST http://{{ site }}/api/v1/profile.json
 H api-secret: {{ sha1 token }}
@@ -31,6 +30,5 @@ NAME trio_import_profile_presets
 GET http://{{ site }}/api/v1/profile.json?count=1
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 1794472200000 "@0.mills"
 ASSERT_LENGTH 1 "@0.overridePresets"
 ASSERT_EQUALS "Sport" "@0.overridePresets.0.name"

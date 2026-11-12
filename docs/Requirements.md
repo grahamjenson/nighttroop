@@ -1012,8 +1012,6 @@ Connectors are a site's third party integrations, each syncing from one service.
   after one are kept too; the site can add a Sensor Stop event group.
 - A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
   profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
-- A profile's `mills` comes back as sent, though Trio sends them in whole seconds and its `startDate` not, else when it
-  starts.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
 - A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and

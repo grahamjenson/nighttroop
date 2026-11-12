@@ -3536,16 +3536,6 @@ func (m *ProfilePreset) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
-// GetMills returns the Mills value.
-func (m ProfilePreset) GetMills() *int64 {
-	return m.Mills
-}
-
-// SetMills sets the Mills value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetMills(v *int64) {
-	m.Mills = v
-}
-
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m ProfilePreset) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
@@ -14554,16 +14544,6 @@ func (m CreateProfilePresetParams) GetEnteredBy() *string {
 // SetEnteredBy sets the EnteredBy value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
-}
-
-// GetMills returns the Mills value.
-func (m CreateProfilePresetParams) GetMills() *int64 {
-	return m.Mills
-}
-
-// SetMills sets the Mills value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetMills(v *int64) {
-	m.Mills = v
 }
 
 // GetOccurredAt returns the OccurredAt value.

@@ -202,14 +202,10 @@ func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) 
 		xstring := ShortStringToString(*source.EnteredBy)
 		sitedbCreateProfilePresetParams.EnteredBy = &xstring
 	}
-	if source.Mills != nil {
-		xint64 := int64(*source.Mills)
-		sitedbCreateProfilePresetParams.Mills = &xint64
-	}
 	sitedbCreateProfilePresetParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint642
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.App != nil {
 		xstring2 := ShortStringToString(*source.App)

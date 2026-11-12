@@ -134,8 +134,9 @@ bundleIdentifier, deviceToken, isAPNSProduction, overridePresets, teamID, expira
 `{ time: "HH:mm", value, timeAsSeconds }`. `units` is `mg/dl` or `mmol`. The push fields let LoopFollow and Trio's
 remote control send it Apple push notifications; Nighttroop registers `deviceToken`, `bundleIdentifier` and
 `isAPNSProduction` as a `trio` push registration for the identity that uploaded it (`/settings/push-registrations`).
-Needs exactly a 200. Works. Its `mills` (whole seconds) and `overridePresets` (`[]` when it has none) come back as
-sent; they came back as `startDate`'s milliseconds and left out.
+Needs exactly a 200. Works. Its `overridePresets` come back as sent, `[]` when it has none; they were left out. Trio
+sends `mills` cut to the whole second and never reads them back, so they come back as `startDate`'s, a number, as its
+import needs.
 
 ## Fetches
 

@@ -407,7 +407,6 @@ type ProfilePreset struct {
 	LoopSettingsID           *string
 	RemoteSettingsID         *string
 	EnteredBy                *string
-	Mills                    *int64
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64
 	CreatedAt                int64
