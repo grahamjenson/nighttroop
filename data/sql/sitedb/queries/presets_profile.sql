@@ -22,6 +22,7 @@ INSERT INTO profile_presets (
 
     loop_settings_id,
     remote_settings_id,
+    entered_by,
     
     occurred_at,
     utc_offset_minutes,
@@ -30,7 +31,7 @@ INSERT INTO profile_presets (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

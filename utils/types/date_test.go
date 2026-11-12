@@ -42,3 +42,21 @@ func TestStringToTimeToTheMinute(t *testing.T) {
 		require.True(t, want.Equal(got), "%s is %s", value, got)
 	}
 }
+
+// A created_at is written as JavaScript's toISOString writes it, as Nightscout does: in UTC with three fractional
+// digits, whatever it was sent with
+func TestISOString(t *testing.T) {
+	tests := []struct{ at, want string }{
+		{"2026-11-12T08:01:23.940Z", "2026-11-12T08:01:23.940Z"},
+		{"2026-11-12T08:01:23Z", "2026-11-12T08:01:23.000Z"},
+		{"2026-11-12T08:01:23.123456Z", "2026-11-12T08:01:23.123Z"},
+		{"2026-11-12T21:01:23.5+13:00", "2026-11-12T08:01:23.500Z"},
+	}
+	for _, test := range tests {
+		t.Run(test.at, func(t *testing.T) {
+			at, err := time.Parse(time.RFC3339Nano, test.at)
+			require.NoError(t, err)
+			require.Equal(t, test.want, types.ISOString(at))
+		})
+	}
+}

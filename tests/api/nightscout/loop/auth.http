@@ -79,16 +79,23 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 401
 
 ######
-# A site that does not exist, as Loop's is after its site is deleted, is a 404 in JSON saying so, not a bare page not
-# found, so an app can tell its user the site is gone rather than a path is wrong
+# A site that does not exist, as Loop's and Trio's are after their site is deleted, is a 410 Gone in JSON saying so on
+# its Nightscout API, not a 404, so an app can tell its user the site is gone rather than a path is wrong. Its pages and
+# API stay a 404 saying so
 ######
 
 NAME loop_upload_to_missing_site
 POST http://notasite.ns.localhost/api/v1/entries
 H api-secret: {{ sha1 token }}
 B [{"type": "sgv", "sgv": 144, "dateString": "{{ time 0 }}"}]
-ASSERT_STATUS 404
-ASSERT_EQUALS 404 "@status"
+ASSERT_STATUS 410
+ASSERT_EQUALS 410 "@status"
+ASSERT_EQUALS "site does not exist" "@message"
+
+NAME loop_read_missing_site
+GET http://notasite.ns.localhost/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 410
 ASSERT_EQUALS "site does not exist" "@message"
 
 NAME site_api_missing_site

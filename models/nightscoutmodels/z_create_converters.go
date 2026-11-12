@@ -198,18 +198,22 @@ func FoodToCreate(source Food, context ConverterContext) sitedb.CreateFoodPreset
 func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) sitedb.CreateProfilePresetParams {
 	var sitedbCreateProfilePresetParams sitedb.CreateProfilePresetParams
 	sitedbCreateProfilePresetParams.ID = AssignID()
+	if source.EnteredBy != nil {
+		xstring := ShortStringToString(*source.EnteredBy)
+		sitedbCreateProfilePresetParams.EnteredBy = &xstring
+	}
 	sitedbCreateProfilePresetParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring
+		xstring2 := ShortStringToString(*source.App)
+		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring2
 	}
 	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring2
+		xstring3 := ShortStringToString(*source.Device)
+		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring3
 	}
 	sitedbCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateProfilePresetParams.CreatedByIdentityID = AssignCreatedByID(context)

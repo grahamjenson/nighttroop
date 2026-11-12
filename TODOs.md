@@ -2,8 +2,7 @@
 
 ## Alpha Testing
 
-1. Point real deivces at Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
-   Nightguard) reading, and Dexcom and Libre connectors
+1. Point real deivces follower apps (xDrip+ follower, LoopFollow, Nightguard, T1DCarer) reading, and Dexcom and Libre connectors
 1. Automated Testing of the staging, create site, do a bunch of stuff
 1. FINISH announcement post
 1. e2e code review. and flatten.
@@ -105,12 +104,6 @@
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
-    1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
-       `timestamp`, once the status as sent is cleared; they are given back only while it is kept
-    1. P3: Keep a Loop profile's `enteredBy` (`Loop`) as sent, as a treatment's is, not the token's subject, so a
-       tool picking profiles by it finds Loop's
-    1. P3: Find why the first request after a quiet spell is slow (a Loop device status took 13 s, a treatments
-       upload 5 s, the rest ~40 ms), as xDrip+ also saw
 
 ## Bugs
 

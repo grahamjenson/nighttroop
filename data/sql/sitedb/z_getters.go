@@ -576,6 +576,36 @@ func (m *DeviceReport) SetPumpModel(v *string) {
 	m.PumpModel = v
 }
 
+// GetPumpID returns the PumpID value.
+func (m DeviceReport) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSuspended returns the PumpSuspended value.
+func (m DeviceReport) GetPumpSuspended() *bool {
+	return m.PumpSuspended
+}
+
+// SetPumpSuspended sets the PumpSuspended value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpSuspended(v *bool) {
+	m.PumpSuspended = v
+}
+
+// GetPumpBolusing returns the PumpBolusing value.
+func (m DeviceReport) GetPumpBolusing() *bool {
+	return m.PumpBolusing
+}
+
+// SetPumpBolusing sets the PumpBolusing value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpBolusing(v *bool) {
+	m.PumpBolusing = v
+}
+
 // GetOverrideJson returns the OverrideJson value.
 func (m DeviceReport) GetOverrideJson() *string {
 	return m.OverrideJson
@@ -3466,6 +3496,16 @@ func (m *ProfilePreset) SetRemoteSettingsID(v *string) {
 	m.RemoteSettingsID = v
 }
 
+// GetEnteredBy returns the EnteredBy value.
+func (m ProfilePreset) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetEnteredBy(v *string) {
+	m.EnteredBy = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m ProfilePreset) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
@@ -5454,6 +5494,36 @@ func (m CreateDeviceReportParams) GetPumpModel() *string {
 // SetPumpModel sets the PumpModel value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetPumpModel(v *string) {
 	m.PumpModel = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m CreateDeviceReportParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSuspended returns the PumpSuspended value.
+func (m CreateDeviceReportParams) GetPumpSuspended() *bool {
+	return m.PumpSuspended
+}
+
+// SetPumpSuspended sets the PumpSuspended value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpSuspended(v *bool) {
+	m.PumpSuspended = v
+}
+
+// GetPumpBolusing returns the PumpBolusing value.
+func (m CreateDeviceReportParams) GetPumpBolusing() *bool {
+	return m.PumpBolusing
+}
+
+// SetPumpBolusing sets the PumpBolusing value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpBolusing(v *bool) {
+	m.PumpBolusing = v
 }
 
 // GetOverrideJson returns the OverrideJson value.
@@ -14394,6 +14464,16 @@ func (m CreateProfilePresetParams) GetRemoteSettingsID() *string {
 // SetRemoteSettingsID sets the RemoteSettingsID value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetRemoteSettingsID(v *string) {
 	m.RemoteSettingsID = v
+}
+
+// GetEnteredBy returns the EnteredBy value.
+func (m CreateProfilePresetParams) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetEnteredBy(v *string) {
+	m.EnteredBy = v
 }
 
 // GetOccurredAt returns the OccurredAt value.

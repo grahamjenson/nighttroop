@@ -1,6 +1,7 @@
 package nscollections
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -94,6 +95,51 @@ func TestDBToNightscoutDeviceStatusLoop(t *testing.T) {
 			} else {
 				require.JSONEq(t, tt.loop, raw(got.LoopRaw))
 			}
+		})
+	}
+}
+
+// A battery or reservoir level out of its column's range, as a phone sends when it does not know it, is left out of the
+// device report, and of its uploader and pump as kept, and the device status sent is not changed
+func TestWithoutUnknownLevels(t *testing.T) {
+	tests := []struct {
+		name, body                      string
+		battery, pumpBattery, reservoir *float64
+		uploaderJSON, pumpJSON          string
+	}{
+		{"in range", `{"uploader":{"battery":80},"pump":{"battery":{"percent":75},"reservoir":150.5}}`,
+			ptr(80.0), ptr(75.0), ptr(150.5), `{"battery":80}`, `{"battery":{"percent":75},"reservoir":150.5}`},
+		{"edges", `{"uploaderBattery":0,"pump":{"battery":{"percent":100},"reservoir":10000}}`,
+			ptr(0.0), ptr(100.0), ptr(10000.0), "", `{"battery":{"percent":100},"reservoir":10000}`},
+		{"trio unknown battery", `{"uploader":{"battery":-100,"isCharging":true}}`, nil, nil, nil, `{"isCharging":true}`, ""},
+		{"out of range", `{"uploaderBattery":101,"pump":{"battery":{"percent":-1,"string":"normal"},"reservoir":-5}}`,
+			nil, nil, nil, "", `{"battery":{"string":"normal"}}`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var status nightscoutmodels.DeviceStatus
+			require.NoError(t, json.Unmarshal([]byte(tt.body), &status))
+			sent, err := json.Marshal(status)
+			require.NoError(t, err)
+
+			params := NightscoutToDBCreateDeviceReport(withoutUnknownLevels(context.Background(), status), nightscoutmodels.ConverterContext{})
+			require.Equal(t, tt.battery, params.DeviceBatteryPercent)
+			require.Equal(t, tt.pumpBattery, params.PumpBatteryPercent)
+			require.Equal(t, tt.reservoir, params.PumpReservoir)
+			for _, kept := range []struct {
+				want string
+				got  *string
+			}{{tt.uploaderJSON, params.UploaderJson}, {tt.pumpJSON, params.PumpJson}} {
+				if kept.want == "" {
+					require.Nil(t, kept.got)
+				} else {
+					require.JSONEq(t, kept.want, *kept.got)
+				}
+			}
+
+			unchanged, err := json.Marshal(status)
+			require.NoError(t, err)
+			require.JSONEq(t, string(sent), string(unchanged))
 		})
 	}
 }

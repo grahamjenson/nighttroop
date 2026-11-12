@@ -3,6 +3,8 @@ package nsutils
 import (
 	"encoding/json"
 	"time"
+
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // Document is one stored record as the Nightscout API writes it, whatever collection it is from
@@ -21,5 +23,5 @@ type Document interface {
 
 // DateString is when the document happened, as Nightscout's dateString
 func DateString(doc Document) string {
-	return time.UnixMilli(doc.OccurredAt()).UTC().Format(time.RFC3339Nano)
+	return types.ISOString(time.UnixMilli(doc.OccurredAt()))
 }

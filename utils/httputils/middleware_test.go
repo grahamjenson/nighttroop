@@ -39,6 +39,27 @@ func TestRequestLogsRedactCredentials(t *testing.T) {
 	}
 }
 
+// A Socket.IO session is authorized once, then each long poll and POST to it carries only its sid, so whoever reads
+// the logs or Sentry must not get the sid, which would let them read and write the site as the session's identity
+func TestRequestLogsAndSentryRedactSocketIOSessionID(t *testing.T) {
+	var logs bytes.Buffer
+	router := chi.NewRouter()
+	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
+	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
+	router.Post("/socket.io/", func(w http.ResponseWriter, r *http.Request) {})
+
+	target := "https://abcdefgh.ns.example.com/socket.io/?EIO=4&transport=polling&sid=sessionid789"
+	router.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, target, nil))
+	assert.Contains(t, logs.String(), "transport=polling")
+	assert.NotContains(t, logs.String(), "sessionid789")
+
+	event := RedactSentryEvent(&sentry.Event{Request: sentry.NewRequest(httptest.NewRequest(http.MethodPost, target, nil))}, nil)
+	sent, err := json.Marshal(event.Request)
+	require.NoError(t, err)
+	assert.Contains(t, string(sent), "transport=polling")
+	assert.NotContains(t, string(sent), "sessionid789")
+}
+
 // The Nightscout API takes a token in the query, the api-secret header and the path, none of which may reach Sentry
 func TestSentryEventsRedactCredentials(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "https://abcdefgh.ns.example.com/api/v2/authorization/request/pathtoken123?token=querytoken456&secret=querysecret789&count=10", nil)

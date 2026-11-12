@@ -206,6 +206,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Every site's and the server's events, newest first, with readable names, when each started and how long it took.
 - Events can be filtered by type and searched (ignoring case); errors and logs have their own pages.
+- A request's log, and what Sentry is sent of it, has the `token`, `secret` and Socket.IO `sid` in its query
+  `REDACTED`, as a Socket.IO session's polls and posts carry only its `sid` once it is authorized.
 - Every log the server writes is kept in the logs too, written in batches, without IP addresses. Logs, events and
   errors keep the `request_id` or `job_id` they were for. Logs held for writing are capped at 1 MB; past that they are
   dropped, and the logs then say how many.
@@ -234,8 +236,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
 - A staging server with `CAPTURE_REQUESTS=true` keeps each request and its response as a `Captured <method> <path>`
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
-  64 KB. Authorization, cookies, API secrets, tokens, passwords, keys, TOTP codes, usernames, emails and URLs are
-  `REDACTED` in its headers, query, path and JSON or form bodies. Any other body, such as a page, text or one past
+  64 KB. Authorization, cookies, API secrets, tokens, Socket.IO session IDs, passwords, keys, TOTP codes, usernames,
+  emails and URLs are `REDACTED` in its headers, query, path and JSON or form bodies. Any other body, such as a page, text or one past
   64 KB, keeps only its size and content type, so a page showing a new site's credentials is not kept. A page's
   styles, scripts, images and fonts are not
   kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
@@ -704,7 +706,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours. A Nightscout backfill keeps the
   device statuses it adds without their loop status (`openaps` or `loop`) or `pump` as sent, which are of no use once old
   and most of a looping site's DB, but with their IOB and COB, which the summaries show, and their pump's battery,
-  reservoir, clock, manufacturer and model; a status the site already had is left as it is.
+  reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`; a status the site already had is left
+  as it is.
 - A Nightscout or virtual backfill copies no device status older than 30 days, though a Nightscout server returns one,
   as an old one's IOB and COB are of little use and device statuses are most of a site's DB; its other records are
   copied however old.
@@ -827,6 +830,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
+- A Socket.IO client polling upgrades to a websocket at once: the probe ends its waiting poll, as the JavaScript client
+  that AAPS and Nightscout's pages use waits for it before upgrading, rather than reconnecting every minute.
 - A Nightscout food has `type` `food`, as AAPS loads only foods of that type.
 - The Nightscout host's root, which LoopFollow's Nightscout tab opens, goes to the site's own pages.
 - A live update sent to a site's sockets is in the site's own settings, such as its time zone, as it goes to every
@@ -879,6 +884,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A document sent with a date but no `utcOffset`, as AAPS sends a device status, takes the site timezone's offset at
   that date; a replace sent with none keeps the offset of the document it replaces.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
+- A document's `created_at` is written as Nightscout writes it, as JavaScript's `toISOString` does, in UTC with three
+  fractional digits: `…23.940Z` sent comes back as is, not `…23.94Z`, and `…23Z` comes back as `…23.000Z`. Dates kept
+  as sent, such as a device status's `pump.clock`, which LoopFollow reads without fractional seconds, are not changed.
 - A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its
   `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any
   other search is the newest first. With a filter other than the date, a page is those that match of the page the
@@ -889,6 +897,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
+- A profile keeps Loop's and Trio's `deviceToken` whole, up to 256 characters, as Apple's are of no fixed length
+  (Trio's are 160 hex characters), and registers it whole; a longer one is kept empty and not registered.
 - A profile's Loop `loopSettings.deviceToken` and Trio `deviceToken` are only given back, in v1, v3 and the socket's
   storage, to an identity that can change the site's data, as LoopFollow sending remote commands is; a read only
   user or device gets the profile without them, and the socket's `dataUpdate`, sent to every reader, has none.
@@ -916,9 +926,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   zeros, such as a combo bolus's split, are kept.
 - An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
-  keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, Trio a temp
-  target or override run, and AAPS's Bolus Wizard its bolus then its carbs, which are one Meal Bolus with both;
-  followers get it as changed, and one sent again as it was stored changes nothing.
+  keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a
+  temp target or override run; followers get it as changed, and one sent again as it was stored changes nothing.
+- A treatment with only carbs at the date and type of one with only insulin, or the other way round, is its own
+  treatment, as AAPS's Bolus Wizard sends its bolus then its carbs as two Meal Boluses and deletes either on its own.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
@@ -943,6 +954,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   `class` its name.
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
   `uploader.battery` and `uploaderBattery`, and Loop's override in force.
+- A device status keeps Loop's pump `pumpID`, `suspended` and `bolusing`, as sent, once the status as sent is cleared,
+  so a follower still sees an older status's insulin delivery suspended.
 - A device status keeps Trio's pump `bolusIncrement`, LoopFollow's remote bolus step, while the status as sent is kept.
 - A Nightscout treatment comes back with its `created_at` as `timestamp`, a bolus with its insulin as `programmed`,
   and a temp basal with `temp` `absolute`, as Loop's NightscoutKit drops treatments without them; a `timestamp`
@@ -952,8 +965,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   the `duration` kept, so not once that is changed on the site; one sent with no `duration` is in minutes too, the
   nearest. A treatment with a duration is always given back with both `duration` and `durationInMilliseconds`, the one
   not kept worked out from the other.
-- A device status keeps its uploader's `isCharging`, and, while the status as sent is kept, its uploader's `name` and
-  `timestamp` and Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
+- A device status keeps its uploader's `isCharging`, `name` and `timestamp`, and, while the status as sent is kept,
+  Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
   override presets, for LoopFollow's Trio Remote Control.
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
@@ -974,6 +987,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Entries of type `cal` (a CGM calibration's slope and intercept) are accepted and not stored, so the finger pricks
   sent with them are kept.
 - A device status's `uploader.battery` is its uploader's battery when it has no `uploaderBattery`.
+- A device status with a battery or reservoir level out of range (an uploader or pump battery below 0 or over 100%, a
+  reservoir below 0 or over 10000 U), like the `uploader.battery` -100 Trio sends when the phone does not know its
+  battery, is stored without that level, and the rest of it kept.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ sends the token in its
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
@@ -988,7 +1004,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   `userEnteredAt` (in UTC) and a bolus's `unabsorbed`.
 - xDrip+'s `Sensor Stop` treatments are kept as an event group, with their event type, so the treatments it uploads
   after one are kept too; the site can add a Sensor Stop event group.
-- A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
+- A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
+  profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
 - A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
@@ -1004,6 +1021,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   insulin and carbs.
 - A treatment with AAPS's `eventType` `SettingsExport`, sent when its settings are exported, is a Note.
 - A `dateString` with Juggluco's `-03:-30` zone for half hours west of UTC is read as `-03:30`.
+- An entry's `date` is kept to the millisecond, a fraction of one dropped, though its `dateString`, as Loop's does,
+  has only whole seconds; the `dateString` gives its UTC offset.
 
 ### Nighttroop API and client
 
@@ -1045,6 +1064,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A site not written to since its last backup is not copied again, so its DB is not opened, and a batch with the same
   sites, none copied again, is not uploaded again until the server restarts; a write during a copy is copied the next
   round, and a failed upload is tried again the next round.
+- A batch whose last site is deleted or archived is uploaded empty, so S3's latest backup of it no longer has the
+  site's data and a restore brings back an empty batch; a batch that never had a site is not uploaded.
 - A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
   leaves nothing behind, so the next start downloads it again.
 - A start removes the staging folders a restore or archive killed part way left beside the DBs and backups, and nothing
@@ -1076,8 +1097,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   day; truncating a site looks at them all, so it clears those the job no longer looks at, as a device's newest before
   it went a day without reporting.
 - A device status's `pump` as sent, the most of it after its loop status, is truncated the same way: kept only on its
-  device's newest status with one, the others keeping their pump's battery, reservoir, clock, manufacturer and model,
-  which the Nightscout API gives back as their `pump`.
+  device's newest status with one, the others keeping their pump's battery, reservoir, clock, manufacturer, model,
+  `pumpID`, `suspended` and `bolusing`, which the Nightscout API gives back as their `pump`.
 - Truncating also thins each device's statuses: all of the last hour are kept, then only the newest in each 10
   minutes until a week old, in each 20 minutes until two weeks old, and in each hour until 30 days old, which keeps its
   newest. A deleted status is not removed, so a client syncing deletions sees it. Every status over 30 days old, its
@@ -1094,9 +1115,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   collection's `/<section>/<collection>/events`), so any other request sent with `Accept: text/event-stream` is still
   refused when the server is busy and still times out after 30 seconds. A quarter of each is kept for uploads to the
   Nightscout API, so glucose keeps arriving while page loads and reads fill the rest.
-- A request for a site there is not is 404 with `{"status": 404, "message": "site does not exist"}`, on its pages, its
-  API and its Nightscout API, so an app can tell its user the site is gone rather than a path is wrong, but one whose site cannot be looked up, as when the server is too busy to
-  answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
+- A request for a site there is not is 404 with `{"status": 404, "message": "site does not exist"}` on its pages and its
+  API, and 410 Gone with `{"status": 410, "message": "site does not exist"}` on its Nightscout API, so an app can tell
+  its user the site is gone rather than a path is wrong, but one whose site cannot be looked up, as when the server is
+  too busy to answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
+- A disabled, archived or deleted site is answered just as a site that never was, so the answer tells nothing about it.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
   Nightscout API or its live updates. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one
   batch, each 100 past the first costing a write against the site's and identity's limits; a live update's upload
@@ -1250,10 +1273,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   (`/settings/push-registrations`, JSON API): the app (`loop`, `trio`, `loopfollow`, `t1dcarer`), its provider (`apns`
   or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
   Registering a token again updates it, and from another of the site's identities moves it there; another site
-  registering the same token has its own, so no site can take or change another's. An APNs token is the same in upper
-  or lower case. An identity has at most 10, even from profiles uploaded at once, though it can always register one
-  of them again, and sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own; an
-  admin can also get and delete any of the site's, but its search and stream are still only its own.
+  registering the same token has its own, so no site can take or change another's. An APNs token is 64 to 256 hex
+  characters, the same in upper or lower case. An identity has at most 10, even from profiles uploaded at once, though
+  it can always register one of them again, and sees, streams the changes to (`/settings/push-registrations/events`)
+  and deletes only its own; an admin can also get and delete any of the site's, but its search and stream are still
+  only its own.
 - Settings, Push Devices (`/settings/push-devices`) lists the apps registered for pushes, with whose they are, the app
   and its service, its bundle ID, whether it is a development build, when it registered, and its last push and error;
   never its token. An admin sees every identity's on the site, and anyone else only their own. Each has a Test button,

@@ -1,0 +1,68 @@
+// Trio's profile has its APNs device token, where LoopFollow sends Trio's remote commands. Apple's device tokens are
+// of no fixed length, and Trio sends 160 hex characters, so the whole token is kept, returned and registered for pushes
+INCLUDE steps/new_ns_site.steps
+
+NAME trio_profile
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+    "defaultProfile": "default", "startDate": "2026-03-01T00:00:00.000Z", "units": "mg/dl", "enteredBy": "Trio",
+    "bundleIdentifier": "org.nightscout.TEAM123456.trio", "isAPNSProduction": false, "teamID": "TEAM123456",
+    "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718",
+    "store": {"default": {"dia": 6, "units": "mg/dl", "timezone": "UTC", "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}],
+        "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}],
+        "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}]}}
+}
+ASSERT_STATUS 200
+ASSERT_LENGTH 160 "@0.deviceToken"
+ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718" "@0.deviceToken"
+
+NAME trio_current_profile
+GET http://{{ site }}/api/v1/profile/current
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 160 "@deviceToken"
+ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718" "@deviceToken"
+ASSERT_EQUALS "org.nightscout.TEAM123456.trio" "@bundleIdentifier"
+ASSERT_EQUALS "TEAM123456" "@teamID"
+ASSERT_EQUALS false "@isAPNSProduction"
+
+// A new token that starts as the first one does is another device, so has its own registration
+NAME trio_new_token_profile
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+    "defaultProfile": "default", "startDate": "2026-03-02T00:00:00.000Z", "units": "mg/dl", "enteredBy": "Trio",
+    "bundleIdentifier": "org.nightscout.TEAM123456.trio", "isAPNSProduction": false, "teamID": "TEAM123456",
+    "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f0",
+    "store": {"default": {"dia": 6, "units": "mg/dl", "timezone": "UTC", "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}],
+        "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}],
+        "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}]}}
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f08796a5b4c3d2e1f0" "@0.deviceToken"
+
+// Loop's token in its loopSettings is kept and registered up to 256 hex characters, room for Apple's tokens to grow
+NAME loop_long_token_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B [{
+    "defaultProfile": "default", "startDate": "2026-03-03T00:00:00.000Z", "units": "mg/dl", "enteredBy": "Loop",
+    "loopSettings": {"dosingEnabled": true, "bundleIdentifier": "com.TEAM123456.loopkit.Loop", "deviceToken": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00"},
+    "store": {"default": {"dia": 6, "units": "mg/dl", "timezone": "UTC", "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}],
+        "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}],
+        "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}]}}
+}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 256 "@0.loopSettings.deviceToken"
+
+NAME registered
+GET http://{{ .create_new_site.site_subdomain }}.localhost/settings/push-registrations
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS "loop" "@result.items.0.app"
+ASSERT_EQUALS "trio" "@result.items.1.app"
+ASSERT_EQUALS "trio" "@result.items.2.app"

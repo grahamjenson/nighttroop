@@ -10,6 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // stored is a collection's Nightscout model, with the server's fields from its row. It is only made into JSON fields
@@ -101,7 +102,7 @@ func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
 
 // server are the server's fields, over the model's, and the one of _id and identifier the API version does not have
 func (s stored[NS]) server(v3 bool) ([]field, string) {
-	fields := []field{{"created_at", quote(time.UnixMilli(s.occurredAt).UTC().Format(time.RFC3339Nano))},
+	fields := []field{{"created_at", quote(types.ISOString(time.UnixMilli(s.occurredAt)))},
 		{"utcOffset", strconv.AppendInt(nil, s.utcOffset, 10)}}
 	if !v3 {
 		return append(fields, field{"_id", quote(s.id)}), "identifier"
