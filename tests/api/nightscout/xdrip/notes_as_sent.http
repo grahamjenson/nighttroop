@@ -1,0 +1,21 @@
+# xDrip+ matches a downloaded treatment to its own by uuid, and appends its notes to its own unless they already hold
+# them (NightscoutTreatments.java), so notes must come back exactly as sent, HTML and all, or its note grows with each
+# download and upload. They are escaped wherever the site shows them.
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME xdrip_note_with_html
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "21111111-2222-3333-4444-555555555555", "_id": "211111112222333344445555", "notes": "xDrip note <b>bold</b> & \"quoted\" 100%% <script>x</script>", "carbs": 0, "insulin": 0, "created_at": "{{ time 5 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "xDrip note <b>bold</b> & \"quoted\" 100%% <script>x</script>" "@notes"
+
+NAME xdrip_download_note
+GET http://{{ site }}/api/v1/treatments.json?find[uuid]=21111111-2222-3333-4444-555555555555
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "xDrip note <b>bold</b> & \"quoted\" 100%% <script>x</script>" "@0.notes"

@@ -1,15 +1,12 @@
 package types
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
-
-	"golang.org/x/net/html"
 )
 
 type ShortString string
@@ -65,34 +62,14 @@ func (s *SanitizedString) Stringp() *string {
 	return &str
 }
 
-func StripAllTags(input string) string {
-	doc, err := html.Parse(strings.NewReader(input))
-	if err != nil {
-		return input
-	}
+// maxNotesLength is the most characters a note keeps, as its column holds
+const maxNotesLength = 1024
 
-	var buf bytes.Buffer
-	var f func(*html.Node)
-
-	f = func(n *html.Node) {
-		// Only keep text nodes, skip script and style contents
-		if n.Type == html.TextNode {
-			if n.Parent != nil && (n.Parent.Data == "script" || n.Parent.Data == "style") {
-				return
-			}
-			buf.WriteString(n.Data)
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-	}
-	f(doc)
-
-	return buf.String()
-}
-
+// UnmarshalJSON keeps a note as sent, white space and HTML too, as Nightscout gives back the text it was sent and
+// xDrip+ appends any note that comes back changed to its own, so it grows with each download. It is escaped wherever
+// it is shown, as the site's own notes are. A note longer than its column is cut at a character, and one only of white
+// space is none.
 func (n *SanitizedString) UnmarshalJSON(data []byte) error {
-	// We are going to sanitize notes here, no html allowed, trim white space, convert to string
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
 		return fmt.Errorf("expected notes string, got %s", data)
@@ -109,14 +86,12 @@ func (n *SanitizedString) UnmarshalJSON(data []byte) error {
 		str = fmt.Sprintf("%v", v)
 	}
 
-	// Trim white space
-	str = strings.TrimSpace(str)
-	// Concat to 1024 characters
-	if len(str) > 1024 {
-		str = str[:1024]
+	if runes := []rune(str); len(runes) > maxNotesLength {
+		str = string(runes[:maxNotesLength])
 	}
-	// Strip all tags
-	str = StripAllTags(str)
+	if strings.TrimSpace(str) == "" {
+		str = ""
+	}
 
 	*n = SanitizedString(str)
 	return nil

@@ -928,6 +928,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A value sent that means none is not stored, and comes back left out, as one not sent does: an empty string, a
   CGM's `noise` or `rssi` of 0, and a heart rate of 0. An update with one keeps the value stored. `false`, and other
   zeros, such as a combo bolus's split, are kept.
+- A treatment's or activity's `notes`, and its `reason` and `reasons`, come back exactly as sent, HTML, entities and
+  the white space around them too, as xDrip+ appends any note that comes back changed to its own; one only of white
+  space is none, one over 1024 characters is cut at a character, and the site shows them escaped, as text.
 - An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
   keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a

@@ -57,3 +57,28 @@ func TestDeviceTokenString(t *testing.T) {
 		})
 	}
 }
+
+// A note is kept as sent, HTML, entities and the white space around it too, as xDrip+ grows its own note with any that
+// comes back changed; one only of white space is none, and one too long is cut at a character, not inside one
+func TestSanitizedString(t *testing.T) {
+	long := strings.Repeat("é", 1030)
+	tests := []struct {
+		name, sent, want string
+	}{
+		{"plain", "Pasta", "Pasta"},
+		{"xDrip+'s note", `xDrip note <b>bold</b> & "quoted" 100%% <script>x</script>`, `xDrip note <b>bold</b> & "quoted" 100%% <script>x</script>`},
+		{"entities as typed", "a &amp; b &lt;c&gt;", "a &amp; b &lt;c&gt;"},
+		{"white space around", "  Pasta\n", "  Pasta\n"},
+		{"only white space", " \n\t ", ""},
+		{"too long", long, strings.Repeat("é", 1024)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data, err := json.Marshal(tt.sent)
+			assert.NoError(t, err)
+			var got types.SanitizedString
+			assert.NoError(t, json.Unmarshal(data, &got))
+			assert.Equal(t, tt.want, string(got))
+		})
+	}
+}
