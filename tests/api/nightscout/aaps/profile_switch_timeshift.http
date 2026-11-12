@@ -1,0 +1,79 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS sends a profile switch's timeshift in milliseconds (PS.timeshift, toNSProfileSwitch) with its
+// originalProfileName, and reads it back as milliseconds, as Nightscout's profile functions read it. It is kept in
+// minutes, as the careportal's is.
+
+// Activate 110 % for 60 minutes, shifted an hour forward
+NAME add_profile_switch_shift_forward
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 30 }},
+    "utcOffset": 780,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Profile Switch",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "profile": "LocalProfile1 (110%,1h)",
+    "originalProfileName": "LocalProfile1",
+    "originalDuration": 3600000,
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "timeshift": 3600000,
+    "percentage": 110,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+SET forward_id {{ .add_profile_switch_shift_forward.identifier }}
+
+NAME get_profile_switch_shift_forward
+GET http://{{ site }}/api/v3/treatments/{{ .forward_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 3600000 "@result.timeshift"
+ASSERT_EQUALS 110 "@result.percentage"
+
+NAME add_profile_switch_shift_back
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 20 }},
+    "utcOffset": 780,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Profile Switch",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "profile": "LocalProfile1 (100%,-2h)",
+    "originalProfileName": "LocalProfile1",
+    "originalDuration": 0,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "timeshift": -7200000,
+    "percentage": 100,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+SET back_id {{ .add_profile_switch_shift_back.identifier }}
+
+NAME get_profile_switch_shift_back
+GET http://{{ site }}/api/v3/treatments/{{ .back_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS -7200000 "@result.timeshift"
+
+// A shift of more than a day is refused, as a careportal's is
+NAME add_profile_switch_shift_too_far
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 10 }},
+    "eventType": "Profile Switch",
+    "profile": "LocalProfile1 (100%,25h)",
+    "originalProfileName": "LocalProfile1",
+    "timeshift": 90000000,
+    "percentage": 100,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 400

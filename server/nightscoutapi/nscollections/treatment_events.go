@@ -139,6 +139,14 @@ func (k eventKind[T, C, U, D]) hardDelete(ctx context.Context, q *sitedb.Queries
 	return err
 }
 
+// AAPS sends a profile switch's timeshift in ms, and reads it back so, with its originalProfileName, as Nightscout's
+// profile functions read it; one from the careportal or Trio has no originalProfileName and is kept in minutes
+func aapsTimeshift[N any, T interface{ ~int64 }](originalProfileName *N, timeshift *T) bool {
+	return originalProfileName != nil && timeshift != nil
+}
+
+const msPerMinute = 60_000
+
 // Loop's override with no end is indefinite, kept as long as a temp target can be, a week
 const (
 	indefinite        = "indefinite"
@@ -295,6 +303,9 @@ var (
 			if source.Profile != nil {
 				target.Name = source.Profile.String()
 			}
+			if aapsTimeshift(source.OriginalProfileName, source.Timeshift) {
+				target.Timeshift = ptr(int64(*source.Timeshift) / msPerMinute)
+			}
 
 			if source.ProfileJSON != nil {
 				var profile nightscoutmodels.Profile
@@ -349,7 +360,13 @@ var (
 				}
 			}
 		},
-		toTreatment: nightscoutmodels.UpdateProfileSwitchToTreatment, mergeInto: nightscoutmodels.UpdateToProfileSwitch,
+		toTreatment: func(event *sitedb.ProfileSwitch, siteContext *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
+			nightscoutmodels.UpdateProfileSwitchToTreatment(event, siteContext, treatment)
+			if event != nil && aapsTimeshift(event.OriginalProfileName, event.Timeshift) {
+				treatment.Timeshift = ptr(types.FlexibleInt64(*event.Timeshift * msPerMinute))
+			}
+		},
+		mergeInto: nightscoutmodels.UpdateToProfileSwitch,
 		toCreate: nightscoutmodels.ProfileSwitchCreate, create: (*sitedb.Queries).CreateProfileSwitch,
 		toUpdate: nightscoutmodels.ProfileSwitchUpdate, update: (*sitedb.Queries).UpdateProfileSwitch,
 		delete: (*sitedb.Queries).HardDeleteProfileSwitch,
