@@ -95,23 +95,36 @@ func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		TypeEq:   nsModel.EventType.Stringp(),
-		Limit:    1,
+		Limit:    maxSameTimeTreatments,
 	})
 	if rerr != nil {
 		return nil, rerr
 	}
-	if len(eventGroups) > 0 {
-		egb := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroups[0]))
-		return &egb, nil
+	for _, eventGroup := range eventGroups {
+		egb := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroup))
+		if !otherAmount(nsModel, &egb) {
+			return &egb, nil
+		}
 	}
 	return nil, nil
 }
 
+// maxSameTimeTreatments is how many treatments of a type at one date are looked through for one sent again
+const maxSameTimeTreatments = 10
+
+// otherAmount is whether a treatment has only carbs and the stored one only insulin, or the other way round, so it is
+// not the same treatment sent again: AAPS's Bolus Wizard sends its bolus and then its carbs as two Meal Boluses at the
+// same date, and deletes either one on its own by its identifier
+func otherAmount(nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+	insulin, carbs := isAssigned(nsModel.Insulin), isAssigned(nsModel.Carbs)
+	storedInsulin, storedCarbs := stored.InsulinDose != nil, stored.FoodIntake != nil && stored.FoodIntake.Carbs != nil
+	return (carbs && !insulin && storedInsulin && !storedCarbs) || (insulin && !carbs && storedCarbs && !storedInsulin)
+}
+
 // Refresh merges a treatment sent again into the one stored, as a patch does: what it sends is changed and what it
-// leaves out is kept. Loop sends a temp basal or bolus again when it ends with what was delivered, Trio a temp target
-// that ended early with its real duration, and AAPS's Bolus Wizard its bolus and then its carbs as two Meal Boluses at
-// the same date, which Nightscout, replacing the first with the second, loses the insulin of. One of another type,
-// sent the same as it was, by the hash of its JSON, or stored without that hash, is left as it is.
+// leaves out is kept. Loop sends a temp basal or bolus again when it ends with what was delivered, and Trio a temp
+// target that ended early with its real duration. One of another type, sent the same as it was, by the hash of its
+// JSON, or stored without that hash, is left as it is.
 func (c TreatmentCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, bool, error) {
 	sent, resent := stored.EventGroup.SentHash, nightscoutmodels.SentHash(nsModel.SentJSON)
 	if nsModel.EventType.String() != stored.EventGroup.GroupType || sent == nil || resent == nil || *sent == *resent {

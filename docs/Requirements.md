@@ -924,9 +924,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   zeros, such as a combo bolus's split, are kept.
 - An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
-  keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, Trio a temp
-  target or override run, and AAPS's Bolus Wizard its bolus then its carbs, which are one Meal Bolus with both;
-  followers get it as changed, and one sent again as it was stored changes nothing.
+  keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a
+  temp target or override run; followers get it as changed, and one sent again as it was stored changes nothing.
+- A treatment with only carbs at the date and type of one with only insulin, or the other way round, is its own
+  treatment, as AAPS's Bolus Wizard sends its bolus then its carbs as two Meal Boluses and deletes either on its own.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
