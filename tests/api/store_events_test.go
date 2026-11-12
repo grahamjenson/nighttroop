@@ -48,8 +48,7 @@ func newEventsSite(t *testing.T) *eventsSite {
 // event stream it opens is read
 func (s *eventsSite) request(identity string, role consts.IdentityRole, method, path, body string) *http.Response {
 	t := s.t
-	jwt, _, err := s.config.Security.GenerateUserJWTToken(s.site.SiteDB.Subdomain, identity, string(role))
-	require.NoError(t, err)
+	jwt := testutils.SiteJWT(t, s.config, s.controlDB, s.site.SiteDB.Subdomain, identity)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
 	req, err := http.NewRequestWithContext(ctx, method, "http://"+s.site.SiteDB.Subdomain+".localhost"+path, strings.NewReader(body))

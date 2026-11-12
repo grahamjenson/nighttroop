@@ -5,16 +5,14 @@ INSERT INTO control_identities (
     totp_secret_enc,
     role,
     created_by_identity_id,
-    created_by_identity_name,
-    credentials_changed_at
+    created_by_identity_name
 ) VALUES (
     ?,
     ?,
     ?,
     ?,
     ?,
-    ?,
-    CAST(unixepoch('subsec') * 1000 AS INTEGER)
+    ?
  );
 
 
@@ -47,12 +45,12 @@ WHERE control_identities.id = sqlc.arg('ID') AND (control_identities.role != 'ad
 
 -- name: UpdateControlIdentityPassword :exec
 UPDATE control_identities
-SET password_hash = sqlc.arg('PasswordHash'), credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+SET password_hash = sqlc.arg('PasswordHash'), credentials_version = credentials_version + 1,
     updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'), updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID');
 
 -- name: UpdateControlIdentityTOTP :exec
 UPDATE control_identities
-SET totp_secret_enc = sqlc.arg('TotpSecretEnc'), credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+SET totp_secret_enc = sqlc.arg('TotpSecretEnc'), credentials_version = credentials_version + 1,
     updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'), updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID');

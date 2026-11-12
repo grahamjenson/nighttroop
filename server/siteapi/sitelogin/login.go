@@ -115,7 +115,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		if can.MustLoginWithTotp(identity.Role, identity.TotpSecretEnc != "") {
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
-			err = config.Security.SetUserPreAuthCookie(w, siteContext.SiteID, identity.Name)
+			err = config.Security.SetUserPreAuthCookie(w, identity, siteContext.SiteID, identity.Name)
 			if err != nil {
 				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to set pre-auth cookie: %w", err))
 				return
@@ -129,7 +129,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			}
 			return
 		} else {
-			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
+			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(identity, siteContext.SiteID, identity.Name, string(identity.Role))
 			if err != nil {
 				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
 				return
@@ -158,7 +158,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		siteContext := httputils.GetSiteContext(r.Context())
 
 		// 1. Fetch And Validate Pre-Auth Token
-		identityNameFromToken, issuedAtMs, err := fetchVerifyPreAuthToken(config, r, siteContext.SiteID)
+		identityNameFromToken, credentials, err := fetchVerifyPreAuthToken(config, r, siteContext.SiteID)
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to fetch and verify pre-auth token: %w", err))
 			return
@@ -175,7 +175,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		identity, err := getTheIdentityeModel(controlDB, r, identityNameFromToken)
 		if err == nil {
 			// The password checked for the pre-auth token may have been reset since
-			err = httputils.CheckIssuedAfterCredentialsChanged(identity, issuedAtMs)
+			err = credentials.CheckCurrent(identity)
 		}
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to get identity model: %w", err))
@@ -200,7 +200,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		}
 
 		// TOTP is valid, generate the real JWT token
-		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
+		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(identity, siteContext.SiteID, identity.Name, string(identity.Role))
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
 			return
@@ -289,18 +289,18 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *controldb.SiteI
 	return nil
 }
 
-func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request, subdomain string) (string, int64, error) {
+func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request, subdomain string) (string, security.Credentials, error) {
 	preAuthToken, err := security.GetUserPreAuthTokenFromRequest(r)
 	if err != nil {
-		return "", 0, fmt.Errorf("Pre-auth token is required: %w", err)
+		return "", security.Credentials{}, fmt.Errorf("Pre-auth token is required: %w", err)
 	}
 
-	identityName, issuedAtMs, err := config.Security.VerifyPreAuthJWTToken(preAuthToken, subdomain)
+	identityName, credentials, err := config.Security.VerifyPreAuthJWTToken(preAuthToken, subdomain)
 	if err != nil {
-		return "", 0, fmt.Errorf("Invalid pre-auth token: %w", err)
+		return "", security.Credentials{}, fmt.Errorf("Invalid pre-auth token: %w", err)
 	}
 
-	return identityName, issuedAtMs, nil
+	return identityName, credentials, nil
 }
 
 // ///
@@ -334,7 +334,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 		return
 	}
 
-	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
+	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(identity, siteContext.SiteID, identity.Name, string(identity.Role))
 	if err != nil {
 		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return

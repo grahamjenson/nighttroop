@@ -87,8 +87,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   admin changed is signed out, as its sign in was for its old role.
 - An Admin resets another's password or TOTP from its Manage menu, after confirming, and the new one is shown once in
   the credentials dialog. The reset removes the admin's passkeys and is recorded as a credentials changed event; the
-  secret is never logged. The reset signs it out, refusing (401) its sign ins from before; the Admin who reset it stays
-  signed in, and it signs in again with its new password or TOTP.
+  secret is never logged. The reset signs it out, refusing (401) its sign ins from before, even one the same moment
+  before; the Admin who reset it stays signed in, and it signs in again with its new password or TOTP, even the same
+  moment after.
 - An Admin deletes another from its Manage menu, after confirming in the confirm dialog, which removes its row and its
   passkeys and signs it out.
 - Only an Admin can add, change, reset or delete admins; a Read only admin sees the list only. No admin can change,
@@ -1211,8 +1212,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - A Nightscout token whose name or role has no identity, or is for an admin or an identity with TOTP, is refused with
   the same status and message as a wrong secret, and checks a password all the same, so neither tells what is on the site.
-- Changing an identity's password or TOTP signs out its existing sessions, and an admin's reset of it, on the site or in
-  control, also removes its passkeys, as for a lost device, so it signs in only with its new credentials.
+- Changing an identity's password or TOTP signs out its existing sessions, even one signed in the same moment before,
+  and an admin's reset of it, on the site or in control, also removes its passkeys, as for a lost device, so it signs in
+  only with its new credentials. A sign in for a deleted identity does not sign in as another made with its name.
 - Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO
   writes are refused at once and its sockets are disconnected within a minute, and its live update streams end within
   30 seconds.

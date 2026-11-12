@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -44,36 +45,39 @@ func TestVerifyUserJWTTokenGarbageIsNotLoggedAtError(t *testing.T) {
 	}
 }
 
-// Each kind of JWT verifies as what it was made for, and only by its own kind's Verify
+// Each kind of JWT verifies as what it was made for, with its identity's credentials, and only by its own kind's Verify
 func TestJWTTokensRoundTrip(t *testing.T) {
 	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
-	before := time.Now().UnixMilli()
+	admin := &controldb.ControlIdentity{ID: 3, CredentialsVersion: 2}
+	identity := &controldb.SiteIdentity{ID: 7, CredentialsVersion: 5}
+	adminCredentials := security.Credentials{IdentityID: 3, Version: 2}
+	identityCredentials := security.Credentials{IdentityID: 7, Version: 5}
 
-	control, expires, err := cfg.GenerateControlJWTToken("ctl-admin", "admin")
+	control, expires, err := cfg.GenerateControlJWTToken(admin, "ctl-admin", "admin")
 	if err != nil || time.Until(expires) < 59*time.Minute {
 		t.Fatalf("control token: %v, expires %v", err, expires)
 	}
-	name, role, issuedAtMs, err := cfg.VerifyControlJWTToken(control)
-	if err != nil || name != "ctl-admin" || role != "admin" || issuedAtMs < before {
-		t.Fatalf("control token verified as %q %q %d: %v", name, role, issuedAtMs, err)
+	name, role, credentials, err := cfg.VerifyControlJWTToken(control)
+	if err != nil || name != "ctl-admin" || role != "admin" || credentials != adminCredentials {
+		t.Fatalf("control token verified as %q %q %v: %v", name, role, credentials, err)
 	}
 
-	user, _, err := cfg.GenerateUserJWTToken("abcdefgh", "admin", "device-read")
+	user, _, err := cfg.GenerateUserJWTToken(identity, "abcdefgh", "admin", "device-read")
 	if err != nil {
 		t.Fatal(err)
 	}
-	subdomain, name, role, issuedAtMs, err := cfg.VerifyUserJWTToken(user)
-	if err != nil || subdomain != "abcdefgh" || name != "admin" || role != "device-read" || issuedAtMs < before {
-		t.Fatalf("user token verified as %q %q %q %d: %v", subdomain, name, role, issuedAtMs, err)
+	subdomain, name, role, credentials, err := cfg.VerifyUserJWTToken(user)
+	if err != nil || subdomain != "abcdefgh" || name != "admin" || role != "device-read" || credentials != identityCredentials {
+		t.Fatalf("user token verified as %q %q %q %v: %v", subdomain, name, role, credentials, err)
 	}
 
-	preAuth, expires, err := cfg.GeneratePreAuthJWTToken("abcdefgh", "admin")
+	preAuth, expires, err := cfg.GeneratePreAuthJWTToken(identity, "abcdefgh", "admin")
 	if err != nil || time.Until(expires) > 5*time.Minute {
 		t.Fatalf("pre-auth token: %v, expires %v", err, expires)
 	}
-	name, issuedAtMs, err = cfg.VerifyPreAuthJWTToken(preAuth, "abcdefgh")
-	if err != nil || name != "admin" || issuedAtMs < before {
-		t.Fatalf("pre-auth token verified as %q %d: %v", name, issuedAtMs, err)
+	name, credentials, err = cfg.VerifyPreAuthJWTToken(preAuth, "abcdefgh")
+	if err != nil || name != "admin" || credentials != identityCredentials {
+		t.Fatalf("pre-auth token verified as %q %v: %v", name, credentials, err)
 	}
 	if _, _, err := cfg.VerifyPreAuthJWTToken(preAuth, "otherste"); err == nil {
 		t.Fatal("a pre-auth token verified for another site")
@@ -90,5 +94,28 @@ func TestJWTTokensRoundTrip(t *testing.T) {
 	}
 	if _, _, _, _, err := cfg.VerifyUserJWTToken(preAuth); err == nil {
 		t.Fatal("a pre-auth token verified as a user token")
+	}
+}
+
+// A JWT's credentials are current only for the identity it was issued to, at the version of its credentials then, so a
+// change to them, or the identity deleted and made again, refuses it
+func TestCredentialsCheckCurrent(t *testing.T) {
+	identity := &controldb.SiteIdentity{ID: 7, CredentialsVersion: 5}
+	tests := []struct {
+		name        string
+		credentials security.Credentials
+		current     bool
+	}{
+		{"current", security.Credentials{IdentityID: 7, Version: 5}, true},
+		{"before a change", security.Credentials{IdentityID: 7, Version: 4}, false},
+		{"another identity", security.Credentials{IdentityID: 8, Version: 5}, false},
+		{"none", security.Credentials{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.credentials.CheckCurrent(identity); (err == nil) != tt.current {
+				t.Fatalf("%v checked against %v: %v", tt.credentials, identity, err)
+			}
+		})
 	}
 }

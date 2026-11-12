@@ -216,7 +216,7 @@ func GetSiteIdentity(ctx context.Context, siteID string, identityName string, ro
 // GetJWTSiteIdentity is the site identity a user JWT is for. A JWT issued before the identity's password or TOTP last
 // changed is refused, so changing them signs out whoever had the old ones.
 func GetJWTSiteIdentity(ctx context.Context, cfg *config.ServerConfig, token string) (*controldb.SiteIdentity, error) {
-	subdomain, identityName, role, issuedAtMs, err := cfg.Security.VerifyUserJWTToken(token)
+	subdomain, identityName, role, credentials, err := cfg.Security.VerifyUserJWTToken(token)
 	if err != nil {
 		return nil, fmt.Errorf("bad JWT token: %w", err)
 	}
@@ -225,19 +225,10 @@ func GetJWTSiteIdentity(ctx context.Context, cfg *config.ServerConfig, token str
 		slog.WarnContext(ctx, "Bad JWT token cant find identity", "error", err)
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
-	if err := CheckIssuedAfterCredentialsChanged(identity, issuedAtMs); err != nil {
+	if err := credentials.CheckCurrent(identity); err != nil {
 		return nil, err
 	}
 	return identity, nil
-}
-
-// CheckIssuedAfterCredentialsChanged refuses a JWT issued, in milliseconds, before its site or control identity's
-// credentials changed
-func CheckIssuedAfterCredentialsChanged(identity interface{ GetCredentialsChangedAt() int64 }, issuedAtMs int64) error {
-	if issuedAtMs < identity.GetCredentialsChangedAt() {
-		return fmt.Errorf("JWT was issued before the identity's credentials changed")
-	}
-	return nil
 }
 
 // IdentityRevoked is whether identity, as it was when it authenticated, has since been deleted, disabled or given
@@ -245,7 +236,7 @@ func CheckIssuedAfterCredentialsChanged(identity interface{ GetCredentialsChange
 // request would be refused.
 func IdentityRevoked(ctx context.Context, controlDB *db.ControlDB, identity *controldb.SiteIdentity) bool {
 	current, err := controlDB.Queries.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: identity.SiteID, ID: identity.ID})
-	return err != nil || !current.Enabled || current.CredentialsChangedAt != identity.CredentialsChangedAt
+	return err != nil || !current.Enabled || current.CredentialsVersion != identity.CredentialsVersion
 }
 
 // RecordAuthClient records the identity authenticating from the request's app and network, for its site's admin to

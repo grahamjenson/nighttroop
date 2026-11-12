@@ -39,7 +39,7 @@ func assume(controlDB *db.ControlDB, config *config.ServerConfig, w http.Respons
 	if err != nil {
 		return err
 	}
-	token, expiresAt, err := config.Security.GenerateUserJWTToken(siteID, identity.Name, string(identity.Role))
+	token, expiresAt, err := config.Security.GenerateUserJWTToken(identity, siteID, identity.Name, string(identity.Role))
 	if err != nil {
 		return fmt.Errorf("failed to generate JWT token: %w", err)
 	}

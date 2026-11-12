@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -72,8 +71,14 @@ func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
 		site, err := controlDB.CreateSite(t.Context())
 		require.NoError(t, err)
 		siteID := site.SiteDB.Subdomain
+		getAdmin := func() *controldb.SiteIdentity {
+			admin, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
+			require.NoError(t, err)
+			return admin
+		}
+		// As the password step makes it, for the identity as it is then
 		preAuth := func() string {
-			token, _, err := testConfig.Security.GeneratePreAuthJWTToken(siteID, consts.FIRST_ADMIN_NAME)
+			token, _, err := testConfig.Security.GeneratePreAuthJWTToken(getAdmin(), siteID, consts.FIRST_ADMIN_NAME)
 			require.NoError(t, err)
 			return token
 		}
@@ -81,11 +86,8 @@ func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
 		token := ""
 		if preAuthBeforeReset {
 			token = preAuth()
-			time.Sleep(2 * time.Millisecond) // so the reset is a millisecond after the token
 		}
-		admin, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
-		require.NoError(t, err)
-		_, err = controlDB.ResetSiteIdentityPassword(t.Context(), admin, "control admin")
+		_, err = controlDB.ResetSiteIdentityPassword(t.Context(), getAdmin(), "control admin")
 		require.NoError(t, err)
 		if !preAuthBeforeReset {
 			token = preAuth()

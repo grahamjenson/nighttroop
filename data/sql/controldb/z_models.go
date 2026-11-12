@@ -24,7 +24,7 @@ type ControlIdentity struct {
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 	DeletedAt             *int64
-	CredentialsChangedAt  int64
+	CredentialsVersion    int64
 }
 
 type Passkey struct {
@@ -193,7 +193,7 @@ type SiteIdentity struct {
 	CreatedByIdentityID              int64
 	CreatedByIdentityName            string
 	Enabled                          bool
-	CredentialsChangedAt             int64
+	CredentialsVersion               int64
 	NightscoutTokenDigest            *string
 	Units                            *consts.Units
 	UnitsMgdlLabel                   *string

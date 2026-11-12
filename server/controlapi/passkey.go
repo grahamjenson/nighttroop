@@ -182,7 +182,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 		if err := controlDB.Queries.UpdateControlPasskeyUsed(r.Context(), controldb.UpdateControlPasskeyUsedParams{CredentialJson: string(credentialJSON), CredentialID: base64.RawURLEncoding.EncodeToString(credential.ID)}); err != nil {
 			slog.ErrorContext(r.Context(), "Unable to keep a control passkey's sign count", "error", err)
 		}
-		token, expiresAt, err := cfg.Security.GenerateControlJWTToken(user.identity.Name, string(user.identity.Role))
+		token, expiresAt, err := cfg.Security.GenerateControlJWTToken(user.identity, user.identity.Name, string(user.identity.Role))
 		if err != nil {
 			sitelogin.PasskeyError(w, r, http.StatusInternalServerError, "You could not be signed in.", err)
 			return

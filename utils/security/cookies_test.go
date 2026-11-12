@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -34,7 +35,7 @@ func TestTokenCookies(t *testing.T) {
 			cfg.ClearUserLoginCookie(w)
 		}, security.GetUserTokenFromRequest, "", true},
 		{"set pre-auth", security.PRE_AUTH_TOKEN_COOKIE, func(cfg *security.SecurityConfig, w http.ResponseWriter) {
-			if err := cfg.SetUserPreAuthCookie(w, "site", "device"); err != nil {
+			if err := cfg.SetUserPreAuthCookie(w, &controldb.SiteIdentity{ID: 1}, "site", "device"); err != nil {
 				t.Fatal(err)
 			}
 		}, security.GetUserPreAuthTokenFromRequest, "", false},

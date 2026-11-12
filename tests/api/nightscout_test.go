@@ -34,10 +34,7 @@ func TestNS(t *testing.T) {
 	fakeApplePush(t)
 	config, controlDB, siteInformation := testutils.NewControlDBWithSite(t)
 
-	defaultJwt, _, err := config.Security.GenerateUserJWTToken(siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
-	if err != nil {
-		t.Fatalf("failed to generate JWT token: %v", err)
-	}
+	defaultJwt := testutils.SiteJWT(t, config, controlDB, siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME)
 
 	router := server.GetMainHandler(controlDB, config)
 	// Background jobs are run after every request instead of on their timers
@@ -47,7 +44,7 @@ func TestNS(t *testing.T) {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() || filepath.Ext(path) != ".http" {
 			return err
 		}

@@ -60,8 +60,8 @@ func GetControlTokenFromRequest(r *http.Request) (string, error) {
 // User
 //////
 
-func (cfg *SecurityConfig) SetUserPreAuthCookie(w http.ResponseWriter, subdomain string, deviceName string) error {
-	tempToken, expiresAt, err := cfg.GeneratePreAuthJWTToken(subdomain, deviceName)
+func (cfg *SecurityConfig) SetUserPreAuthCookie(w http.ResponseWriter, identity Credentialed, subdomain string, deviceName string) error {
+	tempToken, expiresAt, err := cfg.GeneratePreAuthJWTToken(identity, subdomain, deviceName)
 	if err != nil {
 		return fmt.Errorf("error generating pre-auth token: %w", err)
 	}

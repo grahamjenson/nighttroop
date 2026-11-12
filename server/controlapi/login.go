@@ -111,7 +111,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		}
 		controlDB.Logs.SignedInEvent(r.Context(), "", admin.Name, from)
 
-		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, string(admin.Role))
+		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin, admin.Name, string(admin.Role))
 		if err != nil {
 			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("failed to generate JWT token: %w", err))
 			return

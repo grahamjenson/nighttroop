@@ -125,7 +125,7 @@ func Authorization(siteContext *httputils.SiteContext) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	token, expiresAt, err := siteContext.Config.Security.GenerateUserJWTToken(siteContext.SiteID, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
+	token, expiresAt, err := siteContext.Config.Security.GenerateUserJWTToken(siteContext.IdentityModel, siteContext.SiteID, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
 	if err != nil {
 		return nil, err
 	}

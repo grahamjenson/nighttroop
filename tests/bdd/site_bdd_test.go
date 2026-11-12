@@ -99,12 +99,7 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 	siteInformation, err := controlDB.CreateSite(t.Context())
 	require.NoError(t, err)
 
-	defaultJwt, _, err := config.Security.GenerateUserJWTToken(siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
-	if err != nil {
-		t.Fatalf("failed to generate JWT token: %v", err)
-	}
-
-	require.NoError(t, err)
+	defaultJwt := testutils.SiteJWT(t, config, controlDB, siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME)
 	require.NotEmpty(t, defaultJwt) // for the API requests; browser tests still sign in on the login page
 
 	// Wrapped as main.go wraps it, so a form posting from one of the server's hosts to another is refused here too

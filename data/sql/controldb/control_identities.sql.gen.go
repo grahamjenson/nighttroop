@@ -13,7 +13,7 @@ import (
 )
 
 const allControlIdentities = `-- name: AllControlIdentities :many
-SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at FROM control_identities ORDER BY created_at DESC LIMIT 100
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_version FROM control_identities ORDER BY created_at DESC LIMIT 100
 `
 
 // Control has at most 20 admins, see controlapi.maxControlAdmins
@@ -40,7 +40,7 @@ func (q *Queries) AllControlIdentities(ctx context.Context) ([]*ControlIdentity,
 			&i.CreatedByIdentityID,
 			&i.CreatedByIdentityName,
 			&i.DeletedAt,
-			&i.CredentialsChangedAt,
+			&i.CredentialsVersion,
 		); err != nil {
 			return nil, err
 		}
@@ -74,16 +74,14 @@ INSERT INTO control_identities (
     totp_secret_enc,
     role,
     created_by_identity_id,
-    created_by_identity_name,
-    credentials_changed_at
+    created_by_identity_name
 ) VALUES (
     ?,
     ?,
     ?,
     ?,
     ?,
-    ?,
-    CAST(unixepoch('subsec') * 1000 AS INTEGER)
+    ?
  )
 `
 
@@ -122,7 +120,7 @@ func (q *Queries) DeleteControlIdentity(ctx context.Context, arg DeleteControlId
 }
 
 const getControlIdentity = `-- name: GetControlIdentity :one
-SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at FROM control_identities WHERE name = ?1 LIMIT 1
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_version FROM control_identities WHERE name = ?1 LIMIT 1
 `
 
 type GetControlIdentityParams struct {
@@ -146,13 +144,13 @@ func (q *Queries) GetControlIdentity(ctx context.Context, arg GetControlIdentity
 		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 		&i.DeletedAt,
-		&i.CredentialsChangedAt,
+		&i.CredentialsVersion,
 	)
 	return &i, err
 }
 
 const getControlIdentityByID = `-- name: GetControlIdentityByID :one
-SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at FROM control_identities WHERE id = ?1
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_version FROM control_identities WHERE id = ?1
 `
 
 type GetControlIdentityByIDParams struct {
@@ -176,14 +174,14 @@ func (q *Queries) GetControlIdentityByID(ctx context.Context, arg GetControlIden
 		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 		&i.DeletedAt,
-		&i.CredentialsChangedAt,
+		&i.CredentialsVersion,
 	)
 	return &i, err
 }
 
 const updateControlIdentityPassword = `-- name: UpdateControlIdentityPassword :exec
 UPDATE control_identities
-SET password_hash = ?1, credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+SET password_hash = ?1, credentials_version = credentials_version + 1,
     updated_by_identity_id = ?2, updated_by_identity_name = ?3
 WHERE id = ?4
 `
@@ -232,7 +230,7 @@ func (q *Queries) UpdateControlIdentityRole(ctx context.Context, arg UpdateContr
 
 const updateControlIdentityTOTP = `-- name: UpdateControlIdentityTOTP :exec
 UPDATE control_identities
-SET totp_secret_enc = ?1, credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+SET totp_secret_enc = ?1, credentials_version = credentials_version + 1,
     updated_by_identity_id = ?2, updated_by_identity_name = ?3
 WHERE id = ?4
 `

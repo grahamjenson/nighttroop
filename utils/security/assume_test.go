@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -26,7 +27,7 @@ func TestAssumeJWTToken(t *testing.T) {
 	require.ErrorContains(t, err, "has been used")
 
 	// A sign in token is not a link to sign in
-	userToken, _, err := cfg.GenerateUserJWTToken("abcdefgh", "admin", string(consts.IdentityRoleAdmin))
+	userToken, _, err := cfg.GenerateUserJWTToken(&controldb.SiteIdentity{ID: 1}, "abcdefgh", "admin", string(consts.IdentityRoleAdmin))
 	require.NoError(t, err)
 	_, _, err = cfg.VerifyAssumeJWTToken(userToken, "abcdefgh")
 	require.Error(t, err)

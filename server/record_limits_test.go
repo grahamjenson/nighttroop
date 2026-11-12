@@ -21,8 +21,7 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	handler := GetMainHandler(controlDB, config)
 	subdomain := site.SiteDB.Subdomain
-	jwt, _, err := config.Security.GenerateUserJWTToken(subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
-	require.NoError(t, err)
+	jwt := testutils.SiteJWT(t, config, controlDB, subdomain, consts.FIRST_PWD_NAME)
 
 	send := func(method, url, body string) any {
 		r := httptest.NewRequest(method, url, strings.NewReader(body))

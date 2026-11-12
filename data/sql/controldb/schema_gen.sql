@@ -27,8 +27,8 @@ CREATE TABLE control_identities (
 
     deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
 
-    -- credentials_changed_at is when its password or TOTP last changed, or it was made: JWTs issued before it are refused
-    credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    -- credentials_version counts its password and TOTP changes: a JWT carries it, and one from an older version is refused
+    credentials_version INTEGER NOT NULL DEFAULT 0
 ) STRICT;
 
 CREATE TABLE passkeys (
@@ -181,8 +181,8 @@ CREATE TABLE site_identities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
     enabled INTEGER NOT NULL DEFAULT 1,
-    -- credentials_changed_at is when its password or TOTP last changed, or it was made: JWTs issued before it are refused
-    credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    -- credentials_version counts its password and TOTP changes: a JWT carries it, and one from an older version is refused
+    credentials_version INTEGER NOT NULL DEFAULT 0,
     -- nightscout_token_digest finds the identity from the SHA1 of its Nightscout token, which xDrip+ sends as its
     -- api-secret. It is the SHA256 of that SHA1, so it is not what is sent.
     nightscout_token_digest TEXT CHECK(length(nightscout_token_digest) = 64),

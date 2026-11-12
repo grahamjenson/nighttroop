@@ -341,7 +341,7 @@ func passkeySignIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerCon
 		PasskeyError(w, r, http.StatusForbidden, "This identity cannot sign in to the website.", nil)
 		return
 	}
-	token, expiresAt, err := cfg.Security.GenerateUserJWTToken(identity.SiteID, identity.Name, string(identity.Role))
+	token, expiresAt, err := cfg.Security.GenerateUserJWTToken(identity, identity.SiteID, identity.Name, string(identity.Role))
 	if err != nil {
 		PasskeyError(w, r, http.StatusInternalServerError, "You could not be signed in.", err)
 		return

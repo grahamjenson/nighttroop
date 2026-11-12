@@ -22,8 +22,7 @@ func TestGlobalRateLimitLeavesTheControlSite(t *testing.T) {
 	limiters.ControlRateLimiter = rate.NewLimiter(0, 1)
 	config.RateLimiters = &limiters
 	handler := GetMainHandler(controlDB, &config)
-	token, _, err := config.Security.GenerateControlJWTToken(consts.FIRST_ADMIN_NAME, string(consts.ControlRoleAdmin))
-	require.NoError(t, err)
+	token := testutils.ControlJWT(t, &config, controlDB, consts.FIRST_ADMIN_NAME)
 
 	send := func(url string, token string) int {
 		r := httptest.NewRequest("GET", url, nil)

@@ -55,7 +55,7 @@ func TestAuthenticatedRequestsDoNotSpendTheUnauthenticatedLimit(t *testing.T) {
 	subdomain := site.SiteDB.Subdomain
 	identity, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: subdomain, Name: consts.FIRST_READ_ONLY_NAME})
 	require.NoError(t, err)
-	jwt, _, err := cfg.Security.GenerateUserJWTToken(subdomain, identity.Name, string(identity.Role))
+	jwt, _, err := cfg.Security.GenerateUserJWTToken(identity, subdomain, identity.Name, string(identity.Role))
 	require.NoError(t, err)
 	router := NewNightscoutRouter(controlDB, cfg)
 

@@ -75,10 +75,7 @@ func newEndpointFuzzer(tb testing.TB) *endpointFuzzer {
 	subdomain := site.SiteDB.Subdomain
 	router := server.GetMainHandler(controlDB, config)
 
-	siteJWT, _, err := config.Security.GenerateUserJWTToken(subdomain, consts.FIRST_ADMIN_NAME, string(consts.IdentityRoleAdmin))
-	if err != nil {
-		tb.Fatalf("failed to make the site's JWT: %v", err)
-	}
+	siteJWT := testutils.SiteJWT(tb, config, controlDB, subdomain, consts.FIRST_ADMIN_NAME)
 	fuzz := &endpointFuzzer{router: router, endpoints: collectEndpoints(tb), hosts: map[endpointHost]struct{ host, auth string }{
 		nightscoutHost: {subdomain + ".ns.localhost", nightscoutJWT(tb, router, subdomain, site.PwdNSToken)},
 		siteHost:       {subdomain + ".localhost", siteJWT},
