@@ -3,6 +3,7 @@ package nightscoutmodels
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -63,6 +64,9 @@ type Treatment struct {
 	DurationMinutes        *types.FlexibleInt64 `json:"duration,omitempty"`               // minutes
 	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // milliseconds
 	DurationType           *types.ShortString   `json:"durationType,omitempty"`           // Loop's "indefinite" override
+	// DurationFraction is whether duration was sent with a fraction of a minute, as Loop sends a dose's, so it is given
+	// back with it from durationInMilliseconds
+	DurationFraction *bool `json:"-"`
 
 	// Treatment-specific fields
 	Profile             *types.ShortString     `json:"profile,omitempty"`
@@ -108,6 +112,12 @@ type Treatment struct {
 	Reason    *types.ShortString     `json:"reason,omitempty"`
 	// UUID is given back as sent, as xDrip+ matches its own treatments by it
 	UUID *types.ShortString `json:"uuid,omitempty"`
+	// Loop's id for a carb entry or dose, which it finds its own by, given back as sent; the identifier is made from it
+	SyncIdentifier *string `json:"syncIdentifier,omitempty"`
+	// Loop's insulin of a dose, a bolus's insulin not absorbed, and when a carb entry was entered, given back as sent
+	InsulinType   *types.ShortString     `json:"insulinType,omitempty"`
+	Unabsorbed    *types.FlexibleFloat64 `json:"unabsorbed,omitempty"`
+	UserEnteredAt *types.DateString      `json:"userEnteredAt,omitempty"`
 
 	// Default String Fields
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
@@ -129,6 +139,9 @@ type Treatment struct {
 	SentJSON string `json:"-"`
 }
 
+// MaxSyncIdentifierLength is the longest syncIdentifier given back, as an Omnipod dose's is 60 to 70 characters
+const MaxSyncIdentifierLength = 256
+
 // InsulinConfig is AAPS's insulin, its times in milliseconds
 type InsulinConfig struct {
 	InsulinLabel    *types.ShortString     `json:"insulinLabel,omitempty"`
@@ -143,8 +156,10 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	aux := struct {
 		LegacyID *types.IdentifierString `json:"_id"`
 		// Trio's own id, which it deletes by; one that is not an identifier is left out rather than refuse the upload
-		ID             json.RawMessage         `json:"id"`
-		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
+		ID             json.RawMessage `json:"id"`
+		SyncIdentifier json.RawMessage `json:"syncIdentifier"`
+		// Shadows DurationMinutes, so a duration's fraction of a minute is kept
+		Duration *types.FlexibleFloat64 `json:"duration"`
 		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
 		EventTime *types.DateString `json:"eventTime"`
 		// Shadows Timestamp, so a timestamp sent is not read
@@ -168,12 +183,25 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		t.Identifier = types.IdentifierFromJSON(aux.ID)
 	}
 	if t.Identifier == nil {
-		t.Identifier = aux.SyncIdentifier
+		t.Identifier = types.IdentifierFromJSON(aux.SyncIdentifier)
+	}
+	var syncIdentifier string
+	if json.Unmarshal(aux.SyncIdentifier, &syncIdentifier) == nil && syncIdentifier != "" && len(syncIdentifier) <= MaxSyncIdentifierLength {
+		t.SyncIdentifier = &syncIdentifier
 	}
 	if t.Identifier == nil && t.UUID != nil {
 		t.Identifier = types.ToIdentifierString(string(*t.UUID))
 	}
 
+	// A duration's whole minutes are kept in its events, and a fraction of a minute in milliseconds
+	if aux.Duration != nil {
+		minutes := float64(*aux.Duration)
+		t.DurationMinutes = new(types.FlexibleInt64(minutes))
+		t.DurationFraction = new(minutes != math.Trunc(minutes) && minutes > 0 && minutes < 525600)
+		if *t.DurationFraction && t.DurationInMilliseconds == nil {
+			t.DurationInMilliseconds = new(types.FlexibleInt64(math.Round(minutes * 60_000)))
+		}
+	}
 	// A duration sent only in milliseconds is in minutes too, the nearest, as its events keep minutes
 	if t.DurationMinutes == nil && t.DurationInMilliseconds != nil {
 		t.DurationMinutes = new(types.FlexibleInt64((*t.DurationInMilliseconds + 30_000) / 60_000))
@@ -191,6 +219,22 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// MarshalJSON gives a duration sent with a fraction of a minute back with it, from its milliseconds
+func (t Treatment) MarshalJSON() ([]byte, error) {
+	type Alias Treatment
+	aux := struct {
+		Alias
+		Duration any `json:"duration,omitempty"`
+	}{Alias: Alias(t)}
+	if t.DurationMinutes != nil {
+		aux.Duration = t.DurationMinutes
+	}
+	if t.DurationFraction != nil && *t.DurationFraction && t.DurationInMilliseconds != nil {
+		aux.Duration = float64(*t.DurationInMilliseconds) / 60_000
+	}
+	return json.Marshal(aux)
 }
 
 //"eventType": "Correction Bolus",

@@ -114,10 +114,15 @@ type EventGroup struct {
 	TransmitterID             *string
 	IcfgJson                  *string
 	BolusCalculatorResultJson *string
+	SyncIdentifier            *string
+	InsulinType               *string
+	UserEnteredAt             *int64
+	Unabsorbed                *float64
 	Notes                     *string
 	Reason                    *string
 	DurationMinutes           *int64
 	DurationMs                *int64
+	DurationFraction          *bool
 	DeletedAt                 *int64
 	UtcOffsetMinutes          *int64
 	OccurredAt                int64

@@ -363,6 +363,10 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xint642 := *source.DurationMs
 		sitedbCreateEventGroupParams.DurationMs = &xint642
 	}
+	if source.DurationFraction != nil {
+		xbool := *source.DurationFraction
+		sitedbCreateEventGroupParams.DurationFraction = &xbool
+	}
 	if source.EnteredBy != nil {
 		xstring11 := *source.EnteredBy
 		sitedbCreateEventGroupParams.EnteredBy = &xstring11
@@ -376,8 +380,8 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		sitedbCreateEventGroupParams.Mode = &xstring13
 	}
 	if source.AutoForced != nil {
-		xbool := *source.AutoForced
-		sitedbCreateEventGroupParams.AutoForced = &xbool
+		xbool2 := *source.AutoForced
+		sitedbCreateEventGroupParams.AutoForced = &xbool2
 	}
 	if source.Reasons != nil {
 		xstring14 := *source.Reasons
@@ -423,23 +427,39 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring23 := *source.BolusCalculatorResultJson
 		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring23
 	}
+	if source.SyncIdentifier != nil {
+		xstring24 := *source.SyncIdentifier
+		sitedbCreateEventGroupParams.SyncIdentifier = &xstring24
+	}
+	if source.InsulinType != nil {
+		xstring25 := *source.InsulinType
+		sitedbCreateEventGroupParams.InsulinType = &xstring25
+	}
+	if source.UserEnteredAt != nil {
+		xint644 := *source.UserEnteredAt
+		sitedbCreateEventGroupParams.UserEnteredAt = &xint644
+	}
+	if source.Unabsorbed != nil {
+		xfloat64 := *source.Unabsorbed
+		sitedbCreateEventGroupParams.Unabsorbed = &xfloat64
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint644 := *source.UtcOffsetMinutes
-		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint644
+		xint645 := *source.UtcOffsetMinutes
+		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
-		xstring24 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring24
+		xstring26 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring26
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring25 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring25
+		xstring27 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring27
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint645 := *source.CreatedByIdentityID
-		sitedbCreateEventGroupParams.CreatedByIdentityID = &xint645
+		xint646 := *source.CreatedByIdentityID
+		sitedbCreateEventGroupParams.CreatedByIdentityID = &xint646
 	}
 	return sitedbCreateEventGroupParams
 }
@@ -502,6 +522,10 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		xint642 := *source.DurationMs
 		sitedbUpdateEventGroupParams.DurationMs = &xint642
 	}
+	if source.DurationFraction != nil {
+		xbool := *source.DurationFraction
+		sitedbUpdateEventGroupParams.DurationFraction = &xbool
+	}
 	if source.Uuid != nil {
 		xstring12 := *source.Uuid
 		sitedbUpdateEventGroupParams.Uuid = &xstring12
@@ -511,8 +535,8 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		sitedbUpdateEventGroupParams.Mode = &xstring13
 	}
 	if source.AutoForced != nil {
-		xbool := *source.AutoForced
-		sitedbUpdateEventGroupParams.AutoForced = &xbool
+		xbool2 := *source.AutoForced
+		sitedbUpdateEventGroupParams.AutoForced = &xbool2
 	}
 	if source.Reasons != nil {
 		xstring14 := *source.Reasons
@@ -558,13 +582,29 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		xstring23 := *source.BolusCalculatorResultJson
 		sitedbUpdateEventGroupParams.BolusCalculatorResultJson = &xstring23
 	}
+	if source.SyncIdentifier != nil {
+		xstring24 := *source.SyncIdentifier
+		sitedbUpdateEventGroupParams.SyncIdentifier = &xstring24
+	}
+	if source.InsulinType != nil {
+		xstring25 := *source.InsulinType
+		sitedbUpdateEventGroupParams.InsulinType = &xstring25
+	}
+	if source.UserEnteredAt != nil {
+		xint644 := *source.UserEnteredAt
+		sitedbUpdateEventGroupParams.UserEnteredAt = &xint644
+	}
+	if source.Unabsorbed != nil {
+		xfloat64 := *source.Unabsorbed
+		sitedbUpdateEventGroupParams.Unabsorbed = &xfloat64
+	}
 	if source.UpdatedByIdentityID != nil {
-		xint644 := *source.UpdatedByIdentityID
-		sitedbUpdateEventGroupParams.UpdatedByIdentityID = &xint644
+		xint645 := *source.UpdatedByIdentityID
+		sitedbUpdateEventGroupParams.UpdatedByIdentityID = &xint645
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring24 := *source.UpdatedByIdentityName
-		sitedbUpdateEventGroupParams.UpdatedByIdentityName = &xstring24
+		xstring26 := *source.UpdatedByIdentityName
+		sitedbUpdateEventGroupParams.UpdatedByIdentityName = &xstring26
 	}
 	sitedbUpdateEventGroupParams.ID = source.ID
 	return sitedbUpdateEventGroupParams
@@ -2345,52 +2385,72 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xstring21 := *source.BolusCalculatorResultJson
 		sitedbEventGroup.BolusCalculatorResultJson = &xstring21
 	}
+	if source.SyncIdentifier != nil {
+		xstring22 := *source.SyncIdentifier
+		sitedbEventGroup.SyncIdentifier = &xstring22
+	}
+	if source.InsulinType != nil {
+		xstring23 := *source.InsulinType
+		sitedbEventGroup.InsulinType = &xstring23
+	}
+	if source.UserEnteredAt != nil {
+		xint642 := *source.UserEnteredAt
+		sitedbEventGroup.UserEnteredAt = &xint642
+	}
+	if source.Unabsorbed != nil {
+		xfloat64 := *source.Unabsorbed
+		sitedbEventGroup.Unabsorbed = &xfloat64
+	}
 	if source.Notes != nil {
-		xstring22 := *source.Notes
-		sitedbEventGroup.Notes = &xstring22
+		xstring24 := *source.Notes
+		sitedbEventGroup.Notes = &xstring24
 	}
 	if source.Reason != nil {
-		xstring23 := *source.Reason
-		sitedbEventGroup.Reason = &xstring23
+		xstring25 := *source.Reason
+		sitedbEventGroup.Reason = &xstring25
 	}
 	if source.DurationMinutes != nil {
-		xint642 := *source.DurationMinutes
-		sitedbEventGroup.DurationMinutes = &xint642
+		xint643 := *source.DurationMinutes
+		sitedbEventGroup.DurationMinutes = &xint643
 	}
 	if source.DurationMs != nil {
-		xint643 := *source.DurationMs
-		sitedbEventGroup.DurationMs = &xint643
+		xint644 := *source.DurationMs
+		sitedbEventGroup.DurationMs = &xint644
+	}
+	if source.DurationFraction != nil {
+		xbool2 := *source.DurationFraction
+		sitedbEventGroup.DurationFraction = &xbool2
 	}
 	if source.DeletedAt != nil {
-		xint644 := *source.DeletedAt
-		sitedbEventGroup.DeletedAt = &xint644
+		xint645 := *source.DeletedAt
+		sitedbEventGroup.DeletedAt = &xint645
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint645 := *source.UtcOffsetMinutes
-		sitedbEventGroup.UtcOffsetMinutes = &xint645
+		xint646 := *source.UtcOffsetMinutes
+		sitedbEventGroup.UtcOffsetMinutes = &xint646
 	}
 	sitedbEventGroup.OccurredAt = source.OccurredAt
 	sitedbEventGroup.CreatedAt = source.CreatedAt
 	sitedbEventGroup.UpdatedAt = source.UpdatedAt
 	if source.CreatedByAppName != nil {
-		xstring24 := *source.CreatedByAppName
-		sitedbEventGroup.CreatedByAppName = &xstring24
+		xstring26 := *source.CreatedByAppName
+		sitedbEventGroup.CreatedByAppName = &xstring26
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring25 := *source.CreatedByDeviceName
-		sitedbEventGroup.CreatedByDeviceName = &xstring25
+		xstring27 := *source.CreatedByDeviceName
+		sitedbEventGroup.CreatedByDeviceName = &xstring27
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint646 := *source.UpdatedByIdentityID
-		sitedbEventGroup.UpdatedByIdentityID = &xint646
+		xint647 := *source.UpdatedByIdentityID
+		sitedbEventGroup.UpdatedByIdentityID = &xint647
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring26 := *source.UpdatedByIdentityName
-		sitedbEventGroup.UpdatedByIdentityName = &xstring26
+		xstring28 := *source.UpdatedByIdentityName
+		sitedbEventGroup.UpdatedByIdentityName = &xstring28
 	}
 	if source.CreatedByIdentityID != nil {
-		xint647 := *source.CreatedByIdentityID
-		sitedbEventGroup.CreatedByIdentityID = &xint647
+		xint648 := *source.CreatedByIdentityID
+		sitedbEventGroup.CreatedByIdentityID = &xint648
 	}
 	sitedbEventGroup.CreatedByIdentityName = source.CreatedByIdentityName
 	return sitedbEventGroup

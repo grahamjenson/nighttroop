@@ -983,6 +983,12 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
   automatic bolus as an SMB and leaves it out of its bolus stats.
+- A Loop treatment's `syncIdentifier` comes back as sent, up to 256 characters, through API v1 and v3, as Loop finds
+  its own by it, though a dose's `_id` is a hash of an Omnipod one; so do its `insulinType`, a carb entry's
+  `userEnteredAt` (in UTC) and a bolus's `unabsorbed`.
+- A treatment's `duration` sent with a fraction of a minute, as Loop sends a dose ended early (a 1.67 minute bolus),
+  is kept to the millisecond and given back with it, through API v1 and v3, while its whole minutes are its events';
+  one sent in whole minutes, as AAPS sends with its `durationInMilliseconds`, is given back in whole minutes.
 - xDrip+'s `Sensor Stop` treatments are kept as an event group, with their event type, so the treatments it uploads
   after one are kept too; the site can add a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.

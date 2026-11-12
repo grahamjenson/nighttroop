@@ -174,7 +174,9 @@ CREATE TABLE event_groups (
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
     -- (sensor_code, transmitter_id), the insulin AAPS says a bolus or profile switch was given with (icfg_json), and
-    -- AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json)
+    -- AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json),
+    -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier), the insulin it says a dose
+    -- is of (insulin_type), when a carb entry was entered (user_entered_at) and a bolus's insulin not absorbed (unabsorbed)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -189,6 +191,10 @@ CREATE TABLE event_groups (
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
     icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
     bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
+    sync_identifier TEXT CHECK(length(sync_identifier) <= 256),
+    insulin_type TEXT CHECK(length(insulin_type) <= 64),
+    user_entered_at INTEGER CHECK(user_entered_at BETWEEN 0 AND 253402300799999),
+    unabsorbed REAL CHECK(unabsorbed BETWEEN 0 AND 500),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -197,6 +203,9 @@ CREATE TABLE event_groups (
     -- the duration to the millisecond, as sent (durationInMilliseconds), at most a year, as AAPS ends a temp target early
     -- to the millisecond and reads it back before the minutes
     duration_ms INTEGER CHECK(duration_ms BETWEEN 0 AND 31536000000),
+    -- whether the duration was sent with a fraction of a minute, as Loop sends a dose's, so it is given back with it,
+    -- from duration_ms, rather than as whole minutes
+    duration_fraction INTEGER CHECK(duration_fraction IN (0, 1)),
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
