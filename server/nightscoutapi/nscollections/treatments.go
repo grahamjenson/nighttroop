@@ -107,19 +107,17 @@ func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context
 	return nil, nil
 }
 
-// Refresh replaces a treatment sent again with the one sent, as Nightscout upserts a treatment on its created_at and
-// eventType: Loop sends a temp basal or bolus again when it ends with what was delivered, and Trio a temp target that
-// ended early with its real duration. One of another type, sent the same as it was, by the hash of its JSON, or
-// stored without that hash, is left as it is.
+// Refresh merges a treatment sent again into the one stored, as a patch does: what it sends is changed and what it
+// leaves out is kept. Loop sends a temp basal or bolus again when it ends with what was delivered, Trio a temp target
+// that ended early with its real duration, and AAPS's Bolus Wizard its bolus and then its carbs as two Meal Boluses at
+// the same date, which Nightscout, replacing the first with the second, loses the insulin of. One of another type,
+// sent the same as it was, by the hash of its JSON, or stored without that hash, is left as it is.
 func (c TreatmentCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, bool, error) {
 	sent, resent := stored.EventGroup.SentHash, nightscoutmodels.SentHash(nsModel.SentJSON)
 	if nsModel.EventType.String() != stored.EventGroup.GroupType || sent == nil || resent == nil || *sent == *resent {
 		return stored, false, nil
 	}
-	if _, err := hardDeleteEventGroup(ctx, q, stored.EventGroup.ID); err != nil {
-		return nil, false, err
-	}
-	refreshed, err := c.CreateModel(q, ctx, nsModel, cc, &stored.EventGroup.ID)
+	refreshed, err := c.UpdateModel(q, ctx, nsModel, stored.EventGroup.ID, stored, cc)
 	return refreshed, true, err
 }
 

@@ -67,7 +67,7 @@ type CollectionStored[NS any] interface {
 }
 
 // CollectionRefresher is a CollectionDeduplicator whose duplicate takes the values of the model repeating it, as
-// Nightscout upserts one sent again. It is the duplicate as it is now, and whether it changed, which it must not when
+// Nightscout upserts one sent again, or, for treatments, the values it sends, keeping the rest. It is the duplicate as it is now, and whether it changed, which it must not when
 // the values are the same, so a client sending a batch again changes nothing.
 type CollectionRefresher[NS, DM any] interface {
 	Refresh(q *sitedb.Queries, ctx context.Context, nsModel NS, duplicate *DM, cc nightscoutmodels.ConverterContext) (*DM, bool, error)

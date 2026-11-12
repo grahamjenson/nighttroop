@@ -538,6 +538,10 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		xstring21 := *source.TransmitterID
 		sitedbUpdateEventGroupParams.TransmitterID = &xstring21
 	}
+	if source.DurationMinutes != nil {
+		xint642 := *source.DurationMinutes
+		sitedbUpdateEventGroupParams.DurationMinutes = &xint642
+	}
 	if source.IcfgJson != nil {
 		xstring22 := *source.IcfgJson
 		sitedbUpdateEventGroupParams.IcfgJson = &xstring22
@@ -547,8 +551,8 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		sitedbUpdateEventGroupParams.BolusCalculatorResultJson = &xstring23
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint642 := *source.UpdatedByIdentityID
-		sitedbUpdateEventGroupParams.UpdatedByIdentityID = &xint642
+		xint643 := *source.UpdatedByIdentityID
+		sitedbUpdateEventGroupParams.UpdatedByIdentityID = &xint643
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring24 := *source.UpdatedByIdentityName

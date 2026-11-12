@@ -401,6 +401,10 @@ func EventGroupUpdate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring21 := *source.TransmitterID
 		sitedbUpdateEventGroupParams.TransmitterID = &xstring21
 	}
+	if source.DurationMinutes != nil {
+		xint642 := *source.DurationMinutes
+		sitedbUpdateEventGroupParams.DurationMinutes = &xint642
+	}
 	if source.IcfgJson != nil {
 		xstring22 := *source.IcfgJson
 		sitedbUpdateEventGroupParams.IcfgJson = &xstring22

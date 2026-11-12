@@ -1973,13 +1973,14 @@ UPDATE event_groups SET
     pump_type = COALESCE(NULLIF(CAST(?21 AS TEXT), ''), pump_type),
     sensor_code = COALESCE(NULLIF(CAST(?22 AS TEXT), ''), sensor_code),
     transmitter_id = COALESCE(NULLIF(CAST(?23 AS TEXT), ''), transmitter_id),
-    icfg_json = COALESCE(?24, icfg_json),
-    bolus_calculator_result_json = COALESCE(NULLIF(CAST(?25 AS TEXT), ''), bolus_calculator_result_json),
+    duration_minutes = COALESCE(?24, duration_minutes),
+    icfg_json = COALESCE(?25, icfg_json),
+    bolus_calculator_result_json = COALESCE(NULLIF(CAST(?26 AS TEXT), ''), bolus_calculator_result_json),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?26,
-    updated_by_identity_name = ?27
-WHERE id = ?28 AND deleted_at IS NULL
+    updated_by_identity_id = ?27,
+    updated_by_identity_name = ?28
+WHERE id = ?29 AND deleted_at IS NULL
 RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, duration_type, sent_hash, pump_id, pump_serial, pump_type, sensor_code, transmitter_id, icfg_json, bolus_calculator_result_json, notes, reason, duration_minutes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
@@ -2007,6 +2008,7 @@ type UpdateEventGroupParams struct {
 	PumpType                  *string
 	SensorCode                *string
 	TransmitterID             *string
+	DurationMinutes           *int64
 	IcfgJson                  *string
 	BolusCalculatorResultJson *string
 	UpdatedByIdentityID       *int64
@@ -2042,6 +2044,7 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		arg.PumpType,
 		arg.SensorCode,
 		arg.TransmitterID,
+		arg.DurationMinutes,
 		arg.IcfgJson,
 		arg.BolusCalculatorResultJson,
 		arg.UpdatedByIdentityID,

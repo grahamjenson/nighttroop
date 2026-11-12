@@ -9966,6 +9966,16 @@ func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
+// GetDurationMinutes returns the DurationMinutes value.
+func (m UpdateEventGroupParams) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
 // GetIcfgJson returns the IcfgJson value.
 func (m UpdateEventGroupParams) GetIcfgJson() *string {
 	return m.IcfgJson

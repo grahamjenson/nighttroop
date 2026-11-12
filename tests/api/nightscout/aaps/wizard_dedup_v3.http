@@ -1,0 +1,107 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// The Bolus Wizard's bolus and its carbs are two treatments AAPS sends with the same date and eventType Meal Bolus
+// (BS.toNSBolus, CA.toNSCarbs). The carbs are a duplicate of the bolus, which they are merged into, so the bolus's
+// insulin is kept: Nightscout replaces it, losing the insulin.
+SET wizard_at {{ itime 30 }}
+
+NAME add_wizard_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ .wizard_at }},
+    "utcOffset": 780,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Meal Bolus",
+    "pumpId": 1794456578717,
+    "pumpType": "DANA_I",
+    "pumpSerial": "AAPS1234",
+    "insulin": 0.4,
+    "type": "NORMAL",
+    "isBasalInsulin": false,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+SET bolus_id {{ .add_wizard_bolus.identifier }}
+
+NAME add_wizard_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ .wizard_at }},
+    "utcOffset": 780,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Meal Bolus",
+    "carbs": 20.0,
+    "notes": "",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@isDeduplication"
+ASSERT_EQUALS ".bolus_id" "@deduplicatedIdentifier"
+ASSERT_EQUALS ".bolus_id" "@identifier"
+
+NAME get_wizard_meal_bolus
+GET http://{{ site }}/api/v3/treatments/{{ .bolus_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Meal Bolus" "@result.eventType"
+ASSERT_EQUALS 0.4 "@result.insulin"
+ASSERT_EQUALS 20 "@result.carbs"
+ASSERT_EQUALS "NORMAL" "@result.type"
+ASSERT_EXISTS "@result.pumpId"
+ASSERT_EQUALS "DANA_I" "@result.pumpType"
+ASSERT_EQUALS "AAPS1234" "@result.pumpSerial"
+SET merged_since {{ addms (dig "get_wizard_meal_bolus.result.srvModified") 1 }}
+
+NAME only_one_meal_bolus
+GET http://{{ site }}/api/v3/treatments?eventType$eq=Meal%20Bolus&limit=10
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+// The carbs sent again, as they were, change nothing
+NAME add_wizard_carbs_again
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ .wizard_at }},
+    "utcOffset": 780,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Meal Bolus",
+    "carbs": 20.0,
+    "notes": "",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@isDeduplication"
+ASSERT_EQUALS ".bolus_id" "@deduplicatedIdentifier"
+
+NAME wizard_carbs_again_unchanged
+GET http://{{ site }}/api/v3/treatments/history/{{ .merged_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// API v1 creates the same way, so a bolus and its carbs sent there at the same created_at are one Meal Bolus too
+SET v1_wizard_at {{ time 40 }}
+
+NAME add_wizard_bolus_v1
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B { "created_at": "{{ .v1_wizard_at }}", "eventType": "Meal Bolus", "insulin": 1.5, "type": "NORMAL" }
+ASSERT_STATUS 200
+SET bolus_v1_id {{ dig "add_wizard_bolus_v1.0._id" }}
+
+NAME add_wizard_carbs_v1
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B { "created_at": "{{ .v1_wizard_at }}", "eventType": "Meal Bolus", "carbs": 30 }
+ASSERT_STATUS 200
+ASSERT_EQUALS ".bolus_v1_id" "@0._id"
+ASSERT_EQUALS 1.5 "@0.insulin"
+ASSERT_EQUALS 30 "@0.carbs"
