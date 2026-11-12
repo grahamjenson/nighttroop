@@ -206,6 +206,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Every site's and the server's events, newest first, with readable names, when each started and how long it took.
 - Events can be filtered by type and searched (ignoring case); errors and logs have their own pages.
+- A request's log, and what Sentry is sent of it, has the `token`, `secret` and Socket.IO `sid` in its query
+  `REDACTED`, as a Socket.IO session's polls and posts carry only its `sid` once it is authorized.
 - Every log the server writes is kept in the logs too, written in batches, without IP addresses. Logs, events and
   errors keep the `request_id` or `job_id` they were for. Logs held for writing are capped at 1 MB; past that they are
   dropped, and the logs then say how many.
@@ -234,8 +236,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
 - A staging server with `CAPTURE_REQUESTS=true` keeps each request and its response as a `Captured <method> <path>`
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
-  64 KB. Authorization, cookies, API secrets, tokens, passwords, keys, TOTP codes, usernames, emails and URLs are
-  `REDACTED` in its headers, query, path and JSON or form bodies. Any other body, such as a page, text or one past
+  64 KB. Authorization, cookies, API secrets, tokens, Socket.IO session IDs, passwords, keys, TOTP codes, usernames,
+  emails and URLs are `REDACTED` in its headers, query, path and JSON or form bodies. Any other body, such as a page, text or one past
   64 KB, keeps only its size and content type, so a page showing a new site's credentials is not kept. A page's
   styles, scripts, images and fonts are not
   kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
