@@ -852,7 +852,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
-  identity's own, units included.
+  identity's own, units included, and each, a default too, has its `srvCreated` and `date` in milliseconds.
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
   `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these
