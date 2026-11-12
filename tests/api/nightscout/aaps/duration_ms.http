@@ -2,7 +2,8 @@ INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
 // AAPS sends a treatment's duration in whole minutes as duration, and to the millisecond as durationInMilliseconds,
-// which it reads back before duration (TreatmentMapper), so durationInMilliseconds is given back as sent
+// which it reads back before duration (TreatmentMapper), so durationInMilliseconds is given back as sent, and duration
+// as the minutes they are, with their fraction, as Loop sends it
 
 // TT.toNSTemporaryTarget
 NAME add_temp_target
@@ -48,7 +49,7 @@ GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 359587 "@result.durationInMilliseconds"
-ASSERT_EQUALS 5 "@result.duration"
+ASSERT_EQUALS 5.993116666666666 "@result.duration"
 ASSERT_EQUALS 140 "@result.targetTop"
 
 // Extended carbs, which have no event with a duration
