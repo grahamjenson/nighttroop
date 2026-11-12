@@ -81,5 +81,19 @@ ASSERT_EXISTS "@doc.srvModified"
 # No timestamp, which AAPS reads as a number (RemoteTreatment.timestamp) and drops the treatment when it is not
 ASSERT_EQUALS null "@doc.timestamp"
 
+# A careportal profile switch has no profileJson, so AAPS switches to its own profile of that name
+NAME post_profile_switch
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType":"Profile Switch","profile":"NSmmol","percentage":120,"duration":30,"created_at":"{{ time 0 }}"}
+ASSERT_STATUS 200
+
+NAME profile_switch_created
+WAIT create
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS "Profile Switch" "@doc.eventType"
+ASSERT_EQUALS "NSmmol" "@doc.profile"
+ASSERT_EQUALS null "@doc.profileJson"
+
 NAME bye
 DISCONNECT
