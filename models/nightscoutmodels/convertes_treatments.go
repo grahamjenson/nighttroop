@@ -439,6 +439,13 @@ func ToProfileJSON(source interface {
 	GetTargetsLowJson() *string
 	GetTargetsHighJson() *string
 }, siteContext *httputils.SiteContext) *types.LongJSONString {
+	// A switch sent with no profileJson, as the careportal and T1DCarer send one, names a profile the app has, so it
+	// gets none back: AAPS uses its own profile of that name only when there is no profileJson, and drops the switch
+	// when the profileJson has no schedules
+	if source.GetCarbRatiosJson() == nil && source.GetInsulinSensitivitiesJson() == nil && source.GetBasalRatesJson() == nil &&
+		source.GetTargetsLowJson() == nil && source.GetTargetsHighJson() == nil {
+		return nil
+	}
 	profile := Profile{}
 
 	if source.GetDia() != nil {

@@ -856,6 +856,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   clients read `sgv`, `mbg`, a treatment's `glucose`, a temp target's `targetTop` and `targetBottom` and a profile's
   targets as mg/dL: entries, treatments, profiles and their `units`, over HTTP and Socket.IO. It is accepted in the
   units sent with it, or guessed from its value.
+- A profile switch sent without a `profileJson`, as the careportal and T1DCarer send one naming a profile, comes back
+  without one, so AAPS switches to its own profile of that name.
 - A profile, or a profile switch's `profileJson`, sent in mmol/L comes back in mg/dL in every glucose: its `sens`,
   `target_low` and `target_high`, and Loop's `loopSettings` `minimumBGGuard`, `preMealTargetRange` and each override
   preset's `targetRange`, so a reader never sees an mmol/L sensitivity or suspend threshold labelled mg/dL. Every treatment comes back with `units`, a temp target and a therapy

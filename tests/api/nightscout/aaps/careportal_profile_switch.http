@@ -1,0 +1,48 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// A profile switch from the careportal or T1DCarer names a profile and has no profileJson, so it gets none back: AAPS
+// then switches to its own profile of that name (ProfileSwitchExtension.toProfileSwitch), but drops a switch whose
+// profileJson has no schedules
+NAME careportal_profile_switch_v1
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Profile Switch", "profile": "NSmmol", "percentage": 120, "duration": 30, "created_at": "{{ time 20 }}"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@0.profileJson"
+ASSERT_EQUALS "NSmmol" "@0.profile"
+
+NAME careportal_profile_switch_v1_read_v3
+GET http://{{ site }}/api/v3/treatments/{{ dig "careportal_profile_switch_v1.0._id" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.profileJson"
+ASSERT_EQUALS "NSmmol" "@result.profile"
+ASSERT_EQUALS 120 "@result.percentage"
+ASSERT_EQUALS 30 "@result.duration"
+
+NAME careportal_profile_switch_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Profile Switch", "profile": "NSmmol", "percentage": 90, "duration": 15, "date": {{ itime 10 }}}
+ASSERT_STATUS 201
+
+NAME careportal_profile_switch_v3_read
+GET http://{{ site }}/api/v3/treatments/{{ .careportal_profile_switch_v3.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.profileJson"
+ASSERT_EQUALS 90 "@result.percentage"
+
+// One sent with its profile's schedules still has them
+NAME profile_switch_with_profile
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Profile Switch", "profile": "Default", "percentage": 100, "duration": 0, "date": {{ itime 5 }}, "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":110}]}"}
+ASSERT_STATUS 201
+
+NAME profile_switch_with_profile_read
+GET http://{{ site }}/api/v3/treatments/{{ .profile_switch_with_profile.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}]" "@result.profileJson"
