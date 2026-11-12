@@ -449,7 +449,7 @@ func ToProfileJSON(source interface {
 		profile.CarbRatio = JSONToScheduleValueSlice(source.GetCarbRatiosJson())
 	}
 	if source.GetInsulinSensitivitiesJson() != nil {
-		profile.Sens = JSONToScheduleValueSlice(source.GetInsulinSensitivitiesJson())
+		profile.Sens = SensitivitiesFromJSON(source.GetInsulinSensitivitiesJson(), source.GetUnits(), siteContext)
 	}
 	if source.GetBasalRatesJson() != nil {
 		profile.Basal = JSONToScheduleValueSlice(source.GetBasalRatesJson())

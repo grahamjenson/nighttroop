@@ -102,7 +102,7 @@ type DBModelConverter interface {
 
 	// goverter:context siteContext
 	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
-	// goverter:map InsulinSensitivitiesJson Sens       | JSONToScheduleValueSlice
+	// goverter:map .                        Sens       | ProfilePresetSensitivities
 	// goverter:map BasalRatesJson           Basal      | JSONToScheduleValueSlice
 	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSliceWithUnitConversionFromMGDL
 	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSliceWithUnitConversionFromMGDL
@@ -219,6 +219,28 @@ func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteCon
 
 		if sv.TimeAsSeconds == nil && sv.Time != nil {
 			sv.TimeAsSeconds = sv.Time.ToSeconds()
+		}
+	}
+	return result
+}
+
+// ProfilePresetSensitivities are a profile's sensitivities, stored in its own units, in the settings' units
+// goverter:context siteContext
+func ProfilePresetSensitivities(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) []*ScheduleValue {
+	return SensitivitiesFromJSON(source.InsulinSensitivitiesJson, source.Units, siteContext)
+}
+
+// SensitivitiesFromJSON are sensitivities, stored in units, in the settings' units. Without units they are as stored,
+// as a sensitivity's size cannot tell mg/dL from mmol/L.
+func SensitivitiesFromJSON(jsonStr *string, units *consts.Units, siteContext *httputils.SiteContext) []*ScheduleValue {
+	result := JSONToScheduleValueSlice(jsonStr)
+	if units == nil {
+		return result
+	}
+	settingsUnits := siteContext.GetSettings().GetUnits()
+	for _, sv := range result {
+		if sv != nil && sv.Value != nil {
+			sv.Value = new(types.FlexibleFloat64(settingsUnits.FromMGDL(units.ToMGDL(sv.Value.Float64()))))
 		}
 	}
 	return result

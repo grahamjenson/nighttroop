@@ -104,6 +104,13 @@
        `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
        `timestamp`, once the status as sent is cleared; they are given back only while it is kept
+    1. P2: Keep what Loop sends in its treatments that is dropped: `syncIdentifier` (a bolus's and temp basal's `_id`
+       is a hash of it, and Loop finds its own documents by it), `insulinType`, a carb entry's `userEnteredAt`, a
+       bolus's `unabsorbed`, and a duration's fraction of a minute (a 1.67 minute bolus is kept as 1, 0.67 as 0)
+    1. P3: Keep a Loop profile's `enteredBy` (`Loop`) as sent, as a treatment's is, not the token's subject, so a
+       tool picking profiles by it finds Loop's
+    1. P3: Find why the first request after a quiet spell is slow (a Loop device status took 13 s, a treatments
+       upload 5 s, the rest ~40 ms), as xDrip+ also saw
 
 ## Bugs
 

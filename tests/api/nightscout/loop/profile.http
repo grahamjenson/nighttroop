@@ -198,3 +198,38 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS ".loop_upload_settings.0._id" "@0._id"
 ASSERT_EXISTS "@0.enteredBy"
+
+
+######
+# Loop in mmol/L sends its profile and loopSettings in mmol/L. The API gives them in mg/dL, so its sensitivities,
+# targets, suspend threshold, pre-meal range and override presets' ranges are all converted, not only the targets
+######
+
+NAME loop_upload_settings_mmol
+POST http://{{ site }}/api/v1/profile
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"defaultProfile": "Default", "startDate": "{{ time 30 }}", "units": "mmol/L", "enteredBy": "Loop",
+    "loopSettings": {"dosingEnabled": true, "overridePresets": [{"duration": 3600, "symbol": "🏃", "targetRange": [7.8, 8.9], "insulinNeedsScaleFactor": 0.8, "name": "Running"}], "minimumBGGuard": 4.4406, "preMealTargetRange": [4.44, 5.6], "maximumBasalRatePerHour": 4, "maximumBolus": 10, "dosingStrategy": "automaticBolus", "bundleIdentifier": "com.X.loopkit.Loop"},
+    "store": {"Default": {"dia": 6, "timezone": "ETC/GMT-13", "target_low": [{"time": "00:00", "value": 5.6, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 6.7, "timeAsSeconds": 0}], "sens": [{"time": "00:00", "value": 2.8, "timeAsSeconds": 0}], "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}], "units": "mmol/L"}}}]
+ASSERT_STATUS 200
+
+NAME loop_fetch_current_profile_mmol
+GET http://{{ site }}/api/v1/profile/current
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".loop_upload_settings_mmol.0._id" "@_id"
+ASSERT_EQUALS "mg/dL" "@units"
+ASSERT_EQUALS "mg/dL" "@store.Default.units"
+ASSERT_EQUALS 50.45 "@store.Default.sens.0.value"
+ASSERT_EQUALS 100.901 "@store.Default.target_low.0.value"
+ASSERT_EQUALS 120.721 "@store.Default.target_high.0.value"
+ASSERT_EQUALS 0.8 "@store.Default.basal.0.value"
+ASSERT_EQUALS 10 "@store.Default.carbratio.0.value"
+ASSERT_EQUALS 80.011 "@loopSettings.minimumBGGuard"
+ASSERT_EQUALS 80 "@loopSettings.preMealTargetRange.0"
+ASSERT_EQUALS 100.901 "@loopSettings.preMealTargetRange.1"
+ASSERT_EQUALS 140.54 "@loopSettings.overridePresets.0.targetRange.0"
+ASSERT_EQUALS 160.36 "@loopSettings.overridePresets.0.targetRange.1"
+ASSERT_EQUALS 0.8 "@loopSettings.overridePresets.0.insulinNeedsScaleFactor"
+ASSERT_EQUALS 4 "@loopSettings.maximumBasalRatePerHour"
