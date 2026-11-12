@@ -154,6 +154,13 @@ ASSERT_EQUALS 90 "@result.loopSettings.preMealTargetRange.1"
 INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
+# A new site has no profile set, so its current one is null, as in Nightscout, not an empty list
+NAME loop_fetch_current_profile_none
+GET http://{{ site }}/api/v1/profile/current
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@"
+
 NAME loop_upload_settings
 POST http://{{ site }}/api/v1/profile
 H api-secret: {{ sha1 token }}

@@ -158,8 +158,13 @@ func Current(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteError(w, err)
 			return
 		}
-		// As in Nightscout, the current profile is the profile set itself, which Loop reads to be set up from it
-		if collection == nsutils.Profile && len(records) > 0 {
+		// As in Nightscout, the current profile is the profile set itself, which Loop reads to be set up from it, and
+		// null on a site with none
+		if collection == nsutils.Profile {
+			if len(records) == 0 {
+				apiutils.WriteJSON(w, http.StatusOK, nil)
+				return
+			}
 			nsutils.WriteRecordV1(w, records[0], query.Fields)
 			return
 		}

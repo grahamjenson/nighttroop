@@ -954,7 +954,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   indefinite one lasts a week, and is given back with `durationType` `indefinite` while the override as sent is kept.
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
-- v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
+- v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it, and
+  `null` on a site with none, as in Nightscout.
 - A profile search with no filters is the newest profile set, or with a `count` that many, newest first by when each
   starts.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ and Loop send it; a
