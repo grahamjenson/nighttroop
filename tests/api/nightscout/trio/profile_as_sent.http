@@ -14,7 +14,7 @@ GET http://{{ site }}/api/v1/profile.json?count=1
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 1794468600000 "@0.mills"
-ASSERT_EQUALS "2026-11-12T07:30:00Z" "@0.startDate"
+ASSERT_EQUALS "2026-11-12T07:30:00.000Z" "@0.startDate"
 ASSERT_LENGTH 0 "@0.overridePresets"
 ASSERT_EQUALS "seeddevicetoken" "@0.deviceToken"
 
