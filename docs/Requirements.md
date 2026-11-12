@@ -912,7 +912,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   it is that time in its zone.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
-  returned as sent.
+  returned as sent, a `pumpId` sent as a number as a number and one sent as a string as a string.
+- An AAPS bolus's `isBasalInsulin`, and the insulin a bolus or profile switch was given with, its `icfg`
+  (`insulinLabel`, `insulinEndTime` and `insulinPeakTime` in ms, `concentration`), are kept and returned as sent; other
+  fields of an `icfg` are left out.
 - A treatment's `sensorCode` and `transmitterId`, as xDrip+ sends with a sensor change, are kept with it and returned
   as sent. A sensor, site or pump part change (e.g. `Sensor Change`, `Site Change`) is an event group with no events, of
   its type, which the Nightscout v2 properties' ages (`sage`, `cage`, `iage`, `bage`) and the summary read.

@@ -142,7 +142,10 @@ AAPS uses socket.io-client-java 2.1.2 (an `EIO=4` client) on two namespaces of t
 
 - A 400 from a create is skipped for good, so anything Nighttroop refuses is lost to it.
 - A PATCH or DELETE that answers 404 is taken as done; any other status stops the upload queue until it works.
-- `pumpId` comes back from Nighttroop as a string; AAPS reads it into its `Long` anyway.
+- `pumpId` comes back from Nighttroop as it was sent, a number from AAPS; AAPS would read a string of digits into its
+  `Long` too.
+- `programmed`, which Nighttroop adds to a bolus for Loop, is not a field of `RemoteTreatment`, so AAPS ignores it
+  (`ignoreUnknownKeys`, `core/nssdk/.../NsSdkJson.kt`).
 - A create's `identifier` must be at the top level of the answer, not only in `result`.
 - Nighttroop's `created_at$gt` is the treatment's time, as Nightscout's (#514); `srvCreated$gt` is when it reached
   the server.
@@ -182,6 +185,7 @@ SHA1, as AAPS does.
 | First loads over 500 documents | works: a search sorted by date is the oldest first | `first_load_paging.http` |
 | History over 500 documents, and profile history's newest | works: history is the oldest `srvModified` first | `history_paging.http` |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
+| Bolus `icfg` and `isBasalInsulin`, without which AAPS takes the insulin in its settings and a bolus as not basal (`BolusExtension.kt` `NSBolus.toBolus`) | works: kept and returned as sent; Nighttroop's summaries still count a basal insulin bolus as a bolus, TODO P3 | `sync_v3.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Profile switch and effective profile switch `original*` | works: kept with the switch and returned as sent, so a follower reads an effective profile switch as one, not a Note | `sync_v3.http` |
 | Temp basal `type` (e.g. `PUMP_SUSPEND`) | works: kept and returned as sent, so a follower shows a suspended pump as one | `sync_v3.http` |

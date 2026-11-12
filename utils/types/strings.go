@@ -159,6 +159,37 @@ func (n *LongJSONString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ShortNumberOrString is a value sent as a number or as a string, as AAPS sends its pumpId as a number, kept as its text
+// and given back as it was sent: a number as a number, a string as a string. Either is cut to 64 characters, as a
+// ShortString is, so the DB refuses one longer than its column, and any other value is empty, which is not stored
+type ShortNumberOrString struct {
+	Text     string
+	IsNumber bool
+}
+
+func (s *ShortNumberOrString) UnmarshalJSON(data []byte) error {
+	*s = ShortNumberOrString{}
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
+		return fmt.Errorf("expected a number or string, got %s", data)
+	}
+	switch v := v.(type) {
+	case string:
+		s.Text = v[:min(len(v), 64)]
+	case float64:
+		raw := strings.TrimSpace(string(data))
+		s.Text, s.IsNumber = raw[:min(len(raw), 64)], true
+	}
+	return nil
+}
+
+func (s ShortNumberOrString) MarshalJSON() ([]byte, error) {
+	if s.IsNumber {
+		return []byte(s.Text), nil
+	}
+	return json.Marshal(s.Text)
+}
+
 type IdentifierString string
 
 func (i *IdentifierString) String() string {

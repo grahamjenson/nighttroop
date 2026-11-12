@@ -108,10 +108,12 @@ type EventGroup struct {
 	DurationType          *string
 	SentHash              *string
 	PumpID                *string
+	PumpIDIsNumber        *bool
 	PumpSerial            *string
 	PumpType              *string
 	SensorCode            *string
 	TransmitterID         *string
+	IcfgJson              *string
 	Notes                 *string
 	Reason                *string
 	DurationMinutes       *int64
@@ -275,6 +277,7 @@ type InsulinDose struct {
 	SplitNow              *float64
 	SplitExt              *float64
 	Automatic             *bool
+	IsBasalInsulin        *bool
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -297,6 +300,7 @@ type InsulinDosesVw struct {
 	SplitNow              *float64
 	SplitExt              *float64
 	Automatic             *bool
+	IsBasalInsulin        *bool
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64

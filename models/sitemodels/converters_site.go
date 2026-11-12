@@ -246,8 +246,8 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// The site does not set AAPS's running mode, nor the pump
-	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationType SentHash PumpID PumpSerial PumpType
+	// The site does not set AAPS's running mode, nor the pump, nor its insulin
+	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationType SentHash PumpID PumpIDIsNumber PumpSerial PumpType IcfgJson
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
 
 	// goverter:context siteContext
@@ -268,16 +268,16 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// Only a loop's upload says whether a dose was automatic, not the site
-	// goverter:ignore Automatic
+	// Only a loop's upload says whether a dose was automatic or basal insulin, not the site
+	// goverter:ignore Automatic IsBasalInsulin
 	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
 
 	// goverter:context siteContext
 	// goverter:map Dose | Float64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// Only a loop's upload says whether a dose was automatic, not the site
-	// goverter:ignore Automatic
+	// Only a loop's upload says whether a dose was automatic or basal insulin, not the site
+	// goverter:ignore Automatic IsBasalInsulin
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
 	///////

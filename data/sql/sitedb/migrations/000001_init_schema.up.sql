@@ -57,11 +57,12 @@ CREATE TABLE insulin_doses (
     
 
     -- What only some apps send, NULL for most doses: a combo bolus's split, the fraction given at once (split_now,
-    -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), and whether a loop gave it
-    -- (automatic, Loop's, as LoopFollow shows it as an SMB)
+    -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), whether a loop gave it
+    -- (automatic, Loop's, as LoopFollow shows it as an SMB), and whether it is basal insulin (is_basal_insulin, AAPS's)
     split_now REAL CHECK(split_now BETWEEN 0 AND 1),
     split_ext REAL CHECK(split_ext BETWEEN 0 AND 1),
     automatic INTEGER CHECK(automatic IN (0, 1)),
+    is_basal_insulin INTEGER CHECK(is_basal_insulin IN (0, 1)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -320,7 +321,8 @@ CREATE TABLE event_groups (
     -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
-    -- (sensor_code, transmitter_id)
+    -- (sensor_code, transmitter_id), whether the pump's ID was sent as a number, to give it back as one
+    -- (pump_id_is_number), and the insulin AAPS says a bolus or profile switch was given with (icfg_json)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -329,10 +331,12 @@ CREATE TABLE event_groups (
     duration_type TEXT CHECK(length(duration_type) <= 16),
     sent_hash TEXT CHECK(length(sent_hash) <= 32),
     pump_id TEXT CHECK(length(pump_id) <= 32),
+    pump_id_is_number INTEGER CHECK(pump_id_is_number IN (0, 1)),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
     pump_type TEXT CHECK(length(pump_type) <= 64),
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
+    icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

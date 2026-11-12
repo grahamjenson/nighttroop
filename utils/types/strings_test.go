@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,6 +29,32 @@ func TestIdentifierFromJSON(t *testing.T) {
 				return
 			}
 			assert.Equal(t, *tt.want, got.String())
+		})
+	}
+}
+
+// A pumpId is given back with the JSON type it was sent with, cut to 64 characters; one neither a number nor a string
+// is empty and not stored
+func TestShortNumberOrString(t *testing.T) {
+	long := `"` + strings.Repeat("a", 70) + `"`
+	tests := []struct {
+		data, want string
+	}{
+		{"1794456578717", "1794456578717"},
+		{`"1794456578717"`, `"1794456578717"`},
+		{`"DANA_I"`, `"DANA_I"`},
+		{"4102.5", "4102.5"},
+		{long, `"` + strings.Repeat("a", 64) + `"`},
+		{"true", `""`},
+		{`{"id": 1}`, `""`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.data, func(t *testing.T) {
+			var got types.ShortNumberOrString
+			assert.NoError(t, json.Unmarshal([]byte(tt.data), &got))
+			out, err := json.Marshal(got)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, string(out))
 		})
 	}
 }

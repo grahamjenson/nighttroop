@@ -46,6 +46,10 @@ type Treatment struct {
 	Type *types.ShortString `json:"type,omitempty"`
 	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
 	Automatic *bool `json:"automatic,omitempty"`
+	// IsBasalInsulin is AAPS's bolus of basal insulin, and ICfg the insulin AAPS says a bolus or profile switch was
+	// given with, given back as sent, as AAPS takes a bolus without them as not basal, of the insulin in its settings
+	IsBasalInsulin *bool          `json:"isBasalInsulin,omitempty"`
+	ICfg           *InsulinConfig `json:"icfg,omitempty"`
 
 	// Exercise
 	ActivityType *types.ShortString   `json:"activityType,omitempty"` // Type of activity
@@ -92,9 +96,9 @@ type Treatment struct {
 	SensorCode    *types.ShortString `json:"sensorCode,omitempty"`
 	TransmitterID *types.ShortString `json:"transmitterId,omitempty"`
 
-	PumpID     *types.ShortString `json:"pumpId,omitempty"`
-	PumpSerial *types.ShortString `json:"pumpSerial,omitempty"`
-	PumpType   *types.ShortString `json:"pumpType,omitempty"`
+	PumpID     *types.ShortNumberOrString `json:"pumpId,omitempty"`
+	PumpSerial *types.ShortString         `json:"pumpSerial,omitempty"`
+	PumpType   *types.ShortString         `json:"pumpType,omitempty"`
 
 	Notes     *types.SanitizedString `json:"notes,omitempty"`
 	EnteredBy *types.ShortString     `json:"enteredBy,omitempty"`
@@ -120,6 +124,14 @@ type Treatment struct {
 
 	// SentJSON is the JSON it was sent as, to tell one sent again with changes from one sent the same
 	SentJSON string `json:"-"`
+}
+
+// InsulinConfig is AAPS's insulin, its times in milliseconds
+type InsulinConfig struct {
+	InsulinLabel    *types.ShortString     `json:"insulinLabel,omitempty"`
+	InsulinEndTime  *types.FlexibleInt64   `json:"insulinEndTime,omitempty"`
+	InsulinPeakTime *types.FlexibleInt64   `json:"insulinPeakTime,omitempty"`
+	Concentration   *types.FlexibleFloat64 `json:"concentration,omitempty"`
 }
 
 func (t *Treatment) UnmarshalJSON(data []byte) error {

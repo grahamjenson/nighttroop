@@ -906,6 +906,16 @@ func (m *EventGroup) SetPumpID(v *string) {
 	m.PumpID = v
 }
 
+// GetPumpIDIsNumber returns the PumpIDIsNumber value.
+func (m EventGroup) GetPumpIDIsNumber() *bool {
+	return m.PumpIDIsNumber
+}
+
+// SetPumpIDIsNumber sets the PumpIDIsNumber value and returns the updated EventGroup.
+func (m *EventGroup) SetPumpIDIsNumber(v *bool) {
+	m.PumpIDIsNumber = v
+}
+
 // GetPumpSerial returns the PumpSerial value.
 func (m EventGroup) GetPumpSerial() *string {
 	return m.PumpSerial
@@ -944,6 +954,16 @@ func (m EventGroup) GetTransmitterID() *string {
 // SetTransmitterID sets the TransmitterID value and returns the updated EventGroup.
 func (m *EventGroup) SetTransmitterID(v *string) {
 	m.TransmitterID = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m EventGroup) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated EventGroup.
+func (m *EventGroup) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -2396,6 +2416,16 @@ func (m *InsulinDose) SetAutomatic(v *bool) {
 	m.Automatic = v
 }
 
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m InsulinDose) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated InsulinDose.
+func (m *InsulinDose) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
+}
+
 // GetNotes returns the Notes value.
 func (m InsulinDose) GetNotes() *string {
 	return m.Notes
@@ -2584,6 +2614,16 @@ func (m InsulinDosesVw) GetAutomatic() *bool {
 // SetAutomatic sets the Automatic value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetAutomatic(v *bool) {
 	m.Automatic = v
+}
+
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m InsulinDosesVw) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
 }
 
 // GetNotes returns the Notes value.
@@ -8596,6 +8636,16 @@ func (m *CreateEventGroupParams) SetPumpID(v *string) {
 	m.PumpID = v
 }
 
+// GetPumpIDIsNumber returns the PumpIDIsNumber value.
+func (m CreateEventGroupParams) GetPumpIDIsNumber() *bool {
+	return m.PumpIDIsNumber
+}
+
+// SetPumpIDIsNumber sets the PumpIDIsNumber value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetPumpIDIsNumber(v *bool) {
+	m.PumpIDIsNumber = v
+}
+
 // GetPumpSerial returns the PumpSerial value.
 func (m CreateEventGroupParams) GetPumpSerial() *string {
 	return m.PumpSerial
@@ -8634,6 +8684,16 @@ func (m CreateEventGroupParams) GetTransmitterID() *string {
 // SetTransmitterID sets the TransmitterID value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m CreateEventGroupParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -9806,6 +9866,16 @@ func (m *UpdateEventGroupParams) SetPumpID(v *string) {
 	m.PumpID = v
 }
 
+// GetPumpIDIsNumber returns the PumpIDIsNumber value.
+func (m UpdateEventGroupParams) GetPumpIDIsNumber() *bool {
+	return m.PumpIDIsNumber
+}
+
+// SetPumpIDIsNumber sets the PumpIDIsNumber value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetPumpIDIsNumber(v *bool) {
+	m.PumpIDIsNumber = v
+}
+
 // GetPumpSerial returns the PumpSerial value.
 func (m UpdateEventGroupParams) GetPumpSerial() *string {
 	return m.PumpSerial
@@ -9844,6 +9914,16 @@ func (m UpdateEventGroupParams) GetTransmitterID() *string {
 // SetTransmitterID sets the TransmitterID value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m UpdateEventGroupParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -9964,6 +10044,16 @@ func (m CreateInsulinDoseParams) GetAutomatic() *bool {
 // SetAutomatic sets the Automatic value and returns the updated CreateInsulinDoseParams.
 func (m *CreateInsulinDoseParams) SetAutomatic(v *bool) {
 	m.Automatic = v
+}
+
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m CreateInsulinDoseParams) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
 }
 
 // GetNotes returns the Notes value.
@@ -10434,6 +10524,16 @@ func (m UpdateInsulinDoseParams) GetAutomatic() *bool {
 // SetAutomatic sets the Automatic value and returns the updated UpdateInsulinDoseParams.
 func (m *UpdateInsulinDoseParams) SetAutomatic(v *bool) {
 	m.Automatic = v
+}
+
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m UpdateInsulinDoseParams) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
 }
 
 // GetNotes returns the Notes value.

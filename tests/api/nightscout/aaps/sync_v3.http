@@ -181,6 +181,7 @@ B {
     "insulin": 0.3,
     "type": "SMB",
     "isBasalInsulin": false,
+    "icfg": {"insulinLabel": "Fiasp", "insulinEndTime": 18000000, "insulinPeakTime": 3300000, "concentration": 1.0},
     "app": "AAPS"
  }
 ASSERT_STATUS 201
@@ -289,8 +290,8 @@ ASSERT_EQUALS "Temp Basal" "@result.eventType"
 ASSERT_EQUALS 1.2 "@result.absolute"
 ASSERT_EQUALS 12 "@result.duration"
 ASSERT_EQUALS 720000 "@result.durationInMilliseconds"
-// pumpId comes back as a string, which AAPS still reads into its Long (NsSdkJson.kt: a quoted number is accepted)
-ASSERT_EQUALS "4102" "@result.pumpId"
+// pumpId comes back a number, as sent, which RemoteTreatment reads into its Long
+ASSERT_EQUALS 4102 "@result.pumpId"
 ASSERT_EQUALS "DANA_I" "@result.pumpType"
 ASSERT_EQUALS "AAPS1234" "@result.pumpSerial"
 ASSERT_EQUALS "NORMAL" "@result.type"
@@ -305,7 +306,14 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 0.3 "@result.insulin"
 ASSERT_EQUALS "SMB" "@result.type"
-ASSERT_EQUALS "4103" "@result.pumpId"
+ASSERT_EQUALS 4103 "@result.pumpId"
+// The insulin it was given with, which AAPS takes from its own settings without it, and whether it is basal insulin,
+// which AAPS takes as false without it, come back as sent
+ASSERT_EQUALS false "@result.isBasalInsulin"
+ASSERT_EQUALS "Fiasp" "@result.icfg.insulinLabel"
+ASSERT_EQUALS 18000000 "@result.icfg.insulinEndTime"
+ASSERT_EQUALS 3300000 "@result.icfg.insulinPeakTime"
+ASSERT_EQUALS 1 "@result.icfg.concentration"
 
 NAME get_extended_carbs
 GET http://{{ site }}/api/v3/treatments/{{ .add_extended_carbs.identifier }}
