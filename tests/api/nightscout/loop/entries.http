@@ -36,6 +36,16 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS ".loop_upload_glucose.1._id" "@0._id"
 
+# The date is kept with its milliseconds, though the dateString sent with it, as Loop's is, has none
+NAME loop_upload_glucose_ms
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"date": 1794466085460.6873, "dateString": "2026-11-12T06:48:05Z", "device": "loop://iPhone", "type": "sgv", "sgv": 144, "trend": 4, "direction": "Flat"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 1794466085460 "@0.date"
+ASSERT_EQUALS 1794466085460 "@0.mills"
+ASSERT_EQUALS "2026-11-12T06:48:05.46Z" "@0.dateString"
+
 ######
 # NightscoutKit's fetchGlucose (not used by Loop itself): find[dateString] between two ISO dates, and count
 # GlucoseEntry(rawValue:) needs _id a string, date a number of milliseconds, and sgv or mbg in mg/dL
