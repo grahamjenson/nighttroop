@@ -889,6 +889,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
+- A profile keeps Loop's and Trio's `deviceToken` whole, up to 256 characters, as Apple's are of no fixed length
+  (Trio's are 160 hex characters), and registers it whole; a longer one is kept empty and not registered.
 - A profile's Loop `loopSettings.deviceToken` and Trio `deviceToken` are only given back, in v1, v3 and the socket's
   storage, to an identity that can change the site's data, as LoopFollow sending remote commands is; a read only
   user or device gets the profile without them, and the socket's `dataUpdate`, sent to every reader, has none.
@@ -1249,10 +1251,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   (`/settings/push-registrations`, JSON API): the app (`loop`, `trio`, `loopfollow`, `t1dcarer`), its provider (`apns`
   or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
   Registering a token again updates it, and from another of the site's identities moves it there; another site
-  registering the same token has its own, so no site can take or change another's. An APNs token is the same in upper
-  or lower case. An identity has at most 10, even from profiles uploaded at once, though it can always register one
-  of them again, and sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own; an
-  admin can also get and delete any of the site's, but its search and stream are still only its own.
+  registering the same token has its own, so no site can take or change another's. An APNs token is 64 to 256 hex
+  characters, the same in upper or lower case. An identity has at most 10, even from profiles uploaded at once, though
+  it can always register one of them again, and sees, streams the changes to (`/settings/push-registrations/events`)
+  and deletes only its own; an admin can also get and delete any of the site's, but its search and stream are still
+  only its own.
 - Settings, Push Devices (`/settings/push-devices`) lists the apps registered for pushes, with whose they are, the app
   and its service, its bundle ID, whether it is a development build, when it registered, and its last push and error;
   never its token. An admin sees every identity's on the site, and anyone else only their own. Each has a Test button,
