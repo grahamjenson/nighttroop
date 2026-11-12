@@ -38,6 +38,8 @@ type loopCommand struct {
 	RemoteCarbs      *types.FlexibleFloat64 `json:"remoteCarbs"`
 	RemoteAbsorption *types.FlexibleFloat64 `json:"remoteAbsorption"`
 	RemoteBolus      *types.FlexibleFloat64 `json:"remoteBolus"`
+	// FoodType is the carbs' food type, e.g. 🍕, which Loop reads, though neither Nightscout nor LoopFollow sends it
+	FoodType types.ShortString `json:"foodType"`
 	CreatedAt        *types.DateString      `json:"created_at"`
 	OTP              types.ShortString      `json:"otp"`
 	Notes            types.ShortString      `json:"notes"`
@@ -137,6 +139,9 @@ func loopCommandAlert(c loopCommand, identityName string, now time.Time) (push.A
 		data["carbs-entry"], data["absorption-time"] = carbs, absorption
 		if c.CreatedAt != nil {
 			data["start-time"] = types.ISOString(c.CreatedAt.Time())
+		}
+		if c.FoodType != "" {
+			data["food-type"] = c.FoodType.String()
 		}
 		title, body = fmt.Sprintf("Remote Carbs Entry: %g grams", carbs), fmt.Sprintf("Absorption Time: %g hours", absorption)
 	case "Remote Bolus Entry":
