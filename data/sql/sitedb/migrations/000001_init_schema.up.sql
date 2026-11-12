@@ -17,6 +17,7 @@ CREATE TABLE glucose_readings (
 
     delta REAL CHECK(delta BETWEEN -1000 AND 1000),
     direction TEXT CHECK(length(direction) <= 16),
+    trend_rate REAL CHECK(trend_rate BETWEEN -1000 AND 1000), -- the change in mg/dL a minute, Loop's
 
     -- What only some apps send, NULL for most readings: a CGM's raw signal, from xDrip+ and its followers (noise,
     -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), a noise or rssi of 0 meaning none

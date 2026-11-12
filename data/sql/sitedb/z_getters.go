@@ -2016,6 +2016,16 @@ func (m *GlucoseReading) SetDirection(v *string) {
 	m.Direction = v
 }
 
+// GetTrendRate returns the TrendRate value.
+func (m GlucoseReading) GetTrendRate() *float64 {
+	return m.TrendRate
+}
+
+// SetTrendRate sets the TrendRate value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetTrendRate(v *float64) {
+	m.TrendRate = v
+}
+
 // GetNoise returns the Noise value.
 func (m GlucoseReading) GetNoise() *float64 {
 	return m.Noise
@@ -2274,6 +2284,16 @@ func (m GlucoseReadingsVw) GetDirection() *string {
 // SetDirection sets the Direction value and returns the updated GlucoseReadingsVw.
 func (m *GlucoseReadingsVw) SetDirection(v *string) {
 	m.Direction = v
+}
+
+// GetTrendRate returns the TrendRate value.
+func (m GlucoseReadingsVw) GetTrendRate() *float64 {
+	return m.TrendRate
+}
+
+// SetTrendRate sets the TrendRate value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetTrendRate(v *float64) {
+	m.TrendRate = v
 }
 
 // GetNoise returns the Noise value.
@@ -7896,6 +7916,16 @@ func (m *CreateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
 }
 
+// GetTrendRate returns the TrendRate value.
+func (m CreateGlucoseReadingParams) GetTrendRate() *float64 {
+	return m.TrendRate
+}
+
+// SetTrendRate sets the TrendRate value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetTrendRate(v *float64) {
+	m.TrendRate = v
+}
+
 // GetNoise returns the Noise value.
 func (m CreateGlucoseReadingParams) GetNoise() *float64 {
 	return m.Noise
@@ -8564,6 +8594,16 @@ func (m UpdateGlucoseReadingParams) GetDirection() *string {
 // SetDirection sets the Direction value and returns the updated UpdateGlucoseReadingParams.
 func (m *UpdateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
+}
+
+// GetTrendRate returns the TrendRate value.
+func (m UpdateGlucoseReadingParams) GetTrendRate() *float64 {
+	return m.TrendRate
+}
+
+// SetTrendRate sets the TrendRate value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetTrendRate(v *float64) {
+	m.TrendRate = v
 }
 
 // GetNoise returns the Noise value.

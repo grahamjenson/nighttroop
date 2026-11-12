@@ -880,6 +880,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An entry has an `sgv` if it is a CGM reading and an `mbg` if it is a meter reading, never both.
 - An `mbg` entry keeps AAPS's `isCalibration` and `sensorMgdlAtPairing` (in mg/dL) and returns them as sent through
   v1 and v3, so AAPS's followers read a calibration as one; an update without them keeps them.
+- An `sgv` entry keeps Loop's `trendRate`, in mg/dL a minute (converted from mmol/L only when sent with `units`
+  mmol/L), and returns it through v1 and v3, as Loop's Nightscout Remote CGM reads it back; an update without it
+  keeps it.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
 - A document sent with a date but no `utcOffset`, as AAPS sends a device status, takes the site timezone's offset at
   that date; a replace sent with none keeps the offset of the document it replaces.

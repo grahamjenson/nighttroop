@@ -48,7 +48,8 @@ ASSERT_EQUALS "2026-11-12T06:48:05.460Z" "@0.dateString"
 
 ######
 # NightscoutKit's fetchGlucose (not used by Loop itself): find[dateString] between two ISO dates, and count
-# GlucoseEntry(rawValue:) needs _id a string, date a number of milliseconds, and sgv or mbg in mg/dL
+# GlucoseEntry(rawValue:) needs _id a string, date a number of milliseconds, and sgv or mbg in mg/dL, and reads
+# trendRate, in mg/dL a minute, which Loop's Nightscout Remote CGM uses for momentum
 ######
 
 NAME nightscoutkit_fetch_glucose
@@ -64,8 +65,10 @@ ASSERT_EQUALS ".loop_upload_glucose.1.date" "@1.date"
 ASSERT_EQUALS 39 "@1.sgv"
 ASSERT_EQUALS 7 "@1.trend"
 ASSERT_EQUALS "DoubleDown" "@1.direction"
+ASSERT_EQUALS -3.5 "@1.trendRate"
 ASSERT_EQUALS 114 "@2.sgv"
 ASSERT_EQUALS "Flat" "@2.direction"
+ASSERT_EQUALS 0.1 "@2.trendRate"
 
 NAME nightscoutkit_fetch_glucose_count
 GET http://{{ site }}/api/v1/entries?find[dateString][$gte]={{ time 15 }}&find[dateString][$lte]={{ time 0 }}&count=1

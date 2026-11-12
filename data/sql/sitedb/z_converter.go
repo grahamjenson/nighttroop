@@ -985,29 +985,33 @@ func GlucoseReadingFromView(source GlucoseReadingsVw) GlucoseReading {
 		xstring2 := *source.Direction
 		sitedbGlucoseReading.Direction = &xstring2
 	}
+	if source.TrendRate != nil {
+		xfloat642 := *source.TrendRate
+		sitedbGlucoseReading.TrendRate = &xfloat642
+	}
 	if source.Noise != nil {
-		xfloat642 := *source.Noise
-		sitedbGlucoseReading.Noise = &xfloat642
+		xfloat643 := *source.Noise
+		sitedbGlucoseReading.Noise = &xfloat643
 	}
 	if source.Filtered != nil {
-		xfloat643 := *source.Filtered
-		sitedbGlucoseReading.Filtered = &xfloat643
+		xfloat644 := *source.Filtered
+		sitedbGlucoseReading.Filtered = &xfloat644
 	}
 	if source.Unfiltered != nil {
-		xfloat644 := *source.Unfiltered
-		sitedbGlucoseReading.Unfiltered = &xfloat644
+		xfloat645 := *source.Unfiltered
+		sitedbGlucoseReading.Unfiltered = &xfloat645
 	}
 	if source.Rssi != nil {
-		xfloat645 := *source.Rssi
-		sitedbGlucoseReading.Rssi = &xfloat645
+		xfloat646 := *source.Rssi
+		sitedbGlucoseReading.Rssi = &xfloat646
 	}
 	if source.IsCalibration != nil {
 		xbool := *source.IsCalibration
 		sitedbGlucoseReading.IsCalibration = &xbool
 	}
 	if source.SensorMgdlAtPairing != nil {
-		xfloat646 := *source.SensorMgdlAtPairing
-		sitedbGlucoseReading.SensorMgdlAtPairing = &xfloat646
+		xfloat647 := *source.SensorMgdlAtPairing
+		sitedbGlucoseReading.SensorMgdlAtPairing = &xfloat647
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -1080,29 +1084,33 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 		xstring2 := *source.Direction
 		sitedbCreateGlucoseReadingParams.Direction = &xstring2
 	}
+	if source.TrendRate != nil {
+		xfloat642 := *source.TrendRate
+		sitedbCreateGlucoseReadingParams.TrendRate = &xfloat642
+	}
 	if source.Noise != nil {
-		xfloat642 := *source.Noise
-		sitedbCreateGlucoseReadingParams.Noise = &xfloat642
+		xfloat643 := *source.Noise
+		sitedbCreateGlucoseReadingParams.Noise = &xfloat643
 	}
 	if source.Filtered != nil {
-		xfloat643 := *source.Filtered
-		sitedbCreateGlucoseReadingParams.Filtered = &xfloat643
+		xfloat644 := *source.Filtered
+		sitedbCreateGlucoseReadingParams.Filtered = &xfloat644
 	}
 	if source.Unfiltered != nil {
-		xfloat644 := *source.Unfiltered
-		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat644
+		xfloat645 := *source.Unfiltered
+		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat645
 	}
 	if source.Rssi != nil {
-		xfloat645 := *source.Rssi
-		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
+		xfloat646 := *source.Rssi
+		sitedbCreateGlucoseReadingParams.Rssi = &xfloat646
 	}
 	if source.IsCalibration != nil {
 		xbool := *source.IsCalibration
 		sitedbCreateGlucoseReadingParams.IsCalibration = &xbool
 	}
 	if source.SensorMgdlAtPairing != nil {
-		xfloat646 := *source.SensorMgdlAtPairing
-		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat646
+		xfloat647 := *source.SensorMgdlAtPairing
+		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat647
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -1144,29 +1152,33 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 		xstring := *source.Direction
 		sitedbUpdateGlucoseReadingParams.Direction = &xstring
 	}
+	if source.TrendRate != nil {
+		xfloat642 := *source.TrendRate
+		sitedbUpdateGlucoseReadingParams.TrendRate = &xfloat642
+	}
 	if source.Noise != nil {
-		xfloat642 := *source.Noise
-		sitedbUpdateGlucoseReadingParams.Noise = &xfloat642
+		xfloat643 := *source.Noise
+		sitedbUpdateGlucoseReadingParams.Noise = &xfloat643
 	}
 	if source.Filtered != nil {
-		xfloat643 := *source.Filtered
-		sitedbUpdateGlucoseReadingParams.Filtered = &xfloat643
+		xfloat644 := *source.Filtered
+		sitedbUpdateGlucoseReadingParams.Filtered = &xfloat644
 	}
 	if source.Unfiltered != nil {
-		xfloat644 := *source.Unfiltered
-		sitedbUpdateGlucoseReadingParams.Unfiltered = &xfloat644
+		xfloat645 := *source.Unfiltered
+		sitedbUpdateGlucoseReadingParams.Unfiltered = &xfloat645
 	}
 	if source.Rssi != nil {
-		xfloat645 := *source.Rssi
-		sitedbUpdateGlucoseReadingParams.Rssi = &xfloat645
+		xfloat646 := *source.Rssi
+		sitedbUpdateGlucoseReadingParams.Rssi = &xfloat646
 	}
 	if source.IsCalibration != nil {
 		xbool := *source.IsCalibration
 		sitedbUpdateGlucoseReadingParams.IsCalibration = &xbool
 	}
 	if source.SensorMgdlAtPairing != nil {
-		xfloat646 := *source.SensorMgdlAtPairing
-		sitedbUpdateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat646
+		xfloat647 := *source.SensorMgdlAtPairing
+		sitedbUpdateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat647
 	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes
@@ -2625,29 +2637,33 @@ func sitedbGlucoseReadingsVwToSitedbGlucoseReadingsVw(source GlucoseReadingsVw) 
 		xstring4 := *source.Direction
 		sitedbGlucoseReadingsVw.Direction = &xstring4
 	}
+	if source.TrendRate != nil {
+		xfloat643 := *source.TrendRate
+		sitedbGlucoseReadingsVw.TrendRate = &xfloat643
+	}
 	if source.Noise != nil {
-		xfloat643 := *source.Noise
-		sitedbGlucoseReadingsVw.Noise = &xfloat643
+		xfloat644 := *source.Noise
+		sitedbGlucoseReadingsVw.Noise = &xfloat644
 	}
 	if source.Filtered != nil {
-		xfloat644 := *source.Filtered
-		sitedbGlucoseReadingsVw.Filtered = &xfloat644
+		xfloat645 := *source.Filtered
+		sitedbGlucoseReadingsVw.Filtered = &xfloat645
 	}
 	if source.Unfiltered != nil {
-		xfloat645 := *source.Unfiltered
-		sitedbGlucoseReadingsVw.Unfiltered = &xfloat645
+		xfloat646 := *source.Unfiltered
+		sitedbGlucoseReadingsVw.Unfiltered = &xfloat646
 	}
 	if source.Rssi != nil {
-		xfloat646 := *source.Rssi
-		sitedbGlucoseReadingsVw.Rssi = &xfloat646
+		xfloat647 := *source.Rssi
+		sitedbGlucoseReadingsVw.Rssi = &xfloat647
 	}
 	if source.IsCalibration != nil {
 		xbool := *source.IsCalibration
 		sitedbGlucoseReadingsVw.IsCalibration = &xbool
 	}
 	if source.SensorMgdlAtPairing != nil {
-		xfloat647 := *source.SensorMgdlAtPairing
-		sitedbGlucoseReadingsVw.SensorMgdlAtPairing = &xfloat647
+		xfloat648 := *source.SensorMgdlAtPairing
+		sitedbGlucoseReadingsVw.SensorMgdlAtPairing = &xfloat648
 	}
 	if source.Notes != nil {
 		xstring5 := *source.Notes

@@ -234,6 +234,7 @@ type GlucoseReading struct {
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
+	TrendRate             *float64
 	Noise                 *float64
 	Filtered              *float64
 	Unfiltered            *float64
@@ -263,6 +264,7 @@ type GlucoseReadingsVw struct {
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
+	TrendRate             *float64
 	Noise                 *float64
 	Filtered              *float64
 	Unfiltered            *float64

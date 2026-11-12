@@ -221,6 +221,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `api-secret` as the SHA-1 of a device's token | Works since #512 (it was a 401 for everything) |
 | `GET /api/v1/experiments/test` | Works since #513 (was a 400, "invalid collection"); 401 for a read only device, which Loop shows as "Unauthorized" |
 | `POST /api/v1/entries`, as many objects back, `_id` | Works |
+| An entry's `trendRate` | Fixed in this PR: kept in mg/dL a minute and given back, through API v1 and v3 (it was dropped); test in `loop/entries.http` |
 | A POST of more than 100 entries or treatments, which Loop sends with over 100 waiting | Works: a v1 POST takes up to 5000 (it was a 400 over 100, and Loop never uploaded again) |
 | `POST /api/v1/treatments` carbs, doses, pump and CGM events, notes | Works |
 | `PUT /api/v1/treatments` with `_id` in the body | Works |

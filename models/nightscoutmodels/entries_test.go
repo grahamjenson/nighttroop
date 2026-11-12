@@ -46,3 +46,23 @@ func Test_entryToCreateParams(t *testing.T) {
 	entryJson, err := json.MarshalIndent(entry, "", "  ")
 	fmt.Printf("entry JSON: %s %v\n", entryJson, err)
 }
+
+// A trend rate is a change, so it is in mg/dL a minute unless it is sent in mmol/L, and not guessed from its size
+func Test_entryTrendRate(t *testing.T) {
+	tests := []struct {
+		name string
+		json string
+		want float64
+	}{
+		{"mg/dL", `{"type": "sgv", "sgv": 144, "trendRate": 1}`, 1},
+		{"mg/dL sent", `{"type": "sgv", "sgv": 144, "units": "mg/dL", "trendRate": -3.5}`, -3.5},
+		{"mmol/L sent", `{"type": "sgv", "sgv": 8, "units": "mmol/L", "trendRate": 0.1}`, 1.80182},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var entry Entry
+			assert.NoError(t, json.Unmarshal([]byte(tt.json), &entry))
+			assert.InDelta(t, tt.want, entry.TrendRate.Float64(), 0.01)
+		})
+	}
+}

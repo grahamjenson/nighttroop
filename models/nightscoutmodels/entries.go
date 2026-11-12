@@ -29,6 +29,8 @@ type Entry struct {
 	MBG       *types.FlexibleFloat64 `json:"mbg,omitempty"`
 	Direction *string                `json:"direction,omitempty"`
 	Trend     *types.FlexibleFloat64 `json:"trend,omitempty"`
+	// TrendRate is Loop's change in mg/dL a minute, which Loop's Nightscout Remote CGM reads back
+	TrendRate *types.FlexibleFloat64 `json:"trendRate,omitempty"`
 	Units     *consts.Units          `json:"units,omitempty"`
 
 	Filtered   *types.FlexibleFloat64 `json:"filtered,omitempty"`
@@ -91,6 +93,10 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 			res := types.FlexibleFloat64(t.Units.ToMGDL(value.Float64()))
 			t.Mgdl = &res
 		}
+	}
+	// A trend rate is in the units sent with it, which are not guessed from it, as it is a change, not a glucose
+	if t.TrendRate != nil && t.Units != nil && *t.Units == consts.UnitsMMOLL {
+		t.TrendRate = new(types.FlexibleFloat64(t.Units.ToMGDL(t.TrendRate.Float64())))
 	}
 
 	// A date sent is kept, with its milliseconds, which Loop's dateString does not have; the dateString gives the
