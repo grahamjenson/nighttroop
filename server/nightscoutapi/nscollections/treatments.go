@@ -126,7 +126,7 @@ func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context
 	}
 	for _, eventGroup := range eventGroups {
 		egb := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroup))
-		if !otherAmount(nsModel, &egb) {
+		if sameTreatment(nsModel, &egb) {
 			return &egb, nil
 		}
 	}
@@ -136,13 +136,31 @@ func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context
 // maxSameTimeTreatments is how many treatments of a type at one date are looked through for one sent again
 const maxSameTimeTreatments = 10
 
-// otherAmount is whether a treatment has only carbs and the stored one only insulin, or the other way round, so it is
-// not the same treatment sent again: AAPS's Bolus Wizard sends its bolus and then its carbs as two Meal Boluses at the
-// same date, and deletes either one on its own by its identifier
-func otherAmount(nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
-	insulin, carbs := isAssigned(nsModel.Insulin), isAssigned(nsModel.Carbs)
-	storedInsulin, storedCarbs := stored.InsulinDose != nil, stored.FoodIntake != nil && stored.FoodIntake.Carbs != nil
-	return (carbs && !insulin && storedInsulin && !storedCarbs) || (insulin && !carbs && storedCarbs && !storedInsulin)
+// sameTreatment is whether a treatment sent with no identifier of its own is one stored sent again, as Nightscout
+// matches one (treatment-fallback-key.js): one stored without an app's id, xDrip+'s uuid or Loop's syncIdentifier,
+// with the same carbs and insulin, a zero being none. So a careportal note in the same second as xDrip+'s bolus is
+// kept beside it rather than taking it over, and AAPS's Bolus Wizard's bolus and its carbs, sent as two Meal Boluses
+// at the same date and deleted on their own by their identifiers, are two treatments
+func sameTreatment(nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+	if stored.EventGroup.Uuid != nil || stored.EventGroup.SyncIdentifier != nil {
+		return false
+	}
+	var storedInsulin, storedCarbs float64
+	if stored.InsulinDose != nil {
+		storedInsulin = stored.InsulinDose.Dose
+	}
+	if stored.FoodIntake != nil && stored.FoodIntake.Carbs != nil {
+		storedCarbs = *stored.FoodIntake.Carbs
+	}
+	return amount(nsModel.Insulin) == storedInsulin && amount(nsModel.Carbs) == storedCarbs
+}
+
+// amount is a treatment's carbs or insulin, 0 when it has none
+func amount(value *types.FlexibleFloat64) float64 {
+	if value == nil {
+		return 0
+	}
+	return value.Float64()
 }
 
 // Refresh merges a treatment sent again into the one stored, as a patch does: what it sends is changed and what it
