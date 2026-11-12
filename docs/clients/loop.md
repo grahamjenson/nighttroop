@@ -102,10 +102,8 @@ A bolus's `automatic` is kept with its insulin dose and given back as sent, thro
 shows an automatic bolus as an SMB. A temp basal's is not kept.
 
 A treatment's `syncIdentifier` (up to 256 characters), `insulinType`, a carb entry's `userEnteredAt` (given back in
-UTC) and a bolus's `unabsorbed` are kept with its event group and given back as sent, through API v1 and v3. A
-`duration` with a fraction of a minute, as a dose ended early or an override has, keeps its whole minutes in its
-event and the rest in milliseconds (`durationInMilliseconds`), and is given back with the fraction, to the
-millisecond: a 1.6666666666666667 minute bolus is not given back as 1. `userLastModifiedAt` is not kept.
+UTC) and a bolus's `unabsorbed` are kept with its event group and given back as sent, through API v1 and v3.
+`userLastModifiedAt` is not kept.
 
 How each is changed or removed:
 
@@ -229,7 +227,6 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | A dose posted again when it ends, with its final duration or amount | Fixed in this PR: it replaces the first upload, as in Nightscout; test in `loop/treatments.http` |
 | Omnipod `syncIdentifier`s once creates dedup by identifier | Works since #515: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | A treatment's `syncIdentifier`, `insulinType`, a carb entry's `userEnteredAt`, a bolus's `unabsorbed` | Fixed in this PR: kept and given back as sent, through API v1 and v3 (they were dropped); test in `loop/treatments.http` |
-| A dose's or override's `duration` with a fraction of a minute | Fixed in this PR: kept to the millisecond and given back with the fraction (a 1.67 minute bolus came back as 1); test in `loop/treatments.http` |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
 | Device status `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
 | Device status pump `pumpID`, `suspended`, `bolusing` | Works since #514 while the status as sent is kept; dropped once it is cleared |

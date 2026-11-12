@@ -363,10 +363,6 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xint642 := *source.DurationMs
 		sitedbCreateEventGroupParams.DurationMs = &xint642
 	}
-	if source.DurationFraction != nil {
-		xbool := *source.DurationFraction
-		sitedbCreateEventGroupParams.DurationFraction = &xbool
-	}
 	if source.EnteredBy != nil {
 		xstring11 := *source.EnteredBy
 		sitedbCreateEventGroupParams.EnteredBy = &xstring11
@@ -380,8 +376,8 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		sitedbCreateEventGroupParams.Mode = &xstring13
 	}
 	if source.AutoForced != nil {
-		xbool2 := *source.AutoForced
-		sitedbCreateEventGroupParams.AutoForced = &xbool2
+		xbool := *source.AutoForced
+		sitedbCreateEventGroupParams.AutoForced = &xbool
 	}
 	if source.Reasons != nil {
 		xstring14 := *source.Reasons
@@ -522,10 +518,6 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		xint642 := *source.DurationMs
 		sitedbUpdateEventGroupParams.DurationMs = &xint642
 	}
-	if source.DurationFraction != nil {
-		xbool := *source.DurationFraction
-		sitedbUpdateEventGroupParams.DurationFraction = &xbool
-	}
 	if source.Uuid != nil {
 		xstring12 := *source.Uuid
 		sitedbUpdateEventGroupParams.Uuid = &xstring12
@@ -535,8 +527,8 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		sitedbUpdateEventGroupParams.Mode = &xstring13
 	}
 	if source.AutoForced != nil {
-		xbool2 := *source.AutoForced
-		sitedbUpdateEventGroupParams.AutoForced = &xbool2
+		xbool := *source.AutoForced
+		sitedbUpdateEventGroupParams.AutoForced = &xbool
 	}
 	if source.Reasons != nil {
 		xstring14 := *source.Reasons
@@ -2416,10 +2408,6 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 	if source.DurationMs != nil {
 		xint644 := *source.DurationMs
 		sitedbEventGroup.DurationMs = &xint644
-	}
-	if source.DurationFraction != nil {
-		xbool2 := *source.DurationFraction
-		sitedbEventGroup.DurationFraction = &xbool2
 	}
 	if source.DeletedAt != nil {
 		xint645 := *source.DeletedAt

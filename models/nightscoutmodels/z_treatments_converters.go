@@ -147,10 +147,6 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xint642 := *source.DurationMs
 		sitedbCreateEventGroupParams.DurationMs = &xint642
 	}
-	if source.DurationFraction != nil {
-		xbool := *source.DurationFraction
-		sitedbCreateEventGroupParams.DurationFraction = &xbool
-	}
 	if source.EnteredBy != nil {
 		xstring11 := *source.EnteredBy
 		sitedbCreateEventGroupParams.EnteredBy = &xstring11
@@ -164,8 +160,8 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		sitedbCreateEventGroupParams.Mode = &xstring13
 	}
 	if source.AutoForced != nil {
-		xbool2 := *source.AutoForced
-		sitedbCreateEventGroupParams.AutoForced = &xbool2
+		xbool := *source.AutoForced
+		sitedbCreateEventGroupParams.AutoForced = &xbool
 	}
 	if source.Reasons != nil {
 		xstring14 := *source.Reasons
@@ -263,10 +259,6 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		typesShortString := types.ShortString(*source.DurationType)
 		nightscoutmodelsTreatment.DurationType = &typesShortString
 	}
-	if source.DurationFraction != nil {
-		xbool := *source.DurationFraction
-		nightscoutmodelsTreatment.DurationFraction = &xbool
-	}
 	if source.OriginalDurationMs != nil {
 		typesFlexibleInt642 := types.FlexibleInt64(*source.OriginalDurationMs)
 		nightscoutmodelsTreatment.OriginalDurationMs = &typesFlexibleInt642
@@ -276,8 +268,8 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		nightscoutmodelsTreatment.Mode = &typesShortString2
 	}
 	if source.AutoForced != nil {
-		xbool2 := *source.AutoForced
-		nightscoutmodelsTreatment.AutoForced = &xbool2
+		xbool := *source.AutoForced
+		nightscoutmodelsTreatment.AutoForced = &xbool
 	}
 	if source.Reasons != nil {
 		typesSanitizedString := types.SanitizedString(*source.Reasons)
@@ -402,10 +394,6 @@ func EventGroupUpdate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xint642 := *source.DurationMs
 		sitedbUpdateEventGroupParams.DurationMs = &xint642
 	}
-	if source.DurationFraction != nil {
-		xbool := *source.DurationFraction
-		sitedbUpdateEventGroupParams.DurationFraction = &xbool
-	}
 	if source.Uuid != nil {
 		xstring12 := *source.Uuid
 		sitedbUpdateEventGroupParams.Uuid = &xstring12
@@ -415,8 +403,8 @@ func EventGroupUpdate(source sitedb.EventGroup, context ConverterContext) sitedb
 		sitedbUpdateEventGroupParams.Mode = &xstring13
 	}
 	if source.AutoForced != nil {
-		xbool2 := *source.AutoForced
-		sitedbUpdateEventGroupParams.AutoForced = &xbool2
+		xbool := *source.AutoForced
+		sitedbUpdateEventGroupParams.AutoForced = &xbool
 	}
 	if source.Reasons != nil {
 		xstring14 := *source.Reasons
@@ -1608,10 +1596,6 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xint643 := FlexibleInt64ToInt64(*source.DurationInMilliseconds)
 		sitedbEventGroup.DurationMs = &xint643
 	}
-	if source.DurationFraction != nil {
-		xbool2 := *source.DurationFraction
-		sitedbEventGroup.DurationFraction = &xbool2
-	}
 	if source.UtcOffsetMinutes != nil {
 		xint644 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbEventGroup.UtcOffsetMinutes = &xint644
@@ -2101,10 +2085,6 @@ func UpdateToEventGroup(source sitedb.EventGroup, target *sitedb.EventGroup) {
 	if source.DurationMs != nil {
 		xint644 := *source.DurationMs
 		target.DurationMs = &xint644
-	}
-	if source.DurationFraction != nil {
-		xbool2 := *source.DurationFraction
-		target.DurationFraction = &xbool2
 	}
 	if source.DeletedAt != nil {
 		xint645 := *source.DeletedAt

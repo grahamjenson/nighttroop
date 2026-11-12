@@ -189,8 +189,7 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result"
 
 # A dose's syncIdentifier is given back as sent, though its _id is a hash of an Omnipod one, as are its insulinType and
-# a bolus's unabsorbed. A dose ended early, a bolus or a suspend, has a fraction of a minute, given back to the
-# millisecond, and in milliseconds too.
+# a bolus's unabsorbed
 NAME loop_create_doses_as_sent
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -207,10 +206,6 @@ ASSERT_LENGTH 36 "@0._id"
 ASSERT_EQUALS "626f6c757320312e3020323032362d31312d30325430343a30303a30305a" "@0.syncIdentifier"
 ASSERT_EQUALS "Novolog" "@0.insulinType"
 ASSERT_EQUALS 0 "@0.unabsorbed"
-ASSERT_EQUALS 1.6666666666666667 "@0.duration"
-ASSERT_EQUALS 100000 "@0.durationInMilliseconds"
-ASSERT_EQUALS 1.1747 "@1.duration"
-ASSERT_EQUALS 0.667 "@2.duration"
 SET bolus_as_sent_id {{ dig "loop_create_doses_as_sent.0._id" }}
 
 NAME loop_doses_as_sent
@@ -219,16 +214,11 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 3 "@"
 ASSERT_EQUALS "626f6c757320302e303520323032362d31312d30325430343a30323a30305a" "@0.syncIdentifier"
-ASSERT_EQUALS 0.667 "@0.duration"
-ASSERT_EQUALS 40020 "@0.durationInMilliseconds"
 ASSERT_EQUALS "73757370656e6420302e3020323032362d31312d30325430343a30313a30305a" "@1.syncIdentifier"
 ASSERT_EQUALS "Novolog" "@1.insulinType"
-ASSERT_EQUALS 1.1747 "@1.duration"
-ASSERT_EQUALS 70482 "@1.durationInMilliseconds"
 ASSERT_EQUALS "626f6c757320312e3020323032362d31312d30325430343a30303a30305a" "@2.syncIdentifier"
 ASSERT_EQUALS "Novolog" "@2.insulinType"
 ASSERT_EQUALS 0 "@2.unabsorbed"
-ASSERT_EQUALS 1.6666666666666667 "@2.duration"
 
 NAME loop_dose_as_sent_v3
 GET http://{{ site }}/api/v3/treatments/{{ .bolus_as_sent_id }}
@@ -237,7 +227,6 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "626f6c757320312e3020323032362d31312d30325430343a30303a30305a" "@result.syncIdentifier"
 ASSERT_EQUALS "Novolog" "@result.insulinType"
 ASSERT_EQUALS 0 "@result.unabsorbed"
-ASSERT_EQUALS 1.6666666666666667 "@result.duration"
 
 ######
 # Overrides (OverrideTreatment): Loop sets _id to the override's syncIdentifier, a UUID, and posts it again when it
@@ -272,7 +261,7 @@ ASSERT_EQUALS 10080 "@1.duration"
 ASSERT_EQUALS "indefinite" "@1.durationType"
 ASSERT_EQUALS 1.2 "@1.insulinNeedsScaleFactor"
 
-# Ended early, it is posted again with the same _id, and its fractional minutes, given back to the millisecond
+# Ended early, it is posted again with the same _id, and its fractional minutes
 NAME loop_update_override
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -282,14 +271,14 @@ B [{"_id": "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D", "created_at": "{{ .override_a
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D" "@0._id"
-ASSERT_EQUALS 12.483333333333333 "@0.duration"
+ASSERT_EQUALS 12 "@0.duration"
 
 NAME override_updated_not_duplicated
 GET http://{{ site }}/api/v1/treatments?find[eventType]=Temporary+Override&count=10
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
-ASSERT_EQUALS 12.483333333333333 "@1.duration"
+ASSERT_EQUALS 12 "@1.duration"
 
 # NightscoutClient.deleteTreatmentsById: DELETE /api/v1/treatments/<uuid>, with no body
 NAME loop_delete_override
