@@ -906,16 +906,6 @@ func (m *EventGroup) SetOriginalDurationMs(v *int64) {
 	m.OriginalDurationMs = v
 }
 
-// GetDurationType returns the DurationType value.
-func (m EventGroup) GetDurationType() *string {
-	return m.DurationType
-}
-
-// SetDurationType sets the DurationType value and returns the updated EventGroup.
-func (m *EventGroup) SetDurationType(v *string) {
-	m.DurationType = v
-}
-
 // GetSentHash returns the SentHash value.
 func (m EventGroup) GetSentHash() *string {
 	return m.SentHash
@@ -5056,6 +5046,16 @@ func (m *TempTarget) SetInsulinNeedsScaleFactor(v *float64) {
 	m.InsulinNeedsScaleFactor = v
 }
 
+// GetDurationType returns the DurationType value.
+func (m TempTarget) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated TempTarget.
+func (m *TempTarget) SetDurationType(v *string) {
+	m.DurationType = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempTarget) GetNotes() *string {
 	return m.Notes
@@ -5234,6 +5234,16 @@ func (m TempTargetsVw) GetInsulinNeedsScaleFactor() *float64 {
 // SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated TempTargetsVw.
 func (m *TempTargetsVw) SetInsulinNeedsScaleFactor(v *float64) {
 	m.InsulinNeedsScaleFactor = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m TempTargetsVw) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetDurationType(v *string) {
+	m.DurationType = v
 }
 
 // GetNotes returns the Notes value.
@@ -8896,16 +8906,6 @@ func (m *CreateEventGroupParams) SetOriginalDurationMs(v *int64) {
 	m.OriginalDurationMs = v
 }
 
-// GetDurationType returns the DurationType value.
-func (m CreateEventGroupParams) GetDurationType() *string {
-	return m.DurationType
-}
-
-// SetDurationType sets the DurationType value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetDurationType(v *string) {
-	m.DurationType = v
-}
-
 // GetSentHash returns the SentHash value.
 func (m CreateEventGroupParams) GetSentHash() *string {
 	return m.SentHash
@@ -10144,16 +10144,6 @@ func (m UpdateEventGroupParams) GetOriginalDurationMs() *int64 {
 // SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetOriginalDurationMs(v *int64) {
 	m.OriginalDurationMs = v
-}
-
-// GetDurationType returns the DurationType value.
-func (m UpdateEventGroupParams) GetDurationType() *string {
-	return m.DurationType
-}
-
-// SetDurationType sets the DurationType value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetDurationType(v *string) {
-	m.DurationType = v
 }
 
 // GetSentHash returns the SentHash value.
@@ -12956,6 +12946,16 @@ func (m *CreateTempTargetParams) SetInsulinNeedsScaleFactor(v *float64) {
 	m.InsulinNeedsScaleFactor = v
 }
 
+// GetDurationType returns the DurationType value.
+func (m CreateTempTargetParams) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated CreateTempTargetParams.
+func (m *CreateTempTargetParams) SetDurationType(v *string) {
+	m.DurationType = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateTempTargetParams) GetNotes() *string {
 	return m.Notes
@@ -13364,6 +13364,16 @@ func (m UpdateTempTargetParams) GetLowTargetMgdl() *float64 {
 // SetLowTargetMgdl sets the LowTargetMgdl value and returns the updated UpdateTempTargetParams.
 func (m *UpdateTempTargetParams) SetLowTargetMgdl(v *float64) {
 	m.LowTargetMgdl = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m UpdateTempTargetParams) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated UpdateTempTargetParams.
+func (m *UpdateTempTargetParams) SetDurationType(v *string) {
+	m.DurationType = v
 }
 
 // GetNotes returns the Notes value.

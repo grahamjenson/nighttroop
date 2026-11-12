@@ -108,7 +108,6 @@ type EventGroup struct {
 	AutoForced                *bool
 	Reasons                   *string
 	OriginalDurationMs        *int64
-	DurationType              *string
 	SentHash                  *string
 	PumpID                    *string
 	PumpSerial                *string
@@ -577,6 +576,7 @@ type TempTarget struct {
 	HighTargetMgdl          float64
 	LowTargetMgdl           float64
 	InsulinNeedsScaleFactor *float64
+	DurationType            *string
 	Notes                   *string
 	Reason                  *string
 	DeletedAt               *int64
@@ -598,6 +598,7 @@ type TempTargetsVw struct {
 	HighTargetMgdl          *float64
 	LowTargetMgdl           *float64
 	InsulinNeedsScaleFactor *float64
+	DurationType            *string
 	Notes                   *string
 	Reason                  *string
 	DeletedAt               *int64
