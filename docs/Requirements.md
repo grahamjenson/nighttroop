@@ -1082,7 +1082,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   collection's `/<section>/<collection>/events`), so any other request sent with `Accept: text/event-stream` is still
   refused when the server is busy and still times out after 30 seconds. A quarter of each is kept for uploads to the
   Nightscout API, so glucose keeps arriving while page loads and reads fill the rest.
-- A request for a site there is not is 404, but one whose site cannot be looked up, as when the server is too busy to
+- A request for a site there is not is 404 with `{"status": 404, "message": "site does not exist"}`, on its pages, its
+  API and its Nightscout API, so an app can tell its user the site is gone rather than a path is wrong, but one whose site cannot be looked up, as when the server is too busy to
   answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
   Nightscout API or its live updates. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one

@@ -12,8 +12,9 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A request for a site is served with its context, one for a site there is not is 404, and one whose site cannot be
-// looked up, here as its request has ended, is 503, so an uploader tries again rather than take its URL as wrong
+// A request for a site is served with its context, one for a site there is not is 404 saying so, and one whose site
+// cannot be looked up, here as its request has ended, is 503, so an uploader tries again rather than take its URL as
+// wrong
 func TestServeSite(t *testing.T) {
 	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	siteID := site.SiteDB.Subdomain
@@ -31,7 +32,7 @@ func TestServeSite(t *testing.T) {
 		body      string
 	}{
 		{"a site", t.Context(), siteID, http.StatusOK, siteID},
-		{"no site", t.Context(), "zzzzzzzz", http.StatusNotFound, "404 page not found\n"},
+		{"no site", t.Context(), "zzzzzzzz", http.StatusNotFound, "{\"message\":\"site does not exist\",\"status\":404}\n"},
 		{"cannot look up", ended, siteID, http.StatusServiceUnavailable, "Server busy, try again shortly\n"},
 	}
 	for _, tt := range tests {
