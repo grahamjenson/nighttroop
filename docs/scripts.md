@@ -43,6 +43,7 @@ go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root cmd/staging -
 - **Background jobs:** a script with `RUN_BACKGROUND_JOBS` is refused, as only a test's own server can run its jobs at once. On staging, data is written through the API instead, as a phone would.
 - **Browser steps** need Playwright's Chromium (`go run github.com/mxschmitt/playwright-go/cmd/playwright install chromium`). `--headed` shows the browser, `--timeout` is how long each step waits, and screenshots, `SCREENSHOT`'s and a failed script's, go to `--out`.
 - **Running tests:** each script runs as a test, so `-test.v` prints every step and its response, and `-test.run` picks which scripts run.
+- **Only a failing flow is shown.** In `go test ./tests/api/`, `./tests/bdd/` and `./tests/socket/` a flow's steps and the server's logs while it ran are kept, and shown only if it fails: a red `✗ FLOW FAILED` with its steps, the last the one that failed, and the server's last 200 log lines, warnings in yellow and errors in red. A failed assert leads with its file and line and the expected and actual values, before the response or page it read them from, which is dimmed. Set `NO_COLOR=1` for plain text.
 - **A screenshot of every browser step**, into `allScreenshots`, is taken with `FLOW_STEP_SCREENSHOTS=1`, in a script run or `go test ./tests/bdd/`, to see where a test went wrong. It about doubles a browser test's time, so it is off otherwise, even with `-v`.
 
 `cmd/staging` has three:

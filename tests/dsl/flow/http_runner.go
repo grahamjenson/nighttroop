@@ -60,7 +60,7 @@ type httpRunner struct {
 // finish. The file says which events a connection listens for.
 func (r *httpRunner) Step(t *testing.T, file *HTTPFile, step *HTTPStep, ctx map[string]any) {
 	t.Helper()
-	fmt.Printf("=============== %s: %s %s ================\n", step.Name, step.Verb, step.Target)
+	logf(t, "%s:%d: %s %s %s", step.Path, step.Line, step.Name, step.Verb, step.Target)
 	output, err := r.run(t, file, step, ctx)
 	if err != nil {
 		t.Fatalf("%s:%d: %s %s: %v", step.Path, step.Line, step.Verb, step.Target, err)
@@ -69,7 +69,7 @@ func (r *httpRunner) Step(t *testing.T, file *HTTPFile, step *HTTPStep, ctx map[
 		return
 	}
 	pretty, _ := MarshalJsonWithoutEscapeHTML(output)
-	fmt.Printf("GOT: %s\n", pretty)
+	logf(t, "  got: %s", pretty)
 	ctx[step.Name] = output
 	for _, set := range step.Sets {
 		if err := set.Set(ctx); err != nil {

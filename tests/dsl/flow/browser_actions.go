@@ -14,7 +14,6 @@ import (
 type Action interface {
 	ToErrorLine(msg string) string
 	ToFlatString() string
-	PrintAction()
 	Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error)
 }
 
@@ -43,10 +42,6 @@ func (r *Goto) ToErrorLine(msg string) string {
 		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
 	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Goto) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Goto) AddAssert(assert BrowserAssert) {
@@ -114,10 +109,6 @@ func (r *Post) ToErrorLine(msg string) string {
 		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
 	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Post) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Post) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
@@ -204,10 +195,6 @@ func (r *Click) ToErrorLine(msg string) string {
 		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
 	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Click) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Click) AddAssert(assert BrowserAssert) {
@@ -428,10 +415,6 @@ func (r *Input) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
 }
 
-func (r *Input) PrintAction() {
-	fmt.Println(r.ToFlatString())
-}
-
 func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	html, err := page.Content()
 	if err != nil {
@@ -500,10 +483,6 @@ func (r *SaveCookie) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
 }
 
-func (r *SaveCookie) PrintAction() {
-	fmt.Println(r.ToFlatString())
-}
-
 func (r *SaveCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	cookies, err := page.Context().Cookies(page.URL())
 	if err != nil {
@@ -534,10 +513,6 @@ func (r *SetCookie) ToFlatString() string {
 
 func (r *SetCookie) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *SetCookie) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *SetCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
@@ -578,10 +553,6 @@ func (r *ClearCookie) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
 }
 
-func (r *ClearCookie) PrintAction() {
-	fmt.Println(r.ToFlatString())
-}
-
 func (r *ClearCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	return page, page.Context().ClearCookies(playwright.BrowserContextClearCookiesOptions{Name: r.Name})
 }
@@ -604,10 +575,6 @@ func (r *RunBackgroundJobs) ToFlatString() string {
 
 func (r *RunBackgroundJobs) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *RunBackgroundJobs) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 // Execute runs its asserts; the jobs themselves are run by the test before it, against the test's server
@@ -641,10 +608,6 @@ func (r *WaitVisible) ToFlatString() string {
 
 func (r *WaitVisible) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *WaitVisible) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 // Execute waits for the locator, then runs its asserts
@@ -696,10 +659,6 @@ func (r *Hold) ToFlatString() string {
 
 func (r *Hold) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Hold) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Hold) AddAssert(assert BrowserAssert) {
@@ -783,10 +742,6 @@ func (r *Window) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
 }
 
-func (r *Window) PrintAction() {
-	fmt.Println(r.ToFlatString())
-}
-
 func (r *Window) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	return page, page.SetViewportSize(r.Width, r.Height)
 }
@@ -807,10 +762,6 @@ func (r *Media) ToFlatString() string {
 
 func (r *Media) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Media) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Media) AddAssert(assert BrowserAssert) {
@@ -850,10 +801,6 @@ func (r *UserAgent) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
 }
 
-func (r *UserAgent) PrintAction() {
-	fmt.Println(r.ToFlatString())
-}
-
 func (r *UserAgent) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	headers := map[string]string{}
 	if r.Value != "" {
@@ -882,10 +829,6 @@ func (r *SaveText) ToFlatString() string {
 
 func (r *SaveText) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *SaveText) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *SaveText) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
@@ -917,10 +860,6 @@ func (r *VirtualAuthenticator) ToFlatString() string {
 
 func (r *VirtualAuthenticator) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *VirtualAuthenticator) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *VirtualAuthenticator) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
