@@ -924,6 +924,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
   returned as sent.
+- An AAPS bolus's `isBasalInsulin`, and the insulin a bolus or profile switch was given with, its `icfg`
+  (`insulinLabel`, `insulinEndTime` and `insulinPeakTime` in ms, `concentration`), are kept and returned as sent; other
+  fields of an `icfg` are left out.
 - An AAPS Bolus Wizard's `bolusCalculatorResult`, the JSON text of its calculation, is kept with the treatment and
   returned exactly as sent, as AAPS restores the record from it; one that is not JSON or is over 4096 characters is
   left out, and the rest of the treatment kept.

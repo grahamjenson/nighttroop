@@ -946,6 +946,16 @@ func (m *EventGroup) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m EventGroup) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated EventGroup.
+func (m *EventGroup) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m EventGroup) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -2466,6 +2476,16 @@ func (m *InsulinDose) SetAutomatic(v *bool) {
 	m.Automatic = v
 }
 
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m InsulinDose) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated InsulinDose.
+func (m *InsulinDose) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
+}
+
 // GetNotes returns the Notes value.
 func (m InsulinDose) GetNotes() *string {
 	return m.Notes
@@ -2654,6 +2674,16 @@ func (m InsulinDosesVw) GetAutomatic() *bool {
 // SetAutomatic sets the Automatic value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetAutomatic(v *bool) {
 	m.Automatic = v
+}
+
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m InsulinDosesVw) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
 }
 
 // GetNotes returns the Notes value.
@@ -8706,6 +8736,16 @@ func (m *CreateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m CreateEventGroupParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m CreateEventGroupParams) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -9926,6 +9966,16 @@ func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m UpdateEventGroupParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m UpdateEventGroupParams) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -10054,6 +10104,16 @@ func (m CreateInsulinDoseParams) GetAutomatic() *bool {
 // SetAutomatic sets the Automatic value and returns the updated CreateInsulinDoseParams.
 func (m *CreateInsulinDoseParams) SetAutomatic(v *bool) {
 	m.Automatic = v
+}
+
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m CreateInsulinDoseParams) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
 }
 
 // GetNotes returns the Notes value.
@@ -10524,6 +10584,16 @@ func (m UpdateInsulinDoseParams) GetAutomatic() *bool {
 // SetAutomatic sets the Automatic value and returns the updated UpdateInsulinDoseParams.
 func (m *UpdateInsulinDoseParams) SetAutomatic(v *bool) {
 	m.Automatic = v
+}
+
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m UpdateInsulinDoseParams) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
 }
 
 // GetNotes returns the Notes value.
