@@ -115,7 +115,6 @@ type EventGroup struct {
 	PumpType                  *string
 	SensorCode                *string
 	TransmitterID             *string
-	IcfgJson                  *string
 	BolusCalculatorResultJson *string
 	SyncIdentifier            *string
 	InsulinType               *string
@@ -295,6 +294,7 @@ type InsulinDose struct {
 	SplitExt              *float64
 	Automatic             *bool
 	IsBasalInsulin        *bool
+	IcfgJson              *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -318,6 +318,7 @@ type InsulinDosesVw struct {
 	SplitExt              *float64
 	Automatic             *bool
 	IsBasalInsulin        *bool
+	IcfgJson              *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -428,6 +429,7 @@ type ProfileSwitch struct {
 	OriginalPercentage       *int64
 	OriginalDurationMs       *int64
 	OriginalEnd              *int64
+	IcfgJson                 *string
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string
@@ -465,6 +467,7 @@ type ProfileSwitchesVw struct {
 	OriginalPercentage       *int64
 	OriginalDurationMs       *int64
 	OriginalEnd              *int64
+	IcfgJson                 *string
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string

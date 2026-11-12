@@ -176,8 +176,7 @@ CREATE TABLE event_groups (
     -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
-    -- (sensor_code, transmitter_id), the insulin AAPS says a bolus or profile switch was given with (icfg_json), and
-    -- AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json),
+    -- (sensor_code, transmitter_id), and AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json),
     -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier), the insulin it says a dose
     -- is of (insulin_type), when a carb entry was entered (user_entered_at) and a bolus's insulin not absorbed (unabsorbed)
     uuid TEXT CHECK(length(uuid) <= 64),
@@ -192,7 +191,6 @@ CREATE TABLE event_groups (
     pump_type TEXT CHECK(length(pump_type) <= 64),
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
-    icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
     bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
     sync_identifier TEXT CHECK(length(sync_identifier) <= 256),
     insulin_type TEXT CHECK(length(insulin_type) <= 64),
@@ -353,11 +351,13 @@ CREATE TABLE insulin_doses (
 
     -- What only some apps send, NULL for most doses: a combo bolus's split, the fraction given at once (split_now,
     -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), whether a loop gave it
-    -- (automatic, Loop's, as LoopFollow shows it as an SMB), and whether it is basal insulin (is_basal_insulin, AAPS's)
+    -- (automatic, Loop's, as LoopFollow shows it as an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), and
+    -- the insulin AAPS says it was given with, its label, peak and end times and concentration (icfg_json)
     split_now REAL CHECK(split_now BETWEEN 0 AND 1),
     split_ext REAL CHECK(split_ext BETWEEN 0 AND 1),
     automatic INTEGER CHECK(automatic IN (0, 1)),
     is_basal_insulin INTEGER CHECK(is_basal_insulin IN (0, 1)),
+    icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -471,13 +471,15 @@ CREATE TABLE profile_switches (
 
     -- What only AAPS sends, NULL for most switches: the AAPS switch it was made from, which its followers read an
     -- effective profile switch (a Note) by, its name and customized name, its timeshift in milliseconds within a day,
-    -- its percentage, how long it was to last in milliseconds, at most a year, and when it ended
+    -- its percentage, how long it was to last in milliseconds, at most a year, when it ended, and the insulin AAPS says
+    -- it was made with (icfg_json)
     original_profile_name TEXT CHECK(length(original_profile_name) <= 64),
     original_customized_name TEXT CHECK(length(original_customized_name) <= 64),
     original_timeshift_ms INTEGER CHECK(original_timeshift_ms BETWEEN -86400000 AND 86400000),
     original_percentage INTEGER CHECK(original_percentage BETWEEN 0 AND 1000),
     original_duration_ms INTEGER CHECK(original_duration_ms BETWEEN 0 AND 31536000000),
     original_end INTEGER CHECK(original_end BETWEEN 0 AND 253402300799999),
+    icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
 
     -- Profile Stuff
     dia REAL CHECK(dia BETWEEN 0 AND 24), -- in hours

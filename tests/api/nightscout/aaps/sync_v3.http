@@ -241,6 +241,7 @@ B {
     "durationInMilliseconds": 0,
     "timeshift": 0,
     "percentage": 90,
+    "icfg": {"insulinLabel": "Lyumjev", "insulinEndTime": 21600000, "insulinPeakTime": 2700000, "concentration": 1.0},
     "app": "AAPS"
  }
 ASSERT_STATUS 201
@@ -345,6 +346,10 @@ ASSERT_EXISTS "@result.profileJson"
 // A follower names the switch by its originalProfileName, else by profile, and takes its originalDuration
 ASSERT_EQUALS "Default" "@result.originalProfileName"
 ASSERT_EQUALS 0 "@result.originalDuration"
+// The insulin it was made with comes back as sent, as a bolus's does
+ASSERT_EQUALS "Lyumjev" "@result.icfg.insulinLabel"
+ASSERT_EQUALS 21600000 "@result.icfg.insulinEndTime"
+ASSERT_EQUALS 2700000 "@result.icfg.insulinPeakTime"
 
 NAME get_bg_check
 GET http://{{ site }}/api/v3/treatments/{{ .add_bg_check.identifier }}
