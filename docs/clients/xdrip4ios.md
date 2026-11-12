@@ -140,7 +140,8 @@ is that time at one reading every 45 s, plus 1, so up to 1921. It needs a 200 an
 ### Profile
 
 `updateProfile`, each sync and at most every 30 s: `GET /api/v1/profile`, decoded with `JSONDecoder` as
-`[NightscoutProfileResponse]` (`NightscoutProfileModels.swift`), and the first is used if its `startDate` is newer. It
+`[NightscoutProfileResponse]` (`NightscoutProfileModels.swift`), and the first is used if its `startDate` is newer.
+Nighttroop, as Nightscout, gives the newest 10 stores, newest first. It
 requires `_id`, `defaultProfile`, `startDate` (a string) and `store`; and in the default profile (or else the first)
 `basal`, `carbratio`, `sens`, `target_low` and `target_high` as arrays of `{time: string, value: number, timeAsSeconds:
 integer}`, `timezone` (string), `dia` (number) and `units` (string, mg/dL when it lowercases to `mg/dl`). A missing one

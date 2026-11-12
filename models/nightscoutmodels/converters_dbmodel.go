@@ -113,6 +113,7 @@ type DBModelConverter interface {
 // Custom Converter Methods
 // //
 
+// ModelDateStringFromDateIntAndUTCOffset is when it happened as toISOString writes it, in its UTC offset
 func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *types.DateString {
 	if m == nil {
 		return nil
@@ -123,13 +124,13 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *types.DateString {
 		GetOccurredAt() int64
 		GetUtcOffsetMinutes() *int64
 	}:
-		ds := types.DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
+		ds := types.ISODateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
 		return &ds
 	case interface {
 		GetStart() int64
 		GetUtcOffsetMinutes() *int64
 	}:
-		ds := types.DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
+		ds := types.ISODateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
 		return &ds
 	}
 

@@ -145,7 +145,7 @@ ASSERT_EQUALS "Note" "@0.eventType"
 ASSERT_EQUALS "Pizza night" "@0.notes"
 ASSERT_LENGTH 24 "@0.created_at"
 # timestamp is optional, but force cast to a String when there
-ASSERT_LENGTH 20 "@0.timestamp"
+ASSERT_LENGTH 24 "@0.timestamp"
 # Overrides.swift: correctionRange as [Int] or targetBottom/targetTop as Int, insulinNeedsScaleFactor and duration
 ASSERT_EQUALS "Temporary Override" "@1.eventType"
 ASSERT_EQUALS 140 "@1.correctionRange.0"
@@ -308,9 +308,10 @@ ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
 ASSERT_EQUALS 0.7 "@1.store.Default.basal.0.value"
 
-# Without a count or a filter, it is only the latest, as before
+# Without a count, it is Nightscout's default of the newest 10, newest first
 NAME profile_latest
 GET http://{{ site }}/api/v1/profiles.json?token={{ token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
+ASSERT_EQUALS 0.7 "@1.store.Default.basal.0.value"

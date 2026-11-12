@@ -110,6 +110,7 @@ B [
 ASSERT_STATUS 200
 ASSERT_CONTAINS "T08:01:23.940Z" "@0.created_at"
 ASSERT_LENGTH 24 "@0.created_at"
+ASSERT_EQUALS ".trio_upload_millis.0.created_at" "@0.timestamp"
 ASSERT_CONTAINS "T08:02:00.000Z" "@1.created_at"
 ASSERT_CONTAINS "T08:03:00.500Z" "@2.created_at"
 
@@ -141,3 +142,27 @@ GET http://{{ site }}/api/v1/treatments.json?find[notes]=millis
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@"
+
+// A glucose's dateString is written as toISOString writes it, so Trio's deleteGlucose finds it by the .SSS one it sent
+NAME trio_upload_glucose_millis
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{ "type" : "sgv", "sgv" : 130, "date" : {{ addms (dayms -1 730) 510 }}, "dateString" : "{{ date -1 }}T12:10:00.510Z", "direction" : "Flat" }]
+ASSERT_STATUS 200
+ASSERT_CONTAINS "T12:10:00.510Z" "@0.dateString"
+ASSERT_LENGTH 24 "@0.dateString"
+
+NAME trio_find_glucose_millis
+GET http://{{ site }}/api/v1/entries.json?find[dateString][$eq]={{ date -1 }}T12:10:00.510Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_CONTAINS "T12:10:00.510Z" "@0.dateString"
+ASSERT_LENGTH 24 "@0.dateString"
+
+NAME trio_delete_glucose_millis
+DELETE http://{{ site }}/api/v1/entries.json?find[$or][0][id][$eq]=6F1C3B0E-7A8A-4C55-9D42-1B5E5E0B9A13&find[$or][1][dateString][$eq]={{ date -1 }}T12:10:00.510Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"

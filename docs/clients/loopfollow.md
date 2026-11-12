@@ -154,8 +154,8 @@ device token, bundle and team from the profile.
 - A treatment's `timestamp` is its `created_at`, a string as LoopFollow needs.
 - Nighttroop returns `enteredBy` and a bolus's `automatic` as sent (the identity's name when no `enteredBy` was),
   and drops a treatment's sent `timestamp` and `durationType`.
-- A search returns at most 1000 records, the newest, by design, and a profile search with no filters and no count
-  only the latest store.
+- A search returns at most 1000 records, the newest, by design, and a v1 profile search with no count the newest 10
+  stores, as Nightscout does.
 
 ## Status
 
