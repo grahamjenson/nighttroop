@@ -906,16 +906,6 @@ func (m *EventGroup) SetOriginalDurationMs(v *int64) {
 	m.OriginalDurationMs = v
 }
 
-// GetDurationType returns the DurationType value.
-func (m EventGroup) GetDurationType() *string {
-	return m.DurationType
-}
-
-// SetDurationType sets the DurationType value and returns the updated EventGroup.
-func (m *EventGroup) SetDurationType(v *string) {
-	m.DurationType = v
-}
-
 // GetSentHash returns the SentHash value.
 func (m EventGroup) GetSentHash() *string {
 	return m.SentHash
@@ -976,16 +966,6 @@ func (m *EventGroup) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetIcfgJson returns the IcfgJson value.
-func (m EventGroup) GetIcfgJson() *string {
-	return m.IcfgJson
-}
-
-// SetIcfgJson sets the IcfgJson value and returns the updated EventGroup.
-func (m *EventGroup) SetIcfgJson(v *string) {
-	m.IcfgJson = v
-}
-
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m EventGroup) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -1004,36 +984,6 @@ func (m EventGroup) GetSyncIdentifier() *string {
 // SetSyncIdentifier sets the SyncIdentifier value and returns the updated EventGroup.
 func (m *EventGroup) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
-}
-
-// GetInsulinType returns the InsulinType value.
-func (m EventGroup) GetInsulinType() *string {
-	return m.InsulinType
-}
-
-// SetInsulinType sets the InsulinType value and returns the updated EventGroup.
-func (m *EventGroup) SetInsulinType(v *string) {
-	m.InsulinType = v
-}
-
-// GetUserEnteredAt returns the UserEnteredAt value.
-func (m EventGroup) GetUserEnteredAt() *int64 {
-	return m.UserEnteredAt
-}
-
-// SetUserEnteredAt sets the UserEnteredAt value and returns the updated EventGroup.
-func (m *EventGroup) SetUserEnteredAt(v *int64) {
-	m.UserEnteredAt = v
-}
-
-// GetUnabsorbed returns the Unabsorbed value.
-func (m EventGroup) GetUnabsorbed() *float64 {
-	return m.Unabsorbed
-}
-
-// SetUnabsorbed sets the Unabsorbed value and returns the updated EventGroup.
-func (m *EventGroup) SetUnabsorbed(v *float64) {
-	m.Unabsorbed = v
 }
 
 // GetNotes returns the Notes value.
@@ -1316,6 +1266,16 @@ func (m *FoodIntake) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m FoodIntake) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated FoodIntake.
+func (m *FoodIntake) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
 // GetNotes returns the Notes value.
 func (m FoodIntake) GetNotes() *string {
 	return m.Notes
@@ -1574,6 +1534,16 @@ func (m FoodIntakesVw) GetPreBolus() *float64 {
 // SetPreBolus sets the PreBolus value and returns the updated FoodIntakesVw.
 func (m *FoodIntakesVw) SetPreBolus(v *float64) {
 	m.PreBolus = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m FoodIntakesVw) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
 }
 
 // GetNotes returns the Notes value.
@@ -2566,6 +2536,36 @@ func (m *InsulinDose) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
 }
 
+// GetInsulinType returns the InsulinType value.
+func (m InsulinDose) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated InsulinDose.
+func (m *InsulinDose) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m InsulinDose) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated InsulinDose.
+func (m *InsulinDose) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m InsulinDose) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated InsulinDose.
+func (m *InsulinDose) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetNotes returns the Notes value.
 func (m InsulinDose) GetNotes() *string {
 	return m.Notes
@@ -2764,6 +2764,36 @@ func (m InsulinDosesVw) GetIsBasalInsulin() *bool {
 // SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m InsulinDosesVw) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m InsulinDosesVw) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m InsulinDosesVw) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -3716,6 +3746,16 @@ func (m *ProfileSwitch) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m ProfileSwitch) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetDia returns the Dia value.
 func (m ProfileSwitch) GetDia() *float64 {
 	return m.Dia
@@ -4054,6 +4094,16 @@ func (m ProfileSwitchesVw) GetOriginalEnd() *int64 {
 // SetOriginalEnd sets the OriginalEnd value and returns the updated ProfileSwitchesVw.
 func (m *ProfileSwitchesVw) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m ProfileSwitchesVw) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetDia returns the Dia value.
@@ -4616,6 +4666,16 @@ func (m *TempBasal) SetType(v *string) {
 	m.Type = v
 }
 
+// GetInsulinType returns the InsulinType value.
+func (m TempBasal) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated TempBasal.
+func (m *TempBasal) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempBasal) GetNotes() *string {
 	return m.Notes
@@ -4794,6 +4854,16 @@ func (m TempBasalsVw) GetType() *string {
 // SetType sets the Type value and returns the updated TempBasalsVw.
 func (m *TempBasalsVw) SetType(v *string) {
 	m.Type = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m TempBasalsVw) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetInsulinType(v *string) {
+	m.InsulinType = v
 }
 
 // GetNotes returns the Notes value.
@@ -4976,6 +5046,16 @@ func (m *TempTarget) SetInsulinNeedsScaleFactor(v *float64) {
 	m.InsulinNeedsScaleFactor = v
 }
 
+// GetDurationType returns the DurationType value.
+func (m TempTarget) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated TempTarget.
+func (m *TempTarget) SetDurationType(v *string) {
+	m.DurationType = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempTarget) GetNotes() *string {
 	return m.Notes
@@ -5154,6 +5234,16 @@ func (m TempTargetsVw) GetInsulinNeedsScaleFactor() *float64 {
 // SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated TempTargetsVw.
 func (m *TempTargetsVw) SetInsulinNeedsScaleFactor(v *float64) {
 	m.InsulinNeedsScaleFactor = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m TempTargetsVw) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetDurationType(v *string) {
+	m.DurationType = v
 }
 
 // GetNotes returns the Notes value.
@@ -7036,6 +7126,16 @@ func (m *CreateFoodIntakeParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m CreateFoodIntakeParams) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateFoodIntakeParams) GetNotes() *string {
 	return m.Notes
@@ -7614,6 +7714,16 @@ func (m UpdateFoodIntakeParams) GetPreBolus() *float64 {
 // SetPreBolus sets the PreBolus value and returns the updated UpdateFoodIntakeParams.
 func (m *UpdateFoodIntakeParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m UpdateFoodIntakeParams) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
 }
 
 // GetNotes returns the Notes value.
@@ -8796,16 +8906,6 @@ func (m *CreateEventGroupParams) SetOriginalDurationMs(v *int64) {
 	m.OriginalDurationMs = v
 }
 
-// GetDurationType returns the DurationType value.
-func (m CreateEventGroupParams) GetDurationType() *string {
-	return m.DurationType
-}
-
-// SetDurationType sets the DurationType value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetDurationType(v *string) {
-	m.DurationType = v
-}
-
 // GetSentHash returns the SentHash value.
 func (m CreateEventGroupParams) GetSentHash() *string {
 	return m.SentHash
@@ -8866,16 +8966,6 @@ func (m *CreateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetIcfgJson returns the IcfgJson value.
-func (m CreateEventGroupParams) GetIcfgJson() *string {
-	return m.IcfgJson
-}
-
-// SetIcfgJson sets the IcfgJson value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetIcfgJson(v *string) {
-	m.IcfgJson = v
-}
-
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m CreateEventGroupParams) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -8894,36 +8984,6 @@ func (m CreateEventGroupParams) GetSyncIdentifier() *string {
 // SetSyncIdentifier sets the SyncIdentifier value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
-}
-
-// GetInsulinType returns the InsulinType value.
-func (m CreateEventGroupParams) GetInsulinType() *string {
-	return m.InsulinType
-}
-
-// SetInsulinType sets the InsulinType value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetInsulinType(v *string) {
-	m.InsulinType = v
-}
-
-// GetUserEnteredAt returns the UserEnteredAt value.
-func (m CreateEventGroupParams) GetUserEnteredAt() *int64 {
-	return m.UserEnteredAt
-}
-
-// SetUserEnteredAt sets the UserEnteredAt value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetUserEnteredAt(v *int64) {
-	m.UserEnteredAt = v
-}
-
-// GetUnabsorbed returns the Unabsorbed value.
-func (m CreateEventGroupParams) GetUnabsorbed() *float64 {
-	return m.Unabsorbed
-}
-
-// SetUnabsorbed sets the Unabsorbed value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetUnabsorbed(v *float64) {
-	m.Unabsorbed = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -10086,16 +10146,6 @@ func (m *UpdateEventGroupParams) SetOriginalDurationMs(v *int64) {
 	m.OriginalDurationMs = v
 }
 
-// GetDurationType returns the DurationType value.
-func (m UpdateEventGroupParams) GetDurationType() *string {
-	return m.DurationType
-}
-
-// SetDurationType sets the DurationType value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetDurationType(v *string) {
-	m.DurationType = v
-}
-
 // GetSentHash returns the SentHash value.
 func (m UpdateEventGroupParams) GetSentHash() *string {
 	return m.SentHash
@@ -10156,16 +10206,6 @@ func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetIcfgJson returns the IcfgJson value.
-func (m UpdateEventGroupParams) GetIcfgJson() *string {
-	return m.IcfgJson
-}
-
-// SetIcfgJson sets the IcfgJson value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetIcfgJson(v *string) {
-	m.IcfgJson = v
-}
-
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m UpdateEventGroupParams) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -10184,36 +10224,6 @@ func (m UpdateEventGroupParams) GetSyncIdentifier() *string {
 // SetSyncIdentifier sets the SyncIdentifier value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
-}
-
-// GetInsulinType returns the InsulinType value.
-func (m UpdateEventGroupParams) GetInsulinType() *string {
-	return m.InsulinType
-}
-
-// SetInsulinType sets the InsulinType value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetInsulinType(v *string) {
-	m.InsulinType = v
-}
-
-// GetUserEnteredAt returns the UserEnteredAt value.
-func (m UpdateEventGroupParams) GetUserEnteredAt() *int64 {
-	return m.UserEnteredAt
-}
-
-// SetUserEnteredAt sets the UserEnteredAt value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetUserEnteredAt(v *int64) {
-	m.UserEnteredAt = v
-}
-
-// GetUnabsorbed returns the Unabsorbed value.
-func (m UpdateEventGroupParams) GetUnabsorbed() *float64 {
-	return m.Unabsorbed
-}
-
-// SetUnabsorbed sets the Unabsorbed value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetUnabsorbed(v *float64) {
-	m.Unabsorbed = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -10344,6 +10354,36 @@ func (m CreateInsulinDoseParams) GetIsBasalInsulin() *bool {
 // SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated CreateInsulinDoseParams.
 func (m *CreateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m CreateInsulinDoseParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m CreateInsulinDoseParams) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m CreateInsulinDoseParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -10824,6 +10864,36 @@ func (m UpdateInsulinDoseParams) GetIsBasalInsulin() *bool {
 // SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated UpdateInsulinDoseParams.
 func (m *UpdateInsulinDoseParams) SetIsBasalInsulin(v *bool) {
 	m.IsBasalInsulin = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m UpdateInsulinDoseParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m UpdateInsulinDoseParams) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m UpdateInsulinDoseParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -11576,6 +11646,16 @@ func (m *CreateProfileSwitchParams) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m CreateProfileSwitchParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m CreateProfileSwitchParams) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -12156,6 +12236,16 @@ func (m *UpdateProfileSwitchParams) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m UpdateProfileSwitchParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetNotes returns the Notes value.
 func (m UpdateProfileSwitchParams) GetNotes() *string {
 	return m.Notes
@@ -12284,6 +12374,16 @@ func (m CreateTempBasalParams) GetType() *string {
 // SetType sets the Type value and returns the updated CreateTempBasalParams.
 func (m *CreateTempBasalParams) SetType(v *string) {
 	m.Type = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m CreateTempBasalParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated CreateTempBasalParams.
+func (m *CreateTempBasalParams) SetInsulinType(v *string) {
+	m.InsulinType = v
 }
 
 // GetNotes returns the Notes value.
@@ -12706,6 +12806,16 @@ func (m *UpdateTempBasalParams) SetType(v *string) {
 	m.Type = v
 }
 
+// GetInsulinType returns the InsulinType value.
+func (m UpdateTempBasalParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated UpdateTempBasalParams.
+func (m *UpdateTempBasalParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
 // GetNotes returns the Notes value.
 func (m UpdateTempBasalParams) GetNotes() *string {
 	return m.Notes
@@ -12834,6 +12944,16 @@ func (m CreateTempTargetParams) GetInsulinNeedsScaleFactor() *float64 {
 // SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated CreateTempTargetParams.
 func (m *CreateTempTargetParams) SetInsulinNeedsScaleFactor(v *float64) {
 	m.InsulinNeedsScaleFactor = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m CreateTempTargetParams) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated CreateTempTargetParams.
+func (m *CreateTempTargetParams) SetDurationType(v *string) {
+	m.DurationType = v
 }
 
 // GetNotes returns the Notes value.
@@ -13244,6 +13364,16 @@ func (m UpdateTempTargetParams) GetLowTargetMgdl() *float64 {
 // SetLowTargetMgdl sets the LowTargetMgdl value and returns the updated UpdateTempTargetParams.
 func (m *UpdateTempTargetParams) SetLowTargetMgdl(v *float64) {
 	m.LowTargetMgdl = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m UpdateTempTargetParams) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated UpdateTempTargetParams.
+func (m *UpdateTempTargetParams) SetDurationType(v *string) {
+	m.DurationType = v
 }
 
 // GetNotes returns the Notes value.

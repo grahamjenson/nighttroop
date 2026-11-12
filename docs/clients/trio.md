@@ -77,7 +77,8 @@ the whole batch. Fixed in #509: both are kept as insulin doses with their type.
 
 When carbs are entered (`CarbsStorage.getCarbsNotYetUploadedToNightscout`, and the fat and protein units from
 `getFPUsNotYetUploadedToNightscout`): `{ eventType: "Carb Correction", created_at, enteredBy, notes, carbs, fat,
-protein, foodType, id }`. Works.
+protein, foodType, id }`. Works. Its `notes` and `foodType` are the same text, which can end with a new line, and
+both come back as sent.
 
 ### CGM sensor start: `POST /api/v1/treatments.json`
 

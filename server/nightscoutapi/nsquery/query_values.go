@@ -131,17 +131,17 @@ var forwardLookupName = map[string][]string{
 	"updatedlte": {"updated_at$lte", "find[updated_at][$lte]", "srvModified$lte", "find[srvModified][$lte]"},
 	"updatedlt":  {"updated_at$lt", "find[updated_at][$lt]", "srvModified$lt", "find[srvModified][$lt]"},
 
-	"durationeq":  {"duration", "find[duration]", "find[duration][$eq]", "durationMinutes", "find[durationMinutes]", "find[durationMinutes][$eq]"},
+	"durationeq":  {"duration", "find[duration][$eq]", "durationMinutes", "find[durationMinutes][$eq]"},
 	"durationgte": {"duration$gte", "find[duration][$gte]", "durationMinutes$gte", "find[durationMinutes][$gte]"},
 	"durationgt":  {"duration$gt", "find[duration][$gt]", "durationMinutes$gt", "find[durationMinutes][$gt]"},
 	"durationlte": {"duration$lte", "find[duration][$lte]", "durationMinutes$lte", "find[durationMinutes][$lte]"},
 	"durationlt":  {"duration$lt", "find[duration][$lt]", "durationMinutes$lt", "find[durationMinutes][$lt]"},
 
 	// API v3 also writes it field$eq, as Nightguard asks eventType$eq
-	"typeeq": {"type", "type$eq", "find[type]", "find[type][$eq]",
-		"eventType", "eventType$eq", "find[eventType]", "find[eventType][$eq]",
-		"activityType", "activityType$eq", "find[activityType]", "find[activityType][$eq]",
-		"category", "category$eq", "find[category]", "find[category][$eq]",
+	"typeeq": {"type", "type$eq", "find[type][$eq]",
+		"eventType", "eventType$eq", "find[eventType][$eq]",
+		"activityType", "activityType$eq", "find[activityType][$eq]",
+		"category", "category$eq", "find[category][$eq]",
 	},
 	"typeneq": {"type$ne", "find[type][$ne]",
 		"eventType$ne", "find[eventType][$ne]",
@@ -152,11 +152,11 @@ var forwardLookupName = map[string][]string{
 	"typein":  {"type$in", "find[type][$in]", "eventType$in", "find[eventType][$in]", "activityType$in", "find[activityType][$in]", "category$in", "find[category][$in]"},
 	"typenin": {"type$nin", "find[type][$nin]", "eventType$nin", "find[eventType][$nin]", "activityType$nin", "find[activityType][$nin]", "category$nin", "find[category][$nin]"},
 
-	"ideq": {"_id", "find[_id]", "find[_id][$eq]", "identifier", "find[identifier]", "find[identifier][$eq]", "id", "find[id]", "find[id][$eq]"},
+	"ideq": {"_id", "find[_id][$eq]", "identifier", "find[identifier][$eq]", "id", "find[id][$eq]"},
 	"idin": {"_id$in", "find[_id][$in]", "identifier$in", "find[identifier][$in]", "id$in", "find[id][$in]"},
 
 	// Model Specific
-	"sgveq": {"sgv", "find[sgv]", "find[sgv][$eq]", "mbg", "find[mbg]", "find[mbg][$eq]"},
+	"sgveq": {"sgv", "find[sgv][$eq]", "mbg", "find[mbg][$eq]"},
 
 	"sgvgte": {"sgv$gte", "find[sgv][$gte]", "mbg$gte", "find[mbg][$gte]"},
 	"sgvgt":  {"sgv$gt", "find[sgv][$gt]", "mbg$gt", "find[mbg][$gt]"},
@@ -164,28 +164,28 @@ var forwardLookupName = map[string][]string{
 	"sgvlte": {"sgv$lte", "find[sgv][$lte]", "mbg$lte", "find[mbg][$lte]"},
 	"sgvlt":  {"sgv$lt", "find[sgv][$lt]", "mbg$lt", "find[mbg][$lt]"},
 
-	"carbseq":  {"carbs", "find[carbs]", "find[carbs][$eq]"},
+	"carbseq":  {"carbs", "find[carbs][$eq]"},
 	"carbsgte": {"carbs$gte", "find[carbs][$gte]"},
 	"carbsgt":  {"carbs$gt", "find[carbs][$gt]"},
 	"carbslte": {"carbs$lte", "find[carbs][$lte]"},
 	"carbslt":  {"carbs$lt", "find[carbs][$lt]"},
 
-	"insulineq":  {"insulin", "find[insulin]", "find[insulin][$eq]"},
+	"insulineq":  {"insulin", "find[insulin][$eq]"},
 	"insulingte": {"insulin$gte", "find[insulin][$gte]"},
 	"insulingt":  {"insulin$gt", "find[insulin][$gt]"},
 	"insulinlte": {"insulin$lte", "find[insulin][$lte]"},
 	"insulinlt":  {"insulin$lt", "find[insulin][$lt]"},
 
-	"nameeq": {"name", "find[name]", "find[name][$eq]",
-		"defaultProfile", "find[defaultProfile]", "find[defaultProfile][$eq]",
-		"device", "find[device]", "find[device][$eq]",
-		"app", "find[app]", "find[app][$eq]",
-		"subject", "find[subject]", "find[subject][$eq]",
+	"nameeq": {"name", "find[name][$eq]",
+		"defaultProfile", "find[defaultProfile][$eq]",
+		"device", "find[device][$eq]",
+		"app", "find[app][$eq]",
+		"subject", "find[subject][$eq]",
 	},
 
 	"carbsexists":    {"carbs$exists", "find[carbs][$exists]"},
 	"durationexists": {"duration$exists", "find[duration][$exists]"},
-	"enteredbyeq":    {"enteredBy", "enteredBy$eq", "find[enteredBy]", "find[enteredBy][$eq]"},
+	"enteredbyeq":    {"enteredBy", "enteredBy$eq", "find[enteredBy][$eq]"},
 	"enteredbynin":   {"enteredBy$nin", "find[enteredBy][$nin]"},
 
 	"limit": {"limit", "count"},
@@ -214,6 +214,10 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 		}
 		// A key ending [] is a list, as xDrip4iOS sends find[date][$in][]
 		key = strings.TrimSuffix(key, "[]")
+		// find[field]=value is find[field][$eq]=value, as in Nightscout, as xDrip+ finds an entry by find[date]
+		if _, ok := reverseLookupName[key+"[$eq]"]; ok {
+			key += "[$eq]"
+		}
 
 		// Each $ne on enteredBy is one of a $nin; iAPS encodes them twice, so iAPS%20Watch is iAPS Watch
 		if enteredByNe.MatchString(key) {

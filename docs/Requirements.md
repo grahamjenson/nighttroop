@@ -895,6 +895,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   dates alone would give, so it can have fewer than its `limit`, still in order.
 - A v1 or v3 search's `skip` is at most 32000, enough for Nightguard's 32 pages of 1000, and a negative one is 0.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
+- A v1 `find[field]` with no operator is its `$eq`, as in Nightscout, for every field with a `$eq`, its value read
+  the same: `find[date]=<ms>` finds the entry at that date, as xDrip+ asks, and `find[created_at]=<ISO time>` the
+  treatment at that time; a field with no `$eq`, such as `find[srvCreated]`, still finds nothing.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
@@ -928,6 +931,11 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A value sent that means none is not stored, and comes back left out, as one not sent does: an empty string, a
   CGM's `noise` or `rssi` of 0, and a heart rate of 0. An update with one keeps the value stored. `false`, and other
   zeros, such as a combo bolus's split, are kept.
+- A treatment's or activity's `notes`, and its `reason` and `reasons`, come back exactly as sent, HTML, entities and
+  the white space around them too, as xDrip+ appends any note that comes back changed to its own; one only of white
+  space is none, and one over 1024 characters is cut at a character. The site, its pages and its API, gets every
+  note, reason and notification without its HTML tags or the contents of a script, so no app's text can put a script
+  on the site's pages.
 - An entry's `filtered` and `unfiltered` come back as sent, 0 too, as AAPS sends 0 with every reading.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
   keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a
@@ -1003,8 +1011,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
   entries is left out and the readings with it kept; a reading out of range (0 or less, or over 1000 mg/dL) in a
-  batch is left out and the rest stored, and a batch with only readings out of range is refused; an uploader battery
-  that is not a number is left out of its device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
+  batch is left out and the rest stored, and a batch with only readings out of range is taken (200, `[]`) with nothing
+  stored, though one reading sent on its own is refused; up to 10 entries with another problem (such as an unknown
+  `type`) in a batch are left out and the rest stored, and a batch with nothing else stored is refused with the
+  problem; an uploader battery that is not a number is left out of its device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
   automatic bolus as an SMB and leaves it out of its bolus stats.
@@ -1013,6 +1023,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   `userEnteredAt` (in UTC) and a bolus's `unabsorbed`.
 - xDrip+'s `Sensor Stop` treatments are kept as an event group, with their event type, so the treatments it uploads
   after one are kept too; the site can add a Sensor Stop event group.
+- A treatment with insulin or carbs past their limits (500 U, 1000 g, either way) is refused (400) saying the field,
+  its range and what was sent, e.g. `insulin must be between -500 and 500 U (was 8882.5)`, as xDrip+ drops a refused
+  treatment and every one queued after it; a negative one, taking back too much entered, is kept.
+- A value the database refuses through the Nightscout API is refused (400) naming its column and why, e.g. `dose is
+  out of range` or `direction is too long`, never in the database's words, which are logged.
 - A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
   profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.

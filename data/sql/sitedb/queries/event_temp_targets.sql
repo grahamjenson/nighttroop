@@ -8,6 +8,7 @@ INSERT INTO temp_targets (
     high_target_mgdl,
     low_target_mgdl,
     insulin_needs_scale_factor,
+    duration_type,
     notes,
     reason,
     utc_offset_minutes,
@@ -17,7 +18,7 @@ INSERT INTO temp_targets (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -82,6 +83,7 @@ UPDATE temp_targets SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     high_target_mgdl = COALESCE(sqlc.narg('HighTargetMgdl'), high_target_mgdl),
     low_target_mgdl = COALESCE(sqlc.narg('LowTargetMgdl'), low_target_mgdl),
+    duration_type = COALESCE(sqlc.narg('DurationType'), duration_type),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

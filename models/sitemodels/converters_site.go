@@ -91,6 +91,9 @@ type SiteConverter interface {
 	// goverter:map Mgdl Reading | MgdlToSettingsUnits
 	// goverter:map Units OriginalUnits
 	// goverter:map Units | ContextUnits
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *SiteGlucoseReading
 
 	// goverter:context siteContext
@@ -121,6 +124,9 @@ type SiteConverter interface {
 	// goverter:map HighTargetMgdl HighTarget | MgdlToSettingsUnits
 	// goverter:map LowTargetMgdl LowTarget | MgdlToSettingsUnits
 	// goverter:map . Units | ContextUnits
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	TempTargetFromDB(source *sitedb.TempTarget, siteContext *httputils.SiteContext) *SiteTempTarget
 
 	// goverter:context siteContext
@@ -130,6 +136,8 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// Only a loop's upload says an override has no end
+	// goverter:ignore DurationType
 	TempTargetToCreate(source *SiteTempTarget, siteContext *httputils.SiteContext) sitedb.CreateTempTargetParams
 
 	// goverter:context siteContext
@@ -138,12 +146,16 @@ type SiteConverter interface {
 	// goverter:map LowTarget LowTargetMgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore DurationType
 	TempTargetToUpdate(source *SiteTempTarget, siteContext *httputils.SiteContext) sitedb.UpdateTempTargetParams
 
 	///////
 	// TEMP BASALS
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal
 
 	// goverter:context siteContext
@@ -151,21 +163,24 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// The site does not set AAPS's type of temp basal
-	// goverter:ignore Type
+	// The site does not set AAPS's type of temp basal, nor Loop's insulin
+	// goverter:ignore Type InsulinType
 	TempBasalToCreate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.CreateTempBasalParams
 
 	// goverter:context siteContext
 	// goverter:map DurationMinutes | Int64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore Type
+	// goverter:ignore Type InsulinType
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
 	// ACTIVITIES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	ActivityFromDB(source *sitedb.Activity) *SiteActivity
 
 	// goverter:context siteContext
@@ -185,6 +200,11 @@ type SiteConverter interface {
 	// NOTIFICATION EVENTS
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
+	// goverter:map Content | StripTags
+	// goverter:map Title | StripTagsValue
 	NotificationEventFromDB(source *sitedb.NotificationEvent) *SiteNotificationEvent
 
 	// goverter:context siteContext
@@ -206,6 +226,9 @@ type SiteConverter interface {
 	// PROFILE SWITCHES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch
 
 	// goverter:context siteContext
@@ -214,15 +237,15 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson
-	// The site does not set what AAPS's switch was made from
-	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
+	// The site does not set what AAPS's switch was made from, nor the insulin it was made with
+	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd IcfgJson
 	ProfileSwitchToCreate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.CreateProfileSwitchParams
 
 	// goverter:context siteContext
 	// goverter:map Name | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
+	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd IcfgJson
 	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
 
 	///////
@@ -239,6 +262,9 @@ type SiteConverter interface {
 	// goverter:map EventGroup.FoodIntakeID FoodIntakeID
 	// goverter:map EventGroup.TempBasalID TempBasalID
 	// goverter:map EventGroup.TempTargetID TempTargetID
+	// App's text is shown without its tags
+	// goverter:map EventGroup.Notes Notes | StripTags
+	// goverter:map EventGroup.Reason Reason | StripTags
 	EventGroupFromDB(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) *SiteEventGroup
 
 	// goverter:context siteContext
@@ -247,9 +273,9 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// The site does not set AAPS's running mode, nor the pump, nor its insulin, nor a Bolus Wizard's calculation
-	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs DurationType SentHash PumpID PumpSerial PumpType IcfgJson BolusCalculatorResultJson
-	// nor Loop's ids, insulin, carb entry time and unabsorbed insulin
-	// goverter:ignore SyncIdentifier InsulinType UserEnteredAt Unabsorbed
+	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs SentHash PumpID PumpSerial PumpType BolusCalculatorResultJson
+	// nor Loop's ids
+	// goverter:ignore SyncIdentifier
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
 
 	// goverter:context siteContext
@@ -263,6 +289,9 @@ type SiteConverter interface {
 	// INSULIN DOSES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose
 
 	// goverter:context siteContext
@@ -270,22 +299,27 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// Only a loop's upload says whether a dose was automatic or basal insulin, not the site
-	// goverter:ignore Automatic IsBasalInsulin
+	// Only a loop's upload says whether a dose was automatic or basal insulin, its insulin, how much is not absorbed and
+	// the insulin it was given with
+	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson
 	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
 
 	// goverter:context siteContext
 	// goverter:map Dose | Float64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// Only a loop's upload says whether a dose was automatic or basal insulin, not the site
-	// goverter:ignore Automatic IsBasalInsulin
+	// Only a loop's upload says whether a dose was automatic or basal insulin, its insulin, how much is not absorbed and
+	// the insulin it was given with
+	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
 	///////
 	// FOOD INTAKES
 	///////
 
+	// App's text is shown without its tags
+	// goverter:map Notes | StripTags
+	// goverter:map Reason | StripTags
 	FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake
 
 	// goverter:context siteContext
@@ -293,11 +327,14 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// Only Loop's upload says when carbs were entered, not the site
+	// goverter:ignore UserEnteredAt
 	FoodIntakeToCreate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.CreateFoodIntakeParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore UserEnteredAt
 	FoodIntakeToUpdate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.UpdateFoodIntakeParams
 
 	///////

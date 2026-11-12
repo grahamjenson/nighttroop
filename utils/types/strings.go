@@ -65,6 +65,8 @@ func (s *SanitizedString) Stringp() *string {
 	return &str
 }
 
+// StripAllTags is the text of HTML, without its tags or the contents of a script or style, and with its entities
+// decoded
 func StripAllTags(input string) string {
 	doc, err := html.Parse(strings.NewReader(input))
 	if err != nil {
@@ -91,8 +93,14 @@ func StripAllTags(input string) string {
 	return buf.String()
 }
 
+// maxNotesLength is the most characters a note keeps, as its column holds
+const maxNotesLength = 1024
+
+// UnmarshalJSON keeps a note as sent, white space and HTML too, as Nightscout gives back the text it was sent and
+// xDrip+ appends any note that comes back changed to its own, so it grows with each download. The site shows it
+// without its tags (sitemodels.StripTags), escaped. A note longer than its column is cut at a character, and one only
+// of white space is none.
 func (n *SanitizedString) UnmarshalJSON(data []byte) error {
-	// We are going to sanitize notes here, no html allowed, trim white space, convert to string
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
 		return fmt.Errorf("expected notes string, got %s", data)
@@ -109,14 +117,12 @@ func (n *SanitizedString) UnmarshalJSON(data []byte) error {
 		str = fmt.Sprintf("%v", v)
 	}
 
-	// Trim white space
-	str = strings.TrimSpace(str)
-	// Concat to 1024 characters
-	if len(str) > 1024 {
-		str = str[:1024]
+	if runes := []rune(str); len(runes) > maxNotesLength {
+		str = string(runes[:maxNotesLength])
 	}
-	// Strip all tags
-	str = StripAllTags(str)
+	if strings.TrimSpace(str) == "" {
+		str = ""
+	}
 
 	*n = SanitizedString(str)
 	return nil

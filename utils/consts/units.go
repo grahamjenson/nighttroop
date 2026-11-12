@@ -18,6 +18,13 @@ const MMOL_L_TO_MG_DL = 18.018
 // MaxGlucoseMgdl is far above any real reading, so a typo or a made up value is refused
 const MaxGlucoseMgdl = 1000
 
+// MaxInsulinUnits and MaxCarbsGrams are far above any real dose or meal, either way, as a negative one takes back too
+// much entered, so a typo or a made up value is refused, as the database would
+const (
+	MaxInsulinUnits = 500
+	MaxCarbsGrams   = 1000
+)
+
 var unitAliases = map[string]Units{
 	// mg/dL
 	"mg":      UnitsMGDL,
