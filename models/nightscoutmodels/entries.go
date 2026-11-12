@@ -1,6 +1,7 @@
 package nightscoutmodels
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -92,11 +93,11 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	// We Just need Date and UtcOffset to be populated
+	// A date sent is kept, with its milliseconds, which Loop's dateString does not have; the dateString gives the
+	// date when it is not sent, and the UTC offset when it is not sent
 	if t.DateString != nil {
-		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			t.Date, t.UtcOffsetMinutes = t.DateString.MillisUTCOffset()
-		}
+		date, offset := t.DateString.MillisUTCOffset()
+		t.Date, t.UtcOffsetMinutes = cmp.Or(t.Date, date), cmp.Or(t.UtcOffsetMinutes, offset)
 	}
 
 	if t.Mills != nil && t.Date == nil {

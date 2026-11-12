@@ -2,8 +2,7 @@
 
 ## Alpha Testing
 
-1. Point real deivces at Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
-   Nightguard) reading, and Dexcom and Libre connectors
+1. Point real deivces follower apps (xDrip+ follower, LoopFollow, Nightguard, T1DCarer) reading, and Dexcom and Libre connectors
 1. Automated Testing of the staging, create site, do a bunch of stuff
 1. FINISH announcement post
 1. e2e code review. and flatten.
@@ -110,8 +109,6 @@
     1. P2: Keep what Loop sends in its treatments that is dropped: `syncIdentifier` (a bolus's and temp basal's `_id`
        is a hash of it, and Loop finds its own documents by it), `insulinType`, a carb entry's `userEnteredAt`, a
        bolus's `unabsorbed`, and a duration's fraction of a minute (a 1.67 minute bolus is kept as 1, 0.67 as 0)
-    1. P3: Find why the first request after a quiet spell is slow (a Loop device status took 13 s, a treatments
-       upload 5 s, the rest ~40 ms), as xDrip+ also saw
 
 ## Bugs
 

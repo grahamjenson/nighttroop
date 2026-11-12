@@ -1002,6 +1002,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   insulin and carbs.
 - A treatment with AAPS's `eventType` `SettingsExport`, sent when its settings are exported, is a Note.
 - A `dateString` with Juggluco's `-03:-30` zone for half hours west of UTC is read as `-03:30`.
+- An entry's `date` is kept to the millisecond, a fraction of one dropped, though its `dateString`, as Loop's does,
+  has only whole seconds; the `dateString` gives its UTC offset.
 
 ### Nighttroop API and client
 
