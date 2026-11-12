@@ -918,6 +918,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
+- A meter reading (`mbg`) uploaded with the date of one stored is the same finger prick whatever its device, so a
+  careportal BG Check that xDrip+ downloads and uploads again as its own is stored once.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC. So does one given only to
   the minute, such as `find[created_at][$gte]=2026-11-06T04:46`, as some clients send it; to the minute with a zone,
   it is that time in its zone.
@@ -969,8 +971,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ sends the token in its
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
-  entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
-  device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
+  entries is left out and the readings with it kept; a reading out of range (0 or less, or over 1000 mg/dL) in a
+  batch is left out and the rest stored, and a batch with only readings out of range is refused; an uploader battery
+  that is not a number is left out of its device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
   automatic bolus as an SMB and leaves it out of its bolus stats.
