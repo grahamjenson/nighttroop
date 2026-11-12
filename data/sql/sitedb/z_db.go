@@ -84,6 +84,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearStaleSummariesStmt, err = db.PrepareContext(ctx, clearStaleSummaries); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearStaleSummaries: %w", err)
 	}
+	if q.countGeneralSettingsStmt, err = db.PrepareContext(ctx, countGeneralSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query CountGeneralSettings: %w", err)
+	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
 	}
@@ -119,6 +122,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
+	}
+	if q.deleteGeneralSettingStmt, err = db.PrepareContext(ctx, deleteGeneralSetting); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteGeneralSetting: %w", err)
+	}
+	if q.deleteGeneralSettingsBeforeStmt, err = db.PrepareContext(ctx, deleteGeneralSettingsBefore); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteGeneralSettingsBefore: %w", err)
 	}
 	if q.deleteLoopSettingsStmt, err = db.PrepareContext(ctx, deleteLoopSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteLoopSettings: %w", err)
@@ -188,6 +197,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getFoodPresetStmt, err = db.PrepareContext(ctx, getFoodPreset); err != nil {
 		return nil, fmt.Errorf("error preparing query GetFoodPreset: %w", err)
+	}
+	if q.getGeneralSettingStmt, err = db.PrepareContext(ctx, getGeneralSetting); err != nil {
+		return nil, fmt.Errorf("error preparing query GetGeneralSetting: %w", err)
 	}
 	if q.getGlucoseReadingStmt, err = db.PrepareContext(ctx, getGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query GetGlucoseReading: %w", err)
@@ -339,6 +351,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchFoodPresetsStmt, err = db.PrepareContext(ctx, searchFoodPresets); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchFoodPresets: %w", err)
 	}
+	if q.searchGeneralSettingsStmt, err = db.PrepareContext(ctx, searchGeneralSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchGeneralSettings: %w", err)
+	}
 	if q.searchGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchGlucoseReadings); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchGlucoseReadings: %w", err)
 	}
@@ -465,6 +480,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateTempTargetStmt, err = db.PrepareContext(ctx, updateTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateTempTarget: %w", err)
 	}
+	if q.upsertGeneralSettingStmt, err = db.PrepareContext(ctx, upsertGeneralSetting); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertGeneralSetting: %w", err)
+	}
 	if q.upsertLoopSettingsStmt, err = db.PrepareContext(ctx, upsertLoopSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertLoopSettings: %w", err)
 	}
@@ -576,6 +594,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing clearStaleSummariesStmt: %w", cerr)
 		}
 	}
+	if q.countGeneralSettingsStmt != nil {
+		if cerr := q.countGeneralSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countGeneralSettingsStmt: %w", cerr)
+		}
+	}
 	if q.createActivityStmt != nil {
 		if cerr := q.createActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createActivityStmt: %w", cerr)
@@ -634,6 +657,16 @@ func (q *Queries) Close() error {
 	if q.createTempTargetStmt != nil {
 		if cerr := q.createTempTargetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
+		}
+	}
+	if q.deleteGeneralSettingStmt != nil {
+		if cerr := q.deleteGeneralSettingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteGeneralSettingStmt: %w", cerr)
+		}
+	}
+	if q.deleteGeneralSettingsBeforeStmt != nil {
+		if cerr := q.deleteGeneralSettingsBeforeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteGeneralSettingsBeforeStmt: %w", cerr)
 		}
 	}
 	if q.deleteLoopSettingsStmt != nil {
@@ -749,6 +782,11 @@ func (q *Queries) Close() error {
 	if q.getFoodPresetStmt != nil {
 		if cerr := q.getFoodPresetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getFoodPresetStmt: %w", cerr)
+		}
+	}
+	if q.getGeneralSettingStmt != nil {
+		if cerr := q.getGeneralSettingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getGeneralSettingStmt: %w", cerr)
 		}
 	}
 	if q.getGlucoseReadingStmt != nil {
@@ -1001,6 +1039,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchFoodPresetsStmt: %w", cerr)
 		}
 	}
+	if q.searchGeneralSettingsStmt != nil {
+		if cerr := q.searchGeneralSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchGeneralSettingsStmt: %w", cerr)
+		}
+	}
 	if q.searchGlucoseReadingsStmt != nil {
 		if cerr := q.searchGlucoseReadingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchGlucoseReadingsStmt: %w", cerr)
@@ -1211,6 +1254,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.upsertGeneralSettingStmt != nil {
+		if cerr := q.upsertGeneralSettingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertGeneralSettingStmt: %w", cerr)
+		}
+	}
 	if q.upsertLoopSettingsStmt != nil {
 		if cerr := q.upsertLoopSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertLoopSettingsStmt: %w", cerr)
@@ -1280,6 +1328,7 @@ type Queries struct {
 	clearOldLoopStatusesStmt                    *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
 	clearStaleSummariesStmt                     *sql.Stmt
+	countGeneralSettingsStmt                    *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
 	createEventGroupStmt                        *sql.Stmt
@@ -1292,6 +1341,8 @@ type Queries struct {
 	createProfileSwitchStmt                     *sql.Stmt
 	createTempBasalStmt                         *sql.Stmt
 	createTempTargetStmt                        *sql.Stmt
+	deleteGeneralSettingStmt                    *sql.Stmt
+	deleteGeneralSettingsBeforeStmt             *sql.Stmt
 	deleteLoopSettingsStmt                      *sql.Stmt
 	deleteOldDeviceReportsStmt                  *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
@@ -1315,6 +1366,7 @@ type Queries struct {
 	getEventGroupWithoutJoinsStmt               *sql.Stmt
 	getFoodIntakeStmt                           *sql.Stmt
 	getFoodPresetStmt                           *sql.Stmt
+	getGeneralSettingStmt                       *sql.Stmt
 	getGlucoseReadingStmt                       *sql.Stmt
 	getInsulinDoseStmt                          *sql.Stmt
 	getLatestDeviceReportWithPWDInformationStmt *sql.Stmt
@@ -1365,6 +1417,7 @@ type Queries struct {
 	searchEventGroupsStmt                       *sql.Stmt
 	searchFoodIntakesStmt                       *sql.Stmt
 	searchFoodPresetsStmt                       *sql.Stmt
+	searchGeneralSettingsStmt                   *sql.Stmt
 	searchGlucoseReadingsStmt                   *sql.Stmt
 	searchInsulinDosesStmt                      *sql.Stmt
 	searchLoopSettingsStmt                      *sql.Stmt
@@ -1407,6 +1460,7 @@ type Queries struct {
 	updateProfileSwitchStmt                     *sql.Stmt
 	updateTempBasalStmt                         *sql.Stmt
 	updateTempTargetStmt                        *sql.Stmt
+	upsertGeneralSettingStmt                    *sql.Stmt
 	upsertLoopSettingsStmt                      *sql.Stmt
 	upsertSummaryPeriodStmt                     *sql.Stmt
 }
@@ -1435,6 +1489,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearOldLoopStatusesStmt:                    q.clearOldLoopStatusesStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		clearStaleSummariesStmt:                     q.clearStaleSummariesStmt,
+		countGeneralSettingsStmt:                    q.countGeneralSettingsStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,
 		createEventGroupStmt:                        q.createEventGroupStmt,
@@ -1447,6 +1502,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createProfileSwitchStmt:                     q.createProfileSwitchStmt,
 		createTempBasalStmt:                         q.createTempBasalStmt,
 		createTempTargetStmt:                        q.createTempTargetStmt,
+		deleteGeneralSettingStmt:                    q.deleteGeneralSettingStmt,
+		deleteGeneralSettingsBeforeStmt:             q.deleteGeneralSettingsBeforeStmt,
 		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
 		deleteOldDeviceReportsStmt:                  q.deleteOldDeviceReportsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
@@ -1470,6 +1527,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getEventGroupWithoutJoinsStmt:               q.getEventGroupWithoutJoinsStmt,
 		getFoodIntakeStmt:                           q.getFoodIntakeStmt,
 		getFoodPresetStmt:                           q.getFoodPresetStmt,
+		getGeneralSettingStmt:                       q.getGeneralSettingStmt,
 		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
 		getInsulinDoseStmt:                          q.getInsulinDoseStmt,
 		getLatestDeviceReportWithPWDInformationStmt: q.getLatestDeviceReportWithPWDInformationStmt,
@@ -1520,6 +1578,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchEventGroupsStmt:                       q.searchEventGroupsStmt,
 		searchFoodIntakesStmt:                       q.searchFoodIntakesStmt,
 		searchFoodPresetsStmt:                       q.searchFoodPresetsStmt,
+		searchGeneralSettingsStmt:                   q.searchGeneralSettingsStmt,
 		searchGlucoseReadingsStmt:                   q.searchGlucoseReadingsStmt,
 		searchInsulinDosesStmt:                      q.searchInsulinDosesStmt,
 		searchLoopSettingsStmt:                      q.searchLoopSettingsStmt,
@@ -1562,6 +1621,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateProfileSwitchStmt:                     q.updateProfileSwitchStmt,
 		updateTempBasalStmt:                         q.updateTempBasalStmt,
 		updateTempTargetStmt:                        q.updateTempTargetStmt,
+		upsertGeneralSettingStmt:                    q.upsertGeneralSettingStmt,
 		upsertLoopSettingsStmt:                      q.upsertLoopSettingsStmt,
 		upsertSummaryPeriodStmt:                     q.upsertSummaryPeriodStmt,
 	}

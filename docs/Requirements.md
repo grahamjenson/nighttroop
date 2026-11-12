@@ -853,6 +853,11 @@ Connectors are a site's third party integrations, each syncing from one service.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
   identity's own, units included.
+- The v3 settings also keep AAPS's own documents as sent, shared by every identity of the site: its running config
+  (`aaps`, `aaps-state`) and the messages AAPS and AAPSClient pair and control it with (`aaps_clientcontrol_...`).
+  Each is created, replaced, patched, read, searched, deleted and sent to `/storage` sockets as any document is,
+  and the settings' last modified is when one last changed. A document over 256 KiB, or a new one once the site
+  keeps 100, is refused; client control messages left unchanged a week are deleted to make room.
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
   `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these

@@ -112,7 +112,8 @@ func LastModified(store nsutils.Store) func(http.ResponseWriter, *http.Request, 
 					"devicestatus": lasModified.DeviceReportUpdatedAt,
 					"profile":      lasModified.ProfilePresetUpdatedAt,
 					"food":         lasModified.FoodPresetUpdatedAt,
-					"settings":     0, // when a site's settings last changed is not kept
+					// when the site's own settings last changed is not kept, only the documents apps keep in them
+					"settings": lasModified.GeneralSettingUpdatedAt,
 				},
 			},
 		})
