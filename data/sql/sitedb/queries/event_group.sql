@@ -31,7 +31,6 @@ INSERT INTO event_groups (
     pump_type,
     sensor_code,
     transmitter_id,
-    icfg_json,
     bolus_calculator_result_json,
     sync_identifier,
 
@@ -70,7 +69,6 @@ VALUES (
     NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
-    sqlc.narg('IcfgJson'),
     NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sqlc.narg('SyncIdentifier'),
     sqlc.arg('OccurredAt'),
@@ -308,7 +306,6 @@ UPDATE event_groups SET
     pump_type = COALESCE(NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''), pump_type),
     sensor_code = COALESCE(NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''), sensor_code),
     transmitter_id = COALESCE(NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''), transmitter_id),
-    icfg_json = COALESCE(sqlc.narg('IcfgJson'), icfg_json),
     bolus_calculator_result_json = COALESCE(NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''), bolus_calculator_result_json),
     sync_identifier = COALESCE(sqlc.narg('SyncIdentifier'), sync_identifier),
 

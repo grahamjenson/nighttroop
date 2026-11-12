@@ -976,16 +976,6 @@ func (m *EventGroup) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetIcfgJson returns the IcfgJson value.
-func (m EventGroup) GetIcfgJson() *string {
-	return m.IcfgJson
-}
-
-// SetIcfgJson sets the IcfgJson value and returns the updated EventGroup.
-func (m *EventGroup) SetIcfgJson(v *string) {
-	m.IcfgJson = v
-}
-
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m EventGroup) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -2576,6 +2566,16 @@ func (m *InsulinDose) SetUnabsorbed(v *float64) {
 	m.Unabsorbed = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m InsulinDose) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated InsulinDose.
+func (m *InsulinDose) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetNotes returns the Notes value.
 func (m InsulinDose) GetNotes() *string {
 	return m.Notes
@@ -2794,6 +2794,16 @@ func (m InsulinDosesVw) GetUnabsorbed() *float64 {
 // SetUnabsorbed sets the Unabsorbed value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetUnabsorbed(v *float64) {
 	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m InsulinDosesVw) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -3746,6 +3756,16 @@ func (m *ProfileSwitch) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m ProfileSwitch) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetDia returns the Dia value.
 func (m ProfileSwitch) GetDia() *float64 {
 	return m.Dia
@@ -4084,6 +4104,16 @@ func (m ProfileSwitchesVw) GetOriginalEnd() *int64 {
 // SetOriginalEnd sets the OriginalEnd value and returns the updated ProfileSwitchesVw.
 func (m *ProfileSwitchesVw) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m ProfileSwitchesVw) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetDia returns the Dia value.
@@ -8936,16 +8966,6 @@ func (m *CreateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetIcfgJson returns the IcfgJson value.
-func (m CreateEventGroupParams) GetIcfgJson() *string {
-	return m.IcfgJson
-}
-
-// SetIcfgJson sets the IcfgJson value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetIcfgJson(v *string) {
-	m.IcfgJson = v
-}
-
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m CreateEventGroupParams) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -10196,16 +10216,6 @@ func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetIcfgJson returns the IcfgJson value.
-func (m UpdateEventGroupParams) GetIcfgJson() *string {
-	return m.IcfgJson
-}
-
-// SetIcfgJson sets the IcfgJson value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetIcfgJson(v *string) {
-	m.IcfgJson = v
-}
-
 // GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
 func (m UpdateEventGroupParams) GetBolusCalculatorResultJson() *string {
 	return m.BolusCalculatorResultJson
@@ -10374,6 +10384,16 @@ func (m CreateInsulinDoseParams) GetUnabsorbed() *float64 {
 // SetUnabsorbed sets the Unabsorbed value and returns the updated CreateInsulinDoseParams.
 func (m *CreateInsulinDoseParams) SetUnabsorbed(v *float64) {
 	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m CreateInsulinDoseParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -10874,6 +10894,16 @@ func (m UpdateInsulinDoseParams) GetUnabsorbed() *float64 {
 // SetUnabsorbed sets the Unabsorbed value and returns the updated UpdateInsulinDoseParams.
 func (m *UpdateInsulinDoseParams) SetUnabsorbed(v *float64) {
 	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m UpdateInsulinDoseParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -11626,6 +11656,16 @@ func (m *CreateProfileSwitchParams) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
 }
 
+// GetIcfgJson returns the IcfgJson value.
+func (m CreateProfileSwitchParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m CreateProfileSwitchParams) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -12204,6 +12244,16 @@ func (m UpdateProfileSwitchParams) GetOriginalEnd() *int64 {
 // SetOriginalEnd sets the OriginalEnd value and returns the updated UpdateProfileSwitchParams.
 func (m *UpdateProfileSwitchParams) SetOriginalEnd(v *int64) {
 	m.OriginalEnd = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m UpdateProfileSwitchParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
 }
 
 // GetNotes returns the Notes value.
