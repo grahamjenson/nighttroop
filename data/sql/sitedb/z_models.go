@@ -72,6 +72,9 @@ type DeviceReport struct {
 	PumpClock             *int64
 	PumpManufacturer      *string
 	PumpModel             *string
+	PumpID                *string
+	PumpSuspended         *bool
+	PumpBolusing          *bool
 	OverrideJson          *string
 	PumpJson              *string
 	UploaderJson          *string

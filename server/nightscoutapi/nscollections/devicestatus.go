@@ -141,6 +141,16 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if pump.Model == nil && source.PumpModel != nil {
 		pump.Model = (*types.ShortString)(source.PumpModel)
 	}
+	if pump.PumpID == nil && source.PumpID != nil {
+		pump.PumpID = (*types.ShortString)(source.PumpID)
+	}
+	// Followers show a suspended pump's insulin delivery as suspended
+	if pump.Suspended == nil && source.PumpSuspended != nil {
+		pump.Suspended = (*types.FlexibleBool)(source.PumpSuspended)
+	}
+	if pump.Bolusing == nil && source.PumpBolusing != nil {
+		pump.Bolusing = (*types.FlexibleBool)(source.PumpBolusing)
+	}
 	if pump.Battery == nil && source.PumpBatteryPercent != nil {
 		pump.Battery = &nightscoutmodels.PumpBattery{Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent))}
 	}
@@ -252,6 +262,9 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 		}
 		createParams.PumpManufacturer = source.Pump.Manufacturer.Stringp()
 		createParams.PumpModel = source.Pump.Model.Stringp()
+		createParams.PumpID = source.Pump.PumpID.Stringp()
+		createParams.PumpSuspended = (*bool)(source.Pump.Suspended)
+		createParams.PumpBolusing = (*bool)(source.Pump.Bolusing)
 	}
 
 	// Loop's are set last, so a status with both keeps Loop's settings, IOB, COB and predictions over OpenAPS's

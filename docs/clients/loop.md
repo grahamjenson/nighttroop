@@ -154,10 +154,11 @@ for each bolus decision, and each automatic dose decision with it:
   `duration` (seconds left, not minutes), `multiplier`
 
 Loop does not read any of it back. Nighttroop keeps the `loop` object, the `override` (#516), the pump's battery,
-reservoir, `clock`, `manufacturer` and `model` (#516) and the uploader's battery and `isCharging`. The pump's other
-fields, such as `pumpID`, `suspended` and `bolusing`, and the uploader's `name` and `timestamp`, are given back from
-the device status as it was sent until that is cleared when the record is old (#514). The pump's
-`reservoir_display_override` and `reservoir_level_override` are dropped.
+reservoir, `clock`, `manufacturer` and `model` (#516), `pumpID`, `suspended` and `bolusing`, which followers read to
+show insulin delivery suspended, and the uploader's battery, `isCharging`, `name` and `timestamp`. They are still
+given back, as sent, once the pump as sent is cleared from all but the device's newest status (#514). The pump's
+`secondsFromGMT` is given back only while that is kept, and its `reservoir_display_override` and
+`reservoir_level_override` are dropped.
 
 ## Profile: `POST /api/v1/profile` and `GET /api/v1/profile/current`
 
@@ -224,8 +225,8 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | Omnipod `syncIdentifier`s once creates dedup by identifier | Works since #515: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
 | Device status `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
-| Device status pump `pumpID`, `suspended`, `bolusing` | Works since #514 while the status as sent is kept; dropped once it is cleared |
-| Device status uploader `name`, `timestamp`, `isCharging` | Fixed in this PR: `isCharging` is kept, `name` and `timestamp` while the status as sent is kept |
+| Device status pump `pumpID`, `suspended`, `bolusing` | Fixed in this PR: kept once the status as sent is cleared (they were dropped then); test in `loop/devicestatus.http` |
+| Device status uploader `name`, `timestamp`, `isCharging` | Works: kept once the status as sent is cleared |
 | `POST /api/v1/profile`, `loopSettings` and `store` | Works |
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, and had no `enteredBy`) |
 | A profile's `enteredBy` `Loop` given back as sent | Fixed in this PR (was the uploading identity, e.g. `pwd_phone`) |
