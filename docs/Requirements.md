@@ -848,8 +848,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   (an IPv6 /64) may hold at most 10 of a site's live sessions not yet given access
   (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`); its next is refused with 429, so it cannot take them all.
 - Glucose is stored in mg/dL and always returned in mg/dL, whatever the identity's or site's units, as Nightscout's
-  clients read `sgv`, `mbg`, a treatment's `glucose` and a profile's targets as mg/dL: entries, treatments, profiles
-  and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
+  clients read `sgv`, `mbg`, a treatment's `glucose`, a temp target's `targetTop` and `targetBottom` and a profile's
+  targets as mg/dL: entries, treatments, profiles and their `units`, over HTTP and Socket.IO. It is accepted in the
+  units sent with it, or guessed from its value. Every treatment comes back with `units`, a temp target and a therapy
+  event (e.g. a Note or Sensor Change) too, so a follower on an mmol/L site does not read a target of 90 as mmol/L.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
   identity's own, units included.
