@@ -10,8 +10,9 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A value that means none is stored as NULL, as one not sent is: a CGM's raw signal of 0, as AAPS sends unfiltered for
-// every reading, a heart rate of 0, and an empty string. An update with one leaves the value stored as it is.
+// A value that means none is stored as NULL, as one not sent is: a CGM's noise or rssi of 0, a heart rate of 0, and an
+// empty string. An update with one leaves the value stored as it is. A filtered or unfiltered of 0, as AAPS sends for
+// every reading, is kept as sent.
 func TestValuesMeaningNoneAreNotStored(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
 	q, ctx, now := site.SiteDB.Queries(), context.Background(), time.Now().UnixMilli()
@@ -20,8 +21,8 @@ func TestValuesMeaningNoneAreNotStored(t *testing.T) {
 	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "r", Mgdl: 100, ReadingType: "sgv",
 		Unfiltered: &zero, Filtered: &zero, Rssi: &zero, Noise: &noise, OccurredAt: now, CreatedByIdentityName: "test"})
 	require.NoError(t, err)
-	require.Nil(t, reading.Unfiltered)
-	require.Nil(t, reading.Filtered)
+	require.Equal(t, &zero, reading.Unfiltered)
+	require.Equal(t, &zero, reading.Filtered)
 	require.Nil(t, reading.Rssi)
 	require.Equal(t, &noise, reading.Noise)
 

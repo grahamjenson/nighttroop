@@ -44,10 +44,15 @@ func settingDocument(source *settings.SettingAnyType) nsutils.Document {
 // ///
 
 func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError) {
+	if key, _ := data["identifier"].(string); generalSettingType(key) != "" {
+		// One kept already is replaced, and is the duplicate the API says it found
+		doc, created, herr := saveGeneralSetting(ctx, siteContext, key, data, false)
+		return doc, !created, herr
+	}
 	var nsModel nightscoutmodels.Setting
 	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", "settings")
+		slog.WarnContext(ctx, "failed to map data to model", "error", err, "collection", "settings")
 		return nil, false, nsutils.BadDataBodyError
 	}
 
@@ -70,6 +75,9 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
 	}
+	if generalSettingType(identifier) != "" {
+		return saveGeneralSetting(ctx, siteContext, identifier, patch, false)
+	}
 	if patch["identifier"] == nil {
 		patch["identifier"] = identifier
 	}
@@ -77,7 +85,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	var nsModel nightscoutmodels.Setting
 	err := utils.ConvertViaJSON(patch, &nsModel)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", "settings")
+		slog.WarnContext(ctx, "failed to map data to model", "error", err, "collection", "settings")
 		return nil, false, nsutils.BadDataBodyError
 	}
 
@@ -104,6 +112,10 @@ func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.Si
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, nsutils.ErrNotFound
 	}
+	if generalSettingType(identifier) != "" {
+		doc, _, herr := saveGeneralSetting(ctx, siteContext, identifier, patch, true)
+		return doc, herr
+	}
 	if patch["identifier"] == nil {
 		patch["identifier"] = identifier
 	}
@@ -117,6 +129,9 @@ func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+	if generalSettingType(identifier) != "" {
+		return deleteGeneralSetting(ctx, siteContext, identifier)
+	}
 	_, herr := UpdateIndividualSetting(ctx, siteContext, identifier, nil)
 	if herr != nil {
 		slog.ErrorContext(ctx, "failed to update individual setting", "error", herr, "collection", "settings")
@@ -127,6 +142,9 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 }
 
 func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
+	if generalSettingType(identifier) != "" {
+		return getGeneralSetting(ctx, siteContext, identifier)
+	}
 
 	found, err := siteContext.GetOwnSettings().GetSettingAnyTypeByName(identifier)
 	if err != nil {
@@ -137,17 +155,24 @@ func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-	all := siteContext.GetOwnSettings().GetAllSettingAnyTypes()
-	docs := make([]nsutils.Document, len(all))
-	for i, each := range all {
-		docs[i] = settingDocument(each)
-	}
-	return docs, nil
+	return c.withOwn(ctx, siteContext, 0)
 }
 
-// History is every setting, as their changes are not kept
+// History is every one of the site's own settings, as their changes are not kept, and the general ones changed since
 func (c SettingsCollection) History(ctx context.Context, siteContext *httputils.SiteContext, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-	return c.Search(ctx, siteContext, query)
+	return c.withOwn(ctx, siteContext, since)
+}
+
+// withOwn are the general settings changed since the time, newest first, then the identity's own settings
+func (c SettingsCollection) withOwn(ctx context.Context, siteContext *httputils.SiteContext, since int64) ([]nsutils.Document, *nsutils.HTTPError) {
+	docs, herr := generalSettingsSince(ctx, siteContext, since)
+	if herr != nil {
+		return nil, herr
+	}
+	for _, each := range siteContext.GetOwnSettings().GetAllSettingAnyTypes() {
+		docs = append(docs, settingDocument(each))
+	}
+	return docs, nil
 }
 
 func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
@@ -159,6 +184,10 @@ func (c SettingsCollection) DeleteQuery(ctx context.Context, siteContext *httput
 }
 
 func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (*settings.SettingAnyType, *nsutils.HTTPError) {
+	// A setting there is not would be answered as set, with an empty document
+	if !settings.IsSetting(identifier) {
+		return nil, nsutils.ErrNotFound
+	}
 	settingsMap := siteContext.GetOwnSettings()
 	identitySettingsMap := settingsMap.IdentitySettingsMap
 

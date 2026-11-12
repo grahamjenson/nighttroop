@@ -411,18 +411,22 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring21 := *source.TransmitterID
 		sitedbCreateEventGroupParams.TransmitterID = &xstring21
 	}
+	if source.BolusCalculatorResultJson != nil {
+		xstring22 := *source.BolusCalculatorResultJson
+		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring22
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint643 := *source.UtcOffsetMinutes
 		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint643
 	}
 	if source.CreatedByAppName != nil {
-		xstring22 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring22
+		xstring23 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring23
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring23 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring23
+		xstring24 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring24
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -534,13 +538,17 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		xint642 := *source.DurationMinutes
 		sitedbUpdateEventGroupParams.DurationMinutes = &xint642
 	}
+	if source.BolusCalculatorResultJson != nil {
+		xstring22 := *source.BolusCalculatorResultJson
+		sitedbUpdateEventGroupParams.BolusCalculatorResultJson = &xstring22
+	}
 	if source.UpdatedByIdentityID != nil {
 		xint643 := *source.UpdatedByIdentityID
 		sitedbUpdateEventGroupParams.UpdatedByIdentityID = &xint643
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring22 := *source.UpdatedByIdentityName
-		sitedbUpdateEventGroupParams.UpdatedByIdentityName = &xstring22
+		xstring23 := *source.UpdatedByIdentityName
+		sitedbUpdateEventGroupParams.UpdatedByIdentityName = &xstring23
 	}
 	sitedbUpdateEventGroupParams.ID = source.ID
 	return sitedbUpdateEventGroupParams
@@ -2301,13 +2309,17 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xstring19 := *source.TransmitterID
 		sitedbEventGroup.TransmitterID = &xstring19
 	}
+	if source.BolusCalculatorResultJson != nil {
+		xstring20 := *source.BolusCalculatorResultJson
+		sitedbEventGroup.BolusCalculatorResultJson = &xstring20
+	}
 	if source.Notes != nil {
-		xstring20 := *source.Notes
-		sitedbEventGroup.Notes = &xstring20
+		xstring21 := *source.Notes
+		sitedbEventGroup.Notes = &xstring21
 	}
 	if source.Reason != nil {
-		xstring21 := *source.Reason
-		sitedbEventGroup.Reason = &xstring21
+		xstring22 := *source.Reason
+		sitedbEventGroup.Reason = &xstring22
 	}
 	if source.DurationMinutes != nil {
 		xint642 := *source.DurationMinutes
@@ -2325,20 +2337,20 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 	sitedbEventGroup.CreatedAt = source.CreatedAt
 	sitedbEventGroup.UpdatedAt = source.UpdatedAt
 	if source.CreatedByAppName != nil {
-		xstring22 := *source.CreatedByAppName
-		sitedbEventGroup.CreatedByAppName = &xstring22
+		xstring23 := *source.CreatedByAppName
+		sitedbEventGroup.CreatedByAppName = &xstring23
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring23 := *source.CreatedByDeviceName
-		sitedbEventGroup.CreatedByDeviceName = &xstring23
+		xstring24 := *source.CreatedByDeviceName
+		sitedbEventGroup.CreatedByDeviceName = &xstring24
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint645 := *source.UpdatedByIdentityID
 		sitedbEventGroup.UpdatedByIdentityID = &xint645
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring24 := *source.UpdatedByIdentityName
-		sitedbEventGroup.UpdatedByIdentityName = &xstring24
+		xstring25 := *source.UpdatedByIdentityName
+		sitedbEventGroup.UpdatedByIdentityName = &xstring25
 	}
 	if source.CreatedByIdentityID != nil {
 		xint646 := *source.CreatedByIdentityID

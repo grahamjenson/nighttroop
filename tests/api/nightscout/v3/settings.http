@@ -59,9 +59,33 @@ ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
 ASSERT_EQUALS true "@result.value"
 ASSERT_EQUALS "boolean" "@result.type"
 
+# A setting Nighttroop does not have is not found (a create of one is refused), rather than answered as set with an
+# empty document
+NAME put_unknown_setting_v3
+PUT http://{{ site }}/api/v3/settings/not_a_setting
+H Authorization: Bearer {{ jwt }}
+B { "type": "string", "value": "x" }
+ASSERT_STATUS 404
+
+NAME create_unknown_setting_v3
+POST http://{{ site }}/api/v3/settings
+H Authorization: Bearer {{ jwt }}
+B { "identifier": "not_a_setting", "type": "string", "value": "x" }
+ASSERT_STATUS 400
+
+NAME delete_unknown_setting_v3
+DELETE http://{{ site }}/api/v3/settings/not_a_setting
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME get_unknown_setting_v3
+GET http://{{ site }}/api/v3/settings/not_a_setting
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
 
 #####
-# READ 
+# READ
 #####
 
 NAME get_unit_settings_v3

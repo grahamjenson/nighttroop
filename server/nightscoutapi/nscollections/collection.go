@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"slices"
+	"time"
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -166,6 +167,9 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 
 	if err := ValidateInputData(data); err != nil {
 		return nil, false, err
+	}
+	if nsModel, err = withUtcOffset(data, nsModel, siteUtcOffset(siteContext)); err != nil {
+		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
 	if err := m.Validate(nsModel, nil); err != nil {
@@ -504,6 +508,14 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	if httpErr := c.validateReplace(ctx, nsModel, replaced, data, identifier); httpErr != nil {
 		return nil, false, httpErr
 	}
+	offset := siteUtcOffset(siteContext)
+	if replaced != nil && (*replaced).GetUtcOffsetMinutes() != nil {
+		kept := *(*replaced).GetUtcOffsetMinutes()
+		offset = func(int64) int64 { return kept }
+	}
+	if nsModel, err = withUtcOffset(data, nsModel, offset); err != nil {
+		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
 
 	dbCreateModel, err := m.CreateModel(q, ctx, nsModel, converterContext(siteContext), &identifier)
 	if httpErr := c.stored(dbCreateModel, err, "replace"); httpErr != nil {
@@ -730,6 +742,28 @@ func (c Collection[NS, DM]) stored(dbModel *DM, err error, action string) *nsuti
 		return nsutils.ErrInternal
 	}
 	return nil
+}
+
+// withUtcOffset is the model with the offset at its date when it was sent with a date but no utcOffset, which
+// would otherwise be stored as 0
+func withUtcOffset[NS SharedNSFields](data map[string]any, nsModel NS, offset func(date int64) int64) (NS, error) {
+	if nsModel.GetUtcOffsetMinutes() != nil || nsModel.GetDate() == nil {
+		return nsModel, nil
+	}
+	data["utcOffset"] = offset(*nsModel.GetDate())
+	var withOffset NS
+	err := utils.ConvertViaJSON(data, &withOffset)
+	return withOffset, err
+}
+
+// siteUtcOffset is the offset in minutes of the site's timezone at a date, as a document sent with none is in it,
+// as Nightscout takes the server's
+func siteUtcOffset(siteContext *httputils.SiteContext) func(date int64) int64 {
+	location := siteContext.GetSiteTimezone()
+	return func(date int64) int64 {
+		_, seconds := time.UnixMilli(date).In(location).Zone()
+		return int64(seconds / 60)
+	}
 }
 
 // converterContext is who is making a change, which a stored model records
