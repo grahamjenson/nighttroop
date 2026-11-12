@@ -73,6 +73,11 @@ func (c EntriesCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 }
 
 func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
+	// A finger prick at a date is the same one whichever device sent it, as xDrip+ sends a careportal's BG Check back
+	// as its own meter reading, with its own device
+	if readingType := nightscoutmodels.SetReadingType(nsModel); readingType == "mbg" {
+		return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: 1}))
+	}
 	return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
 }
 
