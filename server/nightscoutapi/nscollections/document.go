@@ -64,9 +64,13 @@ type field struct {
 func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
 	raw, _ := json.Marshal(&s.model)
 	server, without := s.server(v3)
+	var v1Only []string
+	if model, ok := any(s.model).(interface{ V1OnlyFields() []string }); ok && v3 {
+		v1Only = model.V1OnlyFields()
+	}
 	out := append(make([]byte, 0, len(raw)+256), '{')
 	add := func(name string, value []byte) {
-		if name == without || (len(only) > 0 && (name == "_id" || !slices.Contains(only, name))) {
+		if name == without || slices.Contains(v1Only, name) || (len(only) > 0 && (name == "_id" || !slices.Contains(only, name))) {
 			return
 		}
 		if len(out) > 1 {
