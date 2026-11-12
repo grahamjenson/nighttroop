@@ -867,7 +867,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   (`aaps`, `aaps-state`) and the messages AAPS and AAPSClient pair and control it with (`aaps_clientcontrol_...`).
   Each is created, replaced, patched, read, searched, deleted and sent to `/storage` sockets as any document is,
   and the settings' last modified is when one last changed. A document over 256 KiB, or a new one once the site
-  keeps 100, is refused; client control messages left unchanged a week are deleted to make room.
+  keeps 100, is refused; client control messages left unchanged a week are deleted to make room. A settings key can
+  be up to 128 characters, as AAPS's client control keys have the client's UUID, while another collection's
+  identifier is at most 36.
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
   `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these

@@ -202,7 +202,7 @@ SHA1, as AAPS does.
 | `/storage` subscribe, `create`, `update`, `delete` | works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | works | `alarm.sio`, `aaps_alarm.sio` |
 | `/alarm` `announcement` | fixed in #511 (was never sent) | `aaps_alarm.sio` |
-| Client control: `settings` documents | kept as sent, shared by the site's identities | `running_config.http` |
+| Client control: `settings` documents | kept as sent, shared by the site's identities; keys up to 128 characters, as AAPS's are `aaps_clientcontrol_<kind>_<client UUID>` (they were refused over 36, so no client could pair) | `running_config.http` |
 | Client control: v2 roles and subjects | not supported; TODO P4 | — |
 | v1 `authorize` with the SHA1 of the secret | works (#512) | `aaps_v1.sio` |
 | v1 `authorize` payload, `dataUpdate`, `dbAdd`, `dbUpdate` | works | `aaps_v1.sio`, `db_writes.sio` |
