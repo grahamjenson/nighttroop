@@ -292,6 +292,40 @@ func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrati
 	return &i, err
 }
 
+const newestPushRegistrationForApp = `-- name: NewestPushRegistrationForApp :one
+SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations
+WHERE site_id = ?1 AND app = ?2
+ORDER BY updated_at DESC, id DESC
+LIMIT 1
+`
+
+type NewestPushRegistrationForAppParams struct {
+	SiteID string
+	App    consts.PushApp
+}
+
+// A site's registration for the app last registered or registered again, as Loop's is with each profile it uploads
+func (q *Queries) NewestPushRegistrationForApp(ctx context.Context, arg NewestPushRegistrationForAppParams) (*PushRegistration, error) {
+	row := q.queryRow(ctx, q.newestPushRegistrationForAppStmt, newestPushRegistrationForApp, arg.SiteID, arg.App)
+	var i PushRegistration
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.IdentityID,
+		&i.App,
+		&i.Provider,
+		&i.BundleID,
+		&i.Production,
+		&i.TokenEnc,
+		&i.TokenHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastPushedAt,
+		&i.LastError,
+	)
+	return &i, err
+}
+
 const pushCredentialFor = `-- name: PushCredentialFor :one
 SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials
 WHERE (site_id = ?1 OR site_id IS NULL) AND provider = ?2
