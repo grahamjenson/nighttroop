@@ -3,11 +3,16 @@ package aslog
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
+	"os"
 	"strings"
 	"sync"
 	"time"
 )
+
+// TestOutput is where a test server writes its logs: stdout, unless the tests keep them to show with a failing test
+var TestOutput io.Writer = os.Stdout
 
 // Record is a log held to be written to the logs DB, with its site, request and job taken out of its attributes
 type Record struct {

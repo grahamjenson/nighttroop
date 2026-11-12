@@ -18,7 +18,7 @@ import (
 func setupLogging(mode consts.ServerMode) {
 	buffer := aslog.BufferHandler{Buffer: aslog.Logs}
 	if mode == consts.Test {
-		slog.SetDefault(slog.New(aslog.ContextHandler{Handler: slogmulti.Fanout(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		slog.SetDefault(slog.New(aslog.ContextHandler{Handler: slogmulti.Fanout(slog.NewTextHandler(aslog.TestOutput, &slog.HandlerOptions{
 			Level: slog.LevelDebug, // Set minimum log level
 		}), buffer)}))
 		return
