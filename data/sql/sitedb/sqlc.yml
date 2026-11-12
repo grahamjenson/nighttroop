@@ -50,6 +50,12 @@ overrides:
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"
+      - column: "device_reports.pump_suspended"
+        go_type:
+          type: "*bool"
+      - column: "device_reports.pump_bolusing"
+        go_type:
+          type: "*bool"
 
       # units
       - column: "glucose_readings.units"

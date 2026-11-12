@@ -576,6 +576,36 @@ func (m *DeviceReport) SetPumpModel(v *string) {
 	m.PumpModel = v
 }
 
+// GetPumpID returns the PumpID value.
+func (m DeviceReport) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSuspended returns the PumpSuspended value.
+func (m DeviceReport) GetPumpSuspended() *bool {
+	return m.PumpSuspended
+}
+
+// SetPumpSuspended sets the PumpSuspended value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpSuspended(v *bool) {
+	m.PumpSuspended = v
+}
+
+// GetPumpBolusing returns the PumpBolusing value.
+func (m DeviceReport) GetPumpBolusing() *bool {
+	return m.PumpBolusing
+}
+
+// SetPumpBolusing sets the PumpBolusing value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpBolusing(v *bool) {
+	m.PumpBolusing = v
+}
+
 // GetOverrideJson returns the OverrideJson value.
 func (m DeviceReport) GetOverrideJson() *string {
 	return m.OverrideJson
@@ -5414,6 +5444,36 @@ func (m CreateDeviceReportParams) GetPumpModel() *string {
 // SetPumpModel sets the PumpModel value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetPumpModel(v *string) {
 	m.PumpModel = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m CreateDeviceReportParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSuspended returns the PumpSuspended value.
+func (m CreateDeviceReportParams) GetPumpSuspended() *bool {
+	return m.PumpSuspended
+}
+
+// SetPumpSuspended sets the PumpSuspended value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpSuspended(v *bool) {
+	m.PumpSuspended = v
+}
+
+// GetPumpBolusing returns the PumpBolusing value.
+func (m CreateDeviceReportParams) GetPumpBolusing() *bool {
+	return m.PumpBolusing
+}
+
+// SetPumpBolusing sets the PumpBolusing value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpBolusing(v *bool) {
+	m.PumpBolusing = v
 }
 
 // GetOverrideJson returns the OverrideJson value.

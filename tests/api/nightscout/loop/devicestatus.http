@@ -116,3 +116,67 @@ GET http://{{ site }}/api/v1/devicestatus?find[created_at][$gte]={{ time 20 }}&c
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@"
+
+######
+# Followers read the pump's suspended to see insulin delivery is suspended. The pump as sent is kept only on the
+# device's newest status with one, so once a newer one comes in and the background jobs clear the older one's, its
+# pumpID, suspended and bolusing, and its uploader's name and timestamp, are still given back as Loop sent them.
+######
+NAME create_suspended_devicestatus
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{
+    "device": "loop://Jo's iPhone",
+    "created_at": "{{ time 15 }}",
+    "uploader": {"battery": 60, "isCharging": true, "name": "Jo's iPhone", "timestamp": "{{ time 15 }}"},
+    "pump": {"bolusing": true, "secondsFromGMT": 46800, "manufacturer": "Insulet", "pumpID": "1A2B3C4D", "clock": "{{ time 15 }}", "model": "Dash", "suspended": true, "reservoir": 40, "battery": {"percent": 70}}
+ }]
+ASSERT_STATUS 200
+SET suspended_id {{ dig "create_suspended_devicestatus.0._id" }}
+
+NAME create_newer_devicestatus
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{
+    "device": "loop://Jo's iPhone",
+    "created_at": "{{ time 10 }}",
+    "pump": {"bolusing": false, "pumpID": "1A2B3C4D", "suspended": false, "reservoir": 39.5}
+ }]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME suspended_devicestatus_kept_v1
+GET http://{{ site }}/api/v1/devicestatus?find[_id]={{ .suspended_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+# The pump as sent was cleared: its secondsFromGMT has no column
+ASSERT_EQUALS null "@0.pump.secondsFromGMT"
+ASSERT_EQUALS "1A2B3C4D" "@0.pump.pumpID"
+ASSERT_EQUALS true "@0.pump.suspended"
+ASSERT_EQUALS true "@0.pump.bolusing"
+ASSERT_EQUALS 40 "@0.pump.reservoir"
+ASSERT_EQUALS "Jo's iPhone" "@0.uploader.name"
+ASSERT_EQUALS ".create_suspended_devicestatus.0.uploader.timestamp" "@0.uploader.timestamp"
+
+NAME suspended_devicestatus_kept_v3
+GET http://{{ site }}/api/v3/devicestatus/{{ .suspended_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.pump.secondsFromGMT"
+ASSERT_EQUALS "1A2B3C4D" "@result.pump.pumpID"
+ASSERT_EQUALS true "@result.pump.suspended"
+ASSERT_EQUALS true "@result.pump.bolusing"
+ASSERT_EQUALS "Jo's iPhone" "@result.uploader.name"
+ASSERT_EQUALS ".create_suspended_devicestatus.0.uploader.timestamp" "@result.uploader.timestamp"
+
+# The newer one's suspended and bolusing, sent false, are given back false
+NAME newer_devicestatus_not_suspended
+GET http://{{ site }}/api/v1/devicestatus?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@0.pump.suspended"
+ASSERT_EQUALS false "@0.pump.bolusing"

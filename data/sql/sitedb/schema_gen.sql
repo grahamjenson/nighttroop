@@ -122,11 +122,14 @@ CREATE TABLE device_reports (
     -- Which loop it is, whose status loop_status_json is
     loop_name TEXT CHECK(loop_name IN ('openaps', 'loop')),
 
-    -- What only some apps send, NULL for most reports: the pump's time when it reported, its manufacturer and model,
-    -- and Loop's override in force
+    -- What only some apps send, NULL for most reports: the pump's time when it reported, its manufacturer, model and
+    -- ID, whether it was suspended or bolusing, which followers show, and Loop's override in force
     pump_clock INTEGER CHECK(pump_clock BETWEEN 0 AND 253402300799999),
     pump_manufacturer TEXT CHECK(length(pump_manufacturer) <= 64),
     pump_model TEXT CHECK(length(pump_model) <= 64),
+    pump_id TEXT CHECK(length(pump_id) <= 64),
+    pump_suspended INTEGER CHECK(pump_suspended IN (0, 1)),
+    pump_bolusing INTEGER CHECK(pump_bolusing IN (0, 1)),
     override_json TEXT CHECK(length(override_json) <= 2048 AND json_valid(override_json)),
     -- The pump and uploader as sent, for their fields without a column, like AAPS's extended. The pump's, the larger,
     -- is kept, like the loop's status, only on its device's newest report with one.

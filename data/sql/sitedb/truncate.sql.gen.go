@@ -49,7 +49,8 @@ type ClearOldPumpsParams struct {
 
 // A pump as sent, the most of a report after its loop's status, is kept as that is: only on its device's newest report
 // with one, as followers read it from that one. What is worth keeping of the others, their battery, reservoir, clock,
-// manufacturer and model, was extracted into their own columns when they were written.
+// manufacturer, model and ID, and whether it was suspended or bolusing, was extracted into their own columns when they
+// were written.
 func (q *Queries) ClearOldPumps(ctx context.Context, arg ClearOldPumpsParams) error {
 	_, err := q.exec(ctx, q.clearOldPumpsStmt, clearOldPumps, arg.Since)
 	return err

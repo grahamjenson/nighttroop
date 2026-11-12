@@ -97,7 +97,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
-	// goverter:ignore IsDeviceCharging DeviceBatteryPercent PumpState PumpBatteryPercent PumpChargingState PumpReservoir LoopIob LoopIobBasal LoopIobTreatment LoopCob ConfigurationID LoopStatusJson LoopName PumpClock PumpManufacturer PumpModel OverrideJson PumpJson UploaderJson
+	// goverter:ignore IsDeviceCharging DeviceBatteryPercent PumpState PumpBatteryPercent PumpChargingState PumpReservoir LoopIob LoopIobBasal LoopIobTreatment LoopCob ConfigurationID LoopStatusJson LoopName PumpClock PumpManufacturer PumpModel PumpID PumpSuspended PumpBolusing OverrideJson PumpJson UploaderJson
 	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx ConverterContext) sitedb.CreateDeviceReportParams
 }
 

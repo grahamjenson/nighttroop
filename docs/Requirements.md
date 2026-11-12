@@ -704,7 +704,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours. A Nightscout backfill keeps the
   device statuses it adds without their loop status (`openaps` or `loop`) or `pump` as sent, which are of no use once old
   and most of a looping site's DB, but with their IOB and COB, which the summaries show, and their pump's battery,
-  reservoir, clock, manufacturer and model; a status the site already had is left as it is.
+  reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`; a status the site already had is left
+  as it is.
 - A Nightscout or virtual backfill copies no device status older than 30 days, though a Nightscout server returns one,
   as an old one's IOB and COB are of little use and device statuses are most of a site's DB; its other records are
   copied however old.
@@ -943,6 +944,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   `class` its name.
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
   `uploader.battery` and `uploaderBattery`, and Loop's override in force.
+- A device status keeps Loop's pump `pumpID`, `suspended` and `bolusing`, as sent, once the status as sent is cleared,
+  so a follower still sees an older status's insulin delivery suspended.
 - A device status keeps Trio's pump `bolusIncrement`, LoopFollow's remote bolus step, while the status as sent is kept.
 - A Nightscout treatment comes back with its `created_at` as `timestamp`, a bolus with its insulin as `programmed`,
   and a temp basal with `temp` `absolute`, as Loop's NightscoutKit drops treatments without them; a `timestamp`
@@ -952,8 +955,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   the `duration` kept, so not once that is changed on the site; one sent with no `duration` is in minutes too, the
   nearest. A treatment with a duration is always given back with both `duration` and `durationInMilliseconds`, the one
   not kept worked out from the other.
-- A device status keeps its uploader's `isCharging`, and, while the status as sent is kept, its uploader's `name` and
-  `timestamp` and Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
+- A device status keeps its uploader's `isCharging`, `name` and `timestamp`, and, while the status as sent is kept,
+  Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
   override presets, for LoopFollow's Trio Remote Control.
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
@@ -1073,8 +1076,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   day; truncating a site looks at them all, so it clears those the job no longer looks at, as a device's newest before
   it went a day without reporting.
 - A device status's `pump` as sent, the most of it after its loop status, is truncated the same way: kept only on its
-  device's newest status with one, the others keeping their pump's battery, reservoir, clock, manufacturer and model,
-  which the Nightscout API gives back as their `pump`.
+  device's newest status with one, the others keeping their pump's battery, reservoir, clock, manufacturer, model,
+  `pumpID`, `suspended` and `bolusing`, which the Nightscout API gives back as their `pump`.
 - Truncating also thins each device's statuses: all of the last hour are kept, then only the newest in each 10
   minutes until a week old, in each 20 minutes until two weeks old, and in each hour until 30 days old, which keeps its
   newest. A deleted status is not removed, so a client syncing deletions sees it. Every status over 30 days old, its

@@ -15,7 +15,8 @@ WHERE device_reports.updated_at >= @since AND device_reports.loop_status_json IS
 -- name: ClearOldPumps :exec
 -- A pump as sent, the most of a report after its loop's status, is kept as that is: only on its device's newest report
 -- with one, as followers read it from that one. What is worth keeping of the others, their battery, reservoir, clock,
--- manufacturer and model, was extracted into their own columns when they were written.
+-- manufacturer, model and ID, and whether it was suspended or bolusing, was extracted into their own columns when they
+-- were written.
 UPDATE device_reports SET pump_json = NULL
 WHERE device_reports.updated_at >= @since AND device_reports.pump_json IS NOT NULL
     AND device_reports.occurred_at < (
