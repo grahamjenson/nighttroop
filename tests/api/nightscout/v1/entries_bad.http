@@ -26,7 +26,7 @@ ASSERT_CONTAINS "date string" "@message"
 // Glucose far outside real use is refused, as the site API does
 NAME create_bad_entry_sgv_too_high_v1
 POST http://{{ site }}/api/v1/entries?token={{ token }}
-B [{"type":"sgv","sgv":5000,"date":{{ itime 0 }}}]
+B {"type":"sgv","sgv":5000,"date":{{ itime 0 }}}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "at most 1000 mg/dL" "@message"
 
@@ -82,12 +82,33 @@ GET http://{{ site }}/api/v1/entries?token={{ token }}&find[date][$gte]={{ itime
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
 
-// A batch of only readings out of range is refused, so the client is told
+// A batch of only readings out of range is taken with nothing stored, as a sensor can send 0 for hours
 NAME create_batch_only_bad_entries_v1
 POST http://{{ site }}/api/v1/entries?token={{ token }}
-B [{"type":"sgv","sgv":0,"date":{{ itime 25 }}},{"type":"sgv","sgv":-5,"date":{{ itime 24 }}}]
+B [{"type":"sgv","sgv":0,"date":{{ itime 25 }}},{"type":"sgv","sgv":-5,"date":{{ itime 24 }}},{"type":"sgv","sgv":5000,"date":{{ itime 23 }}}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// A batch with nothing stored but for an entry with another problem is refused, so the client is told what is wrong
+NAME create_batch_bad_type_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":0,"date":{{ itime 27 }}},{"type":"bad","sgv":120,"date":{{ itime 26 }}}]
 ASSERT_STATUS 400
-ASSERT_CONTAINS "at most 1000 mg/dL" "@message"
+ASSERT_CONTAINS "type" "@message"
+
+// A batch with more entries with problems than are left out is refused
+NAME create_batch_many_bad_types_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":120,"date":{{ itime 40 }}},
+   {"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}},
+   {"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}},
+   {"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}},{"type":"bad","sgv":120,"date":{{ itime 41 }}}]
+ASSERT_STATUS 400
+
+NAME batch_only_bad_entries_not_stored_v1
+GET http://{{ site }}/api/v1/entries?token={{ token }}&find[date][$gte]={{ itime 28 }}&find[date][$lte]={{ itime 23 }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
 
 /////
 // Read
