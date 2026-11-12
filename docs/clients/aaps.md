@@ -184,6 +184,7 @@ SHA1, as AAPS does.
 | First loads over 500 documents | works: a search sorted by date is the oldest first | `first_load_paging.http` |
 | History over 500 documents, and profile history's newest | works: history is the oldest `srvModified` first | `history_paging.http` |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
+| Bolus Wizard's bolus and carbs, two Meal Boluses at the same `date` | fixed: the carbs, a duplicate of the bolus, are merged into it, so it keeps its insulin, where Nightscout replaces it with them | `wizard_dedup_v3.http` |
 | Bolus `icfg` and `isBasalInsulin`, without which AAPS takes the insulin in its settings and a bolus as not basal (`BolusExtension.kt` `NSBolus.toBolus`) | works: kept and returned as sent; Nighttroop's summaries still count a basal insulin bolus as a bolus, TODO P3 | `sync_v3.http` |
 | Bolus Wizard `bolusCalculatorResult`, which AAPS restores the record from and without which it drops it (`TreatmentMapper.kt:270`) | works: kept and returned exactly as sent; one not JSON or over 4096 characters is left out | `bolus_wizard.http` |
 | `units` written as AAPS writes them | works for a device added for AAPS, whose Nightscout API writes mg/dL as `mg/dl`; another device writes `mg/dL`, which AAPS also reads as mg/dL | `bolus_wizard.http` |
