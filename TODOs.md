@@ -92,10 +92,10 @@
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
     1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
-    1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
-       client control (pairing and remote commands) uses
+    1. P4: Support v2 authorization roles and subjects, and POST, PATCH and If-Unmodified-Since for apps' own API v3
+       `settings` documents, which AAPS 4's client control (pairing and remote commands) uses
     1. P4: Only write a treatment's events that changed, rather than every one on each update
-    1. P4: Keep when a site's settings last changed, for API v3 lastModified
+    1. P4: Keep when a site's own settings last changed, for API v3 lastModified, which has only apps' settings documents
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's

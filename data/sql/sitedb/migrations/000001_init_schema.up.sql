@@ -434,6 +434,18 @@ CREATE TABLE loop_settings (
 ) STRICT;
 CREATE INDEX loop_settings_app_last_seen_at_idx ON loop_settings(app, last_seen_at);
 
+-- settings_documents are API v3 settings documents of apps' own, as AAPS's aaps and aaps-state, kept as sent; at most
+-- 64 KiB each, as AAPS's are a few KB. Nighttroop's own settings are in the control DB.
+CREATE TABLE settings_documents (
+    id TEXT PRIMARY KEY CHECK(length(id) BETWEEN 1 AND 36),
+    document_json TEXT NOT NULL CHECK(length(document_json) <= 65536 AND json_valid(document_json)),
+    occurred_at INTEGER NOT NULL CHECK(occurred_at BETWEEN 0 AND 253402300799999),
+    utc_offset_minutes INTEGER NOT NULL CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
+) STRICT;
+
 ----------
 -- PRESETS are user defined templates for the event types
 ----------

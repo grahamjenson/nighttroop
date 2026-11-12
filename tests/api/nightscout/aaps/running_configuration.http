@@ -1,0 +1,116 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS publishes its running configuration as two settings documents of its own, PUT to /api/v3/settings/aaps and
+// /aaps-state (RunningConfigurationPublisher.kt), and AAPSClient reads them back. They are kept as sent, beside
+// Nighttroop's own settings, and signed comes back exactly as sent, as AAPS checks its signature over it.
+NAME put_aaps
+PUT http://{{ site }}/api/v3/settings/aaps
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": 946684800001,
+    "utcOffset": 0,
+    "app": "AAPS",
+    "schemaVersion": 2,
+    "signed": "{\"clients\":[{\"name\":\"Phone <1> & \\\"2\\\"\",\"key\":\"ü\"}],\"n\":1.50,\"slash\":\"a\\/b\"}",
+    "signature": "MEUCIQD+abc/def=="
+ }
+ASSERT_STATUS 201
+ASSERT_EQUALS "aaps" "@identifier"
+ASSERT_EQUALS "aaps" "@result.identifier"
+ASSERT_EQUALS "{\"clients\":[{\"name\":\"Phone <1> & \\\"2\\\"\",\"key\":\"ü\"}],\"n\":1.50,\"slash\":\"a\\/b\"}" "@result.signed"
+
+NAME get_aaps
+GET http://{{ site }}/api/v3/settings/aaps
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps" "@result.identifier"
+ASSERT_EQUALS 946684800001 "@result.date"
+ASSERT_EQUALS 0 "@result.utcOffset"
+ASSERT_EQUALS "AAPS" "@result.app"
+ASSERT_EQUALS 2 "@result.schemaVersion"
+ASSERT_EQUALS "{\"clients\":[{\"name\":\"Phone <1> & \\\"2\\\"\",\"key\":\"ü\"}],\"n\":1.50,\"slash\":\"a\\/b\"}" "@result.signed"
+ASSERT_EQUALS "MEUCIQD+abc/def==" "@result.signature"
+ASSERT_EQUALS true "@result.isValid"
+
+// Sent again it is replaced, as Nightscout's PUT does: 200, not another document
+NAME replace_aaps
+PUT http://{{ site }}/api/v3/settings/aaps
+H Authorization: Bearer {{ jwt }}
+B {"date": 946684800001, "utcOffset": 0, "app": "AAPS", "schemaVersion": 2, "signed": "{\"n\":2}", "signature": "second"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "{\"n\":2}" "@result.signed"
+ASSERT_EQUALS "second" "@result.signature"
+
+NAME put_aaps_state
+PUT http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+B {"date": 946684800001, "utcOffset": 0, "app": "AAPS", "schemaVersion": 2, "signed": "{\"scene\":null}", "signature": "state"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "aaps-state" "@result.identifier"
+
+// AAPS only replaces them; a patch of one is not implemented yet
+NAME patch_aaps_state
+PATCH http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+B {"signature": "patched"}
+ASSERT_STATUS 501
+
+// The search, history and lastModified have them, the last changed first, then Nighttroop's settings, still as they were
+NAME search_settings
+GET http://{{ site }}/api/v3/settings
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps-state" "@result.0.identifier"
+ASSERT_EQUALS "aaps" "@result.1.identifier"
+ASSERT_EQUALS "{\"n\":2}" "@result.1.signed"
+ASSERT_EQUALS "units" "@result.2.identifier"
+
+NAME settings_history
+GET http://{{ site }}/api/v3/settings/history/0
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps-state" "@result.0.identifier"
+ASSERT_EQUALS "state" "@result.0.signature"
+
+NAME last_modified
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".put_aaps_state.result.srvModified" "@result.collections.settings"
+
+NAME units_still_a_setting
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol/L" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
+
+// One without a date, or larger than a site keeps, is refused
+NAME put_without_date
+PUT http://{{ site }}/api/v3/settings/aaps-other
+H Authorization: Bearer {{ jwt }}
+B {"app": "AAPS", "signed": "{}"}
+ASSERT_STATUS 400
+
+NAME put_too_large
+PUT http://{{ site }}/api/v3/settings/aaps-other
+H Authorization: Bearer {{ jwt }}
+B {"date": 946684800001, "app": "AAPS", "signed": "{{ repeat "x" 70000 }}"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "length(document_json) <= 65536" "@message"
+
+NAME too_large_not_kept
+GET http://{{ site }}/api/v3/settings/aaps-other
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+// A deleted one is gone
+NAME delete_aaps_state
+DELETE http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME deleted_aaps_state
+GET http://{{ site }}/api/v3/settings/aaps-state
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404

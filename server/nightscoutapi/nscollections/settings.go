@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -70,6 +71,10 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
 	}
+	// A document of an app's own, as AAPS's aaps, is kept as sent
+	if !settings.IsSetting(identifier) {
+		return putDocument(ctx, siteContext, identifier, patch, canCreate)
+	}
 	if patch["identifier"] == nil {
 		patch["identifier"] = identifier
 	}
@@ -104,6 +109,9 @@ func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.Si
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, nsutils.ErrNotFound
 	}
+	if !settings.IsSetting(identifier) {
+		return nil, nsutils.ErrNotImplemented
+	}
 	if patch["identifier"] == nil {
 		patch["identifier"] = identifier
 	}
@@ -117,6 +125,9 @@ func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+	if !settings.IsSetting(identifier) {
+		return deleteDocument(ctx, siteContext, identifier)
+	}
 	_, herr := UpdateIndividualSetting(ctx, siteContext, identifier, nil)
 	if herr != nil {
 		slog.ErrorContext(ctx, "failed to update individual setting", "error", herr, "collection", "settings")
@@ -127,6 +138,13 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 }
 
 func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
+	if !settings.IsSetting(identifier) {
+		document, err := siteContext.SiteDB.Queries().GetSettingsDocument(ctx, sitedb.GetSettingsDocumentParams{ID: identifier})
+		if err != nil {
+			return nil, nsutils.ErrNotFound
+		}
+		return settingsDocument(document), nil
+	}
 
 	found, err := siteContext.GetOwnSettings().GetSettingAnyTypeByName(identifier)
 	if err != nil {
@@ -137,10 +155,17 @@ func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-	all := siteContext.GetOwnSettings().GetAllSettingAnyTypes()
-	docs := make([]nsutils.Document, len(all))
-	for i, each := range all {
-		docs[i] = settingDocument(each)
+	// Apps' own documents, the last changed first, then Nighttroop's settings
+	documents, err := siteContext.SiteDB.Queries().AllSettingsDocuments(ctx, sitedb.AllSettingsDocumentsParams{Limit: maxSettingsDocuments})
+	if err != nil {
+		return nil, nsutils.ErrInternal
+	}
+	docs := []nsutils.Document{}
+	for _, document := range documents {
+		docs = append(docs, settingsDocument(document))
+	}
+	for _, each := range siteContext.GetOwnSettings().GetAllSettingAnyTypes() {
+		docs = append(docs, settingDocument(each))
 	}
 	return docs, nil
 }

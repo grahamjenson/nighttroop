@@ -66,6 +66,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allProfileSwitchesStmt, err = db.PrepareContext(ctx, allProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query AllProfileSwitches: %w", err)
 	}
+	if q.allSettingsDocumentsStmt, err = db.PrepareContext(ctx, allSettingsDocuments); err != nil {
+		return nil, fmt.Errorf("error preparing query AllSettingsDocuments: %w", err)
+	}
 	if q.allTempBasalsStmt, err = db.PrepareContext(ctx, allTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempBasals: %w", err)
 	}
@@ -125,6 +128,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteOldDeviceReportsStmt, err = db.PrepareContext(ctx, deleteOldDeviceReports); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOldDeviceReports: %w", err)
+	}
+	if q.deleteSettingsDocumentStmt, err = db.PrepareContext(ctx, deleteSettingsDocument); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSettingsDocument: %w", err)
 	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
@@ -218,6 +224,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getProfileSwitchStmt, err = db.PrepareContext(ctx, getProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileSwitch: %w", err)
+	}
+	if q.getSettingsDocumentStmt, err = db.PrepareContext(ctx, getSettingsDocument); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSettingsDocument: %w", err)
 	}
 	if q.getSummaryPeriodStmt, err = db.PrepareContext(ctx, getSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSummaryPeriod: %w", err)
@@ -317,6 +326,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.profileSwitchTotalsStmt, err = db.PrepareContext(ctx, profileSwitchTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query ProfileSwitchTotals: %w", err)
+	}
+	if q.putSettingsDocumentStmt, err = db.PrepareContext(ctx, putSettingsDocument); err != nil {
+		return nil, fmt.Errorf("error preparing query PutSettingsDocument: %w", err)
 	}
 	if q.recentDeviceNamesStmt, err = db.PrepareContext(ctx, recentDeviceNames); err != nil {
 		return nil, fmt.Errorf("error preparing query RecentDeviceNames: %w", err)
@@ -546,6 +558,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allProfileSwitchesStmt: %w", cerr)
 		}
 	}
+	if q.allSettingsDocumentsStmt != nil {
+		if cerr := q.allSettingsDocumentsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allSettingsDocumentsStmt: %w", cerr)
+		}
+	}
 	if q.allTempBasalsStmt != nil {
 		if cerr := q.allTempBasalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allTempBasalsStmt: %w", cerr)
@@ -644,6 +661,11 @@ func (q *Queries) Close() error {
 	if q.deleteOldDeviceReportsStmt != nil {
 		if cerr := q.deleteOldDeviceReportsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteOldDeviceReportsStmt: %w", cerr)
+		}
+	}
+	if q.deleteSettingsDocumentStmt != nil {
+		if cerr := q.deleteSettingsDocumentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSettingsDocumentStmt: %w", cerr)
 		}
 	}
 	if q.deleteSummaryPeriodsStmt != nil {
@@ -799,6 +821,11 @@ func (q *Queries) Close() error {
 	if q.getProfileSwitchStmt != nil {
 		if cerr := q.getProfileSwitchStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.getSettingsDocumentStmt != nil {
+		if cerr := q.getSettingsDocumentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSettingsDocumentStmt: %w", cerr)
 		}
 	}
 	if q.getSummaryPeriodStmt != nil {
@@ -964,6 +991,11 @@ func (q *Queries) Close() error {
 	if q.profileSwitchTotalsStmt != nil {
 		if cerr := q.profileSwitchTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing profileSwitchTotalsStmt: %w", cerr)
+		}
+	}
+	if q.putSettingsDocumentStmt != nil {
+		if cerr := q.putSettingsDocumentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing putSettingsDocumentStmt: %w", cerr)
 		}
 	}
 	if q.recentDeviceNamesStmt != nil {
@@ -1274,6 +1306,7 @@ type Queries struct {
 	allNotificationEventsStmt                   *sql.Stmt
 	allProfilePresetsStmt                       *sql.Stmt
 	allProfileSwitchesStmt                      *sql.Stmt
+	allSettingsDocumentsStmt                    *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
 	clearDeviceReportStatusesStmt               *sql.Stmt
@@ -1294,6 +1327,7 @@ type Queries struct {
 	createTempTargetStmt                        *sql.Stmt
 	deleteLoopSettingsStmt                      *sql.Stmt
 	deleteOldDeviceReportsStmt                  *sql.Stmt
+	deleteSettingsDocumentStmt                  *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
@@ -1325,6 +1359,7 @@ type Queries struct {
 	getProfilePresetStmt                        *sql.Stmt
 	getProfileStoreStmt                         *sql.Stmt
 	getProfileSwitchStmt                        *sql.Stmt
+	getSettingsDocumentStmt                     *sql.Stmt
 	getSummaryPeriodStmt                        *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
@@ -1358,6 +1393,7 @@ type Queries struct {
 	profileStoreAscendingIDsStmt                *sql.Stmt
 	profileStoreHistoryIDsStmt                  *sql.Stmt
 	profileSwitchTotalsStmt                     *sql.Stmt
+	putSettingsDocumentStmt                     *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
@@ -1429,6 +1465,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allNotificationEventsStmt:                   q.allNotificationEventsStmt,
 		allProfilePresetsStmt:                       q.allProfilePresetsStmt,
 		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
+		allSettingsDocumentsStmt:                    q.allSettingsDocumentsStmt,
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
@@ -1449,6 +1486,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createTempTargetStmt:                        q.createTempTargetStmt,
 		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
 		deleteOldDeviceReportsStmt:                  q.deleteOldDeviceReportsStmt,
+		deleteSettingsDocumentStmt:                  q.deleteSettingsDocumentStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
@@ -1480,6 +1518,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfilePresetStmt:                        q.getProfilePresetStmt,
 		getProfileStoreStmt:                         q.getProfileStoreStmt,
 		getProfileSwitchStmt:                        q.getProfileSwitchStmt,
+		getSettingsDocumentStmt:                     q.getSettingsDocumentStmt,
 		getSummaryPeriodStmt:                        q.getSummaryPeriodStmt,
 		getTempBasalStmt:                            q.getTempBasalStmt,
 		getTempTargetStmt:                           q.getTempTargetStmt,
@@ -1513,6 +1552,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		profileStoreAscendingIDsStmt:                q.profileStoreAscendingIDsStmt,
 		profileStoreHistoryIDsStmt:                  q.profileStoreHistoryIDsStmt,
 		profileSwitchTotalsStmt:                     q.profileSwitchTotalsStmt,
+		putSettingsDocumentStmt:                     q.putSettingsDocumentStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,

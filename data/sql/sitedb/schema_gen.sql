@@ -480,6 +480,16 @@ CREATE TABLE profile_switches (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
+CREATE TABLE settings_documents (
+    id TEXT PRIMARY KEY CHECK(length(id) BETWEEN 1 AND 36),
+    document_json TEXT NOT NULL CHECK(length(document_json) <= 65536 AND json_valid(document_json)),
+    occurred_at INTEGER NOT NULL CHECK(occurred_at BETWEEN 0 AND 253402300799999),
+    utc_offset_minutes INTEGER NOT NULL CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
+) STRICT;
+
 CREATE TABLE summary_period (
     period TEXT NOT NULL CHECK(period IN ('day', 'week', 'fortnight', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),

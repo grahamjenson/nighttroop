@@ -4096,6 +4096,76 @@ func (m *ProfileSwitchesVw) SetCreatedByIdentityName(v *string) {
 	m.CreatedByIdentityName = v
 }
 
+// GetID returns the ID value.
+func (m SettingsDocument) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated SettingsDocument.
+func (m *SettingsDocument) SetID(v string) {
+	m.ID = v
+}
+
+// GetDocumentJson returns the DocumentJson value.
+func (m SettingsDocument) GetDocumentJson() string {
+	return m.DocumentJson
+}
+
+// SetDocumentJson sets the DocumentJson value and returns the updated SettingsDocument.
+func (m *SettingsDocument) SetDocumentJson(v string) {
+	m.DocumentJson = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m SettingsDocument) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated SettingsDocument.
+func (m *SettingsDocument) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m SettingsDocument) GetUtcOffsetMinutes() int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated SettingsDocument.
+func (m *SettingsDocument) SetUtcOffsetMinutes(v int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m SettingsDocument) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated SettingsDocument.
+func (m *SettingsDocument) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m SettingsDocument) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated SettingsDocument.
+func (m *SettingsDocument) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m SettingsDocument) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated SettingsDocument.
+func (m *SettingsDocument) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetPeriod returns the Period value.
 func (m SummaryPeriod) GetPeriod() string {
 	return m.Period
@@ -14434,6 +14504,96 @@ func (m UpdateProfilePresetParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateProfilePresetParams.
 func (m *UpdateProfilePresetParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetLimit returns the Limit value.
+func (m AllSettingsDocumentsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated AllSettingsDocumentsParams.
+func (m *AllSettingsDocumentsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetID returns the ID value.
+func (m DeleteSettingsDocumentParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteSettingsDocumentParams.
+func (m *DeleteSettingsDocumentParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetSettingsDocumentParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSettingsDocumentParams.
+func (m *GetSettingsDocumentParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m PutSettingsDocumentParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated PutSettingsDocumentParams.
+func (m *PutSettingsDocumentParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetDocumentJson returns the DocumentJson value.
+func (m PutSettingsDocumentParams) GetDocumentJson() string {
+	return m.DocumentJson
+}
+
+// SetDocumentJson sets the DocumentJson value and returns the updated PutSettingsDocumentParams.
+func (m *PutSettingsDocumentParams) SetDocumentJson(v string) {
+	m.DocumentJson = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m PutSettingsDocumentParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated PutSettingsDocumentParams.
+func (m *PutSettingsDocumentParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m PutSettingsDocumentParams) GetUtcOffsetMinutes() int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated PutSettingsDocumentParams.
+func (m *PutSettingsDocumentParams) SetUtcOffsetMinutes(v int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m PutSettingsDocumentParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated PutSettingsDocumentParams.
+func (m *PutSettingsDocumentParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetMax returns the Max value.
+func (m PutSettingsDocumentParams) GetMax() int64 {
+	return m.Max
+}
+
+// SetMax sets the Max value and returns the updated PutSettingsDocumentParams.
+func (m *PutSettingsDocumentParams) SetMax(v int64) {
+	m.Max = v
 }
 
 // GetBefore returns the Before value.

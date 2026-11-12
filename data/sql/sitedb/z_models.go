@@ -468,6 +468,16 @@ type ProfileSwitchesVw struct {
 	CreatedByIdentityName    *string
 }
 
+type SettingsDocument struct {
+	ID                    string
+	DocumentJson          string
+	OccurredAt            int64
+	UtcOffsetMinutes      int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+}
+
 type SummaryPeriod struct {
 	Period               string
 	Date                 string

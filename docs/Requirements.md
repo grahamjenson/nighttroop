@@ -857,6 +857,12 @@ Connectors are a site's third party integrations, each syncing from one service.
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
   `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these
   is read.
+- A v3 PUT of a settings document under an identifier that is not one of Nighttroop's settings, as AAPS's `aaps` and
+  `aaps-state` running configuration, keeps it as sent (201 when new, 200 when it replaces one), with `signed` given back
+  exactly as sent; a read, the settings search (apps' documents first, the last changed first, then Nighttroop's), its
+  history, lastModified's `settings` and the `/storage` socket's settings room have it, and a delete removes it for good.
+- A settings document needs a `date` and is at most 64 KiB, and a site keeps at most 16: one without a date, larger, or
+  one more is a 400. Creating one needs `api:settings:create`; a POST of one is a 400 and a PATCH a 501.
 - The v1 status has `authorized` with a JWT and the token's permissions, with `api:treatments:create` for one that
   can write, so LoopFollow shows a read token as "Read" and a write token as "Read & Write".
 - The v3 version needs no token, so an app can check for v3 before it signs in.

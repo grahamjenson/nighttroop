@@ -79,5 +79,30 @@ ASSERT_EQUALS 0.5 "@doc.absolute"
 ASSERT_EQUALS 1800000 "@doc.durationInMilliseconds"
 ASSERT_EXISTS "@doc.srvModified"
 
+# AAPS's running configuration, as AAPSClient reads it live from the settings room: created, then updated
+NAME put_running_configuration
+PUT http://{{ site }}/api/v3/settings/aaps?token={{ token }}
+B {"date":946684800001,"utcOffset":0,"app":"AAPS","schemaVersion":2,"signed":"{\"n\":1}","signature":"first"}
+ASSERT_STATUS 201
+
+NAME running_configuration_created
+WAIT create
+T 5s
+ASSERT_EQUALS "settings" "@colName"
+ASSERT_EQUALS "aaps" "@doc.identifier"
+ASSERT_EQUALS "{\"n\":1}" "@doc.signed"
+ASSERT_EXISTS "@doc.srvModified"
+
+NAME replace_running_configuration
+PUT http://{{ site }}/api/v3/settings/aaps?token={{ token }}
+B {"date":946684800001,"utcOffset":0,"app":"AAPS","schemaVersion":2,"signed":"{\"n\":2}","signature":"second"}
+ASSERT_STATUS 200
+
+NAME running_configuration_updated
+WAIT update
+T 5s
+ASSERT_EQUALS "settings" "@colName"
+ASSERT_EQUALS "second" "@doc.signature"
+
 NAME bye
 DISCONNECT
