@@ -204,9 +204,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | EventGroupEnteredBy
 	// goverter:map Uuid UUID
-	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	// goverter:map BolusCalculatorResultJson BolusCalculatorResult
-	// goverter:map UserEnteredAt UserEnteredAt | MillisToDateString
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -231,12 +229,14 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map DoseType Type
 	// goverter:map SplitNow SplitNow | MultiplierToPercentage
 	// goverter:map SplitExt SplitExt | MultiplierToPercentage
+	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
 	// goverter:update target
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
+	// goverter:map UserEnteredAt UserEnteredAt | MillisToDateString
 	UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment)
 
 	// goverter:update target
@@ -276,6 +276,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map . ProfileJSON | ToProfileJSON
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
 	// goverter:map Multiplier Percent | MultiplierToPercentage
+	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
@@ -333,6 +334,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
+	// goverter:map UserEnteredAt UserEnteredAt | DateStringToMillis
 	PartialTreatmentToFoodIntake(source Treatment) sitedb.FoodIntake
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -353,6 +355,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Type DoseType
 	// goverter:map SplitNow SplitNow | PercentageToMultiplier
 	// goverter:map SplitExt SplitExt | PercentageToMultiplier
+	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -371,6 +374,7 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson  BasalRatesJson TargetsHighJson TargetsLowJson
 	// goverter:map Percent Multiplier | PercentageToMultiplier
+	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -403,9 +407,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map EventType GroupType
 	// goverter:map UUID Uuid
 	// goverter:map DurationInMilliseconds DurationMs
-	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
-	// goverter:map UserEnteredAt UserEnteredAt | DateStringToMillis
 	// goverter:map SentJSON SentHash | SentHash
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }

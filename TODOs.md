@@ -103,6 +103,8 @@
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
+    1. P3: Show entries left out of a v1 batch (an unknown `type`, a field too long) on the site's client errors, as
+       only a log counts them and the errors show a batch only when nothing in it was stored
 
 ## Bugs
 
