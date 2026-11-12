@@ -14,7 +14,7 @@ import (
 
 // option is the chart as ECharts gets it, so the test reads what the browser would draw
 func option(t *testing.T, s *sitemodels.Summary, now int64) map[string]any {
-	chart := graph(s, now, time.UTC)
+	chart := graph(context.Background(), s, now, time.UTC)
 	chart.Validate()
 	var option map[string]any
 	require.NoError(t, json.Unmarshal([]byte(chart.JSONNotEscaped()), &option))
@@ -203,7 +203,7 @@ func TestGraphInTheLocationsTime(t *testing.T) {
 	// New Zealand's daylight saving starts at 2am on 27 September 2026, from +12 to +13
 	since := time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC).UnixMilli()
 	now := since + 24*time.Hour.Milliseconds()
-	chart := graph(&sitemodels.Summary{
+	chart := graph(context.Background(), &sitemodels.Summary{
 		Since: since, Units: &mmol, RangeLow: 3.9, RangeHigh: 10,
 		GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 6, Units: &mmol, OccurredAt: now}}},
 	}, now, auckland)
@@ -268,7 +268,7 @@ func TestGraphHoverData(t *testing.T) {
 		InsulinDoses: []*sitemodels.SiteInsulinDose{{Dose: 2.5, OccurredAt: since + 2*minute}, {Dose: 0.2, DoseType: new("SMB"), OccurredAt: since}},
 		FoodIntakes:  []*sitemodels.SiteFoodIntake{{Carbs: new(15.0), OccurredAt: since + 2*minute}},
 	}
-	script := hoverTooltip(s, now, at)
+	script := hoverTooltip(context.Background(), s, now, at)
 	data := strings.SplitN(strings.SplitN(script, "var d = ", 2)[1], ", near", 2)[0]
 	var got hover
 	require.NoError(t, json.Unmarshal([]byte(strings.ReplaceAll(data, "'", `"`)), &got))
@@ -280,13 +280,15 @@ func TestGraphHoverData(t *testing.T) {
 		Treatments: [][]any{
 			{float64(at(since + 2*minute)), "Insulin: 2.5U"}, {float64(at(since)), "SMB: 0.2U"}, {float64(at(since + 2*minute)), "Carbs: 15g"},
 		},
+		Text: map[string]string{"noReading": "Glucose: no reading", "reading": "Glucose: {reading} {units} at {time}", "basal": "Basal: {basal} U/hr",
+			"target": "Target: {target} {units}", "treatment": "{treatment} at {time}"},
 	}, got)
 	// The formatter is made once with its data, and reads the time pointed at from the axis
 	require.True(t, strings.HasPrefix(script, "(function () {"))
 	require.Contains(t, script, "axisValue")
 
 	// The page's script has no escaped double quote, which would stop the browser running it and drawing the graph
-	page := graph(s, now, time.UTC).RenderSnippet().Script
+	page := graph(context.Background(), s, now, time.UTC).RenderSnippet().Script
 	require.Contains(t, page, "var d = {'units':'mmol/L'")
 	require.NotContains(t, page, `\"`)
 }

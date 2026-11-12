@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // glucoseDaysHeight is how tall each day's graph is drawn, and its width is its count of 5 minute slots
@@ -44,9 +45,9 @@ func glucoseDaysMarkY(value, bottom, top float64) string {
 }
 
 // glucoseDayLabel is a day's weekday and date, or Today for the first, which is today so far
-func glucoseDayLabel(day *sitemodels.SiteSummaryDaily, today bool) string {
+func glucoseDayLabel(ctx context.Context, day *sitemodels.SiteSummaryDaily, today bool) string {
 	if today {
-		return "Today"
+		return i18n.T(ctx, "site.data.common.today")
 	}
 	date, _ := time.Parse(time.DateOnly, day.Date)
 	return date.Format(display.ShortDayLayout)
@@ -57,17 +58,17 @@ func glucoseDayLabel(day *sitemodels.SiteSummaryDaily, today bool) string {
 templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 	{{ bottom, top := glucoseDaysAxis(ctx, days) }}
 	{{ low, high := RangeBounds(ctx) }}
-	@card.Card(card.Props{ID: "site--glucose--days", Title: glucoseDaysTitle(len(days))}) {
+	@card.Card(card.Props{ID: "site--glucose--days", Title: glucoseDaysTitle(ctx, len(days))}) {
 		<ol class="grid grid-cols-2 gap-3 sm:grid-cols-5">
 			for i, day := range slices.Backward(days) {
 				<li id={ "site--glucose--day--" + day.Date } class="rounded-lg border border-gray-200 p-2">
 					<div class="flex items-baseline justify-between text-xs">
-						<span class="font-medium text-gray-900">{ glucoseDayLabel(day, i == 0) }</span>
+						<span class="font-medium text-gray-900">{ glucoseDayLabel(ctx, day, i == 0) }</span>
 						if day.TimeInRange != nil {
-							<span class="tabular-nums text-gray-600" title="Time in range">{ display.Percent(day.TimeInRange) }</span>
+							<span class="tabular-nums text-gray-600" title={ i18n.T(ctx, "site.data.glucose_days.time_in_range") }>{ display.Percent(day.TimeInRange) }</span>
 						}
 					</div>
-					<svg class="mt-1 h-16 w-full" viewBox={ fmt.Sprintf("0 0 %d %.0f", max(len(day.Glucose), 1), glucoseDaysHeight) } preserveAspectRatio="none" role="img" aria-label={ "Glucose on " + day.Date }>
+					<svg class="mt-1 h-16 w-full" viewBox={ fmt.Sprintf("0 0 %d %.0f", max(len(day.Glucose), 1), glucoseDaysHeight) } preserveAspectRatio="none" role="img" aria-label={ i18n.T(ctx, "site.data.glucose_days.glucose_on", i18n.Data{"Date": day.Date}) }>
 						<rect class="fill-glucose-in-range/10" x="0" width="100%" y={ glucoseDaysY(high, bottom, top) } height={ fmt.Sprintf("%.1f", glucoseDaysHeight*(high-low)/(top-bottom)) }></rect>
 						for slot, value := range day.Glucose {
 							if value != nil {
@@ -82,9 +83,9 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 }
 
 // glucoseDaysTitle names the days shown: Today for a new site's first day, which has no others, or the last n days
-func glucoseDaysTitle(n int) string {
+func glucoseDaysTitle(ctx context.Context, n int) string {
 	if n == 1 {
-		return "Today"
+		return i18n.T(ctx, "site.data.common.today")
 	}
-	return fmt.Sprintf("Last %d days", n)
+	return i18n.T(ctx, "site.data.glucose_days.last_days", i18n.Data{"Days": n})
 }

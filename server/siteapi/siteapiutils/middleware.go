@@ -1,6 +1,7 @@
 package siteapiutils
 
 import (
+	"cmp"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -27,6 +29,9 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 			identity, err := TryAuthWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetIdentityModelInSiteContext(ctx, identity)
+				// Text is in the language of the identity's settings, or the site's
+				language := cmp.Or(httputils.GetSiteContext(ctx).GetOwnSettings().GetLanguage(), new(""))
+				ctx = i18n.WithLanguages(ctx, *language, r.Header.Get("Accept-Language"))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}

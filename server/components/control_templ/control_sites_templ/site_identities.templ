@@ -1,6 +1,7 @@
 package control_sites_templ
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // SiteIdentities is a site's identities, with buttons for an admin to reset one's password, or its TOTP when it logs in
@@ -21,24 +23,24 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 		@table.Header() {
 			@table.Row() {
 				@table.Head() {
-					Name
+					{ i18n.T(ctx, "control.site_identities.name") }
 				}
 				// On a phone only the name, with the rest under it, and the actions fit beside each other
 				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
-					Role
+					{ i18n.T(ctx, "control.site_identities.role") }
 				}
 				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
-					Enabled
+					{ i18n.T(ctx, "control.site_identities.enabled") }
 				}
 				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
-					TOTP
+					{ i18n.T(ctx, "control.site_identities.totp") }
 				}
 				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
-					Last Seen
+					{ i18n.T(ctx, "control.site_identities.last_seen") }
 				}
 				if httputils.IsControlAdmin(ctx) {
 					@table.Head() {
-						Actions
+						{ i18n.T(ctx, "control.site_identities.actions") }
 					}
 				}
 			}
@@ -47,28 +49,28 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 			for _, identity := range identities {
 				@table.Row(table.RowProps{ID: fmt.Sprintf("control--site--identity--%d", identity.ID)}) {
 					@table.Cell() {
-						<span title={ "Created " + display.DateTime(&identity.CreatedAt) + " by " + identity.CreatedByIdentityName }>{ identity.Name }</span>
-						<div id={ fmt.Sprintf("control--site--identity--%d--summary", identity.ID) } class="mt-0.5 text-xs text-gray-500 sm:hidden">{ identitySummary(identity) }</div>
+						<span title={ i18n.T(ctx, "control.site_identities.created_by", i18n.Data{"CreatedAt": display.DateTime(&identity.CreatedAt), "CreatorName": identity.CreatedByIdentityName}) }>{ identity.Name }</span>
+						<div id={ fmt.Sprintf("control--site--identity--%d--summary", identity.ID) } class="mt-0.5 text-xs text-gray-500 sm:hidden">{ identitySummary(ctx, identity) }</div>
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
 						{ display.Name(string(identity.Role)) }
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
-						{ yesNo(identity.Enabled) }
+						{ yesNo(ctx, identity.Enabled) }
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
-						{ yesNo(identity.HasTotp) }
+						{ yesNo(ctx, identity.HasTotp) }
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
-						<span title={ display.DateTime(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
+						<span title={ display.DateTime(identity.LastSeenAt) }>{ display.Ago(ctx, identity.LastSeenAt, time.Now()) }</span>
 					}
 					if httputils.IsControlAdmin(ctx) {
 						@table.Cell() {
 							// Each action has its own column, so the same action lines up down the table; on a phone they stack
 							<div class="grid gap-1 sm:grid-cols-3">
-								@resetButton(siteID, identity, "password", "Reset password", "Give "+identity.Name+" a new random password? Their old one stops working.")
+								@resetButton(siteID, identity, "password", i18n.T(ctx, "control.site_identities.reset_password"), i18n.T(ctx, "control.site_identities.reset_password_confirm", i18n.Data{"IdentityName": identity.Name}))
 								if identity.HasTotp {
-									@resetButton(siteID, identity, "totp", "Reset TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
+									@resetButton(siteID, identity, "totp", i18n.T(ctx, "control.site_identities.reset_totp"), i18n.T(ctx, "control.site_identities.reset_totp_confirm", i18n.Data{"IdentityName": identity.Name}))
 								} else {
 									<span></span>
 								}
@@ -82,11 +84,11 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 	}
 }
 
-func yesNo(yes bool) string {
+func yesNo(ctx context.Context, yes bool) string {
 	if yes {
-		return "Yes"
+		return i18n.T(ctx, "control.site_identities.answer_yes")
 	}
-	return "No"
+	return i18n.T(ctx, "control.site_identities.answer_no")
 }
 
 // resetButton resets what of an identity, its password or totp, after asking to confirm
@@ -109,16 +111,16 @@ templ resetButton(siteID string, identity *controlmodels.SiteIdentity, what stri
 // SiteIdentityReset shows an identity's new credentials after a reset, which are shown only this once
 templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
 	@alert.Alert(alert.Props{ID: "control--site--identity-reset", Variant: alert.VariantWarning, Class: "mt-2",
-		Title: "New credentials for " + credentials.Name + ". Save them now: they are shown only this once."}) {
+		Title: i18n.T(ctx, "control.site_identities.new_credentials", i18n.Data{"IdentityName": credentials.Name})}) {
 		<dl class="mt-2 grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 font-mono text-gray-900">
 			if credentials.Password != nil {
-				@modal.Detail("Password", *credentials.Password)
+				@modal.Detail(i18n.T(ctx, "control.site_identities.password"), *credentials.Password)
 			}
 			if credentials.NSToken != nil {
-				@modal.Detail("NS token", *credentials.NSToken)
+				@modal.Detail(i18n.T(ctx, "control.site_identities.ns_token"), *credentials.NSToken)
 			}
 			if credentials.TotpSecret != nil {
-				@modal.Detail("TOTP secret", *credentials.TotpSecret)
+				@modal.Detail(i18n.T(ctx, "control.site_identities.totp_secret"), *credentials.TotpSecret)
 			}
 		</dl>
 	}
@@ -131,28 +133,29 @@ templ assumeButton(siteID string, identity *controlmodels.SiteIdentity) {
 		method="post"
 		action={ templ.SafeURL(fmt.Sprintf("/sites/%s/identities/%d/assume", siteID, identity.ID)) }
 		target="_blank"
-		data-confirm={ "Sign in to the site as " + identity.Name + "? The site's events will show you did." }
+		data-confirm={ i18n.T(ctx, "control.site_identities.assume_confirm", i18n.Data{"IdentityName": identity.Name}) }
 		onsubmit="return confirm(this.dataset.confirm);"
 	>
 		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--assume", identity.ID), Type: button.TypeSubmit,
 			Variant: button.VariantOutline, Size: button.SizeSm, Class: "w-full"}) {
-			Sign in as
+			{ i18n.T(ctx, "control.site_identities.assume") }
 		}
 	</form>
 }
 
 // identitySummary is what a phone shows of an identity under its name, for the columns it has no room for: its role,
 // whether it is enabled and has TOTP, and when it was last seen
-func identitySummary(identity *controlmodels.SiteIdentity) string {
+func identitySummary(ctx context.Context, identity *controlmodels.SiteIdentity) string {
 	summary := display.Name(string(identity.Role))
 	if !identity.Enabled {
-		summary += " · disabled"
+		summary += " · " + i18n.T(ctx, "control.site_identities.summary_disabled")
 	}
 	if identity.HasTotp {
-		summary += " · TOTP"
+		summary += " · " + i18n.T(ctx, "control.site_identities.totp")
 	}
-	if seen := display.Ago(identity.LastSeenAt, time.Now()); seen != "Never" {
-		return summary + " · seen " + seen
+	if identity.LastSeenAt != nil && *identity.LastSeenAt != 0 {
+		seen := display.Ago(ctx, identity.LastSeenAt, time.Now())
+		return summary + " · " + i18n.T(ctx, "control.site_identities.summary_seen", i18n.Data{"SeenAgo": seen})
 	}
-	return summary + " · never seen"
+	return summary + " · " + i18n.T(ctx, "control.site_identities.summary_never_seen")
 }

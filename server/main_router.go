@@ -19,6 +19,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.Handler {
@@ -43,7 +44,8 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 
 	secure := httputils.SecurityHeaders(config.IsHTTPS())
 	return secure(shed(httputils.ClientIP(config.TrustedProxies)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		// Text is in the browser's language, until a site's identity signs in with one of its own
+		ctx := i18n.WithLanguages(r.Context(), r.Header.Get("Accept-Language"))
 
 		// Global IP Address Rate Limit, which every request has, the control site's too
 		ipAddress := httputils.GetIPFromHTTPContext(ctx)

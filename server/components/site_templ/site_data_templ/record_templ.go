@@ -7,7 +7,10 @@ package site_data_templ
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "nighttroop.t1d.nz/server/components/modal"
+import (
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 // Record is who and what made a record, and when, each nil one left out
 type Record struct {
@@ -36,39 +39,39 @@ func RecordDetails(r Record) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = modal.Section("Record").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Section(i18n.T(ctx, "site.data.record.section")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("ID", r.ID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.record.record_id"), r.ID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("UTC Offset (minutes)", orDash(r.UtcOffset)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.record.utc_offset"), orDash(r.UtcOffset)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("App", orDash(r.App)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.record.app"), orDash(r.App)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("Device", orDash(r.Device)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.common.device"), orDash(r.Device)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("Created By", r.CreatedBy).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.record.created_by"), r.CreatedBy).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(ctx, r.Created)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.record.created"), formatReadingDate(ctx, r.Created)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(ctx, r.Updated)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.record.updated"), formatReadingDate(ctx, r.Updated)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = readingDetail("Updated By", orDash(r.UpdatedBy)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = readingDetail(i18n.T(ctx, "site.data.record.updated_by"), orDash(r.UpdatedBy)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

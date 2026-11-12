@@ -1,13 +1,15 @@
 package site_reports_templ
 
-// legendItem is one of a graph's key: the classes of its swatch, drawn as it is on the graph, and what it is
+import "nighttroop.t1d.nz/utils/i18n"
+
+// legendItem is one of a graph's key: the classes of its swatch, drawn as it is on the graph, and the message of what it is
 type legendItem struct{ Swatch, Label string }
 
 // legend is a graph's key, each swatch beside what it is
 templ legend(items []legendItem) {
 	<ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
 		for _, item := range items {
-			<li class="flex items-center gap-1.5"><span class={ item.Swatch }></span>{ item.Label }</li>
+			<li class="flex items-center gap-1.5"><span class={ item.Swatch }></span>{ i18n.T(ctx, item.Label) }</li>
 		}
 	</ul>
 }
@@ -35,7 +37,6 @@ templ rangeBar(class string, all []band) {
 // noGlucose says a report has no glucose to graph, and why a day's readings are not in it until the day after
 templ noGlucose(id, period string) {
 	<p id={ id } class="text-sm text-gray-500">
-		No glucose in this { period }. Reports are made from whole days, so a day's readings show here the
-		day after.
+		{ i18n.T(ctx, "site.reports.no_glucose", i18n.Data{"Period": period}) }
 	</p>
 }

@@ -1,6 +1,9 @@
 package modal
 
-import "nighttroop.t1d.nz/server/components/ui/button"
+import (
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 type Props struct {
 	// ID is the modal's, and with "--close" its Close button's
@@ -74,7 +77,7 @@ templ Modal(p Props) {
 							"hx-swap":   "innerHTML",
 						},
 					}) {
-						Close
+						{ i18n.T(ctx, "common.modal.close") }
 					}
 				}
 			</div>

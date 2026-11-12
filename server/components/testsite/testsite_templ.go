@@ -7,7 +7,10 @@ package testsite
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "nighttroop.t1d.nz/utils/httputils"
+import (
+	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 // Banner is across the top of every page of a staging server, a test site, so nobody takes it for a real one or keeps
 // anything they need on it
@@ -29,7 +32,33 @@ func Banner() templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		if httputils.TestSite(ctx) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"test-site-banner\" role=\"alert\" class=\"border-b-4 border-amber-500 bg-amber-100 px-4 py-6 text-center text-amber-800\"><p class=\"text-3xl font-extrabold uppercase tracking-wide\">This is a test site</p><p class=\"mx-auto mt-2 max-w-3xl text-lg font-medium\">All data here is frequently wiped, at least every time a new version is deployed. Do not use it to manage your diabetes, and do not put anything here you want to keep.</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"test-site-banner\" role=\"alert\" class=\"border-b-4 border-amber-500 bg-amber-100 px-4 py-6 text-center text-amber-800\"><p class=\"text-3xl font-extrabold uppercase tracking-wide\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var2 string
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.test_site.title"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `testsite/testsite.templ`, Line: 13, Col: 101}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p><p class=\"mx-auto mt-2 max-w-3xl text-lg font-medium\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.test_site.warning"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `testsite/testsite.templ`, Line: 15, Col: 45}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

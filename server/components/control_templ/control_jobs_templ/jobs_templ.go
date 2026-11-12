@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -19,14 +20,15 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // duration is how long the job took from being fetched to finishing
-func duration(job *controlmodels.Job) string {
+func duration(ctx context.Context, job *controlmodels.Job) string {
 	if job.ConsumerFetchedAt == 0 || job.FinishedAt == 0 {
 		return "-"
 	}
-	return display.Duration(job.FinishedAt - job.ConsumerFetchedAt)
+	return display.Duration(ctx, job.FinishedAt-job.ConsumerFetchedAt)
 }
 
 // statusClass shows failed jobs as errors
@@ -77,17 +79,17 @@ func JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) templ.Compone
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "jobs_table",
-			Title:       "Jobs",
-			Description: "Background jobs not yet summarised into the job stats, newest first. Click a job to see its details.",
+			Title:       i18n.T(ctx, "control.jobs.title"),
+			Description: i18n.T(ctx, "control.jobs.intro"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:     "controlJobsTable",
 				Static: true,
 				Rows:   len(jobs),
-				Empty:  "No jobs here.",
+				Empty:  i18n.T(ctx, "control.jobs.empty"),
 				Columns: []table.Column{
-					{Label: "ID", Numeric: true}, {Label: "Queue"}, {Label: "Job"}, {Label: "Status"}, {Label: "Created"},
-					{Label: "Duration", Numeric: true},
+					{Label: i18n.T(ctx, "control.jobs.id_column"), Numeric: true}, {Label: i18n.T(ctx, "control.jobs.queue")}, {Label: i18n.T(ctx, "control.jobs.job")}, {Label: i18n.T(ctx, "control.jobs.status")},
+					{Label: i18n.T(ctx, "control.jobs.created")}, {Label: i18n.T(ctx, "control.jobs.duration"), Numeric: true},
 				},
 			},
 			Pager: &pager.Props{ID: "control--jobs", Path: "/jobs", Count: len(jobs), Skip: skip, Limit: limit},
@@ -143,7 +145,7 @@ func jobRow(job *controlmodels.Job) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(job.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 61, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 63, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -170,7 +172,7 @@ func jobRow(job *controlmodels.Job) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(job.Queue)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 64, Col: 14}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 66, Col: 14}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -201,7 +203,7 @@ func jobRow(job *controlmodels.Job) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(job.Job)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 67, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 69, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -272,7 +274,7 @@ func jobRow(job *controlmodels.Job) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(job.JobStatus)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 70, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 72, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -307,7 +309,7 @@ func jobRow(job *controlmodels.Job) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.NewAttributeExpression(display.DateTime(&job.CreatedAt)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 73, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 75, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 				if templ_7745c5c3_Err != nil {
@@ -318,9 +320,9 @@ func jobRow(job *controlmodels.Job) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var17 string
-				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&job.CreatedAt, time.Now()))
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &job.CreatedAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 73, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 75, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -349,9 +351,9 @@ func jobRow(job *controlmodels.Job) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var19 string
-				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(duration(job))
+				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(duration(ctx, job))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 76, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 78, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -407,48 +409,61 @@ func JobModal(job *controlmodels.Job) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Queue", job.Queue).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.queue"), job.Queue).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Job", job.Job).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.job"), job.Job).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Status", job.JobStatus).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.status"), job.JobStatus).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Remaining Attempts", fmt.Sprint(job.RemainingAttempts)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.remaining_attempts"), fmt.Sprint(job.RemainingAttempts)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Deduping Key", job.DedupingKey).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.deduping_key"), job.DedupingKey).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Created", display.DateTime(&job.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.created"), display.DateTime(&job.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Execute After", display.DateTime(&job.ExecuteAfter)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.execute_after"), display.DateTime(&job.ExecuteAfter)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Fetched", display.DateTime(&job.ConsumerFetchedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.fetched"), display.DateTime(&job.ConsumerFetchedAt)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Finished", display.DateTime(&job.FinishedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.finished"), display.DateTime(&job.FinishedAt)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = modal.Detail("Duration", duration(job)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = modal.Detail(i18n.T(ctx, "control.jobs.duration"), duration(ctx, job)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if job.RunID != nil {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<dt class=\"text-gray-500\">Logs</dt><dd>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<dt class=\"text-gray-500\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var22 string
+				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.jobs.logs"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 98, Col: 64}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</dt><dd>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -456,52 +471,78 @@ func JobModal(job *controlmodels.Job) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</dd>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</dd>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</dl><h3 class=\"mt-4 text-sm font-semibold\">Errors</h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</dl><h3 class=\"mt-4 text-sm font-semibold\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var23 string
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.jobs.errors"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 104, Col: 77}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</h3>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(job.Errors) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<p class=\"mt-1 text-sm text-gray-500\">No errors.</p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<p class=\"mt-1 text-sm text-gray-500\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var24 string
+				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.jobs.no_errors"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 106, Col: 80}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<ul id=\"control--job--errors\" class=\"mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<ul id=\"control--job--errors\" class=\"mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, e := range job.Errors {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<li class=\"break-all\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<li class=\"break-all\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var22 string
-					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(e)
+					var templ_7745c5c3_Var25 string
+					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 108, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 110, Col: 30}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</li>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</li>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</ul>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</ul>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "control--job--details", Title: fmt.Sprintf("Job %d", job.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "control--job--details", Title: i18n.T(ctx, "control.jobs.modal_title", i18n.Data{"JobID": job.ID})}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -528,7 +569,7 @@ func RunLogsLink(id string, runID string) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		link := filter.PagePath("/logs", nil, nil, filter.ID{Name: "job_id", Value: &runID})
-		templ_7745c5c3_Var24 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -540,18 +581,18 @@ func RunLogsLink(id string, runID string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(runID)
+			var templ_7745c5c3_Var28 string
+			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(runID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 119, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 121, Col: 9}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = nav.Link(id, link, "break-all text-primary underline").Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = nav.Link(id, link, "break-all text-primary underline").Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

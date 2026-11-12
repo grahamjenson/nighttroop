@@ -43,7 +43,16 @@
 
 ## Before First Release:
 
-1. Translations
+1. Translations (the text is in `utils/i18n/locales/*.en.yaml`):
+    1. P2: Review the English wording in the locale files, page by page, e.g. the reports' out of date notice
+    1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
+       medical words like hypo, time in range and AGP must not be machine translated
+    1. P4: Translate the toasts of validation errors, as their messages are shared with the JSON API and stay English
+    1. P4: Show numbers with the language's decimal separator, e.g. 5,4 mmol/L
+    1. P3: Show dates' day and month names in the language, as Go's date layouts are English, and set `<html lang>`
+       to the page's language
+    1. P4: Translate the text the pages' scripts show, such as the passkey's errors, and the stored values shown as they
+       are, such as a treatment's event type
 1. Docs hosting
 1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at
    `apiquery.MaxQuerySkip` (32000 rows, about 110 days of glucose) and walks every row it skips

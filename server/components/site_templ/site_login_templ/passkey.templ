@@ -1,6 +1,9 @@
 package site_login_templ
 
-import "nighttroop.t1d.nz/server/components/ui/button"
+import (
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 // PasskeyLogin signs in with any of the site's, or control's, passkeys the browser has, with no name or password
 // typed; its elements' IDs start with prefix. Its button is the login's own button's size, outlined so the password
@@ -16,7 +19,7 @@ templ PasskeyLogin(prefix string) {
 		Class:      "text-primary",
 		Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": prefix + "--passkey-error"},
 	}) {
-		Log in with a passkey
+		{ i18n.T(ctx, "site.login.passkey") }
 	}
 	<p id={ prefix + "--passkey-error" } class="mt-2 text-sm text-red-600"></p>
 	@PasskeyScript()

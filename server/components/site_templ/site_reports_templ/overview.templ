@@ -10,15 +10,16 @@ import (
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // Overview is the overview of a day, week, fortnight or month: its glucose's mean, GMI, standard deviation and
 // coefficient of variation, its time in each range, how much of it the CGM read, its best day, a graph of its day from
 // midnight averaged over its days, and its daily dose and carbs
 templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod) {
-	@heading.Title("Overview")
+	@heading.Title(i18n.T(ctx, "site.reports.overview.title"))
 	<div id="site--reports" class="w-full space-y-4 py-4">
-		@periodHeader("overview", "Overview", p)
+		@periodHeader("overview", i18n.T(ctx, "site.reports.overview.title"), p)
 		@overviewCards(p, daily, previous, true)
 	</div>
 }
@@ -27,38 +28,38 @@ templ Overview(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 templ overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod, links bool) {
 	{{ now, location := time.Now(), reportLocation(ctx) }}
 	{{ low, high := site_data_templ.RangeBounds(ctx) }}
-		@card.Card(card.Props{ID: "site--overview--glucose", Title: "Glucose"}) {
+		@card.Card(card.Props{ID: "site--overview--glucose", Title: i18n.T(ctx, "site.reports.overview.glucose")}) {
 			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-4">
 				<dl class="space-y-6">
-					@bigStat("site--overview--mean", "Average glucose", display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units), "") {
-						@statChange("site--overview--mean", p, glucoseChange(p, previous))
+					@bigStat("site--overview--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units), "") {
+						@statChange("site--overview--mean", p, glucoseChange(ctx, p, previous))
 					}
-					@bigStat("site--overview--sd", "Standard deviation", display.GlucoseOr(p.SD, p.Units), display.Units(p.Units), "")
+					@bigStat("site--overview--sd", i18n.T(ctx, "site.reports.overview.standard_deviation"), display.GlucoseOr(p.SD, p.Units), display.Units(p.Units), "")
 				</dl>
 				<dl class="space-y-6">
-					@bigStat("site--overview--gmi", "GMI", oneDecimal(p.GMI), "%", gmiNote(p)) {
-						@statChange("site--overview--gmi", p, change(p.GMI, previousOf(previous).GMI, 1, "%"))
+					@bigStat("site--overview--gmi", "GMI", oneDecimal(p.GMI), "%", gmiNote(ctx, p)) {
+						@statChange("site--overview--gmi", p, change(ctx, p.GMI, previousOf(previous).GMI, 1, "%"))
 					}
-					@bigStat("site--overview--cv", "Coefficient of variation", oneDecimal(p.CV), "%", "") {
-						@statChange("site--overview--cv", p, change(p.CV, previousOf(previous).CV, 1, "%"))
+					@bigStat("site--overview--cv", i18n.T(ctx, "site.reports.metrics.coefficient_of_variation"), oneDecimal(p.CV), "%", "") {
+						@statChange("site--overview--cv", p, change(ctx, p.CV, previousOf(previous).CV, 1, "%"))
 					}
 				</dl>
 				<div>
-					<h3 class="text-sm font-medium text-gray-700">Time in range</h3>
+					<h3 class="text-sm font-medium text-gray-700">{ i18n.T(ctx, "site.reports.metrics.time_in_range") }</h3>
 					@timeInRanges(p)
-					@statChange("site--overview--in-range", p, change(p.TimeInRange, previousOf(previous).TimeInRange, 0, "% in range"))
+					@statChange("site--overview--in-range", p, change(ctx, p.TimeInRange, previousOf(previous).TimeInRange, 0, i18n.T(ctx, "site.reports.overview.percent_in_range")))
 					<p id="site--overview--target" class="mt-2 text-xs text-gray-500">
-						Target range { display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }
+						{ i18n.T(ctx, "site.reports.overview.target_range", i18n.Data{"Low": display.Glucose(low, p.Units), "High": display.Glucose(high, p.Units), "Units": display.Units(p.Units)}) }
 					</p>
 				</div>
 				<div>
-					<h3 class="text-sm font-medium text-gray-700">Sensor usage</h3>
+					<h3 class="text-sm font-medium text-gray-700">{ i18n.T(ctx, "site.reports.overview.sensor_usage") }</h3>
 					<dl class="mt-2 space-y-3">
-						@smallStat("site--overview--days", "Days with data", fmt.Sprintf("%d/%d", p.Days, periodDays(p, now, location)), "days", "")
-						@smallStat("site--overview--cgm-active", "Time CGM active", display.Percent(p.CGMActive), "", cgmActiveNote(p)) {
-							@statChange("site--overview--cgm-active", p, change(p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
+						@smallStat("site--overview--days", i18n.T(ctx, "site.reports.metrics.days_with_data"), fmt.Sprintf("%d/%d", p.Days, periodDays(p, now, location)), i18n.T(ctx, "site.reports.overview.days"), "")
+						@smallStat("site--overview--cgm-active", i18n.T(ctx, "site.reports.metrics.time_cgm_active"), display.Percent(p.CGMActive), "", cgmActiveNote(ctx, p)) {
+							@statChange("site--overview--cgm-active", p, change(ctx, p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
 						}
-						@smallStat("site--overview--meter", "Meter readings a day", perDay(p.MeterReadings, periodDays(p, now, location)), "", "")
+						@smallStat("site--overview--meter", i18n.T(ctx, "site.reports.overview.meter_readings"), perDay(p.MeterReadings, periodDays(p, now, location)), "", "")
 					</dl>
 				</div>
 			</div>
@@ -70,24 +71,24 @@ templ overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSum
 				<span class="h-10 w-1.5 shrink-0 rounded-full bg-report-in-range"></span>
 				<div class="min-w-0 flex-1">
 					<h2 class="font-semibold text-gray-900">
-						Best day:
+						{ i18n.T(ctx, "site.reports.overview.best_day") }
 						if links {
 							<a class="text-primary underline" href={ templ.SafeURL(link("overview", "day", date)) } { nav.Attributes(link("overview", "day", date))... }>{ date.Format(display.LongDayLayout) }</a>
 						} else {
 							{ date.Format(display.LongDayLayout) }
 						}
 					</h2>
-					<p class="text-sm text-gray-600">Glucose was in range about { display.Percent(best.TimeInRange) } of the day.</p>
+					<p class="text-sm text-gray-600">{ i18n.T(ctx, "site.reports.overview.best_day_in_range", i18n.Data{"Percent": display.Percent(best.TimeInRange)}) }</p>
 				</div>
 				@dayGlucose("site--overview--best-day--", "h-14 w-full sm:w-64", best.Glucose, p.Units, low, high)
 			}
 		}
-		@card.Card(card.Props{Title: "Each day"}) {
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.reports.overview.each_day")}) {
 			<p class="mb-2 text-sm text-gray-600">
 				if p.Period == "day" {
-					The 7 days to this one, averaged into one day from midnight.
+					{ i18n.T(ctx, "site.reports.overview.day_averaged") }
 				} else {
-					These { fmt.Sprint(periodDays(p, now, location)) } days averaged into one day from midnight.
+					{ i18n.T(ctx, "site.reports.overview.days_averaged", i18n.Data{"Days": periodDays(p, now, location)}) }
 				}
 			</p>
 			if hasGlucose(p) {
@@ -101,10 +102,10 @@ templ overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSum
 		if links {
 			{{ action = tddAction(tddLink(last, now)) }}
 		}
-		@card.Card(card.Props{ID: "site--overview--insulin", Title: "Insulin and carbs", Action: action}) {
+		@card.Card(card.Props{ID: "site--overview--insulin", Title: i18n.T(ctx, "site.reports.overview.insulin_and_carbs"), Action: action}) {
 			<dl class="grid grid-cols-2 gap-6">
-				@bigStat("site--overview--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "")
-				@bigStat("site--overview--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g", "")
+				@bigStat("site--overview--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "")
+				@bigStat("site--overview--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g", "")
 			</dl>
 			@insulinSplit(p)
 		}
@@ -113,7 +114,7 @@ templ overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSum
 // tddAction opens the TDD report of each day's dose to the overview's last day, at path
 templ tddAction(path string) {
 	@nav.Link("site--overview--tdd", path, "text-sm text-primary underline") {
-		Each day's dose
+		{ i18n.T(ctx, "site.reports.overview.each_days_dose") }
 	}
 }
 
@@ -128,8 +129,8 @@ templ insulinSplit(p *sitemodels.SiteSummaryPeriod) {
 				<div class="flex-1 bg-brand-night"></div>
 			</div>
 			<div class="mt-1 flex justify-between gap-3 text-xs text-gray-600">
-				<span id="site--overview--basal"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-gold"></span>Basal { display.Value(&p.TotalDailyBasal, " U") } · { display.Percent(&basal) }</span>
-				<span id="site--overview--bolus"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-night"></span>Bolus { display.Value(new(bolus(p.TotalDailyDose, p.TotalDailyBasal)), " U") } · { display.Percent(new(100 - basal)) }</span>
+				<span id="site--overview--basal"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-gold"></span>{ i18n.T(ctx, "site.reports.overview.basal_split", i18n.Data{"Dose": display.Value(&p.TotalDailyBasal, " U"), "Percent": display.Percent(&basal)}) }</span>
+				<span id="site--overview--bolus"><span class="mr-1 inline-block h-2 w-2 rounded-full bg-brand-night"></span>{ i18n.T(ctx, "site.reports.overview.bolus_split", i18n.Data{"Dose": display.Value(new(bolus(p.TotalDailyDose, p.TotalDailyBasal)), " U"), "Percent": display.Percent(new(100 - basal))}) }</span>
 			</div>
 		</div>
 	}
@@ -169,7 +170,7 @@ templ smallStat(id, label, value, units, note string) {
 // 7 days, when both have it
 templ statChange(id string, p *sitemodels.SiteSummaryPeriod, text string) {
 	if text != "" {
-		<p id={ id + "--change" } class="mt-0.5 text-xs text-gray-500">{ text } on { previousName(p) }</p>
+		<p id={ id + "--change" } class="mt-0.5 text-xs text-gray-500">{ i18n.T(ctx, "site.reports.change.from_previous", i18n.Data{"Change": text, "Previous": previousName(ctx, p)}) }</p>
 	}
 }
 
@@ -188,7 +189,7 @@ templ timeInRanges(p *sitemodels.SiteSummaryPeriod) {
 		<ul class="flex flex-col justify-between text-sm">
 			for _, b := range bands(p) {
 				<li id={ "site--reports--range-" + b.ID } class={ templ.KV("font-semibold", b.ID == "in-range") }>
-					<span class="tabular-nums">{ display.Percent(b.Percent) }</span> { b.Label }
+					<span class="tabular-nums">{ display.Percent(b.Percent) }</span> { i18n.T(ctx, b.Label) }
 				</li>
 			}
 		</ul>
@@ -203,7 +204,7 @@ templ overviewGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 	{{ g := newGraph(960, 300, p.Units, overviewTop(bars)) }}
 	{{ width := (g.Right - g.Left) / float64(len(bars)) }}
 	<div class="overflow-x-auto">
-		<svg id="site--overview--graph" class="h-auto w-full min-w-[40rem] text-[11px]" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label="Glucose each 15 minutes of the day, averaged">
+		<svg id="site--overview--graph" class="h-auto w-full min-w-[40rem] text-[11px]" viewBox={ fmt.Sprintf("0 0 %.0f %.0f", g.Width, g.Height) } role="img" aria-label={ i18n.T(ctx, "site.reports.overview.graph") }>
 			for _, tick := range g.Ticks() {
 				<line class="stroke-gray-200" x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(tick)) } y2={ f(g.Y(tick)) }></line>
 				<text class="fill-gray-500" x={ f(g.Right + 6) } y={ f(g.Y(tick) + 4) }>{ display.Glucose(tick, p.Units) }</text>

@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 type Props struct {
@@ -25,17 +26,21 @@ type Props struct {
 // Pager is under a table of one page of rows: which rows it shows, and buttons to the pages either side
 templ Pager(p Props) {
 	<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-		<span id={ p.ID + "--showing" } data-pager-skip={ strconv.FormatInt(p.Skip, 10) }>
+		<span
+			id={ p.ID + "--showing" }
+			data-pager-skip={ strconv.FormatInt(p.Skip, 10) }
+			data-pager-showing={ i18n.T(ctx, "common.pager.showing", i18n.Data{"From": "{from}", "To": "{to}"}) }
+		>
 			if p.Count > 0 {
-				{ fmt.Sprintf("Showing %d to %d", p.Skip+1, p.Skip+int64(p.Count)) }
+				{ i18n.T(ctx, "common.pager.showing", i18n.Data{"From": p.Skip + 1, "To": p.Skip + int64(p.Count)}) }
 			}
 		</span>
 		<div class="flex gap-2">
 			if p.Skip > 0 {
-				@pageButton(p.ID+"--previous", "Previous", PageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
+				@pageButton(p.ID+"--previous", i18n.T(ctx, "common.pager.previous"), PageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
 			}
 			if hasNext(ctx, p) {
-				@pageButton(p.ID+"--next", "Next", PageURL(p.Path, p.Skip+p.Limit, p.Limit))
+				@pageButton(p.ID+"--next", i18n.T(ctx, "common.pager.next"), PageURL(p.Path, p.Skip+p.Limit, p.Limit))
 			}
 		</div>
 	</div>
@@ -49,7 +54,7 @@ templ Empty(id string, columns int, text string) {
 
 var scriptOnce = templ.NewOnceHandle()
 
-// Script keeps a pager's "Showing" to the rows of the table above it, one with an Empty row, as rows are added or
+// Script keeps a pager's rows showing to the rows of the table above it, one with an Empty row, as rows are added or
 // deleted without loading the page again
 templ Script() {
 	@scriptOnce.Once() {
@@ -59,7 +64,7 @@ templ Script() {
 					const body = showing.closest("section")?.querySelector("tbody:has(> [data-empty])")
 					if (!body) return
 					const skip = Number(showing.dataset.pagerSkip), rows = body.querySelectorAll(":scope > tr:not([data-empty])").length
-					const text = rows > 0 ? "Showing " + (skip + 1) + " to " + (skip + rows) : ""
+					const text = rows > 0 ? showing.dataset.pagerShowing.replace("{from}", skip + 1).replace("{to}", skip + rows) : ""
 					if (showing.textContent.trim() !== text) showing.textContent = text
 				})
 				// After the request's own handlers, such as one removing a deleted row

@@ -8,6 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -17,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // NotificationEventsTable shows one page of notifications, newest first, with buttons to the pages either side
@@ -59,18 +61,18 @@ func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip in
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "notification_events_table",
-			Title:       "Notifications",
-			Description: "Newest first. Click a notification to see all its details.",
-			Action:      addmodal.Open("site--notification--add", "/data/notifications/new", "Add Notification"),
-			Above:       searchTotals("site--notification", "notification", "notifications"),
+			Title:       i18n.T(ctx, "site.data.notification_events.title"),
+			Description: i18n.T(ctx, "site.data.notification_events.about"),
+			Action:      addmodal.Open("site--notification--add", "/data/notifications/new", i18n.T(ctx, "site.data.notification_events.add")),
+			Above:       searchTotals("site--notification", "site.data.notification_events.noun"),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "notificationEventsTable",
 				EmptyID: "site--notification--empty",
-				Empty:   "No notifications here.",
+				Empty:   i18n.T(ctx, "site.data.notification_events.empty"),
 				Columns: []table.Column{
-					{Label: "Time"}, {Label: "Type"}, {Label: "Title"}, {Label: "Severity", Numeric: true},
-					{Label: "Device"}, {Actions: true},
+					{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.common.type")}, {Label: i18n.T(ctx, "site.data.notification_events.title_label")}, {Label: i18n.T(ctx, "site.data.notification_events.severity"), Numeric: true},
+					{Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
 			Pager: &pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit},
@@ -100,8 +102,8 @@ func NotificationEventNew() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--notification--create", Title: "Add Notification", Path: "/data/notifications", Target: "#notificationEventsTable tbody",
-			Submit: "Add Notification", Fields: notificationEventFields}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--notification--create", Title: i18n.T(ctx, "site.data.notification_events.add"), Path: "/data/notifications", Target: "#notificationEventsTable tbody",
+			Submit: i18n.T(ctx, "site.data.notification_events.add"), Fields: notificationEventFields(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -110,14 +112,16 @@ func NotificationEventNew() templ.Component {
 }
 
 // notificationEventFields are what a notification has that a person can type in
-var notificationEventFields = []addmodal.Field{
-	{Name: "title", Label: "Title", Help: "What it is about, in a few words.", Required: true, Kind: addmodal.Text, Max: "128"},
-	{Name: "occurred_at", Label: "When", Help: "When it happened, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "severity", Label: "Severity", Help: "How important it is, from 0, the lowest, to 5.", Min: "0", Max: "5", Step: "1"},
-	{Name: "notification_type", Label: "Type", Help: "The kind of notification, announcement when left blank.", Kind: addmodal.Text, Max: "32", Options: []string{"announcement", "question"}},
-	{Name: "content", Label: "Content", Help: "What it says in full.", Kind: addmodal.Text, Max: "1024", Wide: true},
-	{Name: "reason", Label: "Reason", Help: "Why it was sent.", Kind: addmodal.Text, Max: "64"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func notificationEventFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "title", Label: i18n.T(ctx, "site.data.notification_events.title_label"), Help: i18n.T(ctx, "site.data.notification_events.title_help"), Required: true, Kind: addmodal.Text, Max: "128"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.notification_events.when_help"), Kind: addmodal.When},
+		{Name: "severity", Label: i18n.T(ctx, "site.data.notification_events.severity"), Help: i18n.T(ctx, "site.data.notification_events.severity_help"), Min: "0", Max: "5", Step: "1"},
+		{Name: "notification_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.notification_events.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"announcement", "question"}},
+		{Name: "content", Label: i18n.T(ctx, "site.data.notification_events.content"), Help: i18n.T(ctx, "site.data.notification_events.content_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.notification_events.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // notificationEventRow opens the notification's details when clicked.
@@ -165,7 +169,7 @@ func notificationEventRow(event *sitemodels.SiteNotificationEvent) templ.Compone
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, event.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 62, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 66, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -192,7 +196,7 @@ func notificationEventRow(event *sitemodels.SiteNotificationEvent) templ.Compone
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(event.NotificationType)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 65, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 69, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -219,7 +223,7 @@ func notificationEventRow(event *sitemodels.SiteNotificationEvent) templ.Compone
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(event.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 68, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 72, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -246,7 +250,7 @@ func notificationEventRow(event *sitemodels.SiteNotificationEvent) templ.Compone
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(event.Severity))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 71, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 75, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -273,7 +277,7 @@ func notificationEventRow(event *sitemodels.SiteNotificationEvent) templ.Compone
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(event.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 74, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/notification_events.templ`, Line: 78, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -287,7 +291,7 @@ func notificationEventRow(event *sitemodels.SiteNotificationEvent) templ.Compone
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.DataRow("site--notification--"+event.ID, "/data/notifications/"+event.ID, "Delete this notification?").Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.DataRow("site--notification--"+event.ID, "/data/notifications/"+event.ID, i18n.T(ctx, "site.data.notification_events.delete_confirm")).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -312,8 +316,8 @@ func NotificationEventModal(event *sitemodels.SiteNotificationEvent) templ.Compo
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		edit := addmodal.Props{ID: "site--notification--edit", Path: "/data/notifications/" + event.ID, Target: "#site--notification--" + event.ID, Swap: "outerHTML", Submit: "Save",
-			Fields: addmodal.Edit(notificationEventFields, event, nil)}
+		edit := addmodal.Props{ID: "site--notification--edit", Path: "/data/notifications/" + event.ID, Target: "#site--notification--" + event.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+			Fields: addmodal.Edit(notificationEventFields(ctx), event, nil)}
 		templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -403,7 +407,7 @@ func NotificationEventUpdated(event *sitemodels.SiteNotificationEvent) templ.Com
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = successtoast.OOB("Notification Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "site.data.notification_events.updated")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -428,7 +432,7 @@ func NotificationEventDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.Toast("Notification Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(i18n.T(ctx, "site.data.notification_events.deleted")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

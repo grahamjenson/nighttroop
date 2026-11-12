@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // A day in the totals box is Today, Yesterday, its weekday and date this year, or its date and year before
@@ -29,8 +30,10 @@ func TestTotalsDate(t *testing.T) {
 	}
 }
 
-func TestCountNoun(t *testing.T) {
-	require.Equal(t, "temp targets", countNoun(0, "temp target", "temp targets"))
-	require.Equal(t, "temp target", countNoun(1, "temp target", "temp targets"))
-	require.Equal(t, "temp targets", countNoun(2, "temp target", "temp targets"))
+// The totals' noun is one of them for 1, and many for any other count
+func TestTotalsNoun(t *testing.T) {
+	ctx := context.Background()
+	require.Equal(t, "temp targets", i18n.N(ctx, "site.data.temp_targets.noun", 0))
+	require.Equal(t, "temp target", i18n.N(ctx, "site.data.temp_targets.noun", 1))
+	require.Equal(t, "temp targets", i18n.N(ctx, "site.data.temp_targets.noun", 2))
 }

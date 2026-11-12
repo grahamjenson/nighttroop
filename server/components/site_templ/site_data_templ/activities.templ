@@ -1,6 +1,7 @@
 package site_data_templ
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -10,24 +11,25 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ActivitiesTable shows one page of activities, newest first, with buttons to the pages either side
 templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "activities_table",
-		Title:       "Activities",
-		Description: "Newest first. Click an activity to see all its details.",
-		Action:      addmodal.Open("site--activity--add", "/data/activities/new", "Add Activity"),
-		Above:       searchTotals("site--activity", "activity", "activities"),
+		Title:       i18n.T(ctx, "site.data.activities.title"),
+		Description: i18n.T(ctx, "site.data.activities.about"),
+		Action:      addmodal.Open("site--activity--add", "/data/activities/new", i18n.T(ctx, "site.data.activities.add")),
+		Above:       searchTotals("site--activity", "site.data.activities.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:      "activitiesTable",
 			EmptyID: "site--activity--empty",
-			Empty:   "No activities here.",
+			Empty:   i18n.T(ctx, "site.data.activities.empty"),
 			Columns: []table.Column{
-				{Label: "Time"}, {Label: "Type"}, {Label: "Name"}, {Label: "Minutes", Numeric: true}, {Label: "Notes"},
-				{Label: "Device"}, {Actions: true},
+				{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.common.type")}, {Label: i18n.T(ctx, "site.data.common.name")}, {Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.notes")},
+				{Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 			},
 		},
 		Pager: &pager.Props{ID: "site--activity", Path: "/data/activities", Count: len(activities), Skip: skip, Limit: limit},
@@ -40,26 +42,28 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 
 // ActivityNew adds an activity with all its fields, putting its row at the top of the table
 templ ActivityNew() {
-	@addmodal.Modal(addmodal.Props{ID: "site--activity--create", Title: "Add Activity", Path: "/data/activities", Target: "#activitiesTable tbody",
-		Submit: "Add Activity", Fields: activityFields})
+	@addmodal.Modal(addmodal.Props{ID: "site--activity--create", Title: i18n.T(ctx, "site.data.activities.add"), Path: "/data/activities", Target: "#activitiesTable tbody",
+		Submit: i18n.T(ctx, "site.data.activities.add"), Fields: activityFields(ctx)})
 }
 
 // activityFields are what an activity has that a person can type in
-var activityFields = []addmodal.Field{
-	{Name: "name", Label: "Name", Help: "What it was, e.g. a run.", Required: true, Kind: addmodal.Text, Max: "64"},
-	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "activity_type", Label: "Type", Help: "The kind of activity, exercise when left blank.", Kind: addmodal.Text, Max: "32", Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
-	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasted.", Min: "1", Max: "1440", Step: "1"},
-	{Name: "calories", Label: "Calories", Help: "Energy it burned, in kcal.", Min: "0", Max: "20000", Step: "1"},
-	{Name: "steps", Label: "Steps", Help: "Steps taken during it.", Min: "0", Max: "200000", Step: "1"},
-	{Name: "heart_rate", Label: "Heart rate", Help: "Average beats per minute.", Min: "20", Max: "250", Step: "1"},
-	{Name: "reason", Label: "Reason", Help: "Why it was done, e.g. training.", Kind: addmodal.Text, Max: "64"},
-	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+func activityFields(ctx context.Context) []addmodal.Field {
+	return []addmodal.Field{
+		{Name: "name", Label: i18n.T(ctx, "site.data.common.name"), Help: i18n.T(ctx, "site.data.activities.name_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.activities.when_help"), Kind: addmodal.When},
+		{Name: "activity_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.activities.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
+		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.activities.duration_help"), Min: "1", Max: "1440", Step: "1"},
+		{Name: "calories", Label: i18n.T(ctx, "site.data.activities.calories"), Help: i18n.T(ctx, "site.data.activities.calories_help"), Min: "0", Max: "20000", Step: "1"},
+		{Name: "steps", Label: i18n.T(ctx, "site.data.activities.steps"), Help: i18n.T(ctx, "site.data.activities.steps_help"), Min: "0", Max: "200000", Step: "1"},
+		{Name: "heart_rate", Label: i18n.T(ctx, "site.data.activities.heart_rate"), Help: i18n.T(ctx, "site.data.activities.heart_rate_help"), Min: "20", Max: "250", Step: "1"},
+		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.activities.reason_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 // activityRow opens the activity's details when clicked.
 templ activityRow(activity *sitemodels.SiteActivity) {
-	@table.DataRow("site--activity--"+activity.ID, "/data/activities/"+activity.ID, "Delete this activity?") {
+	@table.DataRow("site--activity--"+activity.ID, "/data/activities/"+activity.ID, i18n.T(ctx, "site.data.activities.delete_confirm")) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, activity.OccurredAt) }
 		}
@@ -82,8 +86,8 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 }
 
 templ ActivityModal(activity *sitemodels.SiteActivity) {
-	{{ edit := addmodal.Props{ID: "site--activity--edit", Path: "/data/activities/" + activity.ID, Target: "#site--activity--" + activity.ID, Swap: "outerHTML", Submit: "Save",
-		Fields: addmodal.Edit(activityFields, activity, nil)} }}
+	{{ edit := addmodal.Props{ID: "site--activity--edit", Path: "/data/activities/" + activity.ID, Target: "#site--activity--" + activity.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
+		Fields: addmodal.Edit(activityFields(ctx), activity, nil)} }}
 	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
@@ -100,9 +104,9 @@ templ ActivityCreated(activity *sitemodels.SiteActivity) {
 templ ActivityUpdated(activity *sitemodels.SiteActivity) {
 	@activityRow(activity)
 	@modal.CloseOOB()
-	@successtoast.OOB("Activity Updated")
+	@successtoast.OOB(i18n.T(ctx, "site.data.activities.updated"))
 }
 
 templ ActivityDeleted() {
-	@successtoast.Toast("Activity Deleted")
+	@successtoast.Toast(i18n.T(ctx, "site.data.activities.deleted"))
 }

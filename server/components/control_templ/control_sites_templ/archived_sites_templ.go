@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ArchivedSitesTable shows one page of the archived sites, the most recently archived first, each with a button to
@@ -60,15 +61,16 @@ func ArchivedSitesTable(sites []*controlmodels.Site, skip int64, limit int64) te
 		})
 		templ_7745c5c3_Err = listpage.Page(listpage.Props{
 			ID:          "archived_sites_table",
-			Title:       "Archived Sites",
-			Description: "Sites whose data is only in their S3 archive. Hydrate one to bring it back live.",
+			Title:       i18n.T(ctx, "control.archived_sites.title"),
+			Description: i18n.T(ctx, "control.archived_sites.intro"),
 			Table: listpage.TableProps{
 				ID:     "controlArchivedSitesTable",
 				Static: true,
 				Rows:   len(sites),
-				Empty:  "No archived sites.",
+				Empty:  i18n.T(ctx, "control.archived_sites.empty"),
 				Columns: []table.Column{
-					{Label: "Site"}, {Label: "Archived"}, {Label: "Last Seen"}, {Label: "DB Size (MB)", Numeric: true}, {},
+					{Label: i18n.T(ctx, "control.archived_sites.site")}, {Label: i18n.T(ctx, "control.archived_sites.archived")}, {Label: i18n.T(ctx, "control.archived_sites.last_seen")},
+					{Label: i18n.T(ctx, "control.archived_sites.db_size"), Numeric: true}, {},
 				},
 			},
 			Pager: &pager.Props{ID: "control--archived-sites", Path: "/archived-sites", Count: len(sites), Skip: skip, Limit: limit},
@@ -124,7 +126,7 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(site.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 42, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 44, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -151,7 +153,7 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(display.DateTime(site.ArchivedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 45, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 47, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -182,7 +184,7 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(display.DateTime(site.LastSeenAt)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 48, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 50, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 				if templ_7745c5c3_Err != nil {
@@ -193,9 +195,9 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(site.LastSeenAt, time.Now()))
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, site.LastSeenAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 48, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 50, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -226,7 +228,7 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(sizeMB(site.EstimatedDbSizeKb))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 51, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 53, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -257,7 +259,7 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/archived-sites/" + site.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 55, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 57, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 				if templ_7745c5c3_Err != nil {
@@ -270,17 +272,30 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#control--archived-site--" + site.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 56, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 58, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" hx-swap=\"outerHTML\" hx-confirm=\"Hydrate this site? Its archive is downloaded from S3 and it is live again.\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"state\" value=\"live\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" hx-swap=\"outerHTML\" hx-confirm=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				var templ_7745c5c3_Var17 string
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "control.archived_sites.hydrate_confirm")).Resolve(ctx)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 60, Col: 70}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"state\" value=\"live\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Var18 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 					if !templ_7745c5c3_IsBuffer {
@@ -292,13 +307,18 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "Hydrate")
+					var templ_7745c5c3_Var19 string
+					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.archived_sites.hydrate"))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 66, Col: 52}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = button.Button(button.Props{ID: "control--archived-site--" + site.ID + "--hydrate", Type: button.TypeSubmit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = button.Button(button.Props{ID: "control--archived-site--" + site.ID + "--hydrate", Type: button.TypeSubmit}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -340,7 +360,7 @@ func SiteHydrated(site *controlmodels.Site) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.OOB("Site Hydrated: "+site.ID+" is live again").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.OOB(i18n.T(ctx, "control.archived_sites.hydrated", i18n.Data{"SiteID": site.ID})).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

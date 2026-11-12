@@ -1,6 +1,9 @@
 package site_data_templ
 
-import "nighttroop.t1d.nz/server/components/modal"
+import (
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/utils/i18n"
+)
 
 // Record is who and what made a record, and when, each nil one left out
 type Record struct {
@@ -13,13 +16,13 @@ type Record struct {
 
 // RecordDetails are a record's own details, at the foot of its details modal's list
 templ RecordDetails(r Record) {
-	@modal.Section("Record")
-	@readingDetail("ID", r.ID)
-	@readingDetail("UTC Offset (minutes)", orDash(r.UtcOffset))
-	@readingDetail("App", orDash(r.App))
-	@readingDetail("Device", orDash(r.Device))
-	@readingDetail("Created By", r.CreatedBy)
-	@readingDetail("Created", formatReadingDate(ctx, r.Created))
-	@readingDetail("Updated", formatReadingDate(ctx, r.Updated))
-	@readingDetail("Updated By", orDash(r.UpdatedBy))
+	@modal.Section(i18n.T(ctx, "site.data.record.section"))
+	@readingDetail(i18n.T(ctx, "site.data.record.record_id"), r.ID)
+	@readingDetail(i18n.T(ctx, "site.data.record.utc_offset"), orDash(r.UtcOffset))
+	@readingDetail(i18n.T(ctx, "site.data.record.app"), orDash(r.App))
+	@readingDetail(i18n.T(ctx, "site.data.common.device"), orDash(r.Device))
+	@readingDetail(i18n.T(ctx, "site.data.record.created_by"), r.CreatedBy)
+	@readingDetail(i18n.T(ctx, "site.data.record.created"), formatReadingDate(ctx, r.Created))
+	@readingDetail(i18n.T(ctx, "site.data.record.updated"), formatReadingDate(ctx, r.Updated))
+	@readingDetail(i18n.T(ctx, "site.data.record.updated_by"), orDash(r.UpdatedBy))
 }

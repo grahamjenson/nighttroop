@@ -1,6 +1,7 @@
 package control_jobs_templ
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -12,14 +13,15 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // duration is how long the job took from being fetched to finishing
-func duration(job *controlmodels.Job) string {
+func duration(ctx context.Context, job *controlmodels.Job) string {
 	if job.ConsumerFetchedAt == 0 || job.FinishedAt == 0 {
 		return "-"
 	}
-	return display.Duration(job.FinishedAt - job.ConsumerFetchedAt)
+	return display.Duration(ctx, job.FinishedAt - job.ConsumerFetchedAt)
 }
 
 // statusClass shows failed jobs as errors
@@ -34,17 +36,17 @@ func statusClass(job *controlmodels.Job) string {
 templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "jobs_table",
-		Title:       "Jobs",
-		Description: "Background jobs not yet summarised into the job stats, newest first. Click a job to see its details.",
+		Title:       i18n.T(ctx, "control.jobs.title"),
+		Description: i18n.T(ctx, "control.jobs.intro"),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:     "controlJobsTable",
 			Static: true,
 			Rows:   len(jobs),
-			Empty:  "No jobs here.",
+			Empty:  i18n.T(ctx, "control.jobs.empty"),
 			Columns: []table.Column{
-				{Label: "ID", Numeric: true}, {Label: "Queue"}, {Label: "Job"}, {Label: "Status"}, {Label: "Created"},
-				{Label: "Duration", Numeric: true},
+				{Label: i18n.T(ctx, "control.jobs.id_column"), Numeric: true}, {Label: i18n.T(ctx, "control.jobs.queue")}, {Label: i18n.T(ctx, "control.jobs.job")}, {Label: i18n.T(ctx, "control.jobs.status")},
+				{Label: i18n.T(ctx, "control.jobs.created")}, {Label: i18n.T(ctx, "control.jobs.duration"), Numeric: true},
 			},
 		},
 		Pager: &pager.Props{ID: "control--jobs", Path: "/jobs", Count: len(jobs), Skip: skip, Limit: limit},
@@ -70,38 +72,38 @@ templ jobRow(job *controlmodels.Job) {
 			<span class={ statusClass(job) }>{ job.JobStatus }</span>
 		}
 		@table.Cell() {
-			<span title={ display.DateTime(&job.CreatedAt) }>{ display.Ago(&job.CreatedAt, time.Now()) }</span>
+			<span title={ display.DateTime(&job.CreatedAt) }>{ display.Ago(ctx, &job.CreatedAt, time.Now()) }</span>
 		}
 		@table.Cell(table.NumCell) {
-			{ duration(job) }
+			{ duration(ctx, job) }
 		}
 	}
 }
 
 // JobModal shows all of a job's details and the errors its attempts had
 templ JobModal(job *controlmodels.Job) {
-	@modal.Modal(modal.Props{ID: "control--job--details", Title: fmt.Sprintf("Job %d", job.ID)}) {
+	@modal.Modal(modal.Props{ID: "control--job--details", Title: i18n.T(ctx, "control.jobs.modal_title", i18n.Data{"JobID": job.ID})}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@modal.Detail("Queue", job.Queue)
-			@modal.Detail("Job", job.Job)
-			@modal.Detail("Status", job.JobStatus)
-			@modal.Detail("Remaining Attempts", fmt.Sprint(job.RemainingAttempts))
-			@modal.Detail("Deduping Key", job.DedupingKey)
-			@modal.Detail("Created", display.DateTime(&job.CreatedAt))
-			@modal.Detail("Execute After", display.DateTime(&job.ExecuteAfter))
-			@modal.Detail("Fetched", display.DateTime(&job.ConsumerFetchedAt))
-			@modal.Detail("Finished", display.DateTime(&job.FinishedAt))
-			@modal.Detail("Duration", duration(job))
+			@modal.Detail(i18n.T(ctx, "control.jobs.queue"), job.Queue)
+			@modal.Detail(i18n.T(ctx, "control.jobs.job"), job.Job)
+			@modal.Detail(i18n.T(ctx, "control.jobs.status"), job.JobStatus)
+			@modal.Detail(i18n.T(ctx, "control.jobs.remaining_attempts"), fmt.Sprint(job.RemainingAttempts))
+			@modal.Detail(i18n.T(ctx, "control.jobs.deduping_key"), job.DedupingKey)
+			@modal.Detail(i18n.T(ctx, "control.jobs.created"), display.DateTime(&job.CreatedAt))
+			@modal.Detail(i18n.T(ctx, "control.jobs.execute_after"), display.DateTime(&job.ExecuteAfter))
+			@modal.Detail(i18n.T(ctx, "control.jobs.fetched"), display.DateTime(&job.ConsumerFetchedAt))
+			@modal.Detail(i18n.T(ctx, "control.jobs.finished"), display.DateTime(&job.FinishedAt))
+			@modal.Detail(i18n.T(ctx, "control.jobs.duration"), duration(ctx, job))
 			if job.RunID != nil {
-				<dt class="text-gray-500">Logs</dt>
+				<dt class="text-gray-500">{ i18n.T(ctx, "control.jobs.logs") }</dt>
 				<dd>
 					@RunLogsLink("control--job--logs", *job.RunID)
 				</dd>
 			}
 		</dl>
-		<h3 class="mt-4 text-sm font-semibold">Errors</h3>
+		<h3 class="mt-4 text-sm font-semibold">{ i18n.T(ctx, "control.jobs.errors") }</h3>
 		if len(job.Errors) == 0 {
-			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+			<p class="mt-1 text-sm text-gray-500">{ i18n.T(ctx, "control.jobs.no_errors") }</p>
 		} else {
 			<ul id="control--job--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
 				for _, e := range job.Errors {

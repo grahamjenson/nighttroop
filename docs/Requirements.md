@@ -750,6 +750,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 - General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
+- Every page's text is in the language setting, the identity's, then the site's, then the browser's, and in English
+  where there is no translation; the control site and public pages are in the browser's language. Only English is
+  written so far.
 - Every page shows dates in the date format, the identity's, then the site's, then the default (YYYY-MM-DD), times in
   the time format chosen the same way (24-hour HH:mm:ss by default, or 12-hour, or without seconds), and both in the
   timezone chosen the same way; the logs pages too.

@@ -222,12 +222,12 @@ func weekStartDay(ctx context.Context) int {
 // agpLegend is the AGP graph's key: its percentiles' bands and median, a day's own glucose over them, and the colours
 // above and below the range
 func agpLegend(p *sitemodels.SiteSummaryPeriod) []legendItem {
-	items := []legendItem{{"h-3 w-3 rounded-sm bg-report-in-range/20", "5th to 95th percentile"},
-		{"h-3 w-3 rounded-sm bg-report-in-range/50", "25th to 75th percentile"}, {"h-1 w-4 rounded-full bg-report-in-range", "Median"}}
+	items := []legendItem{{"h-3 w-3 rounded-sm bg-report-in-range/20", "site.reports.legend.outer_percentiles"},
+		{"h-3 w-3 rounded-sm bg-report-in-range/50", "site.reports.legend.inner_percentiles"}, {"h-1 w-4 rounded-full bg-report-in-range", "site.reports.legend.median"}}
 	if p.Period == "day" {
-		items = append(items, legendItem{"h-1 w-4 rounded-full bg-brand-gold", "This day's glucose"})
+		items = append(items, legendItem{"h-1 w-4 rounded-full bg-brand-gold", "site.reports.legend.days_glucose"})
 	}
-	return append(items, legendItem{"h-3 w-3 rounded-sm bg-glucose-high/50", "Above the range"}, legendItem{"h-3 w-3 rounded-sm bg-glucose-low/50", "Below the range"})
+	return append(items, legendItem{"h-3 w-3 rounded-sm bg-glucose-high/50", "site.reports.legend.above_range"}, legendItem{"h-3 w-3 rounded-sm bg-glucose-low/50", "site.reports.legend.below_range"})
 }
 
 // goalGlucose is the AGP's goal for the average glucose, below 154 mg/dL, in the units

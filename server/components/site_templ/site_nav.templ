@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // signedIn is the identity signed in, or nil before login
@@ -52,7 +53,7 @@ templ HeaderLinks(path string, oob bool) {
 	{{ page := sitenav.At(path) }}
 	<nav
 		id="site--nav--links"
-		aria-label="Site"
+		aria-label={ i18n.T(ctx, "site.nav.site") }
 		class="flex items-center gap-0.5 sm:gap-1"
 		if oob {
 			hx-swap-oob="true"
@@ -62,8 +63,8 @@ templ HeaderLinks(path string, oob bool) {
 		<a
 			id="site--nav--home-icon"
 			href="/"
-			aria-label="Home"
-			title="Home"
+			aria-label={ i18n.T(ctx, "site.nav.home") }
+			title={ i18n.T(ctx, "site.nav.home") }
 			class={ headerLinkClass(home) }
 			if home {
 				aria-current="page"
@@ -77,7 +78,7 @@ templ HeaderLinks(path string, oob bool) {
 				<a
 					id={ "site--nav--" + hub.Slug() }
 					href={ templ.SafeURL(pages[0].Path) }
-					aria-label={ string(hub) }
+					aria-label={ i18n.T(ctx, string(hub)) }
 					class={ headerLinkClass(current) }
 					if current {
 						aria-current="page"
@@ -85,7 +86,7 @@ templ HeaderLinks(path string, oob bool) {
 					{ nav.Attributes(pages[0].Path)... }
 				>
 					@hubIcon(hub)
-					<span class="hidden sm:inline">{ string(hub) }</span>
+					<span class="hidden sm:inline">{ i18n.T(ctx, string(hub)) }</span>
 				</a>
 			}
 		}
@@ -116,7 +117,7 @@ templ MenuLinks(path string, oob bool) {
 						}) {
 							<span class="flex items-center gap-2">
 								@hubIcon(hub)
-								{ string(hub) }
+								{ i18n.T(ctx, string(hub)) }
 							</span>
 						}
 					}
@@ -166,11 +167,16 @@ templ InHub(path string, content templ.Component, oob bool) {
 	}
 }
 
+// hubPages names the tabs of a hub's pages
+func hubPages(ctx context.Context, hub sitenav.Hub) string {
+	return i18n.T(ctx, "site.nav.hub_pages", i18n.Data{"HubName": i18n.T(ctx, string(hub))})
+}
+
 // topTabs are a row of a hub's pages over the page, wrapping in a narrow window, and on a phone scrolling sideways on
 // its own, so the page does not get wider
 templ topTabs(current *sitenav.Page, pages []sitenav.Page) {
 	<div id={ "site--hub--" + current.Hub.Slug() }>
-		<nav aria-label={ string(current.Hub) + " pages" } class="-mx-4 overflow-x-auto border-b border-gray-200 px-4 pb-2 sm:mx-0 sm:px-0">
+		<nav aria-label={ hubPages(ctx, current.Hub) } class="-mx-4 overflow-x-auto border-b border-gray-200 px-4 pb-2 sm:mx-0 sm:px-0">
 			<ul class="flex gap-1 sm:flex-wrap">
 				for _, page := range pages {
 					<li>
@@ -187,11 +193,14 @@ templ topTabs(current *sitenav.Page, pages []sitenav.Page) {
 // groups' names
 templ sideTabs(current *sitenav.Page, pages []sitenav.Page) {
 	<div id={ "site--hub--" + current.Hub.Slug() } class="md:flex md:gap-6">
-		<nav aria-label={ string(current.Hub) + " pages" } class="mb-4 flex flex-wrap gap-1 pt-2 md:mb-0 md:block md:w-52 md:shrink-0 md:space-y-4 md:border-r md:border-gray-200 md:pr-4 md:pt-4">
+		<nav aria-label={ hubPages(ctx, current.Hub) } class="mb-4 flex flex-wrap gap-1 pt-2 md:mb-0 md:block md:w-52 md:shrink-0 md:space-y-4 md:border-r md:border-gray-200 md:pr-4 md:pt-4">
 			for _, group := range sitenav.Groups(pages, false) {
 				<div class="contents md:block">
-					<p class="mb-1 hidden px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 md:block">{ group.Name }</p>
-					<ul aria-label={ group.Name } class="contents md:block md:space-y-0.5">
+					<p class="mb-1 hidden px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 md:block">{ i18n.T(ctx, group.Name) }</p>
+					<ul
+						aria-label={ i18n.T(ctx, group.Name) }
+						class="contents md:block md:space-y-0.5"
+					>
 						for _, page := range group.Pages {
 							<li>
 								@tab(page, page.ID == current.ID, "border border-gray-200 md:border-transparent")
@@ -220,7 +229,7 @@ templ tab(page sitenav.Page, current bool, class string) {
 		{ nav.Attributes(page.Path)... }
 	>
 		@page.Icon(icon.Props{Class: "size-4 shrink-0"})
-		{ page.Label }
+		{ i18n.T(ctx, page.Label) }
 	</a>
 }
 
@@ -229,7 +238,7 @@ templ tab(page sitenav.Page, current bool, class string) {
 // phone, or a narrow window, it is an icon opening a box across the page.
 templ Search() {
 	if pages := sitenav.Visible(signedIn(ctx)); len(pages) > 0 {
-		<button id="site--nav--search-open" type="button" aria-label="Search pages" aria-controls="site--nav--search-box" class="flex size-8 items-center justify-center rounded-md text-gray-300 transition hover:bg-white/10 hover:text-white lg:hidden">
+		<button id="site--nav--search-open" type="button" aria-label={ i18n.T(ctx, "site.nav.search_pages") } aria-controls="site--nav--search-box" class="flex size-8 items-center justify-center rounded-md text-gray-300 transition hover:bg-white/10 hover:text-white lg:hidden">
 			@icon.Search(icon.Props{Class: "size-4"})
 		</button>
 		<div id="site--nav--search-box" class="absolute inset-x-0 top-full hidden border-b border-white/10 bg-brand-night p-2 lg:relative lg:inset-auto lg:block lg:w-64 lg:border-0 lg:p-0">
@@ -239,43 +248,43 @@ templ Search() {
 					id="site--nav--search"
 					type="search"
 					role="combobox"
-					aria-label="Search pages"
+					aria-label={ i18n.T(ctx, "site.nav.search_pages") }
 					aria-expanded="false"
 					aria-controls="site--nav--search-results"
 					aria-autocomplete="list"
 					autocomplete="off"
-					placeholder="Search pages…"
+					placeholder={ i18n.T(ctx, "site.nav.search_placeholder") }
 					maxlength="64"
 					class="peer h-9 w-full rounded-md border border-white/20 bg-white/10 pl-8 pr-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold lg:pr-14"
 				/>
-				<kbd class="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-white/20 px-1.5 text-xs text-gray-400 lg:block lg:peer-focus:hidden">Ctrl K</kbd>
-				<div id="site--nav--search-results" role="listbox" aria-label="Pages" hidden class="absolute inset-x-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg lg:left-auto lg:w-80">
+				<kbd class="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-white/20 px-1.5 text-xs text-gray-400 lg:block lg:peer-focus:hidden">{ i18n.T(ctx, "site.nav.search_shortcut") }</kbd>
+				<div id="site--nav--search-results" role="listbox" aria-label={ i18n.T(ctx, "site.nav.search_results") } hidden class="absolute inset-x-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg lg:left-auto lg:w-80">
 					for _, group := range sitenav.Groups(pages, true) {
-						<div role="group" aria-label={ group.Name }>
-							<p class="px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{ group.Name }</p>
+						<div role="group" aria-label={ i18n.T(ctx, group.Name) }>
+							<p class="px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{ i18n.T(ctx, group.Name) }</p>
 							for _, page := range group.Pages {
 								<a
 									id={ page.SearchID() }
 									role="option"
 									aria-selected="false"
 									href={ templ.SafeURL(page.Path) }
-									data-search={ page.SearchText() }
-									data-label={ strings.ToLower(page.Label) }
-									data-hints={ page.Hints() }
+									data-search={ page.SearchText(ctx) }
+									data-label={ strings.ToLower(i18n.T(ctx, page.Label)) }
+									data-hints={ page.Hints(ctx) }
 									class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-100 aria-selected:bg-gray-100"
 									{ nav.Attributes(page.Path)... }
 								>
 									@page.Icon(icon.Props{Class: "size-4 text-gray-500"})
-									{ page.Label }
+									{ i18n.T(ctx, page.Label) }
 									<span data-hint hidden class="truncate rounded bg-gray-100 px-1.5 text-xs text-gray-600"></span>
 									if page.Group != "" {
-										<span class="ml-auto text-xs text-gray-500">{ page.Group }</span>
+										<span class="ml-auto text-xs text-gray-500">{ i18n.T(ctx, page.Group) }</span>
 									}
 								</a>
 							}
 						</div>
 					}
-					<p id="site--nav--search-empty" hidden class="px-2 py-3 text-sm text-gray-500">No pages match</p>
+					<p id="site--nav--search-empty" hidden class="px-2 py-3 text-sm text-gray-500">{ i18n.T(ctx, "site.nav.no_match") }</p>
 				</div>
 			</div>
 		</div>

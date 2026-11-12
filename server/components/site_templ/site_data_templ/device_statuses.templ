@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // deviceHistoryPage is how many statuses one page of a device's history shows
@@ -54,12 +55,12 @@ func withUnit(value *float64, unit string) string {
 // DeviceStatusGroups shows the latest few statuses of each device, one section per device
 templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 	<div id="device_statuses" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Device Status") {
-			The latest statuses from each device that reported in the last week. Click a status to see all its details.
+		@heading.Page(i18n.T(ctx, "site.data.device_statuses.title")) {
+			{ i18n.T(ctx, "site.data.device_statuses.about") }
 		}
 		if len(statuses) == 0 {
 			<section id="site--device-status--empty" class="rounded-xl border border-gray-200 p-4 text-sm text-gray-500 shadow-sm">
-				No device has reported in the last week.
+				{ i18n.T(ctx, "site.data.device_statuses.none") }
 			</section>
 		}
 		for i, group := range groupByDevice(statuses) {
@@ -74,7 +75,7 @@ templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 						Variant:    button.VariantOutline,
 						Attributes: nav.Attributes(deviceHistoryURL(group.Device, 0, deviceHistoryPage)),
 					}) {
-						Show all
+						{ i18n.T(ctx, "site.data.device_statuses.show_all") }
 					}
 				</div>
 				@deviceStatusTable(fmt.Sprintf("deviceStatusTable-%d", i), group.Statuses)
@@ -88,18 +89,18 @@ templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus, skip int64, limit int64) {
 	<div id="device_status_history" class="mx-auto max-w-5xl space-y-6">
 		<div class="flex items-start justify-between gap-2">
-			@heading.Page("Device Status") {
-				Every status from <span class="font-semibold">{ device }</span>, newest first.
+			@heading.Page(i18n.T(ctx, "site.data.device_statuses.title")) {
+				{ i18n.T(ctx, "site.data.device_statuses.every_status_from") } <span class="font-semibold">{ device }</span>{ i18n.T(ctx, "site.data.device_statuses.newest_first") }
 			}
 			@button.Button(button.Props{
 				ID:         "site--device-status--all-devices",
 				Variant:    button.VariantOutline,
 				Attributes: nav.Attributes("/data/device-status"),
 			}) {
-				All devices
+				{ i18n.T(ctx, "site.data.device_statuses.all_devices") }
 			}
 		</div>
-		@searchTotals("site--device-status", "status", "statuses")
+		@searchTotals("site--device-status", "site.data.device_statuses.noun")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@deviceStatusTable("deviceStatusTable", statuses)
 			@pager.Pager(pager.Props{ID: "site--device-status", Path: "/data/device-status?device=" + url.QueryEscape(device), Count: len(statuses), Skip: skip, Limit: limit})
@@ -112,11 +113,11 @@ templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
 	@listpage.Table(listpage.TableProps{
 		ID:      id,
 		EmptyID: id + "--empty",
-		Empty:   "No statuses here.",
+		Empty:   i18n.T(ctx, "site.data.device_statuses.empty"),
 		Columns: []table.Column{
-			{Label: "Time"}, {Label: "Phone battery (%)", Numeric: true}, {Label: "Reservoir (U)", Numeric: true},
-			{Label: "Pump battery (%)", Numeric: true}, {Label: "IOB (U)", Numeric: true},
-			{Label: "COB (g)", Numeric: true}, {Actions: true},
+			{Label: i18n.T(ctx, "site.data.common.time")}, {Label: i18n.T(ctx, "site.data.device_statuses.phone_battery_percent"), Numeric: true}, {Label: i18n.T(ctx, "site.data.device_statuses.reservoir_units"), Numeric: true},
+			{Label: i18n.T(ctx, "site.data.device_statuses.pump_battery_percent"), Numeric: true}, {Label: i18n.T(ctx, "site.data.device_statuses.iob_units"), Numeric: true},
+			{Label: i18n.T(ctx, "site.data.device_statuses.cob_grams"), Numeric: true}, {Actions: true},
 		},
 	}) {
 		for _, status := range statuses {
@@ -127,7 +128,7 @@ templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
 
 // deviceStatusRow opens the status's details when clicked.
 templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
-	@table.DataRow("site--device-status--"+status.ID, "/data/device-status/"+status.ID, "Delete this device status?") {
+	@table.DataRow("site--device-status--"+status.ID, "/data/device-status/"+status.ID, i18n.T(ctx, "site.data.device_statuses.delete_confirm")) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, status.OccurredAt) }
 		}
@@ -152,22 +153,22 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
 	@modal.Modal(modal.Props{ID: "site--device-status--details", Title: orDash(status.CreatedByDeviceName), Subtitle: formatReadingDate(ctx, status.OccurredAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Phone Battery", withUnit(status.DeviceBatteryPercent, "%"))
-			@readingDetail("Phone Charging", orDash(status.IsDeviceCharging))
-			@readingDetail("Pump State", orDash(status.PumpState))
-			@readingDetail("Pump Reservoir", withUnit(status.PumpReservoir, " U"))
-			@readingDetail("Pump Battery", withUnit(status.PumpBatteryPercent, "%"))
-			@readingDetail("Pump Charging", orDash(status.PumpChargingState))
-			@readingDetail("Loop", orDash(status.LoopName))
-			@readingDetail("IOB", withUnit(status.LoopIob, " U"))
-			@readingDetail("Basal IOB", withUnit(status.LoopIobBasal, " U"))
-			@readingDetail("Bolus IOB", withUnit(status.LoopIobTreatment, " U"))
-			@readingDetail("COB", withUnit(status.LoopCob, " g"))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.phone_battery"), withUnit(status.DeviceBatteryPercent, "%"))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.phone_charging"), orDash(status.IsDeviceCharging))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.pump_state"), orDash(status.PumpState))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.pump_reservoir"), withUnit(status.PumpReservoir, " U"))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.pump_battery"), withUnit(status.PumpBatteryPercent, "%"))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.pump_charging"), orDash(status.PumpChargingState))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.loop"), orDash(status.LoopName))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.iob"), withUnit(status.LoopIob, " U"))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.basal_iob"), withUnit(status.LoopIobBasal, " U"))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.bolus_iob"), withUnit(status.LoopIobTreatment, " U"))
+			@readingDetail(i18n.T(ctx, "site.data.device_statuses.cob"), withUnit(status.LoopCob, " g"))
 			@RecordDetails(Record{ID: status.ID, UtcOffset: status.UtcOffsetMinutes, App: status.CreatedByAppName, CreatedBy: status.CreatedByIdentityName, Created: status.CreatedAt, Updated: status.UpdatedAt})
 		</dl>
 	}
 }
 
 templ DeviceStatusDeleted() {
-	@successtoast.Toast("Device Status Deleted")
+	@successtoast.Toast(i18n.T(ctx, "site.data.device_statuses.deleted"))
 }
