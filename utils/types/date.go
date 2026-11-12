@@ -217,6 +217,16 @@ func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
 	return &dateInt, &offset
 }
 
+// MillisSentOffset is MillisUTCOffset with no offset for a time written in UTC, with Z, as Loop writes every time: it
+// says when, not where, so the document takes the offset of where it was made
+func (d *DateString) MillisSentOffset() (*DateInt, *FlexibleInt64) {
+	date, offset := d.MillisUTCOffset()
+	if strings.HasSuffix(strings.ToUpper(string(*d)), "Z") {
+		return date, nil
+	}
+	return date, offset
+}
+
 func (d *DateString) String() string {
 	return string(*d)
 }

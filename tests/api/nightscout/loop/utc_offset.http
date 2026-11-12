@@ -1,0 +1,55 @@
+INCLUDE steps/new_site_admin.steps
+
+# Loop writes every time in UTC, with Z, and sends no utcOffset. A Z time says when, not where, so Loop's treatments,
+# device statuses and profiles take the site timezone's offset, as a document sent with none does, and a device
+# status the offset of the phone its pump says (secondsFromGMT). Tokyo keeps no daylight saving, so its offset is 540
+# minutes at any date, and the phone's below is 780 (UTC+13).
+
+NAME set_site_timezone
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"timezone": "Asia/Tokyo"}
+ASSERT_STATUS 200
+
+NAME loop_treatment
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"created_at": "{{ time 10 }}", "timestamp": "{{ time 10 }}", "enteredBy": "loop://iPhone", "eventType": "Carb Correction", "carbs": 20, "absorptionTime": 180, "syncIdentifier": "5E3C1D2A-0000-4000-8000-000000000001"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@0.utcOffset"
+
+NAME loop_devicestatus
+POST http://{{ .ns_site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 9 }}", "pump": {"secondsFromGMT": 46800, "manufacturer": "Insulet", "clock": "{{ time 9 }}", "model": "Dash", "reservoir": 40}}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@0.utcOffset"
+
+NAME devicestatus_without_pump
+POST http://{{ .ns_site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 8 }}", "uploader": {"battery": 60}}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@0.utcOffset"
+
+NAME loop_profile
+POST http://{{ .ns_site }}/api/v1/profile
+H api-secret: {{ sha1 token }}
+B [{"defaultProfile": "Default", "startDate": "{{ time 7 }}", "units": "mg/dL", "enteredBy": "Loop",
+    "store": {"Default": {"dia": 6, "timezone": "ETC/GMT-13", "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}], "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}], "units": "mg/dL"}}}]
+ASSERT_STATUS 200
+
+NAME loop_profile_has_site_offset
+GET http://{{ .ns_site }}/api/v1/profile/current
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@utcOffset"
+
+# A time written with its offset keeps it
+NAME treatment_with_offset
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"created_at": "2026-11-12T21:00:00.000+13:00", "enteredBy": "careportal", "eventType": "Note", "notes": "with offset"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@0.utcOffset"

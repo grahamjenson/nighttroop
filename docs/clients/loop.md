@@ -231,6 +231,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | Omnipod `syncIdentifier`s once creates dedup by identifier | Works since #515: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | A treatment's `syncIdentifier`, `insulinType`, a carb entry's `userEnteredAt`, a bolus's `unabsorbed` | Fixed in this PR: kept and given back as sent, through API v1 and v3 (they were dropped); test in `loop/treatments.http` |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
+| `utcOffset` of treatments, device statuses and profiles, whose times Loop writes in UTC | Fixed in this PR: the site timezone's offset, a device status its pump's `secondsFromGMT` (they were 0); test in `loop/utc_offset.http` |
 | Device status `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
 | Device status pump `pumpID`, `suspended`, `bolusing` | Fixed in this PR: kept once the status as sent is cleared (they were dropped then); test in `loop/devicestatus.http` |
 | Device status uploader `name`, `timestamp`, `isCharging` | Works: kept once the status as sent is cleared |

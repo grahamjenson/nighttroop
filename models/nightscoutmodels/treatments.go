@@ -1,6 +1,7 @@
 package nightscoutmodels
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -199,7 +200,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
 	if t.CreatedAt != nil {
 		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+			date, offset := t.CreatedAt.MillisSentOffset()
+			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
 		}
 	}
 
