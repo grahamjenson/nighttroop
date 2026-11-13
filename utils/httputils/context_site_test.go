@@ -41,3 +41,24 @@ func TestGetSettingsWithoutAnIdentityIsTheSites(t *testing.T) {
 	require.Equal(t, consts.UnitsMGDL, *site.GetSettings().GetUnits())
 	require.NotContains(t, logged.String(), "ERROR")
 }
+
+// A JWT issued in the same millisecond as its identity's credentials changed is refused too, as the reset may have come
+// after it: a sign in, a request and a reset can all be within one millisecond
+func TestCheckIssuedAfterCredentialsChanged(t *testing.T) {
+	identity := controldb.SiteIdentity{CredentialsChangedAt: 1000}
+	tests := []struct {
+		name       string
+		issuedAtMs int64
+		refused    bool
+	}{
+		{"issued before", 999, true},
+		{"issued in the same millisecond", 1000, true},
+		{"issued after", 1001, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := CheckIssuedAfterCredentialsChanged(identity, tt.issuedAtMs)
+			require.Equal(t, tt.refused, err != nil)
+		})
+	}
+}
