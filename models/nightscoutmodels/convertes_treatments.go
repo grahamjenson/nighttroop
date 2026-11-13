@@ -438,6 +438,7 @@ func ToProfileJSON(source interface {
 	GetBasalRatesJson() *string
 	GetTargetsLowJson() *string
 	GetTargetsHighJson() *string
+	GetIcfgJson() *string
 }, siteContext *httputils.SiteContext) *types.LongJSONString {
 	// A switch sent with no profileJson, as the careportal and T1DCarer send one, names a profile the app has, so it
 	// gets none back: AAPS uses its own profile of that name only when there is no profileJson, and drops the switch
@@ -476,6 +477,11 @@ func ToProfileJSON(source interface {
 	profileBytes, err := json.Marshal(profile)
 	if err != nil {
 		return nil
+	}
+	// The insulin the switch was made with goes in as AAPS's iCfg, as an AAPSClient follower reads it from there
+	// (pureProfileFromJson), after the rest so the profile's own fields keep their order
+	if icfg := source.GetIcfgJson(); icfg != nil && len(profileBytes) > 2 {
+		profileBytes = append(append(profileBytes[:len(profileBytes)-1], `,"iCfg":`...), *icfg+"}"...)
 	}
 	profileJSON := types.LongJSONString(string(profileBytes))
 	return &profileJSON

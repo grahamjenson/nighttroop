@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,6 +23,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -204,6 +206,11 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http
 	// The outer most layer is CORS and CSRF protection, so no state changing in GET requests
 	httpServer := newHTTPServer(fmt.Sprintf(":%d", serverConfig.HostPort),
 		server.WithCrossOriginProtection(server.GetMainHandler(controlDB, serverConfig)))
+	// Shutdown does not close websockets, so its start closes every Socket.IO session, and none writes to a site's DB
+	// after its last backup
+	closing, closeSessions := context.WithCancel(context.Background())
+	httpServer.RegisterOnShutdown(closeSessions)
+	httpServer.BaseContext = func(net.Listener) context.Context { return engineio.WithClosing(context.Background(), closing) }
 
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {

@@ -315,6 +315,14 @@ var (
 
 					profile.ConvertToMGDL()
 
+					// AAPS's effective profile switch has its insulin only in its profileJson's iCfg
+					var withICfg struct {
+						ICfg *nightscoutmodels.InsulinConfig `json:"iCfg"`
+					}
+					if target.IcfgJson == nil && json.Unmarshal([]byte(*source.ProfileJSON), &withICfg) == nil {
+						target.IcfgJson = nightscoutmodels.InsulinConfigToJSON(withICfg.ICfg)
+					}
+
 					target.Dia = profile.Dia.Float64p()
 					target.Timezone = profile.Timezone.Stringp()
 

@@ -101,7 +101,7 @@
     "/data/glucose": {
       "get": {
         "operationId": "ListGlucoseReadings", "tags": ["Data"], "summary": "The site's glucose readings, newest first",
-        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/Before" }, { "$ref": "#/components/parameters/BeforeId" }, { "$ref": "#/components/parameters/BeforeDate" }],
         "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingList" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
@@ -129,7 +129,7 @@
     "/data/insulin": {
       "get": {
         "operationId": "ListInsulinDoses", "tags": ["Data"], "summary": "The site's insulin doses, newest first",
-        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/Before" }, { "$ref": "#/components/parameters/BeforeId" }, { "$ref": "#/components/parameters/BeforeDate" }],
         "responses": { "200": { "$ref": "#/components/responses/InsulinDoseList" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
@@ -157,7 +157,7 @@
     "/data/food": {
       "get": {
         "operationId": "ListFoodIntakes", "tags": ["Data"], "summary": "The site's food intakes, newest first",
-        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/Before" }, { "$ref": "#/components/parameters/BeforeId" }, { "$ref": "#/components/parameters/BeforeDate" }],
         "responses": { "200": { "$ref": "#/components/responses/FoodIntakeList" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
@@ -550,6 +550,9 @@
       "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
       "Limit": { "name": "limit", "in": "query", "description": "At most 1000", "schema": { "type": "integer", "format": "int64" } },
       "Skip": { "name": "skip", "in": "query", "description": "How many to skip, at most 32000", "schema": { "type": "integer", "format": "int64" } },
+      "Before": { "name": "before", "in": "query", "description": "Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id", "schema": { "type": "integer", "format": "int64" } },
+      "BeforeId": { "name": "before_id", "in": "query", "description": "With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id", "schema": { "type": "string" } },
+      "BeforeDate": { "name": "before_date", "in": "query", "description": "The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id", "schema": { "type": "string", "format": "date" } },
       "NsCollection": { "name": "collection", "in": "path", "required": true, "schema": { "type": "string", "enum": ["entries", "treatments", "devicestatus", "profile", "food", "settings", "activity"] } },
       "NsIdentifier": { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" } },
       "NsCount": { "name": "count", "in": "query", "description": "How many documents, at most 1000", "schema": { "type": "integer", "format": "int64" } },

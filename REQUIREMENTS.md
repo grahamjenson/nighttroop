@@ -714,7 +714,13 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Paging and record counts
 
-- 50 records a page, with Next while there are more. The last page starts at record 32001, also for one further back.
+- 50 records a page.
+- The glucose readings page pages by date, with no limit to how far back:
+  - Older shows the readings older than the last reading on the page. It shows while the page is full.
+  - The date box shows the readings on or before that day, in the site's timezone. It keeps the day it shows.
+  - Readings at the same time show one time each, in the order of their IDs.
+  - Newest goes back to the first page. A page by date shows no "Showing" count and no days above the table.
+- Other pages show Next while there are more. Their last page starts at record 32001, also for one further back.
 - A top box, for all pages:
   - The count ("1 temp target", "2 temp targets"). A device's history counts only that device's statuses.
   - Earliest and latest days, without times, with how long ago: "Today", "Yesterday",
@@ -728,6 +734,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   | `items` | the records |
   | `skip` | at most 32000; negative becomes 0 |
   | `limit` | default 50; at most 1000 |
+  | `before` | a time in ms: the records older than it, for the data kinds and a device's statuses |
+  | `before_id` | with `before`, the ID of a record at that time: the records at that time with a lower ID are also older |
+  | `before_date` | a day, `2026-11-01`, in the settings' timezone: the records on or before it. It replaces `before` |
   | `total`, `earliest_at`, `latest_at` | for these data kinds |
 
 #### Data kinds
@@ -1256,6 +1265,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - An effective profile switch is AAPS's Note with a `profileJson`.
 - Other `icfg` fields are left out.
+- A profile switch with an `icfg` returns it in its `profileJson` as `iCfg`. AAPSClient reads the insulin from there.
+- If an effective profile switch has no `icfg`, its `profileJson` `iCfg` is kept as its `icfg`.
 - Loop finds its own treatments by `syncIdentifier`, though an Omnipod dose's `_id` is a hash.
 - LoopFollow shows an `automatic` bolus as an SMB, and leaves it out of its bolus stats.
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
@@ -1339,7 +1350,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - No `profileJson` (careportal, T1DCarer): comes back with none. AAPS switches to its own profile of that name.
 - `percentage`: a multiplier of the profile's insulin (120 as 1.2), returned as sent.
-- `timeshift`: minutes, or ms when sent with an `originalProfileName` (AAPS). Returned as sent.
+- `timeshift`: minutes, or ms when sent with an `originalProfileName` (AAPS). API v1 returns it as sent.
+- API v3 and its storage socket return every `timeshift` in ms, because AAPS reads it in ms.
 
 #### Event types
 
@@ -1429,6 +1441,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
 - One IP (an IPv6 /64): maximum 10 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
   next gets 429.
+- When the server stops, every socket closes before the last backup. No socket write gets to a site DB after it.
 
 #### Authorize
 
@@ -1747,7 +1760,7 @@ Every 10 minutes, the server truncates every site:
 #### Push registrations
 
 - Each identity, of any role, registers the apps on its devices for pushes at `/settings/push-registrations` (JSON
-  API), with:
+  API). If it is read only or a clinician, it cannot register `loop` or `trio` (403). Each registration has:
   - App: `loop`, `trio`, `loopfollow` or `t1dcarer`.
   - Provider: `apns` or `fcm`.
   - Bundle ID, and if it is a production build.
@@ -1787,6 +1800,7 @@ Every 10 minutes, the server truncates every site:
 - Only an identity that can write treatments sends one. Its sender is that identity, not its IP address.
 - Pushed as Nightscout does, to the Loop that last uploaded its profile, with the site's push credential for its
   bundle ID, expiring in 5 minutes. Answer: 200 `OK`.
+- Only a Loop registered by an enabled identity that can change the site's data gets the command.
 - Remote carbs with a `foodType` (e.g. 🍕) are pushed with it as Loop's `food-type`.
 - Refused (400), saying which:
   - A bolus over 30 U.

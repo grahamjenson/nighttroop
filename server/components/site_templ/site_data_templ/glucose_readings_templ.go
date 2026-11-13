@@ -191,7 +191,7 @@ func percentOr(fraction *float64, unset string) string {
 }
 
 // GlucoseReadingsTable shows one page of readings, newest first, with buttons to the pages either side
-func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64, limit int64) templ.Component {
+func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -233,7 +233,7 @@ func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64,
 			Title:       i18n.T(ctx, "site.data.glucose_readings.title"),
 			Description: i18n.T(ctx, "site.data.glucose_readings.about"),
 			Action:      addmodal.Open("site--glucose--add", "/data/glucose/new", i18n.T(ctx, "site.data.glucose_readings.add")),
-			Above:       glucoseAbove(skip),
+			Above:       glucoseAbove(skip, before),
 			Modal:       true,
 			Table: listpage.TableProps{
 				ID:      "glucoseReadingsTable",
@@ -244,7 +244,7 @@ func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64,
 					{Label: i18n.T(ctx, "site.data.glucose_readings.direction")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--glucose", Path: "/data/glucose", Count: len(readings), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--glucose", Path: "/data/glucose", Count: len(readings), Skip: skip, Limit: limit}, before, readings, func(row *sitemodels.SiteGlucoseReading) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -254,7 +254,7 @@ func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64,
 }
 
 // glucoseAbove is the glucose readings' totals, then, on their first page, the last days' summaries
-func glucoseAbove(skip int64) templ.Component {
+func glucoseAbove(skip int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -275,7 +275,7 @@ func glucoseAbove(skip int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if skip == 0 {
+		if skip == 0 && before == nil {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"site--glucose--days-loading\" hx-get=\"/data/summary-daily?limit=10\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

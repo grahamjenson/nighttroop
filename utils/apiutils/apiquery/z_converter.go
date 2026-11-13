@@ -7,14 +7,23 @@ func QueryValuesToQuery(source QueryValues) Query {
 	var apiqueryQuery Query
 	apiqueryQuery.Limit = GetLimitInt64(source)
 	apiqueryQuery.Skip = GetSkipInt64(source)
+	if source.Before != nil {
+		xint64 := int64(*source.Before)
+		apiqueryQuery.Before = &xint64
+	}
+	apiqueryQuery.BeforeID = GetID(source.BeforeID)
+	if source.BeforeDate != nil {
+		xstring := *source.BeforeDate
+		apiqueryQuery.BeforeDate = &xstring
+	}
 	if source.Device != nil {
-		xstring := *source.Device
-		apiqueryQuery.Device = &xstring
+		xstring2 := *source.Device
+		apiqueryQuery.Device = &xstring2
 	}
 	apiqueryQuery.Hours = GetHoursInt64(source)
 	if source.Order != nil {
-		xstring2 := *source.Order
-		apiqueryQuery.Order = &xstring2
+		xstring3 := *source.Order
+		apiqueryQuery.Order = &xstring3
 	}
 	apiqueryQuery.Type = GetType(source)
 	apiqueryQuery.Search = GetSearch(source)

@@ -1,0 +1,61 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// The virtual connector, backfilled, fills a few days of glucose: from the midnight a day before its first reading
+CLICK #site--settings-menu
+CLICK #site--nav--menu--connectors
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+
+// The first page says which readings it shows, and has a date to jump to and Older, but not Newest
+GOTO /data/glucose?limit=20
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 20
+ASSERT_VISIBLE #site--glucose--date
+ASSERT_TEXT_EQUALS #site--glucose--next Older
+ASSERT_NOT_VISIBLE #site--glucose--newest
+ASSERT_VISIBLE #site--glucose--days
+SCREENSHOT glucose_first_page
+
+// Older shows the readings older than the last one shown, by its time, with no skip, and Newest goes back
+CLICK #site--glucose--next
+ASSERT_STATUS 200
+ASSERT_PATH /data/glucose
+ASSERT_COUNT #glucoseReadingsTable tbody tr:not([data-empty]) 20
+ASSERT_VISIBLE #site--glucose--newest
+ASSERT_NOT_VISIBLE "Showing 1 to 20"
+// Only the first page has the last days above it
+ASSERT_NOT_VISIBLE #site--glucose--days
+ASSERT_VISIBLE #site--glucose--next
+SCREENSHOT glucose_older_page
+CLICK #site--glucose--next
+ASSERT_STATUS 200
+ASSERT_COUNT #glucoseReadingsTable tbody tr:not([data-empty]) 20
+
+CLICK #site--glucose--newest
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 20
+ASSERT_NOT_VISIBLE #site--glucose--newest
+
+// A date jumps to the readings on or before that day, yesterday's from its end, and keeps the day it shows
+INPUT #site--glucose--date {{ date -1 }}
+WAIT_VISIBLE 5 #site--glucose--newest
+ASSERT_VISIBLE #site--glucose--date[value="{{ date -1 }}"]
+ASSERT_COUNT #glucoseReadingsTable tbody tr:not([data-empty]) 20
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> text=/23:5\d/
+ASSERT_VISIBLE #site--glucose--next
+SCREENSHOT glucose_jump_to_date
+
+// A day before the first reading has none, and no Older
+INPUT #site--glucose--date {{ date -3 }}
+WAIT_VISIBLE 5 #site--glucose--empty
+ASSERT_VISIBLE #site--glucose--date[value="{{ date -3 }}"]
+ASSERT_NOT_VISIBLE #site--glucose--next
+ASSERT_VISIBLE #site--glucose--newest

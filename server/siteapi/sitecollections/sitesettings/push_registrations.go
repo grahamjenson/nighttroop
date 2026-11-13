@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/push"
@@ -65,6 +66,10 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 		Token: *model.Token, Production: model.Production}
 	if err := push.CheckRegistration(registration); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err)
+	}
+	// Loop and Trio take remote commands from their registration, so one that cannot change the site's data registers neither
+	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) && !can.SeeDeviceTokens(siteContext.IdentityModel) {
+		return nil, apiutils.ErrForbidden
 	}
 	q, err := collectionTx.Control()
 	if err != nil {

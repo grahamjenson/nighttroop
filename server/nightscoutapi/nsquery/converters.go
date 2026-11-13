@@ -31,6 +31,7 @@ type ToSearchParams interface {
 	// GLUCOSE READINGS
 	//////
 
+	// goverter:ignore Before BeforeID
 	GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams
 	// An entry's find[device] is its device
 	// goverter:map NameEq DeviceEq
@@ -41,6 +42,7 @@ type ToSearchParams interface {
 	// Activities
 	//////
 
+	// goverter:ignore Before BeforeID
 	ActivityAll(source Query) sitedb.AllActivitiesParams
 	ActivitySearch(source Query) sitedb.SearchActivitiesParams
 	ActivityAscending(source Query) sitedb.ActivityAscendingIDsParams
@@ -64,6 +66,7 @@ type ToSearchParams interface {
 	// FoodIntake
 	//////
 
+	// goverter:ignore Before BeforeID
 	FoodIntakeAll(source Query) sitedb.AllFoodIntakesParams
 	FoodIntakeSearch(source Query) sitedb.SearchFoodIntakesParams
 
@@ -71,6 +74,7 @@ type ToSearchParams interface {
 	// Event Group
 	///////
 
+	// goverter:ignore Before BeforeID
 	EventGroupAll(source Query) sitedb.AllEventGroupsParams
 	EventGroupSearch(source Query) sitedb.SearchEventGroupsParams
 	EventGroupAscending(source Query) sitedb.EventGroupAscendingIDsParams

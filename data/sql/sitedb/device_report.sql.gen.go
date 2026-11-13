@@ -360,18 +360,28 @@ func (q *Queries) DeviceReportTotals(ctx context.Context, arg DeviceReportTotals
 const deviceReportsForDevice = `-- name: DeviceReportsForDevice :many
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, pump_id, pump_suspended, pump_bolusing, override_json, pump_json, uploader_json, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE deleted_at IS NULL AND created_by_device_name = ?1
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type DeviceReportsForDeviceParams struct {
-	Device *string
-	Skip   int64
-	Limit  int64
+	Device   *string
+	Before   *int64
+	BeforeID *string
+	Skip     int64
+	Limit    int64
 }
 
 func (q *Queries) DeviceReportsForDevice(ctx context.Context, arg DeviceReportsForDeviceParams) ([]*DeviceReport, error) {
-	rows, err := q.query(ctx, q.deviceReportsForDeviceStmt, deviceReportsForDevice, arg.Device, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.deviceReportsForDeviceStmt, deviceReportsForDevice,
+		arg.Device,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

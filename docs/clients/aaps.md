@@ -194,8 +194,10 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | Works | `sync_v3.http`, `flow_v3.http` |
 | Bolus Wizard bolus and carbs: two Meal Boluses at the same `date` | Fixed: two treatments, each with its own identifier. The bolus keeps its insulin (Nightscout replaces it with the carbs). A delete of the carbs deletes only them (was merged, so it deleted the bolus) | `wizard_dedup_v3.http` |
 | Bolus `icfg` and `isBasalInsulin` (without them, AAPS uses its settings' insulin and a bolus is not basal: `BolusExtension.kt` `NSBolus.toBolus`) | Works. Nighttroop summaries still count a basal insulin bolus as a bolus (TODO P3) | `sync_v3.http` |
+| Profile switch and effective profile switch `profileJson` `iCfg` (AAPSClient reads the insulin from it: `pureProfileFromJson`) | Fixed: returned from the switch's `icfg`, or kept from the `profileJson` when there is no `icfg` (was left out) | `profile_switch_icfg.http` |
 | Bolus Wizard `bolusCalculatorResult` (AAPS restores the record from it, or drops the record: `TreatmentMapper.kt:270`) | Works: returned exactly as sent. Left out if not JSON or over 4096 characters | `bolus_wizard.http` |
 | Bolus Wizard with no BG (`glucose` 0) | Fixed: kept without a glucose reading (was 400, and AAPS does not send it again) | `bolus_wizard.http` |
+| Profile Switch from the site or the careportal (`timeshift` in minutes) | Fixed: API v3 and the storage socket give it in ms, as AAPS reads it (a 60 minute shift was read as 60 ms) | `profile_switch_timeshift.http` |
 | `units` as AAPS writes them | Works: a device added for AAPS writes `mg/dl`. Other devices write `mg/dL`, which AAPS also reads as mg/dL | `bolus_wizard.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), and its update | Works: kept as a multiplier | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Temp basal `type` (for example `PUMP_SUSPEND`) | Works: a follower shows a suspended pump | `sync_v3.http` |

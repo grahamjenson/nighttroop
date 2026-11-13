@@ -199,6 +199,9 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 		if query == nil {
 			query = &apiutils.Query{}
 		}
+		if query.BeforeDate != nil {
+			query.BeforeDay(siteContext.GetSettings().Location())
+		}
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		models, herr := search(r.Context(), tx, collection, query, siteContext)
