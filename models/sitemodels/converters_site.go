@@ -32,10 +32,12 @@ type SiteConverter interface {
 
 	// goverter:map Password PasswordEnc
 	// goverter:map UrlOrUsername UrlOrUsernameEnc
+	// goverter:ignore UrlHostMac
 	ConnectorToUpdate(source *Connector) controldb.UpdateConnectorParams
 
 	// goverter:map Password PasswordEnc
 	// goverter:map UrlOrUsername UrlOrUsernameEnc
+	// goverter:ignore UrlHostMac
 	ConnectorToCreate(source *Connector) controldb.CreateConnectorParams
 
 	///////

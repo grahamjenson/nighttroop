@@ -133,7 +133,7 @@ func TestLoginRateLimitedSaysToWait(t *testing.T) {
 			w := httptest.NewRecorder()
 			POSTLogin(nil, testConfig)(w, r)
 			require.Equal(t, http.StatusTooManyRequests, w.Code)
-			require.Contains(t, w.Body.String(), "Too many login attempts. Wait a minute, then try again.")
+			require.Contains(t, w.Body.String(), "Too many sign in attempts. Wait a minute, then try again.")
 		})
 	}
 }

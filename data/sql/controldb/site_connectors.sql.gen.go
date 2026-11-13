@@ -20,9 +20,11 @@ INSERT INTO site_connectors (
     url_or_username_enc,
     password_enc,
     region,
-    enabled
+    enabled,
+    url_host_mac
 )
 VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -39,6 +41,7 @@ type CreateConnectorParams struct {
 	PasswordEnc      *string
 	Region           *string
 	Enabled          bool
+	UrlHostMac       *string
 }
 
 func (q *Queries) CreateConnector(ctx context.Context, arg CreateConnectorParams) error {
@@ -49,6 +52,7 @@ func (q *Queries) CreateConnector(ctx context.Context, arg CreateConnectorParams
 		arg.PasswordEnc,
 		arg.Region,
 		arg.Enabled,
+		arg.UrlHostMac,
 	)
 	return err
 }
@@ -58,6 +62,7 @@ const deleteConnector = `-- name: DeleteConnector :exec
 UPDATE site_connectors SET 
     enabled = 0,
     url_or_username_enc = NULL,
+    url_host_mac = NULL,
     password_enc = NULL,
     previous_sync_errors = NULL,
     first_successful_sync_time = NULL,
@@ -109,7 +114,7 @@ func (q *Queries) FinishConnectorBackfill(ctx context.Context, arg FinishConnect
 }
 
 const getAllConnectorsForSite = `-- name: GetAllConnectorsForSite :many
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_connectors where site_id = ?
+SELECT site_id, type, url_or_username_enc, password_enc, url_host_mac, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_connectors where site_id = ?
 `
 
 type GetAllConnectorsForSiteParams struct {
@@ -130,6 +135,7 @@ func (q *Queries) GetAllConnectorsForSite(ctx context.Context, arg GetAllConnect
 			&i.Type,
 			&i.UrlOrUsernameEnc,
 			&i.PasswordEnc,
+			&i.UrlHostMac,
 			&i.Region,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -175,7 +181,7 @@ func (q *Queries) GetAllConnectorsForSite(ctx context.Context, arg GetAllConnect
 }
 
 const getConnector = `-- name: GetConnector :one
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_connectors where type = ? AND site_id = ? LIMIT 1
+SELECT site_id, type, url_or_username_enc, password_enc, url_host_mac, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_connectors where type = ? AND site_id = ? LIMIT 1
 `
 
 type GetConnectorParams struct {
@@ -191,6 +197,7 @@ func (q *Queries) GetConnector(ctx context.Context, arg GetConnectorParams) (*Si
 		&i.Type,
 		&i.UrlOrUsernameEnc,
 		&i.PasswordEnc,
+		&i.UrlHostMac,
 		&i.Region,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -228,7 +235,7 @@ func (q *Queries) GetConnector(ctx context.Context, arg GetConnectorParams) (*Si
 const getConnectorsToRun = `-- name: GetConnectorsToRun :many
 
 
-SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.backfill_started_at, us.last_backfill_from, us.last_backfill_to, us.last_backfill_finished_at, us.last_backfill_duration, us.last_backfill_records, us.last_backfill_error, us.total_backfills, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.total_records, us.last_sync_records, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_connectors us
+SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.url_host_mac, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.backfill_started_at, us.last_backfill_from, us.last_backfill_to, us.last_backfill_finished_at, us.last_backfill_duration, us.last_backfill_records, us.last_backfill_error, us.total_backfills, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.total_records, us.last_sync_records, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_connectors us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
@@ -264,6 +271,7 @@ func (q *Queries) GetConnectorsToRun(ctx context.Context) ([]*SiteConnector, err
 			&i.Type,
 			&i.UrlOrUsernameEnc,
 			&i.PasswordEnc,
+			&i.UrlHostMac,
 			&i.Region,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -309,7 +317,7 @@ func (q *Queries) GetConnectorsToRun(ctx context.Context) ([]*SiteConnector, err
 }
 
 const searchConnectors = `-- name: SearchConnectors :many
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_connectors
+SELECT site_id, type, url_or_username_enc, password_enc, url_host_mac, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_connectors
 ORDER BY last_failed_sync IS NULL, last_failed_sync DESC, last_attempted_sync DESC, site_id, type
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
@@ -334,6 +342,7 @@ func (q *Queries) SearchConnectors(ctx context.Context, arg SearchConnectorsPara
 			&i.Type,
 			&i.UrlOrUsernameEnc,
 			&i.PasswordEnc,
+			&i.UrlHostMac,
 			&i.Region,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -365,6 +374,44 @@ func (q *Queries) SearchConnectors(ctx context.Context, arg SearchConnectorsPara
 			&i.FailureEma,
 			&i.LastSyncDuration,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sharedNightscoutHosts = `-- name: SharedNightscoutHosts :many
+SELECT url_host_mac, COUNT(*) AS connectors, group_concat(site_id, ',') AS site_ids FROM site_connectors
+WHERE url_host_mac IS NOT NULL
+GROUP BY url_host_mac HAVING COUNT(*) > 1
+ORDER BY connectors DESC, url_host_mac
+LIMIT 100
+`
+
+type SharedNightscoutHostsRow struct {
+	UrlHostMac *string
+	Connectors int64
+	SiteIds    string
+}
+
+// Nightscout hosts more than one connector syncs from, the most used first, with their sites
+func (q *Queries) SharedNightscoutHosts(ctx context.Context) ([]*SharedNightscoutHostsRow, error) {
+	rows, err := q.query(ctx, q.sharedNightscoutHostsStmt, sharedNightscoutHosts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*SharedNightscoutHostsRow
+	for rows.Next() {
+		var i SharedNightscoutHostsRow
+		if err := rows.Scan(&i.UrlHostMac, &i.Connectors, &i.SiteIds); err != nil {
 			return nil, err
 		}
 		items = append(items, &i)
@@ -410,18 +457,20 @@ UPDATE site_connectors SET
     password_enc = COALESCE(?1, password_enc),
     enabled =  COALESCE(?2, enabled),
     url_or_username_enc = COALESCE(?3, url_or_username_enc),
-    region = COALESCE(?4, region),
+    url_host_mac = COALESCE(?4, url_host_mac),
+    region = COALESCE(?5, region),
     -- New settings get a fresh first sync, and old errors no longer apply
     first_successful_sync_time = NULL,
     previous_sync_errors = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
-WHERE type = ?5 AND site_id = ?6
+WHERE type = ?6 AND site_id = ?7
 `
 
 type UpdateConnectorParams struct {
 	PasswordEnc      *string
 	Enabled          bool
 	UrlOrUsernameEnc *string
+	UrlHostMac       *string
 	Region           *string
 	Type             consts.ConnectorType
 	SiteID           string
@@ -432,6 +481,7 @@ func (q *Queries) UpdateConnector(ctx context.Context, arg UpdateConnectorParams
 		arg.PasswordEnc,
 		arg.Enabled,
 		arg.UrlOrUsernameEnc,
+		arg.UrlHostMac,
 		arg.Region,
 		arg.Type,
 		arg.SiteID,

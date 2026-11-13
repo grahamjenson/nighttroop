@@ -24,6 +24,50 @@ const (
 	NsTokenScopes     = "nsToken.Scopes"
 )
 
+// Defines values for EventGroupType.
+const (
+	GroupAnnouncement      EventGroupType = "Announcement"
+	GroupBGCheck           EventGroupType = "BG Check"
+	GroupBolus             EventGroupType = "Bolus"
+	GroupBolusWizard       EventGroupType = "Bolus Wizard"
+	GroupCalibration       EventGroupType = "Calibration"
+	GroupCannulaFill       EventGroupType = "Cannula Fill"
+	GroupCarbCorrection    EventGroupType = "Carb Correction"
+	GroupComboBolus        EventGroupType = "Combo Bolus"
+	GroupCorrectionBolus   EventGroupType = "Correction Bolus"
+	GroupExercise          EventGroupType = "Exercise"
+	GroupExternalInsulin   EventGroupType = "External Insulin"
+	GroupInsulinChange     EventGroupType = "Insulin Change"
+	GroupMealBolus         EventGroupType = "Meal Bolus"
+	GroupNote              EventGroupType = "Note"
+	GroupPrime             EventGroupType = "Prime"
+	GroupProfileSwitch     EventGroupType = "Profile Switch"
+	GroupPumpBatteryChange EventGroupType = "Pump Battery Change"
+	GroupQuestion          EventGroupType = "Question"
+	GroupReservoirChange   EventGroupType = "Reservoir Change"
+	GroupSMB               EventGroupType = "SMB"
+	GroupSensorChange      EventGroupType = "Sensor Change"
+	GroupSensorStart       EventGroupType = "Sensor Start"
+	GroupSensorStop        EventGroupType = "Sensor Stop"
+	GroupSiteChange        EventGroupType = "Site Change"
+	GroupSnackBolus        EventGroupType = "Snack Bolus"
+	GroupTempBasal         EventGroupType = "Temp Basal"
+	GroupTemporaryOverride EventGroupType = "Temporary Override"
+	GroupTemporaryTarget   EventGroupType = "Temporary Target"
+)
+
+// Defines values for EventKind.
+const (
+	ActivityId          EventKind = "activity_id"
+	FoodIntakeId        EventKind = "food_intake_id"
+	GlucoseReadingId    EventKind = "glucose_reading_id"
+	InsulinDoseId       EventKind = "insulin_dose_id"
+	NotificationEventId EventKind = "notification_event_id"
+	ProfileSwitchId     EventKind = "profile_switch_id"
+	TempBasalId         EventKind = "temp_basal_id"
+	TempTargetId        EventKind = "temp_target_id"
+)
+
 // Defines values for SummaryPeriodPeriod.
 const (
 	Day       SummaryPeriodPeriod = "day"
@@ -109,6 +153,79 @@ type Error struct {
 	Message *string `json:"message,omitempty"`
 	Status  *int    `json:"status,omitempty"`
 }
+
+// EventChoice An event that can be put in a group
+type EventChoice struct {
+	// Amount A reading's glucose or a temp target's low target, in the units of the identity's settings; a dose's U; a food's carbs in g; a temp basal's U/hr
+	Amount *float64 `json:"amount"`
+
+	// Detail What else tells it apart: a reading's or dose's type, a food's or profile's name, an activity's name or type, a notification's title, or a temp target's high target in mg/dL
+	Detail *string `json:"detail"`
+
+	// Id The event's ID, sent as the group's field named by kind
+	Id string `json:"id"`
+
+	// Kind A kind of event, named by the event group's field for its ID
+	Kind EventKind `json:"kind"`
+
+	// Minutes How long a temp basal, temp target, profile switch or activity lasts
+	Minutes    *int64 `json:"minutes"`
+	OccurredAt int64  `json:"occurred_at"`
+
+	// Picked Whether it is in the group of group_id
+	Picked bool `json:"picked"`
+}
+
+// EventGroup defines model for EventGroup.
+type EventGroup struct {
+	ActivityId            *string `json:"activity_id"`
+	CreatedAt             *int64  `json:"created_at,omitempty"`
+	CreatedByAppName      *string `json:"created_by_app_name,omitempty"`
+	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
+	CreatedByIdentityName *string `json:"created_by_identity_name,omitempty"`
+
+	// DurationMinutes Set when creating; an edit does not change it
+	DurationMinutes  *int64          `json:"duration_minutes"`
+	FoodIntake       *FoodIntake     `json:"food_intake,omitempty"`
+	FoodIntakeId     *string         `json:"food_intake_id"`
+	GlucoseReading   *GlucoseReading `json:"glucose_reading,omitempty"`
+	GlucoseReadingId *string         `json:"glucose_reading_id"`
+
+	// GroupType The treatment's eventType: one of EventGroupType when the site adds it, any the Nightscout API has when an app uploads it
+	GroupType           *string      `json:"group_type,omitempty"`
+	Id                  *string      `json:"id,omitempty"`
+	InsulinDose         *InsulinDose `json:"insulin_dose,omitempty"`
+	InsulinDoseId       *string      `json:"insulin_dose_id"`
+	Notes               *string      `json:"notes,omitempty"`
+	NotificationEventId *string      `json:"notification_event_id"`
+
+	// OccurredAt Now, if not sent when creating
+	OccurredAt      *int64  `json:"occurred_at,omitempty"`
+	ProfileSwitchId *string `json:"profile_switch_id"`
+
+	// PumpId The pump the app named, as AAPS does on every treatment; the site does not set it
+	PumpId     *string `json:"pump_id"`
+	PumpSerial *string `json:"pump_serial"`
+	PumpType   *string `json:"pump_type"`
+	Reason     *string `json:"reason,omitempty"`
+
+	// SensorCode A sensor change's sensor code, as xDrip+ sends it
+	SensorCode            *string     `json:"sensor_code"`
+	TempBasal             *TempBasal  `json:"temp_basal,omitempty"`
+	TempBasalId           *string     `json:"temp_basal_id"`
+	TempTarget            *TempTarget `json:"temp_target,omitempty"`
+	TempTargetId          *string     `json:"temp_target_id"`
+	TransmitterId         *string     `json:"transmitter_id"`
+	UpdatedAt             *int64      `json:"updated_at,omitempty"`
+	UpdatedByIdentityName *string     `json:"updated_by_identity_name,omitempty"`
+	UtcOffsetMinutes      *int64      `json:"utc_offset_minutes,omitempty"`
+}
+
+// EventGroupType A type of group the site can add: a Nightscout treatment's eventType. A change (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir Change, Pump Battery Change) has no events.
+type EventGroupType string
+
+// EventKind A kind of event, named by the event group's field for its ID
+type EventKind string
 
 // FoodIntake defines model for FoodIntake.
 type FoodIntake struct {
@@ -424,6 +541,56 @@ type SummaryPeriod struct {
 // SummaryPeriodPeriod defines model for SummaryPeriod.Period.
 type SummaryPeriodPeriod string
 
+// TempBasal defines model for TempBasal.
+type TempBasal struct {
+	CreatedAt             *int64  `json:"created_at,omitempty"`
+	CreatedByAppName      *string `json:"created_by_app_name,omitempty"`
+	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
+	CreatedByIdentityName *string `json:"created_by_identity_name,omitempty"`
+	DurationMinutes       *int64  `json:"duration_minutes,omitempty"`
+	Id                    *string `json:"id,omitempty"`
+
+	// Multiplier Times the scheduled basal at its start, so 0.5 is half
+	Multiplier *float64 `json:"multiplier"`
+	Notes      *string  `json:"notes,omitempty"`
+
+	// OccurredAt Now, if not sent when creating
+	OccurredAt *int64 `json:"occurred_at,omitempty"`
+
+	// Rate U/hr while it runs; 0 is a suspended basal
+	Rate                  *float64 `json:"rate"`
+	Reason                *string  `json:"reason,omitempty"`
+	UpdatedAt             *int64   `json:"updated_at,omitempty"`
+	UpdatedByIdentityName *string  `json:"updated_by_identity_name,omitempty"`
+	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes,omitempty"`
+}
+
+// TempTarget defines model for TempTarget.
+type TempTarget struct {
+	CreatedAt             *int64  `json:"created_at,omitempty"`
+	CreatedByAppName      *string `json:"created_by_app_name,omitempty"`
+	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
+	CreatedByIdentityName *string `json:"created_by_identity_name,omitempty"`
+	DurationMinutes       *int64  `json:"duration_minutes,omitempty"`
+
+	// HighTarget In units
+	HighTarget              *float64 `json:"high_target,omitempty"`
+	Id                      *string  `json:"id,omitempty"`
+	InsulinNeedsScaleFactor *float64 `json:"insulin_needs_scale_factor"`
+
+	// LowTarget In units
+	LowTarget *float64 `json:"low_target,omitempty"`
+	Notes     *string  `json:"notes,omitempty"`
+
+	// OccurredAt Now, if not sent when creating
+	OccurredAt            *int64  `json:"occurred_at,omitempty"`
+	Reason                *string `json:"reason,omitempty"`
+	Units                 *Units  `json:"units,omitempty"`
+	UpdatedAt             *int64  `json:"updated_at,omitempty"`
+	UpdatedByIdentityName *string `json:"updated_by_identity_name,omitempty"`
+	UtcOffsetMinutes      *int64  `json:"utc_offset_minutes,omitempty"`
+}
+
 // Units defines model for Units.
 type Units string
 
@@ -488,6 +655,33 @@ type Skip = int64
 type Deleted struct {
 	// Status deleted
 	Status *string `json:"status,omitempty"`
+}
+
+// EventChoiceList defines model for EventChoiceList.
+type EventChoiceList struct {
+	Result *[]EventChoice `json:"result,omitempty"`
+	Status *int           `json:"status,omitempty"`
+}
+
+// EventGroupList defines model for EventGroupList.
+type EventGroupList struct {
+	Result *struct {
+		EarliestAt *int64        `json:"earliest_at"`
+		Items      *[]EventGroup `json:"items,omitempty"`
+		LatestAt   *int64        `json:"latest_at"`
+
+		// Limit 50 unless the request asks for another, at most 1000
+		Limit *int64 `json:"limit,omitempty"`
+		Skip  *int64 `json:"skip,omitempty"`
+		Total *int64 `json:"total,omitempty"`
+	} `json:"result,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+
+// EventGroupResult defines model for EventGroupResult.
+type EventGroupResult struct {
+	Result *EventGroup `json:"result,omitempty"`
+	Status *int        `json:"status,omitempty"`
 }
 
 // FoodIntakeList defines model for FoodIntakeList.
@@ -621,6 +815,9 @@ type PasskeyOptions struct {
 type PasskeySignedIn struct {
 	Redirect *string `json:"redirect,omitempty"`
 }
+
+// EventGroupBody defines model for EventGroupBody.
+type EventGroupBody = EventGroup
 
 // FoodIntakeBody defines model for FoodIntakeBody.
 type FoodIntakeBody = FoodIntake
@@ -769,6 +966,26 @@ type NsV3ReadParams struct {
 	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
 }
 
+// ListEventGroupsParams defines parameters for ListEventGroups.
+type ListEventGroupsParams struct {
+	// Limit At most 1000
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Skip How many to skip, at most 32000
+	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+}
+
+// ListEventGroupChoicesParams defines parameters for ListEventGroupChoices.
+type ListEventGroupChoicesParams struct {
+	GroupType EventGroupType `form:"group_type" json:"group_type"`
+
+	// OccurredAt The time to find events near, in ms; now when not sent
+	OccurredAt *int64 `form:"occurred_at,omitempty" json:"occurred_at,omitempty"`
+
+	// GroupId The group being edited
+	GroupId *string `form:"group_id,omitempty" json:"group_id,omitempty"`
+}
+
 // ListFoodIntakesParams defines parameters for ListFoodIntakes.
 type ListFoodIntakesParams struct {
 	// Limit At most 1000
@@ -878,6 +1095,12 @@ type NsV3PatchJSONRequestBody = NsDocument
 
 // NsV3ReplaceJSONRequestBody defines body for NsV3Replace for application/json ContentType.
 type NsV3ReplaceJSONRequestBody = NsDocument
+
+// CreateEventGroupJSONRequestBody defines body for CreateEventGroup for application/json ContentType.
+type CreateEventGroupJSONRequestBody = EventGroup
+
+// UpdateEventGroupJSONRequestBody defines body for UpdateEventGroup for application/json ContentType.
+type UpdateEventGroupJSONRequestBody = EventGroup
 
 // CreateFoodIntakeJSONRequestBody defines body for CreateFoodIntake for application/json ContentType.
 type CreateFoodIntakeJSONRequestBody = FoodIntake
@@ -1665,6 +1888,28 @@ type ClientInterface interface {
 
 	NsV3Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListEventGroups request
+	ListEventGroups(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateEventGroupWithBody request with any body
+	CreateEventGroupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateEventGroup(ctx context.Context, body CreateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListEventGroupChoices request
+	ListEventGroupChoices(ctx context.Context, params *ListEventGroupChoicesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteEventGroup request
+	DeleteEventGroup(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetEventGroup request
+	GetEventGroup(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateEventGroupWithBody request with any body
+	UpdateEventGroupWithBody(ctx context.Context, id Id, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateEventGroup(ctx context.Context, id Id, body UpdateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListFoodIntakes request
 	ListFoodIntakes(ctx context.Context, params *ListFoodIntakesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2306,6 +2551,102 @@ func (c *Client) NsV3ReplaceWithBody(ctx context.Context, collection NsCollectio
 
 func (c *Client) NsV3Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV3ReplaceRequest(c.Server, collection, identifier, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListEventGroups(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListEventGroupsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateEventGroupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEventGroupRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateEventGroup(ctx context.Context, body CreateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEventGroupRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListEventGroupChoices(ctx context.Context, params *ListEventGroupChoicesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListEventGroupChoicesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteEventGroup(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteEventGroupRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetEventGroup(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetEventGroupRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateEventGroupWithBody(ctx context.Context, id Id, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateEventGroupRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateEventGroup(ctx context.Context, id Id, body UpdateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateEventGroupRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4705,6 +5046,303 @@ func NewNsV3ReplaceRequestWithBody(server string, collection NsCollection, ident
 	return req, nil
 }
 
+// NewListEventGroupsRequest generates requests for ListEventGroups
+func NewListEventGroupsRequest(server string, params *ListEventGroupsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/data/event-groups")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateEventGroupRequest calls the generic CreateEventGroup builder with application/json body
+func NewCreateEventGroupRequest(server string, body CreateEventGroupJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateEventGroupRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateEventGroupRequestWithBody generates requests for CreateEventGroup with any type of body
+func NewCreateEventGroupRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/data/event-groups")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListEventGroupChoicesRequest generates requests for ListEventGroupChoices
+func NewListEventGroupChoicesRequest(server string, params *ListEventGroupChoicesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/data/event-groups/choices")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "group_type", runtime.ParamLocationQuery, params.GroupType); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if params.OccurredAt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "occurred_at", runtime.ParamLocationQuery, *params.OccurredAt); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.GroupId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "group_id", runtime.ParamLocationQuery, *params.GroupId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteEventGroupRequest generates requests for DeleteEventGroup
+func NewDeleteEventGroupRequest(server string, id Id) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/data/event-groups/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetEventGroupRequest generates requests for GetEventGroup
+func NewGetEventGroupRequest(server string, id Id) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/data/event-groups/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateEventGroupRequest calls the generic UpdateEventGroup builder with application/json body
+func NewUpdateEventGroupRequest(server string, id Id, body UpdateEventGroupJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateEventGroupRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateEventGroupRequestWithBody generates requests for UpdateEventGroup with any type of body
+func NewUpdateEventGroupRequestWithBody(server string, id Id, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/data/event-groups/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListFoodIntakesRequest generates requests for ListFoodIntakes
 func NewListFoodIntakesRequest(server string, params *ListFoodIntakesParams) (*http.Request, error) {
 	var err error
@@ -6255,6 +6893,28 @@ type ClientWithResponsesInterface interface {
 
 	NsV3ReplaceWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3ReplaceResponse, error)
 
+	// ListEventGroupsWithResponse request
+	ListEventGroupsWithResponse(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*ListEventGroupsResponse, error)
+
+	// CreateEventGroupWithBodyWithResponse request with any body
+	CreateEventGroupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEventGroupResponse, error)
+
+	CreateEventGroupWithResponse(ctx context.Context, body CreateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEventGroupResponse, error)
+
+	// ListEventGroupChoicesWithResponse request
+	ListEventGroupChoicesWithResponse(ctx context.Context, params *ListEventGroupChoicesParams, reqEditors ...RequestEditorFn) (*ListEventGroupChoicesResponse, error)
+
+	// DeleteEventGroupWithResponse request
+	DeleteEventGroupWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*DeleteEventGroupResponse, error)
+
+	// GetEventGroupWithResponse request
+	GetEventGroupWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*GetEventGroupResponse, error)
+
+	// UpdateEventGroupWithBodyWithResponse request with any body
+	UpdateEventGroupWithBodyWithResponse(ctx context.Context, id Id, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateEventGroupResponse, error)
+
+	UpdateEventGroupWithResponse(ctx context.Context, id Id, body UpdateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEventGroupResponse, error)
+
 	// ListFoodIntakesWithResponse request
 	ListFoodIntakesWithResponse(ctx context.Context, params *ListFoodIntakesParams, reqEditors ...RequestEditorFn) (*ListFoodIntakesResponse, error)
 
@@ -7206,6 +7866,146 @@ func (r NsV3ReplaceResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsV3ReplaceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListEventGroupsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EventGroupList
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListEventGroupsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListEventGroupsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateEventGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *EventGroupResult
+	JSON409      *Error
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateEventGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateEventGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListEventGroupChoicesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EventChoiceList
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListEventGroupChoicesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListEventGroupChoicesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteEventGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Deleted
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteEventGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteEventGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetEventGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EventGroupResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetEventGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetEventGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateEventGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EventGroupResult
+	JSON409      *Error
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateEventGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateEventGroupResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8306,6 +9106,76 @@ func (c *ClientWithResponses) NsV3ReplaceWithResponse(ctx context.Context, colle
 		return nil, err
 	}
 	return ParseNsV3ReplaceResponse(rsp)
+}
+
+// ListEventGroupsWithResponse request returning *ListEventGroupsResponse
+func (c *ClientWithResponses) ListEventGroupsWithResponse(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*ListEventGroupsResponse, error) {
+	rsp, err := c.ListEventGroups(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListEventGroupsResponse(rsp)
+}
+
+// CreateEventGroupWithBodyWithResponse request with arbitrary body returning *CreateEventGroupResponse
+func (c *ClientWithResponses) CreateEventGroupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEventGroupResponse, error) {
+	rsp, err := c.CreateEventGroupWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEventGroupResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateEventGroupWithResponse(ctx context.Context, body CreateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEventGroupResponse, error) {
+	rsp, err := c.CreateEventGroup(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEventGroupResponse(rsp)
+}
+
+// ListEventGroupChoicesWithResponse request returning *ListEventGroupChoicesResponse
+func (c *ClientWithResponses) ListEventGroupChoicesWithResponse(ctx context.Context, params *ListEventGroupChoicesParams, reqEditors ...RequestEditorFn) (*ListEventGroupChoicesResponse, error) {
+	rsp, err := c.ListEventGroupChoices(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListEventGroupChoicesResponse(rsp)
+}
+
+// DeleteEventGroupWithResponse request returning *DeleteEventGroupResponse
+func (c *ClientWithResponses) DeleteEventGroupWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*DeleteEventGroupResponse, error) {
+	rsp, err := c.DeleteEventGroup(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteEventGroupResponse(rsp)
+}
+
+// GetEventGroupWithResponse request returning *GetEventGroupResponse
+func (c *ClientWithResponses) GetEventGroupWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*GetEventGroupResponse, error) {
+	rsp, err := c.GetEventGroup(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetEventGroupResponse(rsp)
+}
+
+// UpdateEventGroupWithBodyWithResponse request with arbitrary body returning *UpdateEventGroupResponse
+func (c *ClientWithResponses) UpdateEventGroupWithBodyWithResponse(ctx context.Context, id Id, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateEventGroupResponse, error) {
+	rsp, err := c.UpdateEventGroupWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateEventGroupResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateEventGroupWithResponse(ctx context.Context, id Id, body UpdateEventGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEventGroupResponse, error) {
+	rsp, err := c.UpdateEventGroup(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateEventGroupResponse(rsp)
 }
 
 // ListFoodIntakesWithResponse request returning *ListFoodIntakesResponse
@@ -9834,6 +10704,218 @@ func ParseNsV3ReplaceResponse(rsp *http.Response) (*NsV3ReplaceResponse, error) 
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListEventGroupsResponse parses an HTTP response from a ListEventGroupsWithResponse call
+func ParseListEventGroupsResponse(rsp *http.Response) (*ListEventGroupsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListEventGroupsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EventGroupList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateEventGroupResponse parses an HTTP response from a CreateEventGroupWithResponse call
+func ParseCreateEventGroupResponse(rsp *http.Response) (*CreateEventGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateEventGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest EventGroupResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListEventGroupChoicesResponse parses an HTTP response from a ListEventGroupChoicesWithResponse call
+func ParseListEventGroupChoicesResponse(rsp *http.Response) (*ListEventGroupChoicesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListEventGroupChoicesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EventChoiceList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteEventGroupResponse parses an HTTP response from a DeleteEventGroupWithResponse call
+func ParseDeleteEventGroupResponse(rsp *http.Response) (*DeleteEventGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteEventGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Deleted
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetEventGroupResponse parses an HTTP response from a GetEventGroupWithResponse call
+func ParseGetEventGroupResponse(rsp *http.Response) (*GetEventGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetEventGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EventGroupResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateEventGroupResponse parses an HTTP response from a UpdateEventGroupWithResponse call
+func ParseUpdateEventGroupResponse(rsp *http.Response) (*UpdateEventGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateEventGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EventGroupResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -84,7 +84,7 @@ common:
     website_only: "A passkey cannot be added: only an identity that signs in to the website has passkeys."
     not_added: "The passkey could not be added."
     not_kept: "The passkey could not be kept."
-    welcome_over: "This page can no longer add a passkey; log in, then add one on My Account."
+    welcome_over: "This page can no longer add a passkey; sign in, then add one on My Account."
     too_many_attempts: "Too many sign in attempts, try again later."
     not_signed_in: "That passkey could not sign you in."
     not_asked: "A passkey could not be asked for."

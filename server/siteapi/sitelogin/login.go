@@ -385,7 +385,7 @@ func loginTheUserAPI(ctx context.Context, controlDB *db.ControlDB, subdomain str
 }
 
 // tooManyAttempts is what a login refused by the rate limiter says to the API, and site.login.too_many_attempts on the page
-const tooManyAttempts = "Too many login attempts. Wait a minute, then try again."
+const tooManyAttempts = "Too many sign in attempts. Wait a minute, then try again."
 
 func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
 	slog.InfoContext(r.Context(), "Identity Login Failed", "stack", errors.LocalStack())

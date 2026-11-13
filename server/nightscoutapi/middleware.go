@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -58,7 +59,8 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 
 			slog.InfoContext(r.Context(), "JWT and Legacy Token Auth Failed for Nightscout API", "error", err.Error())
 			httputils.SiteUnauthWithinRateLimit(cfg, r)
-			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
+			// In JSON, as every other error is and as Nightscout's 401 is
+			nsutils.WriteError(w, nsutils.ErrMissingCredentials)
 		})
 	}
 }

@@ -146,6 +146,7 @@ type SiteConnector struct {
 	Type                       consts.ConnectorType
 	UrlOrUsernameEnc           *string
 	PasswordEnc                *string
+	UrlHostMac                 *string
 	Region                     *string
 	CreatedAt                  int64
 	UpdatedAt                  int64

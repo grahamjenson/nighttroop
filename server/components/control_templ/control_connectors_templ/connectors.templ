@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/listpage"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
@@ -76,6 +77,7 @@ templ ConnectorsTable(sources []*controlmodels.Connector, skip int64, limit int6
 		ID:          "connectors_table",
 		Title:       i18n.T(ctx, "control.connectors.title"),
 		Description: i18n.T(ctx, "control.connectors.intro"),
+		Above:       sharedHostsLoader(skip),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:     "controlConnectorsTable",
@@ -92,6 +94,55 @@ templ ConnectorsTable(sources []*controlmodels.Connector, skip int64, limit int6
 		for _, source := range sources {
 			@connectorRow(source)
 		}
+	}
+}
+
+// sharedHostsLoader loads the shared Nightscout hosts above the first page of connectors
+templ sharedHostsLoader(skip int64) {
+	if skip == 0 {
+		<div id="control--shared-hosts" hx-get="/connectors/shared-hosts" hx-trigger="load" hx-swap="outerHTML"></div>
+	}
+}
+
+// sharedHostHighlight is over how many connectors a shared host is highlighted, as so many sites syncing from one host
+// may be Nighttroop used as a proxy
+const sharedHostHighlight = 3
+
+func sharedHostClass(host *controlmodels.SharedHost) string {
+	if host.Connectors > sharedHostHighlight {
+		return "bg-amber-100 text-amber-800"
+	}
+	return ""
+}
+
+// SharedHosts shows each Nightscout host more than one connector syncs from, by the end of its MAC, with links to its
+// sites. Hosts with more than three are amber. Nothing shows when no host is shared.
+templ SharedHosts(hosts []*controlmodels.SharedHost) {
+	if len(hosts) > 0 {
+		<section id="control--shared-hosts" class="space-y-2 rounded-xl border border-gray-200 p-4 shadow-sm">
+			<h2 class="font-semibold">{ i18n.T(ctx, "control.connectors.shared_hosts") }</h2>
+			<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "control.connectors.shared_hosts_intro") }</p>
+			@listpage.Table(listpage.TableProps{ID: "controlSharedHostsTable", Static: true, Rows: len(hosts),
+				Columns: []table.Column{{Label: i18n.T(ctx, "control.connectors.host")}, {Label: i18n.T(ctx, "control.connectors.connectors"), Numeric: true}, {Label: i18n.T(ctx, "control.connectors.sites")}}}) {
+				for _, host := range hosts {
+					@table.Row(table.RowProps{ID: "control--shared-host--" + host.ID, Class: sharedHostClass(host)}) {
+						@table.Cell() {
+							<span class="font-mono">{ "…" + host.ID }</span>
+						}
+						@table.Cell(table.NumCell) {
+							{ strconv.FormatInt(host.Connectors, 10) }
+						}
+						@table.Cell(table.CellProps{Class: "space-x-2 whitespace-normal"}) {
+							for _, siteID := range host.SiteIDs {
+								@nav.Link("control--shared-host--site--"+siteID, "/sites/"+siteID, "text-primary underline") {
+									{ siteID }
+								}
+							}
+						}
+					}
+				}
+			}
+		</section>
 	}
 }
 

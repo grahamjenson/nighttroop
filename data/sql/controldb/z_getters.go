@@ -1178,6 +1178,16 @@ func (m *SiteConnector) SetPasswordEnc(v *string) {
 	m.PasswordEnc = v
 }
 
+// GetUrlHostMac returns the UrlHostMac value.
+func (m SiteConnector) GetUrlHostMac() *string {
+	return m.UrlHostMac
+}
+
+// SetUrlHostMac sets the UrlHostMac value and returns the updated SiteConnector.
+func (m *SiteConnector) SetUrlHostMac(v *string) {
+	m.UrlHostMac = v
+}
+
 // GetRegion returns the Region value.
 func (m SiteConnector) GetRegion() *string {
 	return m.Region
@@ -4298,6 +4308,16 @@ func (m *CreateConnectorParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
+// GetUrlHostMac returns the UrlHostMac value.
+func (m CreateConnectorParams) GetUrlHostMac() *string {
+	return m.UrlHostMac
+}
+
+// SetUrlHostMac sets the UrlHostMac value and returns the updated CreateConnectorParams.
+func (m *CreateConnectorParams) SetUrlHostMac(v *string) {
+	m.UrlHostMac = v
+}
+
 // GetType returns the Type value.
 func (m DeleteConnectorParams) GetType() consts.ConnectorType {
 	return m.Type
@@ -4486,6 +4506,16 @@ func (m UpdateConnectorParams) GetUrlOrUsernameEnc() *string {
 // SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated UpdateConnectorParams.
 func (m *UpdateConnectorParams) SetUrlOrUsernameEnc(v *string) {
 	m.UrlOrUsernameEnc = v
+}
+
+// GetUrlHostMac returns the UrlHostMac value.
+func (m UpdateConnectorParams) GetUrlHostMac() *string {
+	return m.UrlHostMac
+}
+
+// SetUrlHostMac sets the UrlHostMac value and returns the updated UpdateConnectorParams.
+func (m *UpdateConnectorParams) SetUrlHostMac(v *string) {
+	m.UrlHostMac = v
 }
 
 // GetRegion returns the Region value.

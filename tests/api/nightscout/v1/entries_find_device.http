@@ -1,0 +1,24 @@
+INCLUDE steps/new_ns_site.steps
+
+// A search of entries by device gives that device's alone, as Nightscout's does, rather than every entry
+
+NAME upload_from_two_devices
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"device": "xDrip-DexcomG6", "type": "sgv", "sgv": 150, "date": {{ itime 10 }}}, {"device": "Trio", "type": "sgv", "sgv": 155, "date": {{ itime 5 }}}]
+ASSERT_STATUS 200
+
+NAME find_device
+GET http://{{ site }}/api/v1/entries.json?find[device]=xDrip-DexcomG6
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 150 "@0.sgv"
+
+NAME find_device_eq
+GET http://{{ site }}/api/v1/entries.json?find[device][$eq]=Trio
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 155 "@0.sgv"

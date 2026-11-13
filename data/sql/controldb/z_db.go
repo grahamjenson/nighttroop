@@ -258,6 +258,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchSitesByLastWriteStmt, err = db.PrepareContext(ctx, searchSitesByLastWrite); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSitesByLastWrite: %w", err)
 	}
+	if q.sharedNightscoutHostsStmt, err = db.PrepareContext(ctx, sharedNightscoutHosts); err != nil {
+		return nil, fmt.Errorf("error preparing query SharedNightscoutHosts: %w", err)
+	}
 	if q.siteExistsStmt, err = db.PrepareContext(ctx, siteExists); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteExists: %w", err)
 	}
@@ -725,6 +728,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchSitesByLastWriteStmt: %w", cerr)
 		}
 	}
+	if q.sharedNightscoutHostsStmt != nil {
+		if cerr := q.sharedNightscoutHostsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing sharedNightscoutHostsStmt: %w", cerr)
+		}
+	}
 	if q.siteExistsStmt != nil {
 		if cerr := q.siteExistsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing siteExistsStmt: %w", cerr)
@@ -962,6 +970,7 @@ type Queries struct {
 	searchSitesStmt                         *sql.Stmt
 	searchSitesByDBSizeStmt                 *sql.Stmt
 	searchSitesByLastWriteStmt              *sql.Stmt
+	sharedNightscoutHostsStmt               *sql.Stmt
 	siteExistsStmt                          *sql.Stmt
 	startConnectorBackfillStmt              *sql.Stmt
 	updateConnectorStmt                     *sql.Stmt
@@ -1070,6 +1079,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchSitesStmt:                         q.searchSitesStmt,
 		searchSitesByDBSizeStmt:                 q.searchSitesByDBSizeStmt,
 		searchSitesByLastWriteStmt:              q.searchSitesByLastWriteStmt,
+		sharedNightscoutHostsStmt:               q.sharedNightscoutHostsStmt,
 		siteExistsStmt:                          q.siteExistsStmt,
 		startConnectorBackfillStmt:              q.startConnectorBackfillStmt,
 		updateConnectorStmt:                     q.updateConnectorStmt,

@@ -78,7 +78,7 @@ func LoopNotification(w http.ResponseWriter, r *http.Request, identity *nsutils.
 	err = push.Send(r.Context(), q, siteContext.Config.Security, registration, alert)
 	switch {
 	case errors.Is(err, push.ErrNoCredential):
-		nsutils.WriteError(w, &nsutils.HTTPError{Status: http.StatusBadRequest, Message: "Loop notification failed: " + err.Error() + ": add Loop's APNs key in Push Certificates"})
+		nsutils.WriteError(w, &nsutils.HTTPError{Status: http.StatusBadRequest, Message: "Loop notification failed: " + err.Error() + ": add Loop's APNs key in Push Credentials"})
 	case errors.Is(err, push.ErrTokenGone):
 		nsutils.WriteError(w, &nsutils.HTTPError{Status: http.StatusGone, Message: "Loop notification failed: Loop is no longer registered on its device"})
 	case err != nil:
