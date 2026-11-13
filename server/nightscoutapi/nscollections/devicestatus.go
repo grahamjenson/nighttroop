@@ -51,8 +51,17 @@ func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Conte
 	return q.CreateDeviceReport(ctx, createParams)
 }
 
-func (c DeviceStatusCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus) (*sitedb.DeviceReport, error) {
-	return first(q.SearchDeviceReports(ctx, sitedb.SearchDeviceReportsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
+// FallbackKey is a device status's date and device
+func (c DeviceStatusCollection) FallbackKey() FallbackKey[nightscoutmodels.DeviceStatus, sitedb.DeviceReport] {
+	return FallbackKey[nightscoutmodels.DeviceStatus, sitedb.DeviceReport]{
+		search: func(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, limit int64) ([]*sitedb.DeviceReport, error) {
+			return q.SearchDeviceReports(ctx, sitedb.SearchDeviceReportsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: limit})
+		},
+		fields: []KeyField[nightscoutmodels.DeviceStatus, sitedb.DeviceReport]{
+			sameDate[nightscoutmodels.DeviceStatus, sitedb.DeviceReport](),
+			sameDevice[nightscoutmodels.DeviceStatus, sitedb.DeviceReport](),
+		},
+	}
 }
 
 func (c DeviceStatusCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.DeviceReport, error) {

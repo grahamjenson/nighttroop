@@ -32,3 +32,23 @@ POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
 B {"type": "sgv", "sgv": "high", "date": {{ itime 0 }}}
 ASSERT_STATUS 400
 ASSERT_EQUALS "Bad or missing body: sgv must be a number (was \"high\")" "@message"
+
+// In a batch, the fields left out and the documents left out show in one client error for the request
+NAME create_devicestatus_batch_left_out
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+H User-Agent: Loop
+B [{"device": "loop://iPhone", "created_at": "{{ time 6 }}", "uploaderBattery": 101},
+   {"device": "loop://iPhone", "created_at": "{{ time 5 }}", "srvModified": 1}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS null "@0.uploaderBattery"
+
+NAME client_errors_batch
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_CONTAINS "Left out uploaderBattery must be between 0 and 100 (was 101)" "@result.items.0.message"
+ASSERT_CONTAINS "Stored 1 devicestatus and left out 1: 1 Field srvModified cannot be modified by the client" "@result.items.0.message"
+ASSERT_EQUALS "Loop" "@result.items.0.attributes.client"

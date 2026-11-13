@@ -56,17 +56,65 @@ type CollectionDB[NS, DM any] interface {
 	Rows(nsModel NS, patched *DM) []sitedb.TableRow
 }
 
-// CollectionDeduplicator is a CollectionDB that looks for a model already stored that a new one repeats, which a
-// create returns instead. It is only asked when the new model has a date, as with nothing to match on it would find
-// the newest.
-type CollectionDeduplicator[NS, DM any] interface {
-	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
+// CollectionKeyed is a CollectionDB whose model sent again is found by its fallback key when no model has its
+// identifier, as Nightscout finds a duplicate (treatment-fallback-key.js, API v3's dedup). Without one, only the
+// identifier finds a duplicate. A create returns the duplicate instead.
+type CollectionKeyed[NS, DM any] interface {
+	FallbackKey() FallbackKey[NS, DM]
 }
 
-// CollectionDateDeduplicator is a CollectionDeduplicator whose duplicate is found by its date even for a model named
-// by an identifier none has, as Nightscout upserts an entry on its date and type whatever its _id
-type CollectionDateDeduplicator interface {
-	DuplicateWhateverItsIdentifier()
+// FallbackKey is the fields a model sent again has the same as the one stored. An app's own id, like xDrip+'s uuid or
+// Loop's syncIdentifier, is the identifier of a model sent without an _id, so the identifier finds it first.
+type FallbackKey[NS, DM any] struct {
+	// search finds at most limit models stored at the sent model's date, with an index of the key's fields
+	search func(q *sitedb.Queries, ctx context.Context, nsModel NS, limit int64) ([]*DM, error)
+	// fields must each be the same, each compared in its own way
+	fields []KeyField[NS, DM]
+	// clientIDs are the apps' ids a stored model can have: one stored with an app's id is found only by its identifier
+	clientIDs []func(stored *DM) *string
+	// whateverItsIdentifier finds a duplicate of a model sent with an identifier no model has too, as Nightscout
+	// upserts an entry on its date and type whatever its _id
+	whateverItsIdentifier bool
+}
+
+// KeyField is a field of a fallback key, and whether the model sent and the one stored have the same value of it
+type KeyField[NS, DM any] struct {
+	name string
+	same func(sent NS, stored *DM) bool
+}
+
+// maxSameTimeDuplicates is how many models a fallback key's search looks through for the one sent again, so a lookup
+// stays cheap however many are stored at one date
+const maxSameTimeDuplicates = 10
+
+// matches is whether the model sent repeats the one stored, by the key
+func (k FallbackKey[NS, DM]) matches(sent NS, stored *DM) bool {
+	for _, clientID := range k.clientIDs {
+		if clientID(stored) != nil {
+			return false
+		}
+	}
+	for _, field := range k.fields {
+		if !field.same(sent, stored) {
+			return false
+		}
+	}
+	return true
+}
+
+// sameDate is a fallback key's date, the same to the millisecond
+func sameDate[NS SharedNSFields, DM SharedDBFields]() KeyField[NS, DM] {
+	return KeyField[NS, DM]{"date", func(sent NS, stored *DM) bool {
+		return sent.GetDate() != nil && *sent.GetDate() == (*stored).GetOccurredAt()
+	}}
+}
+
+// sameDevice is a fallback key's device. A model sent without one has the same as any, as a search without one finds
+// any device's.
+func sameDevice[NS SharedNSFields, DM SharedDBFields]() KeyField[NS, DM] {
+	return KeyField[NS, DM]{"device", func(sent NS, stored *DM) bool {
+		return kept(sent.GetDevice(), (*stored).GetCreatedByDeviceName())
+	}}
 }
 
 // CollectionStored is a CollectionDB that does more once a model created, replaced or refreshed is stored, outside its
@@ -75,7 +123,7 @@ type CollectionStored[NS any] interface {
 	Stored(ctx context.Context, siteContext *httputils.SiteContext, nsModel NS)
 }
 
-// CollectionRefresher is a CollectionDeduplicator whose duplicate takes the values of the model repeating it, as
+// CollectionRefresher is a CollectionDB whose duplicate takes the values of the model repeating it, as
 // Nightscout upserts one sent again, or, for treatments, the values it sends, keeping the rest. It is the duplicate as it is now, and whether it changed, which it must not when
 // the values are the same, so a client sending a batch again changes nothing.
 type CollectionRefresher[NS, DM any] interface {
@@ -95,14 +143,6 @@ type patchValidator[NS, DM any] interface {
 // CollectionTypeDeleter is a CollectionDB that can delete everything of one type; without it that is not implemented
 type CollectionTypeDeleter interface {
 	DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error)
-}
-
-// first is the first row a search found, or nil when it found none
-func first[T any](rows []*T, err error) (*T, error) {
-	if err != nil || len(rows) == 0 {
-		return nil, err
-	}
-	return rows[0], nil
 }
 
 // named is a CollectionDB's name and how it makes its database models into Nightscout models, for it to embed
@@ -205,11 +245,9 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		if duplicateDBModel, httpErr = c.identifiedDuplicate(q, ctx, *identifier); httpErr != nil {
 			return nil, false, httpErr
 		}
-		if duplicateDBModel == nil {
-			duplicateDBModel, err = c.dateDuplicate(q, ctx, nsModel)
-		}
-	} else if deduplicator, ok := any(m).(CollectionDeduplicator[NS, DM]); ok && nsModel.GetDate() != nil {
-		duplicateDBModel, err = deduplicator.GetDuplicate(q, ctx, nsModel)
+	}
+	if duplicateDBModel == nil {
+		duplicateDBModel, err = c.keyDuplicate(q, ctx, nsModel, identifier != nil)
 	}
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
@@ -300,16 +338,6 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 // identifier so the client can delete or replace the document by it. Its only duplicate is the model stored with
 // it; one deleted is removed for good, as a client like Juggluco changes a document by deleting it and creating it
 // again.
-// dateDuplicate is the model one named by an identifier none has repeats, found by its date, for a collection that
-// finds duplicates so whatever their identifier
-func (c Collection[NS, DM]) dateDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error) {
-	deduplicator, ok := any(c.db).(CollectionDeduplicator[NS, DM])
-	if _, byDate := any(c.db).(CollectionDateDeduplicator); !ok || !byDate || nsModel.GetDate() == nil {
-		return nil, nil
-	}
-	return deduplicator.GetDuplicate(q, ctx, nsModel)
-}
-
 func (c Collection[NS, DM]) identifiedDuplicate(q *sitedb.Queries, ctx context.Context, identifier string) (*DM, *nsutils.HTTPError) {
 	if httpErr := nsutils.ValidateIdentifierIsntBad(identifier); httpErr != nil {
 		return nil, httpErr
@@ -329,6 +357,26 @@ func (c Collection[NS, DM]) identifiedDuplicate(q *sitedb.Queries, ctx context.C
 		return nil, nsutils.ErrInternal
 	}
 	return nil, nil
+}
+
+// keyDuplicate is the model a model sent with a date repeats, found by the collection's fallback key. A model sent
+// with an identifier, which no model has, has one only for a key that finds one whatever its identifier.
+func (c Collection[NS, DM]) keyDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS, identified bool) (*DM, error) {
+	keyed, ok := any(c.db).(CollectionKeyed[NS, DM])
+	if !ok || nsModel.GetDate() == nil {
+		return nil, nil
+	}
+	key := keyed.FallbackKey()
+	if identified && !key.whateverItsIdentifier {
+		return nil, nil
+	}
+	found, err := key.search(q, ctx, nsModel, maxSameTimeDuplicates)
+	for _, stored := range found {
+		if key.matches(nsModel, stored) {
+			return stored, nil
+		}
+	}
+	return nil, err
 }
 
 func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
@@ -587,9 +635,9 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	if nsModel, httpErr = c.withinLimits(data, nsModel, nil, &left); httpErr != nil {
 		return nil, false, httpErr
 	}
-	// One created with an identifier none has repeats one at its date, for a collection that finds them so
+	// One created with an identifier none has repeats one with its fallback key, for a key that finds them so
 	if replaced == nil {
-		duplicate, err := c.dateDuplicate(q, ctx, nsModel)
+		duplicate, err := c.keyDuplicate(q, ctx, nsModel, true)
 		if err != nil {
 			slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 			return nil, false, nsutils.ErrInternal

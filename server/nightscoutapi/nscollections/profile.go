@@ -81,20 +81,33 @@ func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 	return &ret, nil
 }
 
-func (c ProfileCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
-	profilePresets, rerr := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
+// FallbackKey is a profile store's date and device
+func (c ProfileCollection) FallbackKey() FallbackKey[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle] {
+	return FallbackKey[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle]{
+		search: c.searchSameTimeStore,
+		fields: []KeyField[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle]{
+			sameDate[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](),
+			sameDevice[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](),
+		},
+	}
+}
+
+// searchSameTimeStore finds the newest profile store from the device at the date of the one sent. It reads only that
+// one, as each store is read with all of its presets.
+func (c ProfileCollection) searchSameTimeStore(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, _ int64) ([]*sitedb.ProfilePresetBundle, error) {
+	profilePresets, err := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		Limit:    1,
 	})
-	if rerr != nil {
-		return nil, rerr
+	if err != nil || len(profilePresets) == 0 {
+		return nil, err
 	}
-	if len(profilePresets) > 0 {
-		identifier := profilePresets[0].ProfileStoreID
-		return c.GetModel(q, ctx, identifier, true)
+	store, err := c.GetModel(q, ctx, profilePresets[0].ProfileStoreID, true)
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+	return []*sitedb.ProfilePresetBundle{store}, nil
 }
 
 func (c ProfileCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.ProfilePresetBundle, error) {

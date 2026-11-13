@@ -57,6 +57,9 @@ a `?token=` in the URL (`NightscoutAPI`, each function's `URLComponents`). Thus 
   `/api/v1/treatments.json`.
 - Trio ignores the response body. It marks records uploaded only on a 2xx (the profile, only on a 200), else it tries
   again later.
+- A batch with up to 10 records Nighttroop cannot store: the rest are stored with a 200, so Trio marks the batch
+  uploaded and does not send the bad records again, as Nightscout stores them all. The whole batch was a 400, sent
+  again and refused each time. The site's client errors show the records left out.
 
 | Upload | When (source) | Body |
 | --- | --- | --- |

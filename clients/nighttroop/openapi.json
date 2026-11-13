@@ -356,7 +356,7 @@
       },
       "post": {
         "operationId": "NsV1Create", "tags": ["Nightscout"],
-        "summary": "Creates one document or each in an array, and returns those created",
+        "summary": "Creates one document or each in an array, and returns those created. An array leaves out up to 10 documents with a problem (a 400) and stores the rest; it is refused only when none is stored or more are left out",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocuments" },
         "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
