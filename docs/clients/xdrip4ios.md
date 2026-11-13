@@ -30,7 +30,7 @@ How xDrip4iOS talks to Nightscout, and how each part works with Nighttroop.
      identity's or site's units.
    - A device added for xDrip4iOS also has the Nightscout API write mg/dL as `mg/dl`. An admin can set this for
      another identity with `units_mgdl_label` through the settings endpoint.
-   - If you use another device, its first upload of a treatment in `mg/dl` sets its label to `mg/dl`.
+   - If you use another device, its first upload in `mg/dl` sets its label to `mg/dl`.
 
 ## Authentication
 
@@ -259,7 +259,7 @@ Tests are in `tests/api/nightscout/xdrip4ios/`, unless a path is given.
     mg/dL as `mg/dl`, so it comes back as the `120` `mg/dl` it sent
     (`tests/api/nighttroop/settings/units_labels.http`).
   - A BG check from a device not added for xDrip4iOS was sent again every 15 s. It came back as `mg/dL`, so the
-    app read 110 as 1982 and did not match it. Now the device's first `mg/dl` upload sets its label to `mg/dl`
+    app read 110 as 1982 and did not match it. Now the device's first upload in `mg/dl` sets its label to `mg/dl`
     (`tests/api/nighttroop/settings/units_label_learned.http`).
 - **Will not fix:** `GET /api/v1/status.json` without credentials gets 401, as from a Nightscout with
   `AUTH_DEFAULT_ROLES=denied`. The follower service status shows a fetch error. A 200 would let LoopFollow connect

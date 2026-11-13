@@ -207,8 +207,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
-	if q.learnSiteIdentityMgdlLabelStmt, err = db.PrepareContext(ctx, learnSiteIdentityMgdlLabel); err != nil {
-		return nil, fmt.Errorf("error preparing query LearnSiteIdentityMgdlLabel: %w", err)
+	if q.learnSiteIdentityUnitsLabelsStmt, err = db.PrepareContext(ctx, learnSiteIdentityUnitsLabels); err != nil {
+		return nil, fmt.Errorf("error preparing query LearnSiteIdentityUnitsLabels: %w", err)
 	}
 	if q.listControlPasskeysStmt, err = db.PrepareContext(ctx, listControlPasskeys); err != nil {
 		return nil, fmt.Errorf("error preparing query ListControlPasskeys: %w", err)
@@ -646,9 +646,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
 		}
 	}
-	if q.learnSiteIdentityMgdlLabelStmt != nil {
-		if cerr := q.learnSiteIdentityMgdlLabelStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing learnSiteIdentityMgdlLabelStmt: %w", cerr)
+	if q.learnSiteIdentityUnitsLabelsStmt != nil {
+		if cerr := q.learnSiteIdentityUnitsLabelsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing learnSiteIdentityUnitsLabelsStmt: %w", cerr)
 		}
 	}
 	if q.listControlPasskeysStmt != nil {
@@ -961,7 +961,7 @@ type Queries struct {
 	getSitesToDeleteInBatchStmt             *sql.Stmt
 	getSitesToDisableStmt                   *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
-	learnSiteIdentityMgdlLabelStmt          *sql.Stmt
+	learnSiteIdentityUnitsLabelsStmt        *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
 	newestPushRegistrationForAppStmt        *sql.Stmt
@@ -1071,7 +1071,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSitesToDeleteInBatchStmt:             q.getSitesToDeleteInBatchStmt,
 		getSitesToDisableStmt:                   q.getSitesToDisableStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
-		learnSiteIdentityMgdlLabelStmt:          q.learnSiteIdentityMgdlLabelStmt,
+		learnSiteIdentityUnitsLabelsStmt:        q.learnSiteIdentityUnitsLabelsStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,
 		newestPushRegistrationForAppStmt:        q.newestPushRegistrationForAppStmt,

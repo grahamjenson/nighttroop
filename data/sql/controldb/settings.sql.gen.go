@@ -12,18 +12,28 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-const learnSiteIdentityMgdlLabel = `-- name: LearnSiteIdentityMgdlLabel :exec
-UPDATE site_identities SET units_mgdl_label = 'mg/dl' WHERE site_id = ?1 AND id = ?2 AND units_mgdl_label IS NULL
+const learnSiteIdentityUnitsLabels = `-- name: LearnSiteIdentityUnitsLabels :exec
+UPDATE site_identities SET
+    units_mgdl_label = COALESCE(units_mgdl_label, ?1),
+    units_mmol_label = COALESCE(units_mmol_label, ?2)
+WHERE site_id = ?3 AND id = ?4
 `
 
-type LearnSiteIdentityMgdlLabelParams struct {
-	SiteID string
-	ID     int64
+type LearnSiteIdentityUnitsLabelsParams struct {
+	UnitsMgdlLabel *string
+	UnitsMmolLabel *string
+	SiteID         string
+	ID             int64
 }
 
-// A device that sends mg/dL as mg/dl is given it back that way, unless its spelling is set
-func (q *Queries) LearnSiteIdentityMgdlLabel(ctx context.Context, arg LearnSiteIdentityMgdlLabelParams) error {
-	_, err := q.exec(ctx, q.learnSiteIdentityMgdlLabelStmt, learnSiteIdentityMgdlLabel, arg.SiteID, arg.ID)
+// A device is given units back spelt as it first sends them, unless its spelling is set
+func (q *Queries) LearnSiteIdentityUnitsLabels(ctx context.Context, arg LearnSiteIdentityUnitsLabelsParams) error {
+	_, err := q.exec(ctx, q.learnSiteIdentityUnitsLabelsStmt, learnSiteIdentityUnitsLabels,
+		arg.UnitsMgdlLabel,
+		arg.UnitsMmolLabel,
+		arg.SiteID,
+		arg.ID,
+	)
 	return err
 }
 

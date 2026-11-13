@@ -1,6 +1,7 @@
 package nightscoutapi
 
 import (
+	"cmp"
 	"context"
 	"log/slog"
 
@@ -82,27 +83,36 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return nil, false, err
 	}
-	if collection == nsutils.Treatments {
-		learnMgdlLabel(ctx, siteContext, data)
-	}
+	learnUnitsLabels(ctx, siteContext, data)
 	return foundAnd(collectionsStore.Create(ctx, siteContext, data))
 }
 
-// learnMgdlLabel has a device that sends a treatment's units as mg/dl given mg/dL back that way, unless its spelling is
-// set. xDrip4iOS reads a BG check's glucose as mg/dL only when its units are exactly mg/dl, so it sees 110 come back as
-// 1982 and uploads it again every 15 seconds. Loop reads one only when they are exactly mg/dL, so not for every device.
-func learnMgdlLabel(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) {
+// unitsSpellings are how apps spell both units, by either: as Nightscout does, mg/dl and mmol, as AAPS, Trio and
+// xDrip4iOS do, or as Nighttroop does, mg/dL and mmol/L, as Loop does
+var unitsSpellings = map[string]struct{ mgdl, mmol string }{
+	"mg/dl": {"mg/dl", "mmol"}, "mmol": {"mg/dl", "mmol"},
+	"mg/dL": {"mg/dL", "mmol/L"}, "mmol/L": {"mg/dL", "mmol/L"},
+}
+
+// learnUnitsLabels gives a device units back spelt as it first sends them, unless its spelling is set, as apps read
+// only their own: xDrip4iOS reads a BG check's glucose as mg/dL only when its units are exactly mg/dl, so it saw 110 come
+// back as 1982 and uploaded it again every 15 seconds; AAPS knows only mg/dl and mmol; Loop reads only mg/dL
+func learnUnitsLabels(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) {
+	sent, _ := data["units"].(string)
+	spelling, ok := unitsSpellings[sent]
 	identity := siteContext.IdentityModel
-	if units, _ := data["units"].(string); units != "mg/dl" || identity == nil || identity.UnitsMgdlLabel != nil {
-		return
-	}
-	err := siteContext.ControlDB.Queries.LearnSiteIdentityMgdlLabel(ctx, controldb.LearnSiteIdentityMgdlLabelParams{SiteID: siteContext.SiteID, ID: identity.ID})
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to keep the identity's mg/dL label", "error", err)
+	if !ok || identity == nil || (identity.UnitsMgdlLabel != nil && identity.UnitsMmolLabel != nil) {
 		return
 	}
 	learned := *identity
-	learned.UnitsMgdlLabel = new("mg/dl")
+	learned.UnitsMgdlLabel = cmp.Or(learned.UnitsMgdlLabel, &spelling.mgdl)
+	learned.UnitsMmolLabel = cmp.Or(learned.UnitsMmolLabel, &spelling.mmol)
+	err := siteContext.ControlDB.Queries.LearnSiteIdentityUnitsLabels(ctx, controldb.LearnSiteIdentityUnitsLabelsParams{
+		SiteID: siteContext.SiteID, ID: learned.ID, UnitsMgdlLabel: learned.UnitsMgdlLabel, UnitsMmolLabel: learned.UnitsMmolLabel})
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to keep the identity's units labels", "error", err)
+		return
+	}
 	httputils.SetIdentityModelInSiteContext(ctx, &learned)
 }
 

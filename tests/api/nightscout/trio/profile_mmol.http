@@ -24,7 +24,7 @@ B {
   "teamID" : "ABC123", "expirationDate" : "2027-01-01T00:00:00.000Z"
 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 ASSERT_EQUALS "mg/dL" "@0.store.default.units"
 ASSERT_EQUALS 99.099 "@0.store.default.target_low.0.value"
 ASSERT_EQUALS 100.901 "@0.store.default.target_high.0.value"
@@ -41,7 +41,7 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS ".trio_upload_profile_mmol.0._id" "@0._id"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 ASSERT_EQUALS "mg/dL" "@0.store.default.units"
 ASSERT_EQUALS 99.099 "@0.store.default.target_low.0.value"
 ASSERT_EQUALS 100.901 "@0.store.default.target_high.0.value"
@@ -55,7 +55,7 @@ GET http://{{ site }}/api/v1/profile/current
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS ".trio_upload_profile_mmol.0._id" "@_id"
-ASSERT_EQUALS "mg/dL" "@units"
+ASSERT_EQUALS "mg/dl" "@units"
 ASSERT_EQUALS "mg/dL" "@store.default.units"
 ASSERT_EQUALS 99.099 "@store.default.target_low.0.value"
 ASSERT_EQUALS 100.901 "@store.default.target_high.0.value"
@@ -67,7 +67,7 @@ NAME trio_v3_profile_mmol
 GET http://{{ site }}/api/v3/profile/{{ dig "trio_upload_profile_mmol.0._id" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS "mg/dl" "@result.units"
 ASSERT_EQUALS "mg/dL" "@result.store.default.units"
 ASSERT_EQUALS 99.099 "@result.store.default.target_low.0.value"
 ASSERT_EQUALS 100.901 "@result.store.default.target_high.0.value"
@@ -81,7 +81,7 @@ NAME trio_current_profile_mmol_as_mgdl
 GET http://{{ site }}/api/v1/profile/current
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@units"
+ASSERT_EQUALS "mg/dl" "@units"
 ASSERT_EQUALS "mg/dL" "@store.default.units"
 ASSERT_EQUALS 99.099 "@store.default.target_low.0.value"
 ASSERT_EQUALS 50.45 "@store.default.sens.0.value"

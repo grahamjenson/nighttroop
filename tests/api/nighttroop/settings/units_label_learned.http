@@ -65,3 +65,31 @@ H Accept: application/json
 B [{"enteredBy": "test", "created_at": "{{ time 3 }}", "eventType": "BG Check", "glucose": 100, "glucoseType": "Finger", "units": "mg/dl"}]
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dL" "@0.units"
+
+// A device that first sends mmol/L as mmol, as AAPS and Trio do, is given both units as Nightscout spells them,
+// mg/dl and mmol, as they spell mg/dL mg/dl
+NAME create_trio_like
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "pump", "role": "device_read_write", "client": "other"}
+ASSERT_STATUS 201
+SET trio_like_token {{ .create_trio_like.result.ns_token }}
+
+NAME trio_like_uploads_mmol
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .trio_like_token }}
+H Accept: application/json
+B [{"enteredBy": "Trio", "created_at": "{{ time 2 }}", "eventType": "Temporary Target", "duration": 30, "targetTop": 7, "targetBottom": 7, "units": "mmol"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 126.126 "@0.targetTop"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+NAME trio_like_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .trio_like_token }}
+ASSERT_STATUS 200
+
+NAME trio_like_mmol_label
+GET http://{{ .ns_site }}/api/v3/settings/units_mmol_label
+H Authorization: Bearer {{ .trio_like_jwt.token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@result.value"

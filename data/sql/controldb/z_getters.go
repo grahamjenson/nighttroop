@@ -3288,23 +3288,43 @@ func (m *UpdateRateLimitsParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
 }
 
+// GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
+func (m LearnSiteIdentityUnitsLabelsParams) GetUnitsMgdlLabel() *string {
+	return m.UnitsMgdlLabel
+}
+
+// SetUnitsMgdlLabel sets the UnitsMgdlLabel value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetUnitsMgdlLabel(v *string) {
+	m.UnitsMgdlLabel = v
+}
+
+// GetUnitsMmolLabel returns the UnitsMmolLabel value.
+func (m LearnSiteIdentityUnitsLabelsParams) GetUnitsMmolLabel() *string {
+	return m.UnitsMmolLabel
+}
+
+// SetUnitsMmolLabel sets the UnitsMmolLabel value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetUnitsMmolLabel(v *string) {
+	m.UnitsMmolLabel = v
+}
+
 // GetSiteID returns the SiteID value.
-func (m LearnSiteIdentityMgdlLabelParams) GetSiteID() string {
+func (m LearnSiteIdentityUnitsLabelsParams) GetSiteID() string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated LearnSiteIdentityMgdlLabelParams.
-func (m *LearnSiteIdentityMgdlLabelParams) SetSiteID(v string) {
+// SetSiteID sets the SiteID value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
 // GetID returns the ID value.
-func (m LearnSiteIdentityMgdlLabelParams) GetID() int64 {
+func (m LearnSiteIdentityUnitsLabelsParams) GetID() int64 {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated LearnSiteIdentityMgdlLabelParams.
-func (m *LearnSiteIdentityMgdlLabelParams) SetID(v int64) {
+// SetID sets the ID value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetID(v int64) {
 	m.ID = v
 }
 

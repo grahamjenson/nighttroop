@@ -198,7 +198,7 @@ B {
     "created_at": "{{ time 6 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 90 "@result.targetBottom"
 ASSERT_EQUALS 90 "@result.targetTop"
 
@@ -215,7 +215,7 @@ B {
     "created_at": "{{ time 7 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 108.108 "@result.targetBottom"
 ASSERT_EQUALS 144.144 "@result.targetTop"
 
@@ -230,7 +230,7 @@ B {
     "created_at": "{{ time 8 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 
 NAME create_mgdl_note
 POST http://{{ site }}/api/v3/treatments
@@ -244,7 +244,7 @@ B {
     "created_at": "{{ time 9 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 
 # GET
 
@@ -295,28 +295,28 @@ NAME get_glucose_reading_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 126.126 "@result.glucose"
 
 NAME get_glucose_reading_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 70 "@result.glucose"
 
 NAME get_unlabeled_glucose_reading_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mmol_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 126.126 "@result.glucose"
 
 NAME get_unlabeled_glucose_reading_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mgdl_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 70 "@result.glucose"
 
 # Temp targets and therapy events
@@ -325,7 +325,7 @@ NAME get_temp_target_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_temp_target.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 108.108 "@result.targetBottom"
 ASSERT_EQUALS 144.144 "@result.targetTop"
 
@@ -333,11 +333,11 @@ NAME get_temp_target_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_temp_target.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 90 "@result.targetBottom"
 
 NAME get_sensor_change_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_sensor_change.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
