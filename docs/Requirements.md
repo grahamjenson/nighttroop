@@ -820,6 +820,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   lastModified and settings.
 - A v3 replace or patch with `If-Unmodified-Since` of a document changed in a later second is refused with a 412 and
   changes nothing, checked in the same transaction as the change, so a client cannot overwrite a change it has not seen.
+- A v3 patch of a temp target keeps the duration and targets it leaves out, e.g. `{"duration": 30}` keeps its targets
+  and `{"targetTop": 9, "units": "mmol"}` keeps its bottom target and duration, as a caregiver's app sends only what it
+  changes and a loop reads a target of 0 as its lowest; `{"duration": 0}` still cancels it.
 - The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them

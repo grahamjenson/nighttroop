@@ -1,0 +1,70 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// A caregiver's app, such as T1DCarer, patches a temp target with only what it changes. What the patch leaves out is
+// kept, as Nightscout merges a patch into the stored document: a loop such as Trio reads a target of 0 as its floor
+
+NAME add_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temporary Target", "targetTop": 6, "targetBottom": 6, "units": "mmol", "duration": 60, "date": {{ itime 10 }}, "app": "T1DCarer"}
+ASSERT_STATUS 201
+
+// A new duration keeps the targets
+NAME patch_duration
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 30}
+ASSERT_STATUS 200
+
+NAME get_after_duration
+GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 30 "@result.duration"
+ASSERT_EQUALS 108.108 "@result.targetTop"
+ASSERT_EQUALS 108.108 "@result.targetBottom"
+
+// New targets keep the duration
+NAME patch_targets
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"targetTop": 162, "targetBottom": 162}
+ASSERT_STATUS 200
+
+NAME get_after_targets
+GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 30 "@result.duration"
+ASSERT_EQUALS 162 "@result.targetTop"
+ASSERT_EQUALS 162 "@result.targetBottom"
+
+// A new top target in mmol/L keeps the bottom one and the duration
+NAME patch_top_mmol
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"targetTop": 9, "units": "mmol"}
+ASSERT_STATUS 200
+
+NAME get_after_top_mmol
+GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 30 "@result.duration"
+ASSERT_EQUALS 162.162 "@result.targetTop"
+ASSERT_EQUALS 162 "@result.targetBottom"
+
+// A duration of 0 still cancels it, keeping its targets
+NAME patch_cancel
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 0}
+ASSERT_STATUS 200
+
+NAME get_after_cancel
+GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@result.duration"
+ASSERT_EQUALS 162.162 "@result.targetTop"

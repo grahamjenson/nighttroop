@@ -191,6 +191,7 @@ func (c TreatmentCollection) UpdateModel(q *sitedb.Queries, ctx context.Context,
 	// This will be a partial update
 
 	nsModel.EventType = ptr(nightscoutmodels.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
+	keepTempTarget(&nsModel, dbModel.TempTarget)
 
 	updateBundle := TreatmentEventGroupBundle(ctx, nsModel)
 
@@ -390,4 +391,26 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 		treatment.Temp = new(types.ShortString("absolute"))
 	}
 	return *treatment
+}
+
+// keepTempTarget gives an update of a temp target the duration and targets it leaves out, from the one stored, in the
+// update's units, as a caregiver's app patches only what it changes and a duration or target left out would be 0
+func keepTempTarget(nsModel *nightscoutmodels.Treatment, stored *sitedb.TempTarget) {
+	if stored == nil || !isAssigned(nsModel.HighTarget, nsModel.LowTarget, nsModel.DurationMinutes, nsModel.CorrectionRange, nsModel.DurationType) {
+		return
+	}
+	// An indefinite one is given its week's duration when it is prepared
+	if nsModel.DurationMinutes == nil && nsModel.DurationType == nil {
+		nsModel.DurationMinutes = new(types.FlexibleInt64(stored.DurationMinutes))
+	}
+	// Loop's correction range is its targets
+	if len(nsModel.CorrectionRange) > 0 {
+		return
+	}
+	if nsModel.HighTarget == nil {
+		nsModel.HighTarget = new(types.FlexibleFloat64(nsModel.Units.FromMGDL(stored.HighTargetMgdl)))
+	}
+	if nsModel.LowTarget == nil {
+		nsModel.LowTarget = new(types.FlexibleFloat64(nsModel.Units.FromMGDL(stored.LowTargetMgdl)))
+	}
 }
