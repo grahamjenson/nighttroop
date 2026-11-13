@@ -62,6 +62,10 @@ query, such as `?token=` (`NightscoutClient.url(with:)`, line 43).
 - Loop moves on only after a 200 (LoopKit `RemoteDataServicesManager.uploadGlucoseData`).
 - Nighttroop takes a v1 POST of up to 5000 records, for the backlog of a Loop that already ran or was offline for
   hours. Each 100 records past the first cost a write against the site's and identity's rate limits.
+- A batch with up to 10 records Nighttroop cannot store (entries, treatments, device statuses, profiles): the rest are
+  stored, and the 200 has fewer objects than sent. Loop sends the batch again, as it did after the 400 it got before.
+  The records stored are found as duplicates, so only the bad ones are left out each time. The site's client errors
+  show them.
 
 ### Glucose: `POST /api/v1/entries`
 
@@ -230,6 +234,7 @@ Test paths start at `tests/api/nightscout/`.
 | `PUT /api/v1/treatments` with `_id` in the body | Works |
 | A carb entry edited to another time (`PUT` with its `_id`); an override's start time edited (posted again with its `_id`) | Fixed: moved to the new time (was a 400, "Field date cannot be modified by the client", sent again without end). `loop/treatments.http` |
 | `DELETE /api/v1/treatments/<_id>` | Works |
+| A treatment or device status batch with a record Nighttroop cannot store | Changed: the rest are stored (the whole batch was a 400). `v1/batch_left_out.http` |
 | `POST` a `Temporary Override` | Works since #515 (was a 400, unknown event type). Kept as a temp target; indefinite as a week, given back with `durationType` `indefinite` |
 | An override's UUID `_id`: posted again when it changes, deleted by it | Works since #515: a v1 POST with an `_id` replaces the record with it, or creates it |
 | `Temporary Override` with `durationType` `indefinite` and `duration` 0, or of 0 minutes | Fixed: indefinite, as with no `duration` (was 0 minutes). `loop/override_indefinite.http` |

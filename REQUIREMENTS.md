@@ -249,9 +249,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - A request refused for what it sent (400, 405, 413, 422), from any API or page, is a `client` error with status,
   method, route pattern (never path or query), the response's reason, request ID, identity, role and User-Agent.
-- An API v1 entry batch stored with entries left out for another problem than glucose out of range: one `client`
-  error with status 200. Its reason gives the count stored, the count left out, and the count for each reason (e.g.
-  `Stored 2 entries and left out 3: 2 Bad or missing body: unknown entry type: bad; 1 glucose out of range`).
+- An API v1 batch of any collection stored with documents left out for another problem than glucose out of range:
+  one `client` error with status 200. Its reason gives the count stored, the count left out, and the count for each
+  reason (e.g. `Stored 2 entries and left out 3: 2 Bad or missing body: unknown entry type: bad; 1 glucose out of
+  range`, or `Stored 2 treatments and left out 1: ...`).
 - Sentry gets it as a warning, grouped by status, route and reason, with role, User-Agent, site and identity.
 - For each site: the same one at most once a minute, at most 20 a minute.
 - Not client errors: missing credentials, permissions or records, and rate limits.
@@ -1050,6 +1051,19 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
     number.
   - The newest also has the delta, uploader battery and IOB, as in Nightscout.
 
+#### v1 batches
+
+- A v1 POST of an array (entries, treatments, device statuses, profiles, food, activities) uses the same rule:
+  - A document with a problem in it (a 400, e.g. a bad field or a value out of range): left out, the rest stored.
+  - The response is 200 and the stored documents, as for a batch with nothing left out.
+  - Up to 10 documents a batch are left out. The 11th refuses the batch with its problem. Documents stored before it
+    are kept.
+  - Nothing stored and a document left out: refused (400) with the first problem.
+  - Missing credentials or permissions, rate limits or a server error: the batch stops with that error.
+  - The site's client errors show a batch with documents left out.
+  - A batch costs the same writes against the rate limits, with or without documents left out.
+- One object sent alone, not in an array, with a problem: refused.
+
 #### Authentication and permissions
 
 - The `api-secret` header accepts the SHA1 of a device's Nightscout token (xDrip+, with the token in its URL, and
@@ -1400,9 +1414,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Calibration (`type` `cal`): left out, its readings kept.
   - Reading out of range (0 or less, or over 1000 mg/dL): left out, the rest stored.
   - Only readings out of range: 200, `[]`, nothing stored. One such reading sent alone: refused.
-  - Up to 10 entries with another problem (e.g. unknown `type`): left out, the rest stored. The response does not
-    change. The site's client errors show the batch.
-  - Nothing else to store: refused, with the problem.
+  - Readings out of range are not counted in the 10 of the v1 batch rule, and alone do not show in the client errors.
+  - Other entries with a problem (e.g. unknown `type`): as the v1 batch rule.
 - Device status: an uploader battery that is not a number is left out. `uploader.battery` is the uploader battery.
 
 ### Nightscout API: device statuses
