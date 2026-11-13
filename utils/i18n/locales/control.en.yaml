@@ -320,7 +320,7 @@ control:
     disable_when: "Offered once no one has used it for {{.InactiveDays}} days."
     truncate: "Truncate"
     truncate_intro: "Every 10 minutes its newest device statuses are thinned; this thins all of them now. It keeps the loop's status and pump only on each device's newest status, and one status every 10 minutes from before the last hour. It also deletes old loop settings no record refers to any more, then shrinks its DB."
-    truncate_confirm: "Truncate this site? Its older loop statuses and pumps are cleared, keeping their IOB, COB and pump battery, its older device statuses thinned, then its DB is shrunk."
+    truncate_confirm: "Truncate this site? Predictions are removed from its loop statuses over a day old, its older pumps are cleared, keeping their battery, its older device statuses thinned, then its DB is shrunk."
     archive: "Archive"
     archive_intro: "Uploads its data to S3 and deletes it here."
     archive_unavailable: "Offered once it is disabled."

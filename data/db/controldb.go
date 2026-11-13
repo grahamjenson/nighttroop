@@ -475,24 +475,24 @@ func (db *ControlDB) TruncateSites(ctx context.Context) error {
 	return errors.Join(errs...)
 }
 
-// truncateLooksBack is how far back the job looks for device reports to clear, as those before were cleared by an
-// earlier run; a day covers a server down for a while
+// truncateLooksBack is how far back the job looks for device reports written, or loop statuses turned a day old, to
+// clear, as those before were cleared by an earlier run; a day covers a server down for a while
 const truncateLooksBack = 24 * time.Hour
 
 // deviceReportsKeptFor is how long a device report is kept at all
 const deviceReportsKeptFor = 30 * 24 * time.Hour
 
-// truncateSite keeps each device's loop status and pump as sent only on its newest report with each, thins its
-// reports from before the last hour to fewer the older they are, and deletes those over 30 days old, looking at those
-// written since since, 0 for all of them
+// truncateSite clears the predictions from each device's loop statuses over a day old, keeps its pump as sent only on
+// its newest report with one, thins its reports from before the last hour to fewer the older they are, and deletes
+// those over 30 days old, looking at those written since since, 0 for all of them
 func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
-	if err := site.Queries().ClearOldLoopStatuses(ctx, sitedb.ClearOldLoopStatusesParams{Since: since}); err != nil {
+	now := time.Now()
+	if err := site.Queries().ClearOldLoopStatuses(ctx, sitedb.ClearOldLoopStatusesParams{Since: since, Now: now.UnixMilli()}); err != nil {
 		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
 	}
 	if err := site.Queries().ClearOldPumps(ctx, sitedb.ClearOldPumpsParams{Since: since}); err != nil {
 		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
 	}
-	now := time.Now()
 	if err := site.Queries().ThinOldDeviceReports(ctx, sitedb.ThinOldDeviceReportsParams{Since: since, Now: now.UnixMilli()}); err != nil {
 		return fmt.Errorf("cannot thin the device reports of site %s: %w", site.Subdomain, err)
 	}
