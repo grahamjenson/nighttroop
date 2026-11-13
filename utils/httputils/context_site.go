@@ -232,9 +232,10 @@ func GetJWTSiteIdentity(ctx context.Context, cfg *config.ServerConfig, token str
 }
 
 // CheckIssuedAfterCredentialsChanged refuses a JWT issued, in milliseconds, before its site or control identity's
-// credentials changed
+// credentials changed, or in the same millisecond, which can be before the change. A sign in after a change checks its
+// password first, which takes longer than that.
 func CheckIssuedAfterCredentialsChanged(identity interface{ GetCredentialsChangedAt() int64 }, issuedAtMs int64) error {
-	if issuedAtMs < identity.GetCredentialsChangedAt() {
+	if issuedAtMs <= identity.GetCredentialsChangedAt() {
 		return fmt.Errorf("JWT was issued before the identity's credentials changed")
 	}
 	return nil

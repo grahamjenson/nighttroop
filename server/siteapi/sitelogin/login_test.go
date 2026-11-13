@@ -88,6 +88,7 @@ func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
 		_, err = controlDB.ResetSiteIdentityPassword(t.Context(), admin, "control admin")
 		require.NoError(t, err)
 		if !preAuthBeforeReset {
+			time.Sleep(2 * time.Millisecond) // a token in the reset's millisecond is refused, as it may be from before it
 			token = preAuth()
 		}
 
