@@ -56,9 +56,10 @@ func glucoseUnits(ctx context.Context) *consts.Units {
 	return sitemodels.ContextUnits(httputils.GetSiteContext(ctx))
 }
 
-// formatGlucose shows glucose on the data pages as every page does: mmol/L to one decimal place, mg/dL whole
-func formatGlucose(value float64, units *consts.Units) string {
-	return display.Glucose(value, units)
+// formatGlucose shows glucose on the data pages as every page does: mmol/L to one decimal place, mg/dL whole, in the
+// number format
+func formatGlucose(ctx context.Context, value float64, units *consts.Units) string {
+	return display.Glucose(ctx, value, units)
 }
 
 // glucoseInputAttributes keeps a typed in glucose value within what the store accepts, in the settings' units
@@ -198,7 +199,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 			{ formatReadingDate(ctx, reading.OccurredAt) }
 		}
 		@table.Cell(glucoseReadingCell(ctx, reading.Reading)) {
-			{ formatGlucose(reading.Reading, reading.Units) }
+			{ formatGlucose(ctx, reading.Reading, reading.Units) }
 			@glucoseRangeMarker(glucoseRange(ctx, reading.Reading))
 		}
 		@table.Cell() {
@@ -215,8 +216,8 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 	{{ edit := addmodal.Props{ID: "site--glucose--edit", Path: "/data/glucose/" + reading.ID, Target: "#site--glucose--" + reading.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": formatGlucose(reading.Reading, reading.Units)}, "reading_type", "measurement_method")} }}
-	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": display.GlucoseValue(reading.Reading, reading.Units)}, "reading_type", "measurement_method")} }}
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(ctx, reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@addmodal.Detail(edit, "reading_type", i18n.T(ctx, "site.data.common.type"), display.ReadingType(ctx, reading.ReadingType))

@@ -14,6 +14,7 @@ type SettingMap struct {
 	DateFormat                       *Setting[string]
 	TimeFormat                       *Setting[string]
 	WeekStartDay                     *Setting[string]
+	NumberFormat                     *Setting[string]
 	BolusDiaHours                    *Setting[float64]
 	BolusOnsetMinutes                *Setting[float64]
 	BolusPeakMinutes                 *Setting[float64]
@@ -63,6 +64,7 @@ var DefaultSettingsMap = &SettingMap{
 	DateFormat:                       NewDefaultSetting(DateFormat),
 	TimeFormat:                       NewDefaultSetting(TimeFormat),
 	WeekStartDay:                     NewDefaultSetting(WeekStartDay),
+	NumberFormat:                     NewDefaultSetting(NumberFormat),
 	BolusDiaHours:                    NewDefaultSetting(BolusDIAHours),
 	BolusOnsetMinutes:                NewDefaultSetting(BolusOnsetMinutes),
 	BolusPeakMinutes:                 NewDefaultSetting(BolusPeakMinutes),
@@ -114,6 +116,7 @@ func NewSettingsMap(g SettingsGetter, createdAt *int64, subject *string) *Settin
 		DateFormat:                       NewSetting(DateFormat, g.GetDateFormat(), createdAt, subject),
 		TimeFormat:                       NewSetting(TimeFormat, g.GetTimeFormat(), createdAt, subject),
 		WeekStartDay:                     NewSetting(WeekStartDay, g.GetWeekStartDay(), createdAt, subject),
+		NumberFormat:                     NewSetting(NumberFormat, g.GetNumberFormat(), createdAt, subject),
 		BolusDiaHours:                    NewSetting(BolusDIAHours, g.GetBolusDiaHours(), createdAt, subject),
 		BolusOnsetMinutes:                NewSetting(BolusOnsetMinutes, g.GetBolusOnsetMinutes(), createdAt, subject),
 		BolusPeakMinutes:                 NewSetting(BolusPeakMinutes, g.GetBolusPeakMinutes(), createdAt, subject),
@@ -267,6 +270,19 @@ func (m *SettingMap) SetWeekStartDay(v *string) {
 
 	m.WeekStartDay = NewSetting(WeekStartDay, v, nil, nil)
 
+}
+
+// GetNumberFormat returns the NumberFormat value.
+func (m SettingMap) GetNumberFormat() *string {
+	if m.NumberFormat == nil {
+		return nil
+	}
+	return ptr(m.NumberFormat.Value)
+}
+
+// SetNumberFormat sets the NumberFormat value.
+func (m *SettingMap) SetNumberFormat(v *string) {
+	m.NumberFormat = NewSetting(NumberFormat, v, nil, nil)
 }
 
 // GetBolusDiaHours returns the BolusDiaHours value.

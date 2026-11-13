@@ -201,6 +201,7 @@ CREATE TABLE site_identities (
     date_format TEXT CHECK(length(date_format) <= 24),
     time_format TEXT CHECK(length(time_format) <= 24),
     week_start_day TEXT CHECK (length(week_start_day) <= 16),
+    number_format TEXT CHECK (length(number_format) <= 16),
 
     -- INSULIN
     bolus_dia_hours REAL,
@@ -305,6 +306,7 @@ CREATE TABLE sites (
     date_format TEXT CHECK(length(date_format) <= 24),
     time_format TEXT CHECK(length(time_format) <= 24),
     week_start_day TEXT CHECK (length(week_start_day) <= 16),
+    number_format TEXT CHECK (length(number_format) <= 16),
 
     -- INSULIN
     bolus_dia_hours REAL,

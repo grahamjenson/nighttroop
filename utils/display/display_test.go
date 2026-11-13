@@ -176,13 +176,13 @@ func TestValueAndPerDay(t *testing.T) {
 		got  string
 		want string
 	}{
-		{"no value", Value(nil, " U"), "–"},
-		{"a value", Value(number(12.5), " U"), "12.5 U"},
-		{"rounded to 2 places", Value(number(1.23456), "%"), "1.23%"},
-		{"a real 0", Value(number(0), " U"), "0 U"},
-		{"no days with data", PerDay(0, 0, " U"), "–"},
-		{"days with data and no insulin", PerDay(3, 0, " U"), "0 U"},
-		{"days with data", PerDay(7, 31.256, " g"), "31.26 g"},
+		{"no value", Value(context.Background(), nil, " U"), "–"},
+		{"a value", Value(context.Background(), number(12.5), " U"), "12.5 U"},
+		{"rounded to 2 places", Value(context.Background(), number(1.23456), "%"), "1.23%"},
+		{"a real 0", Value(context.Background(), number(0), " U"), "0 U"},
+		{"no days with data", PerDay(context.Background(), 0, 0, " U"), "–"},
+		{"days with data and no insulin", PerDay(context.Background(), 3, 0, " U"), "0 U"},
+		{"days with data", PerDay(context.Background(), 7, 31.256, " g"), "31.26 g"},
 	}
 	for _, test := range tests {
 		if test.got != test.want {

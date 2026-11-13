@@ -97,6 +97,7 @@ site:
       date_format: "Date Format"
       time_format: "Time Format"
       week_starts_on: "Week Starts On"
+      number_format: "Number Format"
       password_totp: "Password & TOTP"
       delete_site: "Delete Site"
       db_size: "DB Size"

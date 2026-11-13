@@ -748,6 +748,16 @@ func (m *Site) SetWeekStartDay(v *string) {
 	m.WeekStartDay = v
 }
 
+// GetNumberFormat returns the NumberFormat value.
+func (m Site) GetNumberFormat() *string {
+	return m.NumberFormat
+}
+
+// SetNumberFormat sets the NumberFormat value and returns the updated Site.
+func (m *Site) SetNumberFormat(v *string) {
+	m.NumberFormat = v
+}
+
 // GetBolusDiaHours returns the BolusDiaHours value.
 func (m Site) GetBolusDiaHours() *float64 {
 	return m.BolusDiaHours
@@ -1716,6 +1726,16 @@ func (m SiteIdentity) GetWeekStartDay() *string {
 // SetWeekStartDay sets the WeekStartDay value and returns the updated SiteIdentity.
 func (m *SiteIdentity) SetWeekStartDay(v *string) {
 	m.WeekStartDay = v
+}
+
+// GetNumberFormat returns the NumberFormat value.
+func (m SiteIdentity) GetNumberFormat() *string {
+	return m.NumberFormat
+}
+
+// SetNumberFormat sets the NumberFormat value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetNumberFormat(v *string) {
+	m.NumberFormat = v
 }
 
 // GetBolusDiaHours returns the BolusDiaHours value.
@@ -3328,6 +3348,16 @@ func (m *UpdateSiteIdentitySettingsParams) SetWeekStartDay(v *string) {
 	m.WeekStartDay = v
 }
 
+// GetNumberFormat returns the NumberFormat value.
+func (m UpdateSiteIdentitySettingsParams) GetNumberFormat() *string {
+	return m.NumberFormat
+}
+
+// SetNumberFormat sets the NumberFormat value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetNumberFormat(v *string) {
+	m.NumberFormat = v
+}
+
 // GetBolusDiaHours returns the BolusDiaHours value.
 func (m UpdateSiteIdentitySettingsParams) GetBolusDiaHours() *float64 {
 	return m.BolusDiaHours
@@ -3806,6 +3836,16 @@ func (m UpdateSitesSettingsParams) GetWeekStartDay() *string {
 // SetWeekStartDay sets the WeekStartDay value and returns the updated UpdateSitesSettingsParams.
 func (m *UpdateSitesSettingsParams) SetWeekStartDay(v *string) {
 	m.WeekStartDay = v
+}
+
+// GetNumberFormat returns the NumberFormat value.
+func (m UpdateSitesSettingsParams) GetNumberFormat() *string {
+	return m.NumberFormat
+}
+
+// SetNumberFormat sets the NumberFormat value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetNumberFormat(v *string) {
+	m.NumberFormat = v
 }
 
 // GetBolusDiaHours returns the BolusDiaHours value.

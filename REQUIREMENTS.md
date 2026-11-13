@@ -924,7 +924,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### General settings
 
-- Units, time zone, language, date and time format, week start, insulin and carb defaults.
+- Units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
 - Admins set site settings. Identities can override them.
 - Identity value, then site value, then fallback:
 
@@ -934,8 +934,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   | Date format | YYYY-MM-DD | |
   | Time format | 24-hour HH:mm:ss | or 12-hour, with or without seconds |
   | Timezone | UTC | |
+  | Number format | 1,234.5 | or 1.234,5 or 1 234,5 |
 
 - All pages, including logs, use them. Control and public pages use the browser's language.
+- Number format: glucose, insulin, carbs, and summary and report values use it. With 1.234,5, glucose shows 5,4 mmol/L.
+- Input fields always use a "." for the decimal point.
 - Phone: settings, alarms and another identity's settings are one column (label, then named Site and Yours controls);
   save buttons fit.
 

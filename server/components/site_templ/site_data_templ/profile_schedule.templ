@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // scheduleTime shows seconds from midnight as a time of day
@@ -20,7 +21,7 @@ func ScheduleValue(value float64) string {
 
 // GlucoseValue shows a sensitivity or target as glucose is shown elsewhere in units
 func GlucoseValue(units *consts.Units) func(float64) string {
-	return func(value float64) string { return formatGlucose(value, units) }
+	return func(value float64) string { return display.GlucoseValue(value, units) }
 }
 
 // ProfileSchedule lists a schedule's values from each time of day, for profiles and profile switches
