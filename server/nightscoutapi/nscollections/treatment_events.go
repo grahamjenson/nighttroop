@@ -159,7 +159,8 @@ var (
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.GlucoseReading) {
 			return &b.EventGroup.GlucoseReadingID, &b.GlucoseReading
 		},
-		has:     func(source nightscoutmodels.Treatment) bool { return isAssigned(source.Glucose) },
+		// A glucose of 0 or less is no reading, as AAPS sends 0 with a Bolus Wizard that used no BG
+		has:     func(source nightscoutmodels.Treatment) bool { return source.Glucose != nil && *source.Glucose > 0 },
 		partial: nightscoutmodels.PartialTreatmentToGlucoseReading,
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.GlucoseReading) {
 			target.ReadingType = "sgv"

@@ -54,6 +54,33 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
 ASSERT_CONTAINS "\"totalInsulin\":0.4" "@result.0.bolusCalculatorResult"
 
+// A wizard that used no BG has a glucose of 0 (toNSBolusWizard), which is no reading: the record is kept without one,
+// rather than refused, as AAPS does not send it again
+NAME add_bolus_wizard_no_bg
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ .aaps_jwt }}
+B {
+    "eventType": "Bolus Wizard",
+    "date": {{ itime 25 }},
+    "utcOffset": 720,
+    "isValid": true,
+    "isReadOnly": false,
+    "units": "mg/dl",
+    "glucose": 0.0,
+    "notes": "",
+    "bolusCalculatorResult": "{\"carbs\":15.0,\"glucoseValue\":0.0,\"totalInsulin\":1.5}",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME get_bolus_wizard_no_bg
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .add_bolus_wizard_no_bg.identifier }}
+H Authorization: Bearer {{ .aaps_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Bolus Wizard" "@result.eventType"
+ASSERT_EQUALS null "@result.glucose"
+ASSERT_CONTAINS "\"totalInsulin\":1.5" "@result.bolusCalculatorResult"
+
 // One that is not JSON, or longer than 4096 characters, is left out, and the rest of the record kept
 NAME add_bolus_wizard_not_json
 POST http://{{ .ns_site }}/api/v3/treatments
