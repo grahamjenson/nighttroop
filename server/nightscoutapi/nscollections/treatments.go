@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math"
 	"reflect"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -383,8 +384,10 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	if treatment.DurationMinutes == nil && treatment.DurationInMilliseconds != nil {
 		treatment.DurationMinutes = new((*treatment.DurationInMilliseconds + 30_000) / 60_000)
 	}
+	// The timestamp is when it happened in UTC, as created_at is written and every client sends it, whatever its
+	// utcOffset: LoopFollow reads it before created_at and drops its offset, reading the rest as UTC
+	treatment.Timestamp = new(types.DateString(types.ISOString(time.UnixMilli(source.EventGroup.OccurredAt))))
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
-	treatment.Timestamp = treatment.CreatedAt
 	treatment.Programmed = treatment.Insulin
 	if treatment.Absolute != nil {
 		treatment.Temp = new(types.ShortString("absolute"))

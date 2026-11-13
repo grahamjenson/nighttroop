@@ -894,8 +894,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A document's `created_at` is written as Nightscout writes it, as JavaScript's `toISOString` does, in UTC with three
   fractional digits: `…23.940Z` sent comes back as is, not `…23.94Z`, and `…23Z` comes back as `…23.000Z`. So are a
-  treatment's `timestamp`, an entry's `dateString` and a profile's `startDate`, in their UTC offset, so an entry is
-  found and deleted by the `.SSS` `dateString` sent, as Trio's deleteGlucose does. Dates kept as sent, such as a
+  treatment's `timestamp` and a profile's `startDate`, always in UTC as `created_at` is, whatever their `utcOffset`,
+  as LoopFollow reads them without their offset as UTC, and an entry's `dateString`, in its UTC offset, so an entry
+  is found and deleted by the `.SSS` `dateString` sent, as Trio's deleteGlucose does. Dates kept as sent, such as a
   device status's `pump.clock`, which LoopFollow reads without fractional seconds, are not changed.
 - A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its
   `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any

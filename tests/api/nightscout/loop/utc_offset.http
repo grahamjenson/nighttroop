@@ -19,6 +19,16 @@ B [{"created_at": "{{ time 10 }}", "timestamp": "{{ time 10 }}", "enteredBy": "l
 ASSERT_STATUS 200
 ASSERT_EQUALS 540 "@0.utcOffset"
 
+# Its timestamp is the same time as created_at, in UTC, whatever its utcOffset: LoopFollow reads timestamp before
+# created_at, drops its offset and reads the rest as UTC, so 10:00+09:00 would be drawn 9 hours late
+NAME loop_treatment_timestamp_in_utc
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[eventType]=Carb+Correction&count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@0.utcOffset"
+ASSERT_EQUALS ".loop_treatment.0.created_at" "@0.timestamp"
+ASSERT_CONTAINS "Z" "@0.timestamp"
+
 NAME loop_devicestatus
 POST http://{{ .ns_site }}/api/v1/devicestatus
 H api-secret: {{ sha1 token }}
@@ -45,6 +55,9 @@ GET http://{{ .ns_site }}/api/v1/profile/current
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 540 "@utcOffset"
+# Its startDate is in UTC too, as LoopFollow reads it as when the profile was uploaded, without its offset
+ASSERT_EQUALS ".loop_profile.0.startDate" "@startDate"
+ASSERT_CONTAINS "Z" "@startDate"
 
 # A time written with its offset keeps it
 NAME treatment_with_offset
