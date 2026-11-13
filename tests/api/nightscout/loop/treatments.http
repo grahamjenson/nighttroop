@@ -236,7 +236,9 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "626f6c757320312e3020323032362d31312d30325430343a30303a30305a" "@result.syncIdentifier"
 ASSERT_EQUALS "Novolog" "@result.insulinType"
 ASSERT_EQUALS 0 "@result.unabsorbed"
-ASSERT_EQUALS 1.6666666666666667 "@result.duration"
+// API v3 gives whole minutes, as AAPS reads them, and the exact milliseconds; Loop reads v1, with the fraction
+ASSERT_EQUALS 1 "@result.duration"
+ASSERT_EQUALS 100000 "@result.durationInMilliseconds"
 
 ######
 # Overrides (OverrideTreatment): Loop sets _id to the override's syncIdentifier, a UUID, and posts it again when it

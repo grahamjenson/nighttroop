@@ -62,7 +62,11 @@ type field struct {
 // writes many, the model's fields are copied from its JSON rather than read back into values, and the object is then
 // written as its fields read back would be: names in order, numbers as JSON reads them, strings as the API escapes them.
 func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
-	raw, _ := json.Marshal(&s.model)
+	var model any = &s.model
+	if forV3, ok := any(s.model).(interface{ V3() any }); ok && v3 {
+		model = forV3.V3()
+	}
+	raw, _ := json.Marshal(model)
 	server, without := s.server(v3)
 	var v1Only []string
 	if model, ok := any(s.model).(interface{ V1OnlyFields() []string }); ok && v3 {

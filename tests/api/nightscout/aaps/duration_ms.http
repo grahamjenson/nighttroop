@@ -2,8 +2,9 @@ INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
 // AAPS sends a treatment's duration in whole minutes as duration, and to the millisecond as durationInMilliseconds,
-// which it reads back before duration (TreatmentMapper), so durationInMilliseconds is given back as sent, and duration
-// as the minutes they are, with their fraction, as Loop sends it
+// which it reads back before duration (TreatmentMapper), so durationInMilliseconds is given back as sent. API v3 gives
+// duration in whole minutes, as AAPS reads it as a whole number and drops a treatment, or a page of them, with a
+// fraction; API v1 gives it with its fraction, as Loop sends and reads it
 
 // TT.toNSTemporaryTarget
 NAME add_temp_target
@@ -49,8 +50,43 @@ GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 359587 "@result.durationInMilliseconds"
-ASSERT_EQUALS 5.993116666666666 "@result.duration"
+ASSERT_EQUALS 5 "@result.duration"
 ASSERT_EQUALS 140 "@result.targetTop"
+
+// Its history, which AAPS reads a page of at once, has whole minutes too
+NAME ended_temp_target_history
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 5 "@result.0.duration"
+ASSERT_EQUALS 359587 "@result.0.durationInMilliseconds"
+
+// API v1 gives the minutes with their fraction, as Loop reads them
+NAME ended_temp_target_v1
+GET http://{{ site }}/api/v1/treatments/{{ .add_temp_target.identifier }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 5.993116666666666 "@0.duration"
+
+// A pump reconnected 43 s into a suspend ends its temp basal with a duration of 0 and 43491 ms
+NAME add_suspend
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 25 }}, "utcOffset": 720, "eventType": "Temp Basal", "rate": 0, "absolute": 0, "percent": -100, "duration": 15, "durationInMilliseconds": 900000, "type": "EMULATED_PUMP_SUSPEND", "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME end_suspend
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_suspend.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 0, "durationInMilliseconds": 43491, "rate": 0, "percent": -100, "type": "EMULATED_PUMP_SUSPEND"}
+ASSERT_STATUS 200
+
+NAME get_ended_suspend
+GET http://{{ site }}/api/v3/treatments/{{ .add_suspend.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@result.duration"
+ASSERT_EQUALS 43491 "@result.durationInMilliseconds"
 
 // Extended carbs, which have no event with a duration
 NAME add_extended_carbs
