@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -29,6 +30,9 @@ func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sit
 	if err := validateEntryMgdl(nsModel); err != nil {
 		return err
 	}
+	if err := validateEntryDate(nsModel); err != nil {
+		return err
+	}
 	return validateEntryType(nsModel, dbModel)
 }
 
@@ -39,7 +43,19 @@ func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel
 			return err
 		}
 	}
+	if err := validateEntryDate(nsModel); err != nil {
+		return err
+	}
 	return validateEntryType(nsModel, dbModel)
+}
+
+// validateEntryDate refuses a reading dated well ahead of now, beyond a phone clock's error, as followers, Loop's and
+// Trio's Nightscout CGM among them, show the newest reading as the current one
+func validateEntryDate(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
+	if date := nsModel.GetDate(); date != nil && *date > time.Now().Add(consts.MaxFutureReading).UnixMilli() {
+		return nsutils.ErrFutureReading
+	}
+	return nil
 }
 
 // Refuse glucose far outside real use, checked in mg/dL as it is stored
