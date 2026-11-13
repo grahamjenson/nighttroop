@@ -213,6 +213,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
 | **Device status, food and profiles** | | |
 | Device status: create, history with `srvModified` | Works | `sync_v3.http`, `flow_v3.http` |
+| Device status `openaps` over 1 day old, in the client's 48 hours | Changed: as sent, without `predBGs` in `suggested` and `enacted`, and with the same `srvModified` | `loopfollow/devicestatus_day.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | Works: the pump object comes back as sent | `sync_v3.http` |
 | Food: create | Works | `sync_v3.http` |
 | Food: read | Works: `type` `food`. `portion`, `unit` and `gi` not kept yet (TODO P4) | `sync_v3.http` |

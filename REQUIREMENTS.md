@@ -1569,16 +1569,21 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 Every 10 minutes, the server truncates every site:
 
-- Loop status, and pump as sent: kept only on each device's newest status with one. A newer status without one does
-  not change this. The others keep:
-  - Their IOB and COB, extracted on write. The Nightscout API returns them as `openaps` or `loop`.
-  - Their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. The Nightscout
-    API returns them as `pump`.
+- Loop status (`openaps` or `loop`): kept as sent for 1 day. Followers (e.g. LoopFollow) read a day of statuses.
+  - If a status is more than 1 day older than now and its device's newest status, the predictions are removed.
+  - Predictions are Loop's `predicted.values`, and the `predBGs` in `suggested` and `enacted`.
+  - All other fields stay as sent, e.g. `name`, `timestamp`, `iob`, `cob`, `recommendedBolus`, `enacted`,
+    `predicted.startDate`, and `suggested.bg`, `ISF`, `eventualBG`.
+  - The status does not get a new `srvModified`.
+- Pump as sent: kept only on each device's newest status with one. A newer status without one does not change this.
+  The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`.
+  The Nightscout API returns them as `pump`.
 - Statuses kept for each device: all of the last hour, then the newest in each 10 minutes to 1 week old, each 20
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
   - All statuses over 30 days old are deleted, also newest and deleted ones.
-- The job reads statuses of the last day, and thins again those that became 1 or 2 weeks old in that day.
+- The job reads statuses of the last day, and statuses that became 1 day old in that day. It thins again those that
+  became 1 or 2 weeks old in that day.
 - A site truncate reads all statuses. It also clears those older than a day (e.g. a device's newest from before it
   stopped reports for a day).
 
@@ -1762,7 +1767,8 @@ Every 10 minutes, the server truncates every site:
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
 - "Truncate", after a confirmation, does as control's Truncate:
-  - Clears the loop status and pump as sent from all but each device's newest status.
+  - Removes the predictions from loop statuses over 1 day old.
+  - Clears the pump as sent from all but each device's newest status.
   - Thins device statuses, and deletes those over 30 days old.
   - Deletes loop settings that no profile or device status refers to, except each app's last seen.
   - Shrinks the DB, and keeps all else, as the card says.

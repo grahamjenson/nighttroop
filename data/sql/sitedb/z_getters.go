@@ -15696,6 +15696,16 @@ func (m *UpsertSummaryPeriodParams) SetTotalDailyBasal(v float64) {
 	m.TotalDailyBasal = v
 }
 
+// GetNow returns the Now value.
+func (m ClearOldLoopStatusesParams) GetNow() int64 {
+	return m.Now
+}
+
+// SetNow sets the Now value and returns the updated ClearOldLoopStatusesParams.
+func (m *ClearOldLoopStatusesParams) SetNow(v int64) {
+	m.Now = v
+}
+
 // GetSince returns the Since value.
 func (m ClearOldLoopStatusesParams) GetSince() int64 {
 	return m.Since

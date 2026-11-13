@@ -161,7 +161,7 @@ each bolus decision and each automatic dose decision. Loop reads none of it back
 
 Nighttroop keeps:
 
-- `loop` and `override` (#516).
+- `loop` and `override` (#516). `loop` is kept as sent for 1 day. After that, it has no `predicted.values`.
 - Pump: battery, reservoir, `clock`, `manufacturer`, `model` (#516), `pumpID`, `suspended`, `bolusing` (followers
   show insulin delivery suspended from these).
 - Uploader: battery, `isCharging`, `name`, `timestamp`.
@@ -245,6 +245,7 @@ Test paths start at `tests/api/nightscout/`.
 | `utcOffset` of treatments, device statuses, profiles (times in UTC) | Fixed: the site timezone's offset; a device status uses its pump's `secondsFromGMT` (were 0). `loop/utc_offset.http` |
 | **Device status** | |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
+| An older status's `loop` (`name`, `timestamp`, `enacted`, `recommendedBolus`) | Fixed: kept as sent for 1 day, then without `predicted.values` (was IOB and COB only, 10 minutes after a newer status). `loopfollow/devicestatus_day.http` |
 | `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
 | Pump `pumpID`, `suspended`, `bolusing` | Fixed: kept after the status as sent is cleared (were dropped). `loop/devicestatus.http` |
 | Uploader `name`, `timestamp`, `isCharging` | Works, also after the status as sent is cleared |
