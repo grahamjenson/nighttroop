@@ -240,6 +240,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - A request refused for what it sent (400, 405, 413, 422), from any API or page, is a `client` error with status,
   method, route pattern (never path or query), the response's reason, request ID, identity, role and User-Agent.
+- An API v1 entry batch stored with entries left out for another problem than glucose out of range: one `client`
+  error with status 200. Its reason gives the count stored, the count left out, and the count for each reason (e.g.
+  `Stored 2 entries and left out 3: 2 Bad or missing body: unknown entry type: bad; 1 glucose out of range`).
 - Sentry gets it as a warning, grouped by status, route and reason, with role, User-Agent, site and identity.
 - For each site: the same one at most once a minute, at most 20 a minute.
 - Not client errors: missing credentials, permissions or records, and rate limits.
@@ -1351,7 +1354,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Calibration (`type` `cal`): left out, its readings kept.
   - Reading out of range (0 or less, or over 1000 mg/dL): left out, the rest stored.
   - Only readings out of range: 200, `[]`, nothing stored. One such reading sent alone: refused.
-  - Up to 10 entries with another problem (e.g. unknown `type`): left out, the rest stored.
+  - Up to 10 entries with another problem (e.g. unknown `type`): left out, the rest stored. The response does not
+    change. The site's client errors show the batch.
   - Nothing else to store: refused, with the problem.
 - Device status: an uploader battery that is not a number is left out. `uploader.battery` is the uploader battery.
 
