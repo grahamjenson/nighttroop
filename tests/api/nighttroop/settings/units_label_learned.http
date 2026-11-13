@@ -1,0 +1,95 @@
+INCLUDE steps/new_site_admin.steps
+
+// xDrip4iOS with a device not added for it: it sends a BG check's units as mg/dl and reads one as mg/dL only when they
+// are exactly mg/dl. Given mg/dL, it read its 110 as 1982, never matched its upload, and sent it again every 15 s.
+NAME create_other
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "iphone", "role": "device_read_write", "client": "other"}
+ASSERT_STATUS 201
+SET other_token {{ .create_other.result.ns_token }}
+
+NAME other_uploads_mg_dl
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .other_token }}
+H Accept: application/json
+B [{"enteredBy": "xDrip4iOS", "eventTime": "{{ time 5 }}", "eventType": "BG Check", "glucose": 110, "glucoseType": "Finger", "units": "mg/dl"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 110 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+// So the device reads mg/dL as mg/dl from now on
+NAME other_reads_mg_dl
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 110 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+// A device that sends mg/dL, as Loop does, which reads a BG check only when its units are exactly mg/dL, keeps mg/dL
+NAME create_loop_like
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "follower", "role": "device_read_write", "client": "other"}
+ASSERT_STATUS 201
+SET loop_like_token {{ .create_loop_like.result.ns_token }}
+
+NAME loop_like_uploads_mg_dL
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .loop_like_token }}
+H Accept: application/json
+B [{"enteredBy": "Loop", "created_at": "{{ time 4 }}", "eventType": "BG Check", "glucose": 120, "glucoseType": "Finger", "units": "mg/dL"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@0.units"
+
+NAME loop_like_reads_mg_dL
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .loop_like_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dL" "@1.units"
+
+// A spelling set through the settings endpoint is kept
+NAME loop_like_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .loop_like_token }}
+ASSERT_STATUS 200
+
+NAME loop_like_sets_mg_dL
+PATCH http://{{ .ns_site }}/api/v3/settings/units_mgdl_label
+H Authorization: Bearer {{ .loop_like_jwt.token }}
+B {"value": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME loop_like_uploads_mg_dl
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .loop_like_token }}
+H Accept: application/json
+B [{"enteredBy": "test", "created_at": "{{ time 3 }}", "eventType": "BG Check", "glucose": 100, "glucoseType": "Finger", "units": "mg/dl"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@0.units"
+
+// A device that first sends mmol/L as mmol, as AAPS and Trio do, is given both units as Nightscout spells them,
+// mg/dl and mmol, as they spell mg/dL mg/dl
+NAME create_trio_like
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "pump", "role": "device_read_write", "client": "other"}
+ASSERT_STATUS 201
+SET trio_like_token {{ .create_trio_like.result.ns_token }}
+
+NAME trio_like_uploads_mmol
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .trio_like_token }}
+H Accept: application/json
+B [{"enteredBy": "Trio", "created_at": "{{ time 2 }}", "eventType": "Temporary Target", "duration": 30, "targetTop": 7, "targetBottom": 7, "units": "mmol"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 126.126 "@0.targetTop"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+NAME trio_like_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .trio_like_token }}
+ASSERT_STATUS 200
+
+NAME trio_like_mmol_label
+GET http://{{ .ns_site }}/api/v3/settings/units_mmol_label
+H Authorization: Bearer {{ .trio_like_jwt.token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@result.value"

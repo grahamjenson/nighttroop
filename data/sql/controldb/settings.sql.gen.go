@@ -12,6 +12,31 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+const learnSiteIdentityUnitsLabels = `-- name: LearnSiteIdentityUnitsLabels :exec
+UPDATE site_identities SET
+    units_mgdl_label = COALESCE(units_mgdl_label, ?1),
+    units_mmol_label = COALESCE(units_mmol_label, ?2)
+WHERE site_id = ?3 AND id = ?4
+`
+
+type LearnSiteIdentityUnitsLabelsParams struct {
+	UnitsMgdlLabel *string
+	UnitsMmolLabel *string
+	SiteID         string
+	ID             int64
+}
+
+// A device is given units back spelt as it first sends them, unless its spelling is set
+func (q *Queries) LearnSiteIdentityUnitsLabels(ctx context.Context, arg LearnSiteIdentityUnitsLabelsParams) error {
+	_, err := q.exec(ctx, q.learnSiteIdentityUnitsLabelsStmt, learnSiteIdentityUnitsLabels,
+		arg.UnitsMgdlLabel,
+		arg.UnitsMmolLabel,
+		arg.SiteID,
+		arg.ID,
+	)
+	return err
+}
+
 const updateSiteIdentitySettings = `-- name: UpdateSiteIdentitySettings :exec
 UPDATE site_identities SET
     -- IDENTITY SETTINGS

@@ -67,7 +67,7 @@ ASSERT_EQUALS 0 "@result.filtered"
 ASSERT_EQUALS 0 "@result.unfiltered"
 ASSERT_EQUALS true "@result.isValid"
 ASSERT_EQUALS false "@result.isReadOnly"
-ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS "mg/dl" "@result.units"
 
 NAME add_treatment_cc
 POST http://{{ site }}/api/v3/treatments
