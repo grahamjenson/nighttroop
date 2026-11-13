@@ -1113,6 +1113,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - In a profile history, the last profile store is the newest changed.
 - A delete moves the document's `srvModified` and the v3 lastModified forward, so a history since a sync has later
   deletes.
+- A v3 delete of a document that is already deleted returns 200 and changes nothing. AAPS deletes a treatment again
+  after a follower deletes it. A v1 delete of it counts 0. A delete of an unknown document returns 404.
 - A treatment or reading created with `isValid` false (AAPS uploads one it deleted while offline) stays deleted:
   - Read and search do not find it.
   - History has it with `isValid` false.

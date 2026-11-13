@@ -206,6 +206,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Careportal or T1DCarer profile switch (`profile`, no `profileJson`) | Fixed: no `profileJson`, so AAPS switches to its own profile of that name (had one with only `units`, so `toProfileSwitch` dropped it) | `careportal_profile_switch.http`, `aaps_storage.sio` |
 | Treatment download (`RemoteTreatment.timestamp` is a Long) | Fixed: API v3 and the storage socket give no `timestamp` (the ISO date API v1 gives Loop made AAPS drop every treatment and its page) | `careportal_download.http`, `aaps_storage.sio` |
 | Treatment deleted offline, uploaded as a create with `isValid` false (`DataSyncSelectorV3`) | Fixed: kept deleted, sent as a delete (was valid, so AAPSClient showed deleted carbs as COB) | `created_deleted.http`, `aaps_storage.sio` |
+| Delete of a treatment that a follower already deleted | Fixed: 200, as Nightscout returns (was 404) | `delete_again.http`, `sync_v3.http` |
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
 | **Device status, food and profiles** | | |
 | Device status: create, history with `srvModified` | Works | `sync_v3.http`, `flow_v3.http` |

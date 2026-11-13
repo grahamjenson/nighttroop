@@ -437,6 +437,13 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 	// A permanent delete can remove a record already soft deleted.
 	deleted, err := m.GetModel(q, ctx, identifier, permanent)
 	if err == sql.ErrNoRows || (err == nil && deleted == nil) {
+		// One deleted already is gone rather than not found, which API v3 answers as done, as Nightscout does, since
+		// AAPS deletes a treatment again after a follower's delete reaches it
+		if !permanent {
+			if gone, goneErr := m.GetModel(q, ctx, identifier, true); goneErr == nil && gone != nil && (*gone).GetDeletedAt() != nil {
+				return nsutils.ErrGone
+			}
+		}
 		return nsutils.ErrNotFound
 	}
 	if err != nil {
