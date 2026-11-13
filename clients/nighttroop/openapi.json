@@ -182,6 +182,49 @@
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
+    "/data/event-groups": {
+      "get": {
+        "operationId": "ListEventGroups", "tags": ["Data"], "summary": "The site's event groups, newest first, with their events",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/EventGroupList" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "CreateEventGroup", "tags": ["Data"], "summary": "Groups events already made, picked by their IDs",
+        "description": "Needs group_type. Each ID sent must be of a kind the type can have, from GET /data/event-groups/choices, and at least one is needed, except for a change (a sensor, site or pump part), which has none. 400 when the type is missing or unknown, an ID is of a kind the type cannot have, none is sent, or an event does not exist; 409 when an event is already in another group.",
+        "requestBody": { "$ref": "#/components/requestBodies/EventGroupBody" },
+        "responses": { "201": { "$ref": "#/components/responses/EventGroupResult" }, "409": { "$ref": "#/components/responses/Error" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/event-groups/choices": {
+      "get": {
+        "operationId": "ListEventGroupChoices", "tags": ["Data"], "summary": "The events that can be put in a group of the type, from an hour before occurred_at to an hour after",
+        "description": "Only events not deleted and in no other group, of the kinds the type can have; a change has none, so its list is empty. With group_id the group's own events are listed too, picked, wherever they are. Needs permission to both create and update event groups. 400 when group_type is missing or unknown; 404 when there is no group with group_id.",
+        "parameters": [
+          { "name": "group_type", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/EventGroupType" } },
+          { "name": "occurred_at", "in": "query", "description": "The time to find events near, in ms; now when not sent", "schema": { "type": "integer", "format": "int64" } },
+          { "name": "group_id", "in": "query", "description": "The group being edited", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/EventChoiceList" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/event-groups/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetEventGroup", "tags": ["Data"], "summary": "The event group with the ID, with its events",
+        "responses": { "200": { "$ref": "#/components/responses/EventGroupResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "UpdateEventGroup", "tags": ["Data"], "summary": "Sets the event group's events to those picked",
+        "description": "The group's events become exactly the IDs sent, so an event not sent is taken out of the group, and kept. The type, time, notes, reason, sensor code and transmitter change only when sent; the other fields do not change. The errors are those of creating a group, and 404 when there is no group with the ID.",
+        "requestBody": { "$ref": "#/components/requestBodies/EventGroupBody" },
+        "responses": { "200": { "$ref": "#/components/responses/EventGroupResult" }, "409": { "$ref": "#/components/responses/Error" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteEventGroup", "tags": ["Data"], "summary": "Deletes the event group with the ID and its events",
+        "description": "Marks the group and each of its events deleted, as the Nightscout API deletes a treatment, so syncing apps see the delete.",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
     "/presets/loop-settings": {
       "get": {
         "operationId": "ListLoopSettings", "tags": ["Data"], "summary": "The sets of loop settings the site's records were made with, newest first",
@@ -526,6 +569,7 @@
       "GlucoseReadingBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GlucoseReading" } } } },
       "InsulinDoseBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InsulinDose" } } } },
       "FoodIntakeBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FoodIntake" } } } },
+      "EventGroupBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EventGroup" } } } },
       "NsDocument": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NsDocument" } } } },
       "NsDocuments": { "required": true, "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } }
     },
@@ -543,6 +587,9 @@
       "LoopSettingsResult": { "description": "A set of a loop app's settings", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/LoopSettings" } } } } } },
       "LoopSettingsList": { "description": "Each set of the loop apps' settings, the last seen first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/LoopSettings" } } } }] } } } } } },
       "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } }] } } } } } },
+      "EventGroupResult": { "description": "An event group", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/EventGroup" } } } } } },
+      "EventGroupList": { "description": "Event groups, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/EventGroup" } } } }] } } } } } },
+      "EventChoiceList": { "description": "The events that can be grouped, by kind", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/EventChoice" } } } } } } },
       "NsError": { "description": "A Nightscout error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
       "NsObject": { "description": "A Nightscout response", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
       "NsDocuments": { "description": "Documents, newest first", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } },
@@ -710,6 +757,90 @@
             }
           }
         ]
+      },
+      "TempBasal": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "duration_minutes": { "type": "integer", "format": "int64" },
+              "rate": { "type": "number", "format": "double", "nullable": true, "description": "U/hr while it runs; 0 is a suspended basal" },
+              "multiplier": { "type": "number", "format": "double", "nullable": true, "description": "Times the scheduled basal at its start, so 0.5 is half" }
+            }
+          }
+        ]
+      },
+      "TempTarget": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "duration_minutes": { "type": "integer", "format": "int64" },
+              "low_target": { "type": "number", "format": "double", "description": "In units" },
+              "high_target": { "type": "number", "format": "double", "description": "In units" },
+              "units": { "$ref": "#/components/schemas/Units" },
+              "insulin_needs_scale_factor": { "type": "number", "format": "double", "nullable": true }
+            }
+          }
+        ]
+      },
+      "EventGroupType": {
+        "type": "string",
+        "description": "A type of group the site can add: a Nightscout treatment's eventType. A change (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir Change, Pump Battery Change) has no events.",
+        "enum": ["Announcement", "BG Check", "Bolus", "Bolus Wizard", "Carb Correction", "Combo Bolus", "Correction Bolus", "Exercise", "Insulin Change", "Meal Bolus", "Note", "Profile Switch", "Pump Battery Change", "Question", "Sensor Change", "Sensor Start", "Sensor Stop", "Site Change", "Snack Bolus", "SMB", "External Insulin", "Temp Basal", "Temporary Target", "Temporary Override", "Cannula Fill", "Prime", "Reservoir Change", "Calibration"],
+        "x-enum-varnames": ["GroupAnnouncement", "GroupBGCheck", "GroupBolus", "GroupBolusWizard", "GroupCarbCorrection", "GroupComboBolus", "GroupCorrectionBolus", "GroupExercise", "GroupInsulinChange", "GroupMealBolus", "GroupNote", "GroupProfileSwitch", "GroupPumpBatteryChange", "GroupQuestion", "GroupSensorChange", "GroupSensorStart", "GroupSensorStop", "GroupSiteChange", "GroupSnackBolus", "GroupSMB", "GroupExternalInsulin", "GroupTempBasal", "GroupTemporaryTarget", "GroupTemporaryOverride", "GroupCannulaFill", "GroupPrime", "GroupReservoirChange", "GroupCalibration"]
+      },
+      "EventKind": {
+        "type": "string",
+        "description": "A kind of event, named by the event group's field for its ID",
+        "enum": ["glucose_reading_id", "insulin_dose_id", "food_intake_id", "temp_basal_id", "temp_target_id", "profile_switch_id", "activity_id", "notification_event_id"]
+      },
+      "EventGroup": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "description": "A Nightscout treatment: events recorded together, like a meal bolus's reading, food and insulin. Each event is in at most one group. A group picks its events by their IDs, each null when it has none of that kind; a glucose reading, insulin dose, food intake, temp basal or temp target is also read back whole, null when it has none.",
+            "properties": {
+              "group_type": { "type": "string", "description": "The treatment's eventType: one of EventGroupType when the site adds it, any the Nightscout API has when an app uploads it" },
+              "duration_minutes": { "type": "integer", "format": "int64", "nullable": true, "description": "Set when creating; an edit does not change it" },
+              "sensor_code": { "type": "string", "nullable": true, "description": "A sensor change's sensor code, as xDrip+ sends it" },
+              "transmitter_id": { "type": "string", "nullable": true },
+              "pump_id": { "type": "string", "nullable": true, "readOnly": true, "description": "The pump the app named, as AAPS does on every treatment; the site does not set it" },
+              "pump_serial": { "type": "string", "nullable": true, "readOnly": true },
+              "pump_type": { "type": "string", "nullable": true, "readOnly": true },
+              "glucose_reading_id": { "type": "string", "nullable": true },
+              "insulin_dose_id": { "type": "string", "nullable": true },
+              "food_intake_id": { "type": "string", "nullable": true },
+              "temp_basal_id": { "type": "string", "nullable": true },
+              "temp_target_id": { "type": "string", "nullable": true },
+              "profile_switch_id": { "type": "string", "nullable": true },
+              "activity_id": { "type": "string", "nullable": true },
+              "notification_event_id": { "type": "string", "nullable": true },
+              "glucose_reading": { "$ref": "#/components/schemas/GlucoseReading" },
+              "insulin_dose": { "$ref": "#/components/schemas/InsulinDose" },
+              "food_intake": { "$ref": "#/components/schemas/FoodIntake" },
+              "temp_basal": { "$ref": "#/components/schemas/TempBasal" },
+              "temp_target": { "$ref": "#/components/schemas/TempTarget" }
+            }
+          }
+        ]
+      },
+      "EventChoice": {
+        "type": "object",
+        "description": "An event that can be put in a group",
+        "required": ["kind", "id", "occurred_at", "picked"],
+        "properties": {
+          "kind": { "$ref": "#/components/schemas/EventKind" },
+          "id": { "type": "string", "description": "The event's ID, sent as the group's field named by kind" },
+          "occurred_at": { "type": "integer", "format": "int64" },
+          "amount": { "type": "number", "format": "double", "nullable": true, "description": "A reading's glucose or a temp target's low target, in the units of the identity's settings; a dose's U; a food's carbs in g; a temp basal's U/hr" },
+          "minutes": { "type": "integer", "format": "int64", "nullable": true, "description": "How long a temp basal, temp target, profile switch or activity lasts" },
+          "detail": { "type": "string", "nullable": true, "description": "What else tells it apart: a reading's or dose's type, a food's or profile's name, an activity's name or type, a notification's title, or a temp target's high target in mg/dL" },
+          "picked": { "type": "boolean", "description": "Whether it is in the group of group_id" }
+        }
       },
       "SummaryPeriod": {
         "type": "object",

@@ -1,6 +1,11 @@
 package controlmodels
 
-import "nighttroop.t1d.nz/utils/consts"
+import (
+	"strings"
+
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/consts"
+)
 
 // Connector is a site's connector and its reports; never its credentials
 type Connector struct {
@@ -31,4 +36,20 @@ type Connector struct {
 // ID is the site and type that pick out a connector, as site::type
 func (s *Connector) ID() string {
 	return s.SiteID + "::" + string(s.Type)
+}
+
+// sharedHostIDLength is how many of a MAC's last hex characters name its host: its first are the key's, the same for all
+const sharedHostIDLength = 8
+
+// SharedHost is a Nightscout host more than one connector syncs from, named by the end of its MAC, never by its host
+type SharedHost struct {
+	ID         string   `json:"id"`
+	Connectors int64    `json:"connectors"`
+	SiteIDs    []string `json:"site_ids"`
+}
+
+// SharedHostFromDB is the host's row, with its sites
+func SharedHostFromDB(row *controldb.SharedNightscoutHostsRow) *SharedHost {
+	mac := *row.UrlHostMac
+	return &SharedHost{ID: mac[max(0, len(mac)-sharedHostIDLength):], Connectors: row.Connectors, SiteIDs: strings.Split(row.SiteIds, ",")}
 }

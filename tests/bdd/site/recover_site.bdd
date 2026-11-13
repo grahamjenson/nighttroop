@@ -1,4 +1,4 @@
-// A new site's credentials say to keep the backup key safe, as it is what gets a new admin login on the recover page
+// A new site's credentials say to keep the backup key safe, as it is what gets new admin credentials on the recover page
 GOTO {{ server_url }}/
 ASSERT_STATUS 200
 CLICK "Create Site"

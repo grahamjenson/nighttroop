@@ -1,0 +1,43 @@
+// Two sites sync from one Nightscout host, written two ways, and four from another, so both hosts are shared. The
+// sites of the second host are made last, so create_new_site is one of them.
+INCLUDE steps/new_site_admin.steps
+POST /settings/connectors/nightscout {"url_or_username": "https://two-sites.shared-hosts.test", "password": "a-token", "enabled": true}
+INCLUDE steps/new_site_admin.steps
+POST /settings/connectors/nightscout {"url_or_username": "http://TWO-SITES.shared-hosts.test:80/", "password": "a-token", "enabled": true}
+INCLUDE steps/new_site_admin.steps
+POST /settings/connectors/nightscout {"url_or_username": "https://four-sites.shared-hosts.test", "password": "a-token", "enabled": true}
+INCLUDE steps/new_site_admin.steps
+POST /settings/connectors/nightscout {"url_or_username": "https://four-sites.shared-hosts.test", "password": "a-token", "enabled": true}
+INCLUDE steps/new_site_admin.steps
+POST /settings/connectors/nightscout {"url_or_username": "https://four-sites.shared-hosts.test", "password": "a-token", "enabled": true}
+INCLUDE steps/new_site_admin.steps
+POST /settings/connectors/nightscout {"url_or_username": "https://four-sites.shared-hosts.test:443", "password": "a-token", "enabled": true}
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// The Connectors page shows the shared hosts above its table, the most used first, by the end of a MAC of the host,
+// never the host or its URL
+CLICK #control--menu
+CLICK #control--connectors-button
+ASSERT_PATH /connectors
+ASSERT_VISIBLE #controlSharedHostsTable
+ASSERT_TEXT_VISIBLE Shared Nightscout Hosts
+ASSERT_NOT_VISIBLE #control--shared-hosts >> text=shared-hosts.test
+// The host with four sites is amber, as more than three may be Nighttroop used as a proxy
+ASSERT_VISIBLE #controlSharedHostsTable tbody tr.bg-amber-100:has(#control--shared-host--site--{{ .create_new_site.site_subdomain }})
+ASSERT_VISIBLE #controlSharedHostsTable tbody tr.bg-amber-100:has(td:text-is("4"))
+// The host with two sites is not
+ASSERT_VISIBLE #controlSharedHostsTable tbody tr:not(.bg-amber-100):has(td:text-is("2"))
+ASSERT_NOT_VISIBLE #controlSharedHostsTable tbody tr.bg-amber-100:has(td:text-is("2"))
+SCREENSHOT shared_hosts
+
+// A site's link opens its control page
+SAVE_TEXT #controlSharedHostsTable>tbody>tr.bg-amber-100>td>a:first-child linked_site
+CLICK #controlSharedHostsTable>tbody>tr.bg-amber-100>td>a:first-child
+ASSERT_PATH /sites/{{ .linked_site }}
+ASSERT_VISIBLE #control--site--page

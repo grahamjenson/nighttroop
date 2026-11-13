@@ -195,6 +195,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Bolus Wizard bolus and carbs: two Meal Boluses at the same `date` | Fixed: two treatments, each with its own identifier. The bolus keeps its insulin (Nightscout replaces it with the carbs). A delete of the carbs deletes only them (was merged, so it deleted the bolus) | `wizard_dedup_v3.http` |
 | Bolus `icfg` and `isBasalInsulin` (without them, AAPS uses its settings' insulin and a bolus is not basal: `BolusExtension.kt` `NSBolus.toBolus`) | Works. Nighttroop summaries still count a basal insulin bolus as a bolus (TODO P3) | `sync_v3.http` |
 | Bolus Wizard `bolusCalculatorResult` (AAPS restores the record from it, or drops the record: `TreatmentMapper.kt:270`) | Works: returned exactly as sent. Left out if not JSON or over 4096 characters | `bolus_wizard.http` |
+| Bolus Wizard with no BG (`glucose` 0) | Fixed: kept without a glucose reading (was 400, and AAPS does not send it again) | `bolus_wizard.http` |
 | `units` as AAPS writes them | Works: a device added for AAPS writes `mg/dl`. Other devices write `mg/dL`, which AAPS also reads as mg/dL | `bolus_wizard.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), and its update | Works: kept as a multiplier | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Temp basal `type` (for example `PUMP_SUSPEND`) | Works: a follower shows a suspended pump | `sync_v3.http` |
@@ -205,6 +206,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Careportal or T1DCarer profile switch (`profile`, no `profileJson`) | Fixed: no `profileJson`, so AAPS switches to its own profile of that name (had one with only `units`, so `toProfileSwitch` dropped it) | `careportal_profile_switch.http`, `aaps_storage.sio` |
 | Treatment download (`RemoteTreatment.timestamp` is a Long) | Fixed: API v3 and the storage socket give no `timestamp` (the ISO date API v1 gives Loop made AAPS drop every treatment and its page) | `careportal_download.http`, `aaps_storage.sio` |
 | Treatment deleted offline, uploaded as a create with `isValid` false (`DataSyncSelectorV3`) | Fixed: kept deleted, sent as a delete (was valid, so AAPSClient showed deleted carbs as COB) | `created_deleted.http`, `aaps_storage.sio` |
+| Delete of a treatment that a follower already deleted | Fixed: 200, as Nightscout returns (was 404) | `delete_again.http`, `sync_v3.http` |
 | Treatment without `enteredBy` (Meal Bolus, Carb Correction, Profile Switch) | Fixed: `enteredBy` is its `app`, `AAPS` (was the device name, for example `pwd_phone`) | `entered_by.http` |
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
 | **Device status, food and profiles** | | |
@@ -217,6 +219,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | `/storage` subscribe, `create`, `update`, `delete` | Works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | Works | `alarm.sio`, `aaps_alarm.sio` |
 | `/alarm` `announcement` | Fixed in #511 (was never sent) | `aaps_alarm.sio` |
+| `/alarm` `announcement` added on the site | Fixed: its notification's notes are the message (was empty) | `aaps_alarm.sio` |
 | Client control: `settings` documents | Kept as sent, shared by the site's identities. Keys up to 128 characters for `aaps_clientcontrol_<kind>_<client UUID>` (over 36 was refused, so no client could pair) | `running_config.http` |
 | Client control: v2 roles and subjects | Not supported (TODO P4) | — |
 | v1 `authorize` with the SHA1 of the secret | Works (#512) | `aaps_v1.sio` |

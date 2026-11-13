@@ -83,3 +83,15 @@ NAME list_connectors_without_login
 GET http://control.localhost/connectors
 H Accept: application/json
 ASSERT_STATUS 401
+
+// The Nightscout hosts more than one connector syncs from, which a signed in control identity can see
+NAME list_shared_hosts
+GET http://control.localhost/connectors/shared-hosts
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME list_shared_hosts_without_login
+GET http://control.localhost/connectors/shared-hosts
+H Accept: application/json
+ASSERT_STATUS 401

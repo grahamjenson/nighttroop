@@ -80,6 +80,9 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 	if params.UrlOrUsernameEnc, err = cleanURLOrUsername(ctx, siteContext, params.Type, params.UrlOrUsernameEnc); err != nil {
 		return nil, err
 	}
+	if params.UrlHostMac, err = hostMAC(siteContext.Config.Security, params.Type, params.UrlOrUsernameEnc); err != nil {
+		return nil, err
+	}
 
 	if params.Type == consts.ConnectorTypeLibre {
 		if params.Region == nil || *params.Region == "" {
@@ -137,6 +140,9 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 
 	if params.UrlOrUsernameEnc != nil {
 		if params.UrlOrUsernameEnc, err = cleanURLOrUsername(ctx, siteContext, params.Type, params.UrlOrUsernameEnc); err != nil {
+			return nil, err
+		}
+		if params.UrlHostMac, err = hostMAC(siteContext.Config.Security, params.Type, params.UrlOrUsernameEnc); err != nil {
 			return nil, err
 		}
 	}
@@ -319,6 +325,20 @@ func cleanURLOrUsername(ctx context.Context, siteContext *httputils.SiteContext,
 		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_nightscout_url", i18n.Data{"Error": err}))
 	}
 	return normalized, nil
+}
+
+// hostMAC is a MAC of a Nightscout connector's normalised URL's host, with its port if not the default, so the control
+// site can count the sites syncing from one host without keeping it in the clear. Other connectors have none.
+func hostMAC(sec *security.SecurityConfig, sstype consts.ConnectorType, normalizedURL *string) (*string, error) {
+	if sstype != consts.ConnectorTypeNightscout || normalizedURL == nil {
+		return nil, nil
+	}
+	_, host, _ := strings.Cut(*normalizedURL, "://")
+	mac, err := sec.MACFor(security.PurposeNightscoutHost, host)
+	if err != nil {
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Errorf("Failed to MAC connector host: %s", err))
+	}
+	return &mac, nil
 }
 
 // encryptCredentials encrypts in place, for the site, each of the connector's URL or username and password that is set
