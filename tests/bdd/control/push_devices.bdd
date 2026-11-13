@@ -11,7 +11,7 @@ ASSERT_VISIBLE #control--push-devices-button
 CLICK #control--push-devices-button
 ASSERT_STATUS 200
 ASSERT_PATH /push-devices
-ASSERT_TEXT_VISIBLE never with their tokens
+ASSERT_TEXT_VISIBLE Their tokens are never shown.
 ASSERT_VISIBLE #control--push-devices--table
 SCREENSHOT push_devices
 

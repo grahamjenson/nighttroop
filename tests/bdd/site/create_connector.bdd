@@ -51,7 +51,7 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--submit
 INPUT #site--settings--nightscout-connector--url https://has-a-path.test/nightscout
 CLICK #site--settings--nightscout-connector--url
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:invalid
-CLICK "Connect your Nightscout instance"
+CLICK "Connect your Nightscout site"
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:valid
 
 // A pasted Nightscout link with its token is split into the base URL and the API secret or token, so both boxes are
@@ -59,7 +59,7 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--url:valid
 ASSERT_TEXT_VISIBLE API Secret or Token
 ASSERT_VISIBLE #site--settings--nightscout-connector--password:invalid
 INPUT #site--settings--nightscout-connector--url https://split-me.test/api/v1/entries.json?token=pasted-token
-CLICK "Connect your Nightscout instance"
+CLICK "Connect your Nightscout site"
 ASSERT_VISIBLE #site--settings--nightscout-connector--password:valid
 SCREENSHOT nightscout_link_split
 
@@ -111,7 +111,7 @@ ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--backfill
 
 // A link with api_secret is split the same way, and the base URL is what is saved
 INPUT #site--settings--nightscout-connector--url https://split-me.test/api/v1?api_secret=another-secret
-CLICK "Connect your Nightscout instance"
+CLICK "Connect your Nightscout site"
 CLICK #site--settings--nightscout-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated

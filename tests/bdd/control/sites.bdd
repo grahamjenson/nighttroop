@@ -92,7 +92,7 @@ ASSERT_VISIBLE #control--site--action-archive >> text=Offered once it is disable
 ASSERT_VISIBLE #control--site--action-disable >> text=Stops serving the site. Its data is kept.
 ASSERT_VISIBLE #control--site--disable
 // An admin can download a copy of its DB to look into, which its admins see in its events
-ASSERT_VISIBLE #control--site--action-download-db >> text=Its admins see that you did, in its events.
+ASSERT_VISIBLE #control--site--action-download-db >> text=Its admins see the download in its events.
 ASSERT_VISIBLE #control--site--download-db[href$="/db"][download]
 SCREENSHOT site_download_db
 // Truncating asks first (the test accepts), then shows its page again, with the event saying so

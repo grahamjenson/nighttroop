@@ -43,7 +43,10 @@
 
 1. Translations (the text is in `utils/i18n/locales/*.en.yaml`):
 
-    1. P2: Review the English wording in the locale files, page by page, e.g. the reports' out of date notice
+    1. P4: Use one word for the same thing across the pages, as the wording review left these for their own change:
+       "log in" or "sign in", "Push Certificates" or "Push Credentials" (the site's page and its error say Certificates,
+       control and the page's form say Credentials), "NS" or "Nightscout" for the URL and token (also in the welcome
+       page's copy-all text), and "U/hr" or "U/h" (also written in Go)
 
     1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
        medical words like hypo, time in range and AGP must not be machine translated
