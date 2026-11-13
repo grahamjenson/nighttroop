@@ -61,7 +61,7 @@ SCREENSHOT totp_checked
 CLICK #public--login-button
 ASSERT_NEW_PAGE
 ASSERT_PATH /login
-ASSERT_VISIBLE .login-form-target h2:text-is("Nighttroop Login")
+ASSERT_VISIBLE .login-form-target h2:text-is("Nighttroop Sign In")
 SCREENSHOT login
 
 // PUT IN THE WRONG password
@@ -97,7 +97,7 @@ CLICK #site--login-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--login--otp-1
 ASSERT_VISIBLE #site--login--otp-1[autocomplete="one-time-code"]
-ASSERT_VISIBLE #otp h2:text-is("Nighttroop Login")
+ASSERT_VISIBLE #otp h2:text-is("Nighttroop Sign In")
 ASSERT_PATH /login
 // The code says where it comes from, and is not marked invalid before one has been tried
 ASSERT_TEXT_VISIBLE Enter the 6-digit code from your authenticator app

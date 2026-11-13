@@ -80,6 +80,20 @@ Write `REQUIREMENTS.md`, `README.md` and the Markdown files in `docs` in ASD-STE
     - Put related items in a group with a short heading that says what is in it.
     - Do not repeat facts, or explain history a reader does not need.
 
+#### Words
+
+The words the pages, toasts, errors and docs use for one thing (UI text is in `utils/i18n/locales`):
+
+- **sign in**, **sign out**, and a **Sign In** button: not log in, log out or login.
+- **Push Credentials**: not Push Certificates.
+- **Nightscout URL** and **Nightscout token**: not NS, unless an app's own setting is called that.
+- **U/hr** for an insulin rate: not U/h.
+- **credentials**: the username, password, TOTP secret and Nightscout token shown once.
+- **username** on a sign in form and its errors: not name.
+- **connector**: where a site syncs data from, not source.
+- **device status**: what a loop's phone reports, not device report.
+- **restore** an archived site: not hydrate.
+
 ## SQL
 
 - Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.

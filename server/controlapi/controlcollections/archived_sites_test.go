@@ -20,8 +20,8 @@ func TestHydratingRefused(t *testing.T) {
 		name, from, to, message string
 	}{
 		{"only to live", "archived", "disabled", "an archived site's state can only be changed to live"},
-		{"only an archived site", "live", "live", "only an archived site can be hydrated"},
-		{"only with S3", "archived", "live", "a site can only be hydrated when S3 is connected"},
+		{"only an archived site", "live", "live", "only an archived site can be restored"},
+		{"only with S3", "archived", "live", "a site can only be restored when S3 is connected"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := (&ArchivedSitesCollection{}).UpdateRow(t.Context(), controlContext, &controlmodels.Site{ID: siteID, State: test.from}, &controlmodels.Site{State: test.to})
