@@ -1,0 +1,90 @@
+# xDrip+ sends every bolus, carbs and note with the eventType "<none>", Nightscout's careportal's treatment with no
+# event type, as Juggluco sends its amounts. LoopFollow and Loop's NightscoutKit read insulin only from a bolus
+# (Correction Bolus, Meal Bolus, ...) and carbs only from a Meal Bolus or Carb Correction, so one sent as "<none>" is
+# kept as the one its amounts are: insulin and carbs a Meal Bolus, carbs a Carb Correction, insulin a Correction Bolus,
+# and neither a Note. One sent as a Note stays a Note, whatever its amounts.
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME xdrip_bolus_with_carbs
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "4a5b6c7d-8e9f-4a0b-9c1d-2e3f4a5b6c7d", "_id": "4a5b6c7d8e9f4a0b9c1d2e3f",
+   "carbs": 12.0, "insulin": 1.0, "created_at": "{{ time 10 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Meal Bolus" "@eventType"
+ASSERT_EQUALS 1 "@insulin"
+ASSERT_EQUALS 12 "@carbs"
+
+NAME xdrip_bolus
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d", "_id": "5a6b7c8d9e0f4a1b8c2d3e4f",
+   "carbs": 0.0, "insulin": 0.5, "created_at": "{{ time 12 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Correction Bolus" "@eventType"
+ASSERT_EQUALS 0.5 "@insulin"
+
+NAME xdrip_carbs
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "6b7c8d9e-0f1a-4b2c-9d3e-4f5a6b7c8d9e", "_id": "6b7c8d9e0f1a4b2c9d3e4f5a",
+   "carbs": 25.0, "insulin": 0.0, "created_at": "{{ time 14 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Carb Correction" "@eventType"
+ASSERT_EQUALS 25 "@carbs"
+
+NAME xdrip_note
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "7c8d9e0f-1a2b-4c3d-8e4f-5a6b7c8d9e0f", "_id": "7c8d9e0f1a2b4c3d8e4f5a6b",
+   "notes": "Walked the dog", "carbs": 0.0, "insulin": 0.0, "created_at": "{{ time 16 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Note" "@eventType"
+
+# Changed in xDrip+, the bolus is sent again with the same _id, and is changed, not added
+NAME xdrip_bolus_with_carbs_changed
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "4a5b6c7d-8e9f-4a0b-9c1d-2e3f4a5b6c7d", "_id": "4a5b6c7d8e9f4a0b9c1d2e3f",
+   "carbs": 20.0, "insulin": 1.0, "created_at": "{{ time 10 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "4a5b6c7d8e9f4a0b9c1d2e3f" "@_id"
+ASSERT_EQUALS "Meal Bolus" "@eventType"
+ASSERT_EQUALS 20 "@carbs"
+
+NAME careportal_note_with_carbs
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Note", "enteredBy": "careportal", "notes": "snack?", "carbs": 10, "created_at": "{{ time 18 }}"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "Note" "@0.eventType"
+ASSERT_EQUALS 10 "@0.carbs"
+
+# LoopFollow's read, newest first, finds each once, with the event type it reads the amounts of
+NAME loopfollow_reads_treatments
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ time 20 }}&count=100
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 5 "@"
+ASSERT_EQUALS "Meal Bolus" "@0.eventType"
+ASSERT_EQUALS 20 "@0.carbs"
+ASSERT_EQUALS "Correction Bolus" "@1.eventType"
+ASSERT_EQUALS "Carb Correction" "@2.eventType"
+ASSERT_EQUALS "Note" "@3.eventType"
+ASSERT_EQUALS "Note" "@4.eventType"
+
+# Trio and AAPS find carbs by their amount, whatever the event type
+NAME find_carbs
+GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&count=100
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Meal Bolus" "@0.eventType"
+ASSERT_EQUALS 20 "@0.carbs"
+
+NAME v3_reads_meal_bolus
+GET http://{{ site }}/api/v3/treatments/4a5b6c7d8e9f4a0b9c1d2e3f
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Meal Bolus" "@result.eventType"

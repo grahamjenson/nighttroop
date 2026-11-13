@@ -141,7 +141,8 @@ SET bolus_ms {{ itime 8 }}
 SET bolus_at {{ time 8 }}
 SET bolus_java {{ javatime 8 }}
 
-// A bolus with carbs has the eventType <none>
+// A bolus with carbs has the eventType <none>. It is kept as a Meal Bolus, as LoopFollow and NightscoutKit read the
+// amounts only of a bolus or carbs, so they would not see it as a Note
 NAME xdrip_upsert_bolus
 PUT http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -153,7 +154,7 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@_id"
 # The uuid is given back as sent, as xDrip+ matches its own treatments by it
 ASSERT_EQUALS "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b" "@uuid"
-ASSERT_EQUALS "Note" "@eventType"
+ASSERT_EQUALS "Meal Bolus" "@eventType"
 ASSERT_EQUALS 4.5 "@insulin"
 ASSERT_EQUALS 45 "@carbs"
 ASSERT_EQUALS "pizza" "@notes"
@@ -168,6 +169,7 @@ B {"timestamp": {{ .bolus_ms }}, "eventType": "<none>", "enteredBy": "xdrip", "n
    "sysTime": "{{ .bolus_java }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@_id"
+ASSERT_EQUALS "Meal Bolus" "@eventType"
 ASSERT_EQUALS 50 "@carbs"
 
 NAME xdrip_upsert_note
@@ -178,6 +180,7 @@ B {"timestamp": {{ itime 30 }}, "eventType": "<none>", "enteredBy": "xdrip pos:5
    "sysTime": "{{ javatime 30 }}", "_id": "2f1b4c8d3e5a4b7c9d0e1f2a"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Walked the dog" "@notes"
+ASSERT_EQUALS "Note" "@eventType"
 
 // Treatments.sensorStart
 NAME xdrip_upsert_sensor_start

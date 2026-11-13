@@ -1319,7 +1319,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 | Sent                                                                     | Stored as                               |
 | ------------------------------------------------------------------------ | --------------------------------------- |
-| `eventType` `<none>` (careportal, no type)                               | Note, with its insulin and carbs        |
+| `eventType` `<none>` (careportal, no type) with insulin and carbs        | Meal bolus                              |
+| `eventType` `<none>` with carbs only                                     | Carb correction                         |
+| `eventType` `<none>` with insulin only                                   | Correction bolus                        |
+| `eventType` `<none>` with no insulin and no carbs                        | Note                                    |
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
 | `glucoseType` with the reading after a colon (e.g. `Finger: 6.7 mmol/L`) | Finger prick                            |
@@ -1328,6 +1331,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | xDrip+ `Sensor Stop`                                                     | Event group, with its event type        |
 | Sensor, site or pump part change (e.g. `Sensor Change`, `Site Change`)   | Event group of its type, with no events |
 
+- xDrip+ sends each bolus, carbs and note as `<none>`. Juggluco sends its amounts as `<none>`.
+- LoopFollow and NightscoutKit read insulin and carbs only from boluses and carb corrections.
+- A treatment sent as `Note` stays a Note, also with carbs or insulin.
 - xDrip+ treatments after a `Sensor Stop` are kept. The site can add a Sensor Stop event group.
 - v2 properties ages (`sage`, `cage`, `iage`, `bage`) and the summary use change event groups.
 - Combo bolus `splitNow` and `splitExt`: fractions now and over time (70 as 0.7), returned as sent.
