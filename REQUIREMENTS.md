@@ -61,14 +61,14 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Sign in with username, password and TOTP code. Sign out.
 - Tab order: username, password, code (skips the show password button).
-- As on a site, the sixth code digit (typed or pasted) sends the login, if username and password are in. A code typed
-  first waits for Log in. A wrong code is not sent again.
-- A failed login shows an error toast, "Wrong name, password or code. Codes change every 30 seconds, so use the newest
-  one." or too many login attempts. Inputs are invalid only from then to the next send, and have no placeholders.
+- As on a site, the sixth code digit (typed or pasted) sends the sign in, if username and password are in. A code typed
+  first waits for Sign In. A wrong code is not sent again.
+- A failed sign in shows an error toast, "Wrong username, password or code. Codes change every 30 seconds, so use the newest
+  one." or too many sign in attempts. Inputs are invalid only from then to the next send, and have no placeholders.
 
 #### Passkeys
 
-- "Log in with a passkey" signs in the admin whose passkey the browser has, with no name, password or code.
+- "Sign in with a passkey" signs in the admin whose passkey the browser has, with no name, password or code.
   - Rate limited for each IP, and for all IPs at a much higher rate. Each, failed or not, is a sign in event.
 - Account (Security menu) shows the signed in admin, and adds and removes its passkeys as a site's My Account does:
   - only for the control site's own address;
@@ -168,7 +168,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - control admins only, within the site's download limit;
   - records a "Site DB downloaded by control" event, with the admin, on the site's Events page.
 - Permanent delete (for example, of a site never used) deletes its identities (with passwords, TOTP secrets and push
-  tokens) and push credentials. Archive keeps them for hydrate.
+  tokens) and push credentials. Archive keeps them for restore.
 
 ### A site's identities
 
@@ -220,7 +220,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Never the secret, in the page or JSON API (`/push-credentials`, `/push-credentials/{id}`).
 - Add Push Credential (`POST /push-credentials`, with `site_id`):
   - live sites only, checked and encrypted as a site admin's, within the site's 5;
-  - added by the admin's name, and shown on the site's Push Certificates page;
+  - added by the admin's name, and shown on the site's Push Credentials page;
   - a site not live, or a key that cannot be read, is refused with the modal open.
 - For every site (no `site_id`): refused (400).
 - Delete (any, after a confirmation) removes it and its secret. Pushes stop using it.
@@ -249,6 +249,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - A request refused for what it sent (400, 405, 413, 422), from any API or page, is a `client` error with status,
   method, route pattern (never path or query), the response's reason, request ID, identity, role and User-Agent.
+- An API v1 entry batch stored with entries left out for another problem than glucose out of range: one `client`
+  error with status 200. Its reason gives the count stored, the count left out, and the count for each reason (e.g.
+  `Stored 2 entries and left out 3: 2 Bad or missing body: unknown entry type: bad; 1 glucose out of range`).
 - Sentry gets it as a warning, grouped by status, route and reason, with role, User-Agent, site and identity.
 - For each site: the same one at most once a minute, at most 20 a minute.
 - Not client errors: missing credentials, permissions or records, and rate limits.
@@ -257,7 +260,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - A client error or 5xx keeps the first 8 KB of its request body, sent to Sentry as `request_body` with any error
   reported during the request.
-- JSON or form only, with credentials and connector logins `REDACTED` (tokens, secrets, passwords, keys, TOTP codes,
+- JSON or form only, with credentials, also connectors', `REDACTED` (tokens, secrets, passwords, keys, TOTP codes,
   usernames, emails, URLs).
 - Other bodies, or one cut at 8 KB (for example, JSON that did not parse): size and content type only.
 
@@ -307,10 +310,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 ### Rate limits
 
-- Refreshes every 10 seconds. Lists each limiter kind: every request, the control site's signed out, an IP's, logins,
+- Refreshes every 10 seconds. Lists each limiter kind: every request, the control site's signed out, an IP's, sign ins,
   sites created, a site's and an identity's reads and writes, connector changes, identities created, downloads.
 - Each kind:
-  - what one is for (server, IP, site, identity, login name or IP on a site);
+  - what one is for (server, IP, site, identity, username or IP on a site);
   - rate a minute, burst, and how many are kept;
   - the most used one's spent burst: amber from half, red while any would refuse;
   - how many would refuse now.
@@ -374,16 +377,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - The page removes the ID from its address. Opened again (later, or on another site), it says they were shown and
     links to the recover page.
 
-#### Admin login step
+#### Admin sign in step
 
 - A separate step: username, password, TOTP secret as a QR code and text, and a code check.
 - The code check runs at the sixth digit, with no click, and changes nothing. A wrong code says so. A recovered site
   has the same check.
-- **Log in**:
+- **Sign In**:
   - Disabled until an authenticator code matches. Text under it says to check a code in step 2 first.
-  - Opens the login in a new tab, admin name filled in, so the credentials stay open.
+  - Opens the sign in page in a new tab, admin name filled in, so the credentials stay open.
 - Buttons have the shape of **Copy all credentials**, not round pills.
-- **Log in with a passkey**, beside **Log in** on a new or recovered site, with no authenticator app:
+- **Sign in with a passkey**, beside **Sign In** on a new or recovered site, with no authenticator app:
   - Adds an admin passkey on the site's address (fingerprint, face or PIN) and signs the admin in.
   - Only for the browser shown the credentials, for 15 minutes, one time. Its cookie sent again adds nothing once the
     admin has a passkey.
@@ -429,15 +432,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Layout
 
-- No scroll on a laptop or phone: create site (with medical note and footer), site login and control login.
-- Site login, control login and control setup: a white card centred on a grey page that fills the window, above the
+- No scroll on a laptop or phone: create site (with medical note and footer), site sign in and control sign in.
+- Site sign in, control sign in and control setup: a white card centred on a grey page that fills the window, above the
   control site's footer.
-- On a phone, all six TOTP boxes fit in their card, and shrink when it is narrower (site and control login).
+- On a phone, all six TOTP boxes fit in their card, and shrink when it is narrower (site and control sign in).
 - `MODE=staging`: a large banner on every page (public, site, control) says it is a test site, frequently wiped.
 - Toasts: at the top of every page (site and control), newest on top. A fourth hides the oldest until it times out,
   so three at most take space and the newest always shows.
 - Tab title: the page's name (`Glucose Readings · Nighttroop`), after a full load or a link or tab. With no title
-  (login): `Nighttroop`.
+  (sign in): `Nighttroop`.
 
 ### Navigation
 
@@ -451,7 +454,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 |---|---|---|
 | Data | Header | Side groups: **Readings & treatments** (Glucose Readings, Insulin Doses, Food Intakes, Temp Targets, Temp Basals, Profile Switches), **Events** (Activities, Notifications, Event Groups), **Devices** (Device Status), **Presets** (Food Presets, Profiles, Loop Settings) |
 | Reports | Header | Summaries (first), Overview, AGP, TDD |
-| Settings | User menu | Side groups: **This site** (General), **People & devices** (Users & Devices, also another identity's settings), **Push** (Push Devices, Push Certificates) |
+| Settings | User menu | Side groups: **This site** (General), **People & devices** (Users & Devices, also another identity's settings), **Push** (Push Devices, Push Credentials) |
 | Connectors | User menu | None (`/settings/connectors`) |
 | Alarms | User menu | None (`/settings/alarms`) |
 | Logs & Events | User menu | A row: Events (first), Errors, Logs |
@@ -461,8 +464,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### User menu and access
 
 - User menu, with no scroll on a computer: who is signed in, My Account, Getting Started, Settings, Connectors
-  (admins), Alarms, Logs & Events, Usage (admins), Log out. Each has its icon and is marked when its page shows.
-- Only tabs and items the identity can open show. A non-admin has no Users & Devices or Push Certificates tab, and no
+  (admins), Alarms, Logs & Events, Usage (admins), Sign out. Each has its icon and is marked when its page shows.
+- Only tabs and items the identity can open show. A non-admin has no Users & Devices or Push Credentials tab, and no
   Connectors, Logs & Events or Usage item.
 
 #### Page search
@@ -962,7 +965,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Push credentials
 
-- Settings, Push Certificates (`/settings/push-credentials`). Only admins can add, list, see and delete them.
+- Settings, Push Credentials (`/settings/push-credentials`). Only admins can add, list, see and delete them.
 - An Apple APNs key (team ID, key ID, the `.p8` file pasted in) or a Firebase service account (project ID, its JSON).
 - Apps it pushes to, ticked (`loop`, `trio`, `loopfollow`, `t1dcarer`). Optional: the only bundle IDs, comma separated.
 - Refused, with the modal left open: an unreadable key, an unknown app.
@@ -1360,7 +1363,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Calibration (`type` `cal`): left out, its readings kept.
   - Reading out of range (0 or less, or over 1000 mg/dL): left out, the rest stored.
   - Only readings out of range: 200, `[]`, nothing stored. One such reading sent alone: refused.
-  - Up to 10 entries with another problem (e.g. unknown `type`): left out, the rest stored.
+  - Up to 10 entries with another problem (e.g. unknown `type`): left out, the rest stored. The response does not
+    change. The site's client errors show the batch.
   - Nothing else to store: refused, with the problem.
 - Device status: an uploader battery that is not a number is left out. `uploader.battery` is the uploader battery.
 
@@ -1614,7 +1618,7 @@ Every 10 minutes, the server truncates every site:
 
 #### Passkeys
 
-- "Log in with a passkey" on the login page signs in the identity whose passkey the browser has, with no name,
+- "Sign in with a passkey" on the sign in page signs in the identity whose passkey the browser has, with no name,
   password or TOTP code.
 - A passkey works only on its own site's address.
 - Stored: only its ID, public key, flags and sign count. Never the authenticator model or attestation.
@@ -1629,12 +1633,12 @@ Every 10 minutes, the server truncates every site:
   (`SITE_LOGIN_NAME_PER_MINUTE_*`).
   - Wrong passwords, passkeys or backup keys from one IP use only that IP's attempts.
   - An attempt that one limit refuses uses none of the other.
-  - Refused: "Too many login attempts. Wait a minute, then try again."
+  - Refused: "Too many sign in attempts. Wait a minute, then try again."
 - A disabled identity cannot sign in.
 - Same status and message as a wrong password or secret, and a password check all the same:
-  - A site or control login with a name that does not exist.
+  - A site or control sign in with a name that does not exist.
   - A Nightscout token whose name or role has no identity, or that is for an admin or an identity with TOTP.
-- Site login inputs: no placeholders. Marked not valid only after a failed attempt, until the next.
+- Site sign in inputs: no placeholders. Marked not valid only after a failed attempt, until the next.
 - Devices use their Nightscout token as a token, as an API secret, or for a JWT.
 
 #### End of sessions
@@ -1644,7 +1648,7 @@ Every 10 minutes, the server truncates every site:
 - Disable, delete, or a password or TOTP change also ends the identity's open connections:
   - Socket.IO writes are refused at once, and sockets disconnect within 1 minute.
   - Live update streams end within 30 seconds.
-- A page left open after its sign in ends goes to the login page when its live updates reconnect. It does not retry
+- A page left open after its sign in ends goes to the sign in page when its live updates reconnect. It does not retry
   them again and again.
 
 ### Users & Devices
@@ -1694,7 +1698,7 @@ Every 10 minutes, the server truncates every site:
 - An admin resets a device's password. A new Nightscout token comes with it.
 - An identity resets its own password on the settings page, the admin its own TOTP. Both sign it out.
 - Each reset is an event, with who made it.
-- The site's backup key, on the recover page, recovers a lost admin login.
+- The site's backup key, on the recover page, recovers a lost admin password or TOTP.
 
 ### My Account
 
@@ -1712,8 +1716,8 @@ Every 10 minutes, the server truncates every site:
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
 - "Truncate", after a confirmation, does as control's Truncate:
-  - Clears the loop status and pump as sent from all but each device's newest report.
-  - Thins device reports, and deletes those over 30 days old.
+  - Clears the loop status and pump as sent from all but each device's newest status.
+  - Thins device statuses, and deletes those over 30 days old.
   - Deletes loop settings that no profile or device status refers to, except each app's last seen.
   - Shrinks the DB, and keeps all else, as the card says.
   - Shows the storage again, a toast of the new DB size, and a "Site truncated" event with the admin.

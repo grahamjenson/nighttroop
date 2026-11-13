@@ -182,7 +182,7 @@ site:
       reason_help: "Why it was switched to, e.g. illness."
       delete_confirm: "Delete this profile switch?"
       details_title: "{{.Name}} at {{.Percent}}%"
-      basal_schedule: "Basal (U/h)"
+      basal_schedule: "Basal (U/hr)"
       carb_ratio_schedule: "Carb Ratio (g/U)"
       sensitivity_schedule: "Sensitivity ({{.Units}}/U)"
       low_target_schedule: "Low Target ({{.Units}})"

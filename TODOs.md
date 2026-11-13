@@ -13,22 +13,15 @@
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 
 1. Security
-    1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
-    1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
-       DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
-    1. P2: Stop many sites making the server poll one third party Nightscout. `site_connectors.url_host_mac` now keeps
-       a MAC of each Nightscout connector's host, and the control Connectors page shows hosts shared by more than one
-       connector. Decide a limit of sites for each host (a caregiver's own site may follow a Nightscout another site
-       syncs), then refuse a save over it with a 409.
-    1. P4: Compute `site_connectors.url_host_mac` again when the MAC key set's primary key changes, as MACs from the
-       old key do not match MACs from the new key
 
 ## Before Prod Deployment
 
+1. Refresh the built in DB-IP country database
+1. Test rolling a new keyset, moving to a new encrypted keyset.
 1. Define maintenance tasks.
 1. Define data processes
 1. Define DR recovery processes
@@ -40,42 +33,6 @@
 ## Build these things
 
 1. Control Page to verify backup_key, and regenerate a backup_key
-
-1. Translations (the text is in `utils/i18n/locales/*.en.yaml`):
-
-    1. P4: Use one word for the same thing across the pages, as the wording review left these for their own change:
-       "log in" or "sign in", "Push Certificates" or "Push Credentials" (the site's page and its error say Certificates,
-       control and the page's form say Credentials), "NS" or "Nightscout" for the URL and token (also in the welcome
-       page's copy-all text), and "U/hr" or "U/h" (also written in Go)
-
-    1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
-       medical words like hypo, time in range and AGP must not be machine translated
-
-    1. P5: Show the control site's refusals in the browser's language: its forms are sent the API's English message,
-       not a toast with the hint, though the hints are in `errors.en.yaml`
-
-    1. P5: Translate the refusals only an app can get, which stay English: a setting not one of its options (units,
-       time zone, language, formats), and a push registration's checks (`utils/push/registration.go`)
-
-    1. P4: Set a new site's number format from its browser's language, e.g. 1.234,5 for de-DE, as `BrowserSettings`
-       does its date format; it is 1,234.5 until changed
-
-    1. P4: Show the rest of the numbers in the number format: the summary graph's axes, drawn by ECharts, the
-       event groups' and device statuses' doses, the overview's differences, profile schedules and loop settings
-
-    1. P3: Show dates' day and month names in the language, as Go's date layouts are English, and set `<html lang>`
-       to the page's language
-
-    1. P5: Name the stored values still shown as they are, which apps send or people type, under `stored.<kind>` in
-       `stored.en.yaml`: activity, dose and notification types, a reading's measurement method, a device status's pump
-       and charging states (charging shows true or false), the push apps' ids, and the date and time formats' tokens
-
-
-1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at
-   `apiquery.MaxQuerySkip` (32000 rows, about 110 days of glucose) and walks every row it skips
-
-1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
-   and its client
 
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
@@ -116,8 +73,6 @@
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
-    1. P3: Show entries left out of a v1 batch (an unknown `type`, a field too long) on the site's client errors, as
-       only a log counts them and the errors show a batch only when nothing in it was stored
 
 
 

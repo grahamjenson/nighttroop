@@ -307,7 +307,7 @@ nobody else can take the server first.
 3. Store the control admin's password and TOTP secret safely. The page shows them, with the username, only once.
 4. Add the TOTP secret to your authenticator app (for example, scan its QR code).
 5. Enter the code from the app, then push **Finish setup**.
-6. Log in at <https://control.example.nz>. The rest of the server, such as site creation, now works.
+6. Sign in at <https://control.example.nz>. The rest of the server, such as site creation, now works.
 
 ## Updating Nighttroop safely
 

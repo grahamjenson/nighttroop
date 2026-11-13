@@ -13,12 +13,12 @@ ASSERT_PATH /rate-limits
 ASSERT_VISIBLE #controlRateLimitsTable
 ASSERT_VISIBLE #control--rate-limits--global >> text=Every request
 ASSERT_VISIBLE #control--rate-limits--control >> text=signed out
-ASSERT_VISIBLE #control--rate-limits--login_name >> text=Logins to a name
-ASSERT_VISIBLE #control--rate-limits--login_ip >> text=Logins from an IP
+ASSERT_VISIBLE #control--rate-limits--login_name >> text=Sign ins to a name
+ASSERT_VISIBLE #control--rate-limits--login_ip >> text=Sign ins from an IP
 ASSERT_VISIBLE #control--rate-limits--site_download
 // A name's logins from every IP have their own rate, far above an IP's, so one IP cannot lock others out
 ASSERT_VISIBLE #control--rate-settings--login_name >> text=SITE_LOGIN_NAME_PER_MINUTE_LIMIT/_BURST
-ASSERT_VISIBLE #control--rate-settings--login_name >> text=Logins to a name, from every IP
+ASSERT_VISIBLE #control--rate-settings--login_name >> text=Sign ins to a name, from every IP
 SCREENSHOT rate_limits
 
 // An admin sets a rate limit in place of its env variable's, and every limiter of its kind uses it at once
