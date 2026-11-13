@@ -334,6 +334,103 @@ func (q *Queries) HardDeleteFoodPresetsByType(ctx context.Context, arg HardDelet
 	return q.exec(ctx, q.hardDeleteFoodPresetsByTypeStmt, hardDeleteFoodPresetsByType, arg.FoodType)
 }
 
+const rewriteFoodPreset = `-- name: RewriteFoodPreset :one
+
+UPDATE food_presets SET
+    id = ?1,
+    name = ?2,
+    food_type = ?3,
+    absorption_time_minutes = ?4,
+    carbs = ?5,
+    category = NULLIF(CAST(?6 AS TEXT), ''),
+    subcategory = NULLIF(CAST(?7 AS TEXT), ''),
+    fat = ?8,
+    protein = ?9,
+    fibre = ?10,
+    energy = ?11,
+    portions = ?12,
+    pre_bolus = ?13,
+    created_by_app_name = ?14,
+    created_by_device_name = ?15,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?16 AS TEXT),
+    updated_by_identity_id = ?17
+WHERE id = ?1
+RETURNING id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteFoodPresetParams struct {
+	ID                    string
+	Name                  string
+	FoodType              *string
+	AbsorptionTimeMinutes *int64
+	Carbs                 *float64
+	Category              *string
+	Subcategory           *string
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
+	Energy                *float64
+	Portions              *float64
+	PreBolus              *float64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteFoodPreset writes every column CreateFoodPreset does over the food preset with the ID, as a Nightscout update
+// writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+func (q *Queries) RewriteFoodPreset(ctx context.Context, arg RewriteFoodPresetParams) (*FoodPreset, error) {
+	row := q.queryRow(ctx, q.rewriteFoodPresetStmt, rewriteFoodPreset,
+		arg.ID,
+		arg.Name,
+		arg.FoodType,
+		arg.AbsorptionTimeMinutes,
+		arg.Carbs,
+		arg.Category,
+		arg.Subcategory,
+		arg.Fat,
+		arg.Protein,
+		arg.Fibre,
+		arg.Energy,
+		arg.Portions,
+		arg.PreBolus,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i FoodPreset
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.FoodType,
+		&i.AbsorptionTimeMinutes,
+		&i.Carbs,
+		&i.Category,
+		&i.Subcategory,
+		&i.Fat,
+		&i.Protein,
+		&i.Fibre,
+		&i.Energy,
+		&i.Portions,
+		&i.PreBolus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchFoodPresets = `-- name: SearchFoodPresets :many
 SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
 WHERE
@@ -483,7 +580,6 @@ func (q *Queries) SearchFoodPresets(ctx context.Context, arg SearchFoodPresetsPa
 }
 
 const updateFoodPreset = `-- name: UpdateFoodPreset :one
-
 UPDATE food_presets SET
     name = COALESCE(?1, name),
     food_type = COALESCE(?2, food_type),
@@ -524,9 +620,6 @@ type UpdateFoodPresetParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetParams) (*FoodPreset, error) {
 	row := q.queryRow(ctx, q.updateFoodPresetStmt, updateFoodPreset,
 		arg.Name,

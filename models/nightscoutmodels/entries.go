@@ -207,3 +207,8 @@ func (t Entry) GetUtcOffsetMinutes() *int64 {
 func (t Entry) GetIdentifier() *string {
 	return t.Identifier.Stringp()
 }
+
+// GlucoseFields are the fields whose glucose is in the entry's units
+func (t Entry) GlucoseFields() []string {
+	return []string{"sgv", "mbg"}
+}

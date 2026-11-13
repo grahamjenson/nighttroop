@@ -317,6 +317,124 @@ func (q *Queries) HardDeleteFoodIntakesByType(ctx context.Context, arg HardDelet
 	return q.exec(ctx, q.hardDeleteFoodIntakesByTypeStmt, hardDeleteFoodIntakesByType, arg.FoodType)
 }
 
+const rewriteFoodIntake = `-- name: RewriteFoodIntake :one
+
+UPDATE food_intakes SET
+    id = ?1,
+    name = ?2,
+    food_type = ?3,
+    absorption_time_minutes = ?4,
+    carbs = ?5,
+    category = NULLIF(CAST(?6 AS TEXT), ''),
+    subcategory = NULLIF(CAST(?7 AS TEXT), ''),
+    fat = ?8,
+    protein = ?9,
+    fibre = ?10,
+    energy = ?11,
+    portions = ?12,
+    pre_bolus = ?13,
+    user_entered_at = ?14,
+    notes = ?15,
+    reason = ?16,
+    utc_offset_minutes = ?17,
+    occurred_at = ?18,
+    created_by_app_name = ?19,
+    created_by_device_name = ?20,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?21 AS TEXT),
+    updated_by_identity_id = ?22
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteFoodIntakeParams struct {
+	ID                    string
+	Name                  *string
+	FoodType              *string
+	AbsorptionTimeMinutes *int64
+	Carbs                 *float64
+	Category              *string
+	Subcategory           *string
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
+	Energy                *float64
+	Portions              *float64
+	PreBolus              *float64
+	UserEnteredAt         *int64
+	Notes                 *string
+	Reason                *string
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteFoodIntake writes every column CreateFoodIntake does over the food intake with the ID, as a Nightscout update
+// writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+func (q *Queries) RewriteFoodIntake(ctx context.Context, arg RewriteFoodIntakeParams) (*FoodIntake, error) {
+	row := q.queryRow(ctx, q.rewriteFoodIntakeStmt, rewriteFoodIntake,
+		arg.ID,
+		arg.Name,
+		arg.FoodType,
+		arg.AbsorptionTimeMinutes,
+		arg.Carbs,
+		arg.Category,
+		arg.Subcategory,
+		arg.Fat,
+		arg.Protein,
+		arg.Fibre,
+		arg.Energy,
+		arg.Portions,
+		arg.PreBolus,
+		arg.UserEnteredAt,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i FoodIntake
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.FoodType,
+		&i.AbsorptionTimeMinutes,
+		&i.Carbs,
+		&i.Category,
+		&i.Subcategory,
+		&i.Fat,
+		&i.Protein,
+		&i.Fibre,
+		&i.Energy,
+		&i.Portions,
+		&i.PreBolus,
+		&i.UserEnteredAt,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchFoodIntakes = `-- name: SearchFoodIntakes :many
 SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
 WHERE
@@ -512,7 +630,6 @@ func (q *Queries) SoftDeleteFoodIntakesByType(ctx context.Context, arg SoftDelet
 }
 
 const updateFoodIntake = `-- name: UpdateFoodIntake :one
-
 UPDATE food_intakes SET
     name = COALESCE(?1, name),
     food_type = COALESCE(?2, food_type),
@@ -561,9 +678,6 @@ type UpdateFoodIntakeParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakeParams) (*FoodIntake, error) {
 	row := q.queryRow(ctx, q.updateFoodIntakeStmt, updateFoodIntake,
 		arg.Name,
