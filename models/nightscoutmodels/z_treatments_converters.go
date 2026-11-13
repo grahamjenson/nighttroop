@@ -256,16 +256,16 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		nightscoutmodelsTreatment.TransmitterID = &typesShortString3
 	}
 	if source.PumpID != nil {
-		typesShortString4 := types.ShortString(*source.PumpID)
-		nightscoutmodelsTreatment.PumpID = &typesShortString4
+		typesClientID := types.ClientID(*source.PumpID)
+		nightscoutmodelsTreatment.PumpID = &typesClientID
 	}
 	if source.PumpSerial != nil {
-		typesShortString5 := types.ShortString(*source.PumpSerial)
-		nightscoutmodelsTreatment.PumpSerial = &typesShortString5
+		typesShortString4 := types.ShortString(*source.PumpSerial)
+		nightscoutmodelsTreatment.PumpSerial = &typesShortString4
 	}
 	if source.PumpType != nil {
-		typesShortString6 := types.ShortString(*source.PumpType)
-		nightscoutmodelsTreatment.PumpType = &typesShortString6
+		typesShortString5 := types.ShortString(*source.PumpType)
+		nightscoutmodelsTreatment.PumpType = &typesShortString5
 	}
 	if source.Notes != nil {
 		typesSanitizedString2 := types.SanitizedString(*source.Notes)
@@ -273,24 +273,24 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 	}
 	nightscoutmodelsTreatment.EnteredBy = EventGroupEnteredBy(source)
 	if source.Reason != nil {
-		typesShortString7 := types.ShortString(*source.Reason)
-		nightscoutmodelsTreatment.Reason = &typesShortString7
+		typesShortString6 := types.ShortString(*source.Reason)
+		nightscoutmodelsTreatment.Reason = &typesShortString6
 	}
 	if source.Uuid != nil {
-		typesShortString8 := types.ShortString(*source.Uuid)
-		nightscoutmodelsTreatment.UUID = &typesShortString8
+		typesClientID2 := types.ClientID(*source.Uuid)
+		nightscoutmodelsTreatment.UUID = &typesClientID2
 	}
 	if source.SyncIdentifier != nil {
 		xstring := *source.SyncIdentifier
 		nightscoutmodelsTreatment.SyncIdentifier = &xstring
 	}
 	if source.CreatedByDeviceName != nil {
-		typesShortString9 := types.ShortString(*source.CreatedByDeviceName)
-		nightscoutmodelsTreatment.Device = &typesShortString9
+		typesShortString7 := types.ShortString(*source.CreatedByDeviceName)
+		nightscoutmodelsTreatment.Device = &typesShortString7
 	}
 	if source.CreatedByAppName != nil {
-		typesShortString10 := types.ShortString(*source.CreatedByAppName)
-		nightscoutmodelsTreatment.App = &typesShortString10
+		typesShortString8 := types.ShortString(*source.CreatedByAppName)
+		nightscoutmodelsTreatment.App = &typesShortString8
 	}
 	pTypesShortString := types.ShortString(source.CreatedByIdentityName)
 	nightscoutmodelsTreatment.Subject = &pTypesShortString
@@ -1538,7 +1538,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		sitedbEventGroup.EnteredBy = &xstring
 	}
 	if source.UUID != nil {
-		xstring2 := ShortStringToString(*source.UUID)
+		xstring2 := ClientIDToString(*source.UUID)
 		sitedbEventGroup.Uuid = &xstring2
 	}
 	if source.Mode != nil {
@@ -1559,7 +1559,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 	}
 	sitedbEventGroup.SentHash = SentHash(source.SentJSON)
 	if source.PumpID != nil {
-		xstring5 := ShortStringToString(*source.PumpID)
+		xstring5 := ClientIDToString(*source.PumpID)
 		sitedbEventGroup.PumpID = &xstring5
 	}
 	if source.PumpSerial != nil {

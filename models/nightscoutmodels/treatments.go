@@ -99,15 +99,16 @@ type Treatment struct {
 	SensorCode    *types.ShortString `json:"sensorCode,omitempty"`
 	TransmitterID *types.ShortString `json:"transmitterId,omitempty"`
 
-	PumpID     *types.ShortString `json:"pumpId,omitempty"`
+	// PumpID is AAPS's id for a pump's record, which it finds its own by
+	PumpID     *types.ClientID    `json:"pumpId,omitempty"`
 	PumpSerial *types.ShortString `json:"pumpSerial,omitempty"`
 	PumpType   *types.ShortString `json:"pumpType,omitempty"`
 
 	Notes     *types.SanitizedString `json:"notes,omitempty"`
 	EnteredBy *types.ShortString     `json:"enteredBy,omitempty"`
 	Reason    *types.ShortString     `json:"reason,omitempty"`
-	// UUID is given back as sent, as xDrip+ matches its own treatments by it
-	UUID *types.ShortString `json:"uuid,omitempty"`
+	// UUID is xDrip+'s id, which it matches its own treatments by
+	UUID *types.ClientID `json:"uuid,omitempty"`
 	// Loop's id for a carb entry or dose, which it finds its own by, given back as sent; the identifier is made from it
 	SyncIdentifier *string `json:"syncIdentifier,omitempty"`
 	// Loop's insulin of a dose, a bolus's insulin not absorbed, and when a carb entry was entered, given back as sent

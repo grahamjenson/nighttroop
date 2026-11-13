@@ -18,6 +18,7 @@ import (
 // goverter:extend FlexibleInt64ToInt64
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
+// goverter:extend ClientIDToString
 // goverter:extend UnitsToUnits
 type TreatmentsEvenetConverter interface {
 
