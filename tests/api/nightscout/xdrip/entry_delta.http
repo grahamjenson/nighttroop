@@ -1,0 +1,42 @@
+# xDrip+ sends each reading's delta, the change in mg/dL since the reading before it (populateV1APIBGEntry). As in
+# Nightscout, it is kept as sent and given back, and apart from Loop's trend number, see docs/clients/xdrip.md.
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME xdrip_upload_delta
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "xDrip-DexcomG6", "date": {{ itime 10 }}, "dateString": "{{ javatime 10 }}", "sgv": 120,
+    "delta": -1.234, "direction": "Flat", "type": "sgv", "sysTime": "{{ javatime 10 }}"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS -1.234 "@0.delta"
+ASSERT_EQUALS null "@0.trend"
+
+NAME xdrip_download_delta
+GET http://{{ site }}/api/v1/entries.json?find[device]=xDrip-DexcomG6
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS -1.234 "@0.delta"
+ASSERT_EQUALS null "@0.trend"
+
+// A reading with a delta and a trend keeps both
+NAME xdrip_upload_delta_and_trend
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "xDrip-LibreReceiver", "date": {{ itime 5 }}, "dateString": "{{ javatime 5 }}", "sgv": 130,
+    "delta": 10.5, "trend": 2, "direction": "SingleUp", "type": "sgv"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 10.5 "@0.delta"
+ASSERT_EQUALS 2 "@0.trend"
+
+// A delta far outside any reading's change is left out, and the reading kept
+NAME xdrip_upload_delta_too_large
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "xDrip-DexcomG6", "date": {{ itime 1 }}, "dateString": "{{ javatime 1 }}", "sgv": 125,
+    "delta": 5000, "direction": "Flat", "type": "sgv"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 125 "@0.sgv"
+ASSERT_EQUALS null "@0.delta"

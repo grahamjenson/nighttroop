@@ -2016,6 +2016,16 @@ func (m *GlucoseReading) SetDirection(v *string) {
 	m.Direction = v
 }
 
+// GetTrend returns the Trend value.
+func (m GlucoseReading) GetTrend() *float64 {
+	return m.Trend
+}
+
+// SetTrend sets the Trend value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetTrend(v *float64) {
+	m.Trend = v
+}
+
 // GetNoise returns the Noise value.
 func (m GlucoseReading) GetNoise() *float64 {
 	return m.Noise
@@ -2274,6 +2284,16 @@ func (m GlucoseReadingsVw) GetDirection() *string {
 // SetDirection sets the Direction value and returns the updated GlucoseReadingsVw.
 func (m *GlucoseReadingsVw) SetDirection(v *string) {
 	m.Direction = v
+}
+
+// GetTrend returns the Trend value.
+func (m GlucoseReadingsVw) GetTrend() *float64 {
+	return m.Trend
+}
+
+// SetTrend sets the Trend value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetTrend(v *float64) {
+	m.Trend = v
 }
 
 // GetNoise returns the Noise value.
@@ -8606,6 +8626,16 @@ func (m *CreateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
 }
 
+// GetTrend returns the Trend value.
+func (m CreateGlucoseReadingParams) GetTrend() *float64 {
+	return m.Trend
+}
+
+// SetTrend sets the Trend value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetTrend(v *float64) {
+	m.Trend = v
+}
+
 // GetNoise returns the Noise value.
 func (m CreateGlucoseReadingParams) GetNoise() *float64 {
 	return m.Noise
@@ -9054,6 +9084,16 @@ func (m RewriteGlucoseReadingParams) GetDirection() *string {
 // SetDirection sets the Direction value and returns the updated RewriteGlucoseReadingParams.
 func (m *RewriteGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
+}
+
+// GetTrend returns the Trend value.
+func (m RewriteGlucoseReadingParams) GetTrend() *float64 {
+	return m.Trend
+}
+
+// SetTrend sets the Trend value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetTrend(v *float64) {
+	m.Trend = v
 }
 
 // GetNoise returns the Noise value.

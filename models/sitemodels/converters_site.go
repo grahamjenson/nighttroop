@@ -106,8 +106,8 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// The site does not set an AAPS calibration
-	// goverter:ignore IsCalibration SensorMgdlAtPairing
+	// The site does not set an AAPS calibration, or Nightscout's trend number
+	// goverter:ignore IsCalibration SensorMgdlAtPairing Trend
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext

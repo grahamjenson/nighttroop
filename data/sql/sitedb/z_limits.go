@@ -171,6 +171,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"MeasurementMethod":     {Column: "measurement_method", MaxLength: 32},
 		"Delta":                 {Column: "delta", Min: new(-1000.0), Max: new(1000.0)},
 		"Direction":             {Column: "direction", MaxLength: 32},
+		"Trend":                 {Column: "trend", Min: new(0.0), Max: new(9.0)},
 		"Noise":                 {Column: "noise", Min: new(-1000.0), Max: new(1000.0)},
 		"Filtered":              {Column: "filtered", Min: new(0.0), Max: new(10000000.0)},
 		"Unfiltered":            {Column: "unfiltered", Min: new(0.0), Max: new(10000000.0)},

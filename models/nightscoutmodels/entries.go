@@ -29,6 +29,7 @@ type Entry struct {
 	MBG       *types.FlexibleFloat64 `json:"mbg,omitempty"`
 	Direction *string                `json:"direction,omitempty"`
 	Trend     *types.FlexibleFloat64 `json:"trend,omitempty"`
+	Delta     *types.FlexibleFloat64 `json:"delta,omitempty"` // mg/dL since the reading before, as sent
 	Units     *consts.Units          `json:"units,omitempty"`
 
 	Filtered   *types.FlexibleFloat64 `json:"filtered,omitempty"`

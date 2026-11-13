@@ -98,22 +98,26 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		nightscoutmodelsEntry.SGV = SGVGlucoseReadingTypeToValue(source, context)
 		nightscoutmodelsEntry.MBG = MBGGlucoseReadingTypeToValue(source, context)
 		nightscoutmodelsEntry.Direction = EntryDirection((*source).Direction)
-		if (*source).Delta != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Delta)
+		if (*source).Trend != nil {
+			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Trend)
 			nightscoutmodelsEntry.Trend = &typesFlexibleFloat64
+		}
+		if (*source).Delta != nil {
+			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Delta)
+			nightscoutmodelsEntry.Delta = &typesFlexibleFloat642
 		}
 		nightscoutmodelsEntry.Units = UnitsToValue((*source).Mgdl, context)
 		if (*source).Filtered != nil {
-			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Filtered)
-			nightscoutmodelsEntry.Filtered = &typesFlexibleFloat642
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Filtered)
+			nightscoutmodelsEntry.Filtered = &typesFlexibleFloat643
 		}
 		if (*source).Unfiltered != nil {
-			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Unfiltered)
-			nightscoutmodelsEntry.Unfiltered = &typesFlexibleFloat643
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Unfiltered)
+			nightscoutmodelsEntry.Unfiltered = &typesFlexibleFloat644
 		}
 		if (*source).Rssi != nil {
-			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Rssi)
-			nightscoutmodelsEntry.RSSI = &typesFlexibleFloat644
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Rssi)
+			nightscoutmodelsEntry.RSSI = &typesFlexibleFloat645
 		}
 		nightscoutmodelsEntry.Noise = WholeNoise((*source).Noise)
 		if (*source).IsCalibration != nil {
@@ -121,8 +125,8 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 			nightscoutmodelsEntry.IsCalibration = &xbool
 		}
 		if (*source).SensorMgdlAtPairing != nil {
-			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).SensorMgdlAtPairing)
-			nightscoutmodelsEntry.SensorMgdlAtPairing = &typesFlexibleFloat645
+			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).SensorMgdlAtPairing)
+			nightscoutmodelsEntry.SensorMgdlAtPairing = &typesFlexibleFloat646
 		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
 		nightscoutmodelsEntry.Date = &pTypesDateInt

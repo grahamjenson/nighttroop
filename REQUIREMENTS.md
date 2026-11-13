@@ -1317,6 +1317,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ---------- |
 | `mbg` entry                              | `isCalibration`\*, `sensorMgdlAtPairing`\* (mg/dL)                                          | AAPS       |
 | Entry                                    | `filtered`, `unfiltered`, 0 too                                                            | AAPS       |
+| Entry                                    | `delta` (mg/dL, -1000 to 1000)                                                             | xDrip+     |
+| Entry                                    | `trend` (0 to 9)                                                                           | Loop       |
 | Treatment                                | `pumpId`, `pumpSerial`, `pumpType`                                                         | AAPS       |
 | Bolus                                    | `isBasalInsulin`                                                                           | AAPS       |
 | Bolus, profile switch                    | `icfg`: `insulinLabel`, `insulinEndTime` and `insulinPeakTime` (ms), `concentration`       | AAPS       |

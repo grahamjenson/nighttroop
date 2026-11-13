@@ -197,7 +197,7 @@ var (
 		kept: func(stored, event *sitedb.GlucoseReading) {
 			event.Delta, event.Direction, event.Noise, event.Filtered = stored.Delta, stored.Direction, stored.Noise, stored.Filtered
 			event.Unfiltered, event.Rssi, event.IsCalibration = stored.Unfiltered, stored.Rssi, stored.IsCalibration
-			event.SensorMgdlAtPairing = stored.SensorMgdlAtPairing
+			event.SensorMgdlAtPairing, event.Trend = stored.SensorMgdlAtPairing, stored.Trend
 			if event.MeasurementMethod == nil {
 				event.ReadingType = stored.ReadingType
 			}

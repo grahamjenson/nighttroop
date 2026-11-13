@@ -84,37 +84,41 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 	}
 	sitedbCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
 	sitedbCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
-	if source.Trend != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Trend)
+	if source.Delta != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Delta)
 		sitedbCreateGlucoseReadingParams.Delta = &xfloat64
 	}
 	if source.Direction != nil {
 		xstring := *source.Direction
 		sitedbCreateGlucoseReadingParams.Direction = &xstring
 	}
+	if source.Trend != nil {
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Trend)
+		sitedbCreateGlucoseReadingParams.Trend = &xfloat642
+	}
 	if source.Noise != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Noise)
-		sitedbCreateGlucoseReadingParams.Noise = &xfloat642
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Noise)
+		sitedbCreateGlucoseReadingParams.Noise = &xfloat643
 	}
 	if source.Filtered != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Filtered)
-		sitedbCreateGlucoseReadingParams.Filtered = &xfloat643
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Filtered)
+		sitedbCreateGlucoseReadingParams.Filtered = &xfloat644
 	}
 	if source.Unfiltered != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Unfiltered)
-		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat644
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Unfiltered)
+		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat645
 	}
 	if source.RSSI != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.RSSI)
-		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
+		xfloat646 := FlexibleFloat64ToFloat64(*source.RSSI)
+		sitedbCreateGlucoseReadingParams.Rssi = &xfloat646
 	}
 	if source.IsCalibration != nil {
 		xbool := *source.IsCalibration
 		sitedbCreateGlucoseReadingParams.IsCalibration = &xbool
 	}
 	if source.SensorMgdlAtPairing != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.SensorMgdlAtPairing)
-		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat646
+		xfloat647 := FlexibleFloat64ToFloat64(*source.SensorMgdlAtPairing)
+		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat647
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
