@@ -500,10 +500,14 @@ func ToCorrectionRange(source interface {
 }
 
 // EventGroupEnteredBy is who the app said entered a treatment, as clients look for their own by it (xDrip+ one starting
-// xdrip, Trio Trio, iAPS remote), else the identity that uploaded it
+// xdrip, Trio Trio, iAPS remote), else the app that sent it, else the identity that uploaded it
 func EventGroupEnteredBy(source sitedb.EventGroup) *types.ShortString {
 	if source.EnteredBy != nil {
 		return (*types.ShortString)(source.EnteredBy)
+	}
+	// One sent without enteredBy is by its app, as AAPS names it, before the device that uploaded it
+	if source.CreatedByAppName != nil && *source.CreatedByAppName != "" {
+		return (*types.ShortString)(source.CreatedByAppName)
 	}
 	return (*types.ShortString)(&source.CreatedByIdentityName)
 }

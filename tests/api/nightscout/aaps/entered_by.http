@@ -1,0 +1,37 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS sends no enteredBy with a Meal Bolus, Carb Correction or Profile Switch, but names itself in app. A treatment
+// sent without enteredBy is entered by its app, so a follower such as xDrip+ shows AAPS rather than the device's name
+NAME add_carbs_without_entered_by
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 10 }}, "utcOffset": 780, "eventType": "Carb Correction", "carbs": 12.0, "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME carbs_entered_by_app_v3
+GET http://{{ site }}/api/v3/treatments/{{ .add_carbs_without_entered_by.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "AAPS" "@result.enteredBy"
+
+NAME carbs_entered_by_app_v1
+GET http://{{ site }}/api/v1/treatments.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "AAPS" "@0.enteredBy"
+
+// One with enteredBy keeps it, and one with neither is entered by the device that uploaded it
+NAME add_note_with_entered_by
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 8 }}, "eventType": "Note", "notes": "hi", "enteredBy": "AAPS-note", "app": "AAPS"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "AAPS-note" "@result.enteredBy"
+
+NAME add_note_without_app
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Note", "notes": "no app", "created_at": "{{ time 6 }}"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@0.enteredBy"
