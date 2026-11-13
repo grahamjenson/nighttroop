@@ -1,0 +1,34 @@
+INCLUDE steps/new_ns_site.steps
+
+// Trio's Nightscout as CGM reads a fetch of readings as one list, and gets none if one has a direction it does not
+// know, or a noise that is not a whole number. A direction is kept as Nightscout names it, from its arrow or in any
+// case; one not known is NOT COMPUTABLE, and none is left out. Noise is kept as a whole number.
+
+NAME upload_readings
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+    {"device": "x", "type": "sgv", "sgv": 150, "date": {{ itime 30 }}, "direction": "flat", "noise": 1.5},
+    {"device": "x", "type": "sgv", "sgv": 155, "date": {{ itime 25 }}, "direction": "↗"},
+    {"device": "x", "type": "sgv", "sgv": 160, "date": {{ itime 20 }}, "direction": "↓↓"},
+    {"device": "x", "type": "sgv", "sgv": 165, "date": {{ itime 15 }}, "direction": "None"},
+    {"device": "x", "type": "sgv", "sgv": 170, "date": {{ itime 10 }}, "direction": "sideways"},
+    {"device": "x", "type": "sgv", "sgv": 175, "date": {{ itime 5 }}, "direction": ""},
+    {"device": "x", "type": "sgv", "sgv": 180, "date": {{ itime 3 }}, "direction": "⇕"}
+  ]
+ASSERT_STATUS 200
+
+NAME trio_fetches_readings
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 7 "@"
+ASSERT_EQUALS "RATE OUT OF RANGE" "@0.direction"
+ASSERT_EQUALS null "@1.direction"
+ASSERT_EQUALS "NOT COMPUTABLE" "@2.direction"
+ASSERT_EQUALS "NONE" "@3.direction"
+ASSERT_EQUALS "DoubleDown" "@4.direction"
+ASSERT_EQUALS "FortyFiveUp" "@5.direction"
+ASSERT_EQUALS "Flat" "@6.direction"
+ASSERT_EQUALS 2 "@6.noise"

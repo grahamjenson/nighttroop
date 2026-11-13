@@ -5,11 +5,12 @@ INCLUDE steps/ns_units_mgdl.steps
 // Create
 //////
 
-NAME create_bad_entry_direction_too_long_v1
+// A direction not known, however long, is NOT COMPUTABLE rather than the reading refused
+NAME create_entry_direction_not_known_v1
 POST http://{{ site }}/api/v1/entries?token={{ token }}
 B {"app":"","date":1787481585647,"direction":"thisstringislongerthanisallowedsoIthinkitshouldcorrectlyerror","sgv":196,"type":"sgv"}
-ASSERT_STATUS 400
-ASSERT_EQUALS "Bad or missing body: direction is too long" "@message"
+ASSERT_STATUS 200
+ASSERT_EQUALS "NOT COMPUTABLE" "@0.direction"
 
 NAME create_bad_entry_no_type_v1
 POST http://{{ site }}/api/v1/entries?token={{ token }}
@@ -140,12 +141,11 @@ ASSERT_STATUS 400
 ASSERT_EQUALS "Field device cannot be modified by the client" "@message"
 ASSERT_EQUALS 400 "@status"
 
-// Bad data on a replace is a 400, as it is on create
-NAME bad_update_direction_too_long_v1
+// A direction not known on a replace is NOT COMPUTABLE, as it is on create
+NAME update_direction_not_known_v1
 PUT http://{{ site }}/api/v1/entries?token={{ token }}
 B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "device": "my-device", "app": "my-app", "dateString": "2024-06-05T12:00:00+12:00", "direction": "thisstringislongerthanisallowedsoIthinkitshouldcorrectlyerror", "sgv": 104, "type": "sgv" }
-ASSERT_STATUS 400
-ASSERT_EQUALS "Bad or missing body: direction is too long" "@message"
+ASSERT_STATUS 200
 
 NAME bad_update_sgv_too_high_v1
 PUT http://{{ site }}/api/v1/entries?token={{ token }}

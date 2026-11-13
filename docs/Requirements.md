@@ -962,6 +962,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
+- An entry's `direction` is one of Nightscout's names, e.g. `Flat` or `RATE OUT OF RANGE`, from one sent in any case
+  or as its arrow (`↗`, `↓↓`); one not known is `NOT COMPUTABLE` and an empty one is left out. Its `noise` is a whole
+  number. Trio reads a fetch of readings as one list and gets none if one is not so, even those kept before.
 - A meter reading (`mbg`) uploaded with the date of one stored is the same finger prick whatever its device, so a
   careportal BG Check that xDrip+ downloads and uploads again as its own is stored once.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC. So does one given only to
@@ -1057,7 +1060,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   its range and what was sent, e.g. `insulin must be between -500 and 500 U (was 8882.5)`, as xDrip+ drops a refused
   treatment and every one queued after it; a negative one, taking back too much entered, is kept.
 - A value the database refuses through the Nightscout API is refused (400) naming its column and why, e.g. `dose is
-  out of range` or `direction is too long`, never in the database's words, which are logged.
+  out of range` or `notes is too long`, never in the database's words, which are logged.
 - A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
   profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.

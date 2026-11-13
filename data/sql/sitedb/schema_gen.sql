@@ -308,7 +308,7 @@ CREATE TABLE glucose_readings (
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
     delta REAL CHECK(delta BETWEEN -1000 AND 1000),
-    direction TEXT CHECK(length(direction) <= 16),
+    direction TEXT CHECK(length(direction) <= 32),
 
     -- What only some apps send, NULL for most readings: a CGM's raw signal, from xDrip+ and its followers (noise,
     -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), a noise or rssi of 0 meaning none
