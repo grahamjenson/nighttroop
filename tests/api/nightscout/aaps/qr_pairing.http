@@ -1,0 +1,104 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS pairs a client by QR code: it makes its role and a subject for the client, then reads the subject's
+// accessToken from the subjects, which the client signs in with
+NAME create_role
+POST http://{{ site }}/api/v2/authorization/roles
+H Authorization: Bearer {{ jwt }}
+B {"name": "aaps-client", "permissions": ["*:*:read", "api:settings:admin", "api:settings:create", "api:settings:update", "notifications:*:ack"], "notes": "AAPS client"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "aaps-client" "@name"
+
+NAME update_role
+PUT http://{{ site }}/api/v2/authorization/roles
+H Authorization: Bearer {{ jwt }}
+B {"name": "aaps-client", "permissions": ["*:*:read"]}
+ASSERT_STATUS 200
+
+NAME list_roles
+GET http://{{ site }}/api/v2/authorization/roles
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps-client" "@2.name"
+ASSERT_EQUALS "notifications:*:ack" "@2.permissions.4"
+
+// The site's own identities have no accessToken, as their tokens are not kept
+NAME no_token_for_other_identities
+GET http://{{ site }}/api/v2/authorization/subjects
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@0.name"
+ASSERT_EQUALS null "@0.accessToken"
+
+NAME create_subject
+POST http://{{ site }}/api/v2/authorization/subjects
+H Authorization: Bearer {{ jwt }}
+B {"name": "aaps-Pixel 9", "roles": ["aaps-client"], "notes": "phone 2"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "aaps-Pixel 9" "@name"
+ASSERT_EQUALS "aaps-client" "@roles.0"
+
+NAME list_subjects
+GET http://{{ site }}/api/v2/authorization/subjects
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "aaps-Pixel 9" "@0.name"
+ASSERT_EQUALS "aaps-client" "@0.roles.0"
+ASSERT_EXISTS "@0.accessToken"
+SET client_token {{ dig "list_subjects.0.accessToken" }}
+SET client_id {{ dig "list_subjects.0._id" }}
+
+// The client signs in with it, reads treatments and writes the client control settings
+NAME client_jwt
+GET http://{{ site }}/api/v2/authorization/request/{{ .client_token }}
+ASSERT_STATUS 200
+SET client_jwt {{ .client_jwt.token }}
+
+NAME client_reads_treatments
+GET http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .client_jwt }}
+ASSERT_STATUS 200
+
+NAME client_writes_settings
+PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_hello_6f1d0b9e-2c4a-4e8b-9a37-5c2d8e1f4a61
+H Authorization: Bearer {{ .client_jwt }}
+B {"app": "AAPSClient", "date": 946684800001, "envelope": "abc"}
+ASSERT_STATUS 201
+
+// Only the PWD phone adds or lists subjects, not the client nor a follower
+NAME client_cannot_add_subjects
+POST http://{{ site }}/api/v2/authorization/subjects
+H Authorization: Bearer {{ .client_jwt }}
+B {"name": "aaps-other", "roles": ["aaps-client"]}
+ASSERT_STATUS 403
+
+NAME read_only_cannot_add_subjects
+POST http://{{ site }}/api/v2/authorization/subjects?token={{ .create_new_site.read_only_nstoken }}
+B {"name": "aaps-other", "roles": ["aaps-client"]}
+ASSERT_STATUS 403
+
+NAME read_only_cannot_list_subjects
+GET http://{{ site }}/api/v2/authorization/subjects?token={{ .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 403
+
+// A name longer than an identity can have is refused
+NAME name_too_long
+POST http://{{ site }}/api/v2/authorization/subjects
+H Authorization: Bearer {{ jwt }}
+B {"name": "aaps-a-device-name-that-is-far-too-long", "roles": ["aaps-client"]}
+ASSERT_STATUS 400
+
+// The client removed, its token is refused
+NAME delete_subject
+DELETE http://{{ site }}/api/v2/authorization/subjects/{{ .client_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME deleted_token_refused
+GET http://{{ site }}/api/v3/treatments?token={{ .client_token }}
+ASSERT_STATUS 401
+
+NAME delete_unknown_subject
+DELETE http://{{ site }}/api/v2/authorization/subjects/{{ .client_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404

@@ -80,6 +80,28 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- UPDATE
 --------
 
+-- name: RewriteTempTarget :one
+-- RewriteTempTarget writes every column CreateTempTarget does over the temp target with the ID, as a Nightscout update
+-- writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+UPDATE temp_targets SET
+    id = sqlc.arg('ID'),
+    duration_minutes = sqlc.arg('DurationMinutes'),
+    high_target_mgdl = sqlc.arg('HighTargetMgdl'),
+    low_target_mgdl = sqlc.arg('LowTargetMgdl'),
+    insulin_needs_scale_factor = sqlc.arg('InsulinNeedsScaleFactor'),
+    duration_type = sqlc.arg('DurationType'),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
+
 -- name: UpdateTempTarget :one
 UPDATE temp_targets SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),

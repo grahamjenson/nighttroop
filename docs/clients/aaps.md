@@ -213,6 +213,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
 | **Device status, food and profiles** | | |
 | Device status: create, history with `srvModified` | Works | `sync_v3.http`, `flow_v3.http` |
+| Device status `openaps` over 1 day old, in the client's 48 hours | Changed: as sent, without `predBGs` in `suggested` and `enacted`, and with the same `srvModified` | `loopfollow/devicestatus_day.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | Works: the pump object comes back as sent | `sync_v3.http` |
 | Food: create | Works | `sync_v3.http` |
 | Food: read | Works: `type` `food`. `portion` fixed (was returned as `portions`, so AAPS took 0). `utcOffset` fixed (was 0). `unit`, `gi`, `hidden`, `hideafteruse` and `position` not kept yet (TODO P4) | `sync_v3.http`, `food_portion.http`, `utc_offset.http` |
@@ -223,6 +224,6 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | `/alarm` `announcement` | Fixed in #511 (was never sent) | `aaps_alarm.sio` |
 | `/alarm` `announcement` added on the site | Fixed: its notification's notes are the message (was empty) | `aaps_alarm.sio` |
 | Client control: `settings` documents | Kept as sent, shared by the site's identities. Keys up to 128 characters for `aaps_clientcontrol_<kind>_<client UUID>` (over 36 was refused, so no client could pair) | `running_config.http` |
-| Client control: v2 roles and subjects | Not supported (TODO P4) | — |
+| Client control: v2 roles and subjects (QR pairing) | Fixed: a subject is a device that reads and writes. Its `accessToken` is in the subjects for 10 minutes after it is added (was 404, so QR pairing failed) | `qr_pairing.http` |
 | v1 `authorize` with the SHA1 of the secret | Works (#512) | `aaps_v1.sio` |
 | v1 `authorize` payload, `dataUpdate`, `dbAdd`, `dbUpdate` | Works | `aaps_v1.sio`, `db_writes.sio` |

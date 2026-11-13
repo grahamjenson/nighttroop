@@ -57,11 +57,10 @@ func (c FoodCollection) DeleteType(q *sitedb.Queries, ctx context.Context, typeO
 	return q.HardDeleteFoodPresetsByType(ctx, sitedb.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
 }
 
-func (c FoodCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Food, identifier string, dbModel *sitedb.FoodPreset, uc nightscoutmodels.ConverterContext) (*sitedb.FoodPreset, error) {
-	updateParams := nightscoutmodels.FoodToUpdate(nsModel, uc)
-	updateParams.ID = identifier
-
-	return q.UpdateFoodPreset(ctx, updateParams)
+func (c FoodCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Food, _ map[string]any, stored *sitedb.FoodPreset, cc nightscoutmodels.ConverterContext) (*sitedb.FoodPreset, error) {
+	params := nightscoutmodels.FoodToCreate(nsModel, cc)
+	params.ID = stored.ID
+	return q.RewriteFoodPreset(ctx, sitedb.RewriteFoodPresetParams(params))
 }
 
 func (c FoodCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {

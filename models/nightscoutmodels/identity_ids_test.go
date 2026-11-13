@@ -26,9 +26,9 @@ func TestRecordsStoreTheWritersIdentityID(t *testing.T) {
 	require.Equal(t, int64(7), *created.CreatedByIdentityID)
 	require.Equal(t, "kitchen", created.CreatedByIdentityName)
 
-	update := nightscoutmodels.EntryToUpdate(entry, nightscoutmodels.ConverterContext{IdentityID: 8, IdentityName: "phone"})
+	update := create(nightscoutmodels.ConverterContext{IdentityID: 8, IdentityName: "phone"})
 	update.ID = created.ID
-	updated, err := q.UpdateGlucoseReading(ctx, update)
+	updated, err := q.RewriteGlucoseReading(ctx, sitedb.RewriteGlucoseReadingParams(update))
 	require.NoError(t, err)
 	require.Equal(t, int64(8), *updated.UpdatedByIdentityID)
 	require.Equal(t, int64(7), *updated.CreatedByIdentityID)

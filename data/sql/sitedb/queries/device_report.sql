@@ -143,16 +143,42 @@ LIMIT 1;
 -- UPDATE
 --------
 
--- name: UpdateDeviceReport :one
+-- name: RewriteDeviceReport :one
+-- RewriteDeviceReport writes every column CreateDeviceReport does over the device report with the ID, as a Nightscout
+-- update writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
 UPDATE device_reports SET
-    -- An update changes its pump and uploader when it sends them
-    pump_json = COALESCE(sqlc.narg('PumpJson'), pump_json),
-    uploader_json = COALESCE(sqlc.narg('UploaderJson'), uploader_json),
+    id = sqlc.arg('ID'),
+    device_battery_percent = sqlc.arg('DeviceBatteryPercent'),
+    is_device_charging = sqlc.arg('IsDeviceCharging'),
+    pump_state = sqlc.arg('PumpState'),
+    pump_reservoir = sqlc.arg('PumpReservoir'),
+    pump_battery_percent = sqlc.arg('PumpBatteryPercent'),
+    pump_charging_state = sqlc.arg('PumpChargingState'),
+    loop_iob = sqlc.arg('LoopIob'),
+    loop_iob_basal = sqlc.arg('LoopIobBasal'),
+    loop_iob_treatment = sqlc.arg('LoopIobTreatment'),
+    loop_cob = sqlc.arg('LoopCob'),
+    configuration_id = sqlc.arg('ConfigurationID'),
+    loop_status_json = sqlc.arg('LoopStatusJson'),
+    loop_name = sqlc.arg('LoopName'),
+    pump_clock = sqlc.arg('PumpClock'),
+    pump_manufacturer = sqlc.arg('PumpManufacturer'),
+    pump_model = sqlc.arg('PumpModel'),
+    pump_id = sqlc.arg('PumpID'),
+    pump_suspended = sqlc.arg('PumpSuspended'),
+    pump_bolusing = sqlc.arg('PumpBolusing'),
+    override_json = sqlc.arg('OverrideJson'),
+    pump_json = sqlc.arg('PumpJson'),
+    uploader_json = sqlc.arg('UploaderJson'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
-    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
-RETURNING *; 
+RETURNING *;
 
 --------
 -- DELETE

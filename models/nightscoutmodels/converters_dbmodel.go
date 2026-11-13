@@ -2,7 +2,6 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
-	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -22,7 +21,6 @@ type DBModelConverter interface {
 	///////
 
 	// goverter:context siteContext
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
@@ -35,7 +33,6 @@ type DBModelConverter interface {
 	///////
 
 	// goverter:context siteContext
-	// goverter:ignore SysTime
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
@@ -44,8 +41,6 @@ type DBModelConverter interface {
 	// goverter:map . MBG   | MBGGlucoseReadingTypeToValue
 	// goverter:map Mgdl Units | UnitsToValue
 	// goverter:map OccurredAt Date
-	// goverter:map OccurredAt Mills
-	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ReadingType Type
 	// goverter:map Delta Trend
 	// goverter:map Rssi RSSI
@@ -64,7 +59,6 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	//
 	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop OpenAPSRaw LoopRaw ConfigurationRaw Configuration OverrideRaw
 	DBModelToDeviceStatus(source *sitedb.DeviceReport, siteContext *httputils.SiteContext) DeviceStatus
@@ -89,7 +83,6 @@ type DBModelConverter interface {
 	///////
 
 	// goverter:context siteContext
-	// goverter:map OccurredAt StartDate | UTCDateString
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | ProfilePresetEnteredBy
 	// goverter:map CreatedByAppName App
@@ -98,7 +91,6 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Date
 	//
 	// goverter:ignore Store
-	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
 	// goverter:ignore LoopSettings RemoteSettings
 	DBModelToProfileStore(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
@@ -115,36 +107,6 @@ type DBModelConverter interface {
 // //
 // Custom Converter Methods
 // //
-
-// ModelDateStringFromDateIntAndUTCOffset is when it happened as toISOString writes it, in its UTC offset
-func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *types.DateString {
-	if m == nil {
-		return nil
-	}
-
-	switch v := m.(type) {
-	case interface {
-		GetOccurredAt() int64
-		GetUtcOffsetMinutes() *int64
-	}:
-		ds := types.ISODateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
-		return &ds
-	case interface {
-		GetStart() int64
-		GetUtcOffsetMinutes() *int64
-	}:
-		ds := types.ISODateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
-		return &ds
-	}
-
-	return nil
-}
-
-// UTCDateString is when it happened as toISOString writes it, in UTC, as LoopFollow reads a profile's startDate
-// without its offset
-func UTCDateString(ms int64) *types.DateString {
-	return new(types.DateString(types.ISOString(time.UnixMilli(ms))))
-}
 
 // SGVGlucoseReadingTypeToValue is the sgv of any reading but a meter's. As in Nightscout an entry has one of sgv and
 // mbg, as followers like Nightguard take any entry with an sgv as a CGM reading

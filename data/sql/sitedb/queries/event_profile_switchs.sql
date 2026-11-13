@@ -133,6 +133,45 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- UPDATE
 --------
 
+-- name: RewriteProfileSwitch :one
+-- RewriteProfileSwitch writes every column CreateProfileSwitch does over the profile switch with the ID, as a
+-- Nightscout update writes its merged document. It keeps when it was created and who by: the identity given is who
+-- updated it.
+UPDATE profile_switches SET
+    id = sqlc.arg('ID'),
+    name = sqlc.arg('Name'),
+    duration_minutes = sqlc.arg('DurationMinutes'),
+    multiplier = sqlc.arg('Multiplier'),
+    dia = sqlc.arg('Dia'),
+    units = sqlc.arg('Units'),
+    timezone = sqlc.arg('Timezone'),
+    carbs_hr = sqlc.arg('CarbsHr'),
+    delay = sqlc.arg('Delay'),
+    timeshift = sqlc.arg('Timeshift'),
+    original_profile_name = NULLIF(CAST(sqlc.narg('OriginalProfileName') AS TEXT), ''),
+    original_customized_name = NULLIF(CAST(sqlc.narg('OriginalCustomizedName') AS TEXT), ''),
+    original_timeshift_ms = sqlc.narg('OriginalTimeshiftMs'),
+    original_percentage = sqlc.narg('OriginalPercentage'),
+    original_duration_ms = sqlc.narg('OriginalDurationMs'),
+    original_end = sqlc.narg('OriginalEnd'),
+    icfg_json = sqlc.narg('IcfgJson'),
+    carb_ratios_json = sqlc.arg('CarbRatiosJson'),
+    insulin_sensitivities_json = sqlc.arg('InsulinSensitivitiesJson'),
+    basal_rates_json = sqlc.arg('BasalRatesJson'),
+    targets_high_json = sqlc.arg('TargetsHighJson'),
+    targets_low_json = sqlc.arg('TargetsLowJson'),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
+
 -- name: UpdateProfileSwitch :one
 UPDATE profile_switches SET
     name = COALESCE(sqlc.narg('Name'), name),
