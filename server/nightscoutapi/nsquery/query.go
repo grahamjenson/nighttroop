@@ -84,6 +84,9 @@ type Query struct {
 
 	CarbsExists    *bool   `json:"carbs_exists,omitempty"`
 	DurationExists *bool   `json:"duration_exists,omitempty"`
+	InsulinExists  *bool   `json:"insulin_exists,omitempty"`
+	GlucoseExists  *bool   `json:"glucose_exists,omitempty"`
+	CreationDateEQ *int64  `json:"creation_date_eq,omitempty"`
 	EnteredByEq    *string `json:"entered_by_eq,omitempty"`
 	EnteredByNin   *string `json:"entered_by_nin,omitempty"`
 

@@ -6,7 +6,8 @@
 
 - Uploads: glucose, pump history, carbs, temp targets, overrides, loop status, profile.
 - Downloads: carbs and temp targets that others enter. It can also use Nightscout as its CGM.
-- [iAPS](https://github.com/Artificial-Pancreas/iAPS), which Trio grew from, is nearly the same. Differences are noted.
+- [iAPS](https://github.com/Artificial-Pancreas/iAPS), which Trio grew from, is nearly the same. Differences are noted
+  here and in [iAPS and Nighttroop](iaps.md).
 - No Socket.IO, API v2 or API v3, in Trio or iAPS.
 - Checked against Trio's `main` branch:
   - Trio: `Trio/Sources/Services/Network/Nightscout/NightscoutAPI.swift`, called from `NightscoutManager.swift`.
@@ -213,7 +214,7 @@ When the user deletes a record in Trio, Trio deletes it by query (`deleteCarbs`,
 | Glucose | `DELETE /api/v1/entries.json?find[$or][0][id][$eq]=<id>&find[$or][1][dateString][$eq]=<ISO date>` |
 | Override | `DELETE /api/v1/treatments.json?find[created_at][$eq]=<ISO date>&find[eventType][$eq]=Exercise` |
 
-- iAPS deletes the same way, by `find[created_at][$eq]` and `find[carbs][$exists]` or similar.
+- iAPS deletes in a different way, by other filters. See [iAPS deletes](iaps.md#deletes).
 - Nighttroop:
   - Keeps Trio's `id` as the identifier, so `find[id][$eq]` finds it.
   - Soft deletes what the search finds, at most 1000 a request.

@@ -986,6 +986,26 @@ func (m *EventGroup) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
+// GetCreationDate returns the CreationDate value.
+func (m EventGroup) GetCreationDate() *int64 {
+	return m.CreationDate
+}
+
+// SetCreationDate sets the CreationDate value and returns the updated EventGroup.
+func (m *EventGroup) SetCreationDate(v *int64) {
+	m.CreationDate = v
+}
+
+// GetFpuID returns the FpuID value.
+func (m EventGroup) GetFpuID() *string {
+	return m.FpuID
+}
+
+// SetFpuID sets the FpuID value and returns the updated EventGroup.
+func (m *EventGroup) SetFpuID(v *string) {
+	m.FpuID = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -9926,6 +9946,26 @@ func (m *CreateEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
+// GetCreationDate returns the CreationDate value.
+func (m CreateEventGroupParams) GetCreationDate() *int64 {
+	return m.CreationDate
+}
+
+// SetCreationDate sets the CreationDate value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetCreationDate(v *int64) {
+	m.CreationDate = v
+}
+
+// GetFpuID returns the FpuID value.
+func (m CreateEventGroupParams) GetFpuID() *string {
+	return m.FpuID
+}
+
+// SetFpuID sets the FpuID value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetFpuID(v *string) {
+	m.FpuID = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -10656,6 +10696,26 @@ func (m *RewriteEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
+// GetCreationDate returns the CreationDate value.
+func (m RewriteEventGroupParams) GetCreationDate() *int64 {
+	return m.CreationDate
+}
+
+// SetCreationDate sets the CreationDate value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetCreationDate(v *int64) {
+	m.CreationDate = v
+}
+
+// GetFpuID returns the FpuID value.
+func (m RewriteEventGroupParams) GetFpuID() *string {
+	return m.FpuID
+}
+
+// SetFpuID sets the FpuID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetFpuID(v *string) {
+	m.FpuID = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m RewriteEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -11164,6 +11224,36 @@ func (m SearchEventGroupsParams) GetEnteredByEq() *string {
 // SetEnteredByEq sets the EnteredByEq value and returns the updated SearchEventGroupsParams.
 func (m *SearchEventGroupsParams) SetEnteredByEq(v *string) {
 	m.EnteredByEq = v
+}
+
+// GetInsulinExists returns the InsulinExists value.
+func (m SearchEventGroupsParams) GetInsulinExists() *bool {
+	return m.InsulinExists
+}
+
+// SetInsulinExists sets the InsulinExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetInsulinExists(v *bool) {
+	m.InsulinExists = v
+}
+
+// GetGlucoseExists returns the GlucoseExists value.
+func (m SearchEventGroupsParams) GetGlucoseExists() *bool {
+	return m.GlucoseExists
+}
+
+// SetGlucoseExists sets the GlucoseExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetGlucoseExists(v *bool) {
+	m.GlucoseExists = v
+}
+
+// GetCreationDateEQ returns the CreationDateEQ value.
+func (m SearchEventGroupsParams) GetCreationDateEQ() *int64 {
+	return m.CreationDateEQ
+}
+
+// SetCreationDateEQ sets the CreationDateEQ value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetCreationDateEQ(v *int64) {
+	m.CreationDateEQ = v
 }
 
 // GetEnteredByNin returns the EnteredByNin value.

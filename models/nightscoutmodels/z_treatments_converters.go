@@ -166,18 +166,26 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring22 := *source.SyncIdentifier
 		sitedbCreateEventGroupParams.SyncIdentifier = &xstring22
 	}
+	if source.CreationDate != nil {
+		xint644 := *source.CreationDate
+		sitedbCreateEventGroupParams.CreationDate = &xint644
+	}
+	if source.FpuID != nil {
+		xstring23 := *source.FpuID
+		sitedbCreateEventGroupParams.FpuID = &xstring23
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint644 := *source.UtcOffsetMinutes
-		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint644
+		xint645 := *source.UtcOffsetMinutes
+		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
-		xstring23 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring23
+		xstring24 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring24
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring24 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring24
+		xstring25 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring25
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateEventGroupParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -250,13 +258,18 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		xstring := *source.SyncIdentifier
 		nightscoutmodelsTreatment.SyncIdentifier = &xstring
 	}
+	nightscoutmodelsTreatment.CreationDate = MillisToISODateString(source.CreationDate)
+	if source.FpuID != nil {
+		typesShortString9 := types.ShortString(*source.FpuID)
+		nightscoutmodelsTreatment.FpuID = &typesShortString9
+	}
 	if source.CreatedByDeviceName != nil {
-		typesShortString9 := types.ShortString(*source.CreatedByDeviceName)
-		nightscoutmodelsTreatment.Device = &typesShortString9
+		typesShortString10 := types.ShortString(*source.CreatedByDeviceName)
+		nightscoutmodelsTreatment.Device = &typesShortString10
 	}
 	if source.CreatedByAppName != nil {
-		typesShortString10 := types.ShortString(*source.CreatedByAppName)
-		nightscoutmodelsTreatment.App = &typesShortString10
+		typesShortString11 := types.ShortString(*source.CreatedByAppName)
+		nightscoutmodelsTreatment.App = &typesShortString11
 	}
 	pTypesShortString := types.ShortString(source.CreatedByIdentityName)
 	nightscoutmodelsTreatment.Subject = &pTypesShortString
@@ -1137,13 +1150,18 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xstring11 := *source.SyncIdentifier
 		sitedbEventGroup.SyncIdentifier = &xstring11
 	}
+	sitedbEventGroup.CreationDate = DateStringToMillis(source.CreationDate)
+	if source.FpuID != nil {
+		xstring12 := ShortStringToString(*source.FpuID)
+		sitedbEventGroup.FpuID = &xstring12
+	}
 	if source.Notes != nil {
-		xstring12 := SanitizedStringToString(*source.Notes)
-		sitedbEventGroup.Notes = &xstring12
+		xstring13 := SanitizedStringToString(*source.Notes)
+		sitedbEventGroup.Notes = &xstring13
 	}
 	if source.Reason != nil {
-		xstring13 := ShortStringToString(*source.Reason)
-		sitedbEventGroup.Reason = &xstring13
+		xstring14 := ShortStringToString(*source.Reason)
+		sitedbEventGroup.Reason = &xstring14
 	}
 	if source.DurationMinutes != nil {
 		xint642 := FlexibleInt64ToInt64(*source.DurationMinutes)
@@ -1159,12 +1177,12 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 	}
 	sitedbEventGroup.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring14 := ShortStringToString(*source.App)
-		sitedbEventGroup.CreatedByAppName = &xstring14
+		xstring15 := ShortStringToString(*source.App)
+		sitedbEventGroup.CreatedByAppName = &xstring15
 	}
 	if source.Device != nil {
-		xstring15 := ShortStringToString(*source.Device)
-		sitedbEventGroup.CreatedByDeviceName = &xstring15
+		xstring16 := ShortStringToString(*source.Device)
+		sitedbEventGroup.CreatedByDeviceName = &xstring16
 	}
 	return sitedbEventGroup
 }

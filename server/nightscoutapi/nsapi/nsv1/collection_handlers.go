@@ -258,7 +258,7 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 				nsutils.WriteError(w, nsutils.ErrNotImplemented)
 				return
 			}
-			queries, err := nsutils.ParseDeleteQueries(r.URL.Query())
+			queries, err := nsutils.ParseDeleteQueries(r.URL.Query(), collection)
 			for i := 0; err == nil && i < len(queries); i++ {
 				var amount int
 				amount, err = store.DeleteQuery(r.Context(), collection, queries[i])

@@ -123,6 +123,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map CreationDate CreationDate | MillisToISODateString
 	EventGroupToTreatment(source sitedb.EventGroup) *Treatment
 
 	// goverter:context siteContext
@@ -283,6 +284,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map DurationInMilliseconds DurationMs
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map SentJSON SentHash | SentHash
+	// goverter:map CreationDate CreationDate | DateStringToMillis
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
 
@@ -410,6 +412,14 @@ func DateStringToMillis(source *types.DateString) *int64 {
 		return nil
 	}
 	return source.UnixMillip()
+}
+
+// MillisToISODateString is a date in milliseconds as toISOString writes it, as iAPS sent it, nil when there is none
+func MillisToISODateString(source *int64) *types.DateString {
+	if source == nil {
+		return nil
+	}
+	return new(types.ISODateStringFromInt64AndUTCOffset(*source, nil))
 }
 
 // MillisToDateString is a date in milliseconds as a UTC date string, nil when there is none

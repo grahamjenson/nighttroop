@@ -1,0 +1,118 @@
+// iAPS's deletes, by query (FreeAPS/Sources/Services/Network/NightscoutAPI.swift deleteCarbs, deleteInsulin,
+// deleteManualGlucose, deleteOverride, deleteNSoverride, deleteAllNSoverrrides and deleteAnnouncements), see
+// docs/clients/iaps.md. Each deletes only what it asks for.
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// Carbs are at their actualDate, with creation_date when they were entered, which iAPS deletes them by
+NAME iaps_upload_treatments
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "creation_date" : "{{ date -1 }}T12:01:00.000Z", "enteredBy" : "iAPS", "carbs" : 45, "id" : "A1B2C3D4-0000-0000-0000-000000000005", "fpuID" : "F1B2C3D4-0000-0000-0000-000000000005" },
+  { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:16:00.000Z", "creation_date" : "{{ date -1 }}T12:15:00.000Z", "enteredBy" : "iAPS", "carbs" : 15, "id" : "A1B2C3D4-0000-0000-0000-000000000006" },
+  { "eventType" : "Bolus", "created_at" : "{{ date -1 }}T12:02:00.000Z", "enteredBy" : "iAPS", "insulin" : 2.5, "bolus" : { "id" : "b1", "type" : "Bolus", "timestamp" : "{{ date -1 }}T12:02:00.000Z", "amount" : 2.5 } },
+  { "eventType" : "BG Check", "created_at" : "{{ date -1 }}T12:20:00.000Z", "enteredBy" : "iAPS", "notes" : "iAPS User", "glucose" : "105", "glucoseType" : "Finger", "units" : "mg/dl" },
+  { "duration" : 60, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:13:00.000Z", "enteredBy" : "iAPS", "notes" : "Sport" },
+  { "duration" : 30, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:30:00.000Z", "enteredBy" : "iAPS", "notes" : "Walk" },
+  { "duration" : 30, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:40:00.000Z", "enteredBy" : "careportal", "notes" : "From Nightscout" },
+  { "eventType" : "Announcement", "created_at" : "{{ date -1 }}T12:50:00.000Z", "enteredBy" : "remote", "notes" : "looping: false" }
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 8 "@"
+// creation_date and fpuID are kept and given back
+ASSERT_CONTAINS "T12:01:00.000Z" "@0.creation_date"
+ASSERT_EQUALS "F1B2C3D4-0000-0000-0000-000000000005" "@0.fpuID"
+
+NAME iaps_read_kept_fields
+GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_CONTAINS "T12:15:00.000Z" "@0.creation_date"
+
+// A delete that could delete more than was asked is refused: deleteAllNSoverrrides (all overrides, a developer's
+// tool), a time range longer than 2 days, a count of 0, and a treatment's filter on readings
+NAME iaps_delete_all_overrides_refused
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+
+NAME iaps_delete_long_range_refused
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise&find[enteredBy]=iAPS&find[created_at][$gte]={{ date -5 }}T12:00:00.000Z&find[created_at][$lte]={{ date -1 }}T13:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "2 days" "@message"
+
+NAME iaps_delete_count_zero_refused
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise&count=0&find[enteredBy]=iAPS
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+
+NAME iaps_delete_readings_by_bolus_refused
+DELETE http://{{ site }}/api/v1/entries.json?find[bolus][$exists]=true&find[created_at][$eq]={{ date -1 }}T12:02:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+
+NAME nothing_deleted
+GET http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 8 "@"
+
+// deleteCarbs: by when they were entered, not when they are
+NAME iaps_delete_carbs
+DELETE http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&find[creation_date][$eq]={{ date -1 }}T12:01:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+// deleteInsulin: a bolus at the time; the carbs at their own time are not insulin
+NAME iaps_delete_insulin_not_carbs
+DELETE http://{{ site }}/api/v1/treatments.json?find[bolus][$exists]=true&find[created_at][$eq]={{ date -1 }}T12:16:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@deletedCount"
+
+NAME iaps_delete_insulin
+DELETE http://{{ site }}/api/v1/treatments.json?find[bolus][$exists]=true&find[created_at][$eq]={{ date -1 }}T12:02:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+// deleteManualGlucose
+NAME iaps_delete_manual_glucose
+DELETE http://{{ site }}/api/v1/treatments.json?find[glucose][$exists]=true&find[created_at][$eq]={{ date -1 }}T12:20:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+// deleteOverride: iAPS's own override within a few seconds or minutes of its time
+NAME iaps_delete_override
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise&find[enteredBy]=iAPS&find[created_at][$gte]={{ date -1 }}T12:12:58.000Z&find[created_at][$lte]={{ date -1 }}T12:13:02.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+// deleteNSoverride: count=1 deletes only iAPS's newest override, not one entered in Nightscout
+NAME iaps_delete_ns_override
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise&count=1&find[enteredBy]=iAPS
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+// deleteAnnouncements: those from a time on
+NAME iaps_delete_announcements
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[created_at][$gte]={{ date -1 }}T12:45:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME only_the_others_left
+GET http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "From Nightscout" "@0.notes"
+ASSERT_EQUALS 15 "@1.carbs"

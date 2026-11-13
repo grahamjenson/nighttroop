@@ -484,6 +484,18 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 		xstring10 := *source.EnteredByEq
 		sitedbSearchEventGroupsParams.EnteredByEq = &xstring10
 	}
+	if source.InsulinExists != nil {
+		xbool3 := *source.InsulinExists
+		sitedbSearchEventGroupsParams.InsulinExists = &xbool3
+	}
+	if source.GlucoseExists != nil {
+		xbool4 := *source.GlucoseExists
+		sitedbSearchEventGroupsParams.GlucoseExists = &xbool4
+	}
+	if source.CreationDateEQ != nil {
+		xint6434 := *source.CreationDateEQ
+		sitedbSearchEventGroupsParams.CreationDateEQ = &xint6434
+	}
 	if source.EnteredByNin != nil {
 		xstring11 := *source.EnteredByNin
 		sitedbSearchEventGroupsParams.EnteredByNin = &xstring11
@@ -1198,6 +1210,18 @@ func QueryValueToQuery(source QueryValues) Query {
 		xbool2 := typesFlexibleBoolToBool(*source.DurationExists)
 		nsqueryQuery.DurationExists = &xbool2
 	}
+	if source.InsulinExists != nil {
+		xbool3 := typesFlexibleBoolToBool(*source.InsulinExists)
+		nsqueryQuery.InsulinExists = &xbool3
+	}
+	if source.GlucoseExists != nil {
+		xbool4 := typesFlexibleBoolToBool(*source.GlucoseExists)
+		nsqueryQuery.GlucoseExists = &xbool4
+	}
+	if source.CreationDateEQ != nil {
+		xint6434 := typesDateIntToInt64(*source.CreationDateEQ)
+		nsqueryQuery.CreationDateEQ = &xint6434
+	}
 	if source.EnteredByEq != nil {
 		xstring7 := typesShortStringToString(*source.EnteredByEq)
 		nsqueryQuery.EnteredByEq = &xstring7
@@ -1210,8 +1234,8 @@ func QueryValueToQuery(source QueryValues) Query {
 	}
 	nsqueryQuery.Fields = QueryStringArrayToArray(source.Fields)
 	if source.Envelope != nil {
-		xbool3 := typesFlexibleBoolToBool(*source.Envelope)
-		nsqueryQuery.Envelope = &xbool3
+		xbool5 := typesFlexibleBoolToBool(*source.Envelope)
+		nsqueryQuery.Envelope = &xbool5
 	}
 	nsqueryQuery.UnknownFilter = GetUnknownFilter(source)
 	return nsqueryQuery

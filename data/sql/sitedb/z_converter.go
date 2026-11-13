@@ -410,23 +410,31 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring22 := *source.SyncIdentifier
 		sitedbCreateEventGroupParams.SyncIdentifier = &xstring22
 	}
+	if source.CreationDate != nil {
+		xint644 := *source.CreationDate
+		sitedbCreateEventGroupParams.CreationDate = &xint644
+	}
+	if source.FpuID != nil {
+		xstring23 := *source.FpuID
+		sitedbCreateEventGroupParams.FpuID = &xstring23
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint644 := *source.UtcOffsetMinutes
-		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint644
+		xint645 := *source.UtcOffsetMinutes
+		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
-		xstring23 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring23
+		xstring24 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring24
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring24 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring24
+		xstring25 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring25
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint645 := *source.CreatedByIdentityID
-		sitedbCreateEventGroupParams.CreatedByIdentityID = &xint645
+		xint646 := *source.CreatedByIdentityID
+		sitedbCreateEventGroupParams.CreatedByIdentityID = &xint646
 	}
 	return sitedbCreateEventGroupParams
 }
@@ -2307,52 +2315,60 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xstring20 := *source.SyncIdentifier
 		sitedbEventGroup.SyncIdentifier = &xstring20
 	}
+	if source.CreationDate != nil {
+		xint642 := *source.CreationDate
+		sitedbEventGroup.CreationDate = &xint642
+	}
+	if source.FpuID != nil {
+		xstring21 := *source.FpuID
+		sitedbEventGroup.FpuID = &xstring21
+	}
 	if source.Notes != nil {
-		xstring21 := *source.Notes
-		sitedbEventGroup.Notes = &xstring21
+		xstring22 := *source.Notes
+		sitedbEventGroup.Notes = &xstring22
 	}
 	if source.Reason != nil {
-		xstring22 := *source.Reason
-		sitedbEventGroup.Reason = &xstring22
+		xstring23 := *source.Reason
+		sitedbEventGroup.Reason = &xstring23
 	}
 	if source.DurationMinutes != nil {
-		xint642 := *source.DurationMinutes
-		sitedbEventGroup.DurationMinutes = &xint642
+		xint643 := *source.DurationMinutes
+		sitedbEventGroup.DurationMinutes = &xint643
 	}
 	if source.DurationMs != nil {
-		xint643 := *source.DurationMs
-		sitedbEventGroup.DurationMs = &xint643
+		xint644 := *source.DurationMs
+		sitedbEventGroup.DurationMs = &xint644
 	}
 	if source.DeletedAt != nil {
-		xint644 := *source.DeletedAt
-		sitedbEventGroup.DeletedAt = &xint644
+		xint645 := *source.DeletedAt
+		sitedbEventGroup.DeletedAt = &xint645
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint645 := *source.UtcOffsetMinutes
-		sitedbEventGroup.UtcOffsetMinutes = &xint645
+		xint646 := *source.UtcOffsetMinutes
+		sitedbEventGroup.UtcOffsetMinutes = &xint646
 	}
 	sitedbEventGroup.OccurredAt = source.OccurredAt
 	sitedbEventGroup.CreatedAt = source.CreatedAt
 	sitedbEventGroup.UpdatedAt = source.UpdatedAt
 	if source.CreatedByAppName != nil {
-		xstring23 := *source.CreatedByAppName
-		sitedbEventGroup.CreatedByAppName = &xstring23
+		xstring24 := *source.CreatedByAppName
+		sitedbEventGroup.CreatedByAppName = &xstring24
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring24 := *source.CreatedByDeviceName
-		sitedbEventGroup.CreatedByDeviceName = &xstring24
+		xstring25 := *source.CreatedByDeviceName
+		sitedbEventGroup.CreatedByDeviceName = &xstring25
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint646 := *source.UpdatedByIdentityID
-		sitedbEventGroup.UpdatedByIdentityID = &xint646
+		xint647 := *source.UpdatedByIdentityID
+		sitedbEventGroup.UpdatedByIdentityID = &xint647
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring25 := *source.UpdatedByIdentityName
-		sitedbEventGroup.UpdatedByIdentityName = &xstring25
+		xstring26 := *source.UpdatedByIdentityName
+		sitedbEventGroup.UpdatedByIdentityName = &xstring26
 	}
 	if source.CreatedByIdentityID != nil {
-		xint647 := *source.CreatedByIdentityID
-		sitedbEventGroup.CreatedByIdentityID = &xint647
+		xint648 := *source.CreatedByIdentityID
+		sitedbEventGroup.CreatedByIdentityID = &xint648
 	}
 	sitedbEventGroup.CreatedByIdentityName = source.CreatedByIdentityName
 	return sitedbEventGroup
