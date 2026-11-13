@@ -1179,7 +1179,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   too busy to answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - A disabled, archived or deleted site is answered just as a site that never was, so the answer tells nothing about it.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
-  Nightscout API or its live updates. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one
+  Nightscout API or its live updates, but a Nightscout API search of readings (entries), which returns up to 2880,
+  a day of 1 minute readings twice over, as xDrip+'s follower asks for that many since its newest and never reads
+  the ones it was not given; Nightguard, LoopFollow, Trio and xDrip4iOS also ask for more than 1000. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one
   batch, each 100 past the first costing a write against the site's and identity's limits; a live update's upload
   holds at most 100. Deleting a type of treatment or entry
   through the Nightscout API deletes at most 1000 each time, the newest first, saying how many.

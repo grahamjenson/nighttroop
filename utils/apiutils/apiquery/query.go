@@ -10,6 +10,11 @@ import (
 // MaxQueryLimit is the most models one query returns, so no request can read a whole table at once
 const MaxQueryLimit = 1000
 
+// MaxEntriesQueryLimit is the most readings one Nightscout API search returns, readings being small rows read by
+// their date's index: a day of 1 minute readings, twice over, as xDrip+'s follower asks for up to 2880 since its
+// newest, and keeps the readings it was not given after a gap unread for good
+const MaxEntriesQueryLimit = 2880
+
 // MaxQuerySkip is the furthest a search pages, as SQLite walks every row it skips: 32 searches' worth, enough for
 // Nightguard's 32 pages of a report and a few months of glucose on a site's pages
 const MaxQuerySkip = 32 * MaxQueryLimit
