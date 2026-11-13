@@ -1,6 +1,7 @@
 package nightscoutmodels
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -50,7 +51,7 @@ type Entry struct {
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Mgdl        *types.FlexibleFloat64 `json:"-"`
+	Mgdl *types.FlexibleFloat64 `json:"-"`
 }
 
 func (t *Entry) UnmarshalJSON(data []byte) error {
@@ -71,7 +72,6 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-
 
 	// Identitfiers
 	if t.Identifier == nil {
