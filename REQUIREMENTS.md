@@ -1352,6 +1352,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - A temp basal's `temp` `absolute`.
 - `timestamp`: only API v1 and its sockets. API v3 and its storage socket leave it out (AAPS drops a treatment, or a
   page, whose `timestamp` is a date).
+- A meter reading (`mbg`) that no treatment has, and that AAPS did not send, is also a treatment on API v3. This
+  applies to searches by date only, history, and the storage socket. AAPS takes finger sticks only from BG Checks.
+  - It is a read-only `BG Check`: its `mbg` as `glucose`, `glucoseType` `Finger`, its device as `enteredBy`.
+  - Its identifier is the reading's identifier with `finger` after it.
+  - A read by that identifier gives it. A delete by it deletes the reading.
+  - A careportal BG Check has its own reading, so it is given once.
 
 #### Notes and values
 

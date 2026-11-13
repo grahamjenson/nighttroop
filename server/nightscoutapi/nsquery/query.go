@@ -93,6 +93,9 @@ type Query struct {
 	Fields     []string   `json:"fields,omitempty"`
 	Envelope   *bool      `json:"envelope,omitempty"`
 
+	// V3 is whether API v3 asks, which gives a treatment search meter readings in no treatment too (see FingerSticks)
+	V3 bool `json:"-"`
+
 	// UnknownFilter is whether a filter is on a field or with an operator Nighttroop does not know, so nothing matches
 	UnknownFilter bool `json:"unknown_filter,omitempty"`
 }
