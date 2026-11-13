@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -38,7 +39,7 @@ func (s *NotificationEventsCollection) CreateRow(ctx context.Context, collection
 		model.NotificationType = defaultNotificationType
 	}
 	if model.Title == "" {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint("title is required")
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.title_required"))
 	}
 	if herr := checkNotificationEvent(model); herr != nil {
 		return nil, herr
@@ -126,7 +127,7 @@ func (s *NotificationEventsCollection) DeleteHTMXResponse(model *sitemodels.Site
 // checkNotificationEvent keeps the title short enough to show and the severity within its scale
 func checkNotificationEvent(model *sitemodels.SiteNotificationEvent) *apiutils.HTTPError {
 	if len(model.Title) > 128 {
-		return apiutils.ErrConstraintCheckFailedWithHint("title must be at most 128 characters")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.title_too_long"))
 	}
-	return apiutils.CheckRange("severity", &model.Severity, 0, 5, "")
+	return apiutils.CheckRange("errors.data.severity", &model.Severity, 0, 5)
 }

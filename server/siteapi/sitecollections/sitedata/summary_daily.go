@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/glucose"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // summaryDailyMaxDays is how many days back a summary day can be built, so a request cannot build years of them
@@ -75,10 +76,10 @@ func (s *SummaryDailyCollection) CreateRow(ctx context.Context, collectionTx *si
 	}
 	location, now := siteContext.GetSiteTimezone(), time.Now()
 	if _, err := time.Parse(time.DateOnly, model.Date); err != nil {
-		return nil, apiutils.ErrBadBodyWithHint("date must be a day, like 2026-01-31")
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.data.day"))
 	}
 	if model.Date >= LocalDate(now, location, 0) || model.Date < LocalDate(now, location, -summaryDailyMaxDays) {
-		return nil, apiutils.ErrBadBodyWithHint("date must be before today and within a year")
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.data.day_in_range"))
 	}
 	return RebuildSummaryDaily(ctx, q, siteContext, model.Date, now)
 }

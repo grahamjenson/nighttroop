@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/push"
 )
 
@@ -77,7 +78,7 @@ func PushTestHandler(w http.ResponseWriter, r *http.Request) {
 		Body: "Pushes from " + siteContext.SiteDB.URL() + " reach this device"})
 	switch {
 	case errors.Is(err, push.ErrNoCredential):
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(err.Error()+": add one in Push Certificates"))
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.no_push_credential", i18n.Data{"App": registration.App})))
 		return
 	case errors.Is(err, push.ErrTokenGone):
 		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusGone, Message: "The app is no longer registered on this device, so its registration is deleted"})

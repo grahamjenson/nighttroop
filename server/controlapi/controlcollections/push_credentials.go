@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // PushCredentialsCollection lets control identities see every site's push credentials, and those for every site,
@@ -69,10 +70,9 @@ func (s *PushCredentialsCollection) CreateHandler(w http.ResponseWriter, r *http
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	model, herr := apiutils.ExtractModelFromRequest[controlmodels.PushCredential](httputils.GetContentType(r), r)
 	if herr == nil && (model.SiteID == nil || *model.SiteID == "") {
-		herr = apiutils.ErrConstraintCheckFailedWithHint("a credential for every site cannot be added until the server " +
-			"uses it only for tokens its app registered itself, with its bundle IDs, within a limit across the server")
+		herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.server_push_credential"))
 	} else if herr == nil && model.PushCredential == nil {
-		herr = apiutils.ErrMissingRequiredFieldWithHint("name (at most 64 characters) and secret")
+		herr = apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.push_credential")
 	}
 	var created *controlmodels.PushCredential
 	if herr == nil {
@@ -99,7 +99,7 @@ func (s *PushCredentialsCollection) create(ctx context.Context, controlContext *
 	defer tx.Rollback()
 	q := controlDB.Queries.WithTx(tx)
 	if _, err := q.GetSite(ctx, controldb.GetSiteParams{ID: *model.SiteID}); errors.Is(err, sql.ErrNoRows) {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint("there is no live site with that ID")
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.no_live_site"))
 	} else if err != nil {
 		return nil, err
 	}

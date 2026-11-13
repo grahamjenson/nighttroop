@@ -970,6 +970,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - The Errors page keeps the full error.
 - Refusals written for users show their reason, without the API's "Bad or missing request body" or "Constraint check
   failed" prefix.
+- The toast shows the reason in the page's language. The API's message stays in English.
 - Toasts show above an open modal, so its form's errors can be read and their links clicked.
 
 #### Sign in events

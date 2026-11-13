@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // IdentitiesHandler is a site's identities, newest first
@@ -96,7 +97,7 @@ func (s *SitesCollection) ResetPasswordHandler(w http.ResponseWriter, r *http.Re
 func (s *SitesCollection) ResetTOTPHandler(w http.ResponseWriter, r *http.Request) {
 	s.resetIdentity(w, r, func(ctx context.Context, controlDB *db.ControlDB, identity *controldb.SiteIdentity, by string) (*db.IdentityValues, error) {
 		if identity.TotpSecretEnc == "" {
-			return nil, apiutils.ErrConstraintCheckFailedWithHint("only an identity that logs in with TOTP can have it reset")
+			return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.identities.totp_reset"))
 		}
 		return controlDB.ResetSiteIdentityTOTP(ctx, identity, by)
 	})

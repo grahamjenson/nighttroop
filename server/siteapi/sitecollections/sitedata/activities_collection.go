@@ -129,9 +129,9 @@ func (s *ActivitiesCollection) DeleteHTMXResponse(model *sitemodels.SiteActivity
 // checkActivity keeps each number sent within what a day's activity could have
 func checkActivity(model *sitemodels.SiteActivity) *apiutils.HTTPError {
 	return cmp.Or(
-		apiutils.CheckRange("duration", model.DurationMinutes, 1, 24*60, ""),
-		apiutils.CheckRange("calories", model.Calories, 0, 20_000, ""),
-		apiutils.CheckRange("steps", model.Steps, 0, 200_000, ""),
-		apiutils.CheckRange("heart rate", model.HeartRate, 20, 250, ""),
+		apiutils.CheckRange("errors.data.activity_duration", model.DurationMinutes, 1, 24*60),
+		apiutils.CheckRange("errors.data.calories", model.Calories, 0, 20_000),
+		apiutils.CheckRange("errors.data.steps", model.Steps, 0, 200_000),
+		apiutils.CheckRange("errors.data.heart_rate", model.HeartRate, 20, 250),
 	)
 }

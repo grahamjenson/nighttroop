@@ -36,7 +36,7 @@ func (s *FoodIntakesCollection) GetRoute() string {
 // ////
 func (s *FoodIntakesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
 	if model.Carbs == nil {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("carbs")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.carbs")
 	}
 	if herr := checkFoodIntake(model); herr != nil {
 		return nil, herr
@@ -124,9 +124,9 @@ func (s *FoodIntakesCollection) DeleteHTMXResponse(model *sitemodels.SiteFoodInt
 // checkFoodIntake keeps any carbs, fat, protein or fibre sent within what a meal could have, or take back
 func checkFoodIntake(model *sitemodels.SiteFoodIntake) *apiutils.HTTPError {
 	return cmp.Or(
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Carbs, -maxFoodGrams, maxFoodGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fat, -maxFoodGrams, maxFoodGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Protein, -maxFoodGrams, maxFoodGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fibre, -maxFoodGrams, maxFoodGrams, "g"),
+		apiutils.CheckRange("errors.data.food", model.Carbs, -maxFoodGrams, maxFoodGrams),
+		apiutils.CheckRange("errors.data.food", model.Fat, -maxFoodGrams, maxFoodGrams),
+		apiutils.CheckRange("errors.data.food", model.Protein, -maxFoodGrams, maxFoodGrams),
+		apiutils.CheckRange("errors.data.food", model.Fibre, -maxFoodGrams, maxFoodGrams),
 	)
 }

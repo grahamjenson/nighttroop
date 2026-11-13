@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // readFailingCollection is a collection whose rows cannot be read, with err
@@ -74,10 +75,14 @@ func TestWriteErrorKeepsTheServersWordsFromToasts(t *testing.T) {
 			[]string{"recorded for the site&#39;s admins"}, []string{"/logs/errors", "Internal server error"}},
 		{"the database's words", apiutils.ErrDatabaseRefused(errors.New("CHECK constraint failed: length(notes) <= 1024")),
 			consts.IdentityRoleAdmin, []string{"Something went wrong.", `href="/logs/errors"`}, []string{"CHECK", "Constraint check failed"}},
-		{"a hint for users", apiutils.ErrConstraintCheckFailedWithHint("reading must be more than 0"), consts.IdentityRoleUser,
-			[]string{"reading must be more than 0"}, []string{"Constraint check failed", "Something went wrong."}},
-		{"a body hint for users", apiutils.ErrBadBodyWithHint("date must be a day"), consts.IdentityRoleUser,
+		{"a hint for users", apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.title_required")), consts.IdentityRoleUser,
+			[]string{"title is required"}, []string{"Constraint check failed", "Something went wrong."}},
+		{"a body hint for users", apiutils.ErrBadBodyWithHint(i18n.NewError("errors.data.day")), consts.IdentityRoleUser,
 			[]string{"date must be a day"}, []string{"Bad or missing request body"}},
+		{"a missing field", apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.carbs"), consts.IdentityRoleUser,
+			[]string{"Missing required field carbs"}, []string{"Something went wrong."}},
+		{"a library's error, as it is", apiutils.ErrBadBodyWithHint(errors.New("unexpected EOF")), consts.IdentityRoleUser,
+			[]string{"unexpected EOF"}, []string{"Bad or missing request body"}},
 		{"a message for users", &apiutils.HTTPError{Status: http.StatusGone, Message: "The app is no longer registered on this device"},
 			consts.IdentityRoleUser, []string{"The app is no longer registered on this device"}, []string{"Something went wrong."}},
 	}

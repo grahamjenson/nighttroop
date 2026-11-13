@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ProfilePresetsCollection is the profiles loops upload in profile stores. The site shows, renames and deletes
@@ -33,7 +34,7 @@ func (s *ProfilePresetsCollection) UpdateRow(ctx context.Context, collectionTx *
 	}
 	if model.Name != nil {
 		if *model.Name == "" {
-			return nil, apiutils.ErrMissingRequiredFieldWithHint("name")
+			return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.name")
 		}
 		store, err := q.GetProfileStore(ctx, sitedb.GetProfileStoreParams{ProfileStoreID: oldModel.ProfileStoreID})
 		if err != nil {
@@ -41,7 +42,7 @@ func (s *ProfilePresetsCollection) UpdateRow(ctx context.Context, collectionTx *
 		}
 		for _, profile := range store {
 			if profile.ID != oldModel.ID && profile.Name == *model.Name {
-				return nil, apiutils.ErrConstraintCheckFailedWithHint("another profile in this store is called " + *model.Name)
+				return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.profile_name_taken", i18n.Data{"Name": *model.Name}))
 			}
 		}
 	}

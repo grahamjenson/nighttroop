@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // BackfillHandler starts a backfill of the site's connector in the URL, answering with what it will fetch. A source
@@ -29,7 +30,7 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	source, err := siteContext.ControlDB.Queries.GetConnector(r.Context(), controldb.GetConnectorParams{Type: connectorType, SiteID: siteContext.SiteID})
 	if err != nil || source == nil || !source.Enabled {
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint("turn on and save this connector before backfilling it"))
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.backfill_off")))
 		return
 	}
 

@@ -3,12 +3,12 @@ package sitesettings
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"slices"
 	"strconv"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -56,19 +56,19 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	// A device for a client that must have a role has it, and cannot be made with another
 	if forced, ok := sitemodels.ClientRoles[model.Client]; ok {
 		if model.Role != "" && consts.IdentityRole(model.Role) != forced {
-			return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("A %s device must have the %s role", model.Client, forced))
+			return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.device_role", i18n.Data{"Client": model.Client, "Role": forced}))
 		}
 		model.Role = string(forced)
 	}
 	if model.Name == "" || model.Role == "" {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("name and role")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.name_and_role")
 	}
 	role := consts.IdentityRole(model.Role)
 	if !slices.Contains(identityRoles, role) {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown role: %s", model.Role))
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.unknown_role", i18n.Data{"Role": model.Role}))
 	}
 	if model.Client != "" && model.Client != "other" && !slices.Contains(mgdlClients, model.Client) {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown client: %s", model.Client))
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.unknown_client", i18n.Data{"Client": model.Client}))
 	}
 
 	q, err := collectionTx.Control()
@@ -82,7 +82,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 		return nil, err
 	}
 	if maxIdentities := siteContext.Config.MaxIdentitiesPerSite; count >= int64(maxIdentities) {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d users and devices", maxIdentities))
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.identities.too_many", i18n.Data{"Max": maxIdentities}))
 	}
 	// Each create hashes a password with bcrypt, so stop creating and deleting from using up the CPU
 	if allowed, seconds := httputils.IdentityCreateWithinRateLimit(siteContext); !allowed {
@@ -175,7 +175,7 @@ func (s *IdentitiesCollection) UpdateHTMXResponse(model *sitemodels.UserIdentity
 func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.UserIdentity, error) {
 	identityID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid identity id: %s", id))
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.bad_id", i18n.Data{"ID": id}))
 	}
 	q, err := collectionTx.Control()
 	if err != nil {
@@ -278,7 +278,7 @@ func getIdentityByName(ctx context.Context, q *controldb.Queries, siteContext *h
 // checkCanRemoveIdentity stops an identity disabling or deleting itself, or the site losing its last enabled admin
 func checkCanRemoveIdentity(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identity *sitemodels.UserIdentity) *apiutils.HTTPError {
 	if identity.CurrentIdentity {
-		return apiutils.ErrConstraintCheckFailedWithHint("you cannot disable or delete yourself")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.identities.not_yourself"))
 	}
 	if consts.IdentityRole(identity.Role) != consts.IdentityRoleAdmin || !identity.Enabled {
 		return nil
@@ -295,7 +295,7 @@ func checkCanRemoveIdentity(ctx context.Context, q *controldb.Queries, siteConte
 		}
 	}
 	if admins <= 1 {
-		return apiutils.ErrConstraintCheckFailedWithHint("a site must keep at least one enabled admin")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.identities.keep_an_admin"))
 	}
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
 
@@ -47,11 +48,11 @@ func (s *ArchivedSitesCollection) UpdateRow(ctx context.Context, controlContext 
 	config := controlContext.ControlDB.ServerConfig
 	switch {
 	case model.State != "live":
-		return nil, apiutils.ErrBadBodyWithHint("an archived site's state can only be changed to live")
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.hydrate_to_live"))
 	case oldModel.State != "archived":
-		return nil, apiutils.ErrConstraintCheckFailedWithHint("only an archived site can be hydrated")
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.hydrate_archived_only"))
 	case !config.Status.S3Working:
-		return nil, apiutils.ErrConstraintCheckFailedWithHint("a site can only be hydrated when S3 is connected")
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.hydrate_needs_s3"))
 	}
 	started := time.Now()
 	if err := controlContext.ControlDB.HydrateSite(ctx, oldModel.ID, s3utils.NewS3Client(config).DownloadFilesFromS3); err != nil {

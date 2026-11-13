@@ -362,7 +362,7 @@ func writeError(w http.ResponseWriter, r *http.Request, acceptType httputils.Acc
 		site_templ.SiteErrorRecorded(admin).Render(r.Context(), w)
 		return
 	}
-	site_templ.SiteError(cmp.Or(herr.Hint, herr.Message)).Render(r.Context(), w)
+	site_templ.SiteError(herr.UserMessage(r.Context())).Render(r.Context(), w)
 }
 
 // get is the model, or nil when there is none

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/events"
@@ -235,7 +236,7 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 	// The settings in effect must make sense together
 	inEffect := s.inEffect(siteContext, level)
 	if err := inEffect.Consistent(); err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(err.Error())
+		return nil, apiutils.ErrBadBodyWithHint(err)
 	}
 	if err := s.save(ctx, collectionTx, siteContext, identity, level); err != nil {
 		return nil, err
@@ -264,12 +265,12 @@ func (s *SettingsCollection) setSent(siteContext *httputils.SiteContext, level *
 		if typed, ok := value.(string); ok && slices.Contains(glucoseSettings, name) {
 			glucose, err := strconv.ParseFloat(typed, 64)
 			if err != nil {
-				return apiutils.ErrBadBodyWithHint(fmt.Sprintf("%s must be a number", name))
+				return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.settings.number", i18n.Data{"Name": name}))
 			}
 			value = int64(math.Round(units.ToMGDL(glucose)))
 		}
 		if err := level.SetSettingByName(settingID(name), value, nil, subject); err != nil {
-			return apiutils.ErrBadBodyWithHint(err.Error())
+			return apiutils.ErrBadBodyWithHint(err)
 		}
 	}
 	return nil

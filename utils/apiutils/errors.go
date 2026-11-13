@@ -10,19 +10,38 @@ import (
 
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 type HTTPError struct {
 	Status  int    `json:"status"`
 	Message string `json:"message,omitempty"`
-	// Hint is the part of the message written for users, which a page shows without the message's start
-	Hint string `json:"-"`
+	// Hint is the part of the message written for users, which a page shows in its language without the message's start
+	Hint *i18n.Error `json:"-"`
 	// Internal is a message in the server's own words, such as the database's, which a page does not show its user
 	Internal bool `json:"-"`
 }
 
 func (e *HTTPError) Error() string {
 	return e.Message
+}
+
+// UserMessage is what a page shows its user: the hint in the context's language, or else the message
+func (e *HTTPError) UserMessage(ctx context.Context) string {
+	if e.Hint == nil {
+		return e.Message
+	}
+	return e.Hint.In(ctx)
+}
+
+// withHint is the error whose message starts with start then says the hint in English. A hint not written for
+// people, as an error from a library, is shown as it is.
+func withHint(status int, start string, hint error) *HTTPError {
+	var message *i18n.Error
+	if !errors.As(hint, &message) {
+		message = i18n.NewError("errors.as_written", i18n.Data{"Text": hint.Error()})
+	}
+	return &HTTPError{Status: status, Message: start + message.Error(), Hint: message}
 }
 
 func (e *HTTPError) Write(acceptType httputils.AcceptType, w http.ResponseWriter) string {
@@ -68,22 +87,27 @@ var (
 
 // body errors
 var (
-	ErrUnknownContent  = &HTTPError{Status: http.StatusUnsupportedMediaType, Message: "Unknown content type"}
-	ErrBadBody         = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing request body"}
-	ErrBadBodyWithHint = func(hint string) *HTTPError {
-		return &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing request body: " + hint, Hint: hint}
+	ErrUnknownContent = &HTTPError{Status: http.StatusUnsupportedMediaType, Message: "Unknown content type"}
+	ErrBadBody        = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing request body"}
+	// ErrBadBodyWithHint says why the body is refused: an *i18n.Error, so a page shows it in its language
+	ErrBadBodyWithHint = func(hint error) *HTTPError {
+		return withHint(http.StatusBadRequest, "Bad or missing request body: ", hint)
 	}
 	ErrBadForm = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing form data"}
 )
 
 var (
-	ErrMissingRequiredField         = &HTTPError{Status: http.StatusBadRequest, Message: "Missing required field"}
-	ErrMissingRequiredFieldWithHint = func(field string) *HTTPError {
-		return &HTTPError{Status: http.StatusBadRequest, Message: "Missing required field " + field}
+	ErrMissingRequiredField = &HTTPError{Status: http.StatusBadRequest, Message: "Missing required field"}
+	// ErrMissingRequiredFieldWithHint names the fields missing, by the id of a message saying so, e.g. "Missing
+	// required field name"
+	ErrMissingRequiredFieldWithHint = func(id string) *HTTPError {
+		return withHint(http.StatusBadRequest, "", i18n.NewError(id))
 	}
-	ErrConstraintCheckFailed         = &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed"}
-	ErrConstraintCheckFailedWithHint = func(field string) *HTTPError {
-		return &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed: " + field, Hint: field}
+	ErrConstraintCheckFailed = &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed"}
+	// ErrConstraintCheckFailedWithHint says which value is refused and why: an *i18n.Error, so a page shows it in its
+	// language
+	ErrConstraintCheckFailedWithHint = func(hint error) *HTTPError {
+		return withHint(http.StatusBadRequest, "Constraint check failed: ", hint)
 	}
 	// ErrDatabaseRefused is the database refusing a value, in its own words, which are kept from users
 	ErrDatabaseRefused = func(err error) *HTTPError {

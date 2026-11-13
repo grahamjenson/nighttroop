@@ -9,6 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 type SettingAnyType struct {
@@ -218,14 +219,14 @@ const maxDeviceNames, maxDeviceName = 10, 64
 // ValidDeviceNames is at most 10 different device names, each of 1 to 64 characters
 func ValidDeviceNames(names types.DeviceNames) error {
 	if len(names) > maxDeviceNames {
-		return fmt.Errorf("must be at most %d devices", maxDeviceNames)
+		return i18n.NewError("errors.settings.too_many_devices", i18n.Data{"Max": maxDeviceNames})
 	}
 	for i, name := range names {
 		if name == "" || len(name) > maxDeviceName {
-			return fmt.Errorf("each device must be 1 to %d characters", maxDeviceName)
+			return i18n.NewError("errors.settings.device_length", i18n.Data{"Max": maxDeviceName})
 		}
 		if slices.Contains(names[:i], name) {
-			return fmt.Errorf("%s is listed twice", name)
+			return i18n.NewError("errors.settings.device_twice", i18n.Data{"Name": name})
 		}
 	}
 	return nil
@@ -234,7 +235,7 @@ func ValidDeviceNames(names types.DeviceNames) error {
 func Range[T cmp.Ordered](min, max T) func(T) error {
 	return func(value T) error {
 		if value < min || value > max {
-			return fmt.Errorf("must be between %v and %v", min, max)
+			return i18n.NewError("errors.settings.range", i18n.Data{"Min": min, "Max": max})
 		}
 		return nil
 	}

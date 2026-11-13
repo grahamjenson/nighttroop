@@ -2,9 +2,9 @@ package sitedata
 
 import (
 	"context"
-	"fmt"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -135,10 +135,10 @@ func (s *TempTargetsCollection) DeleteHTMXResponse(model *sitemodels.SiteTempTar
 func checkTempTarget(model *sitemodels.SiteTempTarget, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	units := sitemodels.ContextUnits(siteContext)
 	if model.LowTarget <= 0 || units.ToMGDL(model.HighTarget) > consts.MaxGlucoseMgdl || model.LowTarget > model.HighTarget {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("targets must be more than 0, at most %v %s, and low must be at most high", consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), *units))
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.targets", i18n.Data{"Max": consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), "Units": *units}))
 	}
 	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempTargetMinutes {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempTargetMinutes))
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.duration", i18n.Data{"Max": maxTempTargetMinutes}))
 	}
 	return nil
 }

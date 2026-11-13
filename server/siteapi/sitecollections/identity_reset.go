@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // ResetIdentityPasswordHandler gives one of the site's identities a new random password, and a device the Nightscout
@@ -47,7 +48,7 @@ func resetIdentity(w http.ResponseWriter, r *http.Request, credential string) {
 	}
 
 	if credential == "totp" && identity.TotpSecretEnc == "" {
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint("only an identity that logs in with TOTP can have it reset"))
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.identities.totp_reset")))
 		return
 	}
 	// Each reset hashes a password with bcrypt or encrypts a secret, so it shares the limit on creating identities

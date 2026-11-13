@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // RateLimitsHandler is how close each kind of rate limiter is to refusing requests, which its page asks for every 10
@@ -63,14 +64,14 @@ func ratesFromRequest(r *http.Request, settings []config.RateSetting) (map[strin
 			perMinute, err := strconv.ParseFloat(perMinuteText, 64)
 			burst, burstErr := strconv.Atoi(burstText)
 			if err != nil || burstErr != nil {
-				return nil, apiutils.ErrBadBodyWithHint(setting.Name + " needs a number for its rate and a whole number for its burst")
+				return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.rate_numbers", i18n.Data{"Name": setting.Name}))
 			}
 			rates[setting.Name] = config.Rate{PerMinute: perMinute, Burst: burst}
 		}
 	}
 	for _, setting := range settings {
 		if rate, ok := rates[setting.Name]; ok && !rate.Valid() {
-			return nil, apiutils.ErrBadBodyWithHint(setting.Name + " needs a rate above 0 and a burst of at least 1")
+			return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.rate_values", i18n.Data{"Name": setting.Name}))
 		}
 	}
 	return rates, nil

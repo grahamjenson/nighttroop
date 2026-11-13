@@ -2,7 +2,6 @@ package sitesettings
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/a-h/templ"
@@ -12,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/push"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -58,11 +58,11 @@ func (s *PushCredentialsCollection) CreateRow(ctx context.Context, collectionTx 
 // counted with q, so in a transaction two creates at once cannot both pass it. The control site adds them with it too.
 func CreatePushCredential(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfig, model *sitemodels.PushCredential, params controldb.CreatePushCredentialParams) (*sitemodels.PushCredential, error) {
 	if model.Name == "" || len(model.Name) > 64 || model.Secret == nil {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("name (at most 64 characters) and secret")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.push_credential")
 	}
 	if err := push.Check(push.Credential{Provider: model.Provider, TeamOrProjectID: model.TeamOrProjectID, KeyID: model.KeyID,
 		Secret: *model.Secret, Apps: model.Apps, BundleIDs: model.BundleIDs}); err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(err.Error())
+		return nil, apiutils.ErrBadBodyWithHint(err)
 	}
 	// A credential for every site, with no site of its own, is encrypted for none
 	credentialSite := ""
@@ -78,7 +78,7 @@ func CreatePushCredential(ctx context.Context, q *controldb.Queries, sec *securi
 		return nil, err
 	}
 	if count >= maxPushCredentials {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d push credentials", maxPushCredentials))
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.max_push_credentials", i18n.Data{"Max": maxPushCredentials}))
 	}
 	params.SecretEnc = &secretEnc
 	credential, err := q.CreatePushCredential(ctx, params)
