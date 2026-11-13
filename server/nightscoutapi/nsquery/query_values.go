@@ -178,10 +178,12 @@ var forwardLookupName = map[string][]string{
 
 	"nameeq": {"name", "find[name][$eq]",
 		"defaultProfile", "find[defaultProfile][$eq]",
-		"device", "find[device][$eq]",
 		"app", "find[app][$eq]",
 		"subject", "find[subject][$eq]",
 	},
+
+	// The device that sent it, in every collection: v1's find[device] is read as its $eq
+	"deviceeq": {"device", "device$eq", "find[device][$eq]"},
 
 	"carbsexists":    {"carbs$exists", "find[carbs][$exists]"},
 	"durationexists": {"duration$exists", "find[duration][$exists]"},

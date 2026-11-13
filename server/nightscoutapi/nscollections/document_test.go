@@ -57,6 +57,13 @@ func mapFields[NS any](s stored[NS], v3 bool, only []string) map[string]any {
 	if out == nil {
 		out = map[string]any{}
 	}
+	if timed, ok := any(s.model).(interface{ TimeAliases() types.TimeAliases }); ok {
+		for _, alias := range timed.TimeAliases().Written(s.occurredAt, v3) {
+			var value any
+			_ = json.Unmarshal([]byte(alias[1]), &value)
+			out[alias[0]] = value
+		}
+	}
 	out["created_at"] = types.ISOString(time.UnixMilli(s.occurredAt))
 	out["utcOffset"] = s.utcOffset
 	if v3 {

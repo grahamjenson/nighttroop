@@ -95,6 +95,8 @@ var (
 	BadBoolFieldError = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing bool field %s", field)}
 	}
+	// ErrFutureReading is a reading dated ahead of now by more than a phone clock is wrong
+	ErrFutureReading = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("date is in the future: a reading can be at most %d minutes ahead of now", int(consts.MaxFutureReading.Minutes()))}
 )
 
 // Too Many Rows Errors

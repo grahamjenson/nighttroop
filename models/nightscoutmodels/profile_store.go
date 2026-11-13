@@ -2,7 +2,6 @@ package nightscoutmodels
 
 import (
 	"bytes"
-	"cmp"
 	"encoding/json"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -26,16 +25,16 @@ type ProfileStore struct {
 	// EnteredBy is who uploaded it, as for treatments; Trio, iAPS and Loop need it to import or read a profile
 	EnteredBy *types.ShortString `json:"enteredBy,omitempty"`
 
-	// Date Feilds
-	StartDate *types.DateString `json:"startDate,omitempty"`
-	Mills     *types.DateInt    `json:"mills,omitempty"`
-
-	// Non-JSON values to make mapping easier
-	Date             *types.DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	// Date is when it started, read from and written as its TimeAliases
+	Date             *types.DateInt       `json:"-"`
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
 }
 
 func (t *ProfileStore) UnmarshalJSON(data []byte) error {
+	date, offset, err := profileStoreTimes.Read(data)
+	if err != nil {
+		return err
+	}
 	type Alias ProfileStore
 	aux := struct {
 		ID *types.IdentifierString `json:"_id"`
@@ -54,14 +53,16 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 		t.Identifier = aux.ID
 	}
 
-	if t.StartDate != nil {
-		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			date, offset := t.StartDate.MillisSentOffset()
-			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
-		}
-	}
-
+	t.Date, t.UtcOffsetMinutes = date, offset
 	return nil
+}
+
+// profileStoreTimes are when a profile started; its startDate is in UTC, as LoopFollow reads it as when the profile
+// was uploaded, without its offset
+var profileStoreTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "startDate"}, {Name: "mills", Millis: true}}
+
+func (t ProfileStore) TimeAliases() types.TimeAliases {
+	return profileStoreTimes
 }
 
 type Profile struct {
