@@ -15,7 +15,7 @@ import (
 )
 
 // TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
-templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64) {
+templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64, before *int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "temp_basals_table",
 		Title:       i18n.T(ctx, "site.data.temp_basals.title"),
@@ -32,7 +32,7 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 				{Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 			},
 		},
-		Pager: &pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit},
+		Pager: pager.Dated(pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit}, before, tempBasals, func(row *sitemodels.SiteTempBasal) (int64, string) { return row.OccurredAt, row.ID }),
 	}) {
 		for _, tempBasal := range tempBasals {
 			@tempBasalRow(tempBasal)

@@ -106,7 +106,7 @@ func (s *ActivitiesCollection) SearchTotals(ctx context.Context, collectionTx *s
 }
 
 func (s *ActivitiesCollection) SearchHTMXResponse(models []*sitemodels.SiteActivity, query *apiutils.Query) templ.Component {
-	return site_data_templ.ActivitiesTable(models, query.Skip, query.Limit)
+	return site_data_templ.ActivitiesTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

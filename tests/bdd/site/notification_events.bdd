@@ -46,16 +46,16 @@ ASSERT_TEXT_VISIBLE Notification Updated
 ASSERT_NOT_VISIBLE #site--notification--details
 ASSERT_TEXT_VISIBLE Sensor changed
 
-// A page of one notification pages through them, newest first
+// A page of one notification pages to the older ones, and Newest goes back
 GOTO /data/notifications?limit=1
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Swimming
 CLICK #site--notification--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_VISIBLE #site--notification--newest
 ASSERT_TEXT_VISIBLE Sensor changed
-CLICK #site--notification--previous
+CLICK #site--notification--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

@@ -23,7 +23,7 @@ import (
 )
 
 // TempTargetsTable shows one page of temp targets, newest first, with buttons to the pages either side
-func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64) templ.Component {
+func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -78,7 +78,7 @@ func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limi
 					{Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit}, before, tempTargets, func(row *sitemodels.SiteTempTarget) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

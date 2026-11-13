@@ -105,7 +105,7 @@ func (s *InsulinDosesCollection) SearchTotals(ctx context.Context, collectionTx 
 }
 
 func (s *InsulinDosesCollection) SearchHTMXResponse(models []*sitemodels.SiteInsulinDose, query *apiutils.Query) templ.Component {
-	return site_data_templ.InsulinDosesTable(models, query.Skip, query.Limit)
+	return site_data_templ.InsulinDosesTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

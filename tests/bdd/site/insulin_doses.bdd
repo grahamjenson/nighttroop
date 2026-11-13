@@ -90,19 +90,19 @@ ASSERT_VISIBLE #site--insulin--edit--notes[value="Big lunch"]
 CLICK #site--insulin--details--close
 ASSERT_NOT_VISIBLE #site--insulin--details
 
-// A page of one dose pages through them, newest first
+// A page of one dose pages to the older ones, and Newest goes back
 GOTO /data/insulin?limit=1
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Big lunch
-ASSERT_NOT_VISIBLE #site--insulin--previous
+ASSERT_NOT_VISIBLE #site--insulin--newest
 
 CLICK #site--insulin--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_VISIBLE #site--insulin--newest
 ASSERT_TEXT_VISIBLE Correction
 
-CLICK #site--insulin--previous
+CLICK #site--insulin--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

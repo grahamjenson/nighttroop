@@ -143,7 +143,7 @@ func (s *EventGroupsCollection) SearchTotals(ctx context.Context, collectionTx *
 }
 
 func (s *EventGroupsCollection) SearchHTMXResponse(models []*sitemodels.SiteEventGroup, query *apiutils.Query) templ.Component {
-	return site_data_templ.EventGroupsTable(models, query.Skip, query.Limit)
+	return site_data_templ.EventGroupsTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

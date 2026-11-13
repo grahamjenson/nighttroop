@@ -715,11 +715,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Paging and record counts
 
 - 50 records a page.
-- The glucose readings page pages by date, with no limit to how far back:
-  - Older shows the readings older than the last reading on the page. It shows while the page is full.
-  - The date box shows the readings on or before that day, in the site's timezone. It keeps the day it shows.
-  - Readings at the same time show one time each, in the order of their IDs.
-  - Newest goes back to the first page. A page by date shows no "Showing" count and no days above the table.
+- The data pages page by date, with no limit to how far back. These pages are glucose readings, insulin doses, food
+  intakes, temp basals, temp targets, profile switches, activities, notifications, event groups and a device's
+  statuses:
+  - Older shows the records older than the last record on the page. It shows while the page is full.
+  - The date box shows the records on or before that day, in the site's timezone. It keeps the day it shows.
+  - Records at the same time show one time each, in the order of their IDs.
+  - Newest goes back to the first page. A page by date shows no "Showing" count.
+  - The glucose readings page shows the last days above the table only on its first page.
+  - A device's statuses stay on that device.
 - Other pages show Next while there are more. Their last page starts at record 32001, also for one further back.
 - A top box, for all pages:
   - The count ("1 temp target", "2 temp targets"). A device's history counts only that device's statuses.

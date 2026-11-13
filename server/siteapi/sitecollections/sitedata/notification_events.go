@@ -104,7 +104,7 @@ func (s *NotificationEventsCollection) SearchTotals(ctx context.Context, collect
 }
 
 func (s *NotificationEventsCollection) SearchHTMXResponse(models []*sitemodels.SiteNotificationEvent, query *apiutils.Query) templ.Component {
-	return site_data_templ.NotificationEventsTable(models, query.Skip, query.Limit)
+	return site_data_templ.NotificationEventsTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///
