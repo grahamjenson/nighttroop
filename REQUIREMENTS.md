@@ -788,9 +788,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Events within one hour of the time, updated when the time changes. Times and the window use the time format.
 - Change types (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir
   Change, Pump Battery Change):
-  - No events, and no separate page. Listed in the menu.
-  - Modal: "no events to pick"; only time, reason, notes, and for sensor start, stop or change a sensor code and
-    transmitter ID.
+  - No events needed, and no separate page. Listed in the menu.
+  - Modal: time, reason, notes, and for sensor start, stop or change a sensor code and transmitter ID.
+  - Cannula Fill, Prime and Reservoir Change: "no events to pick". The others can have a glucose.
+- Carb Correction, Question, Exercise, D.A.D. Alert and OpenAPS Offline can also have a glucose, as Nightscout's
+  careportal sends one with them.
 - Refused on add or edit: an event kind the type cannot have, an unknown type, or no events (except change types).
 - Click to edit type, time, notes and events. A new type offers only its event kinds. A removed event is in no group.
 - An event is in one group at most: grouped events are not offered, and grouping again is refused.
@@ -1323,6 +1325,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
 - `bolusCalculatorResult` (AAPS Bolus Wizard calculation, JSON text): kept exactly as sent. Not JSON, or over 4096
   characters: left out, and the rest of the treatment kept.
+- A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
+  for example a Question from AAPS or a Sensor Start from xDrip+.
 - A treatment `glucose` of 0 or less is no glucose reading. The treatment is kept without a reading. AAPS sends 0 with
   a Bolus Wizard that used no BG.
 
