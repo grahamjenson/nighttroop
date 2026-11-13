@@ -24,7 +24,7 @@ type Treatment struct {
 
 	// Glucose
 	Glucose     *types.FlexibleFloat64 `json:"glucose,omitempty"`
-	GlucoseType *GlucoseType           `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
+	GlucoseType *GlucoseType           `json:"glucoseType,omitempty"` // "Sensor", "Finger", "Manual", or as sent
 
 	// Nutrition
 	Carbs                 *types.FlexibleFloat64 `json:"carbs,omitempty"`
@@ -423,7 +423,12 @@ const (
 	Sensor GlucoseType = "Sensor"
 	Finger GlucoseType = "Finger"
 	Meter  GlucoseType = "Meter"
+	// Manual is a finger stick typed in, as AAPS and iAPS send it
+	Manual GlucoseType = "Manual"
 )
+
+// maxGlucoseTypeLength is the most of a glucose type kept, as its column holds 32 characters
+const maxGlucoseTypeLength = 32
 
 func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 	var s string
@@ -440,8 +445,14 @@ func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 		*t = Finger
 	case "meter":
 		*t = Meter
+	case "manual":
+		*t = Manual
 	default:
-		return fmt.Errorf("unknown glucose type: %s", s)
+		// Another type is kept as sent, as Nightscout does, rather than refuse the treatment
+		if len(s) > maxGlucoseTypeLength {
+			s = strings.ToValidUTF8(s[:maxGlucoseTypeLength], "")
+		}
+		*t = GlucoseType(s)
 	}
 
 	return nil
