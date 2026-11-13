@@ -1391,6 +1391,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | `eventType` `<none>` (careportal, no type) with insulin and carbs        | Meal bolus                              |
 | `eventType` `<none>` with carbs only                                     | Carb correction                         |
 | `eventType` `<none>` with insulin only                                   | Correction bolus                        |
+| `eventType` `<none>` with insulin and `notes` `Long-Acting` (Juggluco)   | Correction bolus, `isBasalInsulin` true |
 | `eventType` `<none>` with no insulin and no carbs                        | Note                                    |
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
