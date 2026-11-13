@@ -95,6 +95,9 @@ func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
 			if name == "units" && json.Unmarshal(value, &units) == nil && s.unitsLabels[units] != "" {
 				value = quote(s.unitsLabels[units])
 			}
+			if name == "store" {
+				value = s.labelStoreUnits(value)
+			}
 			if !slices.ContainsFunc(server, func(f field) bool { return f.name == name }) {
 				add(name, value)
 			}
@@ -119,6 +122,24 @@ func (s stored[NS]) server(v3 bool) ([]field, string) {
 		field{"srvCreated", strconv.AppendInt(nil, s.srvCreated, 10)}, field{"srvModified", strconv.AppendInt(nil, s.srvModified, 10)},
 		field{"subject", quote(s.subject)}, field{"isValid", strconv.AppendBool(nil, s.deletedAt == nil)},
 		field{"isReadOnly", []byte("false")}), "_id"
+}
+
+// labelStoreUnits is a profile store's profiles with their units as the settings write them, as AAPS reads a profile's
+// own units and knows only mg/dl and mmol
+func (s stored[NS]) labelStoreUnits(value []byte) []byte {
+	var store map[string]map[string]any
+	if len(s.unitsLabels) == 0 || json.Unmarshal(value, &store) != nil {
+		return value
+	}
+	for _, profile := range store {
+		if units, ok := profile["units"].(string); ok && s.unitsLabels[units] != "" {
+			profile["units"] = s.unitsLabels[units]
+		}
+	}
+	if out, err := json.Marshal(store); err == nil {
+		return out
+	}
+	return value
 }
 
 // quote is a string as JSON

@@ -23,8 +23,10 @@ How AAPS uses the Nightscout API, and the Nighttroop status of each interaction.
 - AAPS reads `sgv` as mg/dL and ignores `units` (`nsclientV3/extensions/GlucoseValueExtension.kt` `NSSgvV3.toGV`).
 - AAPS knows only `mg/dl` and `mmol` (`core/nssdk/.../localmodel/entry/NsUnits.kt`, `GlucoseUnit.fromText` in
   `core/data`). Other units, such as Nighttroop's `mmol/L`, are mg/dL to it.
-- The Nightscout API always gives glucose, temp targets, BG checks and profiles in mg/dL, as Nightscout does,
-  whatever the units of the identity or site.
+- The Nightscout API always gives glucose, temp targets and BG checks in mg/dL, as Nightscout does, whatever the
+  units of the identity or site.
+- A profile store comes back in the units it was sent in, as in Nightscout. AAPS reads each profile's own `units`.
+  A device added for AAPS writes mmol/L as `mmol`, also before it sends units (`aaps/profile_mmol.http`).
 - Uploads work in all units: AAPS labels them `mg/dl`.
 
 ## NSClient v3 (AAPS 4.0, and 3.x with "Use API v3")

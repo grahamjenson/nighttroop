@@ -5,7 +5,6 @@ package nightscoutmodels
 
 import (
 	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
-	consts "nighttroop.t1d.nz/utils/consts"
 	httputils "nighttroop.t1d.nz/utils/httputils"
 	types "nighttroop.t1d.nz/utils/types"
 )
@@ -220,10 +219,7 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 func DBModelToProfile(source *sitedb.ProfilePreset, context *httputils.SiteContext) Profile {
 	var nightscoutmodelsProfile Profile
 	if source != nil {
-		if (*source).Units != nil {
-			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
-			nightscoutmodelsProfile.Units = &constsUnits
-		}
+		nightscoutmodelsProfile.Units = ProfilePresetUnits(source, context)
 		if (*source).Dia != nil {
 			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Dia)
 			nightscoutmodelsProfile.Dia = &typesFlexibleFloat64
@@ -240,11 +236,11 @@ func DBModelToProfile(source *sitedb.ProfilePreset, context *httputils.SiteConte
 			typesTimezone := types.Timezone(*(*source).Timezone)
 			nightscoutmodelsProfile.Timezone = &typesTimezone
 		}
-		nightscoutmodelsProfile.Sens = ProfilePresetSensitivities(source, context)
+		nightscoutmodelsProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
 		nightscoutmodelsProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)
 		nightscoutmodelsProfile.Basal = JSONToScheduleValueSlice((*source).BasalRatesJson)
-		nightscoutmodelsProfile.TargetLow = JSONToScheduleValueSliceWithUnitConversionFromMGDL((*source).TargetsLowJson, context)
-		nightscoutmodelsProfile.TargetHigh = JSONToScheduleValueSliceWithUnitConversionFromMGDL((*source).TargetsHighJson, context)
+		nightscoutmodelsProfile.TargetLow = ProfilePresetTargetsLow(source, context)
+		nightscoutmodelsProfile.TargetHigh = ProfilePresetTargetsHigh(source, context)
 	}
 	return nightscoutmodelsProfile
 }
@@ -255,10 +251,7 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 		nightscoutmodelsProfileStore.Identifier = &pTypesIdentifierString
 		pTypesShortString := types.ShortString((*source).Name)
 		nightscoutmodelsProfileStore.DefaultProfile = &pTypesShortString
-		if (*source).Units != nil {
-			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
-			nightscoutmodelsProfileStore.Units = &constsUnits
-		}
+		nightscoutmodelsProfileStore.Units = ProfilePresetUnits(source, context)
 		if (*source).CreatedByDeviceName != nil {
 			typesShortString := types.ShortString(*(*source).CreatedByDeviceName)
 			nightscoutmodelsProfileStore.Device = &typesShortString
@@ -281,15 +274,4 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 		}
 	}
 	return nightscoutmodelsProfileStore
-}
-func constsUnitsToConstsUnits(source consts.Units) consts.Units {
-	var constsUnits consts.Units
-	switch source {
-	case consts.UnitsMGDL:
-		constsUnits = consts.UnitsMGDL
-	case consts.UnitsMMOLL:
-		constsUnits = consts.UnitsMMOLL
-	default: // ignored
-	}
-	return constsUnits
 }

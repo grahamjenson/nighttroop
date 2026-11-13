@@ -1154,14 +1154,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Each, a default too, has `srvCreated` and `date` in ms.
 - Replace or patch: answers with the setting as stored.
 - An identifier that is not a Nighttroop setting: 404 for read, replace, patch and delete; 400 for create.
-- Units labels (set only through the settings endpoint) choose how the API writes `units`:
+- Units labels (set only through the settings endpoint) choose how the API writes `units`, a profile's own `units` too:
 
   | Setting            | Values             |
   | ------------------ | ------------------ |
   | `units_mgdl_label` | `mg/dL` or `mg/dl` |
   | `units_mmol_label` | `mmol/L` or `mmol` |
 
-  - Default: Nighttroop's label. The API writes only mg/dL.
+  - Default: Nighttroop's label.
   - If an identity without its own labels sends a document with `units`, its labels become that spelling's pair. The
     response to that request uses them too.
     - `mg/dl` or `mmol` (AAPS, Trio, xDrip4iOS): `mg/dl` and `mmol`.
@@ -1182,13 +1182,16 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 ### Nightscout API: glucose units
 
 - Glucose is stored and always returned in mg/dL, whatever the identity or site units, over HTTP and Socket.IO:
-  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`, profile targets.
-  - Entries, treatments, profiles and their `units`.
+  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`.
+  - Entries, treatments and their `units`.
 - Input: in the units sent with it, else guessed from the value.
-- A profile, or a profile switch's `profileJson`, in mmol/L comes back in mg/dL in each glucose field:
-  - `sens`, `target_low`, `target_high`.
+- A profile comes back in the units it was sent in, as in Nightscout, to all identities. Loop compares a remote
+  command's hash of the profile's values with its own values. For a profile in mmol/L, these are in mmol/L:
+  - `units`, and each profile's `units`, `sens`, `target_low` and `target_high`.
   - Loop's `loopSettings`: `minimumBGGuard`, `preMealTargetRange`, each override preset's `targetRange`, the running
     `scheduleOverride`'s `targetRange`.
+  - If a profile has no `units`, it comes back in mg/dL. The size of each target gives its units.
+- A profile switch's `profileJson` in mmol/L comes back in mg/dL in `sens`, `target_low` and `target_high`.
 - Each treatment comes back with `units`, temp targets and therapy events (e.g. Note, Sensor Change) too.
 - v1 status `settings.units`: the identity's units, as Nightscout writes them (`mg/dl` or `mmol`). Followers,
   `/pebble`, `alexa` and `googlehome` use them.
@@ -1724,7 +1727,7 @@ Every 10 minutes, the server truncates every site:
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
 - Any client but Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout API also writes
-  mg/dL as `mg/dl`.
+  mg/dL as `mg/dl` and mmol/L as `mmol`.
 - A device keeps its client (e.g. `loop`, `other`), returned as `client`. Users and a site's first devices have none.
 
 #### Identity list

@@ -64,6 +64,7 @@ ASSERT_EQUALS 25 "@result.store.Work.carbs_hr"
 ASSERT_EQUALS 23 "@result.store.Work.delay"
 
 
+// A store sent in mmol comes back in mmol/L, as sent: this identity first sent mg/dL, so it is given Nighttroop's spelling
 NAME create_profile_aaps_v3
 POST http://{{ site }}/api/v3/profiles
 H Authorization: Bearer {{ jwt }}
@@ -369,7 +370,7 @@ B {
   }
 ASSERT_STATUS 201
 ASSERT_EQUALS "TestDash-2025" "@result.defaultProfile"
-ASSERT_EQUALS "mg/dL" "@result.store.TestDash-2025.units"
+ASSERT_EQUALS "mmol/L" "@result.store.TestDash-2025.units"
 ASSERT_EQUALS "Pacific/Auckland" "@result.store.TestDash-2025.timezone"
 
 

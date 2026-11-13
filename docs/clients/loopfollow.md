@@ -39,7 +39,10 @@
 ## Units and dates
 
 - LoopFollow reads `sgv` and `mbg` as mg/dL, as Nightscout stores them (`Extensions/ShareClientExtension.swift`,
-  `ShareGlucoseData`). The Nightscout API always gives mg/dL. The profile too, with its `units`.
+  `ShareGlucoseData`). The Nightscout API always gives mg/dL.
+- The profile comes back in the units it was sent in, with its `units`, as in Nightscout. LoopFollow reads them.
+  - Loop's profile switch command sends a hash of the profile's schedules as LoopFollow reads them. Loop compares it
+    with its own values, in the user's units. Thus a profile in mmol/L must come back in mmol/L.
 - Times sent: milliseconds; UTC with no zone, `yyyy-MM-dd'T'HH:mm:ss` (`Helpers/DateTime.swift`,
   `getDateTimeString`); ISO 8601, with or without fractional seconds.
 - Entries, profiles, ages and database size use Swift `Codable`: one field of the wrong type fails the response.
@@ -187,6 +190,7 @@ missing, never a number or null.
 | Loop `override` | Works since #516 (was dropped) |
 | **Profile** | |
 | Profile, schedules, Loop's `loopSettings` | Works |
+| Profile in mmol/L, for the hash in Loop's profile switch command | Fixed: in mmol/L, as sent (was mg/dL, so the hash did not match). `loop/profile.http` |
 | Trio remote control settings and override presets | Works since #516 (were dropped) |
 | `deviceToken`s for a read-only token | Left out, as they push to the phone. Remote commands need a Read & Write token |
 | Profile history for the remote diagnostics | Fixed: `count` gives that many stores, newest first (was only the latest) |

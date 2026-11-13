@@ -62,6 +62,7 @@ ASSERT_EQUALS 100 "@0.store.Default.target_low.0.value"
 ASSERT_EQUALS "Pacific/Honolulu" "@0.store.Work.timezone"
 
 
+// A store sent in mmol comes back in mmol/L, as sent: this identity first sent mg/dL, so it is given Nighttroop's spelling
 NAME create_profile_aaps_v1
 POST http://{{ site }}/api/v1/profiles?token={{ token }}
 B {
@@ -366,7 +367,7 @@ B {
   }
 ASSERT_STATUS 200
 ASSERT_EQUALS "TestDash-2025" "@0.defaultProfile"
-ASSERT_EQUALS "mg/dL" "@0.store.TestDash-2025.units"
+ASSERT_EQUALS "mmol/L" "@0.store.TestDash-2025.units"
 ASSERT_EQUALS "Pacific/Auckland" "@0.store.TestDash-2025.timezone"
 
 

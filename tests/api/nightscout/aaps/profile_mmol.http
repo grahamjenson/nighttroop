@@ -1,0 +1,67 @@
+INCLUDE steps/new_site_admin.steps
+
+// AAPS in mmol/L uploads its profile store in mmol/L, labelled mmol. As in Nightscout, it comes back as sent. AAPS reads
+// a profile's own units with GlucoseUnit.fromText, which knows only mg/dl and mmol: any other units, such as mmol/L,
+// are mg/dL to it. So a device added for AAPS writes mmol/L as mmol, also before it sends any units.
+
+NAME create_aaps
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "aaps", "client": "aaps"}
+ASSERT_STATUS 201
+SET aaps_token {{ .create_aaps.result.ns_token }}
+
+NAME aaps_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/{{ .aaps_token }}
+ASSERT_STATUS 200
+SET aaps_jwt {{ .aaps_jwt.token }}
+
+// AAPSClient follows with its own device, and sends nothing
+NAME create_aapsclient
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "aapsclient", "client": "aaps"}
+ASSERT_STATUS 201
+SET aapsclient_token {{ .create_aapsclient.result.ns_token }}
+
+NAME aapsclient_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/{{ .aapsclient_token }}
+ASSERT_STATUS 200
+SET aapsclient_jwt {{ .aapsclient_jwt.token }}
+
+NAME aaps_upload_profile_mmol
+POST http://{{ .ns_site }}/api/v3/profile
+H Authorization: Bearer {{ .aaps_jwt }}
+B {"defaultProfile": "Default", "date": {{ itime 10 }}, "startDate": "{{ time 10 }}", "units": "mmol", "app": "AAPS",
+   "store": {"Default": {"dia": 5, "units": "mmol", "timezone": "Pacific/Auckland",
+     "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 2.8}],
+     "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}],
+     "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}],
+     "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 5.5}],
+     "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 6.5}]}}}
+ASSERT_STATUS 201
+
+// AAPS's first load of the profile store
+NAME aaps_load_profile
+GET http://{{ .ns_site }}/api/v3/profile?sort$desc=date&limit=1
+H Authorization: Bearer {{ .aaps_jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "mmol" "@result.0.units"
+ASSERT_EQUALS "mmol" "@result.0.store.Default.units"
+ASSERT_EQUALS 2.8 "@result.0.store.Default.sens.0.value"
+ASSERT_EQUALS 5.5 "@result.0.store.Default.target_low.0.value"
+ASSERT_EQUALS 6.5 "@result.0.store.Default.target_high.0.value"
+
+NAME aapsclient_load_profile
+GET http://{{ .ns_site }}/api/v3/profile?sort$desc=date&limit=1
+H Authorization: Bearer {{ .aapsclient_jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "mmol" "@result.0.units"
+ASSERT_EQUALS "mmol" "@result.0.store.Default.units"
+ASSERT_EQUALS 2.8 "@result.0.store.Default.sens.0.value"
+ASSERT_EQUALS 5.5 "@result.0.store.Default.target_low.0.value"
+ASSERT_EQUALS 6.5 "@result.0.store.Default.target_high.0.value"

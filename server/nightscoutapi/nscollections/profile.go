@@ -153,17 +153,15 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 			break
 		}
 	}
-	settingsUnits := siteContext.GetSettings().GetUnits()
-
+	// A profile is given back in the units it was sent in, as Nightscout does
 	profileStore := nightscoutmodels.DBModelToProfileStore(defaultProfile, siteContext)
 	profileStore.Store = make(map[types.ShortString]nightscoutmodels.Profile)
 	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
-	profileStore.Units = settingsUnits
 	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted. Loop's glucose
 	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent.
 	if loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID); loop != nil {
 		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop))).WithGlucose(func(glucose float64) float64 {
-			return settingsUnits.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
+			return profileStore.Units.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
 		})
 	}
 	if remote := loopSettingsJSON(context.Background(), siteContext, defaultProfile.RemoteSettingsID); remote != nil {
@@ -171,10 +169,7 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	}
 
 	for _, p := range realSource {
-		profile := nightscoutmodels.DBModelToProfile(p, siteContext)
-		profile.Units = settingsUnits
-
-		profileStore.Store[types.ShortString(p.Name)] = profile
+		profileStore.Store[types.ShortString(p.Name)] = nightscoutmodels.DBModelToProfile(p, siteContext)
 	}
 
 	return profileStore

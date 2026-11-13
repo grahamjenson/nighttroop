@@ -34,7 +34,8 @@ var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightg
 
 // clientMgdlLabels are how a client needs the Nightscout API to write mg/dL, where it is not mg/dL: xDrip4iOS reads a
 // BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again, and AAPS writes
-// them mg/dl, the only spelling of mg/dL its NsUnits reads exactly
+// them mg/dl, the only spelling of mg/dL its NsUnits reads exactly. They spell mmol/L as Nightscout does too, mmol, as
+// AAPS reads a profile in mmol/L as mg/dL otherwise
 var clientMgdlLabels = map[string]string{"xdrip4ios": "mg/dl", "aaps": "mg/dl"}
 
 // ////
@@ -128,6 +129,9 @@ func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httput
 	}
 	if label, ok := clientMgdlLabels[client]; ok {
 		if err := level.SetSettingByName("units_mgdl_label", label, nil, new("identity")); err != nil {
+			return err
+		}
+		if err := level.SetSettingByName("units_mmol_label", "mmol", nil, new("identity")); err != nil {
 			return err
 		}
 	}

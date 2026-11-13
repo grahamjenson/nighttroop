@@ -100,15 +100,17 @@ type DBModelConverter interface {
 	// goverter:ignore Store
 	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
+	// goverter:map . Units | ProfilePresetUnits
 	// goverter:ignore LoopSettings RemoteSettings
 	DBModelToProfileStore(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
 
 	// goverter:context siteContext
 	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
-	// goverter:map .                        Sens       | ProfilePresetSensitivities
+	// goverter:map InsulinSensitivitiesJson Sens       | JSONToScheduleValueSlice
 	// goverter:map BasalRatesJson           Basal      | JSONToScheduleValueSlice
-	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSliceWithUnitConversionFromMGDL
-	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSliceWithUnitConversionFromMGDL
+	// goverter:map .                        TargetHigh | ProfilePresetTargetsHigh
+	// goverter:map .                        TargetLow  | ProfilePresetTargetsLow
+	// goverter:map .                        Units      | ProfilePresetUnits
 	DBModelToProfile(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) Profile
 }
 
@@ -208,30 +210,40 @@ func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
 
 // goverter:context siteContext
 func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteContext *httputils.SiteContext) []*ScheduleValue {
-	if jsonStr == nil {
-		return nil
-	}
-	units := siteContext.GetSettings().GetUnits()
+	return scheduleFromMGDL(jsonStr, siteContext.GetSettings().GetUnits())
+}
 
-	var result []*ScheduleValue
-	err := json.Unmarshal([]byte(*jsonStr), &result)
-	if err != nil {
-		return nil
-	}
+// scheduleFromMGDL is a schedule, stored in mg/dL, in units
+func scheduleFromMGDL(jsonStr *string, units *consts.Units) []*ScheduleValue {
+	result := JSONToScheduleValueSlice(jsonStr)
 	for _, sv := range result {
-		if sv == nil {
-			continue
-		}
-
-		if sv.Value != nil {
+		if sv != nil && sv.Value != nil {
 			sv.Value = new(types.FlexibleFloat64(units.FromMGDL(sv.Value.Float64())))
-		}
-
-		if sv.TimeAsSeconds == nil && sv.Time != nil {
-			sv.TimeAsSeconds = sv.Time.ToSeconds()
 		}
 	}
 	return result
+}
+
+// ProfilePresetUnits are the units a profile was sent in, else the settings', as Nightscout gives a profile back as
+// sent: Loop's remote commands check a hash of its values, and LoopFollow and AAPS read its units
+// goverter:context siteContext
+func ProfilePresetUnits(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) *consts.Units {
+	if source.Units != nil {
+		return source.Units
+	}
+	return siteContext.GetSettings().GetUnits()
+}
+
+// ProfilePresetTargetsLow are a profile's low targets, stored in mg/dL, in its units
+// goverter:context siteContext
+func ProfilePresetTargetsLow(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) []*ScheduleValue {
+	return scheduleFromMGDL(source.TargetsLowJson, ProfilePresetUnits(source, siteContext))
+}
+
+// ProfilePresetTargetsHigh are a profile's high targets, stored in mg/dL, in its units
+// goverter:context siteContext
+func ProfilePresetTargetsHigh(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) []*ScheduleValue {
+	return scheduleFromMGDL(source.TargetsHighJson, ProfilePresetUnits(source, siteContext))
 }
 
 // ProfilePresetEnteredBy is who the app said uploaded a profile, e.g. Loop, as tools pick a loop's profiles by it, else
@@ -244,12 +256,6 @@ func ProfilePresetEnteredBy(source *sitedb.ProfilePreset) *types.ShortString {
 		return (*types.ShortString)(source.CreatedByAppName)
 	}
 	return (*types.ShortString)(&source.CreatedByIdentityName)
-}
-
-// ProfilePresetSensitivities are a profile's sensitivities, stored in its own units, in the settings' units
-// goverter:context siteContext
-func ProfilePresetSensitivities(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) []*ScheduleValue {
-	return SensitivitiesFromJSON(source.InsulinSensitivitiesJson, source.Units, siteContext)
 }
 
 // SensitivitiesFromJSON are sensitivities, stored in units, in the settings' units. Without units they are as stored,

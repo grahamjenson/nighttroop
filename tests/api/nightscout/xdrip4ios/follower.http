@@ -91,8 +91,8 @@ ASSERT_EQUALS "Default" "@0.defaultProfile"
 ASSERT_EXISTS "@0.startDate"
 ASSERT_EQUALS 5 "@0.store.Default.dia"
 ASSERT_EQUALS "Pacific/Auckland" "@0.store.Default.timezone"
-# isMgDl is units, lowercased, being mg/dl
-ASSERT_EQUALS "mg/dL" "@0.store.Default.units"
+# isMgDl is units, lowercased, being mg/dl. A profile's units are written as this device first sent them
+ASSERT_EQUALS "mg/dl" "@0.store.Default.units"
 ASSERT_EQUALS "00:00" "@0.store.Default.basal.0.time"
 ASSERT_EQUALS 0 "@0.store.Default.basal.0.timeAsSeconds"
 ASSERT_EQUALS 0.8 "@0.store.Default.basal.0.value"

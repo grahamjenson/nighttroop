@@ -54,6 +54,15 @@ func mapFields[NS any](s stored[NS], v3 bool, only []string) map[string]any {
 	if units, ok := out["units"].(string); ok && s.unitsLabels[units] != "" {
 		out["units"] = s.unitsLabels[units]
 	}
+	if store, ok := out["store"].(map[string]any); ok {
+		for _, profile := range store {
+			if profile, ok := profile.(map[string]any); ok {
+				if units, ok := profile["units"].(string); ok && s.unitsLabels[units] != "" {
+					profile["units"] = s.unitsLabels[units]
+				}
+			}
+		}
+	}
 	if out == nil {
 		out = map[string]any{}
 	}
@@ -107,6 +116,8 @@ func TestDocumentJSONIsItsFields(t *testing.T) {
 		"entry": dayOfEntries()[0],
 		"labelled units": stored[nightscoutmodels.Treatment]{meta: m, unitsLabels: map[string]string{"mg/dL": "mg/dl"},
 			model: model[nightscoutmodels.Treatment](t, `{"eventType":"BG Check","glucose":5.5,"units":"mg/dl","glucoseType":"Finger"}`)},
+		"labelled profile store": stored[nightscoutmodels.ProfileStore]{meta: m, unitsLabels: map[string]string{"mmol/L": "mmol"},
+			model: model[nightscoutmodels.ProfileStore](t, `{"defaultProfile":"Default","units":"mmol","store":{"Default":{"units":"mmol","target_low":[{"time":"00:00","value":5.5}]},"Other":{"units":"mg/dl"}}}`)},
 		"treatment": stored[nightscoutmodels.Treatment]{meta: deleted, model: model[nightscoutmodels.Treatment](t,
 			`{"_id":"x","identifier":"y","eventType":"Meal Bolus","insulin":1.25,"carbs":30,"notes":"<b>pie</b> & \u2028\t\b chips","created_at":"2020-01-01T00:00:00Z","utcOffset":60}`)},
 		"device status": stored[nightscoutmodels.DeviceStatus]{meta: m, model: model[nightscoutmodels.DeviceStatus](t,
@@ -124,6 +135,8 @@ func TestDocumentJSONIsItsFields(t *testing.T) {
 				case stored[nightscoutmodels.Treatment]:
 					want = mapFields(s, v3, only)
 				case stored[nightscoutmodels.DeviceStatus]:
+					want = mapFields(s, v3, only)
+				case stored[nightscoutmodels.ProfileStore]:
 					want = mapFields(s, v3, only)
 				case stored[setting]:
 					want = mapFields(s, v3, only)

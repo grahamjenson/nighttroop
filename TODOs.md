@@ -52,6 +52,10 @@
 
 
 1. Nightscout API:
+    1. P3: A profile switch's `profileJson` in mmol/L still comes back in mg/dL, unlike its profile, which comes back
+       as sent. Check whether AAPS or Trio compare the two before giving it back as sent
+    1. P3: A device added as Other that has not sent `units` writes a profile in mmol/L as `mmol/L`, which AAPS reads
+       as mg/dL. AAPSClient on such a device needs its `units_mmol_label` set to `mmol`
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
        the temp basal in NSStatus (`nsv2/assistants.go`)

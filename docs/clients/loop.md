@@ -197,6 +197,8 @@ Remote commands:
 - `ProfileSet(rawValue:)` needs `_id`, `startDate`, `units`, `enteredBy`, `defaultProfile`, `store`, and
   `loopSettings` with `dosingEnabled` and `overridePresets`.
 - Each profile needs `timezone` in the `ETC/GMT±N` form sent, `dia`, and each schedule's `timeAsSeconds` and `value`.
+- The profile comes back in the units Loop sent, as in Nightscout: `units`, `sens`, the targets and the `loopSettings`
+  ranges. Loop compares a remote command's profile hash with its own values, in the user's units.
 - `updateProfile` (`PUT /api/v1/profile`) is in NightscoutKit, not used.
 
 ### NightscoutKit reads (not used by Loop)
@@ -253,6 +255,7 @@ Test paths start at `tests/api/nightscout/`.
 | `loopSettings.scheduleOverride`, the active override | Fixed: kept as an override preset, `targetRange` in mg/dL (was dropped). `loop/profile.http` |
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, no `enteredBy`) |
 | A profile's `enteredBy` `Loop`, given back as sent | Fixed (was the uploading identity, for example `pwd_phone`) |
+| A profile in mmol/L, given back in mmol/L as sent: `units`, `sens`, targets, `loopSettings` ranges | Fixed (was converted to mg/dL, so a remote command's profile hash did not match). `loop/profile.http` |
 | **NightscoutKit reads and remote commands** | |
 | `find[created_at]` on treatments and device statuses | Works since #514 (was the upload time, not the event time) |
 | `fetchGlucose` | Works for an identity in mg/dL, as a device added for Loop is (#524). In mmol/L, `sgv` is mmol/L (TODO P1) |

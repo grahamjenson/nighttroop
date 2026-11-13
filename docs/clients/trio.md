@@ -39,7 +39,7 @@ a `?token=` in the URL (`NightscoutAPI`, each function's `URLComponents`). Thus 
   - The Nightscout API always gives both in mg/dL, whatever the identity's or site's units: 120 mg/dL is 120 on an
     mmol/L site too.
   - Profile: Trio uploads it in the user's units, labelled `mg/dl` or `mmol`. On import, it finds mmol/L from
-    `units`, or from targets of 39 or less.
+    `units`, or from targets of 39 or less. Nighttroop gives it back as sent (`trio/profile_mmol.http`).
 - Dates (`JSONCoding`, `Formatters.swift` `customISO8601`):
   - Trio reads a date only from an ISO 8601 string with a time zone, with or without fractional seconds
     (`2026-11-01T12:00:00Z`, `2026-11-01T12:00:00.123Z`). A number, or a date without a zone, fails.

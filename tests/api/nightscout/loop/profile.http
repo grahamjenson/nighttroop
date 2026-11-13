@@ -214,8 +214,9 @@ ASSERT_EQUALS "Loop" "@0.enteredBy"
 
 
 ######
-# Loop in mmol/L sends its profile and loopSettings in mmol/L. The API gives them in mg/dL, so its sensitivities,
-# targets, suspend threshold, pre-meal range and override presets' ranges are all converted, not only the targets
+# Loop in mmol/L sends its profile and loopSettings in mmol/L. The API gives them back in mmol/L, as sent, as Nightscout
+# does: Loop checks a remote command's hash of the profile's values against its own, and LoopFollow reads the units.
+# Its sensitivities, targets, suspend threshold, pre-meal range and override presets' ranges are all as sent.
 ######
 
 NAME loop_upload_settings_mmol
@@ -232,23 +233,43 @@ GET http://{{ site }}/api/v1/profile/current
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS ".loop_upload_settings_mmol.0._id" "@_id"
-ASSERT_EQUALS "mg/dL" "@units"
-ASSERT_EQUALS "mg/dL" "@store.Default.units"
-ASSERT_EQUALS 50.45 "@store.Default.sens.0.value"
-ASSERT_EQUALS 100.901 "@store.Default.target_low.0.value"
-ASSERT_EQUALS 120.721 "@store.Default.target_high.0.value"
+ASSERT_EQUALS "mmol/L" "@units"
+ASSERT_EQUALS "mmol/L" "@store.Default.units"
+ASSERT_EQUALS 2.8 "@store.Default.sens.0.value"
+ASSERT_EQUALS 5.6 "@store.Default.target_low.0.value"
+ASSERT_EQUALS 6.7 "@store.Default.target_high.0.value"
 ASSERT_EQUALS 0.8 "@store.Default.basal.0.value"
 ASSERT_EQUALS 10 "@store.Default.carbratio.0.value"
-ASSERT_EQUALS 80.011 "@loopSettings.minimumBGGuard"
-ASSERT_EQUALS 80 "@loopSettings.preMealTargetRange.0"
-ASSERT_EQUALS 100.901 "@loopSettings.preMealTargetRange.1"
-ASSERT_EQUALS 140.54 "@loopSettings.overridePresets.0.targetRange.0"
-ASSERT_EQUALS 160.36 "@loopSettings.overridePresets.0.targetRange.1"
+ASSERT_EQUALS 4.4406 "@loopSettings.minimumBGGuard"
+ASSERT_EQUALS 4.44 "@loopSettings.preMealTargetRange.0"
+ASSERT_EQUALS 5.6 "@loopSettings.preMealTargetRange.1"
+ASSERT_EQUALS 7.8 "@loopSettings.overridePresets.0.targetRange.0"
+ASSERT_EQUALS 8.9 "@loopSettings.overridePresets.0.targetRange.1"
 ASSERT_EQUALS 0.8 "@loopSettings.overridePresets.0.insulinNeedsScaleFactor"
-ASSERT_EQUALS 149.549 "@loopSettings.scheduleOverride.targetRange.0"
-ASSERT_EQUALS 180.18 "@loopSettings.scheduleOverride.targetRange.1"
+ASSERT_EQUALS 8.3 "@loopSettings.scheduleOverride.targetRange.0"
+ASSERT_EQUALS 10 "@loopSettings.scheduleOverride.targetRange.1"
 ASSERT_EQUALS 3600 "@loopSettings.scheduleOverride.duration"
 ASSERT_EQUALS 4 "@loopSettings.maximumBasalRatePerHour"
+
+# The profile list, as NightscoutKit's fetchProfiles and LoopFollow read it, has the same values
+NAME loop_fetch_profiles_mmol
+GET http://{{ site }}/api/v1/profile?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".loop_upload_settings_mmol.0._id" "@0._id"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS "mmol/L" "@0.store.Default.units"
+ASSERT_EQUALS 2.8 "@0.store.Default.sens.0.value"
+ASSERT_EQUALS 5.6 "@0.store.Default.target_low.0.value"
+ASSERT_EQUALS 6.7 "@0.store.Default.target_high.0.value"
+ASSERT_EQUALS 4.4406 "@0.loopSettings.minimumBGGuard"
+ASSERT_EQUALS 4.44 "@0.loopSettings.preMealTargetRange.0"
+ASSERT_EQUALS 5.6 "@0.loopSettings.preMealTargetRange.1"
+ASSERT_EQUALS 7.8 "@0.loopSettings.overridePresets.0.targetRange.0"
+ASSERT_EQUALS 8.9 "@0.loopSettings.overridePresets.0.targetRange.1"
+ASSERT_EQUALS 8.3 "@0.loopSettings.scheduleOverride.targetRange.0"
+ASSERT_EQUALS 10 "@0.loopSettings.scheduleOverride.targetRange.1"
 
 # A profile sent with no enteredBy or app says who uploaded it, the identity
 NAME upload_profile_no_entered_by

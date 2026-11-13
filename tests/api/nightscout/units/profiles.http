@@ -12,7 +12,8 @@ ASSERT_EQUALS "string" "@result.type"
 # Profiles
 #########
 
-# The Nightscout API gives profile targets in mg/dL, whatever the identity's units
+# The Nightscout API gives a profile back in the units it was sent in, whatever the identity's units. A profile sent
+# with no units is in mg/dL, its targets' units guessed from their size
 
 
 
@@ -31,9 +32,9 @@ B {
     }
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mg/dL" "@result.units"
-ASSERT_EQUALS 72.072 "@result.store.Default.target_low.0.value"
-ASSERT_EQUALS 90.09 "@result.store.Default.target_high.0.value"
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 4 "@result.store.Default.target_low.0.value"
+ASSERT_EQUALS 5 "@result.store.Default.target_high.0.value"
 
 NAME create_profile_labeled_mg_dl
 POST http://{{ site }}/api/v3/profiles
@@ -92,16 +93,16 @@ ASSERT_EQUALS 70 "@result.store.Default.target_low.0.value"
 ASSERT_EQUALS 80 "@result.store.Default.target_high.0.value"
 
 #####
-# Fetched with the identity's mmol/L, the API still gives mg/dL
+# Fetched with the identity's mmol/L, the API still gives each as sent
 #####
 
 NAME get_labeled_mmol
 GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mmol.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@result.units"
-ASSERT_EQUALS 72.072 "@result.store.Default.target_low.0.value"
-ASSERT_EQUALS 90.09 "@result.store.Default.target_high.0.value"
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 4 "@result.store.Default.target_low.0.value"
+ASSERT_EQUALS 5 "@result.store.Default.target_high.0.value"
 
 NAME get_labeled_mg_dl
 GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mg_dl.result.identifier" }}
@@ -140,9 +141,9 @@ NAME get_labeled_mmol
 GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mmol.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@result.units"
-ASSERT_EQUALS 72.072 "@result.store.Default.target_low.0.value"
-ASSERT_EQUALS 90.09 "@result.store.Default.target_high.0.value"
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 4 "@result.store.Default.target_low.0.value"
+ASSERT_EQUALS 5 "@result.store.Default.target_high.0.value"
 
 NAME get_labeled_mg_dl
 GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mg_dl.result.identifier" }}
