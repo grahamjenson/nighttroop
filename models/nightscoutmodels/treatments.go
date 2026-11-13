@@ -482,8 +482,14 @@ func (t Treatment) GetSubject() *string {
 // V3 is the treatment as API v3 and its storage socket write it: its duration in whole minutes, as AAPS reads it as a
 // whole number (RemoteTreatment.duration) and drops a treatment, or a page of them, whose duration has a fraction. Its
 // durationInMilliseconds, which AAPS reads first, is exact; API v1 gives Loop the minutes with their fraction.
+//
+// A profile switch's timeshift is in milliseconds too, as AAPS reads it so: one AAPS sent, with its
+// originalProfileName, is already, and another, from the site or the careportal, is kept in minutes.
 func (t Treatment) V3() any {
 	t.wholeMinutes = true
+	if t.Timeshift != nil && t.OriginalProfileName == nil {
+		t.Timeshift = new(*t.Timeshift * 60_000)
+	}
 	return t
 }
 

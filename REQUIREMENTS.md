@@ -1341,7 +1341,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - No `profileJson` (careportal, T1DCarer): comes back with none. AAPS switches to its own profile of that name.
 - `percentage`: a multiplier of the profile's insulin (120 as 1.2), returned as sent.
-- `timeshift`: minutes, or ms when sent with an `originalProfileName` (AAPS). Returned as sent.
+- `timeshift`: minutes, or ms when sent with an `originalProfileName` (AAPS). API v1 returns it as sent.
+- API v3 and its storage socket return every `timeshift` in ms, because AAPS reads it in ms.
 
 #### Event types
 
