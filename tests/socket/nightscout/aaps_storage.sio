@@ -94,6 +94,18 @@ ASSERT_EQUALS "treatments" "@colName"
 ASSERT_EQUALS 0 "@doc.duration"
 ASSERT_EQUALS 43491 "@doc.durationInMilliseconds"
 
+# Carbs AAPS deleted while offline, uploaded with isValid false, go out as a delete, so no follower takes them as current
+NAME post_deleted_carbs
+POST http://{{ site }}/api/v3/treatments?token={{ token }}
+B {"date":{{ itime 0 }},"utcOffset":720,"isValid":false,"eventType":"Meal Bolus","carbs":33.0,"app":"AAPS"}
+ASSERT_STATUS 201
+
+NAME deleted_carbs_deleted
+WAIT delete
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS ".post_deleted_carbs.identifier" "@identifier"
+
 # A careportal profile switch has no profileJson, so AAPS switches to its own profile of that name
 NAME post_profile_switch
 POST http://{{ site }}/api/v1/treatments?token={{ token }}

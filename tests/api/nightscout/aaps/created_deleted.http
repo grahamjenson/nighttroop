@@ -1,0 +1,59 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS uploads a treatment it deleted while offline as a create with isValid false (DataSyncSelectorV3: one without an
+// NS id is created, valid or not). It is kept deleted, as Nightscout keeps isValid as sent, so AAPSClient and other
+// followers do not bring the deleted carbs back.
+NAME create_deleted_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 20 }}, "utcOffset": 780, "isReadOnly": false, "isValid": false, "eventType": "Meal Bolus", "carbs": 33.0, "app": "AAPS"}
+ASSERT_STATUS 201
+SET deleted_id {{ .create_deleted_carbs.identifier }}
+
+NAME deleted_carbs_not_found
+GET http://{{ site }}/api/v3/treatments/{{ .deleted_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME deleted_carbs_not_searched
+GET http://{{ site }}/api/v3/treatments?eventType$eq=Meal%20Bolus
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// The history, which AAPSClient syncs from, has it as deleted
+NAME deleted_carbs_in_history
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS false "@result.0.isValid"
+ASSERT_EQUALS 33 "@result.0.carbs"
+
+// One sent valid is kept, as before
+NAME create_valid_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 10 }}, "utcOffset": 780, "isReadOnly": false, "isValid": true, "eventType": "Meal Bolus", "carbs": 12.0, "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME valid_carbs_read
+GET http://{{ site }}/api/v3/treatments/{{ .create_valid_carbs.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@result.isValid"
+ASSERT_EQUALS 12 "@result.carbs"
+
+// API v1 keeps a deleted one deleted too
+NAME create_deleted_note_v1
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Note", "notes": "deleted", "isValid": false, "created_at": "{{ time 5 }}"}]
+ASSERT_STATUS 200
+
+NAME deleted_note_v1_not_listed
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Note
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
