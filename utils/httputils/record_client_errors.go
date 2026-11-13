@@ -57,10 +57,11 @@ func (b *errorBody) Write(p []byte) (int, error) {
 type leftOutKey struct{}
 
 // SetLeftOut keeps why a request that was taken left out part of what it sent, such as a batch's entries it could not
-// store, so RecordClientErrors records it as a client error, though its status is not one
+// store, or a document's fields, so RecordClientErrors records it as a client error, though its status is not one. Each
+// reason is added to those kept, once, so a request records one client error with them all.
 func SetLeftOut(ctx context.Context, reason string) {
-	if kept, ok := ctx.Value(leftOutKey{}).(*string); ok {
-		*kept = reason
+	if kept, ok := ctx.Value(leftOutKey{}).(*string); ok && !strings.Contains(*kept, reason) {
+		*kept = strings.TrimPrefix(*kept+"; "+reason, "; ")
 	}
 }
 
