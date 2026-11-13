@@ -13,8 +13,8 @@ How the Juggluco Nightscout uploader talks to Nightscout, and how it works with 
 - Source: commit `d8233ce` (2026-10-29). Native C++ in `Common/src/main/cpp/net/watchserver/` (`uploader.cpp`,
   `uploadtreatment.cpp`, `common.cpp`, `datestring.hpp`), which calls Java in
   `Common/src/main/java/tk/glucodata/NightPost.java` for HTTP.
-- Tests: `tests/api/nightscout/juggluco/upload_v3.http` and `upload_v1.http`. The v1 tests send the token's SHA1 in
-  `api-secret`, as Juggluco does.
+- Tests: `tests/api/nightscout/juggluco/upload_v3.http`, `upload_v1.http` and `long_acting.http`. The v1 tests
+  send the token's SHA1 in `api-secret`, as Juggluco does.
 
 ## Set up
 
@@ -180,3 +180,9 @@ Every amount has `eventType` `<none>` (Nightscout careportal's "no event type").
   - v3 amount changed in Juggluco (a delete, then a post with the same identifier): a deleted document is replaced,
     whatever changed.
   - v1 `dateString` with `-03:-30`: read as `-03:30` (was 400).
+- **Long-acting insulin:**
+  - v1 and v3: an amount with `"notes":"Long-Acting"` is a Correction Bolus with `isBasalInsulin` true, as AAPS
+    marks a bolus of basal insulin. It was a bolus with no `isBasalInsulin`, so followers counted it as a bolus.
+  - Only the notes are used. `insulinType` is the label the user typed, not always the insulin's name.
+  - Nighttroop summaries still count it as a bolus (TODO P3).
+  - Test: `long_acting.http`.
