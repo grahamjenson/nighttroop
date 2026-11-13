@@ -3,7 +3,6 @@ package nightscoutmodels
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -61,9 +60,9 @@ type Treatment struct {
 	Calories     *types.FlexibleInt64 `json:"calories,omitempty"`     // Calories burned
 	HeartRate    *types.FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
 
-	DurationMinutes        *types.FlexibleInt64 `json:"duration,omitempty"`               // minutes
-	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // milliseconds
-	DurationType           *types.ShortString   `json:"durationType,omitempty"`           // Loop's "indefinite" override
+	// Duration is read from and written as duration and durationInMilliseconds
+	Duration     *types.Duration    `json:"-"`
+	DurationType *types.ShortString `json:"durationType,omitempty"` // Loop's "indefinite" override
 
 	// Treatment-specific fields
 	Profile             *types.ShortString     `json:"profile,omitempty"`
@@ -131,8 +130,6 @@ type Treatment struct {
 
 	// SentJSON is the JSON it was sent as, to tell one sent again with changes from one sent the same
 	SentJSON string `json:"-"`
-	// wholeMinutes writes its duration in whole minutes, as API v3 does
-	wholeMinutes bool
 }
 
 // MaxSyncIdentifierLength is the longest syncIdentifier given back, as an Omnipod dose's is 60 to 70 characters
@@ -160,8 +157,7 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		SyncIdentifier json.RawMessage `json:"syncIdentifier"`
 		// Shadows EventType, to tell one sent as "<none>"
 		EventType json.RawMessage `json:"eventType"`
-		// Shadows DurationMinutes, as Loop sends minutes with a fraction, e.g. a bolus's 1.6666666666666667
-		Duration *types.FlexibleFloat64 `json:"duration"`
+		types.SentDuration
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -203,20 +199,7 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		t.Identifier = types.ToIdentifierString(string(*t.UUID))
 	}
 
-	// A duration of minutes with a fraction is kept in whole minutes, as its events keep them, and exactly in
-	// milliseconds, when none were sent, so it is given back as sent
-	if aux.Duration != nil {
-		minutes := aux.Duration.Float64()
-		t.DurationMinutes = new(types.FlexibleInt64(int64(minutes)))
-		if t.DurationInMilliseconds == nil && minutes != math.Trunc(minutes) {
-			t.DurationInMilliseconds = new(types.FlexibleInt64(math.Round(minutes * 60_000)))
-		}
-	}
-
-	// A duration sent only in milliseconds is in minutes too, the nearest, as its events keep minutes
-	if t.DurationMinutes == nil && t.DurationInMilliseconds != nil {
-		t.DurationMinutes = new(types.FlexibleInt64((*t.DurationInMilliseconds + 30_000) / 60_000))
-	}
+	t.Duration = aux.SentDuration.Duration()
 
 	t.Date, t.UtcOffsetMinutes = date, offset
 	return nil
@@ -431,21 +414,13 @@ func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON writes a duration kept in milliseconds that are not whole minutes as the minutes they are, with their
-// fraction, while its minutes are theirs, as Loop's NightscoutKit and LoopFollow read the minutes
+// MarshalJSON writes its duration as its fields
 func (t Treatment) MarshalJSON() ([]byte, error) {
 	type Alias Treatment
-	out := struct {
+	return json.Marshal(struct {
 		Alias
-		Duration any `json:"duration,omitempty"`
-	}{Alias: Alias(t)}
-	if t.DurationMinutes != nil {
-		out.Duration = t.DurationMinutes
-	}
-	if ms, minutes := t.DurationInMilliseconds, t.DurationMinutes; !t.wholeMinutes && ms != nil && minutes != nil && *ms%60_000 != 0 && int64(*ms)/60_000 == int64(*minutes) {
-		out.Duration = float64(*ms) / 60_000
-	}
-	return json.Marshal(out)
+		types.DurationFields
+	}{Alias(t), t.Duration.Fields()})
 }
 
 func (t Treatment) GetDevice() *string {
@@ -467,7 +442,7 @@ func (t Treatment) GetSubject() *string {
 // A profile switch's timeshift is in milliseconds too, as AAPS reads it so: one AAPS sent, with its
 // originalProfileName, is already, and another, from the site or the careportal, is kept in minutes.
 func (t Treatment) V3() any {
-	t.wholeMinutes = true
+	t.Duration = t.Duration.InWholeMinutes()
 	if t.Timeshift != nil && t.OriginalProfileName == nil {
 		t.Timeshift = new(*t.Timeshift * 60_000)
 	}

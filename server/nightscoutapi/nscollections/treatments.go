@@ -321,8 +321,8 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.T
 	// A duration of 0 is until cancelled for one sent indefinite, and for a Temporary Override, as Nightscout's
 	// careportal sends one, so it is kept as indefinite rather than ended as it starts
 	isIndefinite := treatment.DurationType != nil && *treatment.DurationType == indefinite
-	if d := treatment.DurationMinutes; d != nil && *d == 0 && (isIndefinite || *treatment.EventType == nightscoutmodels.TemporaryOverride) {
-		treatment.DurationMinutes, treatment.DurationInMilliseconds = nil, nil
+	if d := treatment.Duration; d != nil && d.Minutes == 0 && (isIndefinite || *treatment.EventType == nightscoutmodels.TemporaryOverride) {
+		treatment.Duration = nil
 		treatment.DurationType = new(types.ShortString(indefinite))
 	}
 	bundle := sitedb.EventGroupsBundle{EventGroup: nightscoutmodels.TreatmentToEventGroup(treatment)}
@@ -370,20 +370,8 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	for _, event := range treatmentEvents {
 		event.addToTreatment(source, siteContext, treatment)
 	}
-	// The duration sent in milliseconds is given back, as AAPS reads it before the minutes, while it is within a minute
-	// of the minutes kept, so not once those are changed on the site
-	if ms := source.EventGroup.DurationMs; ms != nil {
-		if minutes := treatment.DurationMinutes; minutes == nil || max(*ms-int64(*minutes)*60_000, int64(*minutes)*60_000-*ms) < 60_000 {
-			treatment.DurationInMilliseconds = new(types.FlexibleInt64(*ms))
-		}
-	}
-	// A duration is given back both in minutes and in milliseconds, whichever was kept, as a client may read either
-	if treatment.DurationInMilliseconds == nil && treatment.DurationMinutes != nil {
-		treatment.DurationInMilliseconds = new(*treatment.DurationMinutes * 60_000)
-	}
-	if treatment.DurationMinutes == nil && treatment.DurationInMilliseconds != nil {
-		treatment.DurationMinutes = new((*treatment.DurationInMilliseconds + 30_000) / 60_000)
-	}
+	// The duration sent in milliseconds is kept with the minutes its event keeps, as AAPS reads it before the minutes
+	treatment.Duration = treatment.Duration.WithMs(source.EventGroup.DurationMs)
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
 	treatment.Programmed = treatment.Insulin
 	if treatment.Absolute != nil {
@@ -395,12 +383,12 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 // keepTempTarget gives an update of a temp target the duration and targets it leaves out, from the one stored, in the
 // update's units, as a caregiver's app patches only what it changes and a duration or target left out would be 0
 func keepTempTarget(nsModel *nightscoutmodels.Treatment, stored *sitedb.TempTarget) {
-	if stored == nil || !isAssigned(nsModel.HighTarget, nsModel.LowTarget, nsModel.DurationMinutes, nsModel.CorrectionRange, nsModel.DurationType) {
+	if stored == nil || !isAssigned(nsModel.HighTarget, nsModel.LowTarget, nsModel.Duration, nsModel.CorrectionRange, nsModel.DurationType) {
 		return
 	}
 	// An indefinite one is given its week's duration when it is prepared
-	if nsModel.DurationMinutes == nil && nsModel.DurationType == nil {
-		nsModel.DurationMinutes = new(types.FlexibleInt64(stored.DurationMinutes))
+	if nsModel.Duration == nil && nsModel.DurationType == nil {
+		nsModel.Duration = types.DurationOfMinutes(&stored.DurationMinutes)
 	}
 	// Loop's correction range is its targets
 	if len(nsModel.CorrectionRange) > 0 {
