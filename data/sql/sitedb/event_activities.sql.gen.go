@@ -353,6 +353,96 @@ func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivity
 	return q.exec(ctx, q.hardDeleteActivityStmt, hardDeleteActivity, arg.ID)
 }
 
+const rewriteActivity = `-- name: RewriteActivity :one
+
+UPDATE activities SET
+    id = ?1,
+    name = ?2,
+    activity_type = ?3,
+    duration_minutes = ?4,
+    calories = ?5,
+    steps = ?6,
+    heart_rate = NULLIF(CAST(?7 AS INTEGER), 0),
+    notes = ?8,
+    reason = ?9,
+    occurred_at = ?10,
+    utc_offset_minutes = ?11,
+    created_by_app_name = ?12,
+    created_by_device_name = ?13,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?14 AS TEXT),
+    updated_by_identity_id = ?15
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteActivityParams struct {
+	ID                    string
+	Name                  *string
+	ActivityType          string
+	DurationMinutes       *int64
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
+	Notes                 *string
+	Reason                *string
+	OccurredAt            int64
+	UtcOffsetMinutes      *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteActivity writes every column CreateActivity does over the activity with the ID, as a Nightscout update writes
+// its merged document. It keeps when it was created and who by: the identity given is who updated it.
+func (q *Queries) RewriteActivity(ctx context.Context, arg RewriteActivityParams) (*Activity, error) {
+	row := q.queryRow(ctx, q.rewriteActivityStmt, rewriteActivity,
+		arg.ID,
+		arg.Name,
+		arg.ActivityType,
+		arg.DurationMinutes,
+		arg.Calories,
+		arg.Steps,
+		arg.HeartRate,
+		arg.Notes,
+		arg.Reason,
+		arg.OccurredAt,
+		arg.UtcOffsetMinutes,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i Activity
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.ActivityType,
+		&i.DurationMinutes,
+		&i.Calories,
+		&i.Steps,
+		&i.HeartRate,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchActivities = `-- name: SearchActivities :many
 SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities
 WHERE
@@ -541,7 +631,6 @@ func (q *Queries) SoftDeleteActivity(ctx context.Context, arg SoftDeleteActivity
 }
 
 const updateActivity = `-- name: UpdateActivity :one
-
 UPDATE activities SET
     name = COALESCE(?1, name),
     activity_type = COALESCE(?2, activity_type),
@@ -573,9 +662,6 @@ type UpdateActivityParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateActivity(ctx context.Context, arg UpdateActivityParams) (*Activity, error) {
 	row := q.queryRow(ctx, q.updateActivityStmt, updateActivity,
 		arg.Name,

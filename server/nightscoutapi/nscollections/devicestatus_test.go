@@ -123,7 +123,7 @@ func TestDeviceStatusLevelsWithinLimits(t *testing.T) {
 			var left leftOut
 			status, err := deviceStatuses.decode(data, &left)
 			require.Nil(t, err)
-			status, err = deviceStatuses.withinLimits(data, status, nil, &left)
+			status, err = deviceStatuses.withinLimits(data, status, &left)
 			require.Nil(t, err)
 			require.Len(t, left, tt.leftOut)
 

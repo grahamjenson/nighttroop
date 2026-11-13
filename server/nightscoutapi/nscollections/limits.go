@@ -60,12 +60,12 @@ func (l leftOut) record(ctx context.Context, err *nsutils.HTTPError) {
 
 // rows are the rows the model data is would be stored as, with their values by row and column, false when data is not
 // one
-func (c Collection[NS, DM]) rows(data map[string]any, patched *DM) (map[string]sitedb.ColumnValue, bool) {
+func (c Collection[NS, DM]) rows(data map[string]any) (map[string]sitedb.ColumnValue, bool) {
 	var nsModel NS
 	if utils.ConvertViaJSON(data, &nsModel) != nil {
 		return nil, false
 	}
-	return columnValues(c.db.Rows(nsModel, patched)), true
+	return columnValues(c.db.Rows(nsModel)), true
 }
 
 // columnValues are the rows' values, by their table, which of its rows, and their column, e.g. glucose_readings#0.Mgdl
@@ -157,10 +157,10 @@ func (c Collection[NS, DM]) requiredOfType(data map[string]any, path []string, o
 		instead = "x"
 	}
 	set(data, path, instead)
-	with, ok := c.rows(data, nil)
-	unstable := c.unstable(data, with, nil)
+	with, ok := c.rows(data)
+	unstable := c.unstable(data, with)
 	remove(data, path)
-	without, ok2 := c.rows(data, nil)
+	without, ok2 := c.rows(data)
 	if !ok || !ok2 {
 		return false
 	}
@@ -175,10 +175,11 @@ func (c Collection[NS, DM]) requiredOfType(data map[string]any, path []string, o
 }
 
 // withinLimits is the model data is, with each field sent out of its column's limits left out of data and said in left,
-// or the refusal of one it cannot be stored without. A patch, of patched, is refused only for what it sends.
-func (c Collection[NS, DM]) withinLimits(data map[string]any, nsModel NS, patched *DM, left *leftOut) (NS, *nsutils.HTTPError) {
+// or the refusal of one it cannot be stored without. A patch is checked so too, as the stored document with the fields
+// sent merged into it.
+func (c Collection[NS, DM]) withinLimits(data map[string]any, nsModel NS, left *leftOut) (NS, *nsutils.HTTPError) {
 	// The rows are of a model of their own, as making them can change the model, as a profile's targets to mg/dL
-	values, _ := c.rows(data, patched)
+	values, _ := c.rows(data)
 	var keys []string
 	for key, value := range values {
 		if !value.Taken() {
@@ -189,12 +190,9 @@ func (c Collection[NS, DM]) withinLimits(data map[string]any, nsModel NS, patche
 		return nsModel, nil
 	}
 	slices.Sort(keys)
-	fields := c.fieldsOf(data, values, keys, patched)
+	fields := c.fieldsOf(data, values, keys)
 	for _, key := range keys {
 		value, field := values[key], fields[key]
-		if field == nil && patched != nil {
-			continue
-		}
 		name, sent := value.Limit.Column, value.Value
 		if field != nil {
 			name, sent = strings.Join(field, "."), get(data, field)
@@ -223,13 +221,13 @@ func (c Collection[NS, DM]) withinLimits(data map[string]any, nsModel NS, patche
 
 // fieldsOf are the fields sent each value out of its limits is from, nil for one that is from none, found by leaving
 // out each field sent in turn. Of those that change the value, the field is the one that best tells it: see better.
-func (c Collection[NS, DM]) fieldsOf(data map[string]any, values map[string]sitedb.ColumnValue, keys []string, patched *DM) map[string][]string {
+func (c Collection[NS, DM]) fieldsOf(data map[string]any, values map[string]sitedb.ColumnValue, keys []string) map[string][]string {
 	fields, best := map[string][]string{}, map[string]fieldScore{}
-	unstable := c.unstable(data, values, patched)
+	unstable := c.unstable(data, values)
 	for _, field := range sentFields(data, nil) {
 		sent := get(data, field)
 		remove(data, field)
-		without, ok := c.rows(data, patched)
+		without, ok := c.rows(data)
 		set(data, field, sent)
 		if !ok {
 			continue
@@ -288,9 +286,9 @@ func btoi(b bool) int {
 
 // unstable are the values of the rows that are not the same each time data is converted, as a new row's identifier,
 // which no field sent is the one they are from
-func (c Collection[NS, DM]) unstable(data map[string]any, values map[string]sitedb.ColumnValue, patched *DM) map[string]bool {
+func (c Collection[NS, DM]) unstable(data map[string]any, values map[string]sitedb.ColumnValue) map[string]bool {
 	unstable := map[string]bool{}
-	again, _ := c.rows(data, patched)
+	again, _ := c.rows(data)
 	for key, value := range values {
 		if other, kept := again[key]; !kept || other.Value != value.Value {
 			unstable[key] = true
@@ -358,8 +356,11 @@ func typeName(of reflect.Type) string {
 
 // isNumber is whether a value sent is a number
 func isNumber(value any) bool {
-	_, ok := value.(float64)
-	return ok
+	if _, ok := value.(json.Number); ok {
+		return true
+	}
+	v := reflect.ValueOf(value)
+	return v.IsValid() && (v.CanFloat() || v.CanInt())
 }
 
 // shown is a value sent as a client error says it: its JSON, or for a long text how long it is

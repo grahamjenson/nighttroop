@@ -52,8 +52,8 @@ type CollectionDB[NS, DM any] interface {
 	// Delete deletes a model, softly or, when permanent, for good
 	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
 	// Rows are the rows, by their table, the model is stored as, for its values to be checked against their columns'
-	// limits; for a patch of patched, those it changes
-	Rows(nsModel NS, patched *DM) []sitedb.TableRow
+	// limits
+	Rows(nsModel NS) []sitedb.TableRow
 }
 
 // CollectionKeyed is a CollectionDB whose model sent again is found by its fallback key when no model has its
@@ -117,27 +117,30 @@ func sameDevice[NS SharedNSFields, DM SharedDBFields]() KeyField[NS, DM] {
 	}}
 }
 
+// kept is whether a value sent leaves the stored one as it is, as one not sent does
+func kept[T comparable](sent *T, stored *T) bool {
+	return sent == nil || (stored != nil && *sent == *stored)
+}
+
 // CollectionStored is a CollectionDB that does more once a model created, replaced or refreshed is stored, outside its
 // transaction, such as keeping what it says in the control DB
 type CollectionStored[NS any] interface {
 	Stored(ctx context.Context, siteContext *httputils.SiteContext, nsModel NS)
 }
 
-// CollectionRefresher is a CollectionDB whose duplicate takes the values of the model repeating it, as
-// Nightscout upserts one sent again, or, for treatments, the values it sends, keeping the rest. It is the duplicate as it is now, and whether it changed, which it must not when
-// the values are the same, so a client sending a batch again changes nothing.
+// CollectionRefresher is a CollectionDB whose duplicate is updated with the model repeating it, as Nightscout
+// upserts one sent again, when Refreshes says it is: the fields sent are merged into it as a patch's are. A duplicate
+// the merge leaves as it is is not changed, so a client sending a batch again changes nothing.
 type CollectionRefresher[NS, DM any] interface {
-	Refresh(q *sitedb.Queries, ctx context.Context, nsModel NS, duplicate *DM, cc nightscoutmodels.ConverterContext) (*DM, bool, error)
+	Refreshes(nsModel NS, duplicate *DM) bool
 }
 
-// CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented
+// CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented.
+// RewriteModel writes the model, converted as a create converts it, over the stored one, every column, keeping its
+// identifier, when and by whom it was created, and what of it only the database has, which may depend on the fields
+// sent.
 type CollectionPatcher[NS, DM any] interface {
-	UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, identifier string, old *DM, cc nightscoutmodels.ConverterContext) (*DM, error)
-}
-
-// patchValidator is a CollectionPatcher that checks a patch other than as Validate checks a replace
-type patchValidator[NS, DM any] interface {
-	ValidatePatch(nsModel NS, old *DM) *nsutils.HTTPError
+	RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel NS, sent map[string]any, stored *DM, cc nightscoutmodels.ConverterContext) (*DM, error)
 }
 
 // CollectionTypeDeleter is a CollectionDB that can delete everything of one type; without it that is not implemented
@@ -226,7 +229,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	if err := m.Validate(nsModel, nil); err != nil {
 		return nil, false, err
 	}
-	if nsModel, httpErr = c.withinLimits(data, nsModel, nil, &left); httpErr != nil {
+	if nsModel, httpErr = c.withinLimits(data, nsModel, &left); httpErr != nil {
 		return nil, false, httpErr
 	}
 
@@ -255,7 +258,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 	// One naming its identifier repeats its duplicate only with the same date, as Loop sends a dose again when it ends
 	if duplicateDBModel != nil && (identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicateDBModel).GetOccurredAt())) {
-		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel)
+		return c.repeated(ctx, siteContext, tx, q, nsModel, data, duplicateDBModel)
 	}
 	if duplicateDBModel != nil {
 		return c.document(duplicateDBModel, siteContext), true, nil
@@ -314,24 +317,92 @@ func (c Collection[NS, DM]) softDeleted(q *sitedb.Queries, ctx context.Context, 
 	return deleted, nil
 }
 
-// repeated is the duplicate a create repeats, given the create's values when the collection is a CollectionRefresher
-func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
+// repeated is the duplicate a create repeats, with the fields sent merged into it when the collection is a
+// CollectionRefresher and it refreshes the duplicate. It is changed only when its document is, so the write is rolled
+// back otherwise, before the duplicate's document is read, as that may read the site's database.
+func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, data map[string]any, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
 	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
-	if !ok {
+	if !ok || !refresher.Refreshes(nsModel, duplicate) {
+		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
-	refreshed, changed, err := refresher.Refresh(q, ctx, nsModel, duplicate, converterContext(siteContext))
-	if httpErr := c.stored(refreshed, err, "refresh"); httpErr != nil {
+	refreshed, merged, httpErr := c.rewrite(ctx, siteContext, q, duplicate, data, &leftOut{})
+	if httpErr != nil {
 		return nil, false, httpErr
 	}
-	if changed {
-		if httpErr := c.commit(tx, "refresh"); httpErr != nil {
-			return nil, false, httpErr
-		}
-		siteContext.PublishModelChange(events.Updated, refreshed)
-		c.afterStored(ctx, siteContext, nsModel)
+	if !c.changed(duplicate, refreshed, siteContext) {
+		_ = tx.Rollback()
+		return c.document(duplicate, siteContext), true, nil
 	}
+	if httpErr := c.commit(tx, "refresh"); httpErr != nil {
+		return nil, false, httpErr
+	}
+	siteContext.PublishModelChange(events.Updated, refreshed)
+	c.afterStored(ctx, siteContext, merged)
 	return c.document(refreshed, siteContext), true, nil
+}
+
+// rewrite writes the stored model's document with the fields sent merged into it, see merged, converted and checked as
+// a create's model is, over the stored model, its values out of their columns' limits left out and said in left. It is
+// the model written and the merged one.
+func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.SiteContext, q *sitedb.Queries, stored *DM, data map[string]any, left *leftOut) (*DM, NS, *nsutils.HTTPError) {
+	var merged NS
+	rewriter, ok := any(c.db).(CollectionPatcher[NS, DM])
+	if !ok {
+		return nil, merged, nsutils.ErrNotImplemented
+	}
+	document, merged, err := c.merged(stored, data, siteContext)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to merge the fields sent into the stored model", "error", err, "collection", c.db.Name())
+		return nil, merged, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	if err := c.db.Validate(merged, stored); err != nil {
+		slog.ErrorContext(ctx, "validation failed for the merged model", "error", err, "collection", c.db.Name())
+		return nil, merged, err
+	}
+	merged, httpErr := c.withinLimits(document, merged, left)
+	if httpErr != nil {
+		return nil, merged, httpErr
+	}
+	rewritten, err := rewriter.RewriteModel(q, ctx, merged, data, stored, converterContext(siteContext))
+	if httpErr := c.stored(rewritten, err, "update"); httpErr != nil {
+		return nil, merged, httpErr
+	}
+	return rewritten, merged, nil
+}
+
+// merged is the stored model's document, as API v1 gives it, with the fields sent laid over it, see mergeFields, read
+// as a create reads the fields sent
+func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext *httputils.SiteContext) (map[string]any, NS, error) {
+	var model NS
+	var aliases map[string][]string
+	var glucose []string
+	if fields, ok := any(model).(interface{ MergeAliases() map[string][]string }); ok {
+		aliases = fields.MergeAliases()
+	}
+	if fields, ok := any(model).(interface{ GlucoseFields() []string }); ok {
+		glucose = fields.GlucoseFields()
+	}
+	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
+	document = mergeFields(document, data, aliases, glucose)
+	err := utils.ConvertViaJSON(document, &model)
+	return document, model, err
+}
+
+// changed is whether the rewritten model's document is not the stored one's, the server's fields left out
+func (c Collection[NS, DM]) changed(stored, rewritten *DM, siteContext *httputils.SiteContext) bool {
+	before, _ := json.Marshal(c.db.ToNS(stored, withoutSiteDB(siteContext)))
+	after, _ := json.Marshal(c.db.ToNS(rewritten, withoutSiteDB(siteContext)))
+	return string(before) != string(after)
+}
+
+// withoutSiteDB is the site's context for a document read in a write's transaction, which holds the site's database:
+// what the document reads from another table, a device status's configuration, is left out, and the collection keeps
+// it unless it is sent
+func withoutSiteDB(siteContext *httputils.SiteContext) *httputils.SiteContext {
+	without := *siteContext
+	without.SiteDB = nil
+	return &without
 }
 
 // identifiedDuplicate is the model a create naming its identifier repeats, as in Nightscout, which keeps that
@@ -632,7 +703,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	if nsModel, err = withUtcOffset(data, nsModel, offset); err != nil {
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
-	if nsModel, httpErr = c.withinLimits(data, nsModel, nil, &left); httpErr != nil {
+	if nsModel, httpErr = c.withinLimits(data, nsModel, &left); httpErr != nil {
 		return nil, false, httpErr
 	}
 	// One created with an identifier none has repeats one with its fallback key, for a key that finds them so
@@ -643,7 +714,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 			return nil, false, nsutils.ErrInternal
 		}
 		if duplicate != nil {
-			return c.repeated(ctx, siteContext, tx, q, nsModel, duplicate)
+			return c.repeated(ctx, siteContext, tx, q, nsModel, data, duplicate)
 		}
 	}
 
@@ -712,10 +783,11 @@ func (c Collection[NS, DM]) validateReplace(ctx context.Context, nsModel NS, rep
 	return nil
 }
 
+// Patch merges the fields sent into the stored model, see rewrite, once it is found not deleted, not modified since the
+// client read it, and the fields sent do not change those a document keeps
 func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (_ nsutils.Document, httpErr *nsutils.HTTPError) {
 	m := c.db
-	patcher, ok := any(m).(CollectionPatcher[NS, DM])
-	if !ok {
+	if _, ok := any(m).(CollectionPatcher[NS, DM]); !ok {
 		return nil, nsutils.ErrNotImplemented
 	}
 	var left leftOut
@@ -754,28 +826,8 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, err
 	}
 
-	validate := m.Validate
-	if v, ok := any(m).(patchValidator[NS, DM]); ok {
-		validate = v.ValidatePatch
-	}
-	if err := validate(nsModel, updateingModel); err != nil {
-		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
-		return nil, err
-	}
-	if nsModel, httpErr = c.withinLimits(data, nsModel, updateingModel, &left); httpErr != nil {
-		return nil, httpErr
-	}
-
-	dbModel, err := patcher.UpdateModel(
-		q,
-		ctx,
-		nsModel,
-		identifier,
-		updateingModel,
-		converterContext(siteContext),
-	)
-
-	if httpErr := c.stored(dbModel, err, "patch"); httpErr != nil {
+	dbModel, _, httpErr := c.rewrite(ctx, siteContext, q, updateingModel, data, &left)
+	if httpErr != nil {
 		return nil, httpErr
 	}
 	if err := q.MarkStale(ctx, updateingModel); err != nil {
@@ -864,7 +916,7 @@ func (c Collection[NS, DM]) commit(tx *sql.Tx, action string) *nsutils.HTTPError
 	return nil
 }
 
-// stored is the error from storing a model with CreateModel or UpdateModel. Data the database refuses is the client's error.
+// stored is the error from storing a model with CreateModel or RewriteModel. Data the database refuses is the client's error.
 func (c Collection[NS, DM]) stored(dbModel *DM, err error, action string) *nsutils.HTTPError {
 	if err != nil {
 		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {

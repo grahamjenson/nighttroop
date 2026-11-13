@@ -22,7 +22,7 @@ var (
 
 // checked is a document of a collection checked against its columns' limits, as a create checks it: the refusal, or
 // what was left out and the data kept
-func checked[NS SharedNSFields, DM SharedDBFields](c Collection[NS, DM], body string, patched *DM) (string, leftOut, map[string]any) {
+func checked[NS SharedNSFields, DM SharedDBFields](c Collection[NS, DM], body string) (string, leftOut, map[string]any) {
 	var data map[string]any
 	if err := json.Unmarshal([]byte(body), &data); err != nil {
 		panic(err)
@@ -30,7 +30,7 @@ func checked[NS SharedNSFields, DM SharedDBFields](c Collection[NS, DM], body st
 	var left leftOut
 	nsModel, err := c.decode(data, &left)
 	if err == nil {
-		_, err = c.withinLimits(data, nsModel, patched, &left)
+		_, err = c.withinLimits(data, nsModel, &left)
 	}
 	if err != nil {
 		return err.Message, left, data
@@ -51,59 +51,52 @@ func TestWithinLimits(t *testing.T) {
 	}{
 		// Required: its column is NOT NULL
 		{"required in range", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"type": "sgv", "sgv": 1000, "date": 1}`, nil)
+			return checked(entries, `{"type": "sgv", "sgv": 1000, "date": 1}`)
 		}, "", nil, []string{"sgv"}},
 		{"required out of range", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"type": "sgv", "sgv": 1001, "date": 1}`, nil)
+			return checked(entries, `{"type": "sgv", "sgv": 1001, "date": 1}`)
 		}, "Bad or missing body: sgv must be more than 0 and at most 1000 mg/dL (was 1001)", nil, nil},
 		{"required out of range once converted", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"type": "sgv", "sgv": 60, "units": "mmol/L", "date": 1}`, nil)
+			return checked(entries, `{"type": "sgv", "sgv": 60, "units": "mmol/L", "date": 1}`)
 		}, "Bad or missing body: sgv must be more than 0 and at most 1000 mg/dL (was 60, stored as 1081.08)", nil, nil},
 		{"required missing", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"type": "sgv", "date": 1}`, nil)
+			return checked(entries, `{"type": "sgv", "date": 1}`)
 		}, "Bad or missing body: mgdl must be more than 0 and at most 1000 mg/dL (was 0)", nil, nil},
 		{"required wrong type", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"type": "sgv", "sgv": "high", "date": 1}`, nil)
+			return checked(entries, `{"type": "sgv", "sgv": "high", "date": 1}`)
 		}, `Bad or missing body: sgv must be a number (was "high")`, nil, nil},
 		{"required out of range in a treatment", func() (string, leftOut, map[string]any) {
-			return checked(treatments, `{"eventType": "Correction Bolus", "insulin": 501, "date": 1}`, nil)
+			return checked(treatments, `{"eventType": "Correction Bolus", "insulin": 501, "date": 1}`)
 		}, "Bad or missing body: insulin must be between -500 and 500 (was 501)", nil, nil},
 		{"required wrong type in a treatment", func() (string, leftOut, map[string]any) {
-			return checked(treatments, `{"eventType": "Correction Bolus", "insulin": "lots", "date": 1}`, nil)
+			return checked(treatments, `{"eventType": "Correction Bolus", "insulin": "lots", "date": 1}`)
 		}, `Bad or missing body: insulin must be a number (was "lots")`, nil, nil},
 		{"required too long", func() (string, leftOut, map[string]any) {
-			return checked(treatments, `{"eventType": "Announcement", "name": "`+strings.Repeat("a", 130)+`", "date": 1}`, nil)
+			return checked(treatments, `{"eventType": "Announcement", "name": "`+strings.Repeat("a", 130)+`", "date": 1}`)
 		}, "Bad or missing body: name must be at most 128 characters (was 130 characters)", nil, nil},
-		{"required left out of a patch when not sent", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"noise": 1}`, &sitedb.GlucoseReading{ReadingType: "sgv"})
-		}, "", nil, []string{"noise"}},
-		{"required out of range in a patch", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"sgv": 0}`, &sitedb.GlucoseReading{ReadingType: "sgv"})
-		}, "Bad or missing body: sgv must be more than 0 and at most 1000 mg/dL (was 0)", nil, nil},
-
 		// Optional: its column takes NULL
 		{"optional in range", func() (string, leftOut, map[string]any) {
-			return checked(deviceStatuses, `{"uploader": {"battery": 100}, "date": 1}`, nil)
+			return checked(deviceStatuses, `{"uploader": {"battery": 100}, "date": 1}`)
 		}, "", nil, []string{"uploader.battery"}},
 		{"optional out of range", func() (string, leftOut, map[string]any) {
-			return checked(deviceStatuses, `{"uploader": {"battery": -100, "isCharging": true}, "date": 1}`, nil)
+			return checked(deviceStatuses, `{"uploader": {"battery": -100, "isCharging": true}, "date": 1}`)
 		}, "", []string{"uploader.battery must be between 0 and 100 (was -100)"}, []string{"uploader.isCharging"}},
 		{"optional too long", func() (string, leftOut, map[string]any) {
-			return checked(entries, `{"type": "sgv", "sgv": 100, "device": "`+long+`", "date": 1}`, nil)
+			return checked(entries, `{"type": "sgv", "sgv": 100, "device": "`+long+`", "date": 1}`)
 		}, "", []string{"device must be at most 64 characters (was 70 characters)"}, []string{"sgv"}},
 		{"optional wrong type", func() (string, leftOut, map[string]any) {
-			return checked(deviceStatuses, `{"uploader": {"battery": "50 days", "isCharging": true}, "date": 1}`, nil)
+			return checked(deviceStatuses, `{"uploader": {"battery": "50 days", "isCharging": true}, "date": 1}`)
 		}, "", []string{`uploader.battery must be a number (was "50 days")`}, []string{"uploader.isCharging"}},
 		{"optional out of range in a treatment", func() (string, leftOut, map[string]any) {
-			return checked(treatments, `{"eventType": "Note", "notes": "ok", "duration": 600000, "date": 1}`, nil)
+			return checked(treatments, `{"eventType": "Note", "notes": "ok", "duration": 600000, "date": 1}`)
 		}, "", []string{"duration must be between 0 and 525600 (was 600000)"}, []string{"notes"}},
 
 		// The exceptions
 		{"a treatment's glucose is left out", func() (string, leftOut, map[string]any) {
-			return checked(treatments, `{"eventType": "Bolus Wizard", "glucose": 0, "insulin": 1, "date": 1}`, nil)
+			return checked(treatments, `{"eventType": "Bolus Wizard", "glucose": 0, "insulin": 1, "date": 1}`)
 		}, "", []string{"glucose must be more than 0 and at most 1000 mg/dL (was 0)"}, []string{"insulin"}},
 		{"a treatment's carbs refuse it", func() (string, leftOut, map[string]any) {
-			return checked(treatments, `{"eventType": "Carb Correction", "carbs": 1001, "date": 1}`, nil)
+			return checked(treatments, `{"eventType": "Carb Correction", "carbs": 1001, "date": 1}`)
 		}, "Bad or missing body: carbs must be between -1000 and 1000 (was 1001)", nil, nil},
 	}
 	for _, tt := range tests {

@@ -41,7 +41,7 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 }
 
 // Rows are a preset for each of its profiles, by their names, as the store keeps them in no order
-func (c ProfileCollection) Rows(nsModel nightscoutmodels.ProfileStore, _ *sitedb.ProfilePresetBundle) []sitedb.TableRow {
+func (c ProfileCollection) Rows(nsModel nightscoutmodels.ProfileStore) []sitedb.TableRow {
 	presets := NightscoutToDBCreateProfilePreset(nsModel, nightscoutmodels.ConverterContext{})
 	slices.SortFunc(presets, func(a, b sitedb.CreateProfilePresetParams) int { return strings.Compare(a.Name, b.Name) })
 	rows := make([]sitedb.TableRow, len(presets))

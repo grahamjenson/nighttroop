@@ -34,7 +34,7 @@ func (c ActivityCollection) Validate(nsModel nightscoutmodels.Activity, dbModel 
 	return nil
 }
 
-func (c ActivityCollection) Rows(nsModel nightscoutmodels.Activity, _ *sitedb.Activity) []sitedb.TableRow {
+func (c ActivityCollection) Rows(nsModel nightscoutmodels.Activity) []sitedb.TableRow {
 	return []sitedb.TableRow{{Table: "activities", Row: nightscoutmodels.ActivityToCreate(nsModel, nightscoutmodels.ConverterContext{})}}
 }
 
@@ -64,11 +64,10 @@ func (c ActivityCollection) DeleteType(q *sitedb.Queries, ctx context.Context, t
 	return q.SoftDeleteActivitiesByType(ctx, sitedb.SoftDeleteActivitiesByTypeParams{ActivityType: typeString})
 }
 
-func (c ActivityCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity, identifier string, dbModel *sitedb.Activity, uc nightscoutmodels.ConverterContext) (*sitedb.Activity, error) {
-	updateParams := nightscoutmodels.ActivityToUpdate(nsModel, uc)
-	updateParams.ID = identifier
-
-	return q.UpdateActivity(ctx, updateParams)
+func (c ActivityCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity, _ map[string]any, stored *sitedb.Activity, cc nightscoutmodels.ConverterContext) (*sitedb.Activity, error) {
+	params := nightscoutmodels.ActivityToCreate(nsModel, cc)
+	params.ID = stored.ID
+	return q.RewriteActivity(ctx, sitedb.RewriteActivityParams(params))
 }
 
 func (c ActivityCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
