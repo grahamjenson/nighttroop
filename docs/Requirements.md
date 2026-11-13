@@ -959,9 +959,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   insulin, a zero being none; otherwise it is its own treatment. So a careportal note in the same second as an xDrip+
   bolus is kept beside it rather than taking it over, and AAPS's Bolus Wizard's bolus and its carbs, two Meal
   Boluses at one date that it deletes on their own, are two treatments.
-- An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
-  raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
-  nothing, not even when it was last modified.
+- An entry uploaded with the date and type of one stored, whatever its device, and without an `_id` or with one no
+  entry has, takes its new value, direction and raw values, as Nightscout upserts an entry on its date and type and
+  xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes nothing, not even
+  when it was last modified. So a reading Trio downloads, with Nightscout as its CGM, and uploads under its own id, or
+  xDrip+ sends again, is one reading.
 - A meter reading (`mbg`) uploaded with the date of one stored is the same finger prick whatever its device, so a
   careportal BG Check that xDrip+ downloads and uploads again as its own is stored once.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC. So does one given only to

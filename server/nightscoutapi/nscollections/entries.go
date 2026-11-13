@@ -73,13 +73,15 @@ func (c EntriesCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 }
 
 func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
-	// A finger prick at a date is the same one whichever device sent it, as xDrip+ sends a careportal's BG Check back
-	// as its own meter reading, with its own device
-	if readingType := nightscoutmodels.SetReadingType(nsModel); readingType == "mbg" {
-		return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: 1}))
-	}
-	return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
+	// A reading at a date is the same one whichever device sent it, as Nightscout upserts an entry on its date and type:
+	// xDrip+ sends a careportal's BG Check back as its own meter reading, and Trio, with Nightscout as its CGM, uploads
+	// each reading it downloads under its own id and device
+	readingType := nightscoutmodels.SetReadingType(nsModel)
+	return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: 1}))
 }
+
+// DuplicateWhateverItsIdentifier finds a reading sent with an _id none has by its date and type, as Nightscout does
+func (c EntriesCollection) DuplicateWhateverItsIdentifier() {}
 
 // Refresh gives a reading sent again the values it was sent with, as Nightscout upserts a reading on its date and type:
 // xDrip4iOS smooths and rebuilds readings by sending them again without their _id. One of another type, or sent with
