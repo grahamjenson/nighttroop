@@ -43,10 +43,6 @@ func (c FoodCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsMo
 
 }
 
-func (c FoodCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Food) (*sitedb.FoodPreset, error) {
-	return first(q.SearchFoodPresets(ctx, sitedb.SearchFoodPresetsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
-}
-
 func (c FoodCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.FoodPreset, error) {
 	return q.GetFoodPreset(ctx, sitedb.GetFoodPresetParams{ID: identifier})
 }

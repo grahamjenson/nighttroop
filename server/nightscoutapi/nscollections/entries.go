@@ -72,16 +72,24 @@ func (c EntriesCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 
-func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
-	// A reading at a date is the same one whichever device sent it, as Nightscout upserts an entry on its date and type:
-	// xDrip+ sends a careportal's BG Check back as its own meter reading, and Trio, with Nightscout as its CGM, uploads
-	// each reading it downloads under its own id and device
-	readingType := nightscoutmodels.SetReadingType(nsModel)
-	return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: 1}))
+// FallbackKey is a reading's date and type, whichever device sent it and whatever its _id, as Nightscout upserts an
+// entry on its date and type: xDrip+ sends a careportal's BG Check back as its own meter reading, and Trio, with
+// Nightscout as its CGM, uploads each reading it downloads under its own id and device
+func (c EntriesCollection) FallbackKey() FallbackKey[nightscoutmodels.Entry, sitedb.GlucoseReading] {
+	return FallbackKey[nightscoutmodels.Entry, sitedb.GlucoseReading]{
+		search: func(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, limit int64) ([]*sitedb.GlucoseReading, error) {
+			readingType := nightscoutmodels.SetReadingType(nsModel)
+			return q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: limit})
+		},
+		fields: []KeyField[nightscoutmodels.Entry, sitedb.GlucoseReading]{
+			sameDate[nightscoutmodels.Entry, sitedb.GlucoseReading](),
+			{"type", func(sent nightscoutmodels.Entry, stored *sitedb.GlucoseReading) bool {
+				return nightscoutmodels.SetReadingType(sent) == stored.ReadingType
+			}},
+		},
+		whateverItsIdentifier: true,
+	}
 }
-
-// DuplicateWhateverItsIdentifier finds a reading sent with an _id none has by its date and type, as Nightscout does
-func (c EntriesCollection) DuplicateWhateverItsIdentifier() {}
 
 // Refresh gives a reading sent again the values it was sent with, as Nightscout upserts a reading on its date and type:
 // xDrip4iOS smooths and rebuilds readings by sending them again without their _id. One of another type, or sent with

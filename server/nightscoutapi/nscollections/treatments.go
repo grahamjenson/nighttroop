@@ -114,45 +114,57 @@ func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context,
 	return &tebg, nil
 }
 
-func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment) (*sitedb.EventGroupsBundle, error) {
-	eventGroups, rerr := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
+// FallbackKey is a treatment's date, device, eventType, insulin and carbs, a zero being none, as Nightscout matches one
+// sent without an identifier (treatment-fallback-key.js), of one stored without an app's id, xDrip+'s uuid or Loop's
+// syncIdentifier. So a careportal note in the same second as xDrip+'s bolus is kept beside it rather than taking it
+// over, and AAPS's Bolus Wizard's bolus and its carbs, sent as two Meal Boluses at the same date and deleted on their
+// own by their identifiers, are two treatments.
+func (c TreatmentCollection) FallbackKey() FallbackKey[nightscoutmodels.Treatment, sitedb.EventGroupsBundle] {
+	type key = KeyField[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]
+	return FallbackKey[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]{
+		search: searchSameTimeTreatments,
+		fields: []key{
+			sameDate[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](),
+			sameDevice[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](),
+			{"eventType", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+				return sent.EventType == nil || sent.EventType.String() == stored.EventGroup.GroupType
+			}},
+			{"insulin", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+				var dose float64
+				if stored.InsulinDose != nil {
+					dose = stored.InsulinDose.Dose
+				}
+				return amount(sent.Insulin) == dose
+			}},
+			{"carbs", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+				var carbs float64
+				if stored.FoodIntake != nil && stored.FoodIntake.Carbs != nil {
+					carbs = *stored.FoodIntake.Carbs
+				}
+				return amount(sent.Carbs) == carbs
+			}},
+		},
+		clientIDs: []func(*sitedb.EventGroupsBundle) *string{
+			func(stored *sitedb.EventGroupsBundle) *string { return stored.EventGroup.Uuid },
+			func(stored *sitedb.EventGroupsBundle) *string { return stored.EventGroup.SyncIdentifier },
+		},
+	}
+}
+
+// searchSameTimeTreatments finds the treatments of a type and device at the date of the one sent
+func searchSameTimeTreatments(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, limit int64) ([]*sitedb.EventGroupsBundle, error) {
+	eventGroups, err := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		TypeEq:   nsModel.EventType.Stringp(),
-		Limit:    maxSameTimeTreatments,
+		Limit:    limit,
 	})
-	if rerr != nil {
-		return nil, rerr
+	bundles := make([]*sitedb.EventGroupsBundle, len(eventGroups))
+	for i, eventGroup := range eventGroups {
+		bundle := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroup))
+		bundles[i] = &bundle
 	}
-	for _, eventGroup := range eventGroups {
-		egb := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroup))
-		if sameTreatment(nsModel, &egb) {
-			return &egb, nil
-		}
-	}
-	return nil, nil
-}
-
-// maxSameTimeTreatments is how many treatments of a type at one date are looked through for one sent again
-const maxSameTimeTreatments = 10
-
-// sameTreatment is whether a treatment sent with no identifier of its own is one stored sent again, as Nightscout
-// matches one (treatment-fallback-key.js): one stored without an app's id, xDrip+'s uuid or Loop's syncIdentifier,
-// with the same carbs and insulin, a zero being none. So a careportal note in the same second as xDrip+'s bolus is
-// kept beside it rather than taking it over, and AAPS's Bolus Wizard's bolus and its carbs, sent as two Meal Boluses
-// at the same date and deleted on their own by their identifiers, are two treatments
-func sameTreatment(nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
-	if stored.EventGroup.Uuid != nil || stored.EventGroup.SyncIdentifier != nil {
-		return false
-	}
-	var storedInsulin, storedCarbs float64
-	if stored.InsulinDose != nil {
-		storedInsulin = stored.InsulinDose.Dose
-	}
-	if stored.FoodIntake != nil && stored.FoodIntake.Carbs != nil {
-		storedCarbs = *stored.FoodIntake.Carbs
-	}
-	return amount(nsModel.Insulin) == storedInsulin && amount(nsModel.Carbs) == storedCarbs
+	return bundles, err
 }
 
 // amount is a treatment's carbs or insulin, 0 when it has none

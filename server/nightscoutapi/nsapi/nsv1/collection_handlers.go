@@ -63,9 +63,9 @@ func Search(store nsutils.Store) http.HandlerFunc {
 	}
 }
 
-// maxBadEntriesLeftOut is how many entries with a problem, other than a reading out of range, a batch can leave out
-// before it is refused
-const maxBadEntriesLeftOut = 10
+// maxLeftOut is how many documents with a problem, other than a reading out of range, a batch can leave out before it
+// is refused
+const maxLeftOut = 10
 
 func Create(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -107,13 +107,11 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		// Loop over the array of models sent. An entries batch leaves out a reading it cannot store and stores the rest,
-		// as xDrip+ sends a failed batch again with every new reading added, and its device status and treatments only
-		// after it is taken, and Nightscout stores them all
+		// Loop over the array of models sent. A batch of any collection leaves out a document it cannot store and stores
+		// the rest, as Nightscout stores them all: xDrip+ sends a failed entries batch again with every new reading added,
+		// and its device status and treatments only after it is taken, and Loop, Trio and xDrip4iOS send treatment and
+		// device status batches
 		_, isBatch := body.([]any)
-		isEntriesBatch := isBatch && collection == nsutils.Entries
-		outOfRange, bad := 0, 0
-		var badErr *nsutils.HTTPError
 		var left leftOut
 		for _, item := range arrayOfModels {
 			doc, ok := item.(map[string]any)
@@ -132,16 +130,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			} else if ok {
 				record, _, err = store.Create(r.Context(), collection, doc)
 			}
-			// A sensor sends 0 for hours, so any number of readings out of range are left out, but each other problem
-			// can log an error, so only a few are
-			if isEntriesBatch && err == nsutils.BadGlucoseError {
-				outOfRange++
-				left.add("glucose out of range")
-				continue
-			}
-			if isEntriesBatch && err != nil && err.Status == http.StatusBadRequest && bad < maxBadEntriesLeftOut {
-				bad, badErr = bad+1, cmp.Or(badErr, err)
-				left.add(err.Message)
+			if isBatch && left.leaves(err) {
 				continue
 			}
 			if err != nil {
@@ -150,29 +139,53 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			}
 			created = append(created, record)
 		}
-		if outOfRange+bad > 0 {
-			slog.InfoContext(r.Context(), "left out entries from a batch", "out_of_range", outOfRange, "bad", bad, "stored", len(created))
+		if left.outOfRange+left.bad > 0 {
+			slog.InfoContext(r.Context(), "left out documents from a batch", "collection", collection, "out_of_range", left.outOfRange, "bad", left.bad, "stored", len(created))
 		}
-		// A batch with nothing stored and an entry with another problem is refused with it, so the client is told
-		if len(created) == 0 && badErr != nil {
-			nsutils.WriteError(w, badErr)
+		// A batch with nothing stored and a document with another problem is refused with it, so the client is told
+		if len(created) == 0 && left.first != nil {
+			nsutils.WriteError(w, left.first)
 			return
 		}
-		// One stored with an entry left out for another problem shows on the site's client errors, so the admin can see
-		// what the client gets wrong, though the client is not told. Readings out of range alone are not, as a sensor can
-		// send them for hours.
-		if bad > 0 {
-			httputils.SetLeftOut(r.Context(), left.summary(len(created)))
+		// One stored with a document left out for another problem shows on the site's client errors, so the admin can
+		// see what the client gets wrong, though the client is not told. Readings out of range alone are not, as a sensor
+		// can send them for hours.
+		if left.bad > 0 {
+			httputils.SetLeftOut(r.Context(), left.summary(collection, len(created)))
 		}
 
 		nsutils.WriteRecordsV1(w, created, nil)
 	}
 }
 
-// leftOut counts the entries a batch left out by why, in the order each why was first seen
+// leftOut counts the documents a batch left out by why, in the order each why was first seen
 type leftOut struct {
-	reasons []string
-	counts  map[string]int
+	reasons         []string
+	counts          map[string]int
+	outOfRange, bad int
+	// first is the first problem other than a reading out of range, which refuses a batch with nothing stored
+	first *nsutils.HTTPError
+}
+
+// leaves is whether a batch leaves out a document for its problem, err, and stores the rest. Only a 400, from the
+// document's conversion, validation or a database CHECK, is the document's problem. Any other status, such as 401, 403,
+// 412, 429 or 5xx, is the request's or the server's, so it stops the batch, as does an 11th document with a problem. A
+// reading out of range is always left out, as a sensor sends 0 for hours, but each other problem can log an error, so
+// only a few are.
+func (l *leftOut) leaves(err *nsutils.HTTPError) bool {
+	switch {
+	case err == nil || err.Status != http.StatusBadRequest:
+		return false
+	case err == nsutils.BadGlucoseError:
+		l.outOfRange++
+		l.add("glucose out of range")
+	case l.bad < maxLeftOut:
+		l.bad, l.first = l.bad+1, cmp.Or(l.first, err)
+		l.add(err.Message)
+	default:
+		return false
+	}
+	return true
 }
 
 func (l *leftOut) add(reason string) {
@@ -185,15 +198,15 @@ func (l *leftOut) add(reason string) {
 	l.counts[reason]++
 }
 
-// summary says how many entries were stored and left out, then how many were left out for each why, so the counts are
-// kept when a long why is cut short
-func (l *leftOut) summary(stored int) string {
+// summary says how many documents of the collection were stored and left out, then how many were left out for each
+// why, so the counts are kept when a long why is cut short
+func (l *leftOut) summary(collection nsutils.Collection, stored int) string {
 	total, reasons := 0, make([]string, len(l.reasons))
 	for i, reason := range l.reasons {
 		total += l.counts[reason]
 		reasons[i] = fmt.Sprintf("%d %s", l.counts[reason], reason)
 	}
-	return fmt.Sprintf("Stored %d entries and left out %d: %s", stored, total, strings.Join(reasons, "; "))
+	return fmt.Sprintf("Stored %d %s and left out %d: %s", stored, collection, total, strings.Join(reasons, "; "))
 }
 
 func Current(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
