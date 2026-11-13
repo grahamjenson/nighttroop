@@ -2938,6 +2938,16 @@ func (m *NewestPushRegistrationForAppParams) SetApp(v consts.PushApp) {
 	m.App = v
 }
 
+// GetRoles returns the Roles value.
+func (m NewestPushRegistrationForAppParams) GetRoles() []consts.IdentityRole {
+	return m.Roles
+}
+
+// SetRoles sets the Roles value and returns the updated NewestPushRegistrationForAppParams.
+func (m *NewestPushRegistrationForAppParams) SetRoles(v []consts.IdentityRole) {
+	m.Roles = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m PushCredentialForParams) GetSiteID() *string {
 	return m.SiteID

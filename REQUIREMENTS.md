@@ -1760,7 +1760,7 @@ Every 10 minutes, the server truncates every site:
 #### Push registrations
 
 - Each identity, of any role, registers the apps on its devices for pushes at `/settings/push-registrations` (JSON
-  API), with:
+  API). If it is read only or a clinician, it cannot register `loop` or `trio` (403). Each registration has:
   - App: `loop`, `trio`, `loopfollow` or `t1dcarer`.
   - Provider: `apns` or `fcm`.
   - Bundle ID, and if it is a production build.
@@ -1800,6 +1800,7 @@ Every 10 minutes, the server truncates every site:
 - Only an identity that can write treatments sends one. Its sender is that identity, not its IP address.
 - Pushed as Nightscout does, to the Loop that last uploaded its profile, with the site's push credential for its
   bundle ID, expiring in 5 minutes. Answer: 200 `OK`.
+- Only a Loop registered by an enabled identity that can change the site's data gets the command.
 - Remote carbs with a `foodType` (e.g. 🍕) are pushed with it as Loop's `food-type`.
 - Refused (400), saying which:
   - A bolus over 30 U.

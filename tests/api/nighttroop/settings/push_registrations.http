@@ -26,6 +26,21 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result.items"
 
+// Loop and Trio take remote commands from their registration, so a read only device cannot register either
+NAME viewer_cannot_register_loop
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+B {"app": "loop", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop", "production": true, "token": "c1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 403
+
+NAME viewer_cannot_register_trio
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+B {"app": "trio", "provider": "apns", "bundle_id": "com.TEAM123456.Trio", "production": true, "token": "c1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 403
+
 // Loop on the phone registers its APNs device token; the token is never returned
 NAME register_loop
 POST http://{{ site }}/settings/push-registrations

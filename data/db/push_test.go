@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -206,4 +207,41 @@ func TestDeleteSitesRemovesPushData(t *testing.T) {
 	identities, err = q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
 	require.NoError(t, err)
 	require.Empty(t, identities)
+}
+
+// Loop's remote commands go to the newest registration of an enabled identity that can change the site's data, so a
+// read only identity registering a Loop cannot take them
+func TestNewestPushRegistrationForApp(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, siteID := controlDB.Queries, site.SiteDB.Subdomain
+	require.NoError(t, q.CreateSiteIdentity(t.Context(), controldb.CreateSiteIdentityParams{SiteID: siteID, Name: "follower",
+		PasswordHash: "hash", Role: consts.IdentityRoleDeviceRead, CreatedByIdentityName: "test"}))
+	identities, err := q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	require.NoError(t, err)
+	byRole := map[consts.IdentityRole]int64{}
+	for _, identity := range identities {
+		byRole[identity.Role] = identity.ID
+	}
+	register := func(identityID int64, hash string) *controldb.PushRegistration {
+		registration, err := q.UpsertPushRegistration(t.Context(), controldb.UpsertPushRegistrationParams{SiteID: siteID,
+			IdentityID: identityID, App: consts.PushAppLoop, Provider: consts.PushProviderAPNs, BundleID: "com.TEAM.loopkit.Loop",
+			Production: true, TokenEnc: "token", TokenHash: hash})
+		require.NoError(t, err)
+		return registration
+	}
+	newest := func() (*controldb.PushRegistration, error) {
+		return q.NewestPushRegistrationForApp(t.Context(), controldb.NewestPushRegistrationForAppParams{SiteID: siteID,
+			App: consts.PushAppLoop, Roles: can.DeviceTokenRoles})
+	}
+	loop := register(byRole[consts.IdentityRoleDevicePWDPhone], "a000000000000000000000000000000000000000000000000000000000000000")
+	register(byRole[consts.IdentityRoleDeviceRead], "b000000000000000000000000000000000000000000000000000000000000000")
+	got, err := newest()
+	require.NoError(t, err)
+	require.Equal(t, loop.ID, got.ID)
+
+	// Nor does a disabled identity's
+	require.NoError(t, q.UpdateSiteIdentityEnabled(t.Context(), controldb.UpdateSiteIdentityEnabledParams{SiteID: siteID,
+		ID: byRole[consts.IdentityRoleDevicePWDPhone], Enabled: false, UpdatedByIdentityName: new("test")}))
+	_, err = newest()
+	require.ErrorIs(t, err, sql.ErrNoRows)
 }
