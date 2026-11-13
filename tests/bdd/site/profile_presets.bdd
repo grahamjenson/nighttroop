@@ -31,7 +31,7 @@ SCREENSHOT profiles
 CLICK #profilePresetsTable tbody tr >> nth=0
 ASSERT_VISIBLE #presets--profiles--details
 ASSERT_VISIBLE #presets--profiles--schedules
-ASSERT_TEXT_VISIBLE Basal (U/h)
+ASSERT_TEXT_VISIBLE Basal (U/hr)
 ASSERT_TEXT_VISIBLE Low Target (mmol/L)
 // Its schedules make it the tallest details, which scroll leaving Close where it can be clicked
 ASSERT_VISIBLE #presets--profiles--details--close

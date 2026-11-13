@@ -19,9 +19,9 @@ func TestAllInfo(t *testing.T) {
 	}{
 		{name: "a new site", info: created, has: []string{"Nighttroop site: https://abcdefgh.example", "Site ID: abcdefgh",
 			"Backup key: abcdefgh:backup", "Username: admin", "Password: adminpass", "TOTP secret: TOTPSECRET", "pwd_phone",
-			"NS URL: https://abcdefgh.ns.example", "NS token: phonetoken", "read_only", "NS token: readtoken"}},
+			"Nightscout URL: https://abcdefgh.ns.example", "Nightscout token: phonetoken", "read_only", "Nightscout token: readtoken"}},
 		{name: "a recovered site", info: recovered, has: []string{"Site ID: abcdefgh", "Backup key: abcdefgh:newbackup",
-			"Password: newpass", "TOTP secret: NEWSECRET"}, hasNoneOf: []string{"NS URL", "NS token", "pwd_phone", "read_only"}},
+			"Password: newpass", "TOTP secret: NEWSECRET"}, hasNoneOf: []string{"Nightscout URL", "Nightscout token", "pwd_phone", "read_only"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

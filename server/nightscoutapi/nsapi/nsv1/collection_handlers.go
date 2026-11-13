@@ -3,8 +3,10 @@ package nsv1
 import (
 	"cmp"
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -112,6 +114,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 		isEntriesBatch := isBatch && collection == nsutils.Entries
 		outOfRange, bad := 0, 0
 		var badErr *nsutils.HTTPError
+		var left leftOut
 		for _, item := range arrayOfModels {
 			doc, ok := item.(map[string]any)
 			// xDrip+ and xDrip4iOS send their sensor calibrations (type cal) in the same batch as their readings.
@@ -133,10 +136,12 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			// can log an error, so only a few are
 			if isEntriesBatch && err == nsutils.BadGlucoseError {
 				outOfRange++
+				left.add("glucose out of range")
 				continue
 			}
 			if isEntriesBatch && err != nil && err.Status == http.StatusBadRequest && bad < maxBadEntriesLeftOut {
 				bad, badErr = bad+1, cmp.Or(badErr, err)
+				left.add(err.Message)
 				continue
 			}
 			if err != nil {
@@ -153,9 +158,42 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			nsutils.WriteError(w, badErr)
 			return
 		}
+		// One stored with an entry left out for another problem shows on the site's client errors, so the admin can see
+		// what the client gets wrong, though the client is not told. Readings out of range alone are not, as a sensor can
+		// send them for hours.
+		if bad > 0 {
+			httputils.SetLeftOut(r.Context(), left.summary(len(created)))
+		}
 
 		nsutils.WriteRecordsV1(w, created, nil)
 	}
+}
+
+// leftOut counts the entries a batch left out by why, in the order each why was first seen
+type leftOut struct {
+	reasons []string
+	counts  map[string]int
+}
+
+func (l *leftOut) add(reason string) {
+	if l.counts == nil {
+		l.counts = map[string]int{}
+	}
+	if l.counts[reason] == 0 {
+		l.reasons = append(l.reasons, reason)
+	}
+	l.counts[reason]++
+}
+
+// summary says how many entries were stored and left out, then how many were left out for each why, so the counts are
+// kept when a long why is cut short
+func (l *leftOut) summary(stored int) string {
+	total, reasons := 0, make([]string, len(l.reasons))
+	for i, reason := range l.reasons {
+		total += l.counts[reason]
+		reasons[i] = fmt.Sprintf("%d %s", l.counts[reason], reason)
+	}
+	return fmt.Sprintf("Stored %d entries and left out %d: %s", stored, total, strings.Join(reasons, "; "))
 }
 
 func Current(store nsutils.Store) func(http.ResponseWriter, *http.Request) {

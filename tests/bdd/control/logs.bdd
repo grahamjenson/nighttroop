@@ -24,7 +24,7 @@ ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #cont
 ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--events-button
 ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--errors-button
 ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--logs-button
-ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) >> text=Log out
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) >> text=Sign out
 SCREENSHOT menu
 
 // The control site shows every site's and the server's events, newest first

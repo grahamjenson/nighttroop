@@ -21,20 +21,20 @@ B [{"defaultProfile": "Default", "startDate": "{{ time 10 }}", "units": "mg/dL",
     "loopSettings": {"dosingEnabled": true, "maximumBolus": 10, "bundleIdentifier": "com.ABCDE12345.loopkit.Loop", "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0", "overridePresets": []}}]
 ASSERT_STATUS 200
 
-# Without the Loop's APNs key in Push Certificates nothing can be pushed, and it says so
+# Without the Loop's APNs key in Push Credentials nothing can be pushed, and it says so
 NAME remote_bolus_no_credential
 POST http://{{ site }}/api/v2/notifications/loop
 H api-secret: {{ sha1 token }}
 B {"eventType": "Remote Bolus Entry", "remoteBolus": "1.0", "otp": "123456"}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "Push Certificates" "@message"
+ASSERT_CONTAINS "Push Credentials" "@message"
 
 NAME remote_override_no_credential
 POST http://{{ site }}/api/v2/notifications/loop
 H api-secret: {{ sha1 token }}
 B {"reason": "Running", "reasonDisplay": "🏃 Running", "eventType": "Temporary Override", "duration": "60.0", "notes": ""}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "Push Certificates" "@message"
+ASSERT_CONTAINS "Push Credentials" "@message"
 
 # A command Loop could not act on, or far outside real use, is refused before it is pushed
 NAME remote_bolus_too_large
