@@ -2,6 +2,7 @@ package apiquery
 
 import (
 	"net/url"
+	"time"
 
 	"nighttroop.t1d.nz/utils/mapstructure"
 	"nighttroop.t1d.nz/utils/types"
@@ -31,6 +32,11 @@ const MaxQueryHours = 7 * 24
 type Query struct {
 	Limit int64 `json:"limit,omitempty"`
 	Skip  int64 `json:"skip,omitempty"`
+	// Before, a time in ms, pages by date: the rows older than it, or with BeforeID, the ID of a row at it, older than
+	// that row, as its rows are ordered by time then ID. BeforeDate, as 2006-01-02, is the rows on or before that day.
+	Before     *int64  `json:"before,omitempty"`
+	BeforeID   *string `json:"before_id,omitempty"`
+	BeforeDate *string `json:"before_date,omitempty"`
 	// Device, when set, keeps only what that device sent
 	Device *string `json:"device,omitempty"`
 	// Hours, when set, is how far back a summary goes, at most MaxQueryHours
@@ -60,6 +66,11 @@ type QueryValues struct {
 	SiteID    *string              `mapstructure:"site_id,omitempty" json:"site_id,omitempty"`
 	RequestID *string              `mapstructure:"request_id,omitempty" json:"request_id,omitempty"`
 	JobID     *string              `mapstructure:"job_id,omitempty" json:"job_id,omitempty"`
+
+	Before   *types.FlexibleInt64 `mapstructure:"before,omitempty" json:"before,omitempty"`
+	BeforeID *string              `mapstructure:"before_id,omitempty" json:"before_id,omitempty"`
+	// BeforeDate is a day in the site's timezone, which the site's search makes Before
+	BeforeDate *string `mapstructure:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 func ParseQueryValues(values url.Values) (QueryValues, error) {
@@ -71,4 +82,14 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 	var queryValues QueryValues
 	err := mapstructure.Decode(params, &queryValues, nil)
 	return queryValues, err
+}
+
+// BeforeDay makes a BeforeDate, a day in loc, Before: the rows before the next day starts. A day that is not a date
+// is left out.
+func (q *Query) BeforeDay(loc *time.Location) {
+	day, err := time.ParseInLocation(time.DateOnly, *q.BeforeDate, loc)
+	if err == nil {
+		before := day.AddDate(0, 0, 1).UnixMilli()
+		q.Before, q.BeforeID = &before, nil
+	}
 }

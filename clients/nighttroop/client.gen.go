@@ -594,6 +594,15 @@ type TempTarget struct {
 // Units defines model for Units.
 type Units string
 
+// Before defines model for Before.
+type Before = int64
+
+// BeforeDate defines model for BeforeDate.
+type BeforeDate = openapi_types.Date
+
+// BeforeId defines model for BeforeId.
+type BeforeId = string
+
 // Id defines model for Id.
 type Id = string
 
@@ -984,6 +993,15 @@ type ListFoodIntakesParams struct {
 
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Before Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id
+	Before *Before `form:"before,omitempty" json:"before,omitempty"`
+
+	// BeforeId With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id
+	BeforeId *BeforeId `form:"before_id,omitempty" json:"before_id,omitempty"`
+
+	// BeforeDate The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id
+	BeforeDate *BeforeDate `form:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 // ListGlucoseReadingsParams defines parameters for ListGlucoseReadings.
@@ -993,6 +1011,15 @@ type ListGlucoseReadingsParams struct {
 
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Before Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id
+	Before *Before `form:"before,omitempty" json:"before,omitempty"`
+
+	// BeforeId With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id
+	BeforeId *BeforeId `form:"before_id,omitempty" json:"before_id,omitempty"`
+
+	// BeforeDate The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id
+	BeforeDate *BeforeDate `form:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 // ListInsulinDosesParams defines parameters for ListInsulinDoses.
@@ -1002,6 +1029,15 @@ type ListInsulinDosesParams struct {
 
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Before Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id
+	Before *Before `form:"before,omitempty" json:"before,omitempty"`
+
+	// BeforeId With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id
+	BeforeId *BeforeId `form:"before_id,omitempty" json:"before_id,omitempty"`
+
+	// BeforeDate The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id
+	BeforeDate *BeforeDate `form:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 // PasskeyLoginFinishJSONBody defines parameters for PasskeyLoginFinish.
@@ -5361,6 +5397,54 @@ func NewListFoodIntakesRequest(server string, params *ListFoodIntakesParams) (*h
 
 		}
 
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before", runtime.ParamLocationQuery, *params.Before); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_id", runtime.ParamLocationQuery, *params.BeforeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeDate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_date", runtime.ParamLocationQuery, *params.BeforeDate); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -5581,6 +5665,54 @@ func NewListGlucoseReadingsRequest(server string, params *ListGlucoseReadingsPar
 
 		}
 
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before", runtime.ParamLocationQuery, *params.Before); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_id", runtime.ParamLocationQuery, *params.BeforeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeDate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_date", runtime.ParamLocationQuery, *params.BeforeDate); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -5788,6 +5920,54 @@ func NewListInsulinDosesRequest(server string, params *ListInsulinDosesParams) (
 		if params.Skip != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before", runtime.ParamLocationQuery, *params.Before); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_id", runtime.ParamLocationQuery, *params.BeforeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeDate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_date", runtime.ParamLocationQuery, *params.BeforeDate); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err

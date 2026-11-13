@@ -16,12 +16,16 @@ const allProfileSwitches = `-- name: AllProfileSwitches :many
 
 SELECT id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, icfg_json, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllProfileSwitchesParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -30,7 +34,13 @@ type AllProfileSwitchesParams struct {
 // READ
 // ------
 func (q *Queries) AllProfileSwitches(ctx context.Context, arg AllProfileSwitchesParams) ([]*ProfileSwitch, error) {
-	rows, err := q.query(ctx, q.allProfileSwitchesStmt, allProfileSwitches, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allProfileSwitchesStmt, allProfileSwitches,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

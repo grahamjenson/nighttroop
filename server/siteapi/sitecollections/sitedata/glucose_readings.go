@@ -100,7 +100,7 @@ func (s *GlucoseReadingsCollection) SearchTotals(ctx context.Context, collection
 }
 
 func (s *GlucoseReadingsCollection) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading, query *apiutils.Query) templ.Component {
-	return site_data_templ.GlucoseReadingsTable(models, query.Skip, query.Limit)
+	return site_data_templ.GlucoseReadingsTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

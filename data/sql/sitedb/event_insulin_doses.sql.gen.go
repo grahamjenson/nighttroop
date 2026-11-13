@@ -14,12 +14,16 @@ const allInsulinDoses = `-- name: AllInsulinDoses :many
 
 SELECT id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllInsulinDosesParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -28,7 +32,13 @@ type AllInsulinDosesParams struct {
 // READ
 // ------
 func (q *Queries) AllInsulinDoses(ctx context.Context, arg AllInsulinDosesParams) ([]*InsulinDose, error) {
-	rows, err := q.query(ctx, q.allInsulinDosesStmt, allInsulinDoses, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allInsulinDosesStmt, allInsulinDoses,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -15,6 +15,7 @@ type QueryConverter interface {
 	// goverter:map . Search | GetSearch
 	// goverter:map SiteID | GetID
 	// goverter:map RequestID | GetID
+	// goverter:map BeforeID | GetID
 	// goverter:map JobID | GetID
 	QueryValuesToQuery(source QueryValues) Query
 }

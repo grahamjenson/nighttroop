@@ -79,7 +79,9 @@ RETURNING *;
 -- name: AllProfileSwitches :many
 SELECT * FROM profile_switches
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
+AND occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
+AND (sqlc.narg('Before') IS NULL OR occurred_at < sqlc.narg('Before') OR id < CAST(sqlc.narg('BeforeID') AS TEXT))
+ORDER BY occurred_at DESC, id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: ProfileSwitchTotals :one

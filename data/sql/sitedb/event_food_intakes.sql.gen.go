@@ -14,12 +14,16 @@ const allFoodIntakes = `-- name: AllFoodIntakes :many
 
 SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, user_entered_at, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllFoodIntakesParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -28,7 +32,13 @@ type AllFoodIntakesParams struct {
 // READ
 // ------
 func (q *Queries) AllFoodIntakes(ctx context.Context, arg AllFoodIntakesParams) ([]*FoodIntake, error) {
-	rows, err := q.query(ctx, q.allFoodIntakesStmt, allFoodIntakes, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allFoodIntakesStmt, allFoodIntakes,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

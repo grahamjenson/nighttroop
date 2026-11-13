@@ -76,9 +76,13 @@ SELECT CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) FROM glucose_readings WHER
 -- I wont optimize further or compromise on non-prepared statements (until it becomes necessary)!
 
 -- name: AllGlucoseReadings :many
+-- Before pages by date from occurred_at's index: the rows older than a time, or than the row at it with BeforeID,
+-- by time then id, so rows at the same time are each shown once
 SELECT * FROM glucose_readings 
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
+AND occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
+AND (sqlc.narg('Before') IS NULL OR occurred_at < sqlc.narg('Before') OR id < CAST(sqlc.narg('BeforeID') AS TEXT))
+ORDER BY occurred_at DESC, id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GlucoseReadingTotals :one
