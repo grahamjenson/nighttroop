@@ -72,7 +72,7 @@ on reading the body, so it counts as a failure.
 | `date` | integer | ms since the epoch, whole seconds |
 | `sgv` | integer | mg/dL, calibrated if the user calibrated in Juggluco. No `units` field |
 | `delta` | number | mg/dL per 5 minutes, three decimals; `0.000` when there is no trend |
-| `direction` | string | `DoubleUp`, `SingleUp`, `FortyFiveUp`, `Flat`, `FortyFiveDown` or `DoubleDown`; `""` when there is no trend |
+| `direction` | string | `DoubleUp`, `SingleUp`, `FortyFiveUp`, `Flat`, `FortyFiveDown` or `DoubleDown`; `""` when there is no trend, which Nighttroop leaves out |
 | `noise` | integer | always 1 |
 | `filtered`, `unfiltered` | integer | `sgv * 1000` |
 | `rssi` | integer | always 100 |
