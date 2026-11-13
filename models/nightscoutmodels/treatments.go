@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -159,6 +160,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		EventTime *types.DateString `json:"eventTime"`
 		// Shadows Timestamp, so a timestamp sent is not read
 		Timestamp json.RawMessage `json:"timestamp"`
+		// Shadows DurationMinutes, as Loop sends minutes with a fraction, e.g. a bolus's 1.6666666666666667
+		Duration *types.FlexibleFloat64 `json:"duration"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -186,6 +189,16 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 	if t.Identifier == nil && t.UUID != nil {
 		t.Identifier = types.ToIdentifierString(string(*t.UUID))
+	}
+
+	// A duration of minutes with a fraction is kept in whole minutes, as its events keep them, and exactly in
+	// milliseconds, when none were sent, so it is given back as sent
+	if aux.Duration != nil {
+		minutes := aux.Duration.Float64()
+		t.DurationMinutes = new(types.FlexibleInt64(int64(minutes)))
+		if t.DurationInMilliseconds == nil && minutes != math.Trunc(minutes) {
+			t.DurationInMilliseconds = new(types.FlexibleInt64(math.Round(minutes * 60_000)))
+		}
 	}
 
 	// A duration sent only in milliseconds is in minutes too, the nearest, as its events keep minutes
@@ -386,6 +399,23 @@ func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// MarshalJSON writes a duration kept in milliseconds that are not whole minutes as the minutes they are, with their
+// fraction, while its minutes are theirs, as Loop's NightscoutKit and LoopFollow read the minutes
+func (t Treatment) MarshalJSON() ([]byte, error) {
+	type Alias Treatment
+	out := struct {
+		Alias
+		Duration any `json:"duration,omitempty"`
+	}{Alias: Alias(t)}
+	if t.DurationMinutes != nil {
+		out.Duration = t.DurationMinutes
+	}
+	if ms, minutes := t.DurationInMilliseconds, t.DurationMinutes; ms != nil && minutes != nil && *ms%60_000 != 0 && int64(*ms)/60_000 == int64(*minutes) {
+		out.Duration = float64(*ms) / 60_000
+	}
+	return json.Marshal(out)
 }
 
 func (t Treatment) GetDevice() *string {

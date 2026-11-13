@@ -991,6 +991,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   the `duration` kept, so not once that is changed on the site; one sent with no `duration` is in minutes too, the
   nearest. A treatment with a duration is always given back with both `duration` and `durationInMilliseconds`, the one
   not kept worked out from the other.
+- A treatment's `duration` in minutes with a fraction, as Loop sends a bolus's (1.6666666666666667) or a suspend's, is
+  kept to the millisecond and given back with its fraction, not floored, so a quick bolus is not 0 minutes and
+  LoopFollow draws a temp basal as long as it was. A `duration` is given back as its `durationInMilliseconds` in
+  minutes whenever those are not whole minutes, so an AAPS temp target ended at 359587 ms reads 5.9931.
 - A device status keeps its uploader's `isCharging`, `name` and `timestamp`, and, while the status as sent is kept,
   Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
