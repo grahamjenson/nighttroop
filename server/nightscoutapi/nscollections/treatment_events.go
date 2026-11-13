@@ -187,9 +187,7 @@ var (
 				switch *source.GlucoseType {
 				case nightscoutmodels.Sensor:
 					target.ReadingType = "sgv"
-				case nightscoutmodels.Finger:
-					target.ReadingType = "mbg"
-				case nightscoutmodels.Meter:
+				case nightscoutmodels.Finger, nightscoutmodels.Meter, nightscoutmodels.Manual:
 					target.ReadingType = "mbg"
 				}
 			}

@@ -1,0 +1,36 @@
+INCLUDE steps/new_site.steps
+
+// Food added on the site is grouped later. Its group, the Nightscout treatment, is when the food was eaten, not when
+// it was grouped
+SET food_at {{ itime 20 }}
+
+NAME add_food
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 30, "name": "Toast", "occurred_at": {{ .food_at }}}
+ASSERT_STATUS 201
+SET food_id {{ .add_food.result.id }}
+
+NAME add_insulin
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 3, "occurred_at": {{ itime 15 }}}
+ASSERT_STATUS 201
+SET insulin_id {{ .add_insulin.result.id }}
+
+// Grouped now, it is at its earliest event's time
+NAME group_them
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"group_type": "Meal Bolus", "food_intake_id": "{{ .food_id }}", "insulin_dose_id": "{{ .insulin_id }}"}
+ASSERT_STATUS 201
+ASSERT_EQUALS ".add_food.result.occurred_at" "@result.occurred_at"
+
+// Its treatment is too, for AAPS and the other Nightscout clients
+NAME treatment_at_food_time
+GET http://{{ .ns_site }}/api/v1/treatments.json?count=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".add_food.result.occurred_at" "@0.date"

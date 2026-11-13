@@ -173,8 +173,13 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
 	profileStore.Units = settingsUnits
 	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted. Loop's glucose
-	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent.
-	if loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID); loop != nil {
+	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent. A
+	// profile sent with neither, as AAPS's and the careportal's are, has Loop's newest, for LoopFollow to control Loop.
+	loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID)
+	if defaultProfile.LoopSettingsID == nil && defaultProfile.RemoteSettingsID == nil {
+		loop = newestLoopSettingsJSON(context.Background(), siteContext, defaultProfile.OccurredAt)
+	}
+	if loop != nil {
 		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop))).WithGlucose(func(glucose float64) float64 {
 			return settingsUnits.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
 		})
