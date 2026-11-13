@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
 
@@ -25,7 +26,7 @@ func deleteSite(w http.ResponseWriter, r *http.Request, upload s3utils.UploadFun
 	}
 	if upload == nil {
 		if !siteContext.Config.Status.S3Working {
-			writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint("a site can only be deleted when its data can be archived to S3"))
+			writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.delete_needs_s3")))
 			return
 		}
 		upload = s3utils.NewS3Client(siteContext.Config).UploadFilesToS3

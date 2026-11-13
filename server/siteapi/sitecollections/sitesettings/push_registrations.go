@@ -59,12 +59,12 @@ func (s *PushRegistrationsCollection) ToModel(row *controldb.PushRegistration, s
 // CreateRow registers the app's token for the signed in identity, of the site the request is for
 func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.PushRegistration) (*controldb.PushRegistration, error) {
 	if model.Token == nil {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("token")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.token")
 	}
 	registration := push.Registration{Provider: model.Provider, App: string(model.App), BundleID: model.BundleID,
 		Token: *model.Token, Production: model.Production}
 	if err := push.CheckRegistration(registration); err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(err.Error())
+		return nil, apiutils.ErrBadBodyWithHint(err)
 	}
 	q, err := collectionTx.Control()
 	if err != nil {
@@ -72,7 +72,7 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 	}
 	registered, err := push.Register(ctx, q, siteContext.Config.Security, siteContext.SiteID, siteContext.IdentityModel.ID, registration)
 	if errors.Is(err, push.ErrTooManyRegistrations) {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint(err.Error())
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(err)
 	}
 	if err != nil {
 		return nil, err

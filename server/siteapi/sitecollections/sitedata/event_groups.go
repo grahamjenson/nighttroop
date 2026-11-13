@@ -46,7 +46,7 @@ func (s *EventGroupsCollection) ToModel(row *sitedb.EventGroupsBundle, siteConte
 // CreateRow groups the events picked, none of which can be in another group
 func (s *EventGroupsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteEventGroup) (*sitedb.EventGroupsBundle, error) {
 	if model.GroupType == "" {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("group_type")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.group_type")
 	}
 	if herr := checkEventsPicked(model.GroupType, model); herr != nil {
 		return nil, herr

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -56,12 +57,12 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
 	params.SiteID = siteContext.SiteID
 	if id == nil {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("id/type")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.connector_type")
 	}
 
 	sstype, err := consts.NewConnectorTypeFromString(*id)
 	if err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid connector type: %s", *id))
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_type", i18n.Data{"Type": *id}))
 	}
 	params.Type = sstype
 	if err := checkVirtualConnectorAllowed(siteContext, params.Type); err != nil {
@@ -74,7 +75,7 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 	}
 
 	if params.UrlOrUsernameEnc == nil {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.url_or_username")
 	}
 	if params.UrlOrUsernameEnc, err = cleanURLOrUsername(ctx, siteContext, params.Type, params.UrlOrUsernameEnc); err != nil {
 		return nil, err
@@ -90,7 +91,7 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 	}
 
 	if params.PasswordEnc == nil || *params.PasswordEnc == "" {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("password")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.password")
 	}
 
 	if err := encryptCredentials(siteContext.Config.Security, siteContext.SiteID, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
@@ -178,7 +179,7 @@ func (s *ConnectorSettingsCollection) UpdateHTMXResponse(model *sitemodels.Conne
 func (s *ConnectorSettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.Connector, error) {
 	sstype, err := consts.NewConnectorTypeFromString(id)
 	if err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid connector type: %s", id))
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_type", i18n.Data{"Type": id}))
 	}
 
 	q, err := collectionTx.Control()
@@ -205,7 +206,7 @@ func (s *ConnectorSettingsCollection) GetRow(ctx context.Context, collectionTx *
 
 	respMode, err := sitemodels.ConnectorFromDB(model, siteContext.Config.Security)
 	if err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to convert connector from DB: %s", err))
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Errorf("Failed to convert connector from DB: %s", err))
 	}
 	return respMode, nil
 }
@@ -283,7 +284,7 @@ func (s *ConnectorSettingsCollection) SearchHTMXResponse(models []*sitemodels.Co
 func (s *ConnectorSettingsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
 	sstype, err := consts.NewConnectorTypeFromString(id)
 	if err != nil {
-		return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid connector type: %s", id))
+		return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_type", i18n.Data{"Type": id}))
 	}
 	q, err := collectionTx.Control()
 	if err != nil {
@@ -306,7 +307,7 @@ func (s *ConnectorSettingsCollection) DeleteHTMXResponse(model *sitemodels.Conne
 func cleanURLOrUsername(ctx context.Context, siteContext *httputils.SiteContext, sstype consts.ConnectorType, urlOrUsername *string) (*string, error) {
 	trimmed := strings.TrimSpace(*urlOrUsername)
 	if trimmed == "" {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.url_or_username")
 	}
 	if sstype != consts.ConnectorTypeNightscout {
 		return &trimmed, nil
@@ -315,7 +316,7 @@ func cleanURLOrUsername(ctx context.Context, siteContext *httputils.SiteContext,
 	if err != nil {
 		// Neither the log nor the error, which is recorded, has the URL, which can hold a login or token
 		slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err)
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL is not a valid URL. %s", err))
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_nightscout_url", i18n.Data{"Error": err}))
 	}
 	return normalized, nil
 }
@@ -328,7 +329,7 @@ func encryptCredentials(sec *security.SecurityConfig, siteID string, credentials
 		}
 		encrypted, err := sec.EncryptFor(security.PurposeConnector, siteID, *credential)
 		if err != nil {
-			return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt connector credentials: %s", err))
+			return apiutils.ErrBadBodyWithHint(fmt.Errorf("Failed to encrypt connector credentials: %s", err))
 		}
 		*credential = encrypted
 	}
@@ -338,7 +339,7 @@ func encryptCredentials(sec *security.SecurityConfig, siteID string, credentials
 // checkVirtualConnectorAllowed refuses saving the virtual source, which makes up glucose, on a production server
 func checkVirtualConnectorAllowed(siteContext *httputils.SiteContext, sstype consts.ConnectorType) error {
 	if sstype == consts.ConnectorTypeVirtual && !siteContext.Config.VirtualConnectorAllowed() {
-		return apiutils.ErrConstraintCheckFailedWithHint("virtual connector, which makes up glucose, is only on development, test and staging servers")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.connectors.virtual_not_here"))
 	}
 	return nil
 }
@@ -410,7 +411,7 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 // libreRegionValidate refuses a region not in consts.LibreRegions, so a Libre connector only calls their hosts
 func libreRegionValidate(region *string) error {
 	if !consts.IsLibreRegion(*region) {
-		return apiutils.ErrBadBodyWithHint(fmt.Sprintf("LibreLinkUp region '%s' is not a known region.", *region))
+		return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_libre_region", i18n.Data{"Region": *region}))
 	}
 	return nil
 }

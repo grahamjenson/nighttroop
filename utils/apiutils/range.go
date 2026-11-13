@@ -1,15 +1,12 @@
 package apiutils
 
-import "fmt"
+import "nighttroop.t1d.nz/utils/i18n"
 
-// CheckRange refuses a value sent outside min to max, naming it and its unit in the hint; a value not sent passes
-func CheckRange[T int64 | float64](name string, value *T, min, max T, unit string) *HTTPError {
+// CheckRange refuses a value sent outside min to max with the message with the id, which names the value and its unit
+// and has the range as {{.Min}} and {{.Max}}; a value not sent passes
+func CheckRange[T int64 | float64](id string, value *T, min, max T) *HTTPError {
 	if value == nil || (*value >= min && *value <= max) {
 		return nil
 	}
-	hint := fmt.Sprintf("%s must be from %v to %v", name, min, max)
-	if unit != "" {
-		hint += " " + unit
-	}
-	return ErrConstraintCheckFailedWithHint(hint)
+	return ErrConstraintCheckFailedWithHint(i18n.NewError(id, i18n.Data{"Min": min, "Max": max}))
 }

@@ -6,6 +6,7 @@ import (
 	"unicode/utf8"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -34,7 +35,7 @@ func (s *ProfileSwitchesCollection) GetRoute() string {
 // ////
 func (s *ProfileSwitchesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
 	if model.Name == "" {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint("name is required")
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.name_required"))
 	}
 	if herr := checkProfileSwitch(model); herr != nil {
 		return nil, herr
@@ -122,16 +123,16 @@ func (s *ProfileSwitchesCollection) DeleteHTMXResponse(model *sitemodels.SitePro
 // checkProfileSwitch keeps each value sent within what a pump allows, and the duration to a week
 func checkProfileSwitch(model *sitemodels.SiteProfileSwitch) *apiutils.HTTPError {
 	if utf8.RuneCountInString(model.Name) > 64 {
-		return apiutils.ErrConstraintCheckFailedWithHint("name must be at most 64 characters")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.name_too_long"))
 	}
 	if herr := cmp.Or(
-		apiutils.CheckRange("multiplier", model.Multiplier, 0.1, 5, ""),
-		apiutils.CheckRange("timeshift", model.Timeshift, -24*60, 24*60, "minutes"),
+		apiutils.CheckRange("errors.data.multiplier", model.Multiplier, 0.1, 5),
+		apiutils.CheckRange("errors.data.timeshift", model.Timeshift, -24*60, 24*60),
 	); herr != nil {
 		return herr
 	}
 	if d := model.DurationMinutes; d != nil && (*d < 0 || *d > 7*24*60) {
-		return apiutils.ErrConstraintCheckFailedWithHint("duration must be from 0 to 10080 minutes, 0 is until the next switch")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.profile_switch_duration"))
 	}
 	return nil
 }

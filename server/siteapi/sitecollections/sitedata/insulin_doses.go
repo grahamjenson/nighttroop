@@ -3,9 +3,9 @@ package sitedata
 import (
 	"cmp"
 	"context"
-	"fmt"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -127,7 +127,7 @@ func (s *InsulinDosesCollection) DeleteHTMXResponse(model *sitemodels.SiteInsuli
 
 func checkInsulinDose(model *sitemodels.SiteInsulinDose) *apiutils.HTTPError {
 	if model.Dose == 0 || model.Dose < -maxInsulinDoseUnits || model.Dose > maxInsulinDoseUnits {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("dose must not be 0, and must be from -%d to %d units", maxInsulinDoseUnits, maxInsulinDoseUnits))
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.dose", i18n.Data{"Max": maxInsulinDoseUnits}))
 	}
-	return cmp.Or(apiutils.CheckRange("split_now", model.SplitNow, 0, 1, ""), apiutils.CheckRange("split_ext", model.SplitExt, 0, 1, ""))
+	return cmp.Or(apiutils.CheckRange("errors.data.split_now", model.SplitNow, 0, 1), apiutils.CheckRange("errors.data.split_ext", model.SplitExt, 0, 1))
 }

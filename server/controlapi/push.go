@@ -72,7 +72,7 @@ func PushTestHandler(w http.ResponseWriter, r *http.Request) {
 	err = push.Send(r.Context(), q, config.Security, registration, push.Alert{Title: "Nighttroop", Body: "A test push from the server's control site"})
 	switch {
 	case errors.Is(err, push.ErrNoCredential):
-		apiutils.ErrConstraintCheckFailedWithHint(err.Error()).Write(acceptType, w)
+		apiutils.ErrConstraintCheckFailedWithHint(err).Write(acceptType, w)
 		return
 	case errors.Is(err, push.ErrTokenGone):
 		(&apiutils.HTTPError{Status: http.StatusGone, Message: "The app is no longer registered on this device, so its registration is deleted"}).Write(acceptType, w)

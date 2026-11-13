@@ -1,21 +1,21 @@
 package settings
 
-import "fmt"
+import "nighttroop.t1d.nz/utils/i18n"
 
 // orders are settings each of which must be under another, compared as the second times by, e.g. 60 for an
 // insulin's peak in minutes under its duration in hours
 var orders = []struct {
 	under, over string
 	by          float64
-	rule        string
+	rule        string // the id of the message saying the order
 }{
-	{"range_urgent_low_mgdl", "range_low_mgdl", 1, "the urgent low must be under the low"},
-	{"range_low_mgdl", "range_high_mgdl", 1, "the low must be under the high"},
-	{"range_high_mgdl", "range_urgent_high_mgdl", 1, "the high must be under the urgent high"},
-	{"bolus_onset_minutes", "bolus_peak_minutes", 1, "bolus insulin must start acting before its peak"},
-	{"bolus_peak_minutes", "bolus_dia_hours", 60, "bolus insulin must peak before it stops acting"},
-	{"basal_onset_minutes", "basal_peak_minutes", 1, "basal insulin must start acting before its peak"},
-	{"basal_peak_minutes", "basal_dia_hours", 60, "basal insulin must peak before it stops acting"},
+	{"range_urgent_low_mgdl", "range_low_mgdl", 1, "errors.settings.urgent_low_under_low"},
+	{"range_low_mgdl", "range_high_mgdl", 1, "errors.settings.low_under_high"},
+	{"range_high_mgdl", "range_urgent_high_mgdl", 1, "errors.settings.high_under_urgent_high"},
+	{"bolus_onset_minutes", "bolus_peak_minutes", 1, "errors.settings.bolus_onset"},
+	{"bolus_peak_minutes", "bolus_dia_hours", 60, "errors.settings.bolus_peak"},
+	{"basal_onset_minutes", "basal_peak_minutes", 1, "errors.settings.basal_onset"},
+	{"basal_peak_minutes", "basal_dia_hours", 60, "errors.settings.basal_peak"},
 }
 
 // Consistent is whether the settings in effect, each the identity's, the site's or the default, make sense
@@ -31,7 +31,7 @@ func (m *CombinedSettingsMap) Consistent() error {
 			return err
 		}
 		if number(under.Value) >= number(over.Value)*order.by {
-			return fmt.Errorf("%s", order.rule)
+			return i18n.NewError(order.rule)
 		}
 	}
 	return nil

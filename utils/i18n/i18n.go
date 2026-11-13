@@ -96,3 +96,28 @@ func localize(ctx context.Context, config *goi18n.LocalizeConfig) string {
 	}
 	return text
 }
+
+// Error is an error written for people, by its message's id and placeholders, so a page can show it in its language.
+// As an error it is in English, as the JSON API and the logs have it.
+type Error struct {
+	ID   string
+	Data Data
+}
+
+// NewError is the error the message with the id says, its placeholders filled from data
+func NewError(id string, data ...Data) *Error {
+	e := &Error{ID: id}
+	if len(data) > 0 {
+		e.Data = data[0]
+	}
+	return e
+}
+
+func (e *Error) Error() string {
+	return T(context.Background(), e.ID, e.Data)
+}
+
+// In is the error in the context's language
+func (e *Error) In(ctx context.Context) string {
+	return T(ctx, e.ID, e.Data)
+}

@@ -32,6 +32,8 @@ SCREENSHOT usage
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--usage[aria-current="page"]
 PRESS Escape
+// The menu is closed before it is opened again, or the click on its trigger can land while it is still closing
+ASSERT_NOT_VISIBLE #site--nav--menu--usage
 
 // My Account and the General settings no longer have them
 CLICK #site--settings-menu

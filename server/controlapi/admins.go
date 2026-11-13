@@ -19,6 +19,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // maxControlAdmins is the most admins control can have, far more than a server needs, as each is made with bcrypt
@@ -58,10 +59,10 @@ func CreateControlAdminHandler(w http.ResponseWriter, r *http.Request) {
 		admins, err = controlContext.ControlDB.Queries.AllControlIdentities(r.Context())
 	}
 	if err == nil && (form.Name == "" || utf8.RuneCountInString(form.Name) > consts.MAX_IDENTITY_NAME_LENGTH) {
-		err = apiutils.ErrBadBodyWithHint("a name of 1 to 32 characters")
+		err = apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.admin_name"))
 	}
 	if err == nil && len(admins) >= maxControlAdmins {
-		err = apiutils.ErrConstraintCheckFailedWithHint("control can have at most " + strconv.Itoa(maxControlAdmins) + " admins")
+		err = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.max_admins", i18n.Data{"Max": maxControlAdmins}))
 	}
 	var values *db.IdentityValues
 	var created *controldb.ControlIdentity
@@ -167,7 +168,7 @@ func adminForm(r *http.Request) (*controlAdminForm, error) {
 		return nil, herr
 	}
 	if !slices.Contains(control_admins_templ.Roles, form.Role) {
-		return nil, apiutils.ErrBadBodyWithHint("a role of admin or read")
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.admin_role"))
 	}
 	return form, nil
 }

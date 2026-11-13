@@ -3,13 +3,13 @@ package controlcollections
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/backup"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -79,7 +79,7 @@ func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputi
 	case "archived":
 		err = s.archive(ctx, controlContext, oldModel)
 	default:
-		err = apiutils.ErrBadBodyWithHint("a site's state can only be changed to disabled or archived")
+		err = apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.site_state"))
 	}
 	if err != nil {
 		return nil, err
@@ -90,14 +90,14 @@ func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputi
 func (s *SitesCollection) disable(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
 	days := controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays
 	if !oldModel.Inactive(days, time.Now()) {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("only a site not written to or seen in %d days can be disabled", days))
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.disable_unused_only", i18n.Data{"Days": days}))
 	}
 	result, err := controlContext.ControlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: oldModel.ID})
 	if err != nil {
 		return err
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
-		return apiutils.ErrConstraintCheckFailedWithHint("only a live site can be disabled")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.disable_live_only"))
 	}
 	controlContext.ControlDB.Logs.SiteDisabledEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
 	return nil
@@ -107,10 +107,10 @@ func (s *SitesCollection) disable(ctx context.Context, controlContext *httputils
 func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
 	config := controlContext.ControlDB.ServerConfig
 	if oldModel.State != "disabled" {
-		return apiutils.ErrConstraintCheckFailedWithHint("only a disabled site can be archived")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.archive_disabled_only"))
 	}
 	if !config.Status.S3Working {
-		return apiutils.ErrConstraintCheckFailedWithHint("a site can only be archived when S3 is connected")
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.archive_needs_s3"))
 	}
 	started := time.Now()
 	if err := controlContext.ControlDB.ArchiveSite(ctx, oldModel.ID, s3utils.NewS3Client(config).UploadFilesToS3); err != nil {
@@ -132,7 +132,7 @@ func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) 
 	model, herr := apiutils.ExtractModelFromRequest[controlmodels.Site](httputils.GetContentType(r), r)
 	controlDB := controlContext.ControlDB
 	if herr == nil && !utils.SyntacticallyValidateSiteID(model.ID) {
-		herr = apiutils.ErrBadBodyWithHint(fmt.Sprintf("a site ID is %d lowercase letters, a to z", utils.SITE_ID_LENGTH))
+		herr = apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.site_id", i18n.Data{"Length": utils.SITE_ID_LENGTH}))
 	}
 	var site *db.SiteCreateResult
 	if herr == nil {
@@ -215,7 +215,7 @@ func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request
 		herr = apiutils.ErrNotFound
 	}
 	if herr == nil && site.State != "live" && site.State != "disabled" {
-		herr = apiutils.ErrConstraintCheckFailedWithHint("only a live or disabled site, whose DB is here, can be truncated")
+		herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.truncate"))
 	}
 	if herr == nil {
 		started := time.Now()

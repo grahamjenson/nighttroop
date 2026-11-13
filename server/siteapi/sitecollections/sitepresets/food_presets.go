@@ -32,7 +32,7 @@ func (s *FoodPresetsCollection) GetRoute() string {
 
 func (s *FoodPresetsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodPreset) (*sitedb.FoodPreset, error) {
 	if model.Name == nil || *model.Name == "" {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("name")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.name")
 	}
 	if herr := checkFoodPreset(model); herr != nil {
 		return nil, herr
@@ -52,7 +52,7 @@ func (s *FoodPresetsCollection) CreateHTMXResponse(model *sitemodels.SiteFoodPre
 // UpdateRow changes what is sent of a food preset; anything not sent stays as it is
 func (s *FoodPresetsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteFoodPreset, model *sitemodels.SiteFoodPreset) (*sitedb.FoodPreset, error) {
 	if model.Name != nil && *model.Name == "" {
-		return nil, apiutils.ErrMissingRequiredFieldWithHint("name")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.name")
 	}
 	if herr := checkFoodPreset(model); herr != nil {
 		return nil, herr
@@ -100,10 +100,10 @@ func (s *FoodPresetsCollection) DeleteHTMXResponse(model *sitemodels.SiteFoodPre
 // checkFoodPreset keeps any nutrients and absorption time sent within what a portion of food could have
 func checkFoodPreset(model *sitemodels.SiteFoodPreset) *apiutils.HTTPError {
 	return cmp.Or(
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Carbs, 0, maxPresetGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fat, 0, maxPresetGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Protein, 0, maxPresetGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fibre, 0, maxPresetGrams, "g"),
-		apiutils.CheckRange("absorption time", model.AbsorptionTimeMinutes, 0, maxAbsorptionMinutes, "minutes"),
+		apiutils.CheckRange("errors.data.food", model.Carbs, 0, maxPresetGrams),
+		apiutils.CheckRange("errors.data.food", model.Fat, 0, maxPresetGrams),
+		apiutils.CheckRange("errors.data.food", model.Protein, 0, maxPresetGrams),
+		apiutils.CheckRange("errors.data.food", model.Fibre, 0, maxPresetGrams),
+		apiutils.CheckRange("errors.data.absorption_time", model.AbsorptionTimeMinutes, 0, maxAbsorptionMinutes),
 	)
 }

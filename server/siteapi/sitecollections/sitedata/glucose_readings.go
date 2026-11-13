@@ -2,9 +2,9 @@ package sitedata
 
 import (
 	"context"
-	"fmt"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -123,7 +123,7 @@ func (s *GlucoseReadingsCollection) DeleteHTMXResponse(model *sitemodels.SiteGlu
 func checkGlucoseMgdl(mgdl float64, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	if mgdl <= 0 || mgdl > consts.MaxGlucoseMgdl {
 		units := sitemodels.ContextUnits(siteContext)
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("reading must be more than 0 and at most %v %s", consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), *units))
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.reading", i18n.Data{"Max": consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), "Units": *units}))
 	}
 	return nil
 }

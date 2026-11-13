@@ -51,7 +51,11 @@
     1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
        medical words like hypo, time in range and AGP must not be machine translated
 
-    1. P4: Translate the toasts of validation errors, as their messages are shared with the JSON API and stay English
+    1. P5: Show the control site's refusals in the browser's language: its forms are sent the API's English message,
+       not a toast with the hint, though the hints are in `errors.en.yaml`
+
+    1. P5: Translate the refusals only an app can get, which stay English: a setting not one of its options (units,
+       time zone, language, formats), and a push registration's checks (`utils/push/registration.go`)
 
     1. P4: Set a new site's number format from its browser's language, e.g. 1.234,5 for de-DE, as `BrowserSettings`
        does its date format; it is 1,234.5 until changed
