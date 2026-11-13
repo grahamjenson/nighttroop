@@ -1,0 +1,31 @@
+INCLUDE steps/new_ns_site.steps
+
+// A reading sent again at the same date and type is one reading, as Nightscout upserts an entry on its date and type:
+// Trio with Nightscout as its CGM uploads each reading it downloads under its own id and device, and xDrip+ retries
+NAME xdrip_uploads
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"device": "xDrip-DexcomG6", "type": "sgv", "sgv": 150, "date": 1794541178970, "dateString": "2026-11-13T03:39:38.970Z", "direction": "Flat"}]
+ASSERT_STATUS 200
+
+NAME xdrip_retries
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"device": "xDrip-DexcomG6", "type": "sgv", "sgv": 150, "date": 1794541178970, "dateString": "2026-11-13T03:39:38.970Z", "direction": "Flat"}]
+ASSERT_STATUS 200
+
+NAME trio_uploads_what_it_downloaded
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"_id": "6C6F0E2A-0D1B-4C3F-9A3E-1F2B3C4D5E6F", "device": "Trio", "type": "sgv", "sgv": 150, "date": 1794541178970, "dateString": "2026-11-13T03:39:38.970Z", "direction": "Flat"}]
+ASSERT_STATUS 200
+
+NAME one_reading
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 150 "@0.sgv"
