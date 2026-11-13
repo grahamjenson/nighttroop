@@ -235,10 +235,13 @@ func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteCon
 }
 
 // ProfilePresetEnteredBy is who the app said uploaded a profile, e.g. Loop, as tools pick a loop's profiles by it, else
-// the identity that uploaded it
+// the app that sent it, as AAPS names it, else the identity that uploaded it, as a treatment's is
 func ProfilePresetEnteredBy(source *sitedb.ProfilePreset) *types.ShortString {
 	if source.EnteredBy != nil {
 		return (*types.ShortString)(source.EnteredBy)
+	}
+	if source.CreatedByAppName != nil && *source.CreatedByAppName != "" {
+		return (*types.ShortString)(source.CreatedByAppName)
 	}
 	return (*types.ShortString)(&source.CreatedByIdentityName)
 }
