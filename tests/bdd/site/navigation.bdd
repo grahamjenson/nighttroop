@@ -102,7 +102,7 @@ ASSERT_VISIBLE #site--hub--settings nav >> text="This site"
 ASSERT_VISIBLE #site--hub--settings nav >> text="People & devices"
 ASSERT_VISIBLE #site--hub--settings nav >> text="Push"
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="Push"] #site--settings--push-devices-button
-ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="Push"] #site--settings--push-button >> text=Push Certificates
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="Push"] #site--settings--push-button >> text=Push Credentials
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Connections"
 ASSERT_NOT_VISIBLE #site--settings--connectors-button
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"

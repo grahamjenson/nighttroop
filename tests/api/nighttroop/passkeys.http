@@ -25,7 +25,7 @@ NAME welcome_passkey_begin_without_welcome
 POST http://{{ site }}/welcome/passkey/begin
 H Accept: application/json
 ASSERT_STATUS 403
-ASSERT_EQUALS "This page can no longer add a passkey; log in, then add one on My Account." "@error"
+ASSERT_EQUALS "This page can no longer add a passkey; sign in, then add one on My Account." "@error"
 
 NAME welcome_passkey_finish_without_welcome
 POST http://{{ site }}/welcome/passkey/finish

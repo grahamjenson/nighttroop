@@ -137,8 +137,8 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 // The messages a failed login answers with, which never say how far through it got
 const (
-	wrongLogin    = "Wrong name, password or code. Codes change every 30 seconds, so use the newest one."
-	tooManyLogins = "Too many login attempts. Wait a minute, then try again."
+	wrongLogin    = "Wrong username, password or code. Codes change every 30 seconds, so use the newest one."
+	tooManyLogins = "Too many sign in attempts. Wait a minute, then try again."
 )
 
 // loginFailed logs why a login failed, and answers with the status and message: as a toast for the login page, or as

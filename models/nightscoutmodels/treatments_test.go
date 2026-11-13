@@ -35,3 +35,26 @@ func TestSyncIdentifier(t *testing.T) {
 		})
 	}
 }
+
+// A timestamp in milliseconds in the second of created_at, as xDrip+ sends, is the treatment's date to the
+// millisecond; one in another second, or not a number, leaves the date created_at's
+func TestTimestampMilliseconds(t *testing.T) {
+	tests := []struct {
+		name string
+		sent string
+		date int64
+	}{
+		{"xDrip+'s timestamp", `{"created_at": "2026-11-12T19:35:49Z", "timestamp": 1794512149419}`, 1794512149419},
+		{"no timestamp", `{"created_at": "2026-11-12T19:35:49Z"}`, 1794512149000},
+		{"a timestamp in another second", `{"created_at": "2026-11-12T19:35:49Z", "timestamp": 1794512150419}`, 1794512149000},
+		{"a timestamp string", `{"created_at": "2026-11-12T19:35:49Z", "timestamp": "2026-11-12T19:35:49.419Z"}`, 1794512149000},
+		{"only a timestamp", `{"timestamp": 1794512149419}`, 1794512149419},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var treatment Treatment
+			require.NoError(t, json.Unmarshal([]byte(tt.sent), &treatment))
+			require.Equal(t, tt.date, treatment.Date.Int64())
+		})
+	}
+}

@@ -2,6 +2,7 @@ package controlcollections
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -44,6 +45,22 @@ func (s *ConnectorsCollection) GetRow(ctx context.Context, id string, controlCon
 		return nil, nil
 	}
 	return controlContext.ControlDB.Queries.GetConnector(ctx, controldb.GetConnectorParams{SiteID: siteID, Type: consts.ConnectorType(sourceType)})
+}
+
+// SharedHostsHandler is the Nightscout hosts more than one connector syncs from, the most used first, as many sites
+// syncing from one host may be Nighttroop used as a proxy
+func (s *ConnectorsCollection) SharedHostsHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	rows, err := controlContext.ControlDB.Queries.SharedNightscoutHosts(r.Context())
+	if herr := apiutils.ErrorFor(err, s.GetName()); herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	hosts := make([]*controlmodels.SharedHost, 0, len(rows))
+	for _, row := range rows {
+		hosts = append(hosts, controlmodels.SharedHostFromDB(row))
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, hosts, control_connectors_templ.SharedHosts(hosts))
 }
 
 // GetHTMXResponse is the connector's reports and recent errors, shown in a modal

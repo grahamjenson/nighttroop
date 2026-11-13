@@ -78,7 +78,8 @@ func NightscoutAuthRoute(controlDB *db.ControlDB, config *config.ServerConfig) h
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext.IdentityModel == nil {
-			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
+			// In JSON, as every other error is and as Nightscout's 401 is
+			nsutils.WriteError(w, nsutils.ErrMissingCredentials)
 			return
 		}
 

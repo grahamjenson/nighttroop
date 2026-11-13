@@ -240,6 +240,12 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
 		}
 	}
+	// A timestamp in milliseconds in the same second as the date, as xDrip+ sends beside a created_at of whole seconds,
+	// is when it was to the millisecond
+	var ms int64
+	if t.Date != nil && json.Unmarshal(aux.Timestamp, &ms) == nil && ms/1000 == int64(*t.Date)/1000 {
+		t.Date = new(types.DateInt(ms))
+	}
 
 	return nil
 }

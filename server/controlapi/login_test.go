@@ -72,10 +72,10 @@ func TestControlLoginErrors(t *testing.T) {
 		status  int
 		message string
 	}{
-		{"wrong login, page", "203.0.113.11", true, "name=" + longName + "&password=pw", "", http.StatusUnauthorized, "Wrong name, password or code. Codes change every 30 seconds, so use the newest one."},
-		{"wrong login, api", "203.0.113.12", false, `{"name":"` + longName + `","password":"pw"}`, "", http.StatusUnauthorized, "Wrong name, password or code. Codes change every 30 seconds, so use the newest one."},
-		{"too many, page", "203.0.113.13", true, "name=limitedpage&password=pw", "limitedpage", http.StatusTooManyRequests, "Too many login attempts. Wait a minute, then try again."},
-		{"too many, api", "203.0.113.14", false, `{"name":"limitedapi","password":"pw"}`, "limitedapi", http.StatusTooManyRequests, "Too many login attempts. Wait a minute, then try again."},
+		{"wrong login, page", "203.0.113.11", true, "name=" + longName + "&password=pw", "", http.StatusUnauthorized, "Wrong username, password or code. Codes change every 30 seconds, so use the newest one."},
+		{"wrong login, api", "203.0.113.12", false, `{"name":"` + longName + `","password":"pw"}`, "", http.StatusUnauthorized, "Wrong username, password or code. Codes change every 30 seconds, so use the newest one."},
+		{"too many, page", "203.0.113.13", true, "name=limitedpage&password=pw", "limitedpage", http.StatusTooManyRequests, "Too many sign in attempts. Wait a minute, then try again."},
+		{"too many, api", "203.0.113.14", false, `{"name":"limitedapi","password":"pw"}`, "limitedapi", http.StatusTooManyRequests, "Too many sign in attempts. Wait a minute, then try again."},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

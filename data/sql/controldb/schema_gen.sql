@@ -6,6 +6,8 @@ CREATE INDEX push_credentials_site ON push_credentials (site_id, provider);
 
 CREATE INDEX push_registrations_identity ON push_registrations (site_id, identity_id);
 
+CREATE INDEX site_connectors_url_host_mac_idx ON site_connectors(url_host_mac) WHERE url_host_mac IS NOT NULL;
+
 CREATE TABLE control_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -101,6 +103,7 @@ CREATE TABLE site_connectors (
     
     url_or_username_enc TEXT CHECK(length(url_or_username_enc) <= 256),
     password_enc TEXT CHECK(length(password_enc) <= 256), -- or ns token
+    url_host_mac TEXT CHECK(length(url_host_mac) <= 128), -- a MAC of a Nightscout URL's host, to find many sites syncing from one
 
     -- Specific Info
     region TEXT CHECK(region IN ('US', 'OUS', 'GLOBAL', 'AE', 'AP', 'AU', 'CA', 'DE', 'EU', 'EU2', 'FR', 'JP', 'LA')), -- dexcom US or OUS, or a libre region in consts.LibreRegions

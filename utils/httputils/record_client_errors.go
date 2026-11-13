@@ -54,11 +54,21 @@ func (b *errorBody) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// RecordClientErrors records each request refused for what it sent, such as a 400, in the logs DB's errors, with its
-// site when it has one, and in Sentry as a warning: its route's pattern, why it was refused, as its response said, the
-// identity that sent it, its User-Agent and what it sent, its credentials redacted. Why is what the handler said with
-// SetErrorReason, when it did. The same error of a site is recorded at most every clientErrorEvery, and
-// at most clientErrorsPerMinute of a site's.
+type leftOutKey struct{}
+
+// SetLeftOut keeps why a request that was taken left out part of what it sent, such as a batch's entries it could not
+// store, so RecordClientErrors records it as a client error, though its status is not one
+func SetLeftOut(ctx context.Context, reason string) {
+	if kept, ok := ctx.Value(leftOutKey{}).(*string); ok {
+		*kept = reason
+	}
+}
+
+// RecordClientErrors records each request refused for what it sent, such as a 400, or taken but for a part it left
+// out, as SetLeftOut said, in the logs DB's errors, with its site when it has one, and in Sentry as a warning: its
+// route's pattern, why it was refused, as its response said, the identity that sent it, its User-Agent and what it
+// sent, its credentials redacted. Why is what the handler said with SetLeftOut or SetErrorReason, when it did. The same
+// error of a site is recorded at most every clientErrorEvery, and at most clientErrorsPerMinute of a site's.
 func RecordClientErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 	recent, _ := lru.New[string, time.Time](clientErrorsKept)
 	perSite, _ := lru.New[string, *rate.Limiter](clientErrorsKept)
@@ -68,11 +78,13 @@ func RecordClientErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 			body := &errorBody{status: ww.Status}
 			ww.Tee(body)
 			r, reason := withErrorReason(r)
+			leftOut := new(string)
+			r = r.WithContext(context.WithValue(r.Context(), leftOutKey{}, leftOut))
 			next.ServeHTTP(ww, r)
-			if !slices.Contains(clientErrorStatuses, ww.Status()) {
+			if *leftOut == "" && !slices.Contains(clientErrorStatuses, ww.Status()) {
 				return
 			}
-			attributes := db.ClientErrorAttributes{Status: ww.Status(), Method: r.Method, Reason: clip(cmp.Or(*reason, errorReason(body.body))),
+			attributes := db.ClientErrorAttributes{Status: ww.Status(), Method: r.Method, Reason: clip(cmp.Or(*leftOut, *reason, errorReason(body.body))),
 				RequestID: middleware.GetReqID(r.Context()), Client: clip(r.UserAgent()), RequestBody: ErrorRequestBody(r.Context())}
 			if routeContext := chi.RouteContext(r.Context()); routeContext != nil {
 				attributes.Route = routeContext.RoutePattern()
