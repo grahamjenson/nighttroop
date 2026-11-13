@@ -225,6 +225,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | A POST of more than 100 entries or treatments, which Loop sends with over 100 waiting | Works: a v1 POST takes up to 5000 (it was a 400 over 100, and Loop never uploaded again) |
 | `POST /api/v1/treatments` carbs, doses, pump and CGM events, notes | Works |
 | `PUT /api/v1/treatments` with `_id` in the body | Works |
+| A carb entry edited to another time (`PUT` with its `_id`), an override's start time edited (posted again with its `_id`) | Fixed in this PR: moved to the new time (it was a 400, "Field date cannot be modified by the client", and Loop sent it again forever); test in `loop/treatments.http` |
 | `DELETE /api/v1/treatments/<_id>` | Works |
 | `POST` a `Temporary Override` | Works since #515 (was a 400, unknown event type); kept as a temp target, indefinite as a week, given back with `durationType` `indefinite` |
 | An override's UUID `_id`, posted again when it changes, deleted by it | Works since #515: a v1 POST with an `_id` replaces the one with it, or is created with it |

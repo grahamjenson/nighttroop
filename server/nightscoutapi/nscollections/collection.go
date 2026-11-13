@@ -571,7 +571,7 @@ func (c Collection[NS, DM]) validateReplace(ctx context.Context, nsModel NS, rep
 	if replaced != nil && (*replaced).GetDeletedAt() != nil {
 		replaced = nil
 	}
-	if err := ValidateNotChangingSharedFields(replaced, nsModel, data, identifier); err != nil {
+	if err := ValidateNotChangingSharedFields(replaced, nsModel, data, identifier, nsutils.DateMovable(ctx)); err != nil {
 		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", c.db.Name())
 		return err
 	}
@@ -618,7 +618,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrModifiedSince
 	}
 
-	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier); err != nil {
+	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier, false); err != nil {
 		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
@@ -672,7 +672,9 @@ func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {
 	return nil
 }
 
-func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](replacingModelPtr *DM, nsModel NS, nsModelMap map[string]any, identifier string) *nsutils.HTTPError {
+// ValidateNotChangingSharedFields refuses a change to the fields a document keeps, its date and UTC offset too unless
+// dateMovable, as an API v1 replace may move them
+func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](replacingModelPtr *DM, nsModel NS, nsModelMap map[string]any, identifier string, dateMovable bool) *nsutils.HTTPError {
 	if err := ValidateInputData(nsModelMap); err != nil {
 		return err
 	}
@@ -692,11 +694,11 @@ func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](repla
 	if nsModel.GetSubject() != nil && replacingModel.GetCreatedByIdentityName() != "" && *nsModel.GetSubject() != replacingModel.GetCreatedByIdentityName() {
 		return nsutils.ErrCannotChangeSubject
 	}
-	if nsModel.GetDate() != nil && replacingModel.GetOccurredAt() != 0 && *nsModel.GetDate() != replacingModel.GetOccurredAt() {
+	if !dateMovable && nsModel.GetDate() != nil && replacingModel.GetOccurredAt() != 0 && *nsModel.GetDate() != replacingModel.GetOccurredAt() {
 		return nsutils.ErrCannotChangeDate
 	}
 
-	if nsModel.GetUtcOffsetMinutes() != nil && replacingModel.GetUtcOffsetMinutes() != nil && *nsModel.GetUtcOffsetMinutes() != *replacingModel.GetUtcOffsetMinutes() {
+	if !dateMovable && nsModel.GetUtcOffsetMinutes() != nil && replacingModel.GetUtcOffsetMinutes() != nil && *nsModel.GetUtcOffsetMinutes() != *replacingModel.GetUtcOffsetMinutes() {
 		return nsutils.ErrCannotChangeUTCOffset
 	}
 

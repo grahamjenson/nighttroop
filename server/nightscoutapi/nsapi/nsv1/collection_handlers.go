@@ -2,6 +2,7 @@ package nsv1
 
 import (
 	"cmp"
+	"context"
 	"log/slog"
 	"net/http"
 
@@ -124,7 +125,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			var record nsutils.Document
 			err := nsutils.BadDataBodyError
 			if id, isID := doc["_id"].(string); ok && isID && nsutils.ValidateIdentifierIsntBad(id) == nil {
-				record, _, err = store.Replace(r.Context(), collection, id, doc, true)
+				record, _, err = store.Replace(movableDate(r, collection), collection, id, doc, true)
 			} else if ok {
 				record, _, err = store.Create(r.Context(), collection, doc)
 			}
@@ -265,11 +266,20 @@ func Replace(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		updated, _, herr := store.Replace(r.Context(), collection, identifier, body, canCreate)
+		updated, _, herr := store.Replace(movableDate(r, collection), collection, identifier, body, canCreate)
 		if herr != nil {
 			nsutils.WriteError(w, herr)
 			return
 		}
 		nsutils.WriteRecordV1(w, updated, nil)
 	}
+}
+
+// movableDate is the request's context, in which a treatment's replace may move its date, as Loop moves a carb entry or
+// override edited to another time by sending it again with its _id, and Nightscout's v1 replaces the whole document
+func movableDate(r *http.Request, collection nsutils.Collection) context.Context {
+	if collection != nsutils.Treatments {
+		return r.Context()
+	}
+	return nsutils.WithMovableDate(r.Context())
 }
