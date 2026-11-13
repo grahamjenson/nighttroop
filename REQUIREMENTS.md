@@ -1051,6 +1051,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - A field with no `$eq` (e.g. `find[srvCreated]`): nothing.
 - Treatment filters (Trio, iAPS): `find[carbs][$exists]` (also `duration`), `enteredBy`, and `find[enteredBy][$ne]`
   (repeated or in `find[$and][n]`).
+- Entry filter: `find[device]` (also `$eq`) gives the entries of that device only.
 
 #### Date filters
 

@@ -32,6 +32,8 @@ type ToSearchParams interface {
 	//////
 
 	GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams
+	// An entry's find[device] is its device
+	// goverter:map NameEq DeviceEq
 	GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams
 	GlucoseAscending(source Query) sitedb.GlucoseReadingAscendingIDsParams
 
