@@ -1243,6 +1243,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
 - `bolusCalculatorResult` (AAPS Bolus Wizard calculation, JSON text): kept exactly as sent. Not JSON, or over 4096
   characters: left out, and the rest of the treatment kept.
+- A treatment `glucose` of 0 or less is no glucose reading. The treatment is kept without a reading. AAPS sends 0 with
+  a Bolus Wizard that used no BG.
 
 ### Nightscout API: entries
 
