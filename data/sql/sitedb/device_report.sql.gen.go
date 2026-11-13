@@ -541,6 +541,60 @@ func (q *Queries) GetDeviceReport(ctx context.Context, arg GetDeviceReportParams
 	return &i, err
 }
 
+const getLatestDeviceReportWithBattery = `-- name: GetLatestDeviceReportWithBattery :one
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, pump_id, pump_suspended, pump_bolusing, override_json, pump_json, uploader_json, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name from device_reports
+WHERE
+    deleted_at IS NULL AND
+    occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1800000 AND
+    device_battery_percent IS NOT NULL
+ORDER BY occurred_at DESC
+LIMIT 1
+`
+
+// The newest report with the uploader's battery in the last 30 minutes, from any device (a loop's or only an
+// uploader's, like xDrip+), from occurred_at's index, as Nightscout's upbat
+func (q *Queries) GetLatestDeviceReportWithBattery(ctx context.Context) (*DeviceReport, error) {
+	row := q.queryRow(ctx, q.getLatestDeviceReportWithBatteryStmt, getLatestDeviceReportWithBattery)
+	var i DeviceReport
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceBatteryPercent,
+		&i.IsDeviceCharging,
+		&i.PumpState,
+		&i.PumpReservoir,
+		&i.PumpBatteryPercent,
+		&i.PumpChargingState,
+		&i.LoopIob,
+		&i.LoopIobBasal,
+		&i.LoopIobTreatment,
+		&i.LoopCob,
+		&i.ConfigurationID,
+		&i.LoopStatusJson,
+		&i.LoopName,
+		&i.PumpClock,
+		&i.PumpManufacturer,
+		&i.PumpModel,
+		&i.PumpID,
+		&i.PumpSuspended,
+		&i.PumpBolusing,
+		&i.OverrideJson,
+		&i.PumpJson,
+		&i.UploaderJson,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const getLatestDeviceReportWithPWDInformation = `-- name: GetLatestDeviceReportWithPWDInformation :one
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, pump_id, pump_suspended, pump_bolusing, override_json, pump_json, uploader_json, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name from device_reports
 WHERE 

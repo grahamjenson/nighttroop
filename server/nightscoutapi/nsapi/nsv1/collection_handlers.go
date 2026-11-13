@@ -176,7 +176,7 @@ func (l *leftOut) leaves(err *nsutils.HTTPError) bool {
 	switch {
 	case err == nil || err.Status != http.StatusBadRequest:
 		return false
-	case err == nsutils.BadGlucoseError:
+	case err.Column == "mgdl":
 		l.outOfRange++
 		l.add("glucose out of range")
 	case l.bad < maxLeftOut:

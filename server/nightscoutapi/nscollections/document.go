@@ -119,7 +119,7 @@ func CarbsPartOf(identifier string) (string, bool) {
 // identifier and carbsSuffix. One whose identifier is too long to add carbsSuffix to stays one.
 func (s stored[NS]) V3Parts() []nsutils.Document {
 	treatment, ok := any(s.model).(nightscoutmodels.Treatment)
-	if !ok || len(s.id)+len(carbsSuffix) > nsutils.MaxIdentifierLength {
+	if !ok || nsutils.ValidateIdentifierIsntBad(s.id+carbsSuffix) != nil {
 		return []nsutils.Document{s}
 	}
 	insulin, carbs, split := treatment.SplitCarbs()

@@ -178,6 +178,11 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		var sent string
 		if json.Unmarshal(aux.EventType, &sent) == nil && strings.EqualFold(strings.TrimSpace(sent), "<none>") {
 			eventType = t.noEventType()
+			// Juggluco's long-acting insulin has the notes "Long-Acting" (writetreatment in common.cpp), and is basal
+			// insulin, as AAPS marks a bolus of it, so followers do not count it as a bolus
+			if eventType == CorrectionBolus && t.IsBasalInsulin == nil && t.Notes != nil && *t.Notes == "Long-Acting" {
+				t.IsBasalInsulin = new(true)
+			}
 		}
 		t.EventType = &eventType
 	}

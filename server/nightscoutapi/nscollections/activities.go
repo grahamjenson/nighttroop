@@ -34,6 +34,10 @@ func (c ActivityCollection) Validate(nsModel nightscoutmodels.Activity, dbModel 
 	return nil
 }
 
+func (c ActivityCollection) Rows(nsModel nightscoutmodels.Activity) []sitedb.TableRow {
+	return []sitedb.TableRow{{Table: "activities", Row: nightscoutmodels.ActivityToCreate(nsModel, nightscoutmodels.ConverterContext{})}}
+}
+
 func (c ActivityCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.Activity, error) {
 	createParams := nightscoutmodels.ActivityToCreate(nsModel, cc)
 	if overrideIdentifier != nil {

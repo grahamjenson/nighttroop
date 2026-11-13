@@ -216,6 +216,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getInsulinDoseStmt, err = db.PrepareContext(ctx, getInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query GetInsulinDose: %w", err)
 	}
+	if q.getLatestDeviceReportWithBatteryStmt, err = db.PrepareContext(ctx, getLatestDeviceReportWithBattery); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLatestDeviceReportWithBattery: %w", err)
+	}
 	if q.getLatestDeviceReportWithPWDInformationStmt, err = db.PrepareContext(ctx, getLatestDeviceReportWithPWDInformation); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLatestDeviceReportWithPWDInformation: %w", err)
 	}
@@ -853,6 +856,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getInsulinDoseStmt: %w", cerr)
 		}
 	}
+	if q.getLatestDeviceReportWithBatteryStmt != nil {
+		if cerr := q.getLatestDeviceReportWithBatteryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLatestDeviceReportWithBatteryStmt: %w", cerr)
+		}
+	}
 	if q.getLatestDeviceReportWithPWDInformationStmt != nil {
 		if cerr := q.getLatestDeviceReportWithPWDInformationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getLatestDeviceReportWithPWDInformationStmt: %w", cerr)
@@ -1476,6 +1484,7 @@ type Queries struct {
 	getGeneralSettingStmt                       *sql.Stmt
 	getGlucoseReadingStmt                       *sql.Stmt
 	getInsulinDoseStmt                          *sql.Stmt
+	getLatestDeviceReportWithBatteryStmt        *sql.Stmt
 	getLatestDeviceReportWithPWDInformationStmt *sql.Stmt
 	getLoopSettingsStmt                         *sql.Stmt
 	getMostRecentProfileStoreStmt               *sql.Stmt
@@ -1650,6 +1659,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getGeneralSettingStmt:                       q.getGeneralSettingStmt,
 		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
 		getInsulinDoseStmt:                          q.getInsulinDoseStmt,
+		getLatestDeviceReportWithBatteryStmt:        q.getLatestDeviceReportWithBatteryStmt,
 		getLatestDeviceReportWithPWDInformationStmt: q.getLatestDeviceReportWithPWDInformationStmt,
 		getLoopSettingsStmt:                         q.getLoopSettingsStmt,
 		getMostRecentProfileStoreStmt:               q.getMostRecentProfileStoreStmt,

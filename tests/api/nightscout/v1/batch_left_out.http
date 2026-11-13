@@ -27,7 +27,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result.items"
 ASSERT_CONTAINS "Stored 2 treatments and left out 2: 1 Bad or missing body: EventType is nil or unknown: eventType: null" "@result.items.0.message"
-ASSERT_CONTAINS "1 Bad or missing body: insulin must be between -500 and 500 U (was 1000)" "@result.items.0.message"
+ASSERT_CONTAINS "1 Bad or missing body: insulin must be between -500 and 500 (was 1000)" "@result.items.0.message"
 ASSERT_EQUALS 200 "@result.items.0.attributes.status"
 ASSERT_EQUALS "Trio" "@result.items.0.attributes.client"
 
@@ -64,7 +64,7 @@ POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B [{"eventType": "Correction Bolus", "insulin": 1000, "created_at": "{{ time 3 }}"},
    {"notes": "no event type", "created_at": "{{ time 2 }}"}]
 ASSERT_STATUS 400
-ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 U (was 1000)" "@message"
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 (was 1000)" "@message"
 
 NAME create_device_statuses_none_stored
 POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}

@@ -807,6 +807,17 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   dates 1970 to 9999.
 - Insulin and food can be negative, to correct too much entered.
 - Pages are stricter (a dose: at most 100 units either way).
+- Nightscout API: each value is checked against the limit of its column in the site DB (its range, its length, its
+  type, and if it can be empty) before it is stored. A patch is checked as the stored document with the fields sent.
+  - If a value is out of its limit and the document can be kept without it: the value is left out, and the rest kept.
+    The site's client errors show one `client` error for the request, with each value left out, its limit and the
+    value sent (e.g. `Left out uploader.battery must be between 0 and 100 (was -100)`).
+  - If the document cannot be kept without the value (its column cannot be empty, e.g. an entry's `sgv`, a
+    treatment's `insulin`): 400 with the field, its limit and the value sent (e.g.
+    `insulin must be between -500 and 500 (was 8882.5)`, `sgv must be a number (was "high")`).
+  - Not as their column: a treatment's `glucose` is left out. A treatment's `carbs`, a temp basal's `percent`, a
+    profile switch's `timeshift` and an activity's heart rate are refused.
+  - Text is kept whole, not cut to 64 characters. Only notes are cut, at 1024 characters.
 
 #### Add modal
 
@@ -1026,6 +1037,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters.
   - status, versions, verifyauth, slice, count, times, echo, experiments/test, notifications/ack, adminnotifies.
 - **v2**: authorization (a JWT for a token, a check of one JWT permission, roles and subjects), properties, summary.
+  - Properties `upbat`: the newest uploader battery of the last 30 minutes, from any device status (a loop or xDrip+).
 - **v3**: create, read, update, patch, delete, search and history of each collection; version, status, lastModified,
   settings.
 - **Socket.IO**: live updates and alarms, over long polling or websockets.
@@ -1053,6 +1065,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Each glucose is a string in the `units` asked for (`mmol` or `mg/dl`), else the settings' units, with its trend
     number.
   - The newest also has the delta, uploader battery and IOB, as in Nightscout.
+  - The battery is from any device status, as `upbat`. The IOB is from a loop's device status.
 
 #### v1 batches
 
@@ -1197,8 +1210,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Document over 256 KiB: refused.
   - New document when the site has 100: refused.
   - Client control messages with no change for a week: deleted to make space.
-  - Settings key: up to 128 characters (AAPS client control keys include the client UUID). Other collections'
-    identifiers: up to 36.
+  - Settings key: up to 128 characters, as its column (AAPS client control keys include the client UUID). Other
+    collections' identifiers: up to 36, as their columns.
 
 ### Nightscout API: glucose units
 
@@ -1328,8 +1341,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   characters: left out, and the rest of the treatment kept.
 - A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
   for example a Question from AAPS or a Sensor Start from xDrip+.
-- A treatment `glucose` of 0 or less is no glucose reading. The treatment is kept without a reading. AAPS sends 0 with
-  a Bolus Wizard that used no BG.
+- A treatment `glucose` of 0 or less, or over 1000 mg/dL, is left out. The treatment is kept without a reading, and the
+  site's client errors show it. AAPS sends 0 with a Bolus Wizard that used no BG.
 
 ### Nightscout API: entries
 
@@ -1381,9 +1394,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Limits and errors
 
-- Values far outside real use: refused.
+- Values far outside real use: left out, or refused when the treatment cannot be kept without them (see Value limits).
 - Insulin or carbs past 500 U or 1000 g, positive or negative: 400 with the field, range and value (e.g.
-  `insulin must be between -500 and 500 U (was 8882.5)`). A negative value in range (to take back too much) is kept.
+  `insulin must be between -500 and 500 (was 8882.5)`). A negative value in range (to take back too much) is kept.
 - A value the database refuses: 400 with the column and reason (e.g. `dose is out of range`, `notes is too long`),
   never the database's words. The server logs those.
 
@@ -1433,6 +1446,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | `eventType` `<none>` (careportal, no type) with insulin and carbs        | Meal bolus                              |
 | `eventType` `<none>` with carbs only                                     | Carb correction                         |
 | `eventType` `<none>` with insulin only                                   | Correction bolus                        |
+| `eventType` `<none>` with insulin and `notes` `Long-Acting` (Juggluco)   | Correction bolus, `isBasalInsulin` true |
 | `eventType` `<none>` with no insulin and no carbs                        | Note                                    |
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
@@ -1460,7 +1474,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Only readings out of range: 200, `[]`, nothing stored. One such reading sent alone: refused.
   - Readings out of range are not counted in the 10 of the v1 batch rule, and alone do not show in the client errors.
   - Other entries with a problem (e.g. unknown `type`): as the v1 batch rule.
-- Device status: an uploader battery that is not a number is left out. `uploader.battery` is the uploader battery.
+- Device status: an uploader battery that is not a number is left out, and the site's client errors show it.
+  `uploader.battery` is the uploader battery.
 
 ### Nightscout API: device statuses
 
@@ -1478,8 +1493,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   `status.bolusing`, `status.suspended`, and battery `string` and `display`.
 - After the status as sent is cleared: Loop's pump `pumpID`, `suspended` and `bolusing`, as sent. A follower still
   sees an older status's delivery suspended.
-- Out of range, not stored (the rest kept): uploader or pump battery below 0 or over 100% (e.g. Trio's
-  `uploader.battery` -100 for an unknown phone battery), reservoir below 0 or over 10000 U.
+- Out of range, not stored (the rest kept, and the site's client errors show it): uploader or pump battery below 0 or
+  over 100% (e.g. Trio's `uploader.battery` -100 for an unknown phone battery), reservoir below 0 or over 10000 U.
 
 ### Nightscout API: profiles
 
@@ -1502,8 +1517,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   token for pushes to the uploading identity.
   - Production, unless `isAPNSProduction` is false.
   - Not a token: not registered. The profile is still kept.
-- `deviceToken`: kept and registered whole up to 256 characters (Trio's are 160 hex). Longer: kept empty, not
-  registered.
+- `deviceToken`: kept whole. Registered up to 256 characters (Trio's are 160 hex). Longer: not registered.
 - Device tokens come back (v1, v3, socket storage) only to an identity that can change the site's data (e.g.
   LoopFollow remote commands). Read only users and devices, and the socket's `dataUpdate` to all readers, get none.
 
