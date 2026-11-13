@@ -1037,6 +1037,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters.
   - status, versions, verifyauth, slice, count, times, echo, experiments/test, notifications/ack, adminnotifies.
 - **v2**: authorization (a JWT for a token, a check of one JWT permission, roles and subjects), properties, summary.
+  - Properties `upbat`: the newest uploader battery of the last 30 minutes, from any device status (a loop or xDrip+).
 - **v3**: create, read, update, patch, delete, search and history of each collection; version, status, lastModified,
   settings.
 - **Socket.IO**: live updates and alarms, over long polling or websockets.
@@ -1064,6 +1065,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Each glucose is a string in the `units` asked for (`mmol` or `mg/dl`), else the settings' units, with its trend
     number.
   - The newest also has the delta, uploader battery and IOB, as in Nightscout.
+  - The battery is from any device status, as `upbat`. The IOB is from a loop's device status.
 
 #### v1 batches
 

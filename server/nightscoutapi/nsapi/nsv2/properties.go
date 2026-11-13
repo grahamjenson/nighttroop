@@ -39,7 +39,7 @@ func Properties(ctx context.Context, q *sitedb.Queries, now time.Time) map[strin
 	dr := LastDeviceStatusFromPWD(q, ctx)
 	last := func(groupType string) *sitedb.EventGroup { return LastOfType(q, ctx, groupType) }
 	properties := map[string]any{
-		"upbat": GetUptimeBattery(dr),
+		"upbat": GetUptimeBattery(LastBatteryStatus(q, ctx)),
 		"iob":   GetIOB(dr),
 		"cob":   GetCOB(dr),
 		"cage":  GetAge(last("Site Change"), now),
