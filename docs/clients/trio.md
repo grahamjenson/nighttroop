@@ -12,7 +12,8 @@
 - Checked against Trio's `main` branch:
   - Trio: `Trio/Sources/Services/Network/Nightscout/NightscoutAPI.swift`, called from `NightscoutManager.swift`.
   - iAPS: `FreeAPS/Sources/Services/Network/NightscoutAPI.swift`.
-- Tests: `tests/api/nightscout/trio/`. They send the token's SHA1 in `api-secret`, as Trio does.
+- Tests: `tests/api/nightscout/trio/`, and `tests/api/nightscout/iaps/` for iAPS. They send the token's SHA1 in
+  `api-secret`, as Trio does.
 
 ## Set up
 
@@ -73,6 +74,7 @@ a `?token=` in the URL (`NightscoutAPI`, each function's `URLComponents`). Thus 
 | Override | Start (`OverrideStorage.getOverridesNotYetUploadedToNightscout`) | `{ eventType: "Exercise", created_at, duration, enteredBy, notes (its name) }`. `duration: 43200` (30 days) if no end |
 | Override run | Duration change or end (`uploadOverrideRuns`) | Trio first deletes the first upload ([Deletes](#deletes)): Nighttroop soft deletes it. Then the run, with the real duration. A run with the same `created_at`, while the first is kept, replaces it |
 | Note | `uploadNoteTreatment` | `{ eventType: "Note", created_at, enteredBy, notes }` |
+| BG check (iAPS) | A finger stick typed in | `{ eventType: "BG Check", created_at, enteredBy, glucose (a string, e.g. "6.8"), glucoseType: "Manual", units: "mmol" }` |
 | Connection check | `checkConnection` | `{ eventType: "Note", enteredBy: "Trio", notes: "Trio connected" }` |
 | Device status, `/api/v1/devicestatus.json` | Each loop (`performUploadDeviceStatus`) | See [Device status](#device-status) |
 | Profile, `/api/v1/profile.json` | Schedule saved (`uploadProfiles`) | See [Profile](#profile). Needs exactly a 200 |
@@ -108,7 +110,7 @@ No `created_at`: Nightscout and Nighttroop use the arrival time.
 
 Nighttroop gives back (followers read it, Trio does not):
 
-- `openaps`: whole.
+- `openaps`: whole for 1 day. After that, without the `predBGs` in `suggested` and `enacted`.
 - `pump`: all fields above while the JSON as sent is kept. After that, only the clock, battery percent and reservoir.
 - `uploader`: `battery` and `isCharging`.
 - If iOS does not know the phone's battery, Trio sends `uploader.battery` -100 (its `batteryLevel` -1 x 100).
@@ -247,5 +249,6 @@ When the user deletes a record in Trio, Trio deletes it by query (`deleteCarbs`,
 | Temp target fetch | Works in mg/dL. Own ones left out since this PR |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
 | iAPS announcements (`find[enteredBy]=remote`) | Fixed |
+| iAPS BG check (`glucoseType` `Manual`, `glucose` a string in mmol) | Fixed: kept as a finger stick (`mbg`) in mg/dL, `Manual` returned. Was a 400, sent again every 5 minutes |
 | Deletes by query | Fixed (were a 405) |
 | mmol/L site or identity | Not supported by Trio's fetches. A device added for Trio is in mg/dL |

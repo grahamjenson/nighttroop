@@ -7,6 +7,8 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -92,24 +94,47 @@ var storageEvents = map[events.Action]string{events.Created: "create", events.Up
 // sendToStorage sends a change to the /storage sockets subscribed to its collection: a created or updated
 // record whole, as API v3 shows it to the socket's identity, and a deleted one by its identifier
 func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site, event events.Event, collection nsutils.Collection, r recorder) {
+	fingerStick := collection == nsutils.Entries && fingerStick(siteDB, event.Model)
 	ws.mu.Lock()
 	subscribers := []storageSubscriber{}
 	for _, subscriber := range ws.storage[event.SiteID] {
-		if slices.Contains(subscriber.collections, collection) {
+		if slices.Contains(subscriber.collections, collection) || (fingerStick && slices.Contains(subscriber.collections, nsutils.Treatments)) {
 			subscribers = append(subscribers, *subscriber)
 		}
 	}
 	ws.mu.Unlock()
 	for _, subscriber := range subscribers {
 		ctx := httputils.SetMgdlUnits(httputils.CreateSiteContext(context.Background(), ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON))
-		record, ok := r.Record(event.Model, httputils.GetSiteContext(httputils.SetIdentityModelInSiteContext(ctx, subscriber.identity)))
+		siteContext := httputils.GetSiteContext(httputils.SetIdentityModelInSiteContext(ctx, subscriber.identity))
+		record, ok := r.Record(event.Model, siteContext)
 		if !ok {
 			continue
 		}
-		message := map[string]any{"colName": collection, "doc": record.Fields(true)}
-		if event.Action == events.Deleted {
-			message = map[string]any{"colName": collection, "identifier": record.Identifier()}
+		if slices.Contains(subscriber.collections, collection) {
+			emitStorage(subscriber.socket, event.Action, collection, record)
 		}
-		subscriber.socket.Emit(storageEvents[event.Action], message)
+		// A meter reading in no treatment goes to the treatments as a BG Check, as API v3 gives it
+		if bgCheck, ok := nscollections.BGCheck(record, siteContext); ok && fingerStick && slices.Contains(subscriber.collections, nsutils.Treatments) {
+			emitStorage(subscriber.socket, event.Action, nsutils.Treatments, bgCheck)
+		}
 	}
+}
+
+// emitStorage sends a record's change: a created or updated record whole, and a deleted one by its identifier
+func emitStorage(socket *socketio.Socket, action events.Action, collection nsutils.Collection, record nsutils.Document) {
+	message := map[string]any{"colName": collection, "doc": record.Fields(true)}
+	if action == events.Deleted {
+		message = map[string]any{"colName": collection, "identifier": record.Identifier()}
+	}
+	socket.Emit(storageEvents[action], message)
+}
+
+// fingerStick is whether the model is a meter reading in no treatment, which API v3 gives as a BG Check
+func fingerStick(siteDB *db.SiteDB, model any) bool {
+	reading, ok := model.(*sitedb.GlucoseReading)
+	if !ok || !nscollections.FingerStick(reading) {
+		return false
+	}
+	treated, err := siteDB.Queries().GlucoseReadingInTreatment(context.Background(), sitedb.GlucoseReadingInTreatmentParams{ID: &reading.ID})
+	return err == nil && !treated
 }

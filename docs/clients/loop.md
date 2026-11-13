@@ -161,7 +161,7 @@ each bolus decision and each automatic dose decision. Loop reads none of it back
 
 Nighttroop keeps:
 
-- `loop` and `override` (#516).
+- `loop` and `override` (#516). `loop` is kept as sent for 1 day. After that, it has no `predicted.values`.
 - Pump: battery, reservoir, `clock`, `manufacturer`, `model` (#516), `pumpID`, `suspended`, `bolusing` (followers
   show insulin delivery suspended from these).
 - Uploader: battery, `isCharging`, `name`, `timestamp`.
@@ -197,6 +197,8 @@ Remote commands:
 - `ProfileSet(rawValue:)` needs `_id`, `startDate`, `units`, `enteredBy`, `defaultProfile`, `store`, and
   `loopSettings` with `dosingEnabled` and `overridePresets`.
 - Each profile needs `timezone` in the `ETC/GMT±N` form sent, `dia`, and each schedule's `timeAsSeconds` and `value`.
+- If AAPS or the careportal sent a newer profile, that profile comes back with Loop's last `loopSettings`.
+  LoopFollow reads Loop's `deviceToken`, `bundleIdentifier` and `overridePresets` from them. See `loopfollow.md`.
 - `updateProfile` (`PUT /api/v1/profile`) is in NightscoutKit, not used.
 
 ### NightscoutKit reads (not used by Loop)
@@ -245,6 +247,7 @@ Test paths start at `tests/api/nightscout/`.
 | `utcOffset` of treatments, device statuses, profiles (times in UTC) | Fixed: the site timezone's offset; a device status uses its pump's `secondsFromGMT` (were 0). `loop/utc_offset.http` |
 | **Device status** | |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
+| An older status's `loop` (`name`, `timestamp`, `enacted`, `recommendedBolus`) | Fixed: kept as sent for 1 day, then without `predicted.values` (was IOB and COB only, 10 minutes after a newer status). `loopfollow/devicestatus_day.http` |
 | `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
 | Pump `pumpID`, `suspended`, `bolusing` | Fixed: kept after the status as sent is cleared (were dropped). `loop/devicestatus.http` |
 | Uploader `name`, `timestamp`, `isCharging` | Works, also after the status as sent is cleared |
@@ -253,6 +256,7 @@ Test paths start at `tests/api/nightscout/`.
 | `loopSettings.scheduleOverride`, the active override | Fixed: kept as an override preset, `targetRange` in mg/dL (was dropped). `loop/profile.http` |
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, no `enteredBy`) |
 | A profile's `enteredBy` `Loop`, given back as sent | Fixed (was the uploading identity, for example `pwd_phone`) |
+| `loopSettings` after AAPS or the careportal sends a newer profile | Fixed: the newer profile has Loop's last `loopSettings` (was none). `loopfollow/shared_profile.http` |
 | **NightscoutKit reads and remote commands** | |
 | `find[created_at]` on treatments and device statuses | Works since #514 (was the upload time, not the event time) |
 | `fetchGlucose` | Works for an identity in mg/dL, as a device added for Loop is (#524). In mmol/L, `sgv` is mmol/L (TODO P1) |

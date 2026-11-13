@@ -160,6 +160,7 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   mg/dL, whatever the identity's or site's units.
 - **Times:** `dateString` has an offset without a colon (`+1300`). It wins over `date` when there is no `utcOffset`.
   Both are the same time.
+- **AAPS:** gets an xDrip+ blood test (`mbg`) as a BG Check from API v3.
 - **Returned treatments:** no `insulinInjections`. For `<none>`, the eventType of its amounts: `Meal Bolus` (insulin
   and carbs), `Carb Correction`, `Correction Bolus`, or `Note` (no amounts). xDrip+ finds its own by `uuid`.
 - **Gaps:** a reading search gives at most 2880, newest first, so the follower gets all of them after a gap. It was
@@ -185,6 +186,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once. It was kept twice,
     as a reading with another device.
   - A `cal` (#512): left out, so the batch is not refused.
+  - A reading dated more than 15 minutes after now (X10): left out, the rest stored. It was kept, so followers showed it
+    as the current reading.
   - A reading of 0 or less, or over 1000 mg/dL: left out, the rest stored. The batch was refused and sent again with
     each reading, so nothing more uploaded.
   - Only readings of 0 (a failing sensor): `200 []`, nothing stored. It was refused, so the device status and

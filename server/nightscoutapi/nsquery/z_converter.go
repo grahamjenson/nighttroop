@@ -890,8 +890,8 @@ func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 		xstring7 := *source.IDIn
 		sitedbSearchGlucoseReadingsParams.IDIn = &xstring7
 	}
-	if source.NameEq != nil {
-		xstring8 := *source.NameEq
+	if source.DeviceEq != nil {
+		xstring8 := *source.DeviceEq
 		sitedbSearchGlucoseReadingsParams.DeviceEq = &xstring8
 	}
 	if source.AppEq != nil {

@@ -2,6 +2,7 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -18,6 +19,7 @@ import (
 // goverter:extend FlexibleInt64ToInt64
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
+// goverter:extend ClientIDToString
 // goverter:extend UnitsToUnits
 type TreatmentsEvenetConverter interface {
 
@@ -122,13 +124,12 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map DurationMinutes Duration | MinutesToDuration
 	// goverter:map CreationDate CreationDate | MillisToISODateString
 	EventGroupToTreatment(source sitedb.EventGroup) *Treatment
 
 	// goverter:context siteContext
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	//
 	// goverter:ignoreMissing
 	// goverter:map Mgdl Glucose    | GlucoseReadingTypeToValue
@@ -137,7 +138,6 @@ type TreatmentsEvenetConverter interface {
 	UpdateGlucoseReadingToTreatment(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map Dose Insulin
@@ -148,34 +148,30 @@ type TreatmentsEvenetConverter interface {
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map UserEnteredAt UserEnteredAt | MillisToDateString
 	UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map Rate Absolute
-	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map DurationMinutes Duration | MinutesToDuration
 	// goverter:ignore Percent
 	// goverter:map Multiplier TempBasalPercent | MultiplierToPercent
 	UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map . CorrectionRange | ToCorrectionRange
-	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map DurationMinutes Duration | MinutesToDuration
 	// goverter:map HighTargetMgdl HighTarget
 	// goverter:map LowTargetMgdl LowTarget
 	UpdateTempTargetToTreatment(source *sitedb.TempTarget, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map Title Name
@@ -184,21 +180,20 @@ type TreatmentsEvenetConverter interface {
 	// goverter:context siteContext
 	// goverter:update target
 	// The treatment's units are its glucose's: the profile's are in its profileJson
-	// goverter:ignore CreatedAt Units
+	// goverter:ignore Units
 	// goverter:ignoreMissing
 	//
 	// goverter:map Name Profile
 	// goverter:map . ProfileJSON | ToProfileJSON
-	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map DurationMinutes Duration | MinutesToDuration
 	// goverter:map Multiplier Percent | MultiplierToPercentage
 	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
-	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map DurationMinutes Duration | MinutesToDuration
 	UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment)
 
 	//////
@@ -250,6 +245,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson  BasalRatesJson TargetsHighJson TargetsLowJson
 	// goverter:map Percent Multiplier | PercentageToMultiplier
 	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
+	// goverter:map Duration DurationMinutes | DurationToMinutes
 	PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -257,6 +253,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map TempBasalPercent Multiplier | PercentToMultiplier
+	// goverter:map Duration DurationMinutes | DurationToMinutes
 	PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -265,12 +262,14 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map HighTarget HighTargetMgdl
 	// goverter:map LowTarget LowTargetMgdl
+	// goverter:map Duration DurationMinutes | DurationToMinutes
 	PartialTreatmentToTempTarget(source Treatment) sitedb.TempTarget
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
+	// goverter:map Duration DurationMinutes | DurationToMinutesP
 	PartialTreatmentToActivity(source Treatment) sitedb.Activity
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -281,27 +280,38 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ActivityID NotificationEventID
 	// goverter:map EventType GroupType
 	// goverter:map UUID Uuid
-	// goverter:map DurationInMilliseconds DurationMs
+	// goverter:map Duration DurationMinutes | DurationToMinutesP
+	// goverter:map Duration DurationMs | DurationToMs
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map SentJSON SentHash | SentHash
 	// goverter:map CreationDate CreationDate | DateStringToMillis
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
 
-func MinutesToMilliseconds(durationMinutes any) *types.FlexibleInt64 {
+// MinutesToDuration is a duration of the minutes an event keeps, nil when it has none
+func MinutesToDuration(durationMinutes any) *types.Duration {
 	switch v := durationMinutes.(type) {
 	case int64:
-		value := types.FlexibleInt64(v * 60 * 1000)
-		return &value
+		return types.DurationOfMinutes(&v)
 	case *int64:
-		if v == nil {
-			return nil
-		}
-		value := types.FlexibleInt64(*v * 60 * 1000)
-		return &value
+		return types.DurationOfMinutes(v)
 	}
-
 	return nil
+}
+
+// DurationToMinutes are the whole minutes of a duration an event keeps, 0 when there is none
+func DurationToMinutes(source *types.Duration) int64 {
+	return source.MinutesOrZero()
+}
+
+// DurationToMinutesP are the whole minutes of a duration, nil when there is none
+func DurationToMinutesP(source *types.Duration) *int64 {
+	return source.MinutesP()
+}
+
+// DurationToMs are the milliseconds a duration keeps, nil when they are its minutes
+func DurationToMs(source *types.Duration) *int64 {
+	return source.MsP()
 }
 
 // goverter:context siteContext
@@ -419,7 +429,7 @@ func MillisToISODateString(source *int64) *types.DateString {
 	if source == nil {
 		return nil
 	}
-	return new(types.ISODateStringFromInt64AndUTCOffset(*source, nil))
+	return new(types.DateString(types.ISOString(time.UnixMilli(*source))))
 }
 
 // MillisToDateString is a date in milliseconds as a UTC date string, nil when there is none

@@ -117,7 +117,7 @@ CREATE TABLE device_reports (
     configuration_id TEXT CHECK(length(configuration_id) = 64),
 
     -- The loop's status as sent, its openaps or loop object (which loop_name says), with its IOB, COB, reason and
-    -- predicted glucoses, most of a looping site's DB. It is kept only on its device's newest report with one.
+    -- predicted glucoses, most of a looping site's DB. Its predictions are cleared once it is a day old.
     loop_status_json TEXT CHECK(length(loop_status_json) <= 8192 AND json_valid(loop_status_json)),
     -- Which loop it is, whose status loop_status_json is
     loop_name TEXT CHECK(loop_name IN ('openaps', 'loop')),
@@ -132,7 +132,7 @@ CREATE TABLE device_reports (
     pump_bolusing INTEGER CHECK(pump_bolusing IN (0, 1)),
     override_json TEXT CHECK(length(override_json) <= 2048 AND json_valid(override_json)),
     -- The pump and uploader as sent, for their fields without a column, like AAPS's extended. The pump's, the larger,
-    -- is kept, like the loop's status, only on its device's newest report with one.
+    -- is kept only on its device's newest report with one.
     pump_json TEXT CHECK(length(pump_json) <= 4096 AND json_valid(pump_json)),
     uploader_json TEXT CHECK(length(uploader_json) <= 4096 AND json_valid(uploader_json)),
 
