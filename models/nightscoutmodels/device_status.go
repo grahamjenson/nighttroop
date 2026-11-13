@@ -268,6 +268,32 @@ type UploaderStatus struct {
 	IsCharging *types.FlexibleBool  `json:"isCharging,omitempty"`
 	Name       *types.ShortString   `json:"name,omitempty"`
 	Timestamp  *types.DateString    `json:"timestamp,omitempty"`
+	// Others are its fields without a name here, given back as sent, as xDrip+ sends a Dexcom transmitter's days,
+	// voltages, temperature and status
+	Others map[string]json.RawMessage `json:"-"`
+}
+
+// uploaderFields are the uploader's fields with a name in UploaderStatus, which are not kept in Others
+var uploaderFields = map[string]bool{"battery": true, "isCharging": true, "name": true, "timestamp": true}
+
+// IsZero is whether the uploader has nothing to give back
+func (u UploaderStatus) IsZero() bool {
+	return u.Battery == nil && u.IsCharging == nil && u.Name == nil && u.Timestamp == nil && len(u.Others) == 0
+}
+
+// MarshalJSON is the uploader with its other fields as sent
+func (u UploaderStatus) MarshalJSON() ([]byte, error) {
+	type Alias UploaderStatus
+	known, err := json.Marshal(Alias(u))
+	if err != nil || len(u.Others) == 0 {
+		return known, err
+	}
+	all := map[string]json.RawMessage{}
+	_ = json.Unmarshal(known, &all)
+	for name, value := range u.Others {
+		all[name] = value
+	}
+	return json.Marshal(all)
 }
 
 // UnmarshalJSON leaves out a battery that is not a number, like the "50 days (voltage: 285/275)" xDrip+ sends for a
@@ -284,6 +310,17 @@ func (u *UploaderStatus) UnmarshalJSON(data []byte) error {
 	var battery *types.FlexibleInt64
 	if json.Unmarshal(aux.Battery, &battery) == nil {
 		u.Battery = battery
+	}
+	var fields map[string]json.RawMessage
+	_ = json.Unmarshal(data, &fields)
+	for name, value := range fields {
+		if uploaderFields[name] {
+			continue
+		}
+		if u.Others == nil {
+			u.Others = map[string]json.RawMessage{}
+		}
+		u.Others[name] = value
 	}
 	return nil
 }

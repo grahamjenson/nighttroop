@@ -67,7 +67,7 @@ func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Conte
 	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
 	// An update changes its pump and uploader, kept as sent; its columns are as it was made
-	updateParams.PumpJson, updateParams.UploaderJson = jsonp(nsModel.Pump), jsonp(nsModel.Uploader)
+	updateParams.PumpJson, updateParams.UploaderJson = jsonp(nsModel.Pump), uploaderJSON(nsModel.Uploader)
 	return q.UpdateDeviceReport(ctx, updateParams)
 }
 
@@ -132,7 +132,7 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if uploader.IsCharging == nil && source.IsDeviceCharging != nil {
 		uploader.IsCharging = ptr(types.FlexibleBool(*source.IsDeviceCharging))
 	}
-	if uploader != (nightscoutmodels.UploaderStatus{}) {
+	if !uploader.IsZero() {
 		nsModel.Uploader = &uploader
 	}
 	if pump.Manufacturer == nil && source.PumpManufacturer != nil {
@@ -243,7 +243,7 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 		createParams.OverrideJson = ptr(string(*source.OverrideRaw))
 	}
 	// The pump and uploader are kept as the model reads them, so only their known fields, for those without a column
-	createParams.PumpJson, createParams.UploaderJson = jsonp(source.Pump), jsonp(source.Uploader)
+	createParams.PumpJson, createParams.UploaderJson = jsonp(source.Pump), uploaderJSON(source.Uploader)
 
 	/////
 	// Pumps
@@ -342,6 +342,21 @@ func inRange[T ~float64 | ~int64](ctx context.Context, field string, value *T, l
 }
 
 // jsonp is v as JSON, nil when it is
+// uploaderJSON is the uploader as kept, its other fields left out when with them it would be longer than its column,
+// so the device status is still kept
+func uploaderJSON(uploader *nightscoutmodels.UploaderStatus) *string {
+	kept := jsonp(uploader)
+	if kept != nil && len(*kept) > maxUploaderJSON {
+		known := *uploader
+		known.Others = nil
+		kept = jsonp(&known)
+	}
+	return kept
+}
+
+// maxUploaderJSON is the longest uploader_json its column holds
+const maxUploaderJSON = 1024
+
 func jsonp[T any](v *T) *string {
 	if v == nil {
 		return nil

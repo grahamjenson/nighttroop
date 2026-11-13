@@ -3,6 +3,7 @@ package nscollections
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -142,4 +143,17 @@ func TestWithoutUnknownLevels(t *testing.T) {
 			require.JSONEq(t, string(sent), string(unchanged))
 		})
 	}
+}
+
+// An uploader is kept with its other fields as sent, but without them when they would not fit its column, so the
+// device status is still kept with its battery, name and charging
+func TestUploaderJSON(t *testing.T) {
+	var uploader nightscoutmodels.UploaderStatus
+	require.NoError(t, json.Unmarshal([]byte(`{"battery": 80, "name": "phone", "days": 50, "status": "OK"}`), &uploader))
+	require.JSONEq(t, `{"battery": 80, "name": "phone", "days": 50, "status": "OK"}`, *uploaderJSON(&uploader))
+
+	require.NoError(t, json.Unmarshal([]byte(`{"battery": 80, "name": "phone", "log": "`+strings.Repeat("x", maxUploaderJSON)+`"}`), &uploader))
+	require.JSONEq(t, `{"battery": 80, "name": "phone"}`, *uploaderJSON(&uploader))
+
+	require.Nil(t, uploaderJSON(nil))
 }

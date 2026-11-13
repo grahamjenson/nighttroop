@@ -131,6 +131,21 @@ B {"device": "G6 Transmitter", "uploader": {"days": 50, "daysEstimate": "50 / 10
 ASSERT_STATUS 200
 ASSERT_EQUALS "G6 Transmitter" "@0.device"
 
+# The transmitter's fields come back as sent; its battery, text and not a number, is left out
+NAME xdrip_devicestatus_transmitter_as_sent
+GET http://{{ site }}/api/v1/devicestatus.json?find[device]=G6%20Transmitter&count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 50 "@0.uploader.days"
+ASSERT_EQUALS "50 / 100" "@0.uploader.daysEstimate"
+ASSERT_EQUALS "OK" "@0.uploader.status"
+ASSERT_EQUALS 285 "@0.uploader.voltagea"
+ASSERT_EQUALS 275 "@0.uploader.voltageb"
+ASSERT_EQUALS 30 "@0.uploader.temperature"
+ASSERT_EQUALS "DEXCOM_TRANSMITTER" "@0.uploader.type"
+ASSERT_EQUALS null "@0.uploader.battery"
+
 ######
 # TREATMENTS: postTreatments upserts each one with PUT, its _id made from its uuid (uuid_to_id)
 ######
