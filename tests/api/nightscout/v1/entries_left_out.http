@@ -1,0 +1,40 @@
+INCLUDE steps/new_site_admin.steps
+
+// A batch stores the entries it can and leaves out the rest, and the client is told only what was stored, as xDrip+
+// sends a failed batch again with every new reading added
+NAME create_mixed_batch
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+H User-Agent: xDrip+
+B [{"type":"sgv","sgv":120,"date":{{ itime 0 }}},{"type":"bad","sgv":121,"date":{{ itime 1 }}},
+   {"type":"sgv","sgv":0,"date":{{ itime 2 }}},{"type":"sgv","sgv":122,"date":{{ itime 3 }},"srvCreated":1},
+   {"type":"bad","sgv":123,"date":{{ itime 4 }}},{"type":"mbg","mbg":124,"date":{{ itime 5 }}}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+// The site's client errors show the batch once, with how many entries were left out and why, so the admin can see
+// what the client gets wrong
+NAME client_errors
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_CONTAINS "Stored 2 entries and left out 4: 2 Bad or missing body: unknown entry type: bad; 1 glucose out of range; 1 Field srvCreated cannot be modified by the client" "@result.items.0.message"
+ASSERT_EQUALS "client" "@result.items.0.attributes.kind"
+ASSERT_EQUALS 200 "@result.items.0.attributes.status"
+ASSERT_EQUALS "POST" "@result.items.0.attributes.method"
+ASSERT_EQUALS "xDrip+" "@result.items.0.attributes.client"
+
+// A batch with only readings out of range left out is not shown, as a sensor can send them for hours
+NAME create_batch_out_of_range
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":0,"date":{{ itime 10 }}},{"type":"sgv","sgv":125,"date":{{ itime 11 }}}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME client_errors_out_of_range_not_shown
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
