@@ -35,11 +35,13 @@ const (
 	GroupCarbCorrection    EventGroupType = "Carb Correction"
 	GroupComboBolus        EventGroupType = "Combo Bolus"
 	GroupCorrectionBolus   EventGroupType = "Correction Bolus"
+	GroupDADAlert          EventGroupType = "D.A.D. Alert"
 	GroupExercise          EventGroupType = "Exercise"
 	GroupExternalInsulin   EventGroupType = "External Insulin"
 	GroupInsulinChange     EventGroupType = "Insulin Change"
 	GroupMealBolus         EventGroupType = "Meal Bolus"
 	GroupNote              EventGroupType = "Note"
+	GroupOpenAPSOffline    EventGroupType = "OpenAPS Offline"
 	GroupPrime             EventGroupType = "Prime"
 	GroupProfileSwitch     EventGroupType = "Profile Switch"
 	GroupPumpBatteryChange EventGroupType = "Pump Battery Change"
@@ -221,7 +223,7 @@ type EventGroup struct {
 	UtcOffsetMinutes      *int64      `json:"utc_offset_minutes,omitempty"`
 }
 
-// EventGroupType A type of group the site can add: a Nightscout treatment's eventType. A change (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir Change, Pump Battery Change) has no events.
+// EventGroupType A type of group the site can add: a Nightscout treatment's eventType. A change (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir Change, Pump Battery Change) needs no events; all but Cannula Fill, Prime and Reservoir Change can have a glucose.
 type EventGroupType string
 
 // EventKind A kind of event, named by the event group's field for its ID

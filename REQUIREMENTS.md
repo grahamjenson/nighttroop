@@ -788,13 +788,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Events within one hour of the time, updated when the time changes. Times and the window use the time format.
 - Change types (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir
   Change, Pump Battery Change):
-  - No events, and no separate page. Listed in the menu.
-  - Modal: "no events to pick"; only time, reason, notes, and for sensor start, stop or change a sensor code and
-    transmitter ID.
+  - No events needed, and no separate page. Listed in the menu.
+  - Modal: time, reason, notes, and for sensor start, stop or change a sensor code and transmitter ID.
+  - Cannula Fill, Prime and Reservoir Change: "no events to pick". The others can have a glucose.
+- Carb Correction, Question, Exercise, D.A.D. Alert and OpenAPS Offline can also have a glucose, as Nightscout's
+  careportal sends one with them.
 - Refused on add or edit: an event kind the type cannot have, an unknown type, or no events (except change types).
 - Click to edit type, time, notes and events. A new type offers only its event kinds. A removed event is in no group.
 - An event is in one group at most: grouped events are not offered, and grouping again is refused.
 - A group added or edited on the site is a Nightscout treatment, with its events.
+- A group added with events is at its earliest event's time, not the time it was added.
 - Details: the pump its app named (ID, serial, type), as AAPS sends; a sensor change's sensor code and transmitter
   ID (also in its row's events).
 
@@ -1326,6 +1329,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
 - `bolusCalculatorResult` (AAPS Bolus Wizard calculation, JSON text): kept exactly as sent. Not JSON, or over 4096
   characters: left out, and the rest of the treatment kept.
+- A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
+  for example a Question from AAPS or a Sensor Start from xDrip+.
 - A treatment `glucose` of 0 or less is no glucose reading. The treatment is kept without a reading. AAPS sends 0 with
   a Bolus Wizard that used no BG.
 
@@ -1350,6 +1355,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - A temp basal's `temp` `absolute`.
 - `timestamp`: only API v1 and its sockets. API v3 and its storage socket leave it out (AAPS drops a treatment, or a
   page, whose `timestamp` is a date).
+- A meter reading (`mbg`) that no treatment has, and that AAPS did not send, is also a treatment on API v3. This
+  applies to searches by date only, history, and the storage socket. AAPS takes finger sticks only from BG Checks.
+  - It is a read-only `BG Check`: its `mbg` as `glucose`, `glucoseType` `Finger`, its device as `enteredBy`.
+  - Its identifier is the reading's identifier with `finger` after it.
+  - A read by that identifier gives it. A delete by it deletes the reading.
+  - A careportal BG Check has its own reading, so it is given once.
 
 #### Notes and values
 
@@ -1420,6 +1431,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
 | `glucoseType` with the reading after a colon (e.g. `Finger: 6.7 mmol/L`) | Finger prick                            |
+| AAPS and iAPS `glucoseType` `Manual` (a finger prick typed in)           | Finger prick, returned as `Manual`      |
+| Another `glucoseType` (e.g. `Lab`)                                       | Kept as sent, at most 32 characters     |
 | Loop and Trio `Suspend Pump`, `Resume Pump`                              | Kept                                    |
 | Trio and iAPS `SMB`, `External Insulin`                                  | Insulin dose, with its event type       |
 | xDrip+ `Sensor Stop`                                                     | Event group, with its event type        |
@@ -1471,6 +1484,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   seconds). Loop reads it back.
 - Trio's remote control settings (bundle, device token, APNS environment, team, expiry) and override presets: kept, for
   LoopFollow's Trio Remote Control.
+- A profile sent with no `loopSettings` and no Trio remote settings (e.g. AAPS, careportal), if it is not older than
+  Loop's last `loopSettings`: comes back (v1, v3, socket) with Loop's last `loopSettings`. LoopFollow can then
+  control Loop.
+  - A profile older than Loop's last `loopSettings`, or a Trio profile: comes back as sent.
+  - A profile's own `loopSettings`: never changed.
 
 #### APNs device tokens
 
