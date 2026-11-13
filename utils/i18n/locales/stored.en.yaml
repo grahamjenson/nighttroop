@@ -41,7 +41,7 @@ stored:
     site_disabled: "Site disabled"
     site_deleted: "Site deleted"
     site_archived: "Site archived"
-    site_hydrated: "Site hydrated"
+    site_hydrated: "Site restored"
     site_truncated: "Site truncated"
     site_db_missing: "Site db missing"
     site_batch_backed_up: "Site batch backed up"

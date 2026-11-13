@@ -34,7 +34,6 @@
 
 1. Control Page to verify backup_key, and regenerate a backup_key
 
-
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
        fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,

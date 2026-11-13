@@ -26,7 +26,7 @@ SCREENSHOT push_devices
 
 // Testing it needs a push credential for its app, which the site has none of, so it says where to add one
 CLICK #pushDevicesTable tbody tr >> text="Test"
-ASSERT_TEXT_VISIBLE no push credential for the app loop: add one in Push Certificates
+ASSERT_TEXT_VISIBLE no push credential for the app loop: add one in Push Credentials
 SCREENSHOT push_device_test_without_credential
 
 // Deleting it asks first (the test accepts), then removes it, so the page says none are registered, as after a reload

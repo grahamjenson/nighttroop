@@ -85,7 +85,7 @@ var Pages = []Page{
 		Store: "identities", Within: []string{"/settings/identities", "/settings/identity-settings"}},
 	{Hub: Settings, Group: "site.nav.groups.push", Label: "site.nav.pages.push_devices", Path: "/settings/push-devices", ID: "site--settings--push-devices-button", Icon: icon.Send,
 		Store: "push_registrations", Within: []string{"/settings/push-devices", "/settings/push-registrations"}},
-	{Hub: Settings, Group: "site.nav.groups.push", Label: "site.nav.pages.push_certificates", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
+	{Hub: Settings, Group: "site.nav.groups.push", Label: "site.nav.pages.push_credentials", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
 
 	// Connectors is a hub of its own page, where the site's data comes from, for its admins
 	{Hub: Connectors, Label: "site.nav.pages.connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},

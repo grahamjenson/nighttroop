@@ -30,12 +30,12 @@ func (n NewSiteInfo) SiteID() string {
 // there are none, as on a recovery
 func (n NewSiteInfo) AllInfo() string {
 	info := "Nighttroop site: " + n.URL + "\nSite ID: " + n.SiteID() + "\nBackup key: " + n.BackupKey +
-		"\n\nAdmin login\nUsername: " + consts.FIRST_ADMIN_NAME + "\nPassword: " + n.AdminPassword + "\nTOTP secret: " + n.AdminTotpSecret
+		"\n\nAdmin sign in\nUsername: " + consts.FIRST_ADMIN_NAME + "\nPassword: " + n.AdminPassword + "\nTOTP secret: " + n.AdminTotpSecret
 	if n.PwdNSToken != "" {
-		info += "\n\nPhone setup (AAPS / Trio), the " + consts.FIRST_PWD_NAME + " device\nNS URL: " + n.PwdNSURL + "\nNS token: " + n.PwdNSToken
+		info += "\n\nPhone setup (AAPS / Trio), the " + consts.FIRST_PWD_NAME + " device\nNightscout URL: " + n.PwdNSURL + "\nNightscout token: " + n.PwdNSToken
 	}
 	if n.ReadOnlyNSToken != "" {
-		info += "\n\nRead only, the " + consts.FIRST_READ_ONLY_NAME + " device\nNS URL: " + n.PwdNSURL + "\nNS token: " + n.ReadOnlyNSToken
+		info += "\n\nRead only, the " + consts.FIRST_READ_ONLY_NAME + " device\nNightscout URL: " + n.PwdNSURL + "\nNightscout token: " + n.ReadOnlyNSToken
 	}
 	return info
 }

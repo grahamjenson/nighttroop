@@ -9,7 +9,7 @@ ASSERT_NOT_VISIBLE #public--features
 SAVE_TEXT #public--site-info--url site_url
 
 // They are shown once: the ID that shows them is dropped from the address, so opening the page again says so, and
-// that the backup key gets a new admin login on the recover page
+// that the backup key gets new admin credentials on the recover page
 GOTO {{ .site_url }}/welcome
 ASSERT_STATUS 200
 ASSERT_VISIBLE #public--welcome-gone
