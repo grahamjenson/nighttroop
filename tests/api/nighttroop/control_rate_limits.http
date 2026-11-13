@@ -56,7 +56,7 @@ POST http://control.localhost/rate-limits
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 H Content-Type: application/json
-B {"global": {"per_minute": 100000, "burst": 100000}}
+B {"global": {"per_minute": 1200000, "burst": 1200000}}
 ASSERT_STATUS 200
 ASSERT_EQUALS false "@result.0.set"
 ASSERT_EQUALS false "@result.11.set"

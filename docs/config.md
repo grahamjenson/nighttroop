@@ -60,7 +60,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | Variable | Default | Use |
 | --- | --- | --- |
 | `MAX_SITES` | `10000` | The most sites the public can create; creating another from the home page is refused, though a control admin can |
-| `MAX_IDENTITIES_PER_USER` | `10` | The most identities one site can have |
+| `MAX_IDENTITIES_PER_USER` | `100` | The most identities one site can have. The rate limiters are kept for 20 a site, so a higher one costs no more memory |
 | `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a site that was never used is kept before it is deleted |
 | `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site goes unwritten or unseen before control can disable it |
 | `TRUNCATE_INTERVAL_IN_SECONDS` | `60` | How often the logs DB is trimmed and the jobs are summarised |
@@ -87,15 +87,15 @@ control DB's server settings and used in place of the env's from then on, until 
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `100000` / `100000` | Requests to the whole server, to stop a DDoS. The control site has a limit of its own at the same rate, so it can still be signed in to, and a control admin signed in is not limited by either |
+| `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `1200000` / `1200000` | Requests to the whole server, to stop a DDoS. The control site has a limit of its own at the same rate, so it can still be signed in to, and a control admin signed in is not limited by either |
 | `GLOBAL_IP_PER_MINUTE_LIMIT` / `_BURST` | `720` / `1440` | Requests from one IP, enough to manage 4 sites |
 | `SITE_LOGIN_PER_MINUTE_LIMIT` / `_BURST` | `1` / `10` | Logins, passkey sign ins, recoveries and setup codes from one IP, to stop credential stuffing |
 | `SITE_LOGIN_NAME_PER_MINUTE_LIMIT` / `_BURST` | `30` / `60` | Logins to one name on a site (or a site's passkey sign ins, or its recoveries, or the setup code) from every IP, far above one IP's, so one IP cannot lock others out, while guessing spread over many IPs is capped |
-| `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `120` | Requests from one IP to a site that fail auth or need none, so bad tokens cannot spend the site's limit |
+| `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `360` | Requests from one IP to a site that fail auth or need none, so bad tokens cannot spend the site's limit. Each Socket.IO handshake spends it, about 12 for an AAPS phone's namespaces, so the burst lets a household's dozen apps reconnect at once after a deploy |
 | `SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT` / `_BURST` | `7` / `20` | Sites created on the whole server |
 | `SITE_CREATE_IP_PER_MINUTE_LIMIT` / `_BURST` | `0.1` / `1` | Sites created from one IP, one every 10 minutes |
 | `SITE_GET_PER_MINUTE_LIMIT` / `_BURST` | `180` / `360` | An identity's authenticated reads; its site's together may be 4 times this, so one identity cannot spend its site's |
-| `SITE_POST_PER_MINUTE_LIMIT` / `_BURST` | `60` / `240` | An identity's authenticated writes; its site's together may be 4 times this, so a phone uploading a backlog leaves a carer's app or AAPSClient room |
+| `SITE_POST_PER_MINUTE_LIMIT` / `_BURST` | `60` / `720` | An identity's authenticated writes; its site's together may be 4 times this, so a phone uploading a backlog leaves a carer's app or AAPSClient room |
 | `SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's saves of its connector settings, adding one as well as changing it |
 | `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities and its credential resets, each of which hashes a password with bcrypt or makes a TOTP secret |
 | `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, each of which copies its whole DB |
@@ -109,8 +109,8 @@ control DB's server settings and used in place of the env's from then on, until 
 | `SOCKET_PING_INTERVAL_IN_SECONDS` | `25` | How often a client is pinged, Nightscout's interval, which v2 clients expect |
 | `SOCKET_PING_TIMEOUT_IN_SECONDS` | `20` | How long a ping waits for its pong before the client is closed |
 | `SOCKET_MAX_PAYLOAD_BYTES` | `100000` | The largest POST body or websocket message |
-| `SOCKET_MAX_SESSIONS_PER_SITE` | `100` | The most live sessions one site may hold |
-| `SOCKET_MAX_UNAUTH_SESSIONS_PER_IP` | `10` | The most of a site's live sessions one IP (an IPv6 /64) may hold before they are given access, so it cannot take them all from the site's followers |
+| `SOCKET_MAX_SESSIONS_PER_SITE` | `300` | The most live sessions one site may hold |
+| `SOCKET_MAX_UNAUTH_SESSIONS_PER_IP` | `30` | The most of a site's live sessions one IP (an IPv6 /64) may hold before they are given access, so it cannot take them all from the site's followers |
 | `SOCKET_MAX_BUFFERED_PACKETS` | `1000` | Packets waiting for a client before it is closed as too slow |
 | `SOCKET_MAX_BUFFERED_BYTES` | `2000000` | Bytes waiting for a client before it is closed as too slow |
 | `SOCKET_MAX_PACKETS_PER_SECOND` | `20` | Packets a client may send a second, after a burst of 5 seconds' worth, before it is closed |

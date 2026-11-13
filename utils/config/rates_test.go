@@ -187,6 +187,21 @@ func TestSetRatesChangesEveryLimiterOfItsKind(t *testing.T) {
 	}
 }
 
+// The limiters are kept for cachedIdentitiesPerSite identities a site, whatever MAX_IDENTITIES_PER_USER is, so a high
+// one does not let unique IPs or names fill memory; one pushed out is made again, starting full
+func TestRateLimiterCachesKeepAHouseholdsIdentitiesASite(t *testing.T) {
+	limiters := newRateLimiters(ServerConfig{MaxSites: 1, MaxIdentitiesPerSite: 100, SitePOSTPerMinuteLimit: 1, SitePOSTPerMinuteBurst: 1})
+	now := time.Now()
+	require.True(t, limiters.IdentityPOSTLimiter(0).AllowN(now, 1))
+	require.False(t, limiters.IdentityPOSTLimiter(0).AllowN(now, 1), "the first identity has spent its burst")
+
+	// The cache keeps 1 site × 20 identities × 2, so the 40 after it push the first out
+	for id := int64(1); id <= 2*cachedIdentitiesPerSite; id++ {
+		limiters.IdentityPOSTLimiter(id)
+	}
+	require.True(t, limiters.IdentityPOSTLimiter(0).AllowN(now, 1), "made again, it starts full")
+}
+
 // One identity spending all its writes, as a phone uploading a day's backlog does, leaves the site's limit room for its
 // other identities, so a carer's carbs or an AAPSClient command still go through
 func TestOneIdentityLeavesItsSiteRoomForOthers(t *testing.T) {
