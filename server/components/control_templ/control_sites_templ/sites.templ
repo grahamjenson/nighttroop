@@ -205,7 +205,7 @@ templ siteRow(site *controlmodels.Site) {
 			{ site.ID }
 		}
 		@table.Cell() {
-			{ display.Name(site.State) }
+			{ i18n.Stored(ctx, "site_states", site.State) }
 			if inactive(ctx, site) {
 				@badge.Badge(badge.Props{ID: "control--site--" + site.ID + "--inactive", Variant: badge.VariantWarning, Class: "ml-2"}) {
 					{ i18n.T(ctx, "control.sites.inactive") }
@@ -289,7 +289,7 @@ templ SitePage(page *controlmodels.SitePage) {
 			<div class="flex flex-wrap items-center gap-2">
 				<h1 class="font-mono text-2xl font-bold">{ site.ID }</h1>
 				@badge.Badge(badge.Props{ID: "control--site--state", Variant: stateVariants[site.State]}) {
-					{ display.Name(site.State) }
+					{ i18n.Stored(ctx, "site_states", site.State) }
 				}
 				if inactive(ctx, site) {
 					@badge.Badge(badge.Props{ID: "control--site--inactive", Variant: badge.VariantWarning}) {

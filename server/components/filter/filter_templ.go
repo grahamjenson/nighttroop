@@ -13,7 +13,6 @@ import (
 
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -24,8 +23,9 @@ type Props struct {
 	Path string
 	// All labels the option that shows every type
 	All string
-	// Types are the types to pick from, or none for no type select
+	// Types are the types to pick from, or none for no type select, named by their messages under stored.<Stored>
 	Types    []string
+	Stored   string
 	Selected *string
 	Search   *string
 	// IDs narrow the rows to one site, request or job, each a text box named ID--Name, with dashes for underscores
@@ -340,9 +340,9 @@ func Filter(p Props) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(t))
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.Stored(ctx, p.Stored, t))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `filter/filter.templ`, Line: 82, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `filter/filter.templ`, Line: 82, Col: 107}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {

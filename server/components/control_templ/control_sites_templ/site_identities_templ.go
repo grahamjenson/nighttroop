@@ -14,6 +14,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/components/ui/alert"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -96,7 +97,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 						var templ_7745c5c3_Var6 string
 						templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site_identities.name"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 26, Col: 50}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 27, Col: 50}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 						if templ_7745c5c3_Err != nil {
@@ -127,7 +128,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site_identities.role"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 30, Col: 50}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 31, Col: 50}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -154,7 +155,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 						var templ_7745c5c3_Var10 string
 						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site_identities.enabled"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 33, Col: 53}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 34, Col: 53}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 						if templ_7745c5c3_Err != nil {
@@ -181,7 +182,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site_identities.totp"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 36, Col: 50}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 37, Col: 50}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 						if templ_7745c5c3_Err != nil {
@@ -208,7 +209,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 						var templ_7745c5c3_Var14 string
 						templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site_identities.last_seen"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 39, Col: 55}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 40, Col: 55}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 						if templ_7745c5c3_Err != nil {
@@ -236,7 +237,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var16 string
 							templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site_identities.actions"))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 43, Col: 54}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 44, Col: 54}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 							if templ_7745c5c3_Err != nil {
@@ -305,7 +306,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var20 string
 							templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "control.site_identities.created_by", i18n.Data{"CreatedAt": display.DateTime(&identity.CreatedAt), "CreatorName": identity.CreatedByIdentityName})).Resolve(ctx)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 52, Col: 179}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 53, Col: 179}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 							if templ_7745c5c3_Err != nil {
@@ -318,7 +319,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var21 string
 							templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 52, Col: 197}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 53, Col: 197}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 							if templ_7745c5c3_Err != nil {
@@ -331,7 +332,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var22 string
 							templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(fmt.Sprintf("control--site--identity--%d--summary", identity.ID)).Resolve(ctx)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 53, Col: 80}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 54, Col: 80}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 							if templ_7745c5c3_Err != nil {
@@ -344,7 +345,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var23 string
 							templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(identitySummary(ctx, identity))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 53, Col: 162}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 54, Col: 162}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 							if templ_7745c5c3_Err != nil {
@@ -373,9 +374,9 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							}
 							ctx = templ.InitializeContext(ctx)
 							var templ_7745c5c3_Var25 string
-							templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(string(identity.Role)))
+							templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(site_settings_templ.RoleLabel(ctx, string(identity.Role)))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 56, Col: 43}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 57, Col: 65}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 							if templ_7745c5c3_Err != nil {
@@ -402,7 +403,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var27 string
 							templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(yesNo(ctx, identity.Enabled))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 59, Col: 36}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 60, Col: 36}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 							if templ_7745c5c3_Err != nil {
@@ -429,7 +430,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var29 string
 							templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(yesNo(ctx, identity.HasTotp))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 62, Col: 36}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 63, Col: 36}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 							if templ_7745c5c3_Err != nil {
@@ -460,7 +461,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var31 string
 							templ_7745c5c3_Var31, templ_7745c5c3_Err = templruntime.NewAttributeExpression(display.DateTime(identity.LastSeenAt)).Resolve(ctx)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 65, Col: 57}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 66, Col: 57}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 							if templ_7745c5c3_Err != nil {
@@ -473,7 +474,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 							var templ_7745c5c3_Var32 string
 							templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, identity.LastSeenAt, time.Now()))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 65, Col: 111}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 66, Col: 111}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 							if templ_7745c5c3_Err != nil {
@@ -591,7 +592,7 @@ func resetButton(siteID string, identity *controlmodels.SiteIdentity, what strin
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression(fmt.Sprintf("/sites/%s/identities/%d/%s", siteID, identity.ID, what)).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 97, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 98, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 		if templ_7745c5c3_Err != nil {
@@ -604,7 +605,7 @@ func resetButton(siteID string, identity *controlmodels.SiteIdentity, what strin
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(confirm).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 100, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 101, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -629,7 +630,7 @@ func resetButton(siteID string, identity *controlmodels.SiteIdentity, what strin
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 106, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 107, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -743,7 +744,7 @@ func assumeButton(siteID string, identity *controlmodels.SiteIdentity) templ.Com
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(fmt.Sprintf("/sites/%s/identities/%d/assume", siteID, identity.ID))).ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 134, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 135, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 		if templ_7745c5c3_Err != nil {
@@ -756,7 +757,7 @@ func assumeButton(siteID string, identity *controlmodels.SiteIdentity) templ.Com
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "control.site_identities.assume_confirm", i18n.Data{"IdentityName": identity.Name})).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 136, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 137, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 		if templ_7745c5c3_Err != nil {
@@ -781,7 +782,7 @@ func assumeButton(siteID string, identity *controlmodels.SiteIdentity) templ.Com
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site_identities.assume"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 141, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 142, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -805,7 +806,7 @@ func assumeButton(siteID string, identity *controlmodels.SiteIdentity) templ.Com
 // identitySummary is what a phone shows of an identity under its name, for the columns it has no room for: its role,
 // whether it is enabled and has TOTP, and when it was last seen
 func identitySummary(ctx context.Context, identity *controlmodels.SiteIdentity) string {
-	summary := display.Name(string(identity.Role))
+	summary := site_settings_templ.RoleLabel(ctx, string(identity.Role))
 	if !identity.Enabled {
 		summary += " · " + i18n.T(ctx, "control.site_identities.summary_disabled")
 	}

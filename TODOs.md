@@ -62,8 +62,9 @@
     1. P3: Show dates' day and month names in the language, as Go's date layouts are English, and set `<html lang>`
        to the page's language
 
-    1. P4: Translate the text the pages' scripts show, such as the passkey's errors, and the stored values shown as they
-       are, such as a treatment's event type
+    1. P5: Name the stored values still shown as they are, which apps send or people type, under `stored.<kind>` in
+       `stored.en.yaml`: activity, dose and notification types, a reading's measurement method, a device status's pump
+       and charging states (charging shows true or false), the push apps' ids, and the date and time formats' tokens
 
 
 1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at

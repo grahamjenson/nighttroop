@@ -52,7 +52,7 @@ templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, event
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
 	@logview.Page(logview.PageProps{ID: "events_table", Title: i18n.T(ctx, "site.logs.events.title"), Description: i18n.T(ctx, "site.logs.events.explanation"), Pager: "site--events", Path: filter.PagePath("/logs/events", eventType, search), Count: len(events), Skip: skip, Limit: limit}) {
-		@filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: i18n.T(ctx, "site.logs.events.all"), Types: dataevents.PersistedNames(), Selected: eventType, Search: search})
+		@filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: i18n.T(ctx, "site.logs.events.all"), Types: dataevents.PersistedNames(), Stored: "events", Selected: eventType, Search: search})
 		@logview.EventsTable(eventsView(ctx), "siteEventsTable", logview.Rows(events, eventRow(ctx)))
 	}
 }
@@ -64,7 +64,7 @@ templ EventModal(event *sitemodels.SiteEvent) {
 // ErrorsTable shows one page of the site's errors, the newest first
 templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *string, search *string) {
 	@logview.Page(logview.PageProps{ID: "errors_table", Title: i18n.T(ctx, "site.logs.errors.title"), Description: i18n.T(ctx, "site.logs.errors.explanation"), Pager: "site--errors", Path: filter.PagePath("/logs/errors", kind, search), Count: len(errors), Skip: skip, Limit: limit}) {
-		@filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: i18n.T(ctx, "site.logs.errors.all"), Types: db.ErrorKinds, Selected: kind, Search: search})
+		@filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: i18n.T(ctx, "site.logs.errors.all"), Types: db.ErrorKinds, Stored: "error_kinds", Selected: kind, Search: search})
 		@logview.ErrorsTable(view, "siteErrorsTable", logview.Rows(errors, errorRow))
 	}
 }

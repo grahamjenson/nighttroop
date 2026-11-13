@@ -940,6 +940,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - All pages, including logs, use them. Control and public pages use the browser's language.
 - Number format: glucose, insulin, carbs, and summary and report values use it. With 1.234,5, glucose shows 5,4 mmol/L.
 - Input fields always use a "." for the decimal point.
+- Text from page scripts (for example, why a passkey did not work) is in the page's language.
+- Stored values show their name in the page's language: treatment event types, event names, error kinds, log levels,
+  roles, site states, job statuses and connector sync reasons. A value with no name (for example, one an app sends)
+  shows as it is.
 - Phone: settings, alarms and another identity's settings are one column (label, then named Site and Yours controls);
   save buttons fit.
 

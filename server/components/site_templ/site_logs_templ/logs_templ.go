@@ -88,7 +88,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: i18n.T(ctx, "site.logs.events.all"), Types: dataevents.PersistedNames(), Selected: eventType, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: i18n.T(ctx, "site.logs.events.all"), Types: dataevents.PersistedNames(), Stored: "events", Selected: eventType, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -161,7 +161,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: i18n.T(ctx, "site.logs.errors.all"), Types: db.ErrorKinds, Selected: kind, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: i18n.T(ctx, "site.logs.errors.all"), Types: db.ErrorKinds, Stored: "error_kinds", Selected: kind, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

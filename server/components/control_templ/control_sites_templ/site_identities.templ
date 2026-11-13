@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/components/ui/alert"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -53,7 +54,7 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 						<div id={ fmt.Sprintf("control--site--identity--%d--summary", identity.ID) } class="mt-0.5 text-xs text-gray-500 sm:hidden">{ identitySummary(ctx, identity) }</div>
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
-						{ display.Name(string(identity.Role)) }
+						{ site_settings_templ.RoleLabel(ctx, string(identity.Role)) }
 					}
 					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
 						{ yesNo(ctx, identity.Enabled) }
@@ -146,7 +147,7 @@ templ assumeButton(siteID string, identity *controlmodels.SiteIdentity) {
 // identitySummary is what a phone shows of an identity under its name, for the columns it has no room for: its role,
 // whether it is enabled and has TOTP, and when it was last seen
 func identitySummary(ctx context.Context, identity *controlmodels.SiteIdentity) string {
-	summary := display.Name(string(identity.Role))
+	summary := site_settings_templ.RoleLabel(ctx, string(identity.Role))
 	if !identity.Enabled {
 		summary += " · " + i18n.T(ctx, "control.site_identities.summary_disabled")
 	}

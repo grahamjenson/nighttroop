@@ -42,7 +42,7 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 					}
 				}
 				@connectorStat(name, "interval", i18n.T(ctx, "site.settings.connector_status.syncs_every")) {
-					{ fmt.Sprintf("%s (%s)", display.Duration(ctx, source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)) }
+					{ fmt.Sprintf("%s (%s)", display.Duration(ctx, source.SyncIntervalSeconds*1000), i18n.Stored(ctx, "sync_reasons", source.SyncIntervalSecondsReason)) }
 				}
 				@connectorStat(name, "totals", i18n.T(ctx, "site.settings.connector_status.syncs")) {
 					{ i18n.T(ctx, "site.settings.connector_status.worked_failed", i18n.Data{"Worked": count(source.TotalSuccessfulSyncs), "Failed": count(source.TotalFailedSyncs)}) }
@@ -83,7 +83,7 @@ templ connectorStatus(source *sitemodels.Connector, name string) {
 					<summary class="cursor-pointer text-gray-600">{ i18n.T(ctx, "site.settings.connector_status.recent") }</summary>
 					<ul class="mt-2 space-y-1">
 						for _, event := range source.RecentEvents {
-							<li><span class="text-gray-500">{ display.Ago(ctx, &event.StartedAt, time.Now()) }</span> { display.Name(event.Name) }</li>
+							<li><span class="text-gray-500">{ display.Ago(ctx, &event.StartedAt, time.Now()) }</span> { i18n.Stored(ctx, "events", event.Name) }</li>
 						}
 						for _, syncError := range source.RecentErrors {
 							<li class="text-red-700"><span class="text-gray-500">{ display.Ago(ctx, &syncError.CreatedAt, time.Now()) }</span> { syncError.Message }</li>

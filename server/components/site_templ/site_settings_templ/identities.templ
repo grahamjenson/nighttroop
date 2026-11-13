@@ -139,7 +139,8 @@ func forceClientRole(formID string) string {
 		trigger.disabled = !!role`
 }
 
-func roleLabel(ctx context.Context, role string) string {
+// RoleLabel is how a site identity's role is named, in the context's language, or the role as it is when it has no name
+func RoleLabel(ctx context.Context, role string) string {
 	if label, ok := roleLabels[consts.IdentityRole(role)]; ok {
 		return i18n.T(ctx, label)
 	}
@@ -233,7 +234,7 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			}
 		}
 		@table.Cell() {
-			{ roleLabel(ctx, identity.Role) }
+			{ RoleLabel(ctx, identity.Role) }
 		}
 		@table.Cell() {
 			{ formatIdentityDate(ctx, &identity.CreatedAt) }
@@ -380,7 +381,7 @@ templ resetButton(props button.Props, identityID int64, credential string, title
 func roleOptions(ctx context.Context, roles ...consts.IdentityRole) []sitemodels.RoleOption {
 	options := []sitemodels.RoleOption{}
 	for _, role := range roles {
-		options = append(options, sitemodels.RoleOption{Label: roleLabel(ctx, string(role)), Value: role})
+		options = append(options, sitemodels.RoleOption{Label: RoleLabel(ctx, string(role)), Value: role})
 	}
 	return options
 }

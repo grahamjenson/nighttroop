@@ -79,7 +79,7 @@ templ Usage(model controlmodels.Usage) {
 			@stat.NoteTile("control--usage--users-day", i18n.T(ctx, "control.usage.users_today"), fmt.Sprint(model.ActiveIdentitiesDay), i18n.T(ctx, "control.usage.people_and_devices"))
 			@stat.NoteTile("control--usage--users-week", i18n.T(ctx, "control.usage.users_week"), fmt.Sprint(model.ActiveIdentitiesWeek), i18n.T(ctx, "control.usage.people_and_devices"))
 			for _, state := range slices.Sorted(maps.Keys(model.SitesByState)) {
-				@stat.NoteTile("control--usage--sites-"+state, i18n.T(ctx, "control.usage.state_sites", i18n.Data{"StateName": display.Name(state)}), fmt.Sprint(model.SitesByState[state]), i18n.T(ctx, "control.usage.in_all"))
+				@stat.NoteTile("control--usage--sites-"+state, i18n.T(ctx, "control.usage.state_sites", i18n.Data{"StateName": i18n.Stored(ctx, "site_states", state)}), fmt.Sprint(model.SitesByState[state]), i18n.T(ctx, "control.usage.in_all"))
 			}
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.sites_created"), Class: tiles}) {

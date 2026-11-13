@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -166,15 +165,6 @@ func Arrow(direction *string) string {
 		return ""
 	}
 	return directions[*direction]
-}
-
-// Name is a stored snake_case name as words, e.g. "site_created" as "Site created"
-func Name(name string) string {
-	words := strings.ReplaceAll(name, "_", " ")
-	if words == "" {
-		return words
-	}
-	return strings.ToUpper(words[:1]) + words[1:]
 }
 
 // Bytes is a count of bytes as B, KB, MB or GB, in 1024s
