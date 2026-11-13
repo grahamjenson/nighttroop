@@ -1323,6 +1323,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - `direction`: a Nightscout name (e.g. `Flat`, `RATE OUT OF RANGE`), from any letter case or an arrow (`↗`, `↓↓`).
   Unknown: `NOT COMPUTABLE`. Empty: left out.
 - `noise`: a whole number.
+- If a reading is dated more than 15 minutes after now, the API refuses it (400 "date is in the future"). A v1 batch
+  leaves it out and stores the rest. Up to 15 minutes allows for a phone clock that is fast.
 - Trio reads a fetch of readings as one list, and gets none if one is not valid, including readings stored before.
 - Type `cal` (CGM calibration slope and intercept): accepted, not stored. The finger pricks sent with it are kept.
 
