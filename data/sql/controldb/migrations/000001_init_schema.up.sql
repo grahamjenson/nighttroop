@@ -268,6 +268,7 @@ CREATE TABLE site_connectors (
     
     url_or_username_enc TEXT CHECK(length(url_or_username_enc) <= 256),
     password_enc TEXT CHECK(length(password_enc) <= 256), -- or ns token
+    url_host_mac TEXT CHECK(length(url_host_mac) <= 128), -- a MAC of a Nightscout URL's host, to find many sites syncing from one
 
     -- Specific Info
     region TEXT CHECK(region IN ('US', 'OUS', 'GLOBAL', 'AE', 'AP', 'AU', 'CA', 'DE', 'EU', 'EU2', 'FR', 'JP', 'LA')), -- dexcom US or OUS, or a libre region in consts.LibreRegions
@@ -323,6 +324,9 @@ CREATE TABLE site_connectors (
     -- Unique contraint of site_id and type
     UNIQUE(site_id, type)
 ) STRICT;
+
+-- The control site's Connectors page groups Nightscout connectors by their host
+CREATE INDEX site_connectors_url_host_mac_idx ON site_connectors(url_host_mac) WHERE url_host_mac IS NOT NULL;
 
 
 

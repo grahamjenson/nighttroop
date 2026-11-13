@@ -8,6 +8,14 @@ SELECT * FROM site_connectors
 ORDER BY last_failed_sync IS NULL, last_failed_sync DESC, last_attempted_sync DESC, site_id, type
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
+-- name: SharedNightscoutHosts :many
+-- Nightscout hosts more than one connector syncs from, the most used first, with their sites
+SELECT url_host_mac, COUNT(*) AS connectors, group_concat(site_id, ',') AS site_ids FROM site_connectors
+WHERE url_host_mac IS NOT NULL
+GROUP BY url_host_mac HAVING COUNT(*) > 1
+ORDER BY connectors DESC, url_host_mac
+LIMIT 100;
+
 -- name: GetAllConnectorsForSite :many
 SELECT * FROM site_connectors where site_id = ?;
 
@@ -19,9 +27,11 @@ INSERT INTO site_connectors (
     url_or_username_enc,
     password_enc,
     region,
-    enabled
+    enabled,
+    url_host_mac
 )
 VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -35,6 +45,7 @@ UPDATE site_connectors SET
     password_enc = COALESCE(sqlc.narg('PasswordEnc'), password_enc),
     enabled =  COALESCE(sqlc.narg('Enabled'), enabled),
     url_or_username_enc = COALESCE(sqlc.narg('UrlOrUsernameEnc'), url_or_username_enc),
+    url_host_mac = COALESCE(sqlc.narg('UrlHostMac'), url_host_mac),
     region = COALESCE(sqlc.narg('Region'), region),
     -- New settings get a fresh first sync, and old errors no longer apply
     first_successful_sync_time = NULL,
@@ -50,6 +61,7 @@ WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 UPDATE site_connectors SET 
     enabled = 0,
     url_or_username_enc = NULL,
+    url_host_mac = NULL,
     password_enc = NULL,
     previous_sync_errors = NULL,
     first_successful_sync_time = NULL,

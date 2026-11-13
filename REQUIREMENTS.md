@@ -195,6 +195,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   after failing" in amber.
 - Counts and durations are whole numbers (12345, never 1.234e+04). Averages (EMAs) have one decimal place.
 - A click shows its sync reports.
+- Shared Nightscout Hosts, above the table on its first page: each Nightscout host that more than one connector
+  syncs from, at most 100, the most used first.
+  - Each: the last 8 characters of a MAC of the host, the count of connectors, and a link to the control page of each
+    site.
+  - A host with more than three connectors is amber.
+  - Never the host, URL or token. If no host is shared, it does not show.
+- The MAC uses the MAC key set in `KEY_SETS`. It is of the host in lower case, and its port if not the default.
+  - A Nightscout connector save sets it. A delete clears it.
+  - `https://NS.example/`, `http://ns.example:80` and `https://ns.example:443` give the same MAC.
 
 ### Push devices
 

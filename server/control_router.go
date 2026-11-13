@@ -51,6 +51,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Post("/account/passkeys/finish", controlapi.POSTAccountPasskeyFinish(controlDB, config))
 		r.Delete("/account/passkeys/{id}", controlapi.DELETEAccountPasskey(controlDB))
 		r.Get("/usage", controlapi.UsageHandler)
+		r.Get("/connectors/shared-hosts", (&controlcollections.ConnectorsCollection{}).SharedHostsHandler)
 		r.Get("/rate-limits", controlapi.RateLimitsHandler)
 		admin.Post("/rate-limits", controlapi.SetRateLimitsHandler)
 		r.Get("/push-devices", controlapi.PushDevicesHandler)
