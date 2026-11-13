@@ -103,6 +103,7 @@ With `send_treatments_to_nightscout`, each insert and update is a `PUT treatment
 - `eventType`: `<none>` for bolus, carbs and note (`models/Treatments.java:228`); `Sensor Start` / `Sensor Stop`
   (`:399`, `:424`).
 - `_id`: `uuid_to_id(uuid)` (`:245`), the uuid without dashes, cut to 24.
+- `timestamp`: ms. `created_at`: whole seconds. Nighttroop keeps the time from `timestamp`, to the ms.
 - `insulinInjections`: a JSON string, only for multiple injections.
 - `notes`: left out when empty. `carbs`, `insulin`: always there, 0 when none.
 - `enteredBy`: `xdrip` or `xdrip pos:<n>`. Treatments from Nightscout (`enteredBy` ends `via Nightscout`) are not

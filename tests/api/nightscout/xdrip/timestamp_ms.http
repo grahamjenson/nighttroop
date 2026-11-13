@@ -1,0 +1,20 @@
+# xDrip+ sends a treatment's time twice: timestamp in milliseconds, and created_at in whole seconds
+# (NightscoutUploader.populateV1APITreatmentEntry). The treatment keeps the time to the millisecond.
+
+INCLUDE steps/new_ns_site.steps
+
+NAME xdrip_bolus_ms
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"timestamp": 1794512149419, "eventType": "<none>", "enteredBy": "xdrip", "uuid": "41111111-2222-3333-4444-555555555555", "_id": "411111112222333344445555", "insulin": 1.5, "created_at": "2026-11-12T19:35:49Z"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1794512149419 "@date"
+
+NAME xdrip_download_ms
+GET http://{{ site }}/api/v1/treatments.json?find[uuid]=41111111-2222-3333-4444-555555555555
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 1794512149419 "@0.date"
+ASSERT_EQUALS "2026-11-12T19:35:49.419Z" "@0.created_at"
