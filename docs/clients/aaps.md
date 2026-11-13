@@ -186,6 +186,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | **Entries and paging** | | |
 | Create, duplicate, search by date, history with `ETag`, patch, delete, deletion in history | Works | `sync_v3.http` |
 | `filtered` and `unfiltered` of 0, sent with every reading | Not kept (0 is no raw signal) and left out. AAPS does not read them | `flow_v3.http` |
+| AAPS's reading uploaded again by another app or identity (an xDrip+ follower) | Fixed: AAPS's reading is kept. The copy adds only the fields it does not have (was overwritten: whole `sgv`, `Flat`, the follower's device) | `xdrip/follower_echo.http` |
 | Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | Works: kept with the mbg. A follower reads a calibration as one | `sync_v3.http` |
 | Entries and treatments of an identity in mmol/L | Works: always mg/dL | `units/*.http` |
 | First loads over 500 documents | Works: sorted by date, the oldest first | `first_load_paging.http` |

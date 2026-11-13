@@ -1,6 +1,7 @@
 package nscollections
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"log/slog"
@@ -98,6 +99,13 @@ func (c EntriesCollection) FallbackKey() FallbackKey[nightscoutmodels.Entry, sit
 // and rebuilds readings by sending them again without their _id
 func (c EntriesCollection) Refreshes(nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading) bool {
 	return nightscoutmodels.SetReadingType(nsModel) == stored.ReadingType
+}
+
+// SameUploader is whether the identity and device that stored the reading sent it again, so a looper's own correction
+// refreshes it. A copy from another identity or device, like an xDrip+ follower's echo of AAPS's reading, only fills
+// what it is missing. The device is only what the app says; the identity is the token's, which no other app can send.
+func (c EntriesCollection) SameUploader(nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) bool {
+	return *cmp.Or(stored.CreatedByIdentityID, new(int64(0))) == cc.IdentityID && kept(nsModel.Device.Stringp(), stored.CreatedByDeviceName)
 }
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {

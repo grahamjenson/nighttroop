@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"maps"
 	"slices"
 	"time"
 
@@ -130,6 +131,12 @@ type CollectionStored[NS any] interface {
 // the merge leaves as it is is not changed, so a client sending a batch again changes nothing.
 type CollectionRefresher[NS, DM any] interface {
 	Refreshes(nsModel NS, duplicate *DM) bool
+}
+
+// CollectionUploaded is a CollectionRefresher whose duplicate, sent again by another uploader than the one that
+// stored it, only has the fields it is missing filled, so a follower echoing a looper's reading does not overwrite it
+type CollectionUploaded[NS, DM any] interface {
+	SameUploader(nsModel NS, stored *DM, cc nightscoutmodels.ConverterContext) bool
 }
 
 // CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented.
@@ -318,6 +325,9 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
+	if uploaded, ok := any(c.db).(CollectionUploaded[NS, DM]); ok && !uploaded.SameUploader(nsModel, duplicate, converterContext(siteContext)) {
+		data = c.missing(duplicate, data, siteContext)
+	}
 	refreshed, merged, httpErr := c.rewrite(ctx, siteContext, q, duplicate, data)
 	if httpErr != nil {
 		return nil, false, httpErr
@@ -332,6 +342,18 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 	siteContext.PublishModelChange(events.Updated, refreshed)
 	c.afterStored(ctx, siteContext, merged)
 	return c.document(refreshed, siteContext), true, nil
+}
+
+// missing are the fields sent that the stored model's document does not have. The units, device and app are left out,
+// as they say what the stored glucose is in and who sent it.
+func (c Collection[NS, DM]) missing(stored *DM, data map[string]any, siteContext *httputils.SiteContext) map[string]any {
+	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
+	missing := maps.Clone(data)
+	maps.DeleteFunc(missing, func(name string, _ any) bool {
+		_, has := document[name]
+		return has || slices.Contains([]string{"units", "device", "app"}, name)
+	})
+	return missing
 }
 
 // rewrite writes the stored model's document with the fields sent merged into it, see merged, converted and checked as
