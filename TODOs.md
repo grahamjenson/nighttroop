@@ -1,25 +1,12 @@
 # TODOs
 
-## Alpha Testing
-
-1. Point real deivces follower apps (xDrip+ follower, LoopFollow, Nightguard, T1DCarer) reading, and Dexcom and Libre connectors
-1. Automated Testing of the staging, create site, do a bunch of stuff
-1. FINISH announcement post
-1. e2e code review. and flatten.
-
 ## Before Beta Testing
 
-1. Alarms:
-    1. Push notifications to phones, as alarms now only reach an open site page or a Nightscout socket client
-
-1. Bad Sites
-    1. write entry compression
-    1. write treatments compressions
-
-1. Control UI
-    1. Show bad users
-    1. Block IP addresses
-    1. Restore one site from its backup
+1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
+1. Push Notification testing. Alarms testing.
+1. e2e restore/archiving/hydration testing
+1. e2e bakup_key testing. Control
+1. Performance testing (cost estimate for running full node)
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
@@ -40,41 +27,54 @@
        is synced by another site. First decide how a caregiver's own site may still follow a Nightscout another site
        syncs, which this would refuse
 
-## Before First Release:
+## Before Prod Deployment
 
-1. Translations (the text is in `utils/i18n/locales/*.en.yaml`):
-    1. P2: Review the English wording in the locale files, page by page, e.g. the reports' out of date notice
-    1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
-       medical words like hypo, time in range and AGP must not be machine translated
-    1. P4: Translate the toasts of validation errors, as their messages are shared with the JSON API and stay English
-    1. P4: Set a new site's number format from its browser's language, e.g. 1.234,5 for de-DE, as `BrowserSettings`
-       does its date format; it is 1,234.5 until changed
-    1. P4: Show the rest of the numbers in the number format: the summary graph's axes, drawn by ECharts, the
-       event groups' and device statuses' doses, the overview's differences, profile schedules and loop settings
-    1. P3: Show dates' day and month names in the language, as Go's date layouts are English, and set `<html lang>`
-       to the page's language
-    1. P4: Translate the text the pages' scripts show, such as the passkey's errors, and the stored values shown as they
-       are, such as a treatment's event type
-1. Docs hosting
-1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at
-   `apiquery.MaxQuerySkip` (32000 rows, about 110 days of glucose) and walks every row it skips
-1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
-   and its client
-1. Performance testing (cost estimate for running full node)
-1. P4: Mark the user menu's button in the header while a page of Settings, Alarms, or Logs & Events is shown, as the
-   header then marks no hub and only the open menu marks it
-1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
-   and check migrations
-1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
-   restart uploads every batch again though their backups are current
-1. Migrations (from the audit of what happens when one fails):
-    1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
+1. Define maintenance tasks.
+1. Define data processes
+1. Define DR recovery processes
+1. Freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema, comparing each DB's `Schema` with a new one's as
        `cmd/try_migrate_or_delete` does
+
+## Build these things
+
+1. Control Page to verify backup_key, and regenerate a backup_key
+
+1. Translations (the text is in `utils/i18n/locales/*.en.yaml`):
+
+    1. P2: Review the English wording in the locale files, page by page, e.g. the reports' out of date notice
+
+    1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
+       medical words like hypo, time in range and AGP must not be machine translated
+
+    1. P4: Translate the toasts of validation errors, as their messages are shared with the JSON API and stay English
+
+    1. P4: Set a new site's number format from its browser's language, e.g. 1.234,5 for de-DE, as `BrowserSettings`
+       does its date format; it is 1,234.5 until changed
+
+    1. P4: Show the rest of the numbers in the number format: the summary graph's axes, drawn by ECharts, the
+       event groups' and device statuses' doses, the overview's differences, profile schedules and loop settings
+
+    1. P3: Show dates' day and month names in the language, as Go's date layouts are English, and set `<html lang>`
+       to the page's language
+
+    1. P4: Translate the text the pages' scripts show, such as the passkey's errors, and the stored values shown as they
+       are, such as a treatment's event type
+
+
+1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at
+   `apiquery.MaxQuerySkip` (32000 rows, about 110 days of glucose) and walks every row it skips
+
+1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
+   and its client
+
+1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
        fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,
        forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
+
+
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
@@ -84,6 +84,8 @@
        until then
     1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
        identities that can change the site's data are given them back, and push registrations keep them encrypted
+
+
 1. Nightscout API:
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
@@ -109,5 +111,5 @@
     1. P3: Show entries left out of a v1 batch (an unknown `type`, a field too long) on the site's client errors, as
        only a log counts them and the errors show a batch only when nothing in it was stored
 
-## Bugs
+
 
