@@ -32,16 +32,6 @@ func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sit
 	return validateEntryType(nsModel, dbModel)
 }
 
-// A patch without sgv or mbg leaves the reading as it is
-func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	if nsModel.SGV != nil || nsModel.MBG != nil {
-		if err := validateEntryMgdl(nsModel); err != nil {
-			return err
-		}
-	}
-	return validateEntryType(nsModel, dbModel)
-}
-
 // Refuse glucose far outside real use, checked in mg/dL as it is stored
 func validateEntryMgdl(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
 	if nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxGlucoseMgdl {
@@ -83,32 +73,10 @@ func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, 
 // DuplicateWhateverItsIdentifier finds a reading sent with an _id none has by its date and type, as Nightscout does
 func (c EntriesCollection) DuplicateWhateverItsIdentifier() {}
 
-// Refresh gives a reading sent again the values it was sent with, as Nightscout upserts a reading on its date and type:
-// xDrip4iOS smooths and rebuilds readings by sending them again without their _id. One of another type, or sent with
-// the values it has, is left as it is.
-func (c EntriesCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, bool, error) {
-	p := nightscoutmodels.EntryToUpdate(nsModel, cc)
-	if nightscoutmodels.SetReadingType(nsModel) != stored.ReadingType || (kept(p.Mgdl, &stored.Mgdl) && kept(p.Delta, stored.Delta) &&
-		kept(p.Direction, stored.Direction) && kept(signal(p.Noise), stored.Noise) && kept(p.Filtered, stored.Filtered) &&
-		kept(p.Unfiltered, stored.Unfiltered) && kept(signal(p.Rssi), stored.Rssi)) {
-		return stored, false, nil
-	}
-	p.ID = stored.ID
-	updated, err := q.UpdateGlucoseReading(ctx, p)
-	return updated, true, err
-}
-
-// kept is whether a value sent leaves the stored one as it is, as one not sent does
-func kept[T comparable](sent *T, stored *T) bool {
-	return sent == nil || (stored != nil && *sent == *stored)
-}
-
-// signal is a CGM's noise or rssi sent, nil for 0, which means it has none and is stored as NULL
-func signal(sent *float64) *float64 {
-	if sent != nil && *sent == 0 {
-		return nil
-	}
-	return sent
+// Refreshes a reading sent again of its type, as Nightscout upserts a reading on its date and type: xDrip4iOS smooths
+// and rebuilds readings by sending them again without their _id
+func (c EntriesCollection) Refreshes(nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading) bool {
+	return nightscoutmodels.SetReadingType(nsModel) == stored.ReadingType
 }
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
@@ -131,11 +99,11 @@ func (c EntriesCollection) DeleteType(q *sitedb.Queries, ctx context.Context, ty
 	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString, Limit: apiquery.MaxQueryLimit})
 }
 
-func (c EntriesCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
-	updateParams := nightscoutmodels.EntryToUpdate(nsModel, uc)
-	updateParams.ID = identifier
-
-	return q.UpdateGlucoseReading(ctx, updateParams)
+// RewriteModel keeps the reading's notes and reason, from the site, and how it was measured, which an entry does not have
+func (c EntriesCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, _ map[string]any, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
+	params := nightscoutmodels.EntryToCreate(nsModel, cc)
+	params.ID, params.Notes, params.Reason, params.MeasurementMethod = stored.ID, stored.Notes, stored.Reason, stored.MeasurementMethod
+	return q.RewriteGlucoseReading(ctx, sitedb.RewriteGlucoseReadingParams(params))
 }
 
 func (c EntriesCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {

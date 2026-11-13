@@ -364,6 +364,157 @@ func (q *Queries) ProfileSwitchTotals(ctx context.Context) (*ProfileSwitchTotals
 	return &i, err
 }
 
+const rewriteProfileSwitch = `-- name: RewriteProfileSwitch :one
+
+UPDATE profile_switches SET
+    id = ?1,
+    name = ?2,
+    duration_minutes = ?3,
+    multiplier = ?4,
+    dia = ?5,
+    units = ?6,
+    timezone = ?7,
+    carbs_hr = ?8,
+    delay = ?9,
+    timeshift = ?10,
+    original_profile_name = NULLIF(CAST(?11 AS TEXT), ''),
+    original_customized_name = NULLIF(CAST(?12 AS TEXT), ''),
+    original_timeshift_ms = ?13,
+    original_percentage = ?14,
+    original_duration_ms = ?15,
+    original_end = ?16,
+    icfg_json = ?17,
+    carb_ratios_json = ?18,
+    insulin_sensitivities_json = ?19,
+    basal_rates_json = ?20,
+    targets_high_json = ?21,
+    targets_low_json = ?22,
+    notes = ?23,
+    reason = ?24,
+    utc_offset_minutes = ?25,
+    occurred_at = ?26,
+    created_by_app_name = ?27,
+    created_by_device_name = ?28,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?29 AS TEXT),
+    updated_by_identity_id = ?30
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, icfg_json, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteProfileSwitchParams struct {
+	ID                       string
+	Name                     string
+	DurationMinutes          int64
+	Multiplier               *float64
+	Dia                      *float64
+	Units                    *consts.Units
+	Timezone                 *string
+	CarbsHr                  *float64
+	Delay                    *float64
+	Timeshift                *int64
+	OriginalProfileName      *string
+	OriginalCustomizedName   *string
+	OriginalTimeshiftMs      *int64
+	OriginalPercentage       *int64
+	OriginalDurationMs       *int64
+	OriginalEnd              *int64
+	IcfgJson                 *string
+	CarbRatiosJson           *string
+	InsulinSensitivitiesJson *string
+	BasalRatesJson           *string
+	TargetsHighJson          *string
+	TargetsLowJson           *string
+	Notes                    *string
+	Reason                   *string
+	UtcOffsetMinutes         *int64
+	OccurredAt               int64
+	CreatedByAppName         *string
+	CreatedByDeviceName      *string
+	CreatedByIdentityName    string
+	CreatedByIdentityID      *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteProfileSwitch writes every column CreateProfileSwitch does over the profile switch with the ID, as a
+// Nightscout update writes its merged document. It keeps when it was created and who by: the identity given is who
+// updated it.
+func (q *Queries) RewriteProfileSwitch(ctx context.Context, arg RewriteProfileSwitchParams) (*ProfileSwitch, error) {
+	row := q.queryRow(ctx, q.rewriteProfileSwitchStmt, rewriteProfileSwitch,
+		arg.ID,
+		arg.Name,
+		arg.DurationMinutes,
+		arg.Multiplier,
+		arg.Dia,
+		arg.Units,
+		arg.Timezone,
+		arg.CarbsHr,
+		arg.Delay,
+		arg.Timeshift,
+		arg.OriginalProfileName,
+		arg.OriginalCustomizedName,
+		arg.OriginalTimeshiftMs,
+		arg.OriginalPercentage,
+		arg.OriginalDurationMs,
+		arg.OriginalEnd,
+		arg.IcfgJson,
+		arg.CarbRatiosJson,
+		arg.InsulinSensitivitiesJson,
+		arg.BasalRatesJson,
+		arg.TargetsHighJson,
+		arg.TargetsLowJson,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i ProfileSwitch
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.DurationMinutes,
+		&i.Multiplier,
+		&i.Timeshift,
+		&i.OriginalProfileName,
+		&i.OriginalCustomizedName,
+		&i.OriginalTimeshiftMs,
+		&i.OriginalPercentage,
+		&i.OriginalDurationMs,
+		&i.OriginalEnd,
+		&i.IcfgJson,
+		&i.Dia,
+		&i.Units,
+		&i.Timezone,
+		&i.CarbsHr,
+		&i.Delay,
+		&i.CarbRatiosJson,
+		&i.InsulinSensitivitiesJson,
+		&i.BasalRatesJson,
+		&i.TargetsHighJson,
+		&i.TargetsLowJson,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchProfileSwitches = `-- name: SearchProfileSwitches :many
 SELECT id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, icfg_json, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
 WHERE
@@ -618,7 +769,6 @@ func (q *Queries) SoftDeleteProfileSwitch(ctx context.Context, arg SoftDeletePro
 }
 
 const updateProfileSwitch = `-- name: UpdateProfileSwitch :one
-
 UPDATE profile_switches SET
     name = COALESCE(?1, name),
     duration_minutes = COALESCE(?2, duration_minutes),
@@ -660,9 +810,6 @@ type UpdateProfileSwitchParams struct {
 	ID                     string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateProfileSwitch(ctx context.Context, arg UpdateProfileSwitchParams) (*ProfileSwitch, error) {
 	row := q.queryRow(ctx, q.updateProfileSwitchStmt, updateProfileSwitch,
 		arg.Name,
