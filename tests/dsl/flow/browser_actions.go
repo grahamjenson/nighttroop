@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -344,16 +345,34 @@ func (r *Click) followNewPage(t *testing.T, page playwright.Page, e *clickEffect
 		if strings.Contains(page.URL(), "chrome-error") || page.URL() == "about:blank#blocked" {
 			t.Fatalf("\n\n%s\n new page failed to load properly\nURL returnes as %s, might be bad URL\n\n", r.ToErrorLine("Error with NEW PAGE"), page.URL())
 		}
-		err := page.WaitForLoadState(
-			playwright.PageWaitForLoadStateOptions{
-				State: playwright.LoadStateDomcontentloaded,
-			},
-		)
-		if err != nil {
+		if err := waitForLoaded(page); err != nil {
 			return nil, err
 		}
 	}
 	return page, nil
+}
+
+// newPageWait is how long a page an action opened has to load its document, in ms
+const newPageWait = 10000
+
+// loadedCheckWait is how long each of waitForLoaded's waits is, in ms
+const loadedCheckWait = 250
+
+// waitForLoaded waits until page's document has loaded. playwright-go's WaitForLoadState checks whether the page has
+// loaded and only then listens for it loading, while the browser's events arrive on another goroutine, so a page that
+// loads in between is never seen to and the wait times out though it has loaded, as on a busy CI runner. So it waits
+// in short waits, each checking again, and the next sees the page loaded.
+func waitForLoaded(page playwright.Page) error {
+	deadline := time.Now().Add(newPageWait * time.Millisecond)
+	for {
+		err := page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+			State:   playwright.LoadStateDomcontentloaded,
+			Timeout: playwright.Float(loadedCheckWait),
+		})
+		if err == nil || !errors.Is(err, playwright.ErrTimeout) || time.Now().After(deadline) {
+			return err
+		}
+	}
 }
 
 // checkAsserts fails the test unless every assert holds for the effects, page being the new page when one opened
