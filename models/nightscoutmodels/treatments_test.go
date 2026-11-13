@@ -58,3 +58,29 @@ func TestTimestampMilliseconds(t *testing.T) {
 		})
 	}
 }
+
+// A known glucose type is kept as its type, and any other as sent, at most 32 characters, rather than refuse it
+func TestGlucoseType(t *testing.T) {
+	tests := []struct {
+		name string
+		sent string
+		kept GlucoseType
+	}{
+		{"a finger stick", `"Finger"`, Finger},
+		{"a sensor reading", `"Sensor"`, Sensor},
+		{"a meter reading", `"Meter"`, Meter},
+		{"AAPS's and iAPS's typed in finger stick", `"Manual"`, Manual},
+		{"lower case", `"manual"`, Manual},
+		{"xDrip4iOS's reading after a colon", `"Finger: 6.7 mmol/L"`, Finger},
+		{"another type", `"Lab"`, "Lab"},
+		{"too long", `"` + strings.Repeat("a", 40) + `"`, GlucoseType(strings.Repeat("a", 32))},
+		{"too long in the middle of a character", `"` + strings.Repeat("a", 31) + `é"`, GlucoseType(strings.Repeat("a", 31))},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var treatment Treatment
+			require.NoError(t, json.Unmarshal([]byte(`{"eventType": "BG Check", "glucose": 120, "glucoseType": `+tt.sent+`}`), &treatment))
+			require.Equal(t, tt.kept, *treatment.GlucoseType)
+		})
+	}
+}

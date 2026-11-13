@@ -1,0 +1,55 @@
+// iAPS uploads a finger stick the user types in as a BG Check with glucoseType "Manual", its glucose a string in
+// mmol, and sends it again every 5 minutes until it is kept (FreeAPS/Sources/Models/NightscoutTreatment.swift)
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME iaps_upload_bg_check
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"eventType":"BG Check","created_at":"{{ date -1 }}T21:31:17.054Z","enteredBy":"iAPS","glucoseType":"Manual","glucose":"6.8","units":"mmol"}]
+ASSERT_STATUS 200
+
+// The same BG Check sent again, 5 minutes later, is kept once
+NAME iaps_upload_bg_check_again
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"eventType":"BG Check","created_at":"{{ date -1 }}T21:31:17.054Z","enteredBy":"iAPS","glucoseType":"Manual","glucose":"6.8","units":"mmol"}]
+ASSERT_STATUS 200
+
+// Given back in mg/dL (6.8 mmol/L), with its glucoseType as sent
+NAME iaps_fetch_bg_check
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=BG%20Check
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Manual" "@0.glucoseType"
+ASSERT_EQUALS 122.522 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
+ASSERT_EQUALS "iAPS" "@0.enteredBy"
+ASSERT_CONTAINS "T21:31:17.054Z" "@0.created_at"
+
+// A typed in finger stick is a meter reading (mbg), not a CGM reading
+NAME iaps_fetch_bg_check_entry
+GET http://{{ site }}/api/v1/entries.json?find[type]=mbg
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "mbg" "@0.type"
+
+// A glucoseType Nighttroop does not know is kept as sent, rather than refuse the upload
+NAME iaps_upload_unknown_glucose_type
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"eventType":"BG Check","created_at":"{{ date -1 }}T22:00:00.000Z","enteredBy":"iAPS","glucoseType":"Lab","glucose":120,"units":"mg/dl"}]
+ASSERT_STATUS 200
+
+NAME iaps_fetch_unknown_glucose_type
+GET http://{{ site }}/api/v1/treatments.json?find[created_at]={{ date -1 }}T22:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Lab" "@0.glucoseType"
+ASSERT_EQUALS 120 "@0.glucose"
