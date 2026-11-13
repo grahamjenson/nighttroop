@@ -1238,6 +1238,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - An effective profile switch is AAPS's Note with a `profileJson`.
 - Other `icfg` fields are left out.
+- A profile switch with an `icfg` returns it in its `profileJson` as `iCfg`. AAPSClient reads the insulin from there.
+- If an effective profile switch has no `icfg`, its `profileJson` `iCfg` is kept as its `icfg`.
 - Loop finds its own treatments by `syncIdentifier`, though an Omnipod dose's `_id` is a hash.
 - LoopFollow shows an `automatic` bolus as an SMB, and leaves it out of its bolus stats.
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
