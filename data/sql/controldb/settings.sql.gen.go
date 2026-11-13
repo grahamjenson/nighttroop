@@ -12,6 +12,21 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+const learnSiteIdentityMgdlLabel = `-- name: LearnSiteIdentityMgdlLabel :exec
+UPDATE site_identities SET units_mgdl_label = 'mg/dl' WHERE site_id = ?1 AND id = ?2 AND units_mgdl_label IS NULL
+`
+
+type LearnSiteIdentityMgdlLabelParams struct {
+	SiteID string
+	ID     int64
+}
+
+// A device that sends mg/dL as mg/dl is given it back that way, unless its spelling is set
+func (q *Queries) LearnSiteIdentityMgdlLabel(ctx context.Context, arg LearnSiteIdentityMgdlLabelParams) error {
+	_, err := q.exec(ctx, q.learnSiteIdentityMgdlLabelStmt, learnSiteIdentityMgdlLabel, arg.SiteID, arg.ID)
+	return err
+}
+
 const updateSiteIdentitySettings = `-- name: UpdateSiteIdentitySettings :exec
 UPDATE site_identities SET
     -- IDENTITY SETTINGS

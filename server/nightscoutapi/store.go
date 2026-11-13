@@ -2,8 +2,10 @@ package nightscoutapi
 
 import (
 	"context"
+	"log/slog"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -80,7 +82,28 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return nil, false, err
 	}
+	if collection == nsutils.Treatments {
+		learnMgdlLabel(ctx, siteContext, data)
+	}
 	return foundAnd(collectionsStore.Create(ctx, siteContext, data))
+}
+
+// learnMgdlLabel has a device that sends a treatment's units as mg/dl given mg/dL back that way, unless its spelling is
+// set. xDrip4iOS reads a BG check's glucose as mg/dL only when its units are exactly mg/dl, so it sees 110 come back as
+// 1982 and uploads it again every 15 seconds. Loop reads one only when they are exactly mg/dL, so not for every device.
+func learnMgdlLabel(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) {
+	identity := siteContext.IdentityModel
+	if units, _ := data["units"].(string); units != "mg/dl" || identity == nil || identity.UnitsMgdlLabel != nil {
+		return
+	}
+	err := siteContext.ControlDB.Queries.LearnSiteIdentityMgdlLabel(ctx, controldb.LearnSiteIdentityMgdlLabelParams{SiteID: siteContext.SiteID, ID: identity.ID})
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to keep the identity's mg/dL label", "error", err)
+		return
+	}
+	learned := *identity
+	learned.UnitsMgdlLabel = new("mg/dl")
+	httputils.SetIdentityModelInSiteContext(ctx, &learned)
 }
 
 func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {

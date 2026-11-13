@@ -48,9 +48,10 @@ ASSERT_EQUALS "Exercise" "@2.eventType"
 ASSERT_EQUALS 45 "@2.duration"
 ASSERT_CONTAINS "T00:04:00" "@3.created_at"
 ASSERT_EQUALS "BG Check" "@3.eventType"
-# Glucose comes back in mg/dL, whatever the site's units, so the app's exact match on its 120 mg/dL finds it
+# Glucose comes back in mg/dL, whatever the site's units, written mg/dl as the device sent it, so the app's exact
+# match on its 120 mg/dL finds it
 ASSERT_EQUALS 120 "@3.glucose"
-ASSERT_EQUALS "mg/dL" "@3.units"
+ASSERT_EQUALS "mg/dl" "@3.units"
 ASSERT_EQUALS "Note" "@4.eventType"
 ASSERT_EQUALS "xdrip4ios note" "@4.notes"
 ASSERT_EQUALS "Site Change" "@5.eventType"

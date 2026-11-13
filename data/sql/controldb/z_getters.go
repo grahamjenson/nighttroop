@@ -3288,6 +3288,26 @@ func (m *UpdateRateLimitsParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
 }
 
+// GetSiteID returns the SiteID value.
+func (m LearnSiteIdentityMgdlLabelParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated LearnSiteIdentityMgdlLabelParams.
+func (m *LearnSiteIdentityMgdlLabelParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m LearnSiteIdentityMgdlLabelParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated LearnSiteIdentityMgdlLabelParams.
+func (m *LearnSiteIdentityMgdlLabelParams) SetID(v int64) {
+	m.ID = v
+}
+
 // GetUnits returns the Units value.
 func (m UpdateSiteIdentitySettingsParams) GetUnits() *consts.Units {
 	return m.Units

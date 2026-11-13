@@ -143,3 +143,7 @@ UPDATE sites SET
     -- NOTIFICATIONS
     notifications_enabled = sqlc.narg('NotificationsEnabled')
 WHERE id = sqlc.arg('ID');
+
+-- name: LearnSiteIdentityMgdlLabel :exec
+-- A device that sends mg/dL as mg/dl is given it back that way, unless its spelling is set
+UPDATE site_identities SET units_mgdl_label = 'mg/dl' WHERE site_id = ?1 AND id = ?2 AND units_mgdl_label IS NULL;

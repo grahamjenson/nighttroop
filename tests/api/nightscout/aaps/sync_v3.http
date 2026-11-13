@@ -333,7 +333,7 @@ ASSERT_EQUALS 140 "@result.targetTop"
 ASSERT_EQUALS 140 "@result.targetBottom"
 ASSERT_EQUALS 3600000 "@result.durationInMilliseconds"
 ASSERT_EQUALS "Activity" "@result.reason"
-ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS "mg/dl" "@result.units"
 
 NAME get_profile_switch
 GET http://{{ site }}/api/v3/treatments/{{ .add_profile_switch.identifier }}

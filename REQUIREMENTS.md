@@ -1148,6 +1148,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   | `units_mmol_label` | `mmol/L` or `mmol` |
 
   - Default: Nighttroop's label. The API writes only mg/dL.
+  - If an identity without its own `units_mgdl_label` sends a treatment with `units` `mg/dl`, its label becomes `mg/dl`.
+    The response to that request uses it too.
   - Units are stored Nighttroop's way. All labels are read.
 - AAPS documents, kept as sent and shared by all identities of the site:
   - `aaps`, `aaps-state`: the running config.

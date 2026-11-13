@@ -1,0 +1,67 @@
+INCLUDE steps/new_site_admin.steps
+
+// xDrip4iOS with a device not added for it: it sends a BG check's units as mg/dl and reads one as mg/dL only when they
+// are exactly mg/dl. Given mg/dL, it read its 110 as 1982, never matched its upload, and sent it again every 15 s.
+NAME create_other
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "iphone", "role": "device_read_write", "client": "other"}
+ASSERT_STATUS 201
+SET other_token {{ .create_other.result.ns_token }}
+
+NAME other_uploads_mg_dl
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .other_token }}
+H Accept: application/json
+B [{"enteredBy": "xDrip4iOS", "eventTime": "{{ time 5 }}", "eventType": "BG Check", "glucose": 110, "glucoseType": "Finger", "units": "mg/dl"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 110 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+// So the device reads mg/dL as mg/dl from now on
+NAME other_reads_mg_dl
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 110 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+// A device that sends mg/dL, as Loop does, which reads a BG check only when its units are exactly mg/dL, keeps mg/dL
+NAME create_loop_like
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "follower", "role": "device_read_write", "client": "other"}
+ASSERT_STATUS 201
+SET loop_like_token {{ .create_loop_like.result.ns_token }}
+
+NAME loop_like_uploads_mg_dL
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .loop_like_token }}
+H Accept: application/json
+B [{"enteredBy": "Loop", "created_at": "{{ time 4 }}", "eventType": "BG Check", "glucose": 120, "glucoseType": "Finger", "units": "mg/dL"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@0.units"
+
+NAME loop_like_reads_mg_dL
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .loop_like_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dL" "@1.units"
+
+// A spelling set through the settings endpoint is kept
+NAME loop_like_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .loop_like_token }}
+ASSERT_STATUS 200
+
+NAME loop_like_sets_mg_dL
+PATCH http://{{ .ns_site }}/api/v3/settings/units_mgdl_label
+H Authorization: Bearer {{ .loop_like_jwt.token }}
+B {"value": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME loop_like_uploads_mg_dl
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .loop_like_token }}
+H Accept: application/json
+B [{"enteredBy": "test", "created_at": "{{ time 3 }}", "eventType": "BG Check", "glucose": 100, "glucoseType": "Finger", "units": "mg/dl"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@0.units"
