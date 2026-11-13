@@ -47,6 +47,8 @@ type Query struct {
 	Skip  int64 `json:"skip,omitempty"`
 	// CountGiven is whether a limit or count was sent, as Limit is the most a search returns without one
 	CountGiven bool `json:"count_given,omitempty"`
+	// CountAsked is the limit or count sent, before Limit caps it, as readings are capped higher
+	CountAsked int64 `json:"count_asked,omitempty"`
 
 	/////
 	// MODEL SPECIFIC QUERIES
@@ -98,7 +100,7 @@ type Query struct {
 // DatesOnly is whether the query filters on nothing but the date range, whatever it asks of the documents found
 func (q Query) DatesOnly() bool {
 	q.DateGTE, q.DateGT, q.DateEQ, q.DateLTE, q.DateLT, q.IncludeDeleted = nil, nil, nil, nil, nil, false
-	q.Limit, q.Skip, q.CountGiven, q.HasFilters, q.SortOrder, q.Fields, q.Envelope = 0, 0, false, false, nil, nil, nil
+	q.Limit, q.Skip, q.CountGiven, q.CountAsked, q.HasFilters, q.SortOrder, q.Fields, q.Envelope = 0, 0, false, 0, false, nil, nil, nil
 	others, err := json.Marshal(q)
 	return err == nil && string(others) == "{}"
 }

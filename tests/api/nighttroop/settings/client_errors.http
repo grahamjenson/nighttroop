@@ -5,7 +5,7 @@ INCLUDE steps/new_site_admin.steps
 NAME bad_entry
 POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
 H User-Agent: AAPS/3.3.1
-B [{"type": "sgv", "sgv": 120, "direction": "Much too long a direction to be a real one", "date": {{ itime 0 }}}]
+B {"type": "sgv", "sgv": 5000, "date": {{ itime 0 }}}
 ASSERT_STATUS 400
 
 NAME bad_collection
@@ -21,7 +21,7 @@ ASSERT_LENGTH 2 "@result.items"
 ASSERT_EQUALS "400 Bad Request: invalid collection" "@result.items.0.message"
 ASSERT_EQUALS "client" "@result.items.0.attributes.kind"
 ASSERT_EQUALS "/api/v1/{collection}" "@result.items.0.attributes.route"
-ASSERT_EQUALS "400 Bad Request: Bad or missing body: direction is too long" "@result.items.1.message"
+ASSERT_CONTAINS "at most 1000 mg/dL" "@result.items.1.message"
 ASSERT_EQUALS 400 "@result.items.1.attributes.status"
 ASSERT_EQUALS "POST" "@result.items.1.attributes.method"
 ASSERT_EQUALS "pwd_phone" "@result.items.1.attributes.identity"

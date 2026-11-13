@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
 // Identity is the resolved authorization context for a request.
@@ -112,6 +113,10 @@ func ReadCollectionAndQuery(w http.ResponseWriter, r *http.Request) (collection 
 	collection, _, err := GetCollectionAndEnsurePermission(r, CollectionActionRead)
 	if err == nil {
 		if query, err = ParseQuery(r.URL.Query()); err == nil {
+			// Readings are given up to a day of 1 minute readings, twice over, as xDrip+'s follower asks since its newest
+			if collection == Entries {
+				query.Limit = max(query.Limit, min(query.CountAsked, apiquery.MaxEntriesQueryLimit))
+			}
 			return collection, query, true
 		}
 	}

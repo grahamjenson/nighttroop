@@ -95,12 +95,22 @@ func lruMust(maxEntries int) *lru.Cache[string, *rate.Limiter] {
 }
 
 func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limiter], key string, name string) *rate.Limiter {
+	return r.getOrCreateScaledLimiter(limiters, key, name, 1)
+}
+
+// SiteIdentitiesShare is how many identities' worth of reads and writes a site's own limits allow, so one identity,
+// such as a phone uploading a day's backlog, spends at most its own limit and leaves the site's other identities, a
+// carer's app or AAPSClient, theirs
+const SiteIdentitiesShare = 4
+
+// getOrCreateScaledLimiter is the key's limiter, limited by scale times the named rate
+func (r *RateLimiters) getOrCreateScaledLimiter(limiters *lru.Cache[string, *rate.Limiter], key string, name string, scale int) *rate.Limiter {
 	// Keys come from user input (e.g. a login name), so hash them to keep every entry a fixed size
 	sum := sha256.Sum256([]byte(key))
 	key = hex.EncodeToString(sum[:])
 	limiter, exists := limiters.Get(key)
 	if !exists {
-		limiter = r.rate(name).limiter()
+		limiter = r.rate(name).scaled(scale).limiter()
 		limiters.Add(key, limiter)
 	}
 	return limiter
@@ -147,13 +157,11 @@ func (r *RateLimiters) IdentityPOSTLimiter(identityID int64) *rate.Limiter {
 }
 
 func (r *RateLimiters) SiteGETLimiter(subdomain string) *rate.Limiter {
-
-	return r.getOrCreateLimiter(r.siteGETRateLimiters, subdomain, "site_get")
+	return r.getOrCreateScaledLimiter(r.siteGETRateLimiters, subdomain, "site_get", SiteIdentitiesShare)
 }
 
 func (r *RateLimiters) SitePOSTLimiter(subdomain string) *rate.Limiter {
-
-	return r.getOrCreateLimiter(r.sitePOSTRateLimiters, subdomain, "site_post")
+	return r.getOrCreateScaledLimiter(r.sitePOSTRateLimiters, subdomain, "site_post", SiteIdentitiesShare)
 }
 
 func (r *RateLimiters) SiteUpdateConnectorsLimiter(subdomain string) *rate.Limiter {
@@ -224,6 +232,9 @@ type Rate struct {
 }
 
 func (r Rate) limiter() *rate.Limiter { return rate.NewLimiter(rate.Limit(r.PerMinute/60.0), r.Burst) }
+
+// scaled is the rate n times over
+func (r Rate) scaled(n int) Rate { return Rate{r.PerMinute * float64(n), r.Burst * n} }
 
 // Valid is a rate that lets requests through, under limits far above any server's
 func (r Rate) Valid() bool {
@@ -299,7 +310,7 @@ func (r *RateLimiters) SetRates(rates map[string]Rate) map[string]Rate {
 	}
 	r.rates.lock.Unlock()
 	for _, kind := range r.kinds() {
-		current := r.rate(kind.setting)
+		current := r.rate(kind.setting).scaled(kind.scale)
 		for _, limiter := range kind.limiters {
 			limiter.SetLimit(rate.Limit(current.PerMinute / 60.0))
 			limiter.SetBurst(current.Burst)
@@ -309,31 +320,32 @@ func (r *RateLimiters) SetRates(rates map[string]Rate) map[string]Rate {
 }
 
 // limiterKind is one kind of rate limiter: what it is named on the rate limits page, what one is kept for, the rate
-// limit setting it is limited by, and those kept
+// limit setting it is limited by, those kept, and how many times the setting's rate they allow, 1 when unset
 type limiterKind struct {
 	name, per, setting string
 	limiters           []*rate.Limiter
+	scale              int
 }
 
 func (r *RateLimiters) kinds() []limiterKind {
 	return []limiterKind{
-		{"global", "server", "global", []*rate.Limiter{r.GlobalRateLimiter}},
-		{"control", "server", "global", []*rate.Limiter{r.ControlRateLimiter}},
-		{"global_ip", "ip", "global_ip", r.globalIPRateLimiters.Values()},
-		{"site_create", "server", "site_create", []*rate.Limiter{r.SiteCreateLimiter}},
-		{"site_create_ip", "ip", "site_create_ip", r.siteCreateIpLimiter.Values()},
-		{"login_name", "login", "login_name", r.userLoginRateLimiters.Values()},
-		{"login_ip", "ip", "login", r.ipLoginRateLimiters.Values()},
-		{"site_unauth", "site_ip", "site_unauth", r.siteUnauthRateLimiters.Values()},
-		{"site_get", "site", "site_get", r.siteGETRateLimiters.Values()},
-		{"site_post", "site", "site_post", r.sitePOSTRateLimiters.Values()},
-		{"identity_get", "identity", "site_get", r.identityGETRateLimiters.Values()},
-		{"identity_post", "identity", "site_post", r.identityPOSTRateLimiters.Values()},
-		{"site_update_connectors", "site", "site_update_connectors", r.siteUpdateConnectorsRateLimiters.Values()},
-		{"site_identity_create", "site", "site_identity_create", r.siteIdentityCreateRateLimiters.Values()},
-		{"site_download", "site", "site_download", r.siteDownloadRateLimiters.Values()},
-		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values()},
-		{"site_report_print", "site", "site_report_print", r.siteReportPrintRateLimiters.Values()},
+		{"global", "server", "global", []*rate.Limiter{r.GlobalRateLimiter}, 1},
+		{"control", "server", "global", []*rate.Limiter{r.ControlRateLimiter}, 1},
+		{"global_ip", "ip", "global_ip", r.globalIPRateLimiters.Values(), 1},
+		{"site_create", "server", "site_create", []*rate.Limiter{r.SiteCreateLimiter}, 1},
+		{"site_create_ip", "ip", "site_create_ip", r.siteCreateIpLimiter.Values(), 1},
+		{"login_name", "login", "login_name", r.userLoginRateLimiters.Values(), 1},
+		{"login_ip", "ip", "login", r.ipLoginRateLimiters.Values(), 1},
+		{"site_unauth", "site_ip", "site_unauth", r.siteUnauthRateLimiters.Values(), 1},
+		{"site_get", "site", "site_get", r.siteGETRateLimiters.Values(), SiteIdentitiesShare},
+		{"site_post", "site", "site_post", r.sitePOSTRateLimiters.Values(), SiteIdentitiesShare},
+		{"identity_get", "identity", "site_get", r.identityGETRateLimiters.Values(), 1},
+		{"identity_post", "identity", "site_post", r.identityPOSTRateLimiters.Values(), 1},
+		{"site_update_connectors", "site", "site_update_connectors", r.siteUpdateConnectorsRateLimiters.Values(), 1},
+		{"site_identity_create", "site", "site_identity_create", r.siteIdentityCreateRateLimiters.Values(), 1},
+		{"site_download", "site", "site_download", r.siteDownloadRateLimiters.Values(), 1},
+		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values(), 1},
+		{"site_report_print", "site", "site_report_print", r.siteReportPrintRateLimiters.Values(), 1},
 	}
 }
 
@@ -342,7 +354,7 @@ func (r *RateLimiters) Stats(now time.Time) []RateLimiterStats {
 	kinds := r.kinds()
 	stats := make([]RateLimiterStats, 0, len(kinds))
 	for _, kind := range kinds {
-		current := r.rate(kind.setting)
+		current := r.rate(kind.setting).scaled(kind.scale)
 		s := RateLimiterStats{Name: kind.name, Per: kind.per, PerMinute: current.PerMinute, Burst: current.Burst, Tracked: len(kind.limiters)}
 		for _, limiter := range kind.limiters {
 			tokens := limiter.TokensAt(now)

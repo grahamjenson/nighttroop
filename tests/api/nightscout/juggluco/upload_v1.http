@@ -36,7 +36,8 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 3 "@"
 ASSERT_EQUALS 128 "@0.sgv"
 ASSERT_EQUALS "FortyFiveUp" "@0.direction"
-ASSERT_EQUALS "" "@1.direction"
+// Its "" for no trend is left out, as Trio reads a list of readings with one as none
+ASSERT_EQUALS null "@1.direction"
 ASSERT_EQUALS 123 "@2.sgv"
 ASSERT_EQUALS "3MH000TEST" "@2.device"
 

@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -104,7 +105,47 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		t.Date = t.Mills
 	}
 
+	t.Direction = EntryDirection(t.Direction)
+	t.Noise = WholeNoise((*float64)(t.Noise))
+
 	return nil
+}
+
+// directions are Nightscout's directions, by their names in any case and by their arrows, as Trio reads a fetch of
+// readings as one list and gets none if one has a direction it does not know
+var directions = map[string]string{}
+
+func init() {
+	for name, arrows := range map[string][]string{
+		"TripleUp": {"⤊", "↑↑↑"}, "DoubleUp": {"⇈", "↑↑"}, "SingleUp": {"↑"}, "FortyFiveUp": {"↗"},
+		"Flat": {"→", "↔"}, "FortyFiveDown": {"↘"}, "SingleDown": {"↓"}, "DoubleDown": {"⇊", "↓↓"},
+		"TripleDown": {"⤋", "↓↓↓"}, "NONE": {"⇼"}, "NOT COMPUTABLE": {"-"}, "RATE OUT OF RANGE": {"⇕"},
+	} {
+		directions[strings.ToLower(name)] = name
+		for _, arrow := range arrows {
+			directions[arrow] = name
+		}
+	}
+}
+
+// EntryDirection is a reading's direction as Nightscout names it, NOT COMPUTABLE for one it does not know, and none
+// for none
+func EntryDirection(direction *string) *string {
+	if direction == nil || strings.TrimSpace(*direction) == "" {
+		return nil
+	}
+	if name, ok := directions[strings.ToLower(strings.TrimSpace(*direction))]; ok {
+		return &name
+	}
+	return new("NOT COMPUTABLE")
+}
+
+// WholeNoise is a CGM's noise as the whole number Nightscout's apps read, as Trio refuses a fraction
+func WholeNoise(noise *float64) *types.FlexibleFloat64 {
+	if noise == nil {
+		return nil
+	}
+	return new(types.FlexibleFloat64(math.Round(*noise)))
 }
 
 //////

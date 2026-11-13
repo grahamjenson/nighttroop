@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"nighttroop.t1d.nz/utils/config"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -41,7 +42,7 @@ func TestUnauthenticatedRequestsDoNotSpendTheSiteLimit(t *testing.T) {
 	require.Equal(t, http.StatusUnauthorized, get("10.0.0.2", "/api/v1/entries.json"))
 
 	// None of those spent the site's GET limit, which an authenticated device's request would be checked against
-	require.Equal(t, float64(cfg.SiteGETPerMinuteBurst), cfg.RateLimiters.SiteGETLimiter(subdomain).Tokens())
+	require.Equal(t, float64(cfg.SiteGETPerMinuteBurst*config.SiteIdentitiesShare), cfg.RateLimiters.SiteGETLimiter(subdomain).Tokens())
 }
 
 // A device with a valid token is limited by its site and identity, not the budget an IP has before it authenticates,

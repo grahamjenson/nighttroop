@@ -51,7 +51,7 @@ H Authorization: Bearer {{ .juggluco_jwt }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@result"
 ASSERT_EQUALS 125 "@result.0.sgv"
-ASSERT_EQUALS "" "@result.0.direction"
+ASSERT_EQUALS null "@result.0.direction"
 ASSERT_EQUALS 123 "@result.1.sgv"
 ASSERT_EQUALS "FortyFiveDown" "@result.1.direction"
 ASSERT_EQUALS "3MH000TEST" "@result.1.device"
