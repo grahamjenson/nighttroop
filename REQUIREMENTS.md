@@ -1128,6 +1128,15 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - `If-Unmodified-Since` on a replace or patch of a document changed in a later second: 412, no change. The server
   checks in the same transaction as the change.
+- A patch puts the fields it sends on the stored document, as a JSON merge patch (RFC 7386) does. The server then reads
+  the result as a create, and writes all of the record:
+  - A field it does not send stays as stored.
+  - A field it sends as `null` has no value after the patch.
+  - An object it sends is merged into the stored object. A device status `pump` with only `reservoir` keeps its `model`.
+  - A list it sends replaces the stored list.
+  - A field it sends replaces the stored fields with the same data: `duration` replaces `durationInMilliseconds`.
+  - If it sends glucose or `units`, the stored glucose it does not send is converted to those units.
+  - A treatment that gets or loses carbs, insulin or glucose gets or loses that event.
 - A patch of a temp target keeps the fields it does not send:
   - `{"duration": 30}` keeps the targets.
   - `{"targetTop": 9, "units": "mmol"}` keeps the bottom target and duration.
@@ -1261,8 +1270,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Duplicate uploads are ignored.
 - A treatment with the date and type of a stored one, or its identifier and date (Loop sends a temp basal or bolus again
   when it ends, Trio a temp target or override run):
-  - Merged into it. Its `_id` and the fields not sent are kept.
-  - Followers get it as changed. Sent again unchanged: no change.
+  - Merged into it as a patch is. Its `_id` and the fields not sent are kept.
+  - Followers get it as changed. Sent again unchanged, or with changes that do not change the document: no change.
 - Treatment with no app id (`_id`, `identifier`, xDrip+'s `uuid`, Loop's `syncIdentifier`, Trio's `id`): a duplicate
   only if the stored one has no app id and the same carbs and insulin (zero is none), as in Nightscout. Else a new
   treatment:
@@ -1294,7 +1303,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | Carb entry                               | `userEnteredAt` (UTC)                                                                      | Loop       |
 | Bolus                                    | `unabsorbed`                                                                               | Loop       |
 | Treatment                                | `uuid`, `sensorCode`, `transmitterId`                                                      | xDrip+     |
-| Treatment, profile                       | `enteredBy` (e.g. `loop://iPhone`, `Loop`, `Trio`), else a treatment's `app` (e.g. `AAPS`), else the uploading identity | All        |
+| Treatment, profile                       | `enteredBy` (e.g. `loop://iPhone`, `Loop`, `Trio`), else its `app` (e.g. `AAPS`), else the uploading identity | All        |
 
 - An effective profile switch is AAPS's Note with a `profileJson`.
 - Other `icfg` fields are left out.

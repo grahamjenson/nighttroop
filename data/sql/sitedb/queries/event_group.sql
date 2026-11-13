@@ -278,41 +278,47 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- UPDATE
 --------
 
--- name: UpdateEventGroup :one
+-- name: RewriteEventGroup :one
+-- RewriteEventGroup writes every column CreateEventGroup does over the event group with the ID, as a Nightscout update
+-- writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
 UPDATE event_groups SET
-    glucose_reading_id = sqlc.narg('GlucoseReadingID'),
-    insulin_dose_id = sqlc.narg('InsulinDoseID'),
-    food_intake_id = sqlc.narg('FoodIntakeID'),
-    temp_basal_id = sqlc.narg('TempBasalID'),
-    temp_target_id = sqlc.narg('TempTargetID'),
-    profile_switch_id = sqlc.narg('ProfileSwitchID'),
-    activity_id = sqlc.narg('ActivityID'),
-    notification_event_id = sqlc.narg('NotificationEventID'),
-
-    notes = COALESCE(sqlc.narg('Notes'), notes),
-    reason = COALESCE(sqlc.narg('Reason'), reason),
-    entered_by = COALESCE(sqlc.narg('EnteredBy'), entered_by),
-    duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
-    duration_ms = COALESCE(sqlc.narg('DurationMs'), duration_ms),
-    uuid = COALESCE(NULLIF(CAST(sqlc.narg('Uuid') AS TEXT), ''), uuid),
-    mode = COALESCE(NULLIF(CAST(sqlc.narg('Mode') AS TEXT), ''), mode),
-    auto_forced = COALESCE(sqlc.narg('AutoForced'), auto_forced),
-    reasons = COALESCE(NULLIF(CAST(sqlc.narg('Reasons') AS TEXT), ''), reasons),
-    original_duration_ms = COALESCE(sqlc.narg('OriginalDurationMs'), original_duration_ms),
-    sent_hash = COALESCE(NULLIF(CAST(sqlc.narg('SentHash') AS TEXT), ''), sent_hash),
-    pump_id = COALESCE(NULLIF(CAST(sqlc.narg('PumpID') AS TEXT), ''), pump_id),
-    pump_serial = COALESCE(NULLIF(CAST(sqlc.narg('PumpSerial') AS TEXT), ''), pump_serial),
-    pump_type = COALESCE(NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''), pump_type),
-    sensor_code = COALESCE(NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''), sensor_code),
-    transmitter_id = COALESCE(NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''), transmitter_id),
-    bolus_calculator_result_json = COALESCE(NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''), bolus_calculator_result_json),
-    sync_identifier = COALESCE(sqlc.narg('SyncIdentifier'), sync_identifier),
-
+    id = sqlc.arg('ID'),
+    group_type = sqlc.arg('GroupType'),
+    glucose_reading_id = sqlc.arg('GlucoseReadingID'),
+    insulin_dose_id = sqlc.arg('InsulinDoseID'),
+    food_intake_id = sqlc.arg('FoodIntakeID'),
+    temp_basal_id = sqlc.arg('TempBasalID'),
+    temp_target_id = sqlc.arg('TempTargetID'),
+    profile_switch_id = sqlc.arg('ProfileSwitchID'),
+    activity_id = sqlc.arg('ActivityID'),
+    notification_event_id = sqlc.arg('NotificationEventID'),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    duration_minutes = sqlc.arg('DurationMinutes'),
+    duration_ms = sqlc.narg('DurationMs'),
+    entered_by = sqlc.arg('EnteredBy'),
+    uuid = NULLIF(CAST(sqlc.narg('Uuid') AS TEXT), ''),
+    mode = NULLIF(CAST(sqlc.narg('Mode') AS TEXT), ''),
+    auto_forced = sqlc.narg('AutoForced'),
+    reasons = NULLIF(CAST(sqlc.narg('Reasons') AS TEXT), ''),
+    original_duration_ms = sqlc.narg('OriginalDurationMs'),
+    sent_hash = NULLIF(CAST(sqlc.narg('SentHash') AS TEXT), ''),
+    pump_id = NULLIF(CAST(sqlc.narg('PumpID') AS TEXT), ''),
+    pump_serial = NULLIF(CAST(sqlc.narg('PumpSerial') AS TEXT), ''),
+    pump_type = NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''),
+    sensor_code = NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''),
+    transmitter_id = NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
+    bolus_calculator_result_json = NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
+    sync_identifier = sqlc.narg('SyncIdentifier'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
-    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
-RETURNING *; 
+RETURNING *;
 
 -- EventsToGroup are the events that can be put in the group with GroupID (empty for a new one): those not deleted, nor in
 -- another group, from the window, and the group's own. Kind is the group's column for the event, and amount, minutes
@@ -399,7 +405,6 @@ RETURNING *;
 
 -- name: HardDeleteEventGroup :one
 DELETE FROM event_groups WHERE id = ? RETURNING *;
-
 
 -- name: SoftDeleteEventGroupsByType :many
 UPDATE event_groups SET

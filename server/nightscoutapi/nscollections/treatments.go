@@ -3,6 +3,7 @@ package nscollections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"math"
@@ -53,14 +54,6 @@ func (c TreatmentCollection) Validate(nsModel nightscoutmodels.Treatment, dbMode
 	}
 
 	return nil
-}
-
-func (c TreatmentCollection) ValidatePatch(nsModel nightscoutmodels.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
-	if nsModel.EventType != nil && nsModel.EventType.String() != dbModel.EventGroup.GroupType {
-		slog.Error("treatment event type is not good", "eventType", nsModel.EventType.String())
-		return nsutils.BadDataBodyError
-	}
-	return validAmounts(nsModel)
 }
 
 // validAmounts refuses insulin or carbs far outside real use, before the database would, saying which, its range and
@@ -175,17 +168,12 @@ func amount(value *types.FlexibleFloat64) float64 {
 	return value.Float64()
 }
 
-// Refresh merges a treatment sent again into the one stored, as a patch does: what it sends is changed and what it
-// leaves out is kept. Loop sends a temp basal or bolus again when it ends with what was delivered, and Trio a temp
-// target that ended early with its real duration. One of another type, sent the same as it was, by the hash of its
-// JSON, or stored without that hash, is left as it is.
-func (c TreatmentCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, bool, error) {
+// Refreshes a treatment sent again with changes, by the hash of its JSON: Loop sends a temp basal or bolus again when it
+// ends with what was delivered, and Trio a temp target that ended early with its real duration. One of another type,
+// or stored without that hash, is left as it is.
+func (c TreatmentCollection) Refreshes(nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
 	sent, resent := stored.EventGroup.SentHash, nightscoutmodels.SentHash(nsModel.SentJSON)
-	if nsModel.EventType.String() != stored.EventGroup.GroupType || sent == nil || resent == nil || *sent == *resent {
-		return stored, false, nil
-	}
-	refreshed, err := c.UpdateModel(q, ctx, nsModel, stored.EventGroup.ID, stored, cc)
-	return refreshed, true, err
+	return nsModel.EventType.String() == stored.EventGroup.GroupType && sent != nil && resent != nil && *sent != *resent
 }
 
 func (c TreatmentCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.EventGroupsBundle, error) {
@@ -199,41 +187,35 @@ func (c TreatmentCollection) GetModel(q *sitedb.Queries, ctx context.Context, id
 	return &egb, nil
 }
 
-func (c TreatmentCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, identifier string, dbModel *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, error) {
-	// This will be a partial update
-
-	nsModel.EventType = ptr(nightscoutmodels.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
-	keepTempTarget(&nsModel, dbModel.TempTarget)
-
-	updateBundle := TreatmentEventGroupBundle(ctx, nsModel)
-
-	MergeUpdateBundle(dbModel, updateBundle)
-	if err := fillTempBasal(ctx, q, nsModel, dbModel.TempBasal); err != nil {
+// RewriteModel rewrites the group and its events: an event the treatment still has keeps its identifier and what of it
+// a treatment does not have, one it no longer has is deleted once the group no longer refers to it, and one it now has
+// is created. The hash it keeps is of the fields sent, as a create's is of the treatment sent.
+func (c TreatmentCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, sent map[string]any, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, error) {
+	bundle := TreatmentEventGroupBundle(ctx, nsModel)
+	for _, event := range treatmentEvents {
+		event.keep(&bundle, stored)
+	}
+	if err := fillTempBasal(ctx, q, nsModel, bundle.TempBasal); err != nil {
 		return nil, err
 	}
-
-	// Do something with the update bundle to merge it into the dbModel
-
-	err := createUpdateEventGroup(ctx, q, dbModel, cc)
+	if err := createUpdateEventGroup(ctx, q, &bundle, cc); err != nil {
+		return nil, err
+	}
+	params := nightscoutmodels.EventGroupCreate(bundle.EventGroup, cc)
+	sentJSON, _ := json.Marshal(sent)
+	params.ID, params.SentHash = stored.EventGroup.ID, nightscoutmodels.SentHash(string(sentJSON))
+	group, err := q.RewriteEventGroup(ctx, sitedb.RewriteEventGroupParams(params))
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to rewrite event group in database", "error", err)
 		return nil, err
 	}
-
-	updateEventGroupParams := nightscoutmodels.EventGroupUpdate(dbModel.EventGroup, cc)
-	newEventGroup, err := q.UpdateEventGroup(ctx, updateEventGroupParams)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to update event group in database", "error", err)
-		return nil, err
+	bundle.EventGroup = *group
+	for _, event := range treatmentEvents {
+		if err := event.drop(ctx, q, &bundle, stored); err != nil {
+			return nil, err
+		}
 	}
-
-	if newEventGroup == nil || newEventGroup.ID == "" {
-		slog.ErrorContext(ctx, "failed to update event group in database, EventGroup is nil")
-		return nil, fmt.Errorf("newEventGroup is nil or has empty ID")
-	}
-
-	dbModel.EventGroup = *newEventGroup
-
-	return dbModel, nil
+	return &bundle, nil
 }
 
 func (c TreatmentCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
@@ -289,7 +271,7 @@ func (c TreatmentCollection) SearchModels(q *sitedb.Queries, ctx context.Context
 // Private Methods
 // ///////////////////////
 
-// createUpdateEventGroup syncs each of a bundle's events to the DB, see treatmentEvent.write
+// createUpdateEventGroup writes each of a bundle's events to the DB, see treatmentEvent.write
 func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) error {
 	for _, event := range treatmentEvents {
 		if err := event.write(ctx, q, bundle, cc); err != nil {
@@ -344,14 +326,6 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.T
 	return bundle
 }
 
-// Merge a DB Event Group with one created from the
-func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.EventGroupsBundle) {
-	nightscoutmodels.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
-	for _, event := range treatmentEvents {
-		event.merge(dbModel, updateBundle)
-	}
-}
-
 // isAssigned is whether any of the values is set, which kinds of events use to tell if a treatment has one
 func isAssigned(values ...any) bool {
 	for _, value := range values {
@@ -390,26 +364,4 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 		treatment.Temp = new(types.ShortString("absolute"))
 	}
 	return *treatment
-}
-
-// keepTempTarget gives an update of a temp target the duration and targets it leaves out, from the one stored, in the
-// update's units, as a caregiver's app patches only what it changes and a duration or target left out would be 0
-func keepTempTarget(nsModel *nightscoutmodels.Treatment, stored *sitedb.TempTarget) {
-	if stored == nil || !isAssigned(nsModel.HighTarget, nsModel.LowTarget, nsModel.Duration, nsModel.CorrectionRange, nsModel.DurationType) {
-		return
-	}
-	// An indefinite one is given its week's duration when it is prepared
-	if nsModel.Duration == nil && nsModel.DurationType == nil {
-		nsModel.Duration = types.DurationOfMinutes(&stored.DurationMinutes)
-	}
-	// Loop's correction range is its targets
-	if len(nsModel.CorrectionRange) > 0 {
-		return
-	}
-	if nsModel.HighTarget == nil {
-		nsModel.HighTarget = new(types.FlexibleFloat64(nsModel.Units.FromMGDL(stored.HighTargetMgdl)))
-	}
-	if nsModel.LowTarget == nil {
-		nsModel.LowTarget = new(types.FlexibleFloat64(nsModel.Units.FromMGDL(stored.LowTargetMgdl)))
-	}
 }

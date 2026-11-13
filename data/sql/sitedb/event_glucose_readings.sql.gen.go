@@ -493,6 +493,121 @@ func (q *Queries) OldestGlucoseReadingAt(ctx context.Context) (int64, error) {
 	return column_1, err
 }
 
+const rewriteGlucoseReading = `-- name: RewriteGlucoseReading :one
+
+UPDATE glucose_readings SET
+    id = ?1,
+    mgdl = ?2,
+    reading_type = ?3,
+    units = ?4,
+    measurement_method = ?5,
+    delta = ?6,
+    direction = ?7,
+    noise = NULLIF(CAST(?8 AS REAL), 0),
+    filtered = ?9,
+    unfiltered = ?10,
+    rssi = NULLIF(CAST(?11 AS REAL), 0),
+    is_calibration = ?12,
+    sensor_mgdl_at_pairing = ?13,
+    notes = ?14,
+    reason = ?15,
+    utc_offset_minutes = ?16,
+    occurred_at = ?17,
+    created_by_app_name = ?18,
+    created_by_device_name = ?19,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?20 AS TEXT),
+    updated_by_identity_id = ?21
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteGlucoseReadingParams struct {
+	ID                    string
+	Mgdl                  float64
+	ReadingType           string
+	Units                 *consts.Units
+	MeasurementMethod     *string
+	Delta                 *float64
+	Direction             *string
+	Noise                 *float64
+	Filtered              *float64
+	Unfiltered            *float64
+	Rssi                  *float64
+	IsCalibration         *bool
+	SensorMgdlAtPairing   *float64
+	Notes                 *string
+	Reason                *string
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteGlucoseReading writes every column CreateGlucoseReading does over the glucose reading with the ID, as a
+// Nightscout update writes its merged document. It keeps when it was created and who by: the identity given is who
+// updated it.
+func (q *Queries) RewriteGlucoseReading(ctx context.Context, arg RewriteGlucoseReadingParams) (*GlucoseReading, error) {
+	row := q.queryRow(ctx, q.rewriteGlucoseReadingStmt, rewriteGlucoseReading,
+		arg.ID,
+		arg.Mgdl,
+		arg.ReadingType,
+		arg.Units,
+		arg.MeasurementMethod,
+		arg.Delta,
+		arg.Direction,
+		arg.Noise,
+		arg.Filtered,
+		arg.Unfiltered,
+		arg.Rssi,
+		arg.IsCalibration,
+		arg.SensorMgdlAtPairing,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i GlucoseReading
+	err := row.Scan(
+		&i.ID,
+		&i.Mgdl,
+		&i.ReadingType,
+		&i.Units,
+		&i.MeasurementMethod,
+		&i.Delta,
+		&i.Direction,
+		&i.Noise,
+		&i.Filtered,
+		&i.Unfiltered,
+		&i.Rssi,
+		&i.IsCalibration,
+		&i.SensorMgdlAtPairing,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
 SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE
@@ -692,7 +807,6 @@ func (q *Queries) SoftDeleteGlucoseReadingsByType(ctx context.Context, arg SoftD
 }
 
 const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
-
 UPDATE glucose_readings SET
     mgdl = COALESCE(?1, mgdl),
 
@@ -733,9 +847,6 @@ type UpdateGlucoseReadingParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseReadingParams) (*GlucoseReading, error) {
 	row := q.queryRow(ctx, q.updateGlucoseReadingStmt, updateGlucoseReading,
 		arg.Mgdl,

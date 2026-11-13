@@ -336,6 +336,39 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.regroupEventGroupStmt, err = db.PrepareContext(ctx, regroupEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query RegroupEventGroup: %w", err)
 	}
+	if q.rewriteActivityStmt, err = db.PrepareContext(ctx, rewriteActivity); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteActivity: %w", err)
+	}
+	if q.rewriteDeviceReportStmt, err = db.PrepareContext(ctx, rewriteDeviceReport); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteDeviceReport: %w", err)
+	}
+	if q.rewriteEventGroupStmt, err = db.PrepareContext(ctx, rewriteEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteEventGroup: %w", err)
+	}
+	if q.rewriteFoodIntakeStmt, err = db.PrepareContext(ctx, rewriteFoodIntake); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteFoodIntake: %w", err)
+	}
+	if q.rewriteFoodPresetStmt, err = db.PrepareContext(ctx, rewriteFoodPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteFoodPreset: %w", err)
+	}
+	if q.rewriteGlucoseReadingStmt, err = db.PrepareContext(ctx, rewriteGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteGlucoseReading: %w", err)
+	}
+	if q.rewriteInsulinDoseStmt, err = db.PrepareContext(ctx, rewriteInsulinDose); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteInsulinDose: %w", err)
+	}
+	if q.rewriteNotificationEventStmt, err = db.PrepareContext(ctx, rewriteNotificationEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteNotificationEvent: %w", err)
+	}
+	if q.rewriteProfileSwitchStmt, err = db.PrepareContext(ctx, rewriteProfileSwitch); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteProfileSwitch: %w", err)
+	}
+	if q.rewriteTempBasalStmt, err = db.PrepareContext(ctx, rewriteTempBasal); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteTempBasal: %w", err)
+	}
+	if q.rewriteTempTargetStmt, err = db.PrepareContext(ctx, rewriteTempTarget); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteTempTarget: %w", err)
+	}
 	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
 	}
@@ -446,12 +479,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
-	}
-	if q.updateDeviceReportStmt, err = db.PrepareContext(ctx, updateDeviceReport); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateDeviceReport: %w", err)
-	}
-	if q.updateEventGroupStmt, err = db.PrepareContext(ctx, updateEventGroup); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateEventGroup: %w", err)
 	}
 	if q.updateFoodIntakeStmt, err = db.PrepareContext(ctx, updateFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateFoodIntake: %w", err)
@@ -1014,6 +1041,61 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing regroupEventGroupStmt: %w", cerr)
 		}
 	}
+	if q.rewriteActivityStmt != nil {
+		if cerr := q.rewriteActivityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteActivityStmt: %w", cerr)
+		}
+	}
+	if q.rewriteDeviceReportStmt != nil {
+		if cerr := q.rewriteDeviceReportStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteDeviceReportStmt: %w", cerr)
+		}
+	}
+	if q.rewriteEventGroupStmt != nil {
+		if cerr := q.rewriteEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.rewriteFoodIntakeStmt != nil {
+		if cerr := q.rewriteFoodIntakeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.rewriteFoodPresetStmt != nil {
+		if cerr := q.rewriteFoodPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteFoodPresetStmt: %w", cerr)
+		}
+	}
+	if q.rewriteGlucoseReadingStmt != nil {
+		if cerr := q.rewriteGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteGlucoseReadingStmt: %w", cerr)
+		}
+	}
+	if q.rewriteInsulinDoseStmt != nil {
+		if cerr := q.rewriteInsulinDoseStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.rewriteNotificationEventStmt != nil {
+		if cerr := q.rewriteNotificationEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteNotificationEventStmt: %w", cerr)
+		}
+	}
+	if q.rewriteProfileSwitchStmt != nil {
+		if cerr := q.rewriteProfileSwitchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.rewriteTempBasalStmt != nil {
+		if cerr := q.rewriteTempBasalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteTempBasalStmt: %w", cerr)
+		}
+	}
+	if q.rewriteTempTargetStmt != nil {
+		if cerr := q.rewriteTempTargetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteTempTargetStmt: %w", cerr)
+		}
+	}
 	if q.searchActivitiesStmt != nil {
 		if cerr := q.searchActivitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchActivitiesStmt: %w", cerr)
@@ -1197,16 +1279,6 @@ func (q *Queries) Close() error {
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
-		}
-	}
-	if q.updateDeviceReportStmt != nil {
-		if cerr := q.updateDeviceReportStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateDeviceReportStmt: %w", cerr)
-		}
-	}
-	if q.updateEventGroupStmt != nil {
-		if cerr := q.updateEventGroupStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateEventGroupStmt: %w", cerr)
 		}
 	}
 	if q.updateFoodIntakeStmt != nil {
@@ -1412,6 +1484,17 @@ type Queries struct {
 	profileSwitchTotalsStmt                     *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
+	rewriteActivityStmt                         *sql.Stmt
+	rewriteDeviceReportStmt                     *sql.Stmt
+	rewriteEventGroupStmt                       *sql.Stmt
+	rewriteFoodIntakeStmt                       *sql.Stmt
+	rewriteFoodPresetStmt                       *sql.Stmt
+	rewriteGlucoseReadingStmt                   *sql.Stmt
+	rewriteInsulinDoseStmt                      *sql.Stmt
+	rewriteNotificationEventStmt                *sql.Stmt
+	rewriteProfileSwitchStmt                    *sql.Stmt
+	rewriteTempBasalStmt                        *sql.Stmt
+	rewriteTempTargetStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
 	searchDeviceReportsStmt                     *sql.Stmt
 	searchEventGroupsStmt                       *sql.Stmt
@@ -1449,8 +1532,6 @@ type Queries struct {
 	tempTargetTotalsStmt                        *sql.Stmt
 	thinOldDeviceReportsStmt                    *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
-	updateDeviceReportStmt                      *sql.Stmt
-	updateEventGroupStmt                        *sql.Stmt
 	updateFoodIntakeStmt                        *sql.Stmt
 	updateFoodPresetStmt                        *sql.Stmt
 	updateGlucoseReadingStmt                    *sql.Stmt
@@ -1573,6 +1654,17 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		profileSwitchTotalsStmt:                     q.profileSwitchTotalsStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
+		rewriteActivityStmt:                         q.rewriteActivityStmt,
+		rewriteDeviceReportStmt:                     q.rewriteDeviceReportStmt,
+		rewriteEventGroupStmt:                       q.rewriteEventGroupStmt,
+		rewriteFoodIntakeStmt:                       q.rewriteFoodIntakeStmt,
+		rewriteFoodPresetStmt:                       q.rewriteFoodPresetStmt,
+		rewriteGlucoseReadingStmt:                   q.rewriteGlucoseReadingStmt,
+		rewriteInsulinDoseStmt:                      q.rewriteInsulinDoseStmt,
+		rewriteNotificationEventStmt:                q.rewriteNotificationEventStmt,
+		rewriteProfileSwitchStmt:                    q.rewriteProfileSwitchStmt,
+		rewriteTempBasalStmt:                        q.rewriteTempBasalStmt,
+		rewriteTempTargetStmt:                       q.rewriteTempTargetStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
 		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,
 		searchEventGroupsStmt:                       q.searchEventGroupsStmt,
@@ -1610,8 +1702,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tempTargetTotalsStmt:                        q.tempTargetTotalsStmt,
 		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
-		updateDeviceReportStmt:                      q.updateDeviceReportStmt,
-		updateEventGroupStmt:                        q.updateEventGroupStmt,
 		updateFoodIntakeStmt:                        q.updateFoodIntakeStmt,
 		updateFoodPresetStmt:                        q.updateFoodPresetStmt,
 		updateGlucoseReadingStmt:                    q.updateGlucoseReadingStmt,

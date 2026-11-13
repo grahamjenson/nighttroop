@@ -450,6 +450,26 @@ func (t Treatment) V3() any {
 	return t
 }
 
+// MergeAliases are the fields a merge takes out of the stored treatment when one is sent, as they say the same: a
+// duration sent is no longer indefinite, its targets are its correction range, and a temp basal's rate is its percent
+func (t Treatment) MergeAliases() map[string][]string {
+	return map[string][]string{
+		"duration":               {"durationInMilliseconds", "durationType"},
+		"durationInMilliseconds": {"duration", "durationType"},
+		"targetTop":              {"correctionRange"},
+		"targetBottom":           {"correctionRange"},
+		"correctionRange":        {"targetTop", "targetBottom"},
+		"absolute":               {"rate", "percent"},
+		"rate":                   {"absolute", "percent"},
+		"percent":                {"absolute", "rate"},
+	}
+}
+
+// GlucoseFields are the fields whose glucose is in the treatment's units
+func (t Treatment) GlucoseFields() []string {
+	return []string{"glucose", "targetTop", "targetBottom", "correctionRange"}
+}
+
 func (t Treatment) GetDate() *int64 {
 	return t.Date.Int64p()
 }

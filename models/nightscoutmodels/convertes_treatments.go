@@ -109,92 +109,6 @@ type TreatmentsEvenetConverter interface {
 	ActivityCreate(source sitedb.Activity, ctx ConverterContext) sitedb.CreateActivityParams
 
 	///////
-	// Update
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	EventGroupUpdate(source sitedb.EventGroup, ctx ConverterContext) sitedb.UpdateEventGroupParams
-
-	///////
-	// Food Intake
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	FoodIntakeUpdate(source sitedb.FoodIntake, ctx ConverterContext) sitedb.UpdateFoodIntakeParams
-
-	///////
-	// Glucose Reading
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	GlucoseReadingUpdate(source sitedb.GlucoseReading, ctx ConverterContext) sitedb.UpdateGlucoseReadingParams
-
-	///////
-	// Insulin Dose
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	InsulinDoseUpdate(source sitedb.InsulinDose, ctx ConverterContext) sitedb.UpdateInsulinDoseParams
-
-	///////
-	// Notes
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	NotificationEventUpdate(source sitedb.NotificationEvent, ctx ConverterContext) sitedb.UpdateNotificationEventParams
-
-	///////
-	// Profile
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	ProfileUpdate(source sitedb.ProfilePreset, ctx ConverterContext) sitedb.UpdateProfilePresetParams
-
-	///////
-	// Profile Switch
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	ProfileSwitchUpdate(source sitedb.ProfileSwitch, ctx ConverterContext) sitedb.UpdateProfileSwitchParams
-
-	///////
-	// Temp Basal
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	TempBasalUpdate(source sitedb.TempBasal, ctx ConverterContext) sitedb.UpdateTempBasalParams
-
-	///////
-	// Temp Targets
-	///////
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	TempTargetUpdate(source sitedb.TempTarget, ctx ConverterContext) sitedb.UpdateTempTargetParams
-
-	// goverter:context ctx
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	ActivityUpdate(source sitedb.Activity, ctx ConverterContext) sitedb.UpdateActivityParams
-
-	///////
 	// EventGroup
 	///////
 
@@ -279,46 +193,6 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map DurationMinutes Duration | MinutesToDuration
 	UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment)
-
-	//////
-	// Update Override
-	//////
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToEventGroup(source sitedb.EventGroup, target *sitedb.EventGroup)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToFoodIntake(source *sitedb.FoodIntake, target *sitedb.FoodIntake)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.GlucoseReading)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToInsulinDose(source *sitedb.InsulinDose, target *sitedb.InsulinDose)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToNotificationEvent(source *sitedb.NotificationEvent, target *sitedb.NotificationEvent)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToProfileSwitch(source *sitedb.ProfileSwitch, target *sitedb.ProfileSwitch)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToTempBasal(source *sitedb.TempBasal, target *sitedb.TempBasal)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToTempTarget(source *sitedb.TempTarget, target *sitedb.TempTarget)
-
-	// goverter:update target
-	// goverter:ignore ID
-	UpdateToActivity(source *sitedb.Activity, target *sitedb.Activity)
 
 	//////
 	// Partial Treatment Converters
