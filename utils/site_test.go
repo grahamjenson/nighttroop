@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -37,5 +39,21 @@ func TestSyntacticallyValidateSiteIDAllocatesNothing(t *testing.T) {
 func BenchmarkSyntacticallyValidateSiteID(b *testing.B) {
 	for b.Loop() {
 		SyntacticallyValidateSiteID("alicezzz")
+	}
+}
+
+// A record's ID is shaped as a MongoDB ObjectId, as xDrip+ only deletes a treatment whose _id is: 24 lower case hex
+// characters, starting with the unix seconds it was made in, and different each time
+func TestNextIDIsAnObjectID(t *testing.T) {
+	before := time.Now().Unix()
+	seen := map[string]bool{}
+	for range 1000 {
+		id := NextID()
+		require.Regexp(t, `^[0-9a-f]{24}$`, id)
+		seconds, err := strconv.ParseInt(id[:8], 16, 64)
+		require.NoError(t, err)
+		require.InDelta(t, before, seconds, 2)
+		require.False(t, seen[id], "an ID was made twice")
+		seen[id] = true
 	}
 }

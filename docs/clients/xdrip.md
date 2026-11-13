@@ -165,6 +165,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `PUT treatments`, `Sensor Start`, and again to update | Works |
 | `PUT treatments`, `Sensor Stop` | Works: kept as a sensor change, and the treatments queued after it upload (it was refused, and they were lost) |
 | `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted. Any other unknown `find[...]` now gives nothing, so it deletes nothing |
+| Deleting a treatment xDrip+ downloaded, e.g. a careportal note (Undo last) | Fixed in this PR: xDrip+ only deletes one whose `_id` is 24 characters, a MongoDB ObjectId, and Nighttroop's were 8, so the delete was never sent and the treatment came back. Records made without an `_id` now get an ObjectId-shaped one |
 | `GET treatments` download, `Last-Modified` and `Etag` | Works |
 | `POST activity`, steps | Works |
 | `POST activity`, heart rate and motion | Fixed in this PR (only the time was kept) |

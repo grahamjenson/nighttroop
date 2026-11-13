@@ -1,0 +1,49 @@
+# xDrip+ only deletes a treatment whose _id is 24 characters, a MongoDB ObjectId (NightscoutUploader.java), so every
+# record made without an _id, by careportal, another app or the site, gets one shaped so, as Nightscout's are. Before,
+# a careportal note xDrip+ undid stayed on the server and came back on its next download.
+
+INCLUDE steps/new_site.steps
+
+# Nightscout's careportal posts a note with no _id
+NAME careportal_note
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"eventType": "Note", "notes": "delete me", "enteredBy": "careportal", "created_at": "{{ time 5 }}"}
+ASSERT_STATUS 200
+ASSERT_LENGTH 24 "@0._id"
+SET note_id {{ dig "careportal_note.0._id" }}
+
+# xDrip+ undoes it: it looks the treatment up by its uuid, the _id it downloaded, then deletes it by _id
+NAME xdrip_find_note
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[uuid]={{ .note_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+
+NAME xdrip_delete_note
+DELETE http://{{ .ns_site }}/api/v1/treatments/{{ .note_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+
+NAME note_gone
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[_id]={{ .note_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+# A record made on the site has one too, as xDrip+ downloads those as well
+NAME site_food
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 30, "name": "Toast"}
+ASSERT_STATUS 201
+ASSERT_LENGTH 24 "@result.id"
+
+# An entry made without an _id has one shaped so too
+NAME entry
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"type": "sgv", "sgv": 120, "dateString": "{{ time 4 }}", "device": "xDrip-DexcomG6"}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 24 "@0._id"
