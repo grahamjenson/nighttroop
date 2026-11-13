@@ -289,14 +289,7 @@ func AssertContainsValue(t *testing.T, expected, actual any, message string, fil
 		return true
 	}
 
-	t.Fatalf(
-		"\n ASSERT FAILED \n %s:%d: %s\nexpected to contain: %#v\nactual:              %#v",
-		file,
-		line,
-		message,
-		expected,
-		actual,
-	)
+	t.Fatal(failure("ASSERT FAILED", file, line, expected, actual, message))
 
 	return false
 }
@@ -308,14 +301,7 @@ func AssertEqual(t *testing.T, expected, actual any, message string, file string
 		return true
 	}
 
-	t.Fatalf(
-		"\n ASSERT EQUALS FAILED \n %s:%d: %s\nexpected: %#v\nactual:   %#v",
-		file,
-		line,
-		message,
-		expected,
-		actual,
-	)
+	t.Fatal(failure("ASSERT FAILED", file, line, expected, actual, message))
 
 	return false
 }
@@ -327,13 +313,7 @@ func AssertNotNil(t *testing.T, actual any, message string, file string, line in
 		return true
 	}
 
-	t.Fatalf(
-		"\n ASSERT NOT NIL FAILED \n %s:%d: %s\nactual:   %#v",
-		file,
-		line,
-		message,
-		actual,
-	)
+	t.Fatal(failure("ASSERT_EXISTS FAILED", file, line, "a value", actual, message))
 
 	return false
 }

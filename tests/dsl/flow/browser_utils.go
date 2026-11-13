@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/html"
 )
 
+// PrettifyHTML is the page indented, dimmed in a failure so the failure itself stands out
 func PrettifyHTML(input string) string {
 	tokenizer := html.NewTokenizer(strings.NewReader(input))
 	var buf bytes.Buffer
@@ -89,7 +90,7 @@ func PrettifyHTML(input string) string {
 		}
 	}
 
-	return buf.String()
+	return dim(buf.String())
 }
 
 func getLocator(expected any, page playwright.Page) playwright.Locator {

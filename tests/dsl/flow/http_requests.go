@@ -1,7 +1,6 @@
 package flow
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 )
@@ -55,42 +53,26 @@ func Client(ts *httptest.Server) *http.Client {
 // after it, failing the test if it cannot be sent. The request and its response are printed.
 func (r *Request) Run(t *testing.T, client *http.Client, ctx map[string]any) {
 	t.Helper()
-	fmt.Printf("\n=============== %s  ================\n\n", r.Name)
-	r.PrintRequest()
+	if sent := r.Describe(); sent != "" {
+		logf(t, "%s", sent)
+	}
 	if _, err := r.ExecuteRequest(t, client, ctx); err != nil {
 		t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, r.Method, r.URL)
 	}
 
-	fmt.Printf("\nSTATUS CODE: %d\n", ctx[r.Name+"_status"])
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(false)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(ctx[r.Name]); err != nil {
-		fmt.Printf("RESPONSE: %s and failed to format response: %v\n", ctx[r.Name], err)
-	} else {
-		fmt.Printf("RESPONSE:\n%s", buf.String())
-	}
-	fmt.Println("===============================")
+	response, _ := MarshalJsonWithoutEscapeHTML(ctx[r.Name])
+	logf(t, "  status %v: %s", ctx[r.Name+"_status"], response)
 }
 
 func (r *Request) ToFlatString() string {
 	return fmt.Sprintf("NAME %s METHOD %s URL %s", r.Name, r.Method, r.URL)
 }
 
-func (r *Request) PrintRequest() {
-	// String URL of token param
-	urlToPrint := r.URL
-	u, err := url.Parse(r.URL)
-	if err == nil {
-		q := u.Query()
-		q.Del("token")
-		u.RawQuery = q.Encode()
-		urlToPrint = u.String()
-	}
-	fmt.Printf("REQUEST %s: %s %s\n", r.Name, r.Method, urlToPrint)
+// Describe is what the request sends, besides its method and URL, its Authorization left out
+func (r *Request) Describe() string {
+	out := ""
 	if r.Body != nil && len(*r.Body) > 0 {
-		fmt.Printf("BODY %s\n", strings.ReplaceAll(*r.Body, "\n", " "))
+		out += "  body: " + strings.ReplaceAll(*r.Body, "\n", " ") + "\n"
 	}
 	for k, v := range r.Headers {
 		if k == "Accept" || k == "Content-Type" {
@@ -99,8 +81,9 @@ func (r *Request) PrintRequest() {
 		if k == "Authorization" {
 			v = []string{"<REDACTED>"}
 		}
-		fmt.Printf("H %s: %s\n", k, strings.Join(v, ", "))
+		out += fmt.Sprintf("  %s: %s\n", k, strings.Join(v, ", "))
 	}
+	return strings.TrimSuffix(out, "\n")
 }
 
 func (r *Request) AddAssert(assert HTTPAssert) {
@@ -202,7 +185,7 @@ func (r *Request) ExecuteRequest(t *testing.T, client *http.Client, context map[
 	var out any
 	bodyOut := string(sent)
 	if err := json.NewDecoder(strings.NewReader(bodyOut)).Decode(&out); err != nil {
-		fmt.Println("failed to decode json for", r.Name, "error:", err)
+		logf(t, "  %s's response is not JSON: %v", r.Name, err)
 	}
 	if err != nil {
 		return context, fmt.Errorf("request %s response body is not valid JSON: %v", r.Name, err)

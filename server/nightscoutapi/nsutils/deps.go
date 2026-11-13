@@ -125,7 +125,11 @@ func ReadCollectionAndIdentifier(w http.ResponseWriter, r *http.Request, action 
 	collection, identity, err := GetCollectionAndEnsurePermission(r, action)
 	if err == nil {
 		identifier = chi.URLParam(r, "identifier")
-		if err = ValidateIdentifierIsntBad(identifier); err == nil {
+		validate := ValidateIdentifierIsntBad
+		if collection == Settings {
+			validate = ValidateSettingKeyIsntBad
+		}
+		if err = validate(identifier); err == nil {
 			return collection, identity, identifier, true
 		}
 	}

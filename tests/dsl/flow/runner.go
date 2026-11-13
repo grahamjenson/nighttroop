@@ -82,6 +82,7 @@ func requestsAnswered(page playwright.Page) error {
 // browser steps between its API steps.
 func (r *Runner) Run(t *testing.T, flow *Flow, ctx map[string]any) {
 	t.Helper()
+	report(t, flow.Path)
 	api := &httpRunner{Client: r.Client, RunBackgroundJobs: r.RunBackgroundJobs, NewSocket: r.NewSocket}
 	defer api.Close()
 	for i, step := range flow.Steps {
@@ -104,9 +105,7 @@ func (r *Runner) browse(t *testing.T, path string, i int, action Action, ctx map
 		r.Page = page
 	}
 	r.watch(r.Page, ctx)
-	fmt.Printf("\n=============== %s  ================\n\n", action.ToFlatString())
-	action.PrintAction()
-	fmt.Println("\n- - - - - - - - - - - - - - - - ")
+	logf(t, "%s", action.ToFlatString())
 	if _, ok := action.(*RunBackgroundJobs); ok {
 		if err := requestsAnswered(r.Page); err != nil {
 			t.Fatalf("%s", action.ToErrorLine("the page's requests were not answered: "+err.Error()))
@@ -128,7 +127,6 @@ func (r *Runner) browse(t *testing.T, path string, i int, action Action, ctx map
 		if err != nil {
 			t.Fatalf("failed to take screenshot: %v", err)
 		}
-		fmt.Println("Screenshot saved to:", screenshotPath)
+		logf(t, "  screenshot: %s", screenshotPath)
 	}
-	fmt.Println("===============================")
 }

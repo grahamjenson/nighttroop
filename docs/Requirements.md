@@ -856,9 +856,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   clients read `sgv`, `mbg`, a treatment's `glucose`, a temp target's `targetTop` and `targetBottom` and a profile's
   targets as mg/dL: entries, treatments, profiles and their `units`, over HTTP and Socket.IO. It is accepted in the
   units sent with it, or guessed from its value.
+- A profile switch sent without a `profileJson`, as the careportal and T1DCarer send one naming a profile, comes back
+  without one, so AAPS switches to its own profile of that name.
 - A profile, or a profile switch's `profileJson`, sent in mmol/L comes back in mg/dL in every glucose: its `sens`,
-  `target_low` and `target_high`, and Loop's `loopSettings` `minimumBGGuard`, `preMealTargetRange` and each override
-  preset's `targetRange`, so a reader never sees an mmol/L sensitivity or suspend threshold labelled mg/dL. Every treatment comes back with `units`, a temp target and a therapy
+  `target_low` and `target_high`, and Loop's `loopSettings` `minimumBGGuard`, `preMealTargetRange`, each override
+  preset's `targetRange` and its running `scheduleOverride`'s `targetRange`, so a reader never sees an mmol/L sensitivity or suspend threshold labelled mg/dL. Every treatment comes back with `units`, a temp target and a therapy
   event (e.g. a Note or Sensor Change) too, so a follower on an mmol/L site does not read a target of 90 as mmol/L.
 - The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
   followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
@@ -867,7 +869,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   (`aaps`, `aaps-state`) and the messages AAPS and AAPSClient pair and control it with (`aaps_clientcontrol_...`).
   Each is created, replaced, patched, read, searched, deleted and sent to `/storage` sockets as any document is,
   and the settings' last modified is when one last changed. A document over 256 KiB, or a new one once the site
-  keeps 100, is refused; client control messages left unchanged a week are deleted to make room.
+  keeps 100, is refused; client control messages left unchanged a week are deleted to make room. A settings key can
+  be up to 128 characters, as AAPS's client control keys have the client's UUID, while another collection's
+  identifier is at most 36.
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
   `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these
@@ -883,6 +887,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
 - A document sent with a date but no `utcOffset`, as AAPS sends a device status, takes the site timezone's offset at
   that date; a replace sent with none keeps the offset of the document it replaces.
+- A treatment's `created_at`, a device status's `created_at` or a profile's `startDate` written in UTC, with `Z`, as
+  Loop writes every time, says when, not where, so with no `utcOffset` sent it takes the site timezone's offset too; a
+  Loop device status takes its pump's `secondsFromGMT` (the phone's offset) instead; a time written with its offset,
+  e.g. `+13:00`, keeps it, and a `utcOffset` sent is kept.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A document's `created_at` is written as Nightscout writes it, as JavaScript's `toISOString` does, in UTC with three
   fractional digits: `…23.940Z` sent comes back as is, not `…23.94Z`, and `…23Z` comes back as `…23.000Z`. So are a
@@ -902,6 +910,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
+- A profile from Loop keeps its `loopSettings.scheduleOverride`, the override running when it was sent, as an
+  override preset is (its `duration` in seconds), so Loop reads it back.
 - A profile keeps Loop's and Trio's `deviceToken` whole, up to 256 characters, as Apple's are of no fixed length
   (Trio's are 160 hex characters), and registers it whole; a longer one is kept empty and not registered.
 - A profile's Loop `loopSettings.deviceToken` and Trio `deviceToken` are only given back, in v1, v3 and the socket's
@@ -940,8 +950,11 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, is merged into it,
   keeping its `_id` and what the upload leaves out, as Loop sends a temp basal or bolus again when it ends, and Trio a
   temp target or override run; followers get it as changed, and one sent again as it was stored changes nothing.
-- A treatment with only carbs at the date and type of one with only insulin, or the other way round, is its own
-  treatment, as AAPS's Bolus Wizard sends its bolus then its carbs as two Meal Boluses and deletes either on its own.
+- A treatment sent with no id of its own (`_id`, `identifier`, xDrip+'s `uuid`, Loop's `syncIdentifier`, Trio's `id`)
+  is only one stored sent again, as in Nightscout, when the one stored has no app's id either and the same carbs and
+  insulin, a zero being none; otherwise it is its own treatment. So a careportal note in the same second as an xDrip+
+  bolus is kept beside it rather than taking it over, and AAPS's Bolus Wizard's bolus and its carbs, two Meal
+  Boluses at one date that it deletes on their own, are two treatments.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
@@ -978,6 +991,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   the `duration` kept, so not once that is changed on the site; one sent with no `duration` is in minutes too, the
   nearest. A treatment with a duration is always given back with both `duration` and `durationInMilliseconds`, the one
   not kept worked out from the other.
+- A treatment's `duration` in minutes with a fraction, as Loop sends a bolus's (1.6666666666666667) or a suspend's, is
+  kept to the millisecond and given back with its fraction, not floored, so a quick bolus is not 0 minutes and
+  LoopFollow draws a temp basal as long as it was. A `duration` is given back as its `durationInMilliseconds` in
+  minutes whenever those are not whole minutes, so an AAPS temp target ended at 359587 ms reads 5.9931.
 - A device status keeps its uploader's `isCharging`, `name` and `timestamp`, and, while the status as sent is kept,
   Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
@@ -986,6 +1003,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   override again with its `_id` when it changes, and deletes it by that `_id`.
 - Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
   indefinite one lasts a week, and is given back with `durationType` `indefinite` while the override as sent is kept.
+  One sent `indefinite` with a `duration` of 0, or a `Temporary Override` of 0 minutes, as Nightscout's careportal
+  sends one until cancelled, is indefinite too, not ended as it starts; a `Temporary Target` of 0 minutes still
+  cancels the one running.
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it, and
@@ -1320,6 +1340,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   ID, expiring in 5 minutes, and is answered 200 `OK`. Who sent it is its identity, not its IP address. A bolus over
   30 U, carbs over 250 g or absorbing over 24 hours, an override over a week or without a name, or another event type
   is refused (400), as is a command to a site with no Loop or no credential for it, saying which.
+  Remote carbs sent with a `foodType` (e.g. 🍕) are pushed with it as Loop's `food-type`.
 - An FCM push is sent with the Firebase service account's OAuth token, got with a JWT its key signs from Google's
   token endpoint, never the `token_uri` in its JSON, and used again until five minutes before it expires; the key and
   tokens are never logged or shown. A service account Google refuses says Google's reason (502).

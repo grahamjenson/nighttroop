@@ -1,0 +1,35 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+# An override until cancelled: Loop sends durationType indefinite with no duration, but another client may send it
+# with a duration of 0 too, and Nightscout's careportal sends a Temporary Override of 0 minutes. Each is kept as long
+# as a temp target can be, a week, and given back as indefinite, rather than ended as it starts.
+NAME create_indefinite_overrides
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+    {"_id": "4E9C3A5D-1F0A-4C8D-97E6-3A4B5C6D7E8F", "created_at": "{{ time 30 }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "Custom Override", "durationType": "indefinite", "duration": 0, "insulinNeedsScaleFactor": 1.2, "correctionRange": [90, 100]},
+    {"created_at": "{{ time 20 }}", "enteredBy": "careportal", "eventType": "Temporary Override", "reason": "Sick", "duration": 0, "insulinNeedsScaleFactor": 1.3, "correctionRange": [100, 110]},
+    {"created_at": "{{ time 10 }}", "enteredBy": "careportal", "eventType": "Temporary Target", "reason": "Activity", "duration": 0, "targetTop": 140, "targetBottom": 140}
+  ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 10080 "@0.duration"
+ASSERT_EQUALS "indefinite" "@0.durationType"
+ASSERT_EQUALS 10080 "@1.duration"
+ASSERT_EQUALS "indefinite" "@1.durationType"
+# A temp target of 0 minutes is not an override: it cancels the one running, as in Nightscout
+ASSERT_EQUALS 0 "@2.duration"
+ASSERT_EQUALS null "@2.durationType"
+
+NAME indefinite_overrides_read_back
+GET http://{{ site }}/api/v1/treatments?find[eventType]=Temporary+Override&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 10080 "@0.duration"
+ASSERT_EQUALS "indefinite" "@0.durationType"
+ASSERT_EQUALS 1.3 "@0.insulinNeedsScaleFactor"
+ASSERT_EQUALS 10080 "@1.duration"
+ASSERT_EQUALS "indefinite" "@1.durationType"

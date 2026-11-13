@@ -4,11 +4,18 @@ package nsutils
 // Supports up to UUID 36 chars, alpha numeric and _ and - only
 // This is because users are allowed to set their own identifiers, but we have limits
 func ValidateIdentifierIsntBad(identifier string) *HTTPError {
-	if len(identifier) == 0 {
-		return BadIdentifierError
-	}
+	return validateIdentifier(identifier, 36)
+}
 
-	if len(identifier) > 36 {
+// ValidateSettingKeyIsntBad checks a settings document's key, which is longer than an identifier: AAPS names its
+// client control messages aaps_clientcontrol_ with their kind and the client's UUID, as
+// aaps_clientcontrol_cmd_BolusPrepare_<uuid>. The key column keeps up to 128.
+func ValidateSettingKeyIsntBad(key string) *HTTPError {
+	return validateIdentifier(key, 128)
+}
+
+func validateIdentifier(identifier string, maxLength int) *HTTPError {
+	if len(identifier) == 0 || len(identifier) > maxLength {
 		return BadIdentifierError
 	}
 

@@ -167,7 +167,7 @@ H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 H Accept: application/json
 B [{"defaultProfile": "Default", "startDate": "{{ time 40 }}", "mills": "1793600000000", "units": "mg/dL", "enteredBy": "Loop", "isAPNSProduction": true,
-    "loopSettings": {"dosingEnabled": true, "overridePresets": [{"duration": 3600, "symbol": "🏃", "targetRange": [140, 160], "insulinNeedsScaleFactor": 0.8, "name": "Running"}], "minimumBGGuard": 75, "preMealTargetRange": [80, 85], "maximumBasalRatePerHour": 4, "maximumBolus": 10, "deviceToken": "abcd", "dosingStrategy": "automaticBolus", "bundleIdentifier": "com.X.loopkit.Loop"},
+    "loopSettings": {"dosingEnabled": true, "overridePresets": [{"duration": 3600, "symbol": "🏃", "targetRange": [140, 160], "insulinNeedsScaleFactor": 0.8, "name": "Running"}], "scheduleOverride": {"name": "Workout", "symbol": "🏃", "duration": 3600, "targetRange": [150, 180], "insulinNeedsScaleFactor": 0.5}, "minimumBGGuard": 75, "preMealTargetRange": [80, 85], "maximumBasalRatePerHour": 4, "maximumBolus": 10, "deviceToken": "abcd", "dosingStrategy": "automaticBolus", "bundleIdentifier": "com.X.loopkit.Loop"},
     "store": {"Default": {"dia": 6, "carbs_hr": "0", "delay": "0", "timezone": "ETC/GMT-12", "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}], "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}, {"time": "06:30", "value": 1.05, "timeAsSeconds": 23400}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}], "units": "mg/dL"}}}]
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
@@ -188,6 +188,12 @@ ASSERT_EQUALS true "@loopSettings.dosingEnabled"
 ASSERT_EQUALS "Running" "@loopSettings.overridePresets.0.name"
 ASSERT_EQUALS 3600 "@loopSettings.overridePresets.0.duration"
 ASSERT_EQUALS 80 "@loopSettings.preMealTargetRange.0"
+ASSERT_EQUALS "Workout" "@loopSettings.scheduleOverride.name"
+ASSERT_EQUALS "🏃" "@loopSettings.scheduleOverride.symbol"
+ASSERT_EQUALS 3600 "@loopSettings.scheduleOverride.duration"
+ASSERT_EQUALS 150 "@loopSettings.scheduleOverride.targetRange.0"
+ASSERT_EQUALS 180 "@loopSettings.scheduleOverride.targetRange.1"
+ASSERT_EQUALS 0.5 "@loopSettings.scheduleOverride.insulinNeedsScaleFactor"
 ASSERT_EQUALS "ETC/GMT-12" "@store.Default.timezone"
 ASSERT_EQUALS 6 "@store.Default.dia"
 ASSERT_EQUALS 23400 "@store.Default.basal.1.timeAsSeconds"
@@ -217,7 +223,7 @@ POST http://{{ site }}/api/v1/profile
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B [{"defaultProfile": "Default", "startDate": "{{ time 30 }}", "units": "mmol/L", "enteredBy": "Loop",
-    "loopSettings": {"dosingEnabled": true, "overridePresets": [{"duration": 3600, "symbol": "🏃", "targetRange": [7.8, 8.9], "insulinNeedsScaleFactor": 0.8, "name": "Running"}], "minimumBGGuard": 4.4406, "preMealTargetRange": [4.44, 5.6], "maximumBasalRatePerHour": 4, "maximumBolus": 10, "dosingStrategy": "automaticBolus", "bundleIdentifier": "com.X.loopkit.Loop"},
+    "loopSettings": {"dosingEnabled": true, "overridePresets": [{"duration": 3600, "symbol": "🏃", "targetRange": [7.8, 8.9], "insulinNeedsScaleFactor": 0.8, "name": "Running"}], "scheduleOverride": {"name": "Workout", "symbol": "🏃", "duration": 3600, "targetRange": [8.3, 10.0], "insulinNeedsScaleFactor": 0.5}, "minimumBGGuard": 4.4406, "preMealTargetRange": [4.44, 5.6], "maximumBasalRatePerHour": 4, "maximumBolus": 10, "dosingStrategy": "automaticBolus", "bundleIdentifier": "com.X.loopkit.Loop"},
     "store": {"Default": {"dia": 6, "timezone": "ETC/GMT-13", "target_low": [{"time": "00:00", "value": 5.6, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 6.7, "timeAsSeconds": 0}], "sens": [{"time": "00:00", "value": 2.8, "timeAsSeconds": 0}], "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}], "units": "mmol/L"}}}]
 ASSERT_STATUS 200
 
@@ -239,6 +245,9 @@ ASSERT_EQUALS 100.901 "@loopSettings.preMealTargetRange.1"
 ASSERT_EQUALS 140.54 "@loopSettings.overridePresets.0.targetRange.0"
 ASSERT_EQUALS 160.36 "@loopSettings.overridePresets.0.targetRange.1"
 ASSERT_EQUALS 0.8 "@loopSettings.overridePresets.0.insulinNeedsScaleFactor"
+ASSERT_EQUALS 149.549 "@loopSettings.scheduleOverride.targetRange.0"
+ASSERT_EQUALS 180.18 "@loopSettings.scheduleOverride.targetRange.1"
+ASSERT_EQUALS 3600 "@loopSettings.scheduleOverride.duration"
 ASSERT_EQUALS 4 "@loopSettings.maximumBasalRatePerHour"
 
 # A profile sent with no enteredBy says who uploaded it, the identity

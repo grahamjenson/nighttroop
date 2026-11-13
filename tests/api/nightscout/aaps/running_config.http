@@ -98,6 +98,55 @@ GET http://{{ site }}/api/v3/settings/aaps_clientcontrol_hello_phone2
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 404
 
+// AAPS's real keys are aaps_clientcontrol_, the message's kind and the client's UUID, longer than an identifier
+NAME put_offer
+PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_offer_be731bf2-cc1d-42d4-88ed-55600dd34a4b
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800001,"utcOffset":780,"schemaVersion":1,"offer":"abc"}
+ASSERT_STATUS 201
+
+NAME get_offer
+GET http://{{ site }}/api/v3/settings/aaps_clientcontrol_offer_be731bf2-cc1d-42d4-88ed-55600dd34a4b
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "abc" "@result.offer"
+ASSERT_EQUALS "aaps_clientcontrol_offer_be731bf2-cc1d-42d4-88ed-55600dd34a4b" "@result.identifier"
+
+NAME put_command
+PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_cmd_EatReminderControl_be731bf2-cc1d-42d4-88ed-55600dd34a4b
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800002,"schemaVersion":1,"envelope":"cmd"}
+ASSERT_STATUS 201
+
+NAME patch_command
+PATCH http://{{ site }}/api/v3/settings/aaps_clientcontrol_cmd_EatReminderControl_be731bf2-cc1d-42d4-88ed-55600dd34a4b
+H Authorization: Bearer {{ jwt }}
+B {"envelope":"cmd2"}
+ASSERT_STATUS 200
+
+NAME delete_command
+DELETE http://{{ site }}/api/v3/settings/aaps_clientcontrol_cmd_EatReminderControl_be731bf2-cc1d-42d4-88ed-55600dd34a4b
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_offer
+DELETE http://{{ site }}/api/v3/settings/aaps_clientcontrol_offer_be731bf2-cc1d-42d4-88ed-55600dd34a4b
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// A key over 128 characters is refused
+NAME put_key_too_long
+PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_{{ repeat "x" 110 }}
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800001}
+ASSERT_STATUS 400
+
+// Another collection's identifier is still at most 36 characters
+NAME get_treatment_id_too_long
+GET http://{{ site }}/api/v3/treatments/{{ repeat "x" 37 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 400
+
 // A document over 256 KiB is refused
 NAME put_too_large
 PUT http://{{ site }}/api/v3/settings/aaps
