@@ -297,7 +297,6 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 	}
 	pTypesShortString := types.ShortString(source.CreatedByIdentityName)
 	nightscoutmodelsTreatment.Subject = &pTypesShortString
-	nightscoutmodelsTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
 	pTypesDateInt := types.DateInt(source.OccurredAt)
 	nightscoutmodelsTreatment.Date = &pTypesDateInt
 	if source.UtcOffsetMinutes != nil {

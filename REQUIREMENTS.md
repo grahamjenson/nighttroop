@@ -1181,13 +1181,25 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 ### Nightscout API: dates and times
 
+#### Time fields
+
+- Each collection reads its time from the first of its time fields sent, in this order:
+  - Treatment: `date`, `eventTime`, `created_at`, `timestamp`.
+  - Entry: `date`, `dateString`, `mills`, `sysTime`.
+  - Device status, activity: `date`, `created_at`.
+  - Profile: `date`, `startDate`, `mills`.
+- A time field sent later in ms, in the same second, gives the time its ms.
+- A time field that is not a time: refused (400). Exception: a treatment's `timestamp`, which is then not read.
+- Each time field is written from the time: `date` and `mills` in ms, the others as `created_at` is.
+
 #### UTC offset
 
 - A document with a date and no `utcOffset` (e.g. an AAPS device status): the site timezone's offset at that date.
 - A replace with no `utcOffset`: keeps the replaced document's offset.
-- A UTC time with `Z` (Loop) and no `utcOffset`, in a treatment's or device status's `created_at` or a profile's
-  `startDate`: the site timezone's offset. A Loop device status: its pump's `secondsFromGMT` (the phone's offset).
-- A time with an offset (e.g. `+13:00`), or a sent `utcOffset`: kept.
+- A UTC time with `Z` (Loop) and no `utcOffset`, in a treatment's or device status's `created_at`, a profile's
+  `startDate` or an entry's `dateString`: the site timezone's offset. A Loop device status: its pump's
+  `secondsFromGMT` (the phone's offset).
+- A time with an offset (e.g. `+13:00`), or a sent `utcOffset`: kept. The first time string sent gives the offset.
 - Juggluco's `-03:-30` zone in a `dateString`: read as `-03:30`.
 
 #### Time format
@@ -1196,11 +1208,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - `…23.940Z` comes back as sent, not `…23.94Z`. `…23Z` comes back as `…23.000Z`.
 - Same format:
   - Treatment `timestamp`, profile `startDate`: always UTC, whatever `utcOffset` (LoopFollow).
-  - Entry `dateString`: in its UTC offset. Trio's deleteGlucose finds and deletes an entry by the `.SSS` `dateString`
-    it sent.
+  - Entry `dateString`: always UTC, whatever `utcOffset`. Trio's deleteGlucose finds and deletes an entry by the
+    `.SSS` `dateString` it sent.
 - Dates kept as sent (e.g. device status `pump.clock`, which LoopFollow reads without fractional seconds): unchanged.
-- Entry `date`: kept to the ms, a fraction dropped, also when the `dateString` has whole seconds (Loop). The
-  `dateString` gives the UTC offset.
+- Entry `date`: kept to the ms, a fraction dropped, also when the `dateString` has whole seconds (Loop).
 
 #### Treatment times
 

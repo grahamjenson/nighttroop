@@ -1,7 +1,6 @@
 package nightscoutmodels
 
 import (
-	"cmp"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -122,14 +121,11 @@ type Treatment struct {
 	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
-	// Date Fields
-	CreatedAt        *types.DateString    `json:"created_at,omitempty"` // ISO8601 -> time.Time
-	Date             *types.DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds
-	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`  // Minutes offset from UTC
+	// Date is when it happened, read from and written as its TimeAliases
+	Date             *types.DateInt       `json:"-"`
+	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
 
-	// Given back for Loop's NightscoutKit, which drops a treatment without a timestamp, a bolus without programmed
-	// and a temp basal without temp; a timestamp sent is not read, as created_at is when it was
-	Timestamp  *types.DateString      `json:"timestamp,omitempty"`
+	// Given back for Loop's NightscoutKit, which drops a bolus without programmed and a temp basal without temp
 	Programmed *types.FlexibleFloat64 `json:"programmed,omitempty"`
 	Temp       *types.ShortString     `json:"temp,omitempty"`
 
@@ -151,6 +147,10 @@ type InsulinConfig struct {
 }
 
 func (t *Treatment) UnmarshalJSON(data []byte) error {
+	date, offset, err := treatmentTimes.Read(data)
+	if err != nil {
+		return err
+	}
 	type Alias Treatment
 	// We here extract some fields used by other models as a unique identfier
 	aux := struct {
@@ -158,10 +158,6 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		// Trio's own id, which it deletes by; one that is not an identifier is left out rather than refuse the upload
 		ID             json.RawMessage `json:"id"`
 		SyncIdentifier json.RawMessage `json:"syncIdentifier"`
-		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
-		EventTime *types.DateString `json:"eventTime"`
-		// Shadows Timestamp, so a timestamp sent is read only as when it was, with no created_at or date
-		Timestamp json.RawMessage `json:"timestamp"`
 		// Shadows EventType, to tell one sent as "<none>"
 		EventType json.RawMessage `json:"eventType"`
 		// Shadows DurationMinutes, as Loop sends minutes with a fraction, e.g. a bolus's 1.6666666666666667
@@ -222,32 +218,20 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		t.DurationMinutes = new(types.FlexibleInt64((*t.DurationInMilliseconds + 30_000) / 60_000))
 	}
 
-	if aux.EventTime != nil {
-		t.CreatedAt = aux.EventTime
-	}
-	// One sent with only a timestamp, a string or milliseconds, was then, not when it arrives
-	if t.CreatedAt == nil && t.Date == nil && len(aux.Timestamp) > 0 {
-		var sent types.DateString
-		if json.Unmarshal(aux.Timestamp, &sent) == nil && sent != "" {
-			t.CreatedAt = &sent
-		}
-	}
-
-	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
-	if t.CreatedAt != nil {
-		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			date, offset := t.CreatedAt.MillisSentOffset()
-			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
-		}
-	}
-	// A timestamp in milliseconds in the same second as the date, as xDrip+ sends beside a created_at of whole seconds,
-	// is when it was to the millisecond
-	var ms int64
-	if t.Date != nil && json.Unmarshal(aux.Timestamp, &ms) == nil && ms/1000 == int64(*t.Date)/1000 {
-		t.Date = new(types.DateInt(ms))
-	}
-
+	t.Date, t.UtcOffsetMinutes = date, offset
 	return nil
+}
+
+// treatmentTimes are when a treatment happened: eventTime is its created_at, as Nightscout stores a careportal's or
+// xDrip4iOS's; a timestamp, a string or ms, is when it was with no other time, and xDrip+'s ms one gives its
+// created_at of whole seconds its milliseconds. It is given back on API v1 for Loop's NightscoutKit, which drops a
+// treatment without one, in UTC, as LoopFollow reads it before created_at and drops its offset, but not on API v3,
+// as AAPS drops a treatment whose timestamp is not a number.
+var treatmentTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "eventTime", Write: types.WriteNever},
+	{Name: "created_at"}, {Name: "timestamp", Write: types.WriteV1}}
+
+func (t Treatment) TimeAliases() types.TimeAliases {
+	return treatmentTimes
 }
 
 // noEventType is the event type of a treatment sent with none, "<none>", as xDrip+ sends every bolus, carbs and note
@@ -476,9 +460,6 @@ func (t Treatment) GetSubject() *string {
 	return t.Subject.Stringp()
 }
 
-// V1OnlyFields are given back only through API v1 and its sockets, not API v3 and its storage socket: Loop's
-// NightscoutKit reads v1 and drops a treatment without a timestamp, but AAPS reads v3 and drops one whose timestamp is
-// not a number
 // V3 is the treatment as API v3 and its storage socket write it: its duration in whole minutes, as AAPS reads it as a
 // whole number (RemoteTreatment.duration) and drops a treatment, or a page of them, whose duration has a fraction. Its
 // durationInMilliseconds, which AAPS reads first, is exact; API v1 gives Loop the minutes with their fraction.
@@ -491,10 +472,6 @@ func (t Treatment) V3() any {
 		t.Timeshift = new(*t.Timeshift * 60_000)
 	}
 	return t
-}
-
-func (t Treatment) V1OnlyFields() []string {
-	return []string{"timestamp"}
 }
 
 func (t Treatment) GetDate() *int64 {

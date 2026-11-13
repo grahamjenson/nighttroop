@@ -208,12 +208,10 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	EventGroupToTreatment(source sitedb.EventGroup) *Treatment
 
 	// goverter:context siteContext
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	//
 	// goverter:ignoreMissing
 	// goverter:map Mgdl Glucose    | GlucoseReadingTypeToValue
@@ -222,7 +220,6 @@ type TreatmentsEvenetConverter interface {
 	UpdateGlucoseReadingToTreatment(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map Dose Insulin
@@ -233,14 +230,12 @@ type TreatmentsEvenetConverter interface {
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map UserEnteredAt UserEnteredAt | MillisToDateString
 	UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map Rate Absolute
@@ -250,7 +245,6 @@ type TreatmentsEvenetConverter interface {
 	UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map . CorrectionRange | ToCorrectionRange
@@ -260,7 +254,6 @@ type TreatmentsEvenetConverter interface {
 	UpdateTempTargetToTreatment(source *sitedb.TempTarget, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map Title Name
@@ -269,7 +262,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:context siteContext
 	// goverter:update target
 	// The treatment's units are its glucose's: the profile's are in its profileJson
-	// goverter:ignore CreatedAt Units
+	// goverter:ignore Units
 	// goverter:ignoreMissing
 	//
 	// goverter:map Name Profile
@@ -280,7 +273,6 @@ type TreatmentsEvenetConverter interface {
 	UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
-	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
