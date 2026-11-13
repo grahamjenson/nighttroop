@@ -33,6 +33,9 @@ type UserIdentity struct {
 	NSURL  string `json:"-"`
 }
 
+// AAPSClient is the client of a device AAPS pairs as a client, reading and writing, through Nightscout's subjects
+const AAPSClient = "aapsclient"
+
 // ClientRoles are the roles a device for a client must have: a loop (AAPS, Trio or Loop) uploads the treatments it
 // gives and reads the profile it loops with, so it is the PWD phone
 var ClientRoles = map[string]consts.IdentityRole{

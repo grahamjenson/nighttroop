@@ -204,8 +204,8 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 		nsModel.ConfigurationRaw = &configuration
 	}
 
-	// The loop's status goes back as its openaps or loop object, as it was sent, or, once a newer one came in and it was
-	// cleared, as what was extracted of it, its IOB and COB
+	// The loop's status goes back as its openaps or loop object, as it was sent, without its predictions once a day old,
+	// or, for one cleared whole by an earlier truncate, as what was extracted of it, its IOB and COB
 	if source.LoopName != nil {
 		status := extractedLoopStatus(*source.LoopName, source)
 		if source.LoopStatusJson != nil {
