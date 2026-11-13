@@ -185,7 +185,9 @@ On the CGM timer (`fetchLastGlucose`): `count=1600&find[dateString][$gte]=<ISO d
 Trio decodes each as `BloodGlucose`: `dateString` (date) required; `_id`/`id`, `sgv` and `mbg` (integer, or a number
 it truncates), `direction` (one of Nightscout's names, e.g. `Flat`, `FortyFiveUp`, `NOT COMPUTABLE`; any other
 string fails the whole list), `date` (ms, or worked out from `dateString`), `unfiltered`, `filtered`, `noise`
-(integer), `type`, `activationDate`, `sessionStartDate`, `transmitterID`. Works in mg/dL.
+(integer), `type`, `activationDate`, `sessionStartDate`, `transmitterID`. Works in mg/dL. Nighttroop gives each
+`direction` as one of those names, from any case or arrow, `NOT COMPUTABLE` for one it does not know, and `noise` as
+a whole number, so one uploader's reading cannot stop Trio getting glucose.
 
 ### Profile import: `GET /api/v1/profile.json?count=1`
 

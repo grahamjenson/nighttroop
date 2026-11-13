@@ -49,6 +49,8 @@ type DBModelConverter interface {
 	// goverter:map ReadingType Type
 	// goverter:map Delta Trend
 	// goverter:map Rssi RSSI
+	// goverter:map Direction | EntryDirection
+	// goverter:map Noise | WholeNoise
 	DBModelToEntry(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) Entry
 
 	///////

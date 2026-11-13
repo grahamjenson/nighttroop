@@ -2,6 +2,7 @@ package httputils_test
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -39,4 +40,26 @@ func TestExtraWritesWithinRateLimit(t *testing.T) {
 
 	// A batch of one chunk costs nothing more
 	require.True(t, httputils.ExtraWritesWithinRateLimit(r, 0))
+}
+
+// A request over its identity's limit is refused with a Retry-After of when one is let through again, at least a second
+func TestIdentityRateLimitSaysWhenToRetry(t *testing.T) {
+	cfg := testutils.GetTestServerConfig()
+	identity := &controldb.SiteIdentity{ID: -8}
+	ctx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, "retryzzz", "10.0.0.2", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+	r := httptest.NewRequest("POST", "/api/v3/treatments", nil).WithContext(httputils.SetIdentityModelInSiteContext(ctx, identity))
+	limiter := cfg.RateLimiters.IdentityPOSTLimiter(identity.ID)
+	limiter.SetLimit(rate.Limit(1.0 / 30))
+	limiter.SetBurst(1)
+	limited := httputils.SiteIdentityRateLimitMiddleware(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+
+	first := httptest.NewRecorder()
+	limited.ServeHTTP(first, r)
+	require.Equal(t, http.StatusOK, first.Code)
+	require.Empty(t, first.Header().Get("Retry-After"))
+
+	refused := httptest.NewRecorder()
+	limited.ServeHTTP(refused, r)
+	require.Equal(t, http.StatusTooManyRequests, refused.Code)
+	require.Contains(t, []string{"29", "30"}, refused.Header().Get("Retry-After"))
 }

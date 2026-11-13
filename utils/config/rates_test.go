@@ -121,7 +121,8 @@ func TestRateLimiterStats(t *testing.T) {
 		SiteGETPerMinuteLimit: 60, SiteGETPerMinuteBurst: 4,
 	})
 	now := time.Now()
-	for range 4 {
+	// A site's limit is SiteIdentitiesShare identities' worth: 240 a minute and a burst of 16
+	for range 16 {
 		require.True(t, limiters.SiteGETLimiter("busy").AllowN(now, 1))
 	}
 	require.True(t, limiters.SiteGETLimiter("quiet").AllowN(now, 1))
@@ -131,12 +132,12 @@ func TestRateLimiterStats(t *testing.T) {
 		byName[s.Name] = s
 	}
 	require.Len(t, byName, 17)
-	require.Equal(t, RateLimiterStats{Name: "site_get", Per: "site", PerMinute: 60, Burst: 4, Tracked: 2, Limited: 1, FullestPercent: 100},
-		byName["site_get"], "busy has spent its burst, quiet a quarter")
+	require.Equal(t, RateLimiterStats{Name: "site_get", Per: "site", PerMinute: 240, Burst: 16, Tracked: 2, Limited: 1, FullestPercent: 100},
+		byName["site_get"], "busy has spent its burst, quiet a sixteenth")
 	require.Equal(t, RateLimiterStats{Name: "global", Per: "server", PerMinute: 60, Burst: 10, Tracked: 1}, byName["global"])
 	require.Equal(t, RateLimiterStats{Name: "site_post", Per: "site"}, byName["site_post"], "none kept yet")
 
-	// Reading them spent nothing, so a second later busy has one of its 4 back and would not refuse
+	// Reading them spent nothing, so a second later busy has 4 of its 16 back and would not refuse
 	for _, s := range limiters.Stats(now.Add(time.Second)) {
 		if s.Name == "site_get" {
 			require.Zero(t, s.Limited)
@@ -176,7 +177,7 @@ func TestSetRatesChangesEveryLimiterOfItsKind(t *testing.T) {
 			require.Equal(t, len(tt.set) > 0, setting.Set)
 			require.Equal(t, Rate{1, 1}, setting.Default)
 			// Other kinds keep the env's
-			require.Equal(t, 10, limiters.SitePOSTLimiter("site").Burst())
+			require.Equal(t, 10*SiteIdentitiesShare, limiters.SitePOSTLimiter("site").Burst())
 		})
 	}
 	for _, s := range limiters.Stats(time.Now()) {
@@ -199,4 +200,19 @@ func TestRateLimiterCachesKeepAHouseholdsIdentitiesASite(t *testing.T) {
 		limiters.IdentityPOSTLimiter(id)
 	}
 	require.True(t, limiters.IdentityPOSTLimiter(0).AllowN(now, 1), "made again, it starts full")
+}
+
+// One identity spending all its writes, as a phone uploading a day's backlog does, leaves the site's limit room for its
+// other identities, so a carer's carbs or an AAPSClient command still go through
+func TestOneIdentityLeavesItsSiteRoomForOthers(t *testing.T) {
+	limiters := newRateLimiters(ServerConfig{MaxSites: 10, MaxIdentitiesPerSite: 10, SitePOSTPerMinuteLimit: 60, SitePOSTPerMinuteBurst: 4})
+	now := time.Now()
+	site, phone, carer := limiters.SitePOSTLimiter("site"), limiters.IdentityPOSTLimiter(1), limiters.IdentityPOSTLimiter(2)
+	for range 4 {
+		require.True(t, phone.AllowN(now, 1))
+		require.True(t, site.AllowN(now, 1))
+	}
+	require.False(t, phone.AllowN(now, 1), "the phone has spent its own limit")
+	require.True(t, carer.AllowN(now, 1), "the carer has its own")
+	require.True(t, site.AllowN(now, 1), "and the site has room for the carer's write")
 }

@@ -273,6 +273,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   change any and save: every limiter of its kind, those kept and those made after, uses it at once, it says "set here",
   and the server uses it again from each start. One set back to its env default, or left blank, uses the env's from
   then on. A rate of 0 or less, or a burst under 1, is refused, and other control identities only see the rates.
+- A site's reads and writes are limited at 4 times an identity's, so one identity spending all of its own, as a phone
+  uploading a day's backlog, leaves the site's other identities theirs: a carer's carbs and AAPSClient's commands still
+  go through. A request refused over a site's or identity's limit (429) has a `Retry-After` of the seconds until one is
+  let through, at least 1.
 
 ### Resource alerts
 
@@ -962,6 +966,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
+- An entry's `direction` is one of Nightscout's names, e.g. `Flat` or `RATE OUT OF RANGE`, from one sent in any case
+  or as its arrow (`↗`, `↓↓`); one not known is `NOT COMPUTABLE` and an empty one is left out. Its `noise` is a whole
+  number. Trio reads a fetch of readings as one list and gets none if one is not so, even those kept before.
 - A meter reading (`mbg`) uploaded with the date of one stored is the same finger prick whatever its device, so a
   careportal BG Check that xDrip+ downloads and uploads again as its own is stored once.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC. So does one given only to
@@ -1057,7 +1064,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   its range and what was sent, e.g. `insulin must be between -500 and 500 U (was 8882.5)`, as xDrip+ drops a refused
   treatment and every one queued after it; a negative one, taking back too much entered, is kept.
 - A value the database refuses through the Nightscout API is refused (400) naming its column and why, e.g. `dose is
-  out of range` or `direction is too long`, never in the database's words, which are logged.
+  out of range` or `notes is too long`, never in the database's words, which are logged.
 - A profile's `enteredBy` comes back as sent, e.g. `Loop` or `Trio`, as a treatment's does, so a tool picking a loop's
   profiles by it finds them, else the identity that uploaded it, as Trio needs one to import a profile.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
@@ -1179,7 +1186,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   too busy to answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - A disabled, archived or deleted site is answered just as a site that never was, so the answer tells nothing about it.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
-  Nightscout API or its live updates. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one
+  Nightscout API or its live updates, but a Nightscout API search of readings (entries), which returns up to 2880,
+  a day of 1 minute readings twice over, as xDrip+'s follower asks for that many since its newest and never reads
+  the ones it was not given; Nightguard, LoopFollow, Trio and xDrip4iOS also ask for more than 1000. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one
   batch, each 100 past the first costing a write against the site's and identity's limits; a live update's upload
   holds at most 100. Deleting a type of treatment or entry
   through the Nightscout API deletes at most 1000 each time, the newest first, saying how many.

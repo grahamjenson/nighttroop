@@ -65,6 +65,6 @@ func TestUnauthenticatedRequestsDoNotSpendTheSiteLimit(t *testing.T) {
 	require.Equal(t, http.StatusUnauthorized, send("10.0.0.2", http.MethodPost, "/login"))
 
 	// None of those spent the site's limits, which a signed in identity's request is checked against
-	require.Equal(t, float64(cfg.SitePOSTPerMinuteBurst), cfg.RateLimiters.SitePOSTLimiter(subdomain).Tokens())
-	require.Equal(t, float64(cfg.SiteGETPerMinuteBurst), cfg.RateLimiters.SiteGETLimiter(subdomain).Tokens())
+	require.Equal(t, float64(cfg.SitePOSTPerMinuteBurst*config.SiteIdentitiesShare), cfg.RateLimiters.SitePOSTLimiter(subdomain).Tokens())
+	require.Equal(t, float64(cfg.SiteGETPerMinuteBurst*config.SiteIdentitiesShare), cfg.RateLimiters.SiteGETLimiter(subdomain).Tokens())
 }
