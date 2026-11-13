@@ -55,6 +55,11 @@
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
        the temp basal in NSStatus (`nsv2/assistants.go`)
+    1. P3: Add the v2 `basal` property watch faces read: the profile's basal now (`sitemodels.BasalAt`) and the temp
+       basal running, as `display` and `current` (`basal`, `tempbasal`, `totalbasal`, `treatment`)
+    1. P4: The v2 `pump`, `openaps` and `loop` properties read only the newest loop device status of the last 20
+       minutes. Nightscout reads 6 hours (2 for the pump), so it also has a pump with no loop, and an earlier
+       enacted when the newest status has none
     1. P5: Temp targets, temp basals, profile switches and activities keep their duration in whole minutes, so the
        site's summaries end a temp target AAPS ended at 5.99 minutes at 5; only its event group keeps the
        milliseconds, for the Nightscout API's `durationInMilliseconds`

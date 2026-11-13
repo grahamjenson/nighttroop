@@ -1054,6 +1054,23 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
     number.
   - The newest also has the delta, uploader battery and IOB, as in Nightscout.
 
+#### v2 properties
+
+- `pump`, `openaps` and `loop` (watch faces) are from the newest loop device status of the last 20 minutes.
+- `pump`: the pump as sent, and in `data` its `clock`, `reservoir`, `battery`, `status` and `device`, each with a
+  `label` and a `display`.
+  - Levels: -3 (none), 1 (warning) or 2 (urgent). `data.level` is the highest of them.
+  - A warning: a clock over 30 minutes old, a reservoir under 10 U, a battery under 30%.
+  - Urgent: a clock over 60 minutes old, a reservoir under 5 U, a battery under 20%.
+  - An Omnipod (`Insulet`) with no reservoir shows `50+ U`.
+- `openaps` (Trio, iAPS and AAPS): `lastEnacted` (`lastNotEnacted` if not received), `lastSuggested` and `lastIOB` as
+  sent, each with its `moment`.
+  - `lastLoopMoment`, `lastEventualBG` and `lastPredBGs` are from the newer of the enacted and the suggested.
+  - `status`: `notenacted`, `enacted` or `looping` in the last 15 minutes, else `warning`.
+- `loop` (Loop): `lastLoop`, `lastEnacted` and `lastPredicted` as sent, and `lastOkMoment`.
+  - `display`: `error` for a failure or an enacted not received, else `enacted` or `looping` in the last 15
+    minutes, else `warning`.
+
 #### v1 batches
 
 - A v1 POST of an array (entries, treatments, device statuses, profiles, food, activities) uses the same rule:
