@@ -1283,7 +1283,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | Carb entry                               | `userEnteredAt` (UTC)                                                                      | Loop       |
 | Bolus                                    | `unabsorbed`                                                                               | Loop       |
 | Treatment                                | `uuid`, `sensorCode`, `transmitterId`                                                      | xDrip+     |
-| Treatment, profile                       | `enteredBy` (e.g. `loop://iPhone`, `Loop`, `Trio`), else a treatment's `app` (e.g. `AAPS`), else the uploading identity | All        |
+| Treatment, profile                       | `enteredBy` (e.g. `loop://iPhone`, `Loop`, `Trio`), else its `app` (e.g. `AAPS`), else the uploading identity | All        |
 
 - An effective profile switch is AAPS's Note with a `profileJson`.
 - Other `icfg` fields are left out.

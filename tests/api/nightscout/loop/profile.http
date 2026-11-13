@@ -250,10 +250,18 @@ ASSERT_EQUALS 180.18 "@loopSettings.scheduleOverride.targetRange.1"
 ASSERT_EQUALS 3600 "@loopSettings.scheduleOverride.duration"
 ASSERT_EQUALS 4 "@loopSettings.maximumBasalRatePerHour"
 
-# A profile sent with no enteredBy says who uploaded it, the identity
+# A profile sent with no enteredBy or app says who uploaded it, the identity
 NAME upload_profile_no_entered_by
 POST http://{{ site }}/api/v1/profile
 H api-secret: {{ sha1 token }}
 B [{"defaultProfile": "Default", "startDate": "{{ time 20 }}", "units": "mg/dL", "store": {"Default": {"dia": 6, "units": "mg/dL"}}}]
 ASSERT_STATUS 200
 ASSERT_EQUALS "pwd_phone" "@0.enteredBy"
+
+# One sent with no enteredBy but its app, as AAPS sends its profile store, is entered by its app, as a treatment is
+NAME upload_profile_app_no_entered_by
+POST http://{{ site }}/api/v1/profile
+H api-secret: {{ sha1 token }}
+B [{"defaultProfile": "Default", "startDate": "{{ time 18 }}", "units": "mg/dL", "app": "AAPS", "store": {"Default": {"dia": 6, "units": "mg/dL"}}}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "AAPS" "@0.enteredBy"
