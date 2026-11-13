@@ -788,13 +788,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Events within one hour of the time, updated when the time changes. Times and the window use the time format.
 - Change types (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir
   Change, Pump Battery Change):
-  - No events, and no separate page. Listed in the menu.
-  - Modal: "no events to pick"; only time, reason, notes, and for sensor start, stop or change a sensor code and
-    transmitter ID.
+  - No events needed, and no separate page. Listed in the menu.
+  - Modal: time, reason, notes, and for sensor start, stop or change a sensor code and transmitter ID.
+  - Cannula Fill, Prime and Reservoir Change: "no events to pick". The others can have a glucose.
+- Carb Correction, Question, Exercise, D.A.D. Alert and OpenAPS Offline can also have a glucose, as Nightscout's
+  careportal sends one with them.
 - Refused on add or edit: an event kind the type cannot have, an unknown type, or no events (except change types).
 - Click to edit type, time, notes and events. A new type offers only its event kinds. A removed event is in no group.
 - An event is in one group at most: grouped events are not offered, and grouping again is refused.
 - A group added or edited on the site is a Nightscout treatment, with its events.
+- A group added with events is at its earliest event's time, not the time it was added.
 - Details: the pump its app named (ID, serial, type), as AAPS sends; a sensor change's sensor code and transmitter
   ID (also in its row's events).
 
@@ -1022,7 +1025,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - **v1**:
   - entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters.
   - status, versions, verifyauth, slice, count, times, echo, experiments/test, notifications/ack, adminnotifies.
-- **v2**: authorization (a JWT for a token, a check of one JWT permission), properties, summary.
+- **v2**: authorization (a JWT for a token, a check of one JWT permission, roles and subjects), properties, summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection; version, status, lastModified,
   settings.
 - **Socket.IO**: live updates and alarms, over long polling or websockets.
@@ -1073,6 +1076,13 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v3 status: what the token can do to each collection (e.g. `crud` for an uploader, `r` for read only). AAPS uploads
   only with a token that can write.
 - v3 version: needs no token.
+- v2 roles and subjects (AAPS pairs a client by QR code with them):
+  - Roles: a fixed list, `admin`, `readable` and `aaps-client`. A role sent is given back, and not kept.
+  - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
+  - Add a subject: a device that can read and write, for AAPSClient, with mg/dL units written `mg/dl`.
+  - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
+  - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
+  - Delete a subject: its identity is deleted, so its token gets 401. A device cannot delete itself.
 - If a request has no token or a token that is not valid, the API returns 401 in JSON, `{"status": 401, "message"}`.
   Other errors and Nightscout's 401 use the same JSON.
 
@@ -1319,6 +1329,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
 - `bolusCalculatorResult` (AAPS Bolus Wizard calculation, JSON text): kept exactly as sent. Not JSON, or over 4096
   characters: left out, and the rest of the treatment kept.
+- A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
+  for example a Question from AAPS or a Sensor Start from xDrip+.
 - A treatment `glucose` of 0 or less is no glucose reading. The treatment is kept without a reading. AAPS sends 0 with
   a Bolus Wizard that used no BG.
 
@@ -1343,6 +1355,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - A temp basal's `temp` `absolute`.
 - `timestamp`: only API v1 and its sockets. API v3 and its storage socket leave it out (AAPS drops a treatment, or a
   page, whose `timestamp` is a date).
+- A meter reading (`mbg`) that no treatment has, and that AAPS did not send, is also a treatment on API v3. This
+  applies to searches by date only, history, and the storage socket. AAPS takes finger sticks only from BG Checks.
+  - It is a read-only `BG Check`: its `mbg` as `glucose`, `glucoseType` `Finger`, its device as `enteredBy`.
+  - Its identifier is the reading's identifier with `finger` after it.
+  - A read by that identifier gives it. A delete by it deletes the reading.
+  - A careportal BG Check has its own reading, so it is given once.
 
 #### Notes and values
 
@@ -1413,6 +1431,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
 | `glucoseType` with the reading after a colon (e.g. `Finger: 6.7 mmol/L`) | Finger prick                            |
+| AAPS and iAPS `glucoseType` `Manual` (a finger prick typed in)           | Finger prick, returned as `Manual`      |
+| Another `glucoseType` (e.g. `Lab`)                                       | Kept as sent, at most 32 characters     |
 | Loop and Trio `Suspend Pump`, `Resume Pump`                              | Kept                                    |
 | Trio and iAPS `SMB`, `External Insulin`                                  | Insulin dose, with its event type       |
 | xDrip+ `Sensor Stop`                                                     | Event group, with its event type        |
@@ -1464,6 +1484,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   seconds). Loop reads it back.
 - Trio's remote control settings (bundle, device token, APNS environment, team, expiry) and override presets: kept, for
   LoopFollow's Trio Remote Control.
+- A profile sent with no `loopSettings` and no Trio remote settings (e.g. AAPS, careportal), if it is not older than
+  Loop's last `loopSettings`: comes back (v1, v3, socket) with Loop's last `loopSettings`. LoopFollow can then
+  control Loop.
+  - A profile older than Loop's last `loopSettings`, or a Trio profile: comes back as sent.
+  - A profile's own `loopSettings`: never changed.
 
 #### APNs device tokens
 
@@ -1596,16 +1621,21 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 Every 10 minutes, the server truncates every site:
 
-- Loop status, and pump as sent: kept only on each device's newest status with one. A newer status without one does
-  not change this. The others keep:
-  - Their IOB and COB, extracted on write. The Nightscout API returns them as `openaps` or `loop`.
-  - Their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. The Nightscout
-    API returns them as `pump`.
+- Loop status (`openaps` or `loop`): kept as sent for 1 day. Followers (e.g. LoopFollow) read a day of statuses.
+  - If a status is more than 1 day older than now and its device's newest status, the predictions are removed.
+  - Predictions are Loop's `predicted.values`, and the `predBGs` in `suggested` and `enacted`.
+  - All other fields stay as sent, e.g. `name`, `timestamp`, `iob`, `cob`, `recommendedBolus`, `enacted`,
+    `predicted.startDate`, and `suggested.bg`, `ISF`, `eventualBG`.
+  - The status does not get a new `srvModified`.
+- Pump as sent: kept only on each device's newest status with one. A newer status without one does not change this.
+  The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`.
+  The Nightscout API returns them as `pump`.
 - Statuses kept for each device: all of the last hour, then the newest in each 10 minutes to 1 week old, each 20
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
   - All statuses over 30 days old are deleted, also newest and deleted ones.
-- The job reads statuses of the last day, and thins again those that became 1 or 2 weeks old in that day.
+- The job reads statuses of the last day, and statuses that became 1 day old in that day. It thins again those that
+  became 1 or 2 weeks old in that day.
 - A site truncate reads all statuses. It also clears those older than a day (e.g. a device's newest from before it
   stopped reports for a day).
 
@@ -1789,7 +1819,8 @@ Every 10 minutes, the server truncates every site:
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
 - "Truncate", after a confirmation, does as control's Truncate:
-  - Clears the loop status and pump as sent from all but each device's newest status.
+  - Removes the predictions from loop statuses over 1 day old.
+  - Clears the pump as sent from all but each device's newest status.
   - Thins device statuses, and deletes those over 30 days old.
   - Deletes loop settings that no profile or device status refers to, except each app's last seen.
   - Shrinks the DB, and keeps all else, as the card says.

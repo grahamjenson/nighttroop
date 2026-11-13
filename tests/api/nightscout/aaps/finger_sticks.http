@@ -1,0 +1,97 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS takes finger sticks only from BG Check treatments, and xDrip+ sends a blood test only as a meter reading (mbg)
+// (TP3). API v3 gives AAPS each meter reading in no treatment as a read-only BG Check with the treatments, with the
+// reading's identifier and "finger". A careportal BG Check has its own reading, so it is not given twice.
+
+NAME xdrip_finger_stick
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"type": "mbg", "mbg": 118, "device": "Manual Entry", "date": {{ itime 20 }}}]
+ASSERT_STATUS 200
+SET reading_id {{ dig "xdrip_finger_stick.0._id" }}
+SET finger_id {{ dig "xdrip_finger_stick.0._id" }}finger
+
+// AAPS's first load
+NAME aaps_first_load
+GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt={{ time 60 }}&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "BG Check" "@result.0.eventType"
+ASSERT_EQUALS 118 "@result.0.glucose"
+ASSERT_EQUALS "Finger" "@result.0.glucoseType"
+ASSERT_EQUALS "Manual Entry" "@result.0.enteredBy"
+ASSERT_EQUALS true "@result.0.isReadOnly"
+ASSERT_EQUALS true "@result.0.isValid"
+ASSERT_EQUALS ".finger_id" "@result.0.identifier"
+ASSERT_EXISTS "@result.0.date"
+ASSERT_EXISTS "@result.0.srvModified"
+
+// AAPS's later loads
+NAME aaps_history
+GET http://{{ site }}/api/v3/treatments/history/0?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".finger_id" "@result.0.identifier"
+
+NAME read_by_identifier
+GET http://{{ site }}/api/v3/treatments/{{ .reading_id }}finger
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 118 "@result.glucose"
+
+// A careportal BG Check has its reading, so it is given once, as itself
+NAME careportal_bg_check
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "BG Check", "glucose": 110, "glucoseType": "Finger", "units": "mg/dl", "created_at": "{{ time 10 }}", "enteredBy": "careportal"}
+ASSERT_STATUS 200
+
+// xDrip+ downloads it and sends its reading back as its own mbg, which is the BG Check's reading
+NAME xdrip_echo
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"type": "mbg", "mbg": 110, "device": "careportal via Nightscout", "date": {{ dig "careportal_bg_check.0.date" }}}]
+ASSERT_STATUS 200
+
+NAME one_each
+GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt={{ time 60 }}&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 118 "@result.0.glucose"
+ASSERT_EQUALS 110 "@result.1.glucose"
+ASSERT_EQUALS "careportal" "@result.1.enteredBy"
+
+// API v1 is as stored: the meter reading is an entry, not a treatment
+NAME v1_only_treatments
+GET http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 110 "@0.glucose"
+
+// AAPS deletes the finger stick: its reading is deleted
+NAME aaps_deletes_finger_stick
+DELETE http://{{ site }}/api/v3/treatments/{{ .reading_id }}finger
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME reading_deleted
+GET http://{{ site }}/api/v1/entries.json?find[type]=mbg
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 110 "@0.mbg"
+
+// History tells AAPS's followers
+NAME deleted_in_history
+GET http://{{ site }}/api/v3/treatments/history/0?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS ".finger_id" "@result.1.identifier"
+ASSERT_EQUALS false "@result.1.isValid"

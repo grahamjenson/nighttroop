@@ -10,26 +10,37 @@ import (
 )
 
 const clearOldLoopStatuses = `-- name: ClearOldLoopStatuses :exec
-UPDATE device_reports SET loop_status_json = NULL
-WHERE device_reports.updated_at >= ?1 AND device_reports.loop_status_json IS NOT NULL
+UPDATE device_reports
+SET loop_status_json = json_remove(device_reports.loop_status_json, '$.predicted.values', '$.suggested.predBGs', '$.enacted.predBGs')
+WHERE device_reports.occurred_at < CAST(?1 AS INTEGER) - 86400000 AND (
+        device_reports.updated_at >= CAST(?2 AS INTEGER)
+        OR device_reports.occurred_at BETWEEN CAST(?2 AS INTEGER) - 86400000 AND CAST(?1 AS INTEGER) - 86400000
+    )
+    AND (json_type(device_reports.loop_status_json, '$.predicted.values') IS NOT NULL
+        OR json_type(device_reports.loop_status_json, '$.suggested.predBGs') IS NOT NULL
+        OR json_type(device_reports.loop_status_json, '$.enacted.predBGs') IS NOT NULL)
     AND device_reports.occurred_at < (
         SELECT MAX(newest.occurred_at) FROM device_reports AS newest
         WHERE newest.created_by_device_name IS device_reports.created_by_device_name
             AND newest.loop_status_json IS NOT NULL AND newest.deleted_at IS NULL
-    )
+    ) - 86400000
 `
 
 type ClearOldLoopStatusesParams struct {
+	Now   int64
 	Since int64
 }
 
-// A loop's status, most of a device report and of a site's DB, is kept only on its device's newest report with one,
-// as followers (LoopFollow, the Nightscout web app) read its predictions and reason from that one. Once a newer one
-// comes in, the others are cleared: what is worth keeping of them, the loop's IOB and COB, was extracted into their own
-// columns when they were written. Only reports written since Since are looked at, by their updated_at index, as those
-// before were cleared by an earlier run; 0 looks at them all.
+// A loop's status as sent is kept whole for a day, as followers read a day of them and cache each as never changing:
+// LoopFollow its predictions, timestamp and recommended bolus, the Nightscout web app's Loop pill its last enacted and
+// OK times. Then only its bulky predictions are cleared, Loop's predicted.values and openaps' predBGs in suggested and
+// enacted; the rest stays as sent, with Loop's predicted.startDate. A status is cleared once it is a day older than Now
+// and than its device's newest status with one, so a device that stops keeps its last day whole. Its updated_at stays,
+// so clients syncing by srvModified do not fetch it again. Only reports written since Since are looked at, by their
+// updated_at index, and those that turned a day old since then, by their occurred_at index, as those before were
+// cleared by an earlier run; 0 looks at them all. A cleared status has no predictions, so it is not written again.
 func (q *Queries) ClearOldLoopStatuses(ctx context.Context, arg ClearOldLoopStatusesParams) error {
-	_, err := q.exec(ctx, q.clearOldLoopStatusesStmt, clearOldLoopStatuses, arg.Since)
+	_, err := q.exec(ctx, q.clearOldLoopStatusesStmt, clearOldLoopStatuses, arg.Now, arg.Since)
 	return err
 }
 
@@ -47,7 +58,7 @@ type ClearOldPumpsParams struct {
 	Since int64
 }
 
-// A pump as sent, the most of a report after its loop's status, is kept as that is: only on its device's newest report
+// A pump as sent, the most of a report after its loop's status, is kept only on its device's newest report
 // with one, as followers read it from that one. What is worth keeping of the others, their battery, reservoir, clock,
 // manufacturer, model and ID, and whether it was suspended or bolusing, was extracted into their own columns when they
 // were written.

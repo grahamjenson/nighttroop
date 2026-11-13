@@ -296,6 +296,198 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 	return &i, err
 }
 
+const fingerSticks = `-- name: FingerSticks :many
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings gr
+WHERE gr.reading_type = 'mbg' AND gr.deleted_at IS NULL AND gr.occurred_at >= ?1 AND gr.occurred_at <= ?2
+    AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.glucose_reading_id = gr.id) AND COALESCE(gr.created_by_app_name, '') != 'AAPS'
+ORDER BY gr.occurred_at DESC LIMIT CAST(?3 AS INTEGER)
+`
+
+type FingerSticksParams struct {
+	FromMs int64
+	ToMs   int64
+	Limit  int64
+}
+
+// Meter readings in a treatment of none, between FromMs and ToMs, the newest first, as API v3 gives AAPS them as BG
+// Checks with its treatments: xDrip+ sends a finger stick only as a reading. AAPS has its own, so not those it sent.
+func (q *Queries) FingerSticks(ctx context.Context, arg FingerSticksParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.fingerSticksStmt, fingerSticks, arg.FromMs, arg.ToMs, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GlucoseReading
+	for rows.Next() {
+		var i GlucoseReading
+		if err := rows.Scan(
+			&i.ID,
+			&i.Mgdl,
+			&i.ReadingType,
+			&i.Units,
+			&i.MeasurementMethod,
+			&i.Delta,
+			&i.Direction,
+			&i.Noise,
+			&i.Filtered,
+			&i.Unfiltered,
+			&i.Rssi,
+			&i.IsCalibration,
+			&i.SensorMgdlAtPairing,
+			&i.Notes,
+			&i.Reason,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const fingerSticksAscending = `-- name: FingerSticksAscending :many
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings gr
+WHERE gr.reading_type = 'mbg' AND gr.deleted_at IS NULL AND gr.occurred_at >= ?1 AND gr.occurred_at <= ?2
+    AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.glucose_reading_id = gr.id) AND COALESCE(gr.created_by_app_name, '') != 'AAPS'
+ORDER BY gr.occurred_at LIMIT CAST(?3 AS INTEGER)
+`
+
+type FingerSticksAscendingParams struct {
+	FromMs int64
+	ToMs   int64
+	Limit  int64
+}
+
+// FingerSticks, the oldest first
+func (q *Queries) FingerSticksAscending(ctx context.Context, arg FingerSticksAscendingParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.fingerSticksAscendingStmt, fingerSticksAscending, arg.FromMs, arg.ToMs, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GlucoseReading
+	for rows.Next() {
+		var i GlucoseReading
+		if err := rows.Scan(
+			&i.ID,
+			&i.Mgdl,
+			&i.ReadingType,
+			&i.Units,
+			&i.MeasurementMethod,
+			&i.Delta,
+			&i.Direction,
+			&i.Noise,
+			&i.Filtered,
+			&i.Unfiltered,
+			&i.Rssi,
+			&i.IsCalibration,
+			&i.SensorMgdlAtPairing,
+			&i.Notes,
+			&i.Reason,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const fingerSticksChanged = `-- name: FingerSticksChanged :many
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings gr
+WHERE gr.reading_type = 'mbg' AND gr.updated_at >= ?1
+    AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.glucose_reading_id = gr.id) AND COALESCE(gr.created_by_app_name, '') != 'AAPS'
+ORDER BY gr.updated_at, gr.occurred_at, gr.id LIMIT CAST(?2 AS INTEGER)
+`
+
+type FingerSticksChangedParams struct {
+	Since int64
+	Limit int64
+}
+
+// FingerSticks changed since Since, deleted ones too, the oldest change first, as GlucoseReadingHistoryIDs
+func (q *Queries) FingerSticksChanged(ctx context.Context, arg FingerSticksChangedParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.fingerSticksChangedStmt, fingerSticksChanged, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GlucoseReading
+	for rows.Next() {
+		var i GlucoseReading
+		if err := rows.Scan(
+			&i.ID,
+			&i.Mgdl,
+			&i.ReadingType,
+			&i.Units,
+			&i.MeasurementMethod,
+			&i.Delta,
+			&i.Direction,
+			&i.Noise,
+			&i.Filtered,
+			&i.Unfiltered,
+			&i.Rssi,
+			&i.IsCalibration,
+			&i.SensorMgdlAtPairing,
+			&i.Notes,
+			&i.Reason,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
 SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
@@ -430,6 +622,22 @@ func (q *Queries) GlucoseReadingHistoryIDs(ctx context.Context, arg GlucoseReadi
 		return nil, err
 	}
 	return items, nil
+}
+
+const glucoseReadingInTreatment = `-- name: GlucoseReadingInTreatment :one
+SELECT EXISTS (SELECT 1 FROM event_groups WHERE glucose_reading_id = ?1)
+`
+
+type GlucoseReadingInTreatmentParams struct {
+	ID *string
+}
+
+// Whether a treatment has the reading, as a BG Check does its meter reading
+func (q *Queries) GlucoseReadingInTreatment(ctx context.Context, arg GlucoseReadingInTreatmentParams) (bool, error) {
+	row := q.queryRow(ctx, q.glucoseReadingInTreatmentStmt, glucoseReadingInTreatment, arg.ID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const glucoseReadingTotals = `-- name: GlucoseReadingTotals :one
