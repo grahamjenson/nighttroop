@@ -86,7 +86,7 @@ type DBModelConverter interface {
 	///////
 
 	// goverter:context siteContext
-	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map . StartDate | ProfilePresetStartDate
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | ProfilePresetEnteredBy
 	// goverter:map CreatedByAppName App
@@ -232,6 +232,11 @@ func ProfilePresetEnteredBy(source *sitedb.ProfilePreset) *types.ShortString {
 		return (*types.ShortString)(source.EnteredBy)
 	}
 	return (*types.ShortString)(&source.CreatedByIdentityName)
+}
+
+// ProfilePresetStartDate is when the profile starts, in UTC, as Nightscout gives back a startDate sent with Z
+func ProfilePresetStartDate(source *sitedb.ProfilePreset) *types.DateString {
+	return new(types.ISODateStringFromInt64AndUTCOffset(source.OccurredAt, nil))
 }
 
 // ProfilePresetSensitivities are a profile's sensitivities, stored in its own units, in the settings' units

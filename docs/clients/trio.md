@@ -40,7 +40,8 @@ one field of the wrong type, or one required field missing, fails the whole list
 
 Nighttroop writes `created_at`, `timestamp`, `dateString` and `startDate` as Nightscout does, as JavaScript's
 `toISOString` writes them: with three fractional digits, e.g. `2026-11-01T12:00:00.000Z`, so `deleteGlucose` finds a
-reading by the `.SSS` `dateString` it sent. Trio reads them.
+reading by the `.SSS` `dateString` it sent. Trio reads them. A treatment's `timestamp` and a profile's `startDate` are
+in UTC, as LoopFollow, which most Trio users follow with, reads `timestamp` as UTC.
 
 ## Uploads
 

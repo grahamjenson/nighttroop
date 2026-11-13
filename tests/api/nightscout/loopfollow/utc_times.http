@@ -1,0 +1,37 @@
+INCLUDE steps/new_site_admin.steps
+
+# A treatment's timestamp and a profile's startDate are given back in UTC, as Nightscout does, whatever the site's
+# timezone, as LoopFollow reads a treatment's timestamp as UTC and showed one 9 hours late on a site in Tokyo
+
+NAME set_site_timezone
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"timezone": "Asia/Tokyo"}
+ASSERT_STATUS 200
+
+NAME trio_carbs
+POST http://{{ .ns_site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Carb Correction", "carbs": 20, "created_at": "2026-11-11T20:21:17.123Z", "enteredBy": "Trio"}]
+ASSERT_STATUS 200
+
+NAME loopfollow_reads_treatment
+GET http://{{ .ns_site }}/api/v1/treatments.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "2026-11-11T20:21:17.123Z" "@0.timestamp"
+ASSERT_EQUALS "2026-11-11T20:21:17.123Z" "@0.created_at"
+
+NAME trio_profile
+POST http://{{ .ns_site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+B {"defaultProfile": "default", "startDate": "2026-11-13T01:53:59.604Z", "mills": 1794534839604, "units": "mg/dl", "enteredBy": "Trio",
+   "store": {"default": {"dia": 6, "timezone": "Asia/Tokyo", "units": "mg/dl", "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}], "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}]}}}
+ASSERT_STATUS 200
+
+NAME loopfollow_reads_profile
+GET http://{{ .ns_site }}/api/v1/profile.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "2026-11-13T01:53:59.604Z" "@0.startDate"

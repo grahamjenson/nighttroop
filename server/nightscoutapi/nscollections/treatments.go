@@ -384,7 +384,10 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 		treatment.DurationMinutes = new((*treatment.DurationInMilliseconds + 30_000) / 60_000)
 	}
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
-	treatment.Timestamp = treatment.CreatedAt
+	// Its timestamp is in UTC, as Nightscout's, since LoopFollow reads it as UTC
+	if treatment.CreatedAt != nil {
+		treatment.Timestamp = new(types.ISODateStringFromInt64AndUTCOffset(treatment.CreatedAt.UnixMilli(), nil))
+	}
 	treatment.Programmed = treatment.Insulin
 	if treatment.Absolute != nil {
 		treatment.Temp = new(types.ShortString("absolute"))
