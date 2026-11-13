@@ -217,6 +217,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | `/storage` subscribe, `create`, `update`, `delete` | Works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | Works | `alarm.sio`, `aaps_alarm.sio` |
 | `/alarm` `announcement` | Fixed in #511 (was never sent) | `aaps_alarm.sio` |
+| `/alarm` `announcement` added on the site | Fixed: its notification's notes are the message (was empty) | `aaps_alarm.sio` |
 | Client control: `settings` documents | Kept as sent, shared by the site's identities. Keys up to 128 characters for `aaps_clientcontrol_<kind>_<client UUID>` (over 36 was refused, so no client could pair) | `running_config.http` |
 | Client control: v2 roles and subjects | Not supported (TODO P4) | — |
 | v1 `authorize` with the SHA1 of the secret | Works (#512) | `aaps_v1.sio` |

@@ -49,6 +49,33 @@ COLLECT announcement
 T 500ms
 ASSERT_LENGTH 0 "@"
 
+# An Announcement added on the site has its text in its notes, which is the message
+NAME site_jwt
+GET http://{{ site }}/api/v2/authorization/request/{{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .site_jwt.token }}
+SET site_host {{ .create_new_site.site_subdomain }}.localhost
+
+NAME add_site_notification
+POST http://{{ .site_host }}/data/notifications
+H Authorization: Bearer {{ .jwt }}
+H Accept: application/json
+B {"title": "Site note", "severity": 0, "notes": "Website announcement test"}
+ASSERT_STATUS 201
+
+NAME add_site_announcement
+POST http://{{ .site_host }}/data/event-groups
+H Authorization: Bearer {{ .jwt }}
+H Accept: application/json
+B {"group_type": "Announcement", "notification_event_id": "{{ .add_site_notification.result.id }}"}
+ASSERT_STATUS 201
+
+NAME site_announcement
+WAIT announcement
+T 5s
+ASSERT_EQUALS "Website announcement test" "@message"
+ASSERT_EQUALS true "@isAnnouncement"
+
 NAME bye
 DISCONNECT
 
