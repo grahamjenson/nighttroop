@@ -1468,6 +1468,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   seconds). Loop reads it back.
 - Trio's remote control settings (bundle, device token, APNS environment, team, expiry) and override presets: kept, for
   LoopFollow's Trio Remote Control.
+- A profile sent with no `loopSettings` and no Trio remote settings (e.g. AAPS, careportal), if it is not older than
+  Loop's last `loopSettings`: comes back (v1, v3, socket) with Loop's last `loopSettings`. LoopFollow can then
+  control Loop.
+  - A profile older than Loop's last `loopSettings`, or a Trio profile: comes back as sent.
+  - A profile's own `loopSettings`: never changed.
 
 #### APNs device tokens
 
