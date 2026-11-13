@@ -13,6 +13,9 @@ ASSERT_VISIBLE #control--site--page
 ASSERT_VISIBLE #control--site--identities--table
 ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 ASSERT_VISIBLE #control--site--identities--table td >> text=read_only
+// Each role is named as the site's own pages name it, in the page's language
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("read_only") td:text-is("Read")
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("pwd_phone") td:text-is("PWD Phone")
 SCREENSHOT site_identities
 
 // Each identity's actions are named and line up in columns: only an identity that logs in with TOTP can have it reset

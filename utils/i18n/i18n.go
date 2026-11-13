@@ -9,6 +9,8 @@ import (
 	"io/fs"
 	"log/slog"
 	"maps"
+	"regexp"
+	"strings"
 
 	goi18n "github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -64,12 +66,29 @@ func N(ctx context.Context, id string, count int, data ...Data) string {
 	return localize(ctx, &goi18n.LocalizeConfig{MessageID: id, PluralCount: count, TemplateData: templateData})
 }
 
-func localize(ctx context.Context, config *goi18n.LocalizeConfig) string {
-	localizer, ok := ctx.Value(localizerKey{}).(*goi18n.Localizer)
-	if !ok {
-		localizer = english
+// Stored is a value as it is stored, such as a treatment's event type, in the context's language: its message under
+// stored.<group>, by the value in lower snake case, e.g. stored.event_types.meal_bolus, or the value as it is when it
+// has none, as one sent by an app
+func Stored(ctx context.Context, group string, value string) string {
+	key := strings.Trim(notKey.ReplaceAllString(strings.ToLower(value), "_"), "_")
+	if text, err := localizer(ctx).Localize(&goi18n.LocalizeConfig{MessageID: "stored." + group + "." + key}); err == nil {
+		return text
 	}
-	text, err := localizer.Localize(config)
+	return value
+}
+
+// notKey are the characters a stored value's message key has none of
+var notKey = regexp.MustCompile(`[^a-z0-9]+`)
+
+func localizer(ctx context.Context) *goi18n.Localizer {
+	if localizer, ok := ctx.Value(localizerKey{}).(*goi18n.Localizer); ok {
+		return localizer
+	}
+	return english
+}
+
+func localize(ctx context.Context, config *goi18n.LocalizeConfig) string {
+	text, err := localizer(ctx).Localize(config)
 	if err != nil {
 		// A message missing from the locales is a bug, which TestEveryMessageIsInEnglish finds before it is served
 		slog.ErrorContext(ctx, "message not localized", "id", config.MessageID, "error", err)

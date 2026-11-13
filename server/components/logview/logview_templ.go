@@ -950,9 +950,9 @@ func EventsTable(v View, id string, events []Row) templ.Component {
 							}
 							ctx = templ.InitializeContext(ctx)
 							var templ_7745c5c3_Var44 string
-							templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(event.Name))
+							templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.Stored(ctx, "events", event.Name))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 222, Col: 32}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 222, Col: 46}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 							if templ_7745c5c3_Err != nil {
@@ -1097,7 +1097,7 @@ func EventModal(v View, event Row) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: v.Prefix + "--event--details", Title: display.Name(event.Name), Subtitle: v.Date(ctx, event.At)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: v.Prefix + "--event--details", Title: i18n.Stored(ctx, "events", event.Name), Subtitle: v.Date(ctx, event.At)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1484,9 +1484,9 @@ func LogsTable(v View, id string, logs []Row) templ.Component {
 							}
 							ctx = templ.InitializeContext(ctx)
 							var templ_7745c5c3_Var69 string
-							templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(log.Name)
+							templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.Stored(ctx, "log_levels", log.Name))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 304, Col: 16}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `logview/logview.templ`, Line: 304, Col: 48}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 							if templ_7745c5c3_Err != nil {
@@ -1634,7 +1634,7 @@ func LogModal(v View, log Row) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: v.Prefix + "--log--details", Title: log.Name, Subtitle: v.Date(ctx, log.At)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var73), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: v.Prefix + "--log--details", Title: i18n.Stored(ctx, "log_levels", log.Name), Subtitle: v.Date(ctx, log.At)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var73), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

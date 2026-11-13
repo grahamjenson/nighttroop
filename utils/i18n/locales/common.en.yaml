@@ -73,6 +73,20 @@ common:
     scan_with: "Scan with an authenticator app, such as "
     comma: ", "
     or_last: " or "
+  # Why a passkey did not work, shown under its button by the page's script
+  passkey:
+    failed: "The passkey did not work."
+    cannot_add: "A passkey cannot be added."
+    most: "A passkey cannot be added: you have {{.Max}} passkeys, the most you can add; remove one first."
+    website_only: "A passkey cannot be added: only an identity that signs in to the website has passkeys."
+    not_added: "The passkey could not be added."
+    not_kept: "The passkey could not be kept."
+    welcome_over: "This page can no longer add a passkey; log in, then add one on My Account."
+    too_many_attempts: "Too many sign in attempts, try again later."
+    not_signed_in: "That passkey could not sign you in."
+    not_asked: "A passkey could not be asked for."
+    not_on_website: "This identity cannot sign in to the website."
+    sign_in_failed: "You could not be signed in."
   time:
     never: "Never"
     just_now: "just now"

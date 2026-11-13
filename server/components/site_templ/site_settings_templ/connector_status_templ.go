@@ -249,9 +249,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s (%s)", display.Duration(ctx, source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)))
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s (%s)", display.Duration(ctx, source.SyncIntervalSeconds*1000), i18n.Stored(ctx, "sync_reasons", source.SyncIntervalSecondsReason)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 45, Col: 133}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 45, Col: 153}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -571,9 +571,9 @@ func connectorStatus(source *sitemodels.Connector, name string) templ.Component 
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var34 string
-					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(event.Name))
+					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.Stored(ctx, "events", event.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 86, Col: 123}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connector_status.templ`, Line: 86, Col: 137}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 					if templ_7745c5c3_Err != nil {

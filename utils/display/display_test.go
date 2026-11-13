@@ -161,14 +161,6 @@ func TestDirection(t *testing.T) {
 	}
 }
 
-func TestName(t *testing.T) {
-	for in, want := range map[string]string{"site_created": "Site created", "control_backed_up": "Control backed up", "active": "Active", "": ""} {
-		if got := Name(in); got != want {
-			t.Errorf("Name(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
 func TestValueAndPerDay(t *testing.T) {
 	number := func(v float64) *float64 { return &v }
 	tests := []struct {

@@ -14,12 +14,14 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/server/components/control_templ/control_admins_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // controlUser is a control admin as WebAuthn sees it, with its passkeys: named by its admin name, with a user handle
@@ -55,7 +57,7 @@ func controlUserFor(r *http.Request, controlDB *db.ControlDB, identity *controld
 		user.passkeys, user.credentials = append(user.passkeys, row), append(user.credentials, credential)
 	}
 	if err == nil && adding && len(rows) >= sitelogin.MaxPasskeys {
-		err = fmt.Errorf("you have %d passkeys, the most you can add; remove one first", sitelogin.MaxPasskeys)
+		err = sitelogin.ErrMostPasskeys
 	}
 	return user, err
 }
@@ -71,7 +73,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 			return
 		}
 		controlcollections.WriteResponse(w, r, httputils.GetAcceptType(r), http.StatusOK, user.passkeys,
-			site_settings_templ.MyAccount(identity.Name, string(identity.Role), user.passkeys, sitelogin.MaxPasskeys, "/account", false))
+			site_settings_templ.MyAccount(identity.Name, control_admins_templ.RoleLabel(r.Context(), identity.Role), user.passkeys, sitelogin.MaxPasskeys, "/account", false))
 	}
 }
 
@@ -81,7 +83,7 @@ func POSTAccountPasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) 
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := controlUserFor(r, controlDB, httputils.GetControlContext(r.Context()).IdentityModel, true)
 		if err != nil {
-			sitelogin.PasskeyError(w, r, http.StatusForbidden, "A passkey cannot be added: "+err.Error()+".", err)
+			sitelogin.PasskeyNotAdded(w, r, err)
 			return
 		}
 		sitelogin.PasskeyBegin(w, r, cfg, controlOrigin(cfg), func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
@@ -114,7 +116,7 @@ func POSTAccountPasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig)
 				CredentialID: base64.RawURLEncoding.EncodeToString(credential.ID), CredentialJson: string(credentialJSON)})
 		}
 		if err != nil {
-			sitelogin.PasskeyError(w, r, http.StatusBadRequest, "The passkey could not be added.", err)
+			sitelogin.PasskeyError(w, r, http.StatusBadRequest, i18n.T(r.Context(), "common.passkey.not_added"), err)
 			return
 		}
 		apiutils.WriteJSON(w, http.StatusOK, map[string]string{"redirect": "/account"})
@@ -150,7 +152,7 @@ func POSTPasskeyLoginBegin(cfg *config.ServerConfig) http.HandlerFunc {
 func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if allowed, _ := httputils.ControlLoginAttemptsWithinRateLimit(cfg, r, "passkey"); !allowed {
-			sitelogin.PasskeyError(w, r, http.StatusTooManyRequests, "Too many sign in attempts, try again later.", nil)
+			sitelogin.PasskeyError(w, r, http.StatusTooManyRequests, i18n.T(r.Context(), "common.passkey.too_many_attempts"), nil)
 			return
 		}
 		var user controlUser
@@ -176,7 +178,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 		}
 		if err != nil {
 			controlDB.Logs.SignInFailedEvent(r.Context(), "", from)
-			sitelogin.PasskeyError(w, r, http.StatusUnauthorized, "That passkey could not sign you in.", err)
+			sitelogin.PasskeyError(w, r, http.StatusUnauthorized, i18n.T(r.Context(), "common.passkey.not_signed_in"), err)
 			return
 		}
 		if err := controlDB.Queries.UpdateControlPasskeyUsed(r.Context(), controldb.UpdateControlPasskeyUsedParams{CredentialJson: string(credentialJSON), CredentialID: base64.RawURLEncoding.EncodeToString(credential.ID)}); err != nil {
@@ -184,7 +186,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 		}
 		token, expiresAt, err := cfg.Security.GenerateControlJWTToken(user.identity.Name, string(user.identity.Role))
 		if err != nil {
-			sitelogin.PasskeyError(w, r, http.StatusInternalServerError, "You could not be signed in.", err)
+			sitelogin.PasskeyError(w, r, http.StatusInternalServerError, i18n.T(r.Context(), "common.passkey.sign_in_failed"), err)
 			return
 		}
 		controlDB.Logs.SignedInEvent(r.Context(), "", user.identity.Name, from)

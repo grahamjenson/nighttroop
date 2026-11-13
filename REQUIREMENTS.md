@@ -936,6 +936,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   | Timezone | UTC | |
 
 - All pages, including logs, use them. Control and public pages use the browser's language.
+- Text from page scripts (for example, why a passkey did not work) is in the page's language.
+- Stored values show their name in the page's language: treatment event types, event names, error kinds, log levels,
+  roles, site states, job statuses and connector sync reasons. A value with no name (for example, one an app sends)
+  shows as it is.
 - Phone: settings, alarms and another identity's settings are one column (label, then named Site and Yours controls);
   save buttons fit.
 

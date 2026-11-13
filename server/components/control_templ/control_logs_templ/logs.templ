@@ -81,7 +81,7 @@ templ EventsTable(events []*controlmodels.Event, q *apiquery.Query) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
 	@logview.Page(logview.PageProps{ID: "events_table", Title: i18n.T(ctx, "control.logs.events_title"), Description: i18n.T(ctx, "control.logs.events_intro"), Pager: "control--events", Path: filter.PagePath("/events", q.Type, q.Search, ids(ctx, q)...), Count: len(events), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
-		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: i18n.T(ctx, "control.logs.all_events"), Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)})
+		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: i18n.T(ctx, "control.logs.all_events"), Types: dataevents.PersistedNames(), Stored: "events", Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)})
 		@EventsList("controlEventsTable", events, true)
 	}
 }
@@ -99,7 +99,7 @@ templ EventModal(event *controlmodels.Event) {
 // ErrorsTable shows one page of errors, the newest first
 templ ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) {
 	@logview.Page(logview.PageProps{ID: "errors_table", Title: i18n.T(ctx, "control.logs.errors_title"), Description: i18n.T(ctx, "control.logs.errors_intro"), Pager: "control--errors", Path: filter.PagePath("/errors", q.Type, q.Search, ids(ctx, q)...), Count: len(errors), Skip: q.Skip, Limit: q.Limit, Action: download()}) {
-		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: i18n.T(ctx, "control.logs.all_errors"), Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)})
+		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: i18n.T(ctx, "control.logs.all_errors"), Types: db.ErrorKinds, Stored: "error_kinds", Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)})
 		@ErrorsList("controlErrorsTable", errors, true)
 	}
 }

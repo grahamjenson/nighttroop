@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // passkeyUser is an identity as WebAuthn sees it: named by its identity name, as admin, never the person's, with a user
@@ -65,16 +67,22 @@ func passkeyUserFor(r *http.Request, controlDB *db.ControlDB, identity *controld
 // MaxPasskeys is how many passkeys an identity may have, one a device or password manager, so none fills the table
 const MaxPasskeys = 10
 
+var (
+	// ErrMostPasskeys refuses adding a passkey to an identity that has the most it may
+	ErrMostPasskeys = fmt.Errorf("you have %d passkeys, the most you can add; remove one first", MaxPasskeys)
+	errNotOnWebsite = errors.New("only an identity that signs in to the website has passkeys")
+)
+
 // accountUser is the signed in identity, one that signs in to the website, with its passkeys, refused when adding one
 // more than the most it may have
 func accountUser(r *http.Request, controlDB *db.ControlDB, adding bool) (passkeyUser, error) {
 	identity := httputils.GetSiteContext(r.Context()).IdentityModel
 	if identity == nil || !can.LoginToWebsite(identity.Role) {
-		return passkeyUser{}, fmt.Errorf("only an identity that signs in to the website has passkeys")
+		return passkeyUser{}, errNotOnWebsite
 	}
 	user, err := passkeyUserFor(r, controlDB, identity)
 	if err == nil && adding && len(user.credentials) >= MaxPasskeys {
-		err = fmt.Errorf("you have %d passkeys, the most you can add; remove one first", MaxPasskeys)
+		err = ErrMostPasskeys
 	}
 	return user, err
 }
@@ -94,7 +102,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 			http.Error(w, "Only a user who signs in to the website has an account page", http.StatusForbidden)
 			return
 		}
-		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, MaxPasskeys, "/settings/account", true), true)
+		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, site_settings_templ.RoleLabel(r.Context(), string(user.identity.Role)), passkeys, MaxPasskeys, "/settings/account", true), true)
 	}
 }
 
@@ -103,7 +111,7 @@ func POSTAccountPasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) 
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := accountUser(r, controlDB, true)
 		if err != nil {
-			PasskeyError(w, r, http.StatusForbidden, "A passkey cannot be added: "+err.Error()+".", err)
+			PasskeyNotAdded(w, r, err)
 			return
 		}
 		beginAdding(w, r, cfg, user)
@@ -129,11 +137,11 @@ func finishAdding(w http.ResponseWriter, r *http.Request, cfg *config.ServerConf
 		credential, err = rp.FinishRegistration(user, session, r)
 	}
 	if err != nil {
-		PasskeyError(w, r, http.StatusBadRequest, "The passkey could not be added.", err)
+		PasskeyError(w, r, http.StatusBadRequest, i18n.T(r.Context(), "common.passkey.not_added"), err)
 		return false
 	}
 	if err := savePasskey(r, controlDB, credential, user.identity.ID, true); err != nil {
-		PasskeyError(w, r, http.StatusInternalServerError, "The passkey could not be kept.", err)
+		PasskeyError(w, r, http.StatusInternalServerError, i18n.T(r.Context(), "common.passkey.not_kept"), err)
 		return false
 	}
 	slog.InfoContext(r.Context(), "Passkey added", "identity", user.identity.Name)
@@ -145,7 +153,7 @@ func POSTAccountPasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig)
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := accountUser(r, controlDB, true)
 		if err != nil {
-			PasskeyError(w, r, http.StatusBadRequest, "The passkey could not be added.", err)
+			PasskeyError(w, r, http.StatusBadRequest, i18n.T(r.Context(), "common.passkey.not_added"), err)
 			return
 		}
 		if finishAdding(w, r, cfg, controlDB, user) {
@@ -183,7 +191,7 @@ func POSTWelcomePasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) 
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := welcomeAdmin(r, controlDB, cfg)
 		if err != nil {
-			PasskeyError(w, r, http.StatusForbidden, "This page can no longer add a passkey; log in, then add one on My Account.", err)
+			PasskeyError(w, r, http.StatusForbidden, i18n.T(r.Context(), "common.passkey.welcome_over"), err)
 			return
 		}
 		beginAdding(w, r, cfg, user)
@@ -196,7 +204,7 @@ func POSTWelcomePasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig)
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := welcomeAdmin(r, controlDB, cfg)
 		if err != nil {
-			PasskeyError(w, r, http.StatusForbidden, "This page can no longer add a passkey; log in, then add one on My Account.", err)
+			PasskeyError(w, r, http.StatusForbidden, i18n.T(r.Context(), "common.passkey.welcome_over"), err)
 			return
 		}
 		if finishAdding(w, r, cfg, controlDB, user) {
@@ -242,7 +250,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteID := httputils.GetSiteContext(r.Context()).SiteID
 		if allowed, _ := httputils.SiteLoginAttemptsWithinRateLimit(cfg, r, siteID, "passkey"); !allowed {
-			PasskeyError(w, r, http.StatusTooManyRequests, "Too many sign in attempts, try again later.", nil)
+			PasskeyError(w, r, http.StatusTooManyRequests, i18n.T(r.Context(), "common.passkey.too_many_attempts"), nil)
 			return
 		}
 		var user passkeyUser
@@ -266,7 +274,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 			}, session, r)
 		}
 		if err != nil {
-			PasskeyError(w, r, http.StatusUnauthorized, "That passkey could not sign you in.", err)
+			PasskeyError(w, r, http.StatusUnauthorized, i18n.T(r.Context(), "common.passkey.not_signed_in"), err)
 			return
 		}
 		if err := savePasskey(r, controlDB, credential, user.identity.ID, false); err != nil {
@@ -294,7 +302,7 @@ func PasskeyBegin(w http.ResponseWriter, r *http.Request, cfg *config.ServerConf
 		sessionJSON, err = json.Marshal(session)
 	}
 	if err != nil {
-		PasskeyError(w, r, http.StatusInternalServerError, "A passkey could not be asked for.", err)
+		PasskeyError(w, r, http.StatusInternalServerError, i18n.T(r.Context(), "common.passkey.not_asked"), err)
 		return
 	}
 	cfg.Security.SetPasskeySessionCookie(w, sessionJSON)
@@ -338,12 +346,12 @@ func savePasskey(r *http.Request, controlDB *db.ControlDB, credential *webauthn.
 // person's fingerprint, face or PIN, so it is enough on its own
 func passkeySignIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, identity *controldb.SiteIdentity) {
 	if !can.LoginToWebsite(identity.Role) {
-		PasskeyError(w, r, http.StatusForbidden, "This identity cannot sign in to the website.", nil)
+		PasskeyError(w, r, http.StatusForbidden, i18n.T(r.Context(), "common.passkey.not_on_website"), nil)
 		return
 	}
 	token, expiresAt, err := cfg.Security.GenerateUserJWTToken(identity.SiteID, identity.Name, string(identity.Role))
 	if err != nil {
-		PasskeyError(w, r, http.StatusInternalServerError, "You could not be signed in.", err)
+		PasskeyError(w, r, http.StatusInternalServerError, i18n.T(r.Context(), "common.passkey.sign_in_failed"), err)
 		return
 	}
 	cfg.Security.SetUserLoginCookie(w, token, expiresAt)
@@ -353,8 +361,21 @@ func passkeySignIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerCon
 	apiutils.WriteJSON(w, http.StatusOK, map[string]string{"redirect": "/"})
 }
 
-// PasskeyError tells the page's script why a passkey did not work, logging what went wrong
+// PasskeyError tells the page's script why a passkey did not work, in the request's language, logging what went wrong
 func PasskeyError(w http.ResponseWriter, r *http.Request, status int, message string, err error) {
 	slog.InfoContext(r.Context(), "Passkey failed", "message", message, "error", err)
 	apiutils.WriteJSON(w, status, map[string]string{"error": message})
+}
+
+// PasskeyNotAdded tells the page's script why a passkey cannot be added: the identity cannot have one, or has the
+// most it may
+func PasskeyNotAdded(w http.ResponseWriter, r *http.Request, err error) {
+	message := i18n.T(r.Context(), "common.passkey.cannot_add")
+	switch {
+	case errors.Is(err, ErrMostPasskeys):
+		message = i18n.T(r.Context(), "common.passkey.most", i18n.Data{"Max": MaxPasskeys})
+	case errors.Is(err, errNotOnWebsite):
+		message = i18n.T(r.Context(), "common.passkey.website_only")
+	}
+	PasskeyError(w, r, http.StatusForbidden, message, err)
 }

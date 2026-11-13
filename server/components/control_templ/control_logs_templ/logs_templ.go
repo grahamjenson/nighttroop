@@ -159,7 +159,7 @@ func EventsTable(events []*controlmodels.Event, q *apiquery.Query) templ.Compone
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: i18n.T(ctx, "control.logs.all_events"), Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: i18n.T(ctx, "control.logs.all_events"), Types: dataevents.PersistedNames(), Stored: "events", Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -259,7 +259,7 @@ func ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) templ.Compone
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: i18n.T(ctx, "control.logs.all_errors"), Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: i18n.T(ctx, "control.logs.all_errors"), Types: db.ErrorKinds, Stored: "error_kinds", Selected: q.Type, Search: q.Search, IDs: ids(ctx, q)}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

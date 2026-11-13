@@ -92,7 +92,7 @@ templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
 			{ formatReadingDate(ctx, eventGroup.OccurredAt) }
 		}
 		@table.Cell() {
-			{ eventGroup.GroupType }
+			{ i18n.Stored(ctx, "event_types", eventGroup.GroupType) }
 		}
 		@table.Cell() {
 			{ strings.Join(eventGroupEvents(ctx, eventGroup), ", ") }
@@ -123,7 +123,7 @@ templ eventGroupAdd() {
 						Attributes: templ.Attributes{"hx-get": "/data/event-groups/new?group_type=" + url.QueryEscape(groupType),
 							"hx-target": "#modal-container", "hx-swap": "innerHTML"},
 					}) {
-						{ groupType }
+						{ i18n.Stored(ctx, "event_types", groupType) }
 					}
 				}
 			}
@@ -134,15 +134,16 @@ templ eventGroupAdd() {
 // eventGroupForm adds a group of groupType, or with a group changes it, its events picked from those near its time of
 // the kinds its type can have
 func eventGroupForm(ctx context.Context, group *sitemodels.SiteEventGroup, groupType string) addmodal.Props {
-	p := addmodal.Props{ID: "site--event-group--create", Title: i18n.T(ctx, "site.data.event_groups.add_type", i18n.Data{"Type": groupType}), Path: "/data/event-groups", Target: "#eventGroupsTable tbody",
-		Submit: i18n.T(ctx, "site.data.event_groups.add_type", i18n.Data{"Type": groupType})}
+	p := addmodal.Props{ID: "site--event-group--create", Title: i18n.T(ctx, "site.data.event_groups.add_type", i18n.Data{"Type": i18n.Stored(ctx, "event_types", groupType)}), Path: "/data/event-groups", Target: "#eventGroupsTable tbody",
+		Submit: i18n.T(ctx, "site.data.event_groups.add_type", i18n.Data{"Type": i18n.Stored(ctx, "event_types", groupType)})}
 	when, reason, notes := time.Now(), "", ""
 	choices := "/data/event-groups/choices"
 	if group != nil {
 		p.ID, p.Path, p.Target, p.Swap, p.Submit = "site--event-group--edit", "/data/event-groups/"+group.ID, "#site--event-group--"+group.ID, "outerHTML", i18n.T(ctx, "site.data.common.save")
 		when, reason, notes = time.UnixMilli(group.OccurredAt), orEmpty(group.Reason), orEmpty(group.Notes)
 		choices += "?group_id=" + group.ID
-		p.Fields = []addmodal.Field{{Name: "group_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.event_groups.type_help"), Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes, Value: groupType}}
+		p.Fields = []addmodal.Field{{Name: "group_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.event_groups.type_help"), Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes, Value: groupType,
+			OptionLabel: func(t string) string { return i18n.Stored(ctx, "event_types", t) }}}
 	}
 	p.Extra = eventGroupChoicesLoader(p.ID, choices, group == nil, groupType)
 	whenHelp := i18n.T(ctx, "site.data.event_groups.when_help")
@@ -281,7 +282,7 @@ templ EventGroupUpdated(eventGroup *sitemodels.SiteEventGroup) {
 // EventGroupModal is the group's details, and a form to change its type, time and events
 templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 	{{ edit := eventGroupForm(ctx, eventGroup, eventGroup.GroupType) }}
-	@modal.Modal(modal.Props{ID: "site--event-group--details", Title: eventGroup.GroupType, Subtitle: formatReadingDate(ctx, eventGroup.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+	@modal.Modal(modal.Props{ID: "site--event-group--details", Title: i18n.Stored(ctx, "event_types", eventGroup.GroupType), Subtitle: formatReadingDate(ctx, eventGroup.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		<ul id="site--event-group--events" class="mt-4 list-inside list-disc text-sm">
 			for _, event := range eventGroupEvents(ctx, eventGroup) {
 				<li>{ event }</li>

@@ -144,7 +144,7 @@ func Usage(model controlmodels.Usage) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, state := range slices.Sorted(maps.Keys(model.SitesByState)) {
-				templ_7745c5c3_Err = stat.NoteTile("control--usage--sites-"+state, i18n.T(ctx, "control.usage.state_sites", i18n.Data{"StateName": display.Name(state)}), fmt.Sprint(model.SitesByState[state]), i18n.T(ctx, "control.usage.in_all")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = stat.NoteTile("control--usage--sites-"+state, i18n.T(ctx, "control.usage.state_sites", i18n.Data{"StateName": i18n.Stored(ctx, "site_states", state)}), fmt.Sprint(model.SitesByState[state]), i18n.T(ctx, "control.usage.in_all")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
