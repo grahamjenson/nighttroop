@@ -158,7 +158,9 @@ One every 5 minutes per device: phone battery, pump reservoir and battery, the l
 
 **Today** (`data/sql/sitedb/queries/truncate.sql`, every 10 minutes):
 
-- The loop status and pump as sent stay only on each device's newest report.
+- The loop status stays as sent for a day. After that, its predictions are removed (Loop's `predicted.values`, openaps'
+  `predBGs`).
+- The pump as sent stays only on each device's newest report.
 - Reports thin to every 10 minutes after an hour, 20 after a week, and hourly after two weeks.
 - All are deleted after 30 days.
 - The day's summary keeps the loop's IOB (total, basal, treatment) and COB every 5 minutes.
