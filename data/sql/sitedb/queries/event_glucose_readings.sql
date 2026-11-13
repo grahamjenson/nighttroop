@@ -107,6 +107,32 @@ ORDER BY occurred_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.a
 SELECT id FROM glucose_readings WHERE updated_at >= sqlc.arg('Since')
 ORDER BY updated_at, occurred_at, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
+-- name: FingerSticks :many
+-- Meter readings in a treatment of none, between FromMs and ToMs, the newest first, as API v3 gives AAPS them as BG
+-- Checks with its treatments: xDrip+ sends a finger stick only as a reading. AAPS has its own, so not those it sent.
+SELECT * FROM glucose_readings gr
+WHERE gr.reading_type = 'mbg' AND gr.deleted_at IS NULL AND gr.occurred_at >= sqlc.arg('FromMs') AND gr.occurred_at <= sqlc.arg('ToMs')
+    AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.glucose_reading_id = gr.id) AND COALESCE(gr.created_by_app_name, '') != 'AAPS'
+ORDER BY gr.occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
+-- name: FingerSticksAscending :many
+-- FingerSticks, the oldest first
+SELECT * FROM glucose_readings gr
+WHERE gr.reading_type = 'mbg' AND gr.deleted_at IS NULL AND gr.occurred_at >= sqlc.arg('FromMs') AND gr.occurred_at <= sqlc.arg('ToMs')
+    AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.glucose_reading_id = gr.id) AND COALESCE(gr.created_by_app_name, '') != 'AAPS'
+ORDER BY gr.occurred_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
+-- name: FingerSticksChanged :many
+-- FingerSticks changed since Since, deleted ones too, the oldest change first, as GlucoseReadingHistoryIDs
+SELECT * FROM glucose_readings gr
+WHERE gr.reading_type = 'mbg' AND gr.updated_at >= sqlc.arg('Since')
+    AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.glucose_reading_id = gr.id) AND COALESCE(gr.created_by_app_name, '') != 'AAPS'
+ORDER BY gr.updated_at, gr.occurred_at, gr.id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
+-- name: GlucoseReadingInTreatment :one
+-- Whether a treatment has the reading, as a BG Check does its meter reading
+SELECT EXISTS (SELECT 1 FROM event_groups WHERE glucose_reading_id = sqlc.arg('ID'));
+
 -- name: SearchGlucoseReadings :many
 SELECT * FROM glucose_readings
 WHERE

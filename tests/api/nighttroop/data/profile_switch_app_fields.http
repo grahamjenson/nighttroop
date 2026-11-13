@@ -49,12 +49,15 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 0 "@0.originalTimeshift"
 ASSERT_EQUALS 0 "@0.originalDuration"
 
-// Each is still refused far outside real use, as a column of its own was
+// A percentage far outside real use is left out, and the switch kept
 NAME original_percentage_out_of_range
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Profile Switch", "created_at": "{{ time 10 }}", "app": "AAPS", "profile": "Default", "originalPercentage": 2000 }
-ASSERT_STATUS 400
+ASSERT_STATUS 200
+ASSERT_EQUALS "Default" "@0.profile"
+ASSERT_EQUALS null "@0.originalPercentage"
 
+// A shift of more than a day is refused, as the switch would be kept unshifted
 NAME original_timeshift_out_of_range
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Profile Switch", "created_at": "{{ time 15 }}", "app": "AAPS", "profile": "Default", "originalTimeshift": 90000000 }

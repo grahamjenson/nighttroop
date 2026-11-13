@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"slices"
+	"strings"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/types"
@@ -36,6 +38,17 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 	}
 
 	return nil
+}
+
+// Rows are a preset for each of its profiles, by their names, as the store keeps them in no order
+func (c ProfileCollection) Rows(nsModel nightscoutmodels.ProfileStore) []sitedb.TableRow {
+	presets := NightscoutToDBCreateProfilePreset(nsModel, nightscoutmodels.ConverterContext{})
+	slices.SortFunc(presets, func(a, b sitedb.CreateProfilePresetParams) int { return strings.Compare(a.Name, b.Name) })
+	rows := make([]sitedb.TableRow, len(presets))
+	for i, preset := range presets {
+		rows[i] = sitedb.TableRow{Table: "profile_presets", Row: preset}
+	}
+	return rows
 }
 
 func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
@@ -160,8 +173,13 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
 	profileStore.Units = settingsUnits
 	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted. Loop's glucose
-	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent.
-	if loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID); loop != nil {
+	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent. A
+	// profile sent with neither, as AAPS's and the careportal's are, has Loop's newest, for LoopFollow to control Loop.
+	loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID)
+	if defaultProfile.LoopSettingsID == nil && defaultProfile.RemoteSettingsID == nil {
+		loop = newestLoopSettingsJSON(context.Background(), siteContext, defaultProfile.OccurredAt)
+	}
+	if loop != nil {
 		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop))).WithGlucose(func(glucose float64) float64 {
 			return settingsUnits.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
 		})

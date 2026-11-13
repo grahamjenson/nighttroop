@@ -1,6 +1,7 @@
 package nsv1
 
 import (
+	"net/http"
 	"testing"
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -35,6 +36,8 @@ func TestLeftOutSummary(t *testing.T) {
 // TestLeftOutLeaves checks which problems leave a document out of a batch and which stop it
 func TestLeftOutLeaves(t *testing.T) {
 	bad := nsutils.BadDataBodyError
+	// A reading out of range is refused for its mgdl column
+	outOfRange := &nsutils.HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing body: sgv must be more than 0 and at most 1000 mg/dL (was 0)", Column: "mgdl"}
 	tests := []struct {
 		name string
 		errs []*nsutils.HTTPError
@@ -44,12 +47,12 @@ func TestLeftOutLeaves(t *testing.T) {
 		{"stored", []*nsutils.HTTPError{nil}, []bool{false}, 0},
 		{"a problem with the document", []*nsutils.HTTPError{bad, nsutils.BadDateFieldError}, []bool{true, true}, 2},
 		{"a database CHECK", []*nsutils.HTTPError{nsutils.BadDataBodyErrorWithHint("dose is out of range")}, []bool{true}, 1},
-		{"readings out of range are not counted", []*nsutils.HTTPError{nsutils.BadGlucoseError, nsutils.BadGlucoseError}, []bool{true, true}, 0},
+		{"readings out of range are not counted", []*nsutils.HTTPError{outOfRange, outOfRange}, []bool{true, true}, 0},
 		{"credentials stop the batch", []*nsutils.HTTPError{nsutils.ErrMissingCredentials}, []bool{false}, 0},
 		{"permissions stop the batch", []*nsutils.HTTPError{nsutils.ErrRecordReadOnly}, []bool{false}, 0},
 		{"rate limits stop the batch", []*nsutils.HTTPError{nsutils.ErrTooManyBatchWrites}, []bool{false}, 0},
 		{"server errors stop the batch", []*nsutils.HTTPError{nsutils.ErrInternal}, []bool{false}, 0},
-		{"an 11th problem stops the batch", []*nsutils.HTTPError{bad, bad, bad, bad, bad, bad, bad, bad, bad, bad, nsutils.BadGlucoseError, bad},
+		{"an 11th problem stops the batch", []*nsutils.HTTPError{bad, bad, bad, bad, bad, bad, bad, bad, bad, bad, outOfRange, bad},
 			[]bool{true, true, true, true, true, true, true, true, true, true, true, false}, 10},
 	}
 	for _, tt := range tests {
