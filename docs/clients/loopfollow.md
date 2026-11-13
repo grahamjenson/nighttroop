@@ -127,6 +127,10 @@ missing, never a number or null.
     `targetRange` as `[Double]`, `insulinNeedsScaleFactor`, `symbol`).
   - Trio Remote Control: top level `deviceToken`, `bundleIdentifier`, `isAPNSProduction`, `teamID`, `expirationDate`
     (string), `overridePresets` (`name`, `duration`, `percentage`, `target` in mg/dL).
+- On a site that AAPS or the careportal also sends profiles to, the newest profile is not always Loop's.
+  - If the newest has no `loopSettings` and no Trio remote settings, Nighttroop adds Loop's last `loopSettings`.
+  - Its `store` and `defaultProfile` stay as sent. A read only token gets no `deviceToken`.
+  - Test: `loopfollow/shared_profile.http`.
 
 ### Database size and Nightscout tab
 
@@ -187,6 +191,7 @@ missing, never a number or null.
 | Loop `override` | Works since #516 (was dropped) |
 | **Profile** | |
 | Profile, schedules, Loop's `loopSettings` | Works |
+| Loop's `loopSettings` after AAPS or the careportal sends a newer profile | Fixed: the newer profile has Loop's last `loopSettings` (was none, so no remote commands) |
 | Trio remote control settings and override presets | Works since #516 (were dropped) |
 | `deviceToken`s for a read-only token | Left out, as they push to the phone. Remote commands need a Read & Write token |
 | Profile history for the remote diagnostics | Fixed: `count` gives that many stores, newest first (was only the latest) |
