@@ -1,158 +1,116 @@
-# Deploying Nighttroop to a Hostinger VPS
+# Deploy Nighttroop to a Hostinger VPS
 
-This guide runs Nighttroop on a [Hostinger](https://www.hostinger.com/vps-hosting) VPS with Docker. It is written for
-someone new to Hostinger who is comfortable with SSH and a Linux shell.
+This guide installs Nighttroop with Docker on a [Hostinger](https://www.hostinger.com/vps-hosting) VPS. It is for
+operators new to Hostinger who know SSH and a Linux shell.
 
-When you are done you will have:
+## Overview
 
-- **Caddy** answering on ports 80 and 443. It gets Let's Encrypt certificates and renews them by itself.
-  - The certificates are wildcards, proven through Hostinger's DNS API, so every site's subdomain is covered.
-- **Nighttroop** behind Caddy, on a private Docker network with no ports of its own.
-- **A data folder** on the VPS with the SQLite databases, optionally backed up to S3.
-- **An update script** that backs up, updates, checks health and rolls back if the new version is not healthy.
+### Result
 
-The files this guide uses are in this folder:
+- [`hostinger.compose.yml`](hostinger.compose.yml) runs:
+  - **Caddy** on ports 80 and 443. It gets and renews Let's Encrypt certificates automatically.
+  - **Nighttroop** behind Caddy, on a private Docker network, with no ports of its own.
+- **A data folder** holds the SQLite databases, optionally backed up to S3.
+- [`update.sh`](../update.sh), the safe update script, backs up, updates, checks health, and rolls back if the new
+  version is not healthy.
 
-| File | What it is |
-| --- | --- |
-| [`hostinger.compose.yml`](hostinger.compose.yml) | Docker Compose file for Nighttroop and Caddy |
-| [`update.sh`](../update.sh) | The safe update script |
+### Host names
 
-## Contents
+All host names come from one domain (`example.com` in this guide):
 
-1. [How the pieces fit](#how-the-pieces-fit)
-2. [What you need](#what-you-need)
-3. [Set up the VPS](#1-set-up-the-vps)
-4. [Open the firewall](#2-open-the-firewall)
-5. [Point your domain at the VPS](#3-point-your-domain-at-the-vps)
-6. [Make a Hostinger API token](#4-make-a-hostinger-api-token)
-7. [Choose where backups go](#5-choose-where-backups-go)
-8. [Put the files on the VPS](#6-put-the-files-on-the-vps)
-9. [Configure it](#7-configure-it)
-10. [Start it](#8-start-it)
-11. [Set up the control plane](#9-set-up-the-control-plane)
-12. [Updating Nighttroop safely](#updating-nighttroop-safely)
-13. [Other upkeep](#other-upkeep)
-14. [Troubleshooting](#troubleshooting)
+- `example.com`: the public page, where people create sites.
+- `control.example.com`: the control plane, for the control admin.
+- `<site>.example.com`: each site.
+- `<site>.ns.example.com`: the Nightscout-compatible API of each site, for apps like AAPS and Loop.
 
-## How the pieces fit
+### DNS and certificates
 
-Nighttroop serves several kinds of host names, all from one domain (`example.com` below):
+- **DNS:** `example.com`, `*.example.com` and `*.ns.example.com` point to the VPS.
+- **Certificates:** `example.com`, and wildcards `*.example.com` and `*.ns.example.com` for the subdomain of each site.
+- **Wildcard proof:** Let's Encrypt gives wildcards only with proof of DNS control.
+  - Caddy adds a TXT record through Hostinger's API (a DNS-01 challenge). It needs an API token for this.
+  - Caddy is built with the community [`caddy-dns-hostinger`](https://github.com/sbrunk/caddy-dns-hostinger) module.
 
-| Host | What it serves |
-| --- | --- |
-| `example.com` | The public page, where people create sites |
-| `control.example.com` | The control plane, for the server's admin |
-| `<site>.example.com` | Each site |
-| `<site>.ns.example.com` | Each site's Nightscout-compatible API, for apps like AAPS and Loop |
-
-So the server needs:
-
-- **DNS:** records for `example.com`, `*.example.com` and `*.ns.example.com`, all pointing at the VPS.
-- **Certificates:** one for `example.com` and wildcards for `*.example.com` and `*.ns.example.com`.
-  - Let's Encrypt only gives wildcards to someone who proves they control the domain's DNS.
-  - Caddy does that with a DNS-01 challenge: it adds a TXT record through Hostinger's API, which is why it needs an
-    API token.
-  - Caddy is built with the community [`caddy-dns-hostinger`](https://github.com/sbrunk/caddy-dns-hostinger) module for
-    this.
-
-Requests then flow like this:
+### Request flow
 
 1. A browser or app connects to Caddy on port 443.
 2. Caddy proxies the request to Nighttroop on port 3000, over the private Docker network.
-3. Nighttroop believes the client IP Caddy sends in `X-Forwarded-For`, because Caddy's address (`172.30.0.2`) is its
-   only trusted proxy (`TRUSTED_PROXIES`). This keeps rate limits per visitor rather than per proxy.
+3. Nighttroop uses the client IP in `X-Forwarded-For`, from its only trusted proxy (`TRUSTED_PROXIES`), Caddy
+   (`172.30.0.2`). Thus rate limits apply to each visitor.
 
-## What you need
+## Requirements
 
-- **A Hostinger VPS.** Web and shared hosting plans can't run Nighttroop: it is a long-running server keeping its
-  databases on local disk.
-  - The smallest KVM plan is enough to start. Nighttroop is built to be cheap per user.
-- **A domain using Hostinger's nameservers**, so Caddy can make DNS records through the Hostinger API.
-  - A domain bought from Hostinger uses them already.
-  - A domain from another registrar needs its nameservers changed to Hostinger's (see
-    [step 3](#3-point-your-domain-at-the-vps)).
-- **A GitHub account with access to this repository.** The image is published to its container registry, which is
-  private while the repository is.
-- **Somewhere for backups (optional but strongly recommended):** S3-compatible storage. Hostinger doesn't sell any;
-  see [step 5](#5-choose-where-backups-go).
-- **On your own computer:** a clone of this repository, and `ssh` and `scp`.
+- **A Hostinger VPS.** The smallest KVM plan is sufficient to start. Nighttroop is built to be cheap per user.
+  - Web and shared hosting cannot run Nighttroop, a long-running server with its databases on local disk.
+- **A domain on Hostinger's nameservers,** for Caddy's DNS records. Domains bought from Hostinger have them. For
+  others, see [step 3](#3-point-the-domain-at-the-vps).
+- **GitHub access to this repository.** Its container registry has the image, and is private while the repository is.
+- **S3-compatible storage** (optional, strongly recommended). Hostinger does not sell it. See
+  [step 5](#5-choose-where-backups-go).
+- **On your computer:** a clone of this repository, `ssh` and `scp`.
 
-## 1. Set up the VPS
+## Prepare the host
 
-1. **Buy the VPS.** In [hPanel](https://hpanel.hostinger.com), buy a KVM VPS plan.
-2. **Pick the operating system.** During setup choose the **Docker** template, which is Ubuntu with Docker and Docker
-   Compose installed.
-   - To change it later: open the VPS, then **OS & Panel**, **Operating System**, and search for Docker under
-     **Change OS**. Changing the OS wipes the VPS.
-   - Plain **Ubuntu 24.04** also works; install Docker yourself with
+### 1. Set up the VPS
+
+1. In [hPanel](https://hpanel.hostinger.com), buy a KVM VPS plan.
+2. Select the **Docker** template (Ubuntu with Docker and Docker Compose).
+   - Or select plain **Ubuntu 24.04**, and install Docker with
      [Docker's instructions for Ubuntu](https://docs.docker.com/engine/install/ubuntu/).
-3. **Set how you log in.** Set a strong root password, and add your SSH public key so you can log in without it.
-4. **Note the VPS's IP address.** It is shown on the VPS's **Overview** page in hPanel: open **VPS**, then **Manage** on
-   your server. Below it is written `203.0.113.10`.
-5. **Log in and update the system:**
+   - To change it later: **OS & Panel**, **Operating System**, search for Docker under **Change OS**.
+     **Caution:** This erases the VPS.
+3. Set a strong root password, and add your SSH public key.
+4. Note the VPS IP on its **Overview** page (**VPS**, **Manage**). This guide uses `203.0.113.10`.
+5. Log in and update the system:
 
    ```sh
    ssh root@203.0.113.10
    apt update && apt upgrade -y
    ```
 
-6. **Check Docker Compose is new enough.** The compose file needs Docker Compose 2.23.1 or later, for inline configs:
+6. Check that Docker Compose is 2.23.1 or later, for inline configs:
 
    ```sh
    docker compose version
    ```
 
-This guide manages Nighttroop over SSH with `docker compose`, not through hPanel's Docker Manager, because the
-update script runs on the server.
+This guide uses `docker compose` over SSH, not hPanel's Docker Manager, because the update script runs on the server.
 
-## 2. Open the firewall
+### 2. Open the firewall
 
-Hostinger's VPS firewall is managed in hPanel, outside the VPS. Once a firewall is turned on it drops everything that no
-rule accepts, so add every rule before turning it on.
+hPanel manages the firewall, outside the VPS.
 
-1. In hPanel, open **VPS**, then **Manage** on your server.
-2. Open **Security**, then **Firewall**, and create a firewall configuration.
-3. Add these **accept** rules, each from any source:
+**Warning:** Add all rules before you activate the firewall. It drops all traffic that no rule accepts.
 
-   | Protocol | Port | Why |
-   | --- | --- | --- |
-   | TCP | 22 | SSH. Add it first, so you can't lock yourself out |
-   | TCP | 80 | HTTP, which Caddy redirects to HTTPS |
-   | TCP | 443 | HTTPS |
-   | UDP | 443 | HTTP/3 |
+1. In hPanel, open **VPS**, **Manage**, **Security**, **Firewall**.
+2. Create a configuration with these **accept** rules, each from any source:
+   - TCP 22: SSH. Add it first, so that you cannot lock yourself out.
+   - TCP 80: HTTP, which Caddy redirects to HTTPS.
+   - TCP 443: HTTPS.
+   - UDP 443: HTTP/3.
+3. Activate the configuration for your VPS.
 
-4. Activate the configuration for your VPS.
+**Warning:** Do not open port 3000. Nighttroop is reachable only through Caddy.
 
-Don't open port 3000: Nighttroop is only reachable through Caddy.
+## Prepare the domain and storage
 
-## 3. Point your domain at the VPS
+### 3. Point the domain at the VPS
 
-### If the domain is registered somewhere else
+#### If a different registrar has the domain
 
-1. Add the domain to your Hostinger account, so its DNS zone shows in hPanel.
-2. At that registrar, change its nameservers to the ones hPanel shows for the domain.
-   - They are usually `ns1.dns-parking.com` and `ns2.dns-parking.com`, but some accounts get other `dns-parking.com`
-     names, so use what hPanel shows.
-3. Wait for the change to spread. It can take up to a day or two, though it is often much faster.
+1. Add the domain to your Hostinger account, so that hPanel shows its DNS zone.
+2. At the registrar, set the nameservers that hPanel shows. These are usually `ns1.dns-parking.com` and
+   `ns2.dns-parking.com`, but some accounts get other `dns-parking.com` names.
+3. Wait for the change to spread: up to one or two days, often much less.
 
-### Add the records
+#### Add the records
 
-1. In hPanel, open **Domains**, then your domain, then **DNS / Nameservers**.
-2. Remove any existing `A`, `AAAA` or `CNAME` records named `@`, `*` or `ns`. New domains get parking records that
-   would clash.
-   - Leave `MX` and `TXT` records alone if you use email on the domain.
-3. Add three `A` records, each pointing to the VPS's IP:
-
-   | Type | Name | Points to | TTL |
-   | --- | --- | --- | --- |
-   | A | `@` | `203.0.113.10` | 3600 |
-   | A | `*` | `203.0.113.10` | 3600 |
-   | A | `*.ns` | `203.0.113.10` | 3600 |
-
-4. If your VPS has an IPv6 address, add the same three as `AAAA` records with it.
-   - Its IPv6 address is on the same **Overview** page as the IPv4 one.
-5. Check the records from your own computer. All three should print the VPS's IP:
+1. In hPanel, open **Domains**, your domain, **DNS / Nameservers**.
+2. Remove `A`, `AAAA` and `CNAME` records named `@`, `*` or `ns` (conflicting parking records). Keep `MX` and `TXT`
+   records if you use email on the domain.
+3. Add `A` records `@`, `*` and `*.ns` to `203.0.113.10`, with TTL 3600.
+4. If the VPS has an IPv6 address (on its **Overview** page), add the same records as `AAAA` records.
+5. On your computer, check that each command prints the VPS IP:
 
    ```sh
    dig +short example.com
@@ -160,70 +118,67 @@ Don't open port 3000: Nighttroop is only reachable through Caddy.
    dig +short anything.ns.example.com
    ```
 
-You don't need a `TXT` record for the certificates: Caddy adds and removes those itself.
+You do not need `TXT` records for the certificates. Caddy adds and removes them.
 
-## 4. Make a Hostinger API token
+### 4. Make a Hostinger API token
 
-Caddy uses this token to add the `_acme-challenge` TXT records Let's Encrypt checks.
+Caddy uses it to add the `_acme-challenge` TXT records that Let's Encrypt checks.
 
-1. In hPanel, open your profile, then **API**, or go straight to <https://hpanel.hostinger.com/profile/api>.
-2. Make a new token, named e.g. `nighttroop-caddy`.
-3. **Pick a long expiry.**
-   - When the token expires, Caddy can no longer renew the certificates, and the site goes down when they run out.
-   - Put a reminder in your calendar to replace it before then.
-4. Copy the token now; it is only shown once.
+1. In hPanel, open your profile, **API** (<https://hpanel.hostinger.com/profile/api>).
+2. Make a token with a long expiry, for example `nighttroop-caddy`.
+3. Copy the token. Hostinger shows it only once.
+4. Put a reminder in your calendar to replace the token before it expires. Without a valid token, Caddy cannot renew
+   the certificates, and the site goes down when they expire.
 
-Keep the token secret. It can manage your Hostinger account through the API, not just this domain's DNS.
+**Warning:** Keep the token secret. It can manage your whole Hostinger account through the API, not only this DNS.
 
-## 5. Choose where backups go
+### 5. Choose where backups go
 
-Nighttroop can back up its databases to S3-compatible storage. It also restores from there when it starts on an empty
-data folder, for example on a new VPS.
+Nighttroop can back up its databases to S3-compatible storage, encrypted with your `KEY_SETS`. It restores from there
+when it starts on an empty data folder, for example on a new VPS.
 
-- **Without S3:** Nighttroop still runs, but your only copies are on the VPS.
-  - The update script's local backups, and Hostinger's VPS backups and snapshots, are still there.
-- **With S3:** Hostinger doesn't sell object storage. Good options with free or cheap tiers are:
-  - [Cloudflare R2](https://developers.cloudflare.com/r2/)
-  - [Backblaze B2](https://www.backblaze.com/cloud-storage)
+- **Without S3:** your only copies are the update script's local backups on the VPS, and Hostinger's VPS backups and
+  snapshots.
+- **With S3:** Hostinger does not sell object storage. [Cloudflare R2](https://developers.cloudflare.com/r2/) and
+  [Backblaze B2](https://www.backblaze.com/cloud-storage) have free or cheap tiers.
 
 To set up S3:
 
-1. Make a private bucket, e.g. `nighttroop-backups`.
+1. Make a private bucket, for example `nighttroop-backups`.
 2. Make an access key that can only read and write that bucket.
-3. Note four values for [step 7](#7-configure-it): the S3 endpoint URL, the bucket name, the access key ID and the
-   secret key.
+3. Note the endpoint URL, bucket, access key ID and secret key for [step 7](#7-make-the-settings-files).
 
-The backups are encrypted with your `KEY_SETS` before they are uploaded.
+## Install
 
-## 6. Put the files on the VPS
+### 6. Put the files on the VPS
 
-1. **Make Nighttroop's folder.** On the VPS, make the folder it will live in, with a `data` folder inside. The image runs
-   Nighttroop as user ID `10001`, so `data` must belong to that user:
+1. On the VPS, make the folder. `data` must belong to user ID `10001`, which the image runs Nighttroop as:
 
    ```sh
    mkdir -p /opt/nighttroop/data
    chown 10001:10001 /opt/nighttroop/data
    ```
 
-2. **Copy the files up.** From your clone of this repository, on your own computer:
+2. On your computer, from your clone, copy the files:
 
    ```sh
    scp docs/deploy/hostinger/hostinger.compose.yml docs/deploy/update.sh root@203.0.113.10:/opt/nighttroop/
    ```
 
-3. **Let the VPS pull the image.** The image is at `ghcr.io/grahamjenson/nighttroop`. While the repository is private,
-   the VPS has to log in to GitHub's container registry:
-   1. On GitHub, make a **classic** personal access token with only the `read:packages` scope:
-      **Settings**, then **Developer settings**, **Personal access tokens**, **Tokens (classic)**.
-   2. On the VPS, log in with your GitHub username, pasting the token as the password:
+3. On GitHub, make a **classic** personal access token with only the `read:packages` scope (**Settings**,
+   **Developer settings**, **Personal access tokens**, **Tokens (classic)**).
+4. On the VPS, log in to GitHub's container registry, with the token as the password. This lets the VPS pull
+   `ghcr.io/grahamjenson/nighttroop` while the repository is private.
 
-      ```sh
-      docker login ghcr.io -u <your-github-username>
-      ```
+   ```sh
+   docker login ghcr.io -u <your-github-username>
+   ```
 
-## 7. Configure it
+## Configure
 
-There are two files of settings in `/opt/nighttroop`. Make them readable by root only, as they hold secrets:
+### 7. Make the settings files
+
+Both settings files hold secrets. Make them readable by root only:
 
 ```sh
 cd /opt/nighttroop
@@ -231,7 +186,7 @@ touch .env nighttroop.env
 chmod 600 .env nighttroop.env
 ```
 
-### `.env`: settings for Docker Compose and Caddy
+#### `.env`: settings for Docker Compose and Caddy
 
 ```sh
 # So plain `docker compose` commands in this folder use the right file
@@ -250,11 +205,11 @@ HOSTINGER_API_TOKEN=paste-the-token-here
 NIGHTTROOP_IMAGE=ghcr.io/grahamjenson/nighttroop:latest
 ```
 
-### `nighttroop.env`: settings for Nighttroop
+#### `nighttroop.env`: settings for Nighttroop
 
-The compose file already sets the host name, HTTPS and the trusted proxy, so this file only holds secrets and options.
+The compose file sets the host name, HTTPS and the trusted proxy. This file holds only secrets and options.
 
-1. Make the encryption keys. The image includes the tool:
+1. Make the encryption keys with the tool in the image:
 
    ```sh
    docker run --rm --entrypoint create_keysets ghcr.io/grahamjenson/nighttroop:latest
@@ -280,78 +235,72 @@ The compose file already sets the host name, HTTPS and the trusted proxy, so thi
    # SENTRY_DSN=...
    ```
 
-3. **Keep a copy of `KEY_SETS` somewhere safe, off the VPS**, such as a password manager.
-   - It encrypts the secrets in the databases and the backups.
-   - Without it, the data can't be read, and a backup can't be restored onto a new VPS.
+3. Keep a copy of `KEY_SETS` off the VPS, for example in a password manager.
 
-## 8. Start it
+**Warning:** Do not lose `KEY_SETS`. It encrypts the secrets in the databases and the backups. Without it, you cannot
+read the data or restore a backup onto a new VPS.
 
-```sh
-cd /opt/nighttroop
-docker compose up -d --build
-```
+## Start
 
-The first start takes a few minutes:
+### 8. Start Nighttroop
 
-- **Building Caddy:** the `--build` compiles Caddy with the Hostinger DNS module.
-- **Pulling Nighttroop:** the image is downloaded.
-- **Getting certificates:** Caddy asks for them, which can take a minute or two while the DNS challenge record spreads.
+1. Start the containers. The first start takes a few minutes: it compiles Caddy with the Hostinger DNS module
+   (`--build`), pulls Nighttroop and gets the certificates.
 
-Watch Caddy get the certificates:
+   ```sh
+   cd /opt/nighttroop
+   docker compose up -d --build
+   ```
 
-```sh
-docker compose logs -f caddy
-```
+2. Watch the Caddy logs for `certificate obtained successfully` for `example.com`, `*.example.com` and
+   `*.ns.example.com`. This can take a minute or two while the DNS challenge record spreads. Then push Ctrl+C.
 
-You should see `certificate obtained successfully` for `example.com`, `*.example.com` and `*.ns.example.com`. Press
-Ctrl+C to stop watching.
+   ```sh
+   docker compose logs -f caddy
+   ```
 
-Then check that everything works:
+3. Check that:
+   - [ ] `docker compose ps` shows both containers running, and `nighttroop` as `healthy`.
+   - [ ] `curl https://example.com/health` prints `{"status":"ok"}`.
+   - [ ] <https://example.com> goes to the setup page at `https://control.example.com/setup`, with a valid padlock.
+   - [ ] `http://example.com` redirects to HTTPS.
 
-- [ ] `docker compose ps` shows both containers running, and `nighttroop` as `healthy`.
-- [ ] `curl https://example.com/health` prints `{"status":"ok"}`.
-- [ ] <https://example.com> goes to the setup page at `https://control.example.com/setup`, with a valid padlock.
-- [ ] `http://example.com` redirects to HTTPS.
+### 9. Set up the control plane
 
-## 9. Set up the control plane
+A new server has no control admin, so all pages go to the setup page. Setup needs the code from the server logs, so
+nobody else can take the server first.
 
-A new server has no control plane admin, so every page goes to the setup page until you make one. Only someone with
-the setup code the server prints to its logs can, so nobody else can take a new server before you do.
-
-1. Find the setup code in the logs:
+1. Find the setup code. The server logs it at each start until setup is complete, so restart Nighttroop to see it
+   again.
 
    ```sh
    docker compose logs nighttroop | grep -A1 "SET UP NIGHTTROOP"
    ```
 
-   - The code is printed on every start until setup is done, so restart Nighttroop to see it again.
 2. Open <https://control.example.com/setup> and enter the code.
-3. It shows the admin's username, password and TOTP secret, once:
-   1. Store the password and TOTP secret somewhere safe.
-   2. Add the TOTP secret to your authenticator app, e.g. by scanning its QR code.
-   3. Enter the code from your authenticator app and press **Finish setup**.
-4. Log in at <https://control.example.com>. The rest of the server, such as creating sites, now works.
+3. Store the control admin's password and TOTP secret safely. The page shows them, with the username, only once.
+4. Add the TOTP secret to your authenticator app (for example, scan its QR code).
+5. Enter the code from the app, then push **Finish setup**.
+6. Log in at <https://control.example.com>. The rest of the server, such as site creation, now works.
 
 ## Updating Nighttroop safely
 
 ### Where new versions come from
 
-Merges to `main` build no image. A version is released by pushing a tag for it, on a commit CI passed on:
+Merges to `main` build no image. To release a version, push a tag on a commit that passed CI:
 
 ```sh
 git tag v1.2.3 && git push origin v1.2.3
 ```
 
-The **Docker image** workflow (`.github/workflows/docker.yml`) then builds the server's image from that tag and pushes
-two tags to `ghcr.io/grahamjenson/nighttroop`:
+The **Docker image** workflow (`.github/workflows/docker.yml`) builds that tag and pushes it to
+`ghcr.io/grahamjenson/nighttroop` as:
 
-- **`:v1.2.3`** is that version, and never changes.
-- **`:latest`** is the newest version.
+- **`:v1.2.3`**: that version. It never changes.
+- **`:latest`**: the newest version.
 
-Deploy the version tags, so you always know which version is running and can go back to it. You can find them:
-
-- on the repository's **Packages** page on GitHub;
-- in the repository's tags.
+Deploy version tags, so that you know which version runs and can go back to it. Find them on the repository's GitHub
+**Packages** page, or in its tags.
 
 ### Running an update
 
@@ -364,61 +313,57 @@ sudo ./update.sh ghcr.io/grahamjenson/nighttroop:v1.2.3
 
 The script:
 
-1. **Pulls the new image** while the old version keeps running, so a bad tag or a registry problem changes nothing.
-   - If the new image is the one already running, it stops here.
-2. **Keeps the running image** under its own name, `nighttroop-rollback:<time>`, so it can always start it again.
-3. **Stops Nighttroop**, which uploads a last backup to S3 on the way down (it allows two minutes).
-4. **Copies `./data`** to `./backups/data-<time>.tar.gz` while nothing is writing to it.
-5. **Starts the new image** and waits up to 3 minutes for its health check to pass.
-   - The health check asks the server's `/health`, which answers once the control database does. The server only
-     starts serving once every live site's database is opened and migrated, so a release that cannot open one is
-     never healthy, and takes no data before it is rolled back.
-6. **If it is healthy, it is done.** It keeps the newest 5 backups and previous images and deletes older ones.
-7. **If it isn't healthy, it rolls back:**
-   1. prints the new version's last logs;
-   2. stops it, and moves its `./data` aside to `./data-failed-<time>`;
-   3. puts back `./data` from the copy made in step 4;
-   4. starts the previous image again, and checks that it is healthy.
+1. **Pulls the new image** while the old version runs, so a bad tag or registry problem changes nothing. Stops if that
+   image runs already.
+2. **Keeps the running image** as `nighttroop-rollback:<time>`, to start it again.
+3. **Stops Nighttroop,** which uploads a last backup to S3 (two minutes allowed).
+4. **Copies `./data`** to `./backups/data-<time>.tar.gz`, while nothing writes to it.
+5. **Starts the new image** and waits up to 3 minutes for its health check, `/health`. This answers when the control
+   database does.
+   - The server serves only after it opens and migrates each live site's database. A release that cannot open one is
+     never healthy, and takes no data.
+6. **If healthy:** keeps the newest 5 backups and previous images, and deletes older ones.
+7. **If not healthy, rolls back:**
+   1. Prints the new version's last logs.
+   2. Stops it, and moves its `./data` to `./data-failed-<time>`.
+   3. Restores `./data` from step 4.
+   4. Starts the previous image, and checks that it is healthy.
 
-Nighttroop is down from step 3 until it is healthy in step 5, usually well under a minute. Caddy keeps running
-throughout.
-
-How the script finishes:
+Nighttroop is down from step 3 until healthy in step 5, usually much less than a minute. Caddy runs all the time.
 
 | Exit code | Meaning |
 | --- | --- |
 | `0` | Updated, or already running that image |
-| `1` | The new version wasn't healthy and the previous one is back, with its data |
-| `2` | Neither version is healthy; look at `docker compose logs nighttroop` |
+| `1` | The new version was not healthy. The previous one is back, with its data |
+| `2` | Neither version is healthy. See `docker compose logs nighttroop` |
 
-You can change its defaults with environment variables:
+Options:
 
-- `sudo HEALTH_TIMEOUT=300 ./update.sh ...` waits 5 minutes for the health check instead of 3, e.g. for a large
-  restore.
-- `sudo KEEP_BACKUPS=10 ./update.sh ...` keeps 10 backups and previous images instead of 5.
+- `sudo HEALTH_TIMEOUT=300 ./update.sh ...` waits 5 minutes for the health check, not 3 (for example, for a large
+  restore).
+- `sudo KEEP_BACKUPS=10 ./update.sh ...` keeps 10 backups and previous images, not 5.
 
-### What a rollback can't undo
+### What a rollback cannot undo
 
-- **Data the new version wrote** before it was rolled back is not in the restored `./data`. It is kept in
-  `./data-failed-<time>` if you need it.
-- **S3 backups the new version made.** It may have uploaded backups in its new format while it ran.
-  - The restored version runs from its local data, and replaces those uploads with its own on its next backups.
-  - Only a fresh VPS would restore from S3, so don't move servers until the old version has backed up again.
+- **Data the new version wrote** is not in the restored `./data`. It stays in `./data-failed-<time>`. The script does
+  not delete these folders: delete them when you do not need them.
+- **S3 backups the new version made,** possibly in its new format. The restored version runs from local data, and its
+  next backups replace them.
 
-Delete `./data-failed-*` folders once you are sure you don't need them; the script doesn't.
+**Warning:** Do not move servers until the old version backs up again. Only a new VPS restores from S3.
 
 ### Fix forward once a new version has served
 
-The script's rollback loses nothing, as a new version that is not healthy has served nothing. Once a new version is
-healthy and has served, don't roll back: update again to a version that fixes the problem. An earlier version can't
-open databases a newer one migrated, so going back means putting back an old copy of `./data`, and losing everything
-written since.
+The script's rollback loses nothing: a version that is not healthy served nothing. After a new version served, do not
+roll back. Update to a version with a fix. An earlier version cannot open databases that a newer one migrated. To go
+back, you must restore an old `./data` copy, and you lose everything written since.
 
 ### Rolling back by hand
 
-Only as a last resort, to go back to an earlier version, use the copy of `./data` made just before that version was
-replaced. Its databases are in the format that version expects, and everything written since is lost; move it aside,
-as below, if you need it.
+**Caution:** Do this only as a last resort. You lose everything written since the copy.
+
+Restore the copy of `./data` made just before the earlier version was replaced. Its databases have the format that
+version expects. The commands keep the current data in `data-before-rollback`.
 
 ```sh
 cd /opt/nighttroop
@@ -430,85 +375,81 @@ sed -i 's|^NIGHTTROOP_IMAGE=.*|NIGHTTROOP_IMAGE=nighttroop-rollback:<time>|' .en
 docker compose up -d nighttroop
 ```
 
-## Other upkeep
+## Maintenance
 
-- **Logs:**
-  - `docker compose logs -f nighttroop` or `docker compose logs -f caddy`.
-  - Each container keeps up to 50 MB of logs.
-- **Certificates:** Caddy renews them by itself, well before they expire, and keeps them in the `caddy_data` volume.
-  You don't need cron or certbot.
-- **Updating Caddy:** rebuild it on the newest Caddy 2.11 release, then restart it:
+- **Logs:** `docker compose logs -f nighttroop` or `docker compose logs -f caddy`. Up to 50 MB for each container.
+- **Certificates:** Caddy renews them well before expiry, in the `caddy_data` volume. No cron or certbot.
+- **Caddy:** rebuild on the newest Caddy 2.11 release and restart:
 
   ```sh
   docker compose build --pull caddy && docker compose up -d caddy
   ```
 
-- **Updating the VPS:** run `apt update && apt upgrade -y` now and then, and reboot when it asks. Both containers start
-  again by themselves.
-- **Snapshots:**
-  - Before a big change, take a snapshot in hPanel: **VPS**, then **Manage**, **Backups & Monitoring**, **Snapshots &
-    Backups**, **Create Snapshot**.
-  - It is a whole-machine fallback alongside the script's backups. Hostinger keeps one snapshot at a time, and its own
-    automatic backups weekly.
-- **Disk space:**
-  - `du -sh /opt/nighttroop/*` shows what the data, backups and failed-update folders use.
-  - `docker system df` shows what images use.
+- **VPS:** run `apt update && apt upgrade -y` from time to time, and reboot when it asks. Both containers restart
+  automatically.
+- **Snapshots:** before a big change, in hPanel: **VPS**, **Manage**, **Backups & Monitoring**, **Snapshots &
+  Backups**, **Create Snapshot**. A whole-machine fallback, in addition to the script's backups. Hostinger keeps one
+  snapshot at a time, and its own automatic backups weekly.
+- **Disk space:** `du -sh /opt/nighttroop/*` (data, backups and failed-update folders) and `docker system df`
+  (images).
 
 ## Troubleshooting
 
-### Caddy doesn't get certificates
+### Caddy does not get certificates
 
-Look at `docker compose logs caddy` for the error. Common causes:
+Find the error in `docker compose logs caddy`:
 
-- **`401` or `unauthorized` from Hostinger:** the API token is wrong or has expired. Make a new one, put it in `.env`,
-  and run `docker compose up -d caddy`.
-- **Timeouts waiting for the TXT record:**
-  - Check the domain really uses Hostinger's nameservers: `dig +short NS example.com` should show `dns-parking.com`
-    names.
-  - Caddy checks the record with public resolvers (`1.1.1.1` and `8.8.8.8`), which see it once Hostinger's nameservers
-    have it.
-- **Too many failed attempts:** Let's Encrypt limits how often a domain can fail. While you fix things, try Let's
-  Encrypt's staging service, which has looser limits but gives untrusted certificates:
-  1. Add `acme_ca https://acme-staging-v02.api.letsencrypt.org/directory` inside the `tls` block of the Caddyfile in
-     `hostinger.compose.yml`.
+- **`401` or `unauthorized` from Hostinger:** the token is wrong or expired. Put a new token in `.env`, then run
+  `docker compose up -d caddy`.
+- **Timeouts for the TXT record:** `dig +short NS example.com` must show `dns-parking.com` names (Hostinger's
+  nameservers). Caddy checks with public resolvers (`1.1.1.1` and `8.8.8.8`), which see the record once Hostinger has
+  it.
+- **Too many failed attempts:** Let's Encrypt limits failures for each domain. While you repair the problem, use its
+  staging service (looser limits, untrusted certificates):
+  1. In `hostinger.compose.yml`, add `acme_ca https://acme-staging-v02.api.letsencrypt.org/directory` in the `tls`
+     block of the Caddyfile.
   2. Run `docker compose up -d caddy`.
-  3. Remove the line again once certificates are obtained.
+  3. When Caddy has the certificates, remove the line.
 
 ### The browser shows a 404 page
 
-Nighttroop only answers host names under `DOMAIN`.
+Nighttroop answers only host names under `DOMAIN`.
 
-- Check `DOMAIN` in `.env` is exactly your domain, then run `docker compose up -d`.
-- A subdomain that isn't a site, such as `www.example.com`, gets a 404 by design.
+- Make sure that `DOMAIN` in `.env` is exactly your domain, then run `docker compose up -d`.
+- A subdomain that is not a site (for example `www.example.com`) gets a 404 by design.
 
-### Nighttroop isn't healthy
+### Nighttroop is not healthy
 
-Look at `docker compose logs nighttroop`:
+Find the cause in `docker compose logs nighttroop`:
 
-- **`cannot create server config`:** a setting has a bad value, such as `TRUSTED_PROXIES`.
-- **A setting seems to be ignored:** check its spelling in `nighttroop.env`. Settings there reach Nighttroop as
-  environment variables, so a misspelled one is ignored and the default is used.
-- **Permission denied under `/data`:** the data folder isn't owned by user `10001`:
+- **`cannot create server config`:** a setting has a bad value, for example `TRUSTED_PROXIES`.
+- **A setting has no effect:** check its spelling in `nighttroop.env`. Nighttroop ignores misspelled environment
+  variables and uses the default.
+- **Permission denied under `/data`:** the data folder must belong to user `10001`:
 
   ```sh
   chown -R 10001:10001 /opt/nighttroop/data
   ```
 
-- **Still starting after a while:** a first start on a new VPS restores from S3, which takes longer the more data there
-  is. Give it a few minutes.
-- **`Site DB is missing, so the site is not opened`:** a live site's database file is missing and was not restored
-  from its batch's backup in S3, so the server does not start (`live sites' DBs are missing and were not restored:`
-  names them). Put its file back, such as from a copy in `./backups`, and restart.
+- **Still starting after a while:** a first start on a new VPS restores from S3. More data takes longer. Wait a few
+  minutes.
+- **`Site DB is missing, so the site is not opened`:** a live site's database is missing, and its batch's S3 backup
+  did not restore it. The server does not start (`live sites' DBs are missing and were not restored:` names them). Put
+  the file back (for example, from `./backups`), then restart.
 
 ### Everyone seems to share one IP address
 
-If rate limits are hit far too often, check `TRUSTED_PROXIES` in `hostinger.compose.yml` is Caddy's address,
-`172.30.0.2`, and that the `internal` network's subnet is unchanged.
+If rate limits occur much too often, check in `hostinger.compose.yml` that:
 
-- Don't widen `TRUSTED_PROXIES` to a whole range anyone can send from. Anything it trusts can claim to be any IP, and
-  so get past the rate limits.
+- `TRUSTED_PROXIES` is Caddy's address, `172.30.0.2`.
+- The subnet of the `internal` network is unchanged.
+
+**Warning:** Do not widen `TRUSTED_PROXIES` to a range that anyone can send from. A trusted address can claim any IP,
+and get past the rate limits.
 
 ### The `172.30.0.0/24` network is already used on the VPS
 
-Change both the `subnet` and `ip_range` under `networks` in `hostinger.compose.yml`, and set Caddy's `ipv4_address`
-and `TRUSTED_PROXIES` to the same new address. It must be inside the subnet but outside `ip_range`.
+In `hostinger.compose.yml`:
+
+1. Change `subnet` and `ip_range` under `networks`.
+2. Set Caddy's `ipv4_address` and `TRUSTED_PROXIES` to the same new address, inside the subnet but outside `ip_range`.
