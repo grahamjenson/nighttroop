@@ -1010,6 +1010,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   One sent `indefinite` with a `duration` of 0, or a `Temporary Override` of 0 minutes, as Nightscout's careportal
   sends one until cancelled, is indefinite too, not ended as it starts; a `Temporary Target` of 0 minutes still
   cancels the one running.
+- A record made without an `_id`, through the Nightscout API or on the site, gets one shaped as a MongoDB ObjectId, as
+  Nightscout's are: 24 lower case hex characters, the second it was made in then 8 random bytes, as xDrip+ only
+  deletes a treatment with such an `_id`. A record made before, with an 8 character `_id`, is still found by it.
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it, and
