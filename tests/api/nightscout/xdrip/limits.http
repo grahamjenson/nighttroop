@@ -11,7 +11,7 @@ B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "9d3e5f7a-1b2c-4d6e-8f0a
    "_id": "9d3e5f7a1b2c4d6e8f0a1b2c", "insulin": 8882.5,
    "carbs": 0, "created_at": "{{ time 5 }}"}
 ASSERT_STATUS 400
-ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 U (was 8882.5)" "@message"
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 (was 8882.5)" "@message"
 
 NAME xdrip_insulin_just_too_large
 PUT http://{{ site }}/api/v1/treatments
@@ -20,7 +20,7 @@ B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "0a4f6b8c-2d3e-4f5a-9b1c
    "_id": "0a4f6b8c2d3e4f5a9b1c2d3e", "insulin": 501,
    "carbs": 0, "created_at": "{{ time 6 }}"}
 ASSERT_STATUS 400
-ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 U (was 501)" "@message"
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 (was 501)" "@message"
 
 NAME xdrip_carbs_too_many
 PUT http://{{ site }}/api/v1/treatments
@@ -29,7 +29,7 @@ B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "1b5a7c9d-3e4f-4a6b-8c2d
    "_id": "1b5a7c9d3e4f4a6b8c2d3e4f", "insulin": 0,
    "carbs": 1500, "created_at": "{{ time 7 }}"}
 ASSERT_STATUS 400
-ASSERT_EQUALS "Bad or missing body: carbs must be between -1000 and 1000 g (was 1500)" "@message"
+ASSERT_EQUALS "Bad or missing body: carbs must be between -1000 and 1000 (was 1500)" "@message"
 
 // No refused treatment is stored
 NAME xdrip_refused_not_stored

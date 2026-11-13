@@ -137,6 +137,17 @@ WHERE
 ORDER BY occurred_at DESC
 LIMIT 1;
 
+-- name: GetLatestDeviceReportWithBattery :one
+-- The newest report with the uploader's battery in the last 30 minutes, from any device (a loop's or only an
+-- uploader's, like xDrip+), from occurred_at's index, as Nightscout's upbat
+SELECT * from device_reports
+WHERE
+    deleted_at IS NULL AND
+    occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1800000 AND
+    device_battery_percent IS NOT NULL
+ORDER BY occurred_at DESC
+LIMIT 1;
+
 
 
 --------
