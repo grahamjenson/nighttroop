@@ -805,7 +805,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Insulin and food can be negative, to correct too much entered.
 - Pages are stricter (a dose: at most 100 units either way).
 - Nightscout API: each value is checked against the limit of its column in the site DB (its range, its length, its
-  type, and if it can be empty) before it is stored.
+  type, and if it can be empty) before it is stored. A patch is checked as the stored document with the fields sent.
   - If a value is out of its limit and the document can be kept without it: the value is left out, and the rest kept.
     The site's client errors show one `client` error for the request, with each value left out, its limit and the
     value sent (e.g. `Left out uploader.battery must be between 0 and 100 (was -100)`).
