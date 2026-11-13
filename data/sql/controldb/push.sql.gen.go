@@ -7,6 +7,7 @@ package controldb
 
 import (
 	"context"
+	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -293,20 +294,36 @@ func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrati
 }
 
 const newestPushRegistrationForApp = `-- name: NewestPushRegistrationForApp :one
-SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations
-WHERE site_id = ?1 AND app = ?2
-ORDER BY updated_at DESC, id DESC
+SELECT push_registrations.id, push_registrations.site_id, push_registrations.identity_id, push_registrations.app, push_registrations.provider, push_registrations.bundle_id, push_registrations.production, push_registrations.token_enc, push_registrations.token_hash, push_registrations.created_at, push_registrations.updated_at, push_registrations.last_pushed_at, push_registrations.last_error FROM push_registrations
+JOIN site_identities ON site_identities.id = push_registrations.identity_id
+WHERE push_registrations.site_id = ?1 AND push_registrations.app = ?2
+  AND site_identities.enabled AND site_identities.role IN (/*SLICE:Roles*/?)
+ORDER BY push_registrations.updated_at DESC, push_registrations.id DESC
 LIMIT 1
 `
 
 type NewestPushRegistrationForAppParams struct {
 	SiteID string
 	App    consts.PushApp
+	Roles  []consts.IdentityRole
 }
 
-// A site's registration for the app last registered or registered again, as Loop's is with each profile it uploads
+// A site's registration for the app last registered or registered again, as Loop's is with each profile it uploads,
+// by an enabled identity with one of the Roles, so one that cannot change the site's data cannot take its commands
 func (q *Queries) NewestPushRegistrationForApp(ctx context.Context, arg NewestPushRegistrationForAppParams) (*PushRegistration, error) {
-	row := q.queryRow(ctx, q.newestPushRegistrationForAppStmt, newestPushRegistrationForApp, arg.SiteID, arg.App)
+	query := newestPushRegistrationForApp
+	var queryParams []interface{}
+	queryParams = append(queryParams, arg.SiteID)
+	queryParams = append(queryParams, arg.App)
+	if len(arg.Roles) > 0 {
+		for _, v := range arg.Roles {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:Roles*/?", strings.Repeat(",?", len(arg.Roles))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:Roles*/?", "NULL", 1)
+	}
+	row := q.queryRow(ctx, nil, query, queryParams...)
 	var i PushRegistration
 	err := row.Scan(
 		&i.ID,
