@@ -1160,6 +1160,10 @@ func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 		xstring2 := ShortStringToString(*source.InsulinType)
 		sitedbTempBasal.InsulinType = &xstring2
 	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbTempBasal.Automatic = &xbool
+	}
 	if source.Notes != nil {
 		xstring3 := SanitizedStringToString(*source.Notes)
 		sitedbTempBasal.Notes = &xstring3
@@ -1409,6 +1413,10 @@ func TempBasalCreate(source sitedb.TempBasal, context ConverterContext) sitedb.C
 		xstring2 := *source.InsulinType
 		sitedbCreateTempBasalParams.InsulinType = &xstring2
 	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbCreateTempBasalParams.Automatic = &xbool
+	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
 		sitedbCreateTempBasalParams.Notes = &xstring3
@@ -1451,6 +1459,10 @@ func TempBasalUpdate(source sitedb.TempBasal, context ConverterContext) sitedb.U
 	if source.InsulinType != nil {
 		xstring2 := *source.InsulinType
 		sitedbUpdateTempBasalParams.InsulinType = &xstring2
+	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbUpdateTempBasalParams.Automatic = &xbool
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -1862,6 +1874,10 @@ func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 		if source.Type != nil {
 			typesShortString := types.ShortString(*source.Type)
 			target.Type = &typesShortString
+		}
+		if source.Automatic != nil {
+			xbool := *source.Automatic
+			target.Automatic = &xbool
 		}
 		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
 		target.DurationMinutes = &pTypesFlexibleInt64
@@ -2566,6 +2582,10 @@ func UpdateToTempBasal(source *sitedb.TempBasal, target *sitedb.TempBasal) {
 		if source.InsulinType != nil {
 			xstring2 := *source.InsulinType
 			target.InsulinType = &xstring2
+		}
+		if source.Automatic != nil {
+			xbool := *source.Automatic
+			target.Automatic = &xbool
 		}
 		if source.Notes != nil {
 			xstring3 := *source.Notes

@@ -533,6 +533,7 @@ type TempBasal struct {
 	Multiplier            *float64
 	Type                  *string
 	InsulinType           *string
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -555,6 +556,7 @@ type TempBasalsVw struct {
 	Multiplier            *float64
 	Type                  *string
 	InsulinType           *string
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64

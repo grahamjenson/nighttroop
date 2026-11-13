@@ -1969,6 +1969,10 @@ func TempBasalFromView(source TempBasalsVw) TempBasal {
 		xstring2 := *source.InsulinType
 		sitedbTempBasal.InsulinType = &xstring2
 	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbTempBasal.Automatic = &xbool
+	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
 		sitedbTempBasal.Notes = &xstring3
@@ -2036,6 +2040,10 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 		xstring2 := *source.InsulinType
 		sitedbCreateTempBasalParams.InsulinType = &xstring2
 	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbCreateTempBasalParams.Automatic = &xbool
+	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
 		sitedbCreateTempBasalParams.Notes = &xstring3
@@ -2081,6 +2089,10 @@ func TempBasalToUpdate(source TempBasal) UpdateTempBasalParams {
 	if source.InsulinType != nil {
 		xstring2 := *source.InsulinType
 		sitedbUpdateTempBasalParams.InsulinType = &xstring2
+	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbUpdateTempBasalParams.Automatic = &xbool
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -3044,6 +3056,10 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 	if source.InsulinType != nil {
 		xstring3 := *source.InsulinType
 		sitedbTempBasalsVw.InsulinType = &xstring3
+	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbTempBasalsVw.Automatic = &xbool
 	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
