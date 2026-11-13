@@ -19,7 +19,7 @@ GOTO /settings/connectors
 CLICK #site--settings--virtual-connector--backfill
 RUN_BACKGROUND_JOBS
 GOTO /reports/overview/day-{{ date -1 }}
-ASSERT_VISIBLE #site--reports--out-of-date >> text=This report's data changed, so it is being updated.
+ASSERT_VISIBLE #site--reports--out-of-date >> text=This report's data changed since its numbers were worked out
 SCREENSHOT out_of_date
 GOTO /reports/agp/day-{{ date -1 }}
 ASSERT_VISIBLE #site--reports--out-of-date

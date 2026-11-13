@@ -148,7 +148,7 @@ site:
     signed_in_as: "Signed in as"
     my_account: "My Account"
     getting_started: "Getting Started"
-    logout: "Logout"
+    logout: "Log out"
     error_recorded_on: "Something went wrong. It has been recorded on the"
     errors_page: "Errors page"
     error_recorded_for_admins: "Something went wrong. It has been recorded for the site's admins."
@@ -238,7 +238,7 @@ site:
       source_device_status: "Device status"
       details_title: "{{.AppName}} Settings"
       details_last_seen: "Last seen {{.LastSeen}}"
-      changes: "Changed From the Set Before"
+      changes: "Changes From the Previous Set"
       first_kept: "These are the first {{.AppName}} settings kept, so there is nothing to compare them with."
       no_changes: "No visible changes; they differ only in formatting."
       not_sent: "not sent"
@@ -248,7 +248,7 @@ site:
   logs:
     events:
       title: "Events"
-      explanation: "What happened to this site and its backup batch, newest first. Search covers the newest 10,000."
+      explanation: "What happened to this site and its backups, newest first. Search covers the newest 10,000."
       all: "All events"
       about: "For"
       this_site: "This site"

@@ -52,8 +52,8 @@ func TestResourceWarning(t *testing.T) {
 	}{
 		{config.ResourceLevel{Resource: "disk", Value: 87, Limit: 60, Total: &total}, "124.0 GB free of 954.0 GB."},
 		{config.ResourceLevel{Resource: "memory", Value: 75, Limit: 60, Total: new(float64(2 << 30))}, "1.5 GB used of 2.0 GB."},
-		{config.ResourceLevel{Resource: "memory", Value: 75, Limit: 60}, "75% used, and 60% or more warns."},
-		{config.ResourceLevel{Resource: "cpu", Value: 25, Limit: 20}, "at 100% for 25 seconds, and 20 or more warns."},
+		{config.ResourceLevel{Resource: "memory", Value: 75, Limit: 60}, "75% used; it warns from 60%."},
+		{config.ResourceLevel{Resource: "cpu", Value: 25, Limit: 20}, "at 100% for 25 seconds; it warns from 20 seconds."},
 	}
 	for _, tt := range tests {
 		require.Equal(t, tt.want, resourceWarning(context.Background(), tt.level))

@@ -15,7 +15,7 @@ site:
     nav:
       previous: "Previous {{.Unit}}"
       next: "Next {{.Unit}}"
-    out_of_date: "This report's data changed, so it is being updated. Refresh in a minute or two."
+    out_of_date: "This report's data changed since its numbers were worked out, so they may be out of date. They are being worked out again: reload the page in a minute or two to see them."
     # Numbers more than one report shows
     metrics:
       average_glucose: "Average glucose"
@@ -48,7 +48,7 @@ site:
       average: "Average"
       days_glucose: "This day's glucose"
       below_range: "Below the range"
-    no_glucose: "No glucose in this {{.Period}}. Reports are made from whole days, so a day's readings show here the day after."
+    no_glucose: "No glucose readings in this {{.Period}}. Reports are made from whole days, so a day's readings show here the day after."
     overview:
       title: "Overview"
       glucose: "Glucose"
@@ -102,7 +102,7 @@ site:
       day_so_far: "{{.Day}}, so far"
       empty: "No insulin on these days."
       help: "Basal is estimated from the rate in force each minute, scheduled or temp; the rest of the daily dose is boluses."
-      help_today: "Today is not over, so it is paler, marked so far, and left out of the totals, lowest and highest."
+      help_today: "Today is not over yet, so it is drawn paler, marked so far, and left out of the totals and the lowest and highest days."
       each_day: "Each day"
       day: "Day"
     summaries:
@@ -113,7 +113,7 @@ site:
       above_range: "Above range"
       none_in: "No {{.Period}}s kept in {{.In}}."
       none_yet: "No {{.Period}}s kept yet. Each is made from whole days, so the first shows the day after readings arrive."
-      maintenance: "Summaries look wrong, e.g. after changing the timezone or uploading old readings? Rebuild the last year of them from the site's data."
+      maintenance: "Summaries look wrong, e.g. after changing the timezone or uploading old readings? Regenerate the last year of them from the site's data."
       regenerate_confirm: "Regenerate the last year of summaries from the site's data? It runs in the background and takes a minute."
       regenerate: "Regenerate summaries"
       regenerating: "Regenerating summaries"
@@ -176,13 +176,13 @@ site:
         insulin: "Insulin: {{.Dose}}"
         smb: "SMB: {{.Dose}}"
         carbs: "Carbs: {{.Carbs}}"
-    insulin_and_carbs: "Insulin & Carbs"
+    insulin_and_carbs: "Insulin and carbs"
     intake:
       when: "When"
       insulin: "Insulin"
       carbs: "Carbs"
       none: "No insulin or carbs in this time."
-    other_treatments: "Other Treatments"
+    other_treatments: "Other treatments"
     treatments:
       none: "No temp targets or temp basals in this time."
       temp_target: "Temp Target"
@@ -208,10 +208,10 @@ site:
       identities_text: "Give family and friends their own login, and each phone or watch its own token, so you can see and take away each one's access."
       identities_link: "Open Users & Devices"
       settings: "Make it yours"
-      settings_text: "Choose your units, time zone, language, and date and time formats."
+      settings_text: "Choose your units, timezone, language, and date and time formats."
       settings_link: "Open Settings"
       alarms: "Set up alarms"
-      alarms_text: "Every alarm starts off. Turn on the ones you want, like lows, highs and no data, and set when each goes off."
+      alarms_text: "Every alarm is off at first. Turn on the ones you want, like lows, highs and no data, and set when each goes off."
       alarms_link: "Open Alarms"
       not_admin: "Your site's admin sets up where its data comes from and who can use it."
       where: "Readings, treatments and presets are under Data at the top of every page, and reports under Reports. Settings, alarms, logs and events are in the menu under your name. Search finds any page by name."

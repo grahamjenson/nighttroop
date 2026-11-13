@@ -6,7 +6,7 @@ TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 ASSERT_VISIBLE #control--status-banner--sites
 ASSERT_TEXT_VISIBLE Sites near their limit
-ASSERT_TEXT_VISIBLE 9 of the 10 MAX_SITES allows.
+ASSERT_TEXT_VISIBLE 9 of the 10 sites MAX_SITES allows.
 SCREENSHOT near_limit
 
 // A site created from the public page reaches the limit, which the banner then says
@@ -19,5 +19,5 @@ ASSERT_VISIBLE #public--copy-button
 GOTO {{ .control_url }}/
 ASSERT_VISIBLE #control--status-banner--sites
 ASSERT_TEXT_VISIBLE Sites at their limit
-ASSERT_TEXT_VISIBLE 10 of the 10 MAX_SITES allows.
+ASSERT_TEXT_VISIBLE 10 of the 10 sites MAX_SITES allows.
 SCREENSHOT at_limit

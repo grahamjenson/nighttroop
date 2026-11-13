@@ -23,7 +23,7 @@ ASSERT_TEXT_VISIBLE Showing 1 to 2
 // The newer settings show only what changed from those before, old then new, with glucose in the site's mmol/L
 CLICK #loopSettingsTable tbody tr >> nth=0
 ASSERT_VISIBLE #presets--loop-settings--details
-ASSERT_TEXT_VISIBLE Changed From the Set Before
+ASSERT_TEXT_VISIBLE Changes From the Previous Set
 ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("dosingStrategy"):has-text("tempBasalOnly"):has-text("automaticBolus")
 ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("maximumBolus"):has-text("10"):has-text("12")
 ASSERT_VISIBLE #presets--loop-settings--changes li:has-text("minimumBGGuard"):has-text("4.4 mmol/L"):has-text("5.0 mmol/L")

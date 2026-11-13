@@ -65,7 +65,7 @@ ASSERT_VISIBLE #site--identities--created--password + [data-copy-button]
 ASSERT_VISIBLE #site--identities--created--ns-token + [data-copy-button]
 // Each copy button is named for what it copies, as it shows only an icon, and copying them all says so
 ASSERT_VISIBLE #site--identities--credentials >> role=button[name="Copy Password"]
-ASSERT_VISIBLE #site--identities--credentials >> role=button[name="Copy Nightscout Token"]
+ASSERT_VISIBLE #site--identities--credentials div:has(> #site--identities--created--ns-token) >> role=button[name="Copy Nightscout token"]
 ASSERT_VISIBLE #site--identities--created--guide >> role=button[name="Copy Nightscout URL"]
 ASSERT_VISIBLE #site--identities--created--guide >> role=button[name="Copy Nightscout token"]
 ASSERT_VISIBLE #site--identities--credentials >> role=button[name="Copy all credentials"]

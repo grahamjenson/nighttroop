@@ -43,7 +43,7 @@ common:
     close: "Close"
   select_box:
     clear_selection: "Clear selection"
-    search: "Search..."
+    search: "Search…"
   badge:
     live: "● Live"
   db_size:
@@ -52,7 +52,7 @@ common:
     limit: "of its {{.Limit}} MB limit"
     other_tables: "Other"
     used: "{{.Percent}}% of its limit used"
-    measured_by: "The resource check measures each site's DB"
+    measured_by: "It is measured in the background, so check back soon."
   log_view:
     event: "Event"
     started: "Started"
