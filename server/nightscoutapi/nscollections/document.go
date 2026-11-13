@@ -6,7 +6,6 @@ import (
 	"encoding/json/jsontext"
 	"slices"
 	"strconv"
-	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -68,13 +67,9 @@ func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
 	}
 	raw, _ := json.Marshal(model)
 	server, without := s.server(v3)
-	var v1Only []string
-	if model, ok := any(s.model).(interface{ V1OnlyFields() []string }); ok && v3 {
-		v1Only = model.V1OnlyFields()
-	}
 	out := append(make([]byte, 0, len(raw)+256), '{')
 	add := func(name string, value []byte) {
-		if name == without || slices.Contains(v1Only, name) || (len(only) > 0 && (name == "_id" || !slices.Contains(only, name))) {
+		if name == without || (len(only) > 0 && (name == "_id" || !slices.Contains(only, name))) {
 			return
 		}
 		if len(out) > 1 {
@@ -111,14 +106,27 @@ func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
 	return json.RawMessage(written)
 }
 
-// server are the server's fields, over the model's, and the one of _id and identifier the API version does not have
+// server are the server's fields, over the model's, and the one of _id and identifier the API version does not have.
+// Every document is written with a created_at, and a date on API v3, and with its collection's time aliases.
 func (s stored[NS]) server(v3 bool) ([]field, string) {
-	fields := []field{{"created_at", quote(types.ISOString(time.UnixMilli(s.occurredAt)))},
-		{"utcOffset", strconv.AppendInt(nil, s.utcOffset, 10)}}
+	aliases := types.TimeAliases{{Name: "created_at"}}
+	if v3 {
+		aliases = append(aliases, types.TimeAlias{Name: "date", Millis: true})
+	}
+	if timed, ok := any(s.model).(interface{ TimeAliases() types.TimeAliases }); ok {
+		aliases = append(aliases, timed.TimeAliases()...)
+	}
+	fields := []field{}
+	for _, written := range aliases.Written(s.occurredAt, v3) {
+		if !slices.ContainsFunc(fields, func(f field) bool { return f.name == written[0] }) {
+			fields = append(fields, field{written[0], []byte(written[1])})
+		}
+	}
+	fields = append(fields, field{"utcOffset", strconv.AppendInt(nil, s.utcOffset, 10)})
 	if !v3 {
 		return append(fields, field{"_id", quote(s.id)}), "identifier"
 	}
-	return append(fields, field{"identifier", quote(s.id)}, field{"date", strconv.AppendInt(nil, s.occurredAt, 10)},
+	return append(fields, field{"identifier", quote(s.id)},
 		field{"srvCreated", strconv.AppendInt(nil, s.srvCreated, 10)}, field{"srvModified", strconv.AppendInt(nil, s.srvModified, 10)},
 		field{"subject", quote(s.subject)}, field{"isValid", strconv.AppendBool(nil, s.deletedAt == nil)},
 		field{"isReadOnly", []byte("false")}), "_id"

@@ -924,6 +924,15 @@ type NsV1GetParams struct {
 	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
 }
 
+// NsV2CreateRoleJSONBody defines parameters for NsV2CreateRole.
+type NsV2CreateRoleJSONBody map[string]interface{}
+
+// NsV2UpdateRoleJSONBody defines parameters for NsV2UpdateRole.
+type NsV2UpdateRoleJSONBody map[string]interface{}
+
+// NsV2CreateSubjectJSONBody defines parameters for NsV2CreateSubject.
+type NsV2CreateSubjectJSONBody map[string]interface{}
+
 // NsV3SearchParams defines parameters for NsV3Search.
 type NsV3SearchParams struct {
 	// Limit At most 1000
@@ -1095,6 +1104,15 @@ type NsV1ReplaceByBodyJSONRequestBody = NsDocument
 
 // NsV1ReplaceJSONRequestBody defines body for NsV1Replace for application/json ContentType.
 type NsV1ReplaceJSONRequestBody = NsDocument
+
+// NsV2CreateRoleJSONRequestBody defines body for NsV2CreateRole for application/json ContentType.
+type NsV2CreateRoleJSONRequestBody NsV2CreateRoleJSONBody
+
+// NsV2UpdateRoleJSONRequestBody defines body for NsV2UpdateRole for application/json ContentType.
+type NsV2UpdateRoleJSONRequestBody NsV2UpdateRoleJSONBody
+
+// NsV2CreateSubjectJSONRequestBody defines body for NsV2CreateSubject for application/json ContentType.
+type NsV2CreateSubjectJSONRequestBody NsV2CreateSubjectJSONBody
 
 // NsV3CreateJSONRequestBody defines body for NsV3Create for application/json ContentType.
 type NsV3CreateJSONRequestBody = NsDocument
@@ -1846,6 +1864,30 @@ type ClientInterface interface {
 	// NsV2Authorize request
 	NsV2Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// NsV2Roles request
+	NsV2Roles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2CreateRoleWithBody request with any body
+	NsV2CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV2CreateRole(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2UpdateRoleWithBody request with any body
+	NsV2UpdateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV2UpdateRole(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2Subjects request
+	NsV2Subjects(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2CreateSubjectWithBody request with any body
+	NsV2CreateSubjectWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV2CreateSubject(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2DeleteSubject request
+	NsV2DeleteSubject(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// NsV2Properties request
 	NsV2Properties(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2344,6 +2386,114 @@ func (c *Client) NsV2CheckPermission(ctx context.Context, permission string, req
 
 func (c *Client) NsV2Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV2AuthorizeRequest(c.Server, token)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2Roles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2RolesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateRoleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateRole(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateRoleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2UpdateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2UpdateRoleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2UpdateRole(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2UpdateRoleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2Subjects(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2SubjectsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateSubjectWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateSubjectRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateSubject(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateSubjectRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2DeleteSubject(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2DeleteSubjectRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -4322,6 +4472,214 @@ func NewNsV2AuthorizeRequest(server string, token string) (*http.Request, error)
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2RolesRequest generates requests for NsV2Roles
+func NewNsV2RolesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2CreateRoleRequest calls the generic NsV2CreateRole builder with application/json body
+func NewNsV2CreateRoleRequest(server string, body NsV2CreateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV2CreateRoleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV2CreateRoleRequestWithBody generates requests for NsV2CreateRole with any type of body
+func NewNsV2CreateRoleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2UpdateRoleRequest calls the generic NsV2UpdateRole builder with application/json body
+func NewNsV2UpdateRoleRequest(server string, body NsV2UpdateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV2UpdateRoleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV2UpdateRoleRequestWithBody generates requests for NsV2UpdateRole with any type of body
+func NewNsV2UpdateRoleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2SubjectsRequest generates requests for NsV2Subjects
+func NewNsV2SubjectsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/subjects")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2CreateSubjectRequest calls the generic NsV2CreateSubject builder with application/json body
+func NewNsV2CreateSubjectRequest(server string, body NsV2CreateSubjectJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV2CreateSubjectRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV2CreateSubjectRequestWithBody generates requests for NsV2CreateSubject with any type of body
+func NewNsV2CreateSubjectRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/subjects")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2DeleteSubjectRequest generates requests for NsV2DeleteSubject
+func NewNsV2DeleteSubjectRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/subjects/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -6899,6 +7257,30 @@ type ClientWithResponsesInterface interface {
 	// NsV2AuthorizeWithResponse request
 	NsV2AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV2AuthorizeResponse, error)
 
+	// NsV2RolesWithResponse request
+	NsV2RolesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2RolesResponse, error)
+
+	// NsV2CreateRoleWithBodyWithResponse request with any body
+	NsV2CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error)
+
+	NsV2CreateRoleWithResponse(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error)
+
+	// NsV2UpdateRoleWithBodyWithResponse request with any body
+	NsV2UpdateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error)
+
+	NsV2UpdateRoleWithResponse(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error)
+
+	// NsV2SubjectsWithResponse request
+	NsV2SubjectsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2SubjectsResponse, error)
+
+	// NsV2CreateSubjectWithBodyWithResponse request with any body
+	NsV2CreateSubjectWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error)
+
+	NsV2CreateSubjectWithResponse(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error)
+
+	// NsV2DeleteSubjectWithResponse request
+	NsV2DeleteSubjectWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*NsV2DeleteSubjectResponse, error)
+
 	// NsV2PropertiesWithResponse request
 	NsV2PropertiesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2PropertiesResponse, error)
 
@@ -7577,6 +7959,144 @@ func (r NsV2AuthorizeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsV2AuthorizeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2RolesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]map[string]interface{}
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2RolesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2RolesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2CreateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2CreateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2CreateRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2UpdateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2UpdateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2UpdateRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2SubjectsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]map[string]interface{}
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2SubjectsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2SubjectsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2CreateSubjectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2CreateSubjectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2CreateSubjectResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2DeleteSubjectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2DeleteSubjectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2DeleteSubjectResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -9006,6 +9526,84 @@ func (c *ClientWithResponses) NsV2AuthorizeWithResponse(ctx context.Context, tok
 	return ParseNsV2AuthorizeResponse(rsp)
 }
 
+// NsV2RolesWithResponse request returning *NsV2RolesResponse
+func (c *ClientWithResponses) NsV2RolesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2RolesResponse, error) {
+	rsp, err := c.NsV2Roles(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2RolesResponse(rsp)
+}
+
+// NsV2CreateRoleWithBodyWithResponse request with arbitrary body returning *NsV2CreateRoleResponse
+func (c *ClientWithResponses) NsV2CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error) {
+	rsp, err := c.NsV2CreateRoleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV2CreateRoleWithResponse(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error) {
+	rsp, err := c.NsV2CreateRole(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateRoleResponse(rsp)
+}
+
+// NsV2UpdateRoleWithBodyWithResponse request with arbitrary body returning *NsV2UpdateRoleResponse
+func (c *ClientWithResponses) NsV2UpdateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error) {
+	rsp, err := c.NsV2UpdateRoleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2UpdateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV2UpdateRoleWithResponse(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error) {
+	rsp, err := c.NsV2UpdateRole(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2UpdateRoleResponse(rsp)
+}
+
+// NsV2SubjectsWithResponse request returning *NsV2SubjectsResponse
+func (c *ClientWithResponses) NsV2SubjectsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2SubjectsResponse, error) {
+	rsp, err := c.NsV2Subjects(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2SubjectsResponse(rsp)
+}
+
+// NsV2CreateSubjectWithBodyWithResponse request with arbitrary body returning *NsV2CreateSubjectResponse
+func (c *ClientWithResponses) NsV2CreateSubjectWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error) {
+	rsp, err := c.NsV2CreateSubjectWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateSubjectResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV2CreateSubjectWithResponse(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error) {
+	rsp, err := c.NsV2CreateSubject(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateSubjectResponse(rsp)
+}
+
+// NsV2DeleteSubjectWithResponse request returning *NsV2DeleteSubjectResponse
+func (c *ClientWithResponses) NsV2DeleteSubjectWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*NsV2DeleteSubjectResponse, error) {
+	rsp, err := c.NsV2DeleteSubject(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2DeleteSubjectResponse(rsp)
+}
+
 // NsV2PropertiesWithResponse request returning *NsV2PropertiesResponse
 func (c *ClientWithResponses) NsV2PropertiesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2PropertiesResponse, error) {
 	rsp, err := c.NsV2Properties(ctx, reqEditors...)
@@ -10252,6 +10850,204 @@ func ParseNsV2AuthorizeResponse(rsp *http.Response) (*NsV2AuthorizeResponse, err
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest NsAuthorization
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2RolesResponse parses an HTTP response from a NsV2RolesWithResponse call
+func ParseNsV2RolesResponse(rsp *http.Response) (*NsV2RolesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2RolesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2CreateRoleResponse parses an HTTP response from a NsV2CreateRoleWithResponse call
+func ParseNsV2CreateRoleResponse(rsp *http.Response) (*NsV2CreateRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2CreateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2UpdateRoleResponse parses an HTTP response from a NsV2UpdateRoleWithResponse call
+func ParseNsV2UpdateRoleResponse(rsp *http.Response) (*NsV2UpdateRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2UpdateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2SubjectsResponse parses an HTTP response from a NsV2SubjectsWithResponse call
+func ParseNsV2SubjectsResponse(rsp *http.Response) (*NsV2SubjectsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2SubjectsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2CreateSubjectResponse parses an HTTP response from a NsV2CreateSubjectWithResponse call
+func ParseNsV2CreateSubjectResponse(rsp *http.Response) (*NsV2CreateSubjectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2CreateSubjectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2DeleteSubjectResponse parses an HTTP response from a NsV2DeleteSubjectWithResponse call
+func ParseNsV2DeleteSubjectResponse(rsp *http.Response) (*NsV2DeleteSubjectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2DeleteSubjectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

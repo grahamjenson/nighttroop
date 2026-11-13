@@ -162,6 +162,36 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 -- UPDATE
 --------
 
+-- name: RewriteGlucoseReading :one
+-- RewriteGlucoseReading writes every column CreateGlucoseReading does over the glucose reading with the ID, as a
+-- Nightscout update writes its merged document. It keeps when it was created and who by: the identity given is who
+-- updated it.
+UPDATE glucose_readings SET
+    id = sqlc.arg('ID'),
+    mgdl = sqlc.arg('Mgdl'),
+    reading_type = sqlc.arg('ReadingType'),
+    units = sqlc.arg('Units'),
+    measurement_method = sqlc.arg('MeasurementMethod'),
+    delta = sqlc.arg('Delta'),
+    direction = sqlc.arg('Direction'),
+    noise = NULLIF(CAST(sqlc.narg('Noise') AS REAL), 0),
+    filtered = sqlc.narg('Filtered'),
+    unfiltered = sqlc.narg('Unfiltered'),
+    rssi = NULLIF(CAST(sqlc.narg('Rssi') AS REAL), 0),
+    is_calibration = sqlc.narg('IsCalibration'),
+    sensor_mgdl_at_pairing = sqlc.narg('SensorMgdlAtPairing'),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.narg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
+
 -- name: UpdateGlucoseReading :one
 UPDATE glucose_readings SET
     mgdl = COALESCE(sqlc.narg('Mgdl'), mgdl),

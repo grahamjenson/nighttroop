@@ -68,8 +68,8 @@
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
     1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
-    1. P4: Support v2 authorization roles and subjects, which AAPS 4's client control (pairing and remote commands)
-       uses with an admin token, beside the `settings` documents now kept
+    1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another
+       server; AAPS pairing a client again after that gets no token. Keep it in the DB if this is a problem
     1. P3: Count an AAPS bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal in the
        summaries, reports and IOB, as it is kept and given back but still counted as a bolus
     1. P4: Only write a treatment's events that changed, rather than every one on each update

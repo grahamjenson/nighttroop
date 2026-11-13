@@ -107,7 +107,7 @@ No `created_at`: Nightscout and Nighttroop use the arrival time.
 
 Nighttroop gives back (followers read it, Trio does not):
 
-- `openaps`: whole.
+- `openaps`: whole for 1 day. After that, without the `predBGs` in `suggested` and `enacted`.
 - `pump`: all fields above while the JSON as sent is kept. After that, only the clock, battery percent and reservoir.
 - `uploader`: `battery` and `isCharging`.
 - If iOS does not know the phone's battery, Trio sends `uploader.battery` -100 (its `batteryLevel` -1 x 100).

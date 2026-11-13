@@ -44,7 +44,6 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 			typesSanitizedString2 := types.SanitizedString(*(*source).Reason)
 			nightscoutmodelsActivity.Reason = &typesSanitizedString2
 		}
-		nightscoutmodelsActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByDeviceName != nil {
 			typesShortString2 := types.ShortString(*(*source).CreatedByDeviceName)
 			nightscoutmodelsActivity.Device = &typesShortString2
@@ -75,7 +74,6 @@ func DBModelToDeviceStatus(source *sitedb.DeviceReport, context *httputils.SiteC
 		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
 		nightscoutmodelsDeviceStatus.Date = &pTypesDateInt
-		nightscoutmodelsDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByAppName != nil {
 			typesShortString2 := types.ShortString(*(*source).CreatedByAppName)
 			nightscoutmodelsDeviceStatus.App = &typesShortString2
@@ -127,9 +125,6 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
 		nightscoutmodelsEntry.Date = &pTypesDateInt
-		nightscoutmodelsEntry.DateString = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pTypesDateInt2 := types.DateInt((*source).OccurredAt)
-		nightscoutmodelsEntry.Mills = &pTypesDateInt2
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsEntry.UtcOffsetMinutes = &typesFlexibleInt64
@@ -263,11 +258,8 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 		pTypesShortString2 := types.ShortString((*source).CreatedByIdentityName)
 		nightscoutmodelsProfileStore.Subject = &pTypesShortString2
 		nightscoutmodelsProfileStore.EnteredBy = ProfilePresetEnteredBy(source)
-		nightscoutmodelsProfileStore.StartDate = UTCDateString((*source).OccurredAt)
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
-		nightscoutmodelsProfileStore.Mills = &pTypesDateInt
-		pTypesDateInt2 := types.DateInt((*source).OccurredAt)
-		nightscoutmodelsProfileStore.Date = &pTypesDateInt2
+		nightscoutmodelsProfileStore.Date = &pTypesDateInt
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsProfileStore.UtcOffsetMinutes = &typesFlexibleInt64
