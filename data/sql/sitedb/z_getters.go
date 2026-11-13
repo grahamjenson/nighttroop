@@ -8746,6 +8746,86 @@ func (m *CreateGlucoseReadingParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
 }
 
+// GetFromMs returns the FromMs value.
+func (m FingerSticksParams) GetFromMs() int64 {
+	return m.FromMs
+}
+
+// SetFromMs sets the FromMs value and returns the updated FingerSticksParams.
+func (m *FingerSticksParams) SetFromMs(v int64) {
+	m.FromMs = v
+}
+
+// GetToMs returns the ToMs value.
+func (m FingerSticksParams) GetToMs() int64 {
+	return m.ToMs
+}
+
+// SetToMs sets the ToMs value and returns the updated FingerSticksParams.
+func (m *FingerSticksParams) SetToMs(v int64) {
+	m.ToMs = v
+}
+
+// GetLimit returns the Limit value.
+func (m FingerSticksParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated FingerSticksParams.
+func (m *FingerSticksParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetFromMs returns the FromMs value.
+func (m FingerSticksAscendingParams) GetFromMs() int64 {
+	return m.FromMs
+}
+
+// SetFromMs sets the FromMs value and returns the updated FingerSticksAscendingParams.
+func (m *FingerSticksAscendingParams) SetFromMs(v int64) {
+	m.FromMs = v
+}
+
+// GetToMs returns the ToMs value.
+func (m FingerSticksAscendingParams) GetToMs() int64 {
+	return m.ToMs
+}
+
+// SetToMs sets the ToMs value and returns the updated FingerSticksAscendingParams.
+func (m *FingerSticksAscendingParams) SetToMs(v int64) {
+	m.ToMs = v
+}
+
+// GetLimit returns the Limit value.
+func (m FingerSticksAscendingParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated FingerSticksAscendingParams.
+func (m *FingerSticksAscendingParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSince returns the Since value.
+func (m FingerSticksChangedParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated FingerSticksChangedParams.
+func (m *FingerSticksChangedParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m FingerSticksChangedParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated FingerSticksChangedParams.
+func (m *FingerSticksChangedParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetIncludeDeleted returns the IncludeDeleted value.
 func (m GetGlucoseReadingParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
@@ -8864,6 +8944,16 @@ func (m GlucoseReadingHistoryIDsParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated GlucoseReadingHistoryIDsParams.
 func (m *GlucoseReadingHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
+}
+
+// GetID returns the ID value.
+func (m GlucoseReadingInTreatmentParams) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GlucoseReadingInTreatmentParams.
+func (m *GlucoseReadingInTreatmentParams) SetID(v *string) {
+	m.ID = v
 }
 
 // GetID returns the ID value.
