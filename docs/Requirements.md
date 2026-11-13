@@ -1018,6 +1018,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A treatment's `eventTime`, as xDrip4iOS and Nightscout's careportal send it, is its `created_at`; an eventType of
   `Carbs` is a carb correction, and a glucoseType with the reading after a colon, like `Finger: 6.7 mmol/L`, is a
   finger prick.
+- A treatment sent with a `timestamp`, a string or milliseconds, and no `created_at` or `date` is kept at its
+  `timestamp`, not when it arrives, so an old meal sent so is not carbs on board now.
 - Entries of type `cal` (a CGM calibration's slope and intercept) are accepted and not stored, so the finger pricks
   sent with them are kept.
 - A device status's `uploader.battery` is its uploader's battery when it has no `uploaderBattery`.
