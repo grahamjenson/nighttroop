@@ -268,59 +268,38 @@ type UploaderStatus struct {
 	IsCharging *types.FlexibleBool  `json:"isCharging,omitempty"`
 	Name       *types.ShortString   `json:"name,omitempty"`
 	Timestamp  *types.DateString    `json:"timestamp,omitempty"`
-	// Others are its fields without a name here, given back as sent, as xDrip+ sends a Dexcom transmitter's days,
-	// voltages, temperature and status
-	Others map[string]json.RawMessage `json:"-"`
+	// A Dexcom transmitter's, as xDrip+ sends it as its own device status: its days in use and their estimate, its
+	// status, battery voltages, resistance and its status, temperature, when it was last queried, and its type
+	Days             *types.FlexibleFloat64 `json:"days,omitempty"`
+	DaysEstimate     *types.ShortString     `json:"daysEstimate,omitempty"`
+	Status           *types.ShortString     `json:"status,omitempty"`
+	VoltageA         *types.FlexibleFloat64 `json:"voltagea,omitempty"`
+	VoltageB         *types.FlexibleFloat64 `json:"voltageb,omitempty"`
+	Resistance       *types.FlexibleFloat64 `json:"resistance,omitempty"`
+	ResistanceStatus *types.ShortString     `json:"resistance_status,omitempty"`
+	Temperature      *types.FlexibleFloat64 `json:"temperature,omitempty"`
+	LastQueried      *types.FlexibleInt64   `json:"lastQueried,omitempty"`
+	Type             *types.ShortString     `json:"type,omitempty"`
 }
 
-// uploaderFields are the uploader's fields with a name in UploaderStatus, which are not kept in Others
-var uploaderFields = map[string]bool{"battery": true, "isCharging": true, "name": true, "timestamp": true}
+// uploaderNumbers are the uploader's fields that are numbers
+var uploaderNumbers = map[string]bool{"battery": true, "days": true, "voltagea": true, "voltageb": true,
+	"resistance": true, "temperature": true, "lastQueried": true}
 
-// IsZero is whether the uploader has nothing to give back
-func (u UploaderStatus) IsZero() bool {
-	return u.Battery == nil && u.IsCharging == nil && u.Name == nil && u.Timestamp == nil && len(u.Others) == 0
-}
-
-// MarshalJSON is the uploader with its other fields as sent
-func (u UploaderStatus) MarshalJSON() ([]byte, error) {
-	type Alias UploaderStatus
-	known, err := json.Marshal(Alias(u))
-	if err != nil || len(u.Others) == 0 {
-		return known, err
-	}
-	all := map[string]json.RawMessage{}
-	_ = json.Unmarshal(known, &all)
-	for name, value := range u.Others {
-		all[name] = value
-	}
-	return json.Marshal(all)
-}
-
-// UnmarshalJSON leaves out a battery that is not a number, like the "50 days (voltage: 285/275)" xDrip+ sends for a
+// UnmarshalJSON leaves out a number that is not one, like the "50 days (voltage: 285/275)" battery xDrip+ sends for a
 // Dexcom transmitter, rather than refusing the device status
 func (u *UploaderStatus) UnmarshalJSON(data []byte) error {
 	type Alias UploaderStatus
-	aux := struct {
-		Battery json.RawMessage `json:"battery"`
-		*Alias
-	}{Alias: (*Alias)(u)}
-	if err := json.Unmarshal(data, &aux); err != nil {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
-	var battery *types.FlexibleInt64
-	if json.Unmarshal(aux.Battery, &battery) == nil {
-		u.Battery = battery
-	}
-	var fields map[string]json.RawMessage
-	_ = json.Unmarshal(data, &fields)
 	for name, value := range fields {
-		if uploaderFields[name] {
-			continue
+		var number types.FlexibleFloat64
+		if uploaderNumbers[name] && json.Unmarshal(value, &number) != nil {
+			delete(fields, name)
 		}
-		if u.Others == nil {
-			u.Others = map[string]json.RawMessage{}
-		}
-		u.Others[name] = value
 	}
-	return nil
+	numbers, _ := json.Marshal(fields)
+	return json.Unmarshal(numbers, (*Alias)(u))
 }

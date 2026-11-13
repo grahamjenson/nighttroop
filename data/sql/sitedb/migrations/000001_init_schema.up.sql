@@ -419,7 +419,7 @@ CREATE TABLE device_reports (
     -- The pump and uploader as sent, for their fields without a column, like AAPS's extended. The pump's, the larger,
     -- is kept, like the loop's status, only on its device's newest report with one.
     pump_json TEXT CHECK(length(pump_json) <= 4096 AND json_valid(pump_json)),
-    uploader_json TEXT CHECK(length(uploader_json) <= 1024 AND json_valid(uploader_json)),
+    uploader_json TEXT CHECK(length(uploader_json) <= 4096 AND json_valid(uploader_json)),
 
 
     -- Default Stuff

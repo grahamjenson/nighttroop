@@ -192,7 +192,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
 - **Fixed, device status (#512):**
   - Phone and bridge battery: `uploader.battery` was only kept for Loop.
   - Dexcom transmitter (text `battery`): the battery is left out, not the status refused. Its other uploader fields
-    (`days`, `voltagea`, `voltageb`, `temperature`, `status`, `type`) come back as sent.
+    (`days`, `daysEstimate`, `status`, `voltagea`, `voltageb`, `resistance`, `resistance_status`,
+    `temperature`, `lastQueried`, `type`) come back as sent.
 - **Fixed, treatments:**
   - eventType `<none>` (bolus, carbs, note) (#512): kept as a Note.
   - `<none>` with insulin or carbs: returned as `Meal Bolus`, `Carb Correction` or `Correction Bolus`. As a Note,

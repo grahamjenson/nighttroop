@@ -145,15 +145,18 @@ func TestWithoutUnknownLevels(t *testing.T) {
 	}
 }
 
-// An uploader is kept with its other fields as sent, but without them when they would not fit its column, so the
-// device status is still kept with its battery, name and charging
-func TestUploaderJSON(t *testing.T) {
+// An uploader keeps each field it names, a Dexcom transmitter's from xDrip+ too, and leaves out a number that is not one
+// and a field it does not name, rather than refusing the device status
+func TestUploaderFields(t *testing.T) {
 	var uploader nightscoutmodels.UploaderStatus
-	require.NoError(t, json.Unmarshal([]byte(`{"battery": 80, "name": "phone", "days": 50, "status": "OK"}`), &uploader))
-	require.JSONEq(t, `{"battery": 80, "name": "phone", "days": 50, "status": "OK"}`, *uploaderJSON(&uploader))
+	transmitter := `{"days": 50, "daysEstimate": "50 / 100", "status": "OK", "voltagea": 285, "voltageb": 275,
+		"resistance": 100, "resistance_status": "GOOD", "temperature": 30, "lastQueried": 1700000000000,
+		"type": "DEXCOM_TRANSMITTER"}`
+	require.NoError(t, json.Unmarshal([]byte(transmitter), &uploader))
+	require.JSONEq(t, transmitter, *jsonp(&uploader))
 
-	require.NoError(t, json.Unmarshal([]byte(`{"battery": 80, "name": "phone", "log": "`+strings.Repeat("x", maxUploaderJSON)+`"}`), &uploader))
-	require.JSONEq(t, `{"battery": 80, "name": "phone"}`, *uploaderJSON(&uploader))
-
-	require.Nil(t, uploaderJSON(nil))
+	uploader = nightscoutmodels.UploaderStatus{}
+	require.NoError(t, json.Unmarshal([]byte(`{"battery": "50 days (voltage: 285/275)", "voltagea": "high",
+		"name": "phone", "log": "`+strings.Repeat("x", 100)+`"}`), &uploader))
+	require.JSONEq(t, `{"name": "phone"}`, *jsonp(&uploader))
 }
