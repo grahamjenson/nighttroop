@@ -140,7 +140,8 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
   `insulinInjections`, and eventType `Note` for `<none>`.
 - An `mbg` entry has no `sgv` (#514), as in Nightscout, but the follower takes every entry as a reading
   (`cgm/nsfollow/EntryProcessor.java`), so a finger stick becomes a reading of 0, as it would from Nightscout.
-- A search gives at most 1000, newest first; the follower asks for 2880.
+- A search of readings gives at most 2880, newest first, so the follower, which asks for 2880 since its newest, is given
+  all of them after a gap. It was 1000, so a follower offline for more than 1000 readings never read the older ones.
 - `rr` is an unknown query parameter, which is logged and ignored; it is not a filter, unlike an unknown `find[...]`,
   which gives nothing.
 

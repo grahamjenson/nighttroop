@@ -24,6 +24,7 @@ type ToSearchParams interface {
 	// goverter:map . Skip | GetSkipInt64
 	// goverter:map . Limit | GetLimitInt64
 	// goverter:map . CountGiven | GetCountGiven
+	// goverter:map . CountAsked | GetCountAskedInt64
 	QueryValueToQuery(source QueryValues) Query
 
 	//////
@@ -111,6 +112,14 @@ func GetSkipInt64(source QueryValues) int64 {
 func GetLimitInt64(source QueryValues) int64 {
 	if source.Limit == nil || *source.Limit <= 0 || *source.Limit > apiquery.MaxQueryLimit {
 		return apiquery.MaxQueryLimit
+	}
+	return source.Limit.Int64()
+}
+
+// GetCountAskedInt64 is the limit or count sent, before it is capped, or 0 when none or a bad one was
+func GetCountAskedInt64(source QueryValues) int64 {
+	if source.Limit == nil || *source.Limit <= 0 {
+		return 0
 	}
 	return source.Limit.Int64()
 }
