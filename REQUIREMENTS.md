@@ -1160,8 +1160,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   deletes.
 - A v3 delete of a document that is already deleted returns 200 and changes nothing. AAPS deletes a treatment again
   after a follower deletes it. A v1 delete of it counts 0. A delete of an unknown document returns 404.
+- A v3 read of a deleted entry, treatment or device status returns 410 with only `status` and `message`, as in
+  Nightscout. A v1 read of it returns 404. A read of a document deleted permanently, or of an unknown document,
+  returns 404.
 - A treatment or reading created with `isValid` false (AAPS uploads one it deleted while offline) stays deleted:
-  - Read and search do not find it.
+  - A v3 read returns 410. A search does not find it.
   - History has it with `isValid` false.
   - Storage sockets get it as a delete. Followers (e.g. AAPSClient) do not restore it.
 - A food or profile created with `isValid` false is stored as usual.

@@ -436,9 +436,10 @@ func (c Collection[NS, DM]) keyDuplicate(q *sitedb.Queries, ctx context.Context,
 	return nil, err
 }
 
+// Get is the model with the identifier. As in Nightscout, a deleted one is gone, unless deleted ones are asked for.
 func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
-	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, query.IncludeDeleted)
+	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, true)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -448,6 +449,9 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 	}
 	if dbModel == nil {
 		return nil, nsutils.ErrNotFound
+	}
+	if (*dbModel).GetDeletedAt() != nil && !query.IncludeDeleted {
+		return nil, nsutils.ErrGone
 	}
 	return c.document(dbModel, siteContext), nil
 }
