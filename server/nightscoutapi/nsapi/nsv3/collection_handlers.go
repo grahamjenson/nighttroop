@@ -88,6 +88,10 @@ func Remove(store nsutils.Store) http.HandlerFunc {
 		}
 
 		permanent := r.URL.Query().Get("permanent") == "true"
+		if err := store.SplitV3(r.Context(), collection, identifier); err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 		err := store.Delete(r.Context(), collection, identifier, permanent)
 		// Deleting one deleted already changes nothing and is done, as in Nightscout
 		if err == nsutils.ErrGone && !permanent {
@@ -141,6 +145,10 @@ func Replace(store nsutils.Store) http.HandlerFunc {
 		if !ok {
 			return
 		}
+		if err := store.SplitV3(r.Context(), collection, identifier); err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 		// A record changed after If-Unmodified-Since is not replaced, so a client cannot overwrite a change it has not seen
 		record, created, err := store.Replace(nsutils.WithIfUnmodifiedSince(r), collection, identifier, doc, canCreate)
 
@@ -167,6 +175,10 @@ func Patch(store nsutils.Store) http.HandlerFunc {
 
 		doc, ok := readDocument(w, r)
 		if !ok {
+			return
+		}
+		if err := store.SplitV3(r.Context(), collection, identifier); err != nil {
+			nsutils.WriteError(w, err)
 			return
 		}
 		// A record changed after If-Unmodified-Since is not patched, so a client cannot overwrite a change it has not seen

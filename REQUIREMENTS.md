@@ -1325,6 +1325,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - A temp basal's `temp` `absolute`.
 - `timestamp`: only API v1 and its sockets. API v3 and its storage socket leave it out (AAPS drops a treatment, or a
   page, whose `timestamp` is a date).
+- A treatment with both insulin and carbs (a Meal Bolus from xDrip+ or the careportal), on API v3 searches, history
+  and the storage socket, is two documents, as AAPS reads one record from each:
+  - its insulin, with its identifier;
+  - its carbs, as a `Carb Correction` at the same time, with its identifier and `carbs` after it.
+  - Read by its identifier, it is whole. Read by the carbs part's identifier, it is its carbs.
+  - API v1 gives it as one, as sent.
+  - If its identifier is longer than 31 characters, it stays one document.
+- If API v3 changes or deletes either part, the carbs first become their own treatment with the carbs part's
+  identifier. Only the part asked for changes.
 
 #### Notes and values
 

@@ -51,7 +51,8 @@ GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 120 }}&created_at
 H Accept: application/json
 H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 3 "@result"
+// The Meal Bolus is its insulin and its carbs, as API v3 gives one with both, so the report has the same totals
+ASSERT_LENGTH 4 "@result"
 ASSERT_EQUALS "Temporary Target" "@result.0.eventType"
 ASSERT_EQUALS 140 "@result.0.targetTop"
 ASSERT_EQUALS 140 "@result.0.targetBottom"
@@ -60,14 +61,15 @@ ASSERT_EQUALS "Temp Basal" "@result.1.eventType"
 ASSERT_EQUALS 0.4 "@result.1.absolute"
 ASSERT_EQUALS 30 "@result.1.duration"
 ASSERT_EQUALS "Meal Bolus" "@result.2.eventType"
-ASSERT_EQUALS 30 "@result.2.carbs"
 ASSERT_EQUALS 2.5 "@result.2.insulin"
 ASSERT_EXISTS "@result.2.identifier"
 ASSERT_EXISTS "@result.2.created_at"
+ASSERT_EQUALS "Carb Correction" "@result.3.eventType"
+ASSERT_EQUALS 30 "@result.3.carbs"
 
 // The next page is from before the oldest it has, and an empty page ends it
 NAME nightguard_v3_report_treatments_page_2
-GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 120 }}&created_at$lt={{ dig "nightguard_v3_report_treatments.result.2.created_at" }}&limit=1000&skip=3&sort$desc=created_at
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 120 }}&created_at$lt={{ dig "nightguard_v3_report_treatments.result.3.created_at" }}&limit=1000&skip=4&sort$desc=created_at
 H Accept: application/json
 H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
 ASSERT_STATUS 200

@@ -4,8 +4,11 @@ package nsutils
 // Supports up to UUID 36 chars, alpha numeric and _ and - only
 // This is because users are allowed to set their own identifiers, but we have limits
 func ValidateIdentifierIsntBad(identifier string) *HTTPError {
-	return validateIdentifier(identifier, 36)
+	return validateIdentifier(identifier, MaxIdentifierLength)
 }
+
+// MaxIdentifierLength is the longest identifier a document can have
+const MaxIdentifierLength = 36
 
 // ValidateSettingKeyIsntBad checks a settings document's key, which is longer than an identifier: AAPS names its
 // client control messages aaps_clientcontrol_ with their kind and the client's UUID, as

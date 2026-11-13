@@ -1,0 +1,44 @@
+# AAPS reads one record from a treatment document (RemoteTreatment.toTreatment), its insulin first, so its /storage
+# socket gets a treatment with both insulin and carbs as two creates, as API v3 lists it: its insulin, then its carbs
+# with its identifier and "carbs". See docs/clients/aaps.md
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /storage
+T 5s
+
+NAME subscribe
+EMIT subscribe
+B {"accessToken":"{{ token }}","collections":["treatments"]}
+ACK
+ASSERT_EQUALS true "@success"
+
+NAME careportal_meal_bolus
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType":"Meal Bolus","_id":"8c3d4e5f60718293a4b5c6d7","created_at":"{{ time 5 }}","insulin":1.5,"carbs":15,"enteredBy":"careportal"}
+ASSERT_STATUS 200
+
+NAME insulin_created
+WAIT create
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS "8c3d4e5f60718293a4b5c6d7" "@doc.identifier"
+ASSERT_EQUALS 1.5 "@doc.insulin"
+ASSERT_EQUALS null "@doc.carbs"
+
+NAME carbs_created
+WAIT create
+T 5s
+ASSERT_EQUALS "8c3d4e5f60718293a4b5c6d7carbs" "@doc.identifier"
+ASSERT_EQUALS "Carb Correction" "@doc.eventType"
+ASSERT_EQUALS 15 "@doc.carbs"
+ASSERT_EQUALS null "@doc.insulin"
+
+NAME disconnect
+DISCONNECT

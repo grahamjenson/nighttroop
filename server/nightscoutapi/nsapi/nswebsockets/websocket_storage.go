@@ -106,10 +106,12 @@ func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site,
 		if !ok {
 			continue
 		}
-		message := map[string]any{"colName": collection, "doc": record.Fields(true)}
-		if event.Action == events.Deleted {
-			message = map[string]any{"colName": collection, "identifier": record.Identifier()}
+		for _, part := range nsutils.V3Parts([]nsutils.Document{record}) {
+			message := map[string]any{"colName": collection, "doc": part.Fields(true)}
+			if event.Action == events.Deleted {
+				message = map[string]any{"colName": collection, "identifier": part.Identifier()}
+			}
+			subscriber.socket.Emit(storageEvents[event.Action], message)
 		}
-		subscriber.socket.Emit(storageEvents[event.Action], message)
 	}
 }
