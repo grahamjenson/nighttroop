@@ -3,6 +3,7 @@ package nscollections
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -142,4 +143,20 @@ func TestWithoutUnknownLevels(t *testing.T) {
 			require.JSONEq(t, string(sent), string(unchanged))
 		})
 	}
+}
+
+// An uploader keeps each field it names, a Dexcom transmitter's from xDrip+ too, and leaves out a number that is not one
+// and a field it does not name, rather than refusing the device status
+func TestUploaderFields(t *testing.T) {
+	var uploader nightscoutmodels.UploaderStatus
+	transmitter := `{"days": 50, "daysEstimate": "50 / 100", "status": "OK", "voltagea": 285, "voltageb": 275,
+		"resistance": 100, "resistance_status": "GOOD", "temperature": 30, "lastQueried": 1700000000000,
+		"type": "DEXCOM_TRANSMITTER"}`
+	require.NoError(t, json.Unmarshal([]byte(transmitter), &uploader))
+	require.JSONEq(t, transmitter, *jsonp(&uploader))
+
+	uploader = nightscoutmodels.UploaderStatus{}
+	require.NoError(t, json.Unmarshal([]byte(`{"battery": "50 days (voltage: 285/275)", "voltagea": "high",
+		"name": "phone", "log": "`+strings.Repeat("x", 100)+`"}`), &uploader))
+	require.JSONEq(t, `{"name": "phone"}`, *jsonp(&uploader))
 }

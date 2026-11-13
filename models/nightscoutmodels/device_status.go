@@ -268,22 +268,38 @@ type UploaderStatus struct {
 	IsCharging *types.FlexibleBool  `json:"isCharging,omitempty"`
 	Name       *types.ShortString   `json:"name,omitempty"`
 	Timestamp  *types.DateString    `json:"timestamp,omitempty"`
+	// A Dexcom transmitter's, as xDrip+ sends it as its own device status: its days in use and their estimate, its
+	// status, battery voltages, resistance and its status, temperature, when it was last queried, and its type
+	Days             *types.FlexibleFloat64 `json:"days,omitempty"`
+	DaysEstimate     *types.ShortString     `json:"daysEstimate,omitempty"`
+	Status           *types.ShortString     `json:"status,omitempty"`
+	VoltageA         *types.FlexibleFloat64 `json:"voltagea,omitempty"`
+	VoltageB         *types.FlexibleFloat64 `json:"voltageb,omitempty"`
+	Resistance       *types.FlexibleFloat64 `json:"resistance,omitempty"`
+	ResistanceStatus *types.ShortString     `json:"resistance_status,omitempty"`
+	Temperature      *types.FlexibleFloat64 `json:"temperature,omitempty"`
+	LastQueried      *types.FlexibleInt64   `json:"lastQueried,omitempty"`
+	Type             *types.ShortString     `json:"type,omitempty"`
 }
 
-// UnmarshalJSON leaves out a battery that is not a number, like the "50 days (voltage: 285/275)" xDrip+ sends for a
+// uploaderNumbers are the uploader's fields that are numbers
+var uploaderNumbers = map[string]bool{"battery": true, "days": true, "voltagea": true, "voltageb": true,
+	"resistance": true, "temperature": true, "lastQueried": true}
+
+// UnmarshalJSON leaves out a number that is not one, like the "50 days (voltage: 285/275)" battery xDrip+ sends for a
 // Dexcom transmitter, rather than refusing the device status
 func (u *UploaderStatus) UnmarshalJSON(data []byte) error {
 	type Alias UploaderStatus
-	aux := struct {
-		Battery json.RawMessage `json:"battery"`
-		*Alias
-	}{Alias: (*Alias)(u)}
-	if err := json.Unmarshal(data, &aux); err != nil {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
-	var battery *types.FlexibleInt64
-	if json.Unmarshal(aux.Battery, &battery) == nil {
-		u.Battery = battery
+	for name, value := range fields {
+		var number types.FlexibleFloat64
+		if uploaderNumbers[name] && json.Unmarshal(value, &number) != nil {
+			delete(fields, name)
+		}
 	}
-	return nil
+	numbers, _ := json.Marshal(fields)
+	return json.Unmarshal(numbers, (*Alias)(u))
 }

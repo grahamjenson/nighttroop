@@ -1396,6 +1396,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Uploader battery, returned as both `uploader.battery` and `uploaderBattery`. With no `uploaderBattery`,
     `uploader.battery` is used.
   - Uploader `isCharging`, `name`, `timestamp`.
+  - xDrip+'s Dexcom transmitter uploader fields: `days`, `daysEstimate`, `status`, `voltagea`, `voltageb`,
+    `resistance`, `resistance_status`, `temperature`, `lastQueried`, `type`. A number field that is not a number is
+    left out. Other uploader fields are left out.
   - Loop's override in force.
 - While the status as sent is kept: Trio's pump `bolusIncrement` (LoopFollow's remote bolus step),
   `status.bolusing`, `status.suspended`, and battery `string` and `display`.
