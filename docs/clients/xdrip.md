@@ -190,7 +190,9 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   - Only readings of 0 (a failing sensor): `200 []`, nothing stored. It was refused, so the device status and
     treatments (a bolus) after it were not sent.
   - An unknown type: left out, the rest stored (up to 10 a batch). A batch with nothing else stored is still refused.
-    The site's client errors show a batch with an entry left out, with the counts and the reasons.
+    The site's client errors show a batch with an entry left out, with the counts and the reasons. Every v1 batch,
+    such as activity, now uses this rule. Treatments (`PUT`, one at a time) and device statuses (one object) are not
+    batches, so one with a problem is still refused.
 - **Fixed, device status (#512):**
   - Phone and bridge battery: `uploader.battery` was only kept for Loop.
   - Dexcom transmitter (text `battery`): the battery is left out, not the status refused. Its other uploader fields

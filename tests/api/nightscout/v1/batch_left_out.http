@@ -1,0 +1,85 @@
+INCLUDE steps/new_site_admin.steps
+
+// A treatments batch stores the treatments it can and leaves out the rest, as for entries, and the client is told only
+// what was stored, as Loop, Trio and xDrip4iOS send their treatments in batches
+NAME create_mixed_treatments
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+H User-Agent: Trio
+B [{"eventType": "Note", "notes": "kept", "created_at": "{{ time 10 }}"},
+   {"notes": "no event type", "created_at": "{{ time 9 }}"},
+   {"eventType": "Correction Bolus", "insulin": 1000, "created_at": "{{ time 8 }}"},
+   {"eventType": "Carb Correction", "carbs": 20, "created_at": "{{ time 7 }}"}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Note" "@0.eventType"
+ASSERT_EQUALS "Carb Correction" "@1.eventType"
+
+NAME get_treatments
+GET http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+// The site's client errors show the batch once, with how many treatments were left out and why
+NAME client_errors_treatments
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_CONTAINS "Stored 2 treatments and left out 2: 1 Bad or missing body: EventType is nil or unknown: eventType: null" "@result.items.0.message"
+ASSERT_CONTAINS "1 Bad or missing body: insulin must be between -500 and 500 U (was 1000)" "@result.items.0.message"
+ASSERT_EQUALS 200 "@result.items.0.attributes.status"
+ASSERT_EQUALS "Trio" "@result.items.0.attributes.client"
+
+// A device status batch does the same
+NAME create_mixed_device_statuses
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+H User-Agent: Loop
+B [{"device": "loop://iPhone", "created_at": "{{ time 6 }}", "uploaderBattery": 80},
+   {"device": "loop://iPhone", "created_at": "{{ time 5 }}", "srvModified": 1},
+   {"device": "loop://iPhone", "created_at": "{{ time 4 }}", "uploaderBattery": 79}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 80 "@0.uploaderBattery"
+ASSERT_EQUALS 79 "@1.uploaderBattery"
+
+NAME get_device_statuses
+GET http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME client_errors_device_statuses
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_CONTAINS "Stored 2 devicestatus and left out 1: 1 Field srvModified cannot be modified by the client" "@result.items.0.message"
+ASSERT_EQUALS 200 "@result.items.0.attributes.status"
+ASSERT_EQUALS "Loop" "@result.items.0.attributes.client"
+
+// A batch with nothing that can be stored is still refused, saying why, so the client sends it again
+NAME create_treatments_none_stored
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Correction Bolus", "insulin": 1000, "created_at": "{{ time 3 }}"},
+   {"notes": "no event type", "created_at": "{{ time 2 }}"}]
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 U (was 1000)" "@message"
+
+NAME create_device_statuses_none_stored
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 1 }}", "srvModified": 1}]
+ASSERT_STATUS 400
+ASSERT_EQUALS "Field srvModified cannot be modified by the client" "@message"
+
+// A batch with more than 10 documents that cannot be stored is refused at the 11th, as each can log an error. As before,
+// what it stored before then is kept.
+NAME create_treatments_too_many_left_out
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Note", "notes": "first", "created_at": "{{ time 30 }}"}{{ range $i := 11 }},{"notes": "no event type", "created_at": "{{ time 20 }}"}{{ end }}]
+ASSERT_STATUS 400
+
+NAME get_treatments_stored_before_refused
+GET http://{{ .ns_site }}/api/v1/treatments?token={{ token }}&count=10
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"

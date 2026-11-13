@@ -149,6 +149,9 @@ Nighttroop keeps the `mbg` finger pricks. It accepts the `cal` records, but does
      Exercise, or the event type.
    - `matchesTreatmentEntry` matches each to an upload, to learn its `_id`. It compares `created_at` to the
      millisecond, type, value and notes. A treatment that does not match is uploaded again at the next sync.
+   - A batch with up to 10 treatments Nighttroop cannot store: the rest are stored and returned. Each bad one does not
+     match, so it is uploaded again at the next sync and left out again. The whole batch was a 400. The site's client
+     errors show the treatments left out.
 2. **Upload edits** (`updateTreatmentToNightscout`): `PUT /api/v1/treatments`, one treatment, with its `_id` in the
    body.
 3. **Download** (`getLatestTreatmentsNSResponses`): `GET /api/v1/treatments?find[created_at][$gte]=<24 hours ago>`,
