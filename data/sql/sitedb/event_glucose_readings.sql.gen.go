@@ -82,12 +82,16 @@ const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
 SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllGlucoseReadingsParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -96,8 +100,16 @@ type AllGlucoseReadingsParams struct {
 // 1. All default order with limit
 // 2. Default order with search terms limit and skip
 // I wont optimize further or compromise on non-prepared statements (until it becomes necessary)!
+// Before pages by date from occurred_at's index: the rows older than a time, or than the row at it with BeforeID,
+// by time then id, so rows at the same time are each shown once
 func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadingsParams) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.allGlucoseReadingsStmt, allGlucoseReadings, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allGlucoseReadingsStmt, allGlucoseReadings,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

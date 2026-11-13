@@ -5846,6 +5846,26 @@ func (m *DeviceReportsForDeviceParams) SetDevice(v *string) {
 	m.Device = v
 }
 
+// GetBefore returns the Before value.
+func (m DeviceReportsForDeviceParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeviceReportsForDeviceParams.
+func (m *DeviceReportsForDeviceParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m DeviceReportsForDeviceParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated DeviceReportsForDeviceParams.
+func (m *DeviceReportsForDeviceParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m DeviceReportsForDeviceParams) GetSkip() int64 {
 	return m.Skip
@@ -6324,6 +6344,26 @@ func (m AllActivitiesParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllActivitiesParams.
 func (m *AllActivitiesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllActivitiesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllActivitiesParams.
+func (m *AllActivitiesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllActivitiesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllActivitiesParams.
+func (m *AllActivitiesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -6994,6 +7034,26 @@ func (m AllFoodIntakesParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllFoodIntakesParams.
 func (m *AllFoodIntakesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllFoodIntakesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllFoodIntakesParams.
+func (m *AllFoodIntakesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllFoodIntakesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllFoodIntakesParams.
+func (m *AllFoodIntakesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -7824,6 +7884,26 @@ func (m AllGlucoseReadingsParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllGlucoseReadingsParams.
 func (m *AllGlucoseReadingsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllGlucoseReadingsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllGlucoseReadingsParams.
+func (m *AllGlucoseReadingsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllGlucoseReadingsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllGlucoseReadingsParams.
+func (m *AllGlucoseReadingsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -8704,6 +8784,26 @@ func (m AllEventGroupsParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllEventGroupsParams.
 func (m *AllEventGroupsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllEventGroupsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllEventGroupsParams.
+func (m *AllEventGroupsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllEventGroupsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllEventGroupsParams.
+func (m *AllEventGroupsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -10286,6 +10386,26 @@ func (m *AllInsulinDosesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetBefore returns the Before value.
+func (m AllInsulinDosesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllInsulinDosesParams.
+func (m *AllInsulinDosesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllInsulinDosesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllInsulinDosesParams.
+func (m *AllInsulinDosesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllInsulinDosesParams) GetSkip() int64 {
 	return m.Skip
@@ -10976,6 +11096,26 @@ func (m *AllNotificationEventsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetBefore returns the Before value.
+func (m AllNotificationEventsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllNotificationEventsParams.
+func (m *AllNotificationEventsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllNotificationEventsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllNotificationEventsParams.
+func (m *AllNotificationEventsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllNotificationEventsParams) GetSkip() int64 {
 	return m.Skip
@@ -11484,6 +11624,26 @@ func (m AllProfileSwitchesParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllProfileSwitchesParams.
 func (m *AllProfileSwitchesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllProfileSwitchesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllProfileSwitchesParams.
+func (m *AllProfileSwitchesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllProfileSwitchesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllProfileSwitchesParams.
+func (m *AllProfileSwitchesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -12326,6 +12486,26 @@ func (m *AllTempBasalsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetBefore returns the Before value.
+func (m AllTempBasalsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllTempBasalsParams.
+func (m *AllTempBasalsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllTempBasalsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllTempBasalsParams.
+func (m *AllTempBasalsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllTempBasalsParams) GetSkip() int64 {
 	return m.Skip
@@ -12914,6 +13094,26 @@ func (m AllTempTargetsParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllTempTargetsParams.
 func (m *AllTempTargetsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllTempTargetsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllTempTargetsParams.
+func (m *AllTempTargetsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllTempTargetsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllTempTargetsParams.
+func (m *AllTempTargetsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.

@@ -71,8 +71,9 @@
        and charging states (charging shows true or false), the push apps' ids, and the date and time formats' tokens
 
 
-1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at
-   `apiquery.MaxQuerySkip` (32000 rows, about 110 days of glucose) and walks every row it skips
+1. P3: Page the other data pages by date as the glucose readings page does (insulin, food, temp basals, temp targets,
+   profile switches, activities, notifications, event groups and a device's statuses): their searches take `before`,
+   so each table gives `pager.Dated` its rows, and their BDD tests page Older and Newest
 
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client

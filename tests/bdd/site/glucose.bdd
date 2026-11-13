@@ -142,9 +142,11 @@ ASSERT_NOT_VISIBLE #site--glucose--previous
 
 CLICK #site--glucose--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+// Older is the rows older than the last shown, and Newest goes back to the first page
+ASSERT_VISIBLE #site--glucose--newest
+ASSERT_VISIBLE #site--glucose--next
 
-CLICK #site--glucose--previous
+CLICK #site--glucose--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

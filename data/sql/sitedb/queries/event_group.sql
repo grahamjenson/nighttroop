@@ -119,7 +119,9 @@ LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
-ORDER BY eg.occurred_at DESC
+AND eg.occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
+AND (sqlc.narg('Before') IS NULL OR eg.occurred_at < sqlc.narg('Before') OR eg.id < CAST(sqlc.narg('BeforeID') AS TEXT))
+ORDER BY eg.occurred_at DESC, eg.id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: EventGroupTotals :one

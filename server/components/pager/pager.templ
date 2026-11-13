@@ -3,13 +3,16 @@ package pager
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -21,26 +24,44 @@ type Props struct {
 	Count int
 	Skip  int64
 	Limit int64
+	// Dated pages by date, not skip: ID--next is the rows older than the page's last row, its LastAt and LastID,
+	// ID--date the rows on or before a day, and ID--newest the first page. Before is the time it shows rows before.
+	Dated  bool
+	Before *int64
+	LastAt int64
+	LastID string
 }
 
 // Pager is under a table of one page of rows: which rows it shows, and buttons to the pages either side
 templ Pager(p Props) {
-	<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+	<div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-500">
 		<span
 			id={ p.ID + "--showing" }
 			data-pager-skip={ strconv.FormatInt(p.Skip, 10) }
 			data-pager-showing={ i18n.T(ctx, "common.pager.showing", i18n.Data{"From": "{from}", "To": "{to}"}) }
+			hidden?={ p.Before != nil }
 		>
 			if p.Count > 0 {
 				{ i18n.T(ctx, "common.pager.showing", i18n.Data{"From": p.Skip + 1, "To": p.Skip + int64(p.Count)}) }
 			}
 		</span>
-		<div class="flex gap-2">
+		<div class="flex items-center gap-2">
+			if p.Dated {
+				<form { nav.Attributes(p.Path)... } hx-trigger="change">
+					<input type="hidden" name="limit" value={ strconv.FormatInt(p.Limit, 10) }/>
+					<input id={ p.ID + "--date" } name="before_date" type="date" value={ day(ctx, p.Before) } aria-label={ i18n.T(ctx, "common.pager.date") } class="rounded-md border border-gray-200 px-2 py-1"/>
+				</form>
+			}
 			if p.Skip > 0 {
 				@pageButton(p.ID+"--previous", i18n.T(ctx, "common.pager.previous"), PageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
 			}
-			if hasNext(ctx, p) {
-				@pageButton(p.ID+"--next", i18n.T(ctx, "common.pager.next"), PageURL(p.Path, p.Skip+p.Limit, p.Limit))
+			if p.Before != nil {
+				@pageButton(p.ID+"--newest", i18n.T(ctx, "common.pager.newest"), PageURL(p.Path, 0, p.Limit))
+			}
+			if hasNext(ctx, p) && p.Dated {
+				@pageButton(p.ID+"--next", i18n.T(ctx, "common.pager.older"), nextURL(p))
+			} else if hasNext(ctx, p) {
+				@pageButton(p.ID+"--next", i18n.T(ctx, "common.pager.next"), nextURL(p))
 			}
 		</div>
 	</div>
@@ -84,16 +105,45 @@ templ pageButton(id string, label string, url string) {
 	}
 }
 
-// hasNext is whether there are rows after this page: before the total, for a search that counts its rows, or else
-// when the page is full. There is none past the most a search skips, which would show this page again.
+// hasNext is whether there are rows after this page: before the total, for a search that counts its rows from its
+// first, or else when the page is full. There is none past the most a search skips, which would show this page again.
 func hasNext(ctx context.Context, p Props) bool {
-	if p.Skip+p.Limit > apiquery.MaxQuerySkip {
+	if !p.Dated && p.Skip+p.Limit > apiquery.MaxQuerySkip {
 		return false
 	}
-	if totals := apiutils.TotalsFrom(ctx); totals != nil {
+	if totals := apiutils.TotalsFrom(ctx); totals != nil && p.Before == nil {
 		return p.Skip+int64(p.Count) < totals.Total
 	}
 	return int64(p.Count) == p.Limit
+}
+
+// nextURL is the page after this one: the rows older than its last, for a dated page, or else from the next skip
+func nextURL(p Props) string {
+	if p.Dated {
+		return fmt.Sprintf("%s&before=%d&before_id=%s", PageURL(p.Path, 0, p.Limit), p.LastAt, url.QueryEscape(p.LastID))
+	}
+	return PageURL(p.Path, p.Skip+p.Limit, p.Limit)
+}
+
+// Dated pages a data page's rows by date, before a time if any, by each row's time and ID
+func Dated[T any](p Props, before *int64, rows []T, cursor func(T) (int64, string)) *Props {
+	p.Dated, p.Before = true, before
+	if len(rows) > 0 {
+		p.LastAt, p.LastID = cursor(rows[len(rows)-1])
+	}
+	return &p
+}
+
+// day is a dated page's day in the site's timezone, that of the time before its Before, or none on its first page
+func day(ctx context.Context, before *int64) string {
+	if before == nil {
+		return ""
+	}
+	location := time.UTC
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		location = siteContext.GetSettings().Location()
+	}
+	return time.UnixMilli(*before - 1).In(location).Format(time.DateOnly)
 }
 
 // PageURL is path, which may have a query of its own, at the page of rows from skip

@@ -36,12 +36,16 @@ LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 
 WHERE (CAST(?1 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
-ORDER BY eg.occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND eg.occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR eg.occurred_at < ?2 OR eg.id < CAST(?3 AS TEXT))
+ORDER BY eg.occurred_at DESC, eg.id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllEventGroupsParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -61,7 +65,13 @@ type AllEventGroupsRow struct {
 // The joins name the _vw views so sqlc types their columns as nullable, but the generated queries join the tables
 // themselves (see joinTablesNotViews in data/sql/gen/sqlc.go), so SQLite does not copy each table for every query
 func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) ([]*AllEventGroupsRow, error) {
-	rows, err := q.query(ctx, q.allEventGroupsStmt, allEventGroups, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allEventGroupsStmt, allEventGroups,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

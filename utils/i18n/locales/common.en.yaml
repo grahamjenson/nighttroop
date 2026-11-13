@@ -37,6 +37,9 @@ common:
     showing: "Showing {{.From}} to {{.To}}"
     previous: "Previous"
     next: "Next"
+    older: "Older"
+    newest: "Newest"
+    date: "Show the rows on or before this date"
   success_toast:
     title: "Success"
   toast:
