@@ -91,7 +91,7 @@ control DB's server settings and used in place of the env's from then on, until 
 | `GLOBAL_IP_PER_MINUTE_LIMIT` / `_BURST` | `720` / `1440` | Requests from one IP, enough to manage 4 sites |
 | `SITE_LOGIN_PER_MINUTE_LIMIT` / `_BURST` | `1` / `10` | Logins, passkey sign ins, recoveries and setup codes from one IP, to stop credential stuffing |
 | `SITE_LOGIN_NAME_PER_MINUTE_LIMIT` / `_BURST` | `30` / `60` | Logins to one name on a site (or a site's passkey sign ins, or its recoveries, or the setup code) from every IP, far above one IP's, so one IP cannot lock others out, while guessing spread over many IPs is capped |
-| `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `120` | Requests from one IP to a site that fail auth or need none, so bad tokens cannot spend the site's limit |
+| `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `360` | Requests from one IP to a site that fail auth or need none, so bad tokens cannot spend the site's limit. Each Socket.IO handshake spends it, about 12 for an AAPS phone's namespaces, so the burst lets a household's dozen apps reconnect at once after a deploy |
 | `SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT` / `_BURST` | `7` / `20` | Sites created on the whole server |
 | `SITE_CREATE_IP_PER_MINUTE_LIMIT` / `_BURST` | `0.1` / `1` | Sites created from one IP, one every 10 minutes |
 | `SITE_GET_PER_MINUTE_LIMIT` / `_BURST` | `180` / `360` | An identity's authenticated reads; its site's together may be 4 times this, so one identity cannot spend its site's |

@@ -377,7 +377,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteLoginNamePerMinuteBurst: configIntSelect(dotenv, "SITE_LOGIN_NAME_PER_MINUTE_BURST", 60),
 
 		SiteUnauthPerMinuteLimit: configIntSelect(dotenv, "SITE_UNAUTH_PER_MINUTE_LIMIT", 60), // What one IP may send a site before it authenticates, so bad tokens cannot spend the site's limit
-		SiteUnauthPerMinuteBurst: configIntSelect(dotenv, "SITE_UNAUTH_PER_MINUTE_BURST", 120),
+		SiteUnauthPerMinuteBurst: configIntSelect(dotenv, "SITE_UNAUTH_PER_MINUTE_BURST", 360),
 
 		// Site Create Rate Limits
 		SiteCreateGlobalPerMinuteLimit: configIntSelect(dotenv, "SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT", 7), // If maxed out this filles up in a day
