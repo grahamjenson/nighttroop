@@ -1075,8 +1075,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   and `utcOffset`, as Nightscout's v1 replaces the whole treatment and Loop sends a carb entry or override edited to
   another time again with its `_id`; an API v3 replace, and a v1 replace of any other document, still refuses a
   change to its date or `utcOffset`.
-- A treatment with `eventType` `<none>`, Nightscout careportal's treatment with no type, is a Note keeping its
-  insulin and carbs.
+- A treatment with `eventType` `<none>`, Nightscout careportal's treatment with no type, as xDrip+ sends every bolus,
+  carbs and note and Juggluco its amounts, is kept as what its amounts are: a Meal Bolus with insulin and carbs, a Carb
+  Correction with carbs, a Correction Bolus with insulin, and a Note with neither, so LoopFollow and Loop's
+  NightscoutKit, which read amounts only from those, see its insulin and carbs. One sent as a `Note` stays a Note.
 - A treatment with AAPS's `eventType` `SettingsExport`, sent when its settings are exported, is a Note.
 - A `dateString` with Juggluco's `-03:-30` zone for half hours west of UTC is read as `-03:30`.
 - An entry's `date` is kept to the millisecond, a fraction of one dropped, though its `dateString`, as Loop's does,

@@ -188,3 +188,4 @@ device token, bundle and team from the profile.
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |
 | Nightscout tab (`/`) | Fixed: sent on to the site's pages |
 | Socket.IO connect, `authorize` without ack, `connected`, `dataUpdate` and deltas | Works |
+| xDrip+'s and Juggluco's boluses and carbs (sent as `<none>`) | Fixed: given as Meal Bolus, Carb Correction or Correction Bolus by their amounts, which LoopFollow reads (as Notes it showed only a dot) |

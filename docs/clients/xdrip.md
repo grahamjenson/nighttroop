@@ -137,7 +137,8 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 - `dateString` has an offset without a colon (`+1300`), and wins over `date` when there is no `utcOffset`; both are
   the same time.
 - The returned treatment has `enteredBy` and `uuid` as sent, so xDrip+ matches its own by them, but no
-  `insulinInjections`, and eventType `Note` for `<none>`.
+  `insulinInjections`, and for `<none>` the eventType of its amounts: `Meal Bolus` (insulin and carbs), `Carb
+  Correction`, `Correction Bolus`, or `Note` with neither. xDrip+ matches its own by `uuid`, not eventType.
 - An `mbg` entry has no `sgv` (#514), as in Nightscout, but the follower takes every entry as a reading
   (`cgm/nsfollow/EntryProcessor.java`), so a finger stick becomes a reading of 0, as it would from Nightscout.
 - A search gives at most 1000, newest first; the follower asks for 2880.
@@ -160,6 +161,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `POST devicestatus`, phone and bridge battery | Fixed in #512: `uploader.battery` was only kept for Loop |
 | `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |
 | `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
+| xDrip+'s boluses and carbs on LoopFollow | Fixed in this PR: a `<none>` with amounts is a Meal Bolus, Carb Correction or Correction Bolus, as LoopFollow reads amounts only of those (it showed them as note dots); test in `xdrip/none_amounts.http` |
 | A careportal treatment with no id in the same second as an xDrip+ `<none>` bolus | Fixed in this PR: kept as its own treatment. It was merged into the bolus and took it over, its `enteredBy` and notes |
 | A treatment's `notes` with HTML, e.g. `<b>bold</b>` | Fixed in this PR: given back exactly as sent. Tags were removed, so xDrip+ appended the changed note to its own with each download |
 | `PUT treatments`, `Sensor Start`, and again to update | Works |
