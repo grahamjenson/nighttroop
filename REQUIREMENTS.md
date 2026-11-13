@@ -1187,7 +1187,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - `eventTime` (xDrip4iOS, Nightscout careportal) is the `created_at`.
 - A `timestamp` (string or ms) with no `created_at` or `date`: the treatment's time, not its arrival time.
-- With a `created_at` or `date`, a sent `timestamp` is not read.
+- With a `created_at` or `date`, a sent `timestamp` is not read, with one exception. If `timestamp` is in ms and in the
+  same second, it is the treatment's time, to the ms. xDrip+ sends `created_at` in whole seconds.
 
 ### Nightscout API: identifiers and duplicates
 
