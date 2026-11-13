@@ -3,6 +3,7 @@ package security
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log/slog"
@@ -148,6 +149,7 @@ const (
 	PurposePushToken       Purpose = "push_token"
 	PurposeNightscoutToken Purpose = "nightscout_token"
 	PurposeWelcomePasskey  Purpose = "welcome_passkey"
+	PurposeNightscoutHost  Purpose = "nightscout_host" // a MAC of a Nightscout connector's host
 )
 
 func associatedData(purpose Purpose, siteID string) []byte {
@@ -161,6 +163,16 @@ func (config *SecurityConfig) EncryptFor(purpose Purpose, siteID, plaintext stri
 		return "", fmt.Errorf("failed to encrypt: %w", err)
 	}
 	return base64.RawStdEncoding.EncodeToString(ciphertext), nil
+}
+
+// MACFor is a MAC of the data for its purpose, as hex: the same data gives the same MAC while the MAC key set's primary
+// key is the same, so equal values can be found without keeping them
+func (config *SecurityConfig) MACFor(purpose Purpose, data string) (string, error) {
+	tag, err := config.mac.ComputeMAC(associatedData(purpose, data))
+	if err != nil {
+		return "", fmt.Errorf("failed to compute MAC: %w", err)
+	}
+	return hex.EncodeToString(tag), nil
 }
 
 // DecryptFor decrypts what EncryptFor encrypted for the purpose and site, and nothing else

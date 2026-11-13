@@ -20,12 +20,12 @@
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
-    1. P2: Stop many sites making the server poll one third party Nightscout, as only each site's connector saves are
-       rate limited and its credentials' ciphertexts differ: keep a keyed HMAC (`SecurityConfig.mac`, the MAC key set
-       in `KEY_SETS`) of the normalised Nightscout host in a new `site_connectors` column with a partial unique index,
-       set on create and update and cleared on delete, and refuse a second site syncing that host with a 409 saying it
-       is synced by another site. First decide how a caregiver's own site may still follow a Nightscout another site
-       syncs, which this would refuse
+    1. P2: Stop many sites making the server poll one third party Nightscout. `site_connectors.url_host_mac` now keeps
+       a MAC of each Nightscout connector's host, and the control Connectors page shows hosts shared by more than one
+       connector. Decide a limit of sites for each host (a caregiver's own site may follow a Nightscout another site
+       syncs), then refuse a save over it with a 409.
+    1. P4: Compute `site_connectors.url_host_mac` again when the MAC key set's primary key changes, as MACs from the
+       old key do not match MACs from the new key
 
 ## Before Prod Deployment
 
