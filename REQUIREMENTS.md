@@ -1437,6 +1437,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
 | `glucoseType` with the reading after a colon (e.g. `Finger: 6.7 mmol/L`) | Finger prick                            |
+| AAPS and iAPS `glucoseType` `Manual` (a finger prick typed in)           | Finger prick, returned as `Manual`      |
+| Another `glucoseType` (e.g. `Lab`)                                       | Kept as sent, at most 32 characters     |
 | Loop and Trio `Suspend Pump`, `Resume Pump`                              | Kept                                    |
 | Trio and iAPS `SMB`, `External Insulin`                                  | Insulin dose, with its event type       |
 | xDrip+ `Sensor Stop`                                                     | Event group, with its event type        |
