@@ -241,7 +241,7 @@ var (
 			return &b.EventGroup.TempBasalID, &b.TempBasal
 		},
 		has: func(source nightscoutmodels.Treatment) bool {
-			return isAssigned(source.Absolute, source.Rate, source.TempBasalPercent, source.DurationMinutes)
+			return isAssigned(source.Absolute, source.Rate, source.TempBasalPercent, source.Duration)
 		},
 		partial: nightscoutmodels.PartialTreatmentToTempBasal,
 		// AAPS sends its rate as rate, and Loop as absolute too
@@ -273,13 +273,13 @@ var (
 				source.HighTarget = source.CorrectionRange[0]
 			}
 			// An indefinite one lasts as long as a temp target can, a week
-			if source.DurationMinutes == nil && source.DurationType != nil && *source.DurationType == indefinite {
-				source.DurationMinutes = new(types.FlexibleInt64(indefiniteMinutes))
+			if source.Duration == nil && source.DurationType != nil && *source.DurationType == indefinite {
+				source.Duration = &types.Duration{Minutes: indefiniteMinutes}
 			}
 			return source
 		},
 		has: func(source nightscoutmodels.Treatment) bool {
-			return isAssigned(source.HighTarget, source.LowTarget, source.DurationMinutes)
+			return isAssigned(source.HighTarget, source.LowTarget, source.Duration)
 		},
 		partial: nightscoutmodels.PartialTreatmentToTempTarget,
 		// The targets are kept in mg/dL, converted from the units sent, or guessed from them as glucose is, as AAPS sends

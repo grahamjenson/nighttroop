@@ -113,6 +113,15 @@ missing, never a number or null.
 | Loop (`DeviceStatusLoop.swift`) | `loop.failureReason` (any value, even null, shows a failure), `loop.enacted`, `loop.iob.iob`, `loop.cob.cob`, `loop.predicted.values` (`[Double]`, force cast), `loop.recommendedBolus`, `loop.recommendedTempBasal.timestamp` (force cast to a String), `loop.timestamp`; top level `override.active`, `override.multiplier`, `override.currentCorrectionRange.minValue`/`maxValue` |
 | Trio, OpenAPS (`DeviceStatusOpenAPS.swift`) | `device`, `openaps.failureReason`, `openaps.iob.iob`. From `openaps.suggested` (else `enacted`): `deliverAt` or `timestamp`, `ISF`, `CR`, `COB` (else from `reason`), `sensitivityRatio`, `eventualBG`, `current_target`, `TDD`, and `predBGs.ZT`, `IOB`, `COB`, `UAM` as `[Double]` |
 
+Nighttroop keeps each status's `loop` or `openaps` as sent for 1 day, also when a newer status comes in:
+
+- After 1 day, it removes only the predictions: `loop.predicted.values`, and `predBGs` in `openaps.suggested` and
+  `openaps.enacted`.
+- All other fields stay as sent, e.g. `loop.timestamp`, `loop.recommendedBolus`, `loop.predicted.startDate`,
+  `suggested.bg`, `ISF`, `sensitivityRatio`, `eventualBG`, `current_target`, `CR`, `TDD`, `deliverAt`.
+- LoopFollow reads `predicted.values` and `predBGs` with optional casts. A status without them shows no prediction.
+- The status keeps its `srvModified`, so a client that has it does not read it again.
+
 ### Profile
 
 - When: every 10 minutes (30 with the socket), and when the socket says the profile changed (`Task/ProfileTask.swift`,
@@ -179,6 +188,7 @@ missing, never a number or null.
 | Site, sensor and insulin ages | Works (with the zoneless fix) |
 | **Device status** | |
 | Loop and OpenAPS objects, IOB, COB, predictions | Works |
+| Statuses older than the newest, in the last day | Fixed: kept as sent for 1 day, then without predictions (were IOB and COB only, 10 minutes after a newer status). `loopfollow/devicestatus_day.http` |
 | `pump.clock`, `manufacturer`, `model` | Works since #516 (were dropped) |
 | `pump.pumpID` | Works since #514, while the status as sent is kept (as the latest is) |
 | `pump.bolusIncrement` | Fixed, while the status as sent is kept (as the latest is) |

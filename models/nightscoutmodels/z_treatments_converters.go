@@ -193,13 +193,10 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		typesJSONTextString := types.JSONTextString(*source.BolusCalculatorResultJson)
 		nightscoutmodelsTreatment.BolusCalculatorResult = &typesJSONTextString
 	}
-	if source.DurationMinutes != nil {
-		typesFlexibleInt64 := types.FlexibleInt64(*source.DurationMinutes)
-		nightscoutmodelsTreatment.DurationMinutes = &typesFlexibleInt64
-	}
+	nightscoutmodelsTreatment.Duration = MinutesToDuration(source.DurationMinutes)
 	if source.OriginalDurationMs != nil {
-		typesFlexibleInt642 := types.FlexibleInt64(*source.OriginalDurationMs)
-		nightscoutmodelsTreatment.OriginalDurationMs = &typesFlexibleInt642
+		typesFlexibleInt64 := types.FlexibleInt64(*source.OriginalDurationMs)
+		nightscoutmodelsTreatment.OriginalDurationMs = &typesFlexibleInt64
 	}
 	if source.Mode != nil {
 		typesShortString := types.ShortString(*source.Mode)
@@ -222,16 +219,16 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		nightscoutmodelsTreatment.TransmitterID = &typesShortString3
 	}
 	if source.PumpID != nil {
-		typesShortString4 := types.ShortString(*source.PumpID)
-		nightscoutmodelsTreatment.PumpID = &typesShortString4
+		typesClientID := types.ClientID(*source.PumpID)
+		nightscoutmodelsTreatment.PumpID = &typesClientID
 	}
 	if source.PumpSerial != nil {
-		typesShortString5 := types.ShortString(*source.PumpSerial)
-		nightscoutmodelsTreatment.PumpSerial = &typesShortString5
+		typesShortString4 := types.ShortString(*source.PumpSerial)
+		nightscoutmodelsTreatment.PumpSerial = &typesShortString4
 	}
 	if source.PumpType != nil {
-		typesShortString6 := types.ShortString(*source.PumpType)
-		nightscoutmodelsTreatment.PumpType = &typesShortString6
+		typesShortString5 := types.ShortString(*source.PumpType)
+		nightscoutmodelsTreatment.PumpType = &typesShortString5
 	}
 	if source.Notes != nil {
 		typesSanitizedString2 := types.SanitizedString(*source.Notes)
@@ -239,33 +236,32 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 	}
 	nightscoutmodelsTreatment.EnteredBy = EventGroupEnteredBy(source)
 	if source.Reason != nil {
-		typesShortString7 := types.ShortString(*source.Reason)
-		nightscoutmodelsTreatment.Reason = &typesShortString7
+		typesShortString6 := types.ShortString(*source.Reason)
+		nightscoutmodelsTreatment.Reason = &typesShortString6
 	}
 	if source.Uuid != nil {
-		typesShortString8 := types.ShortString(*source.Uuid)
-		nightscoutmodelsTreatment.UUID = &typesShortString8
+		typesClientID2 := types.ClientID(*source.Uuid)
+		nightscoutmodelsTreatment.UUID = &typesClientID2
 	}
 	if source.SyncIdentifier != nil {
 		xstring := *source.SyncIdentifier
 		nightscoutmodelsTreatment.SyncIdentifier = &xstring
 	}
 	if source.CreatedByDeviceName != nil {
-		typesShortString9 := types.ShortString(*source.CreatedByDeviceName)
-		nightscoutmodelsTreatment.Device = &typesShortString9
+		typesShortString7 := types.ShortString(*source.CreatedByDeviceName)
+		nightscoutmodelsTreatment.Device = &typesShortString7
 	}
 	if source.CreatedByAppName != nil {
-		typesShortString10 := types.ShortString(*source.CreatedByAppName)
-		nightscoutmodelsTreatment.App = &typesShortString10
+		typesShortString8 := types.ShortString(*source.CreatedByAppName)
+		nightscoutmodelsTreatment.App = &typesShortString8
 	}
 	pTypesShortString := types.ShortString(source.CreatedByIdentityName)
 	nightscoutmodelsTreatment.Subject = &pTypesShortString
-	nightscoutmodelsTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
 	pTypesDateInt := types.DateInt(source.OccurredAt)
 	nightscoutmodelsTreatment.Date = &pTypesDateInt
 	if source.UtcOffsetMinutes != nil {
-		typesFlexibleInt643 := types.FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutmodelsTreatment.UtcOffsetMinutes = &typesFlexibleInt643
+		typesFlexibleInt642 := types.FlexibleInt64(*source.UtcOffsetMinutes)
+		nightscoutmodelsTreatment.UtcOffsetMinutes = &typesFlexibleInt642
 	}
 	return &nightscoutmodelsTreatment
 }
@@ -521,21 +517,18 @@ func PartialTreatmentToActivity(source Treatment) sitedb.Activity {
 	if source.ActivityType != nil {
 		sitedbActivity.ActivityType = ShortStringToString(*source.ActivityType)
 	}
-	if source.DurationMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
-		sitedbActivity.DurationMinutes = &xint64
-	}
+	sitedbActivity.DurationMinutes = DurationToMinutesP(source.Duration)
 	if source.Calories != nil {
-		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		sitedbActivity.Calories = &xint642
+		xint64 := FlexibleInt64ToInt64(*source.Calories)
+		sitedbActivity.Calories = &xint64
 	}
 	if source.Steps != nil {
-		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		sitedbActivity.Steps = &xint643
+		xint642 := FlexibleInt64ToInt64(*source.Steps)
+		sitedbActivity.Steps = &xint642
 	}
 	if source.HeartRate != nil {
-		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		sitedbActivity.HeartRate = &xint644
+		xint643 := FlexibleInt64ToInt64(*source.HeartRate)
+		sitedbActivity.HeartRate = &xint643
 	}
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
@@ -546,8 +539,8 @@ func PartialTreatmentToActivity(source Treatment) sitedb.Activity {
 		sitedbActivity.Reason = &xstring3
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbActivity.UtcOffsetMinutes = &xint645
+		xint644 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbActivity.UtcOffsetMinutes = &xint644
 	}
 	sitedbActivity.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
@@ -749,9 +742,7 @@ func PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch {
 	if source.Name != nil {
 		sitedbProfileSwitch.Name = ShortStringToString(*source.Name)
 	}
-	if source.DurationMinutes != nil {
-		sitedbProfileSwitch.DurationMinutes = FlexibleInt64ToInt64(*source.DurationMinutes)
-	}
+	sitedbProfileSwitch.DurationMinutes = DurationToMinutes(source.Duration)
 	sitedbProfileSwitch.Multiplier = PercentageToMultiplier(source.Percent)
 	if source.Timeshift != nil {
 		xint64 := FlexibleInt64ToInt64(*source.Timeshift)
@@ -807,9 +798,7 @@ func PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch {
 }
 func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 	var sitedbTempBasal sitedb.TempBasal
-	if source.DurationMinutes != nil {
-		sitedbTempBasal.DurationMinutes = FlexibleInt64ToInt64(*source.DurationMinutes)
-	}
+	sitedbTempBasal.DurationMinutes = DurationToMinutes(source.Duration)
 	if source.Rate != nil {
 		sitedbTempBasal.Rate = FlexibleFloat64ToFloat64(*source.Rate)
 	}
@@ -851,9 +840,7 @@ func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 }
 func PartialTreatmentToTempTarget(source Treatment) sitedb.TempTarget {
 	var sitedbTempTarget sitedb.TempTarget
-	if source.DurationMinutes != nil {
-		sitedbTempTarget.DurationMinutes = FlexibleInt64ToInt64(*source.DurationMinutes)
-	}
+	sitedbTempTarget.DurationMinutes = DurationToMinutes(source.Duration)
 	if source.HighTarget != nil {
 		sitedbTempTarget.HighTargetMgdl = FlexibleFloat64ToFloat64(*source.HighTarget)
 	}
@@ -1089,7 +1076,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		sitedbEventGroup.EnteredBy = &xstring
 	}
 	if source.UUID != nil {
-		xstring2 := ShortStringToString(*source.UUID)
+		xstring2 := ClientIDToString(*source.UUID)
 		sitedbEventGroup.Uuid = &xstring2
 	}
 	if source.Mode != nil {
@@ -1110,7 +1097,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 	}
 	sitedbEventGroup.SentHash = SentHash(source.SentJSON)
 	if source.PumpID != nil {
-		xstring5 := ShortStringToString(*source.PumpID)
+		xstring5 := ClientIDToString(*source.PumpID)
 		sitedbEventGroup.PumpID = &xstring5
 	}
 	if source.PumpSerial != nil {
@@ -1145,17 +1132,11 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xstring13 := ShortStringToString(*source.Reason)
 		sitedbEventGroup.Reason = &xstring13
 	}
-	if source.DurationMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.DurationMinutes)
-		sitedbEventGroup.DurationMinutes = &xint642
-	}
-	if source.DurationInMilliseconds != nil {
-		xint643 := FlexibleInt64ToInt64(*source.DurationInMilliseconds)
-		sitedbEventGroup.DurationMs = &xint643
-	}
+	sitedbEventGroup.DurationMinutes = DurationToMinutesP(source.Duration)
+	sitedbEventGroup.DurationMs = DurationToMs(source.Duration)
 	if source.UtcOffsetMinutes != nil {
-		xint644 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbEventGroup.UtcOffsetMinutes = &xint644
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbEventGroup.UtcOffsetMinutes = &xint642
 	}
 	sitedbEventGroup.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
@@ -1188,11 +1169,7 @@ func UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment) {
 			typesFlexibleInt643 := types.FlexibleInt64(*source.HeartRate)
 			target.HeartRate = &typesFlexibleInt643
 		}
-		if source.DurationMinutes != nil {
-			typesFlexibleInt644 := types.FlexibleInt64(*source.DurationMinutes)
-			target.DurationMinutes = &typesFlexibleInt644
-		}
-		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		target.Duration = MinutesToDuration(source.DurationMinutes)
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString
@@ -1202,8 +1179,8 @@ func UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment) {
 			target.Reason = &typesShortString2
 		}
 		if source.UtcOffsetMinutes != nil {
-			typesFlexibleInt645 := types.FlexibleInt64(*source.UtcOffsetMinutes)
-			target.UtcOffsetMinutes = &typesFlexibleInt645
+			typesFlexibleInt644 := types.FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &typesFlexibleInt644
 		}
 	}
 }
@@ -1358,9 +1335,7 @@ func UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, context *httpu
 		pTypesShortString := types.ShortString(source.Name)
 		target.Name = &pTypesShortString
 		target.ICfg = JSONToInsulinConfig(source.IcfgJson)
-		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
-		target.DurationMinutes = &pTypesFlexibleInt64
-		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		target.Duration = MinutesToDuration(source.DurationMinutes)
 		pTypesShortString2 := types.ShortString(source.Name)
 		target.Profile = &pTypesShortString2
 		if source.OriginalProfileName != nil {
@@ -1417,9 +1392,7 @@ func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 			xbool := *source.Automatic
 			target.Automatic = &xbool
 		}
-		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
-		target.DurationMinutes = &pTypesFlexibleInt64
-		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		target.Duration = MinutesToDuration(source.DurationMinutes)
 		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.Rate)
 		target.Rate = &pTypesFlexibleFloat64
 		pTypesFlexibleFloat642 := types.FlexibleFloat64(source.Rate)
@@ -1445,9 +1418,7 @@ func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 }
 func UpdateTempTargetToTreatment(source *sitedb.TempTarget, target *Treatment) {
 	if source != nil {
-		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
-		target.DurationMinutes = &pTypesFlexibleInt64
-		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		target.Duration = MinutesToDuration(source.DurationMinutes)
 		if source.DurationType != nil {
 			typesShortString := types.ShortString(*source.DurationType)
 			target.DurationType = &typesShortString

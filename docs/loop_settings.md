@@ -15,8 +15,8 @@ records sent often:
 **Note:** A device status's `openaps` and `loop` objects are not settings. They are the loop's state at that cycle:
 IOB, COB, predictions, what it enacted, and the cycle's effective ISF, CR and targets.
 
-They change every cycle, and stay in `device_reports.loop_status_json` only on each device's newest report with one.
-The truncate every 10 minutes clears the others', keeping IOB and COB in their own columns.
+They change every cycle, and stay in `device_reports.loop_status_json`. After a day, the truncate every 10 minutes
+removes their predictions, and keeps the rest.
 
 ## The table
 

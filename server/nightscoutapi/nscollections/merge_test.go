@@ -3,12 +3,16 @@ package nscollections
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -248,4 +252,86 @@ func TestEntryMergeKeepsWhatOnlyTheDatabaseHas(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "site note", *reading.Notes)
 	require.Equal(t, "Flat", *reading.Direction)
+}
+
+// A time sent as any of a document's time aliases, as created_at in whole seconds beside a timestamp in ms too, is read
+// as a create reads it: a patch, or a document sent again, at the stored time keeps it to the ms, and a patch at another
+// time is refused, so the stored aliases a merge keeps beside the one sent always say the same time
+func TestMergeTimeSentAsAnyAlias(t *testing.T) {
+	siteContext, _ := mergeSite(t, consts.UnitsMGDL)
+	stored := time.Now().Add(-time.Hour).Truncate(time.Second).Add(500 * time.Millisecond).UnixMilli()
+	iso := func(ms int64) string { return time.UnixMilli(ms).UTC().Format("2006-01-02T15:04:05.000Z") }
+	tests := []struct {
+		collection CollectionStore
+		document   string
+		sent       func(ms int64) map[string]any
+	}{
+		{NewTreatmentCollection(), `{"eventType":"Note","notes":"a"}`, func(ms int64) map[string]any { return map[string]any{"created_at": iso(ms)} }},
+		{NewTreatmentCollection(), `{"eventType":"Note","notes":"a"}`, func(ms int64) map[string]any { return map[string]any{"eventTime": iso(ms)} }},
+		{NewTreatmentCollection(), `{"eventType":"Note","notes":"a"}`, func(ms int64) map[string]any { return map[string]any{"timestamp": float64(ms)} }},
+		{NewTreatmentCollection(), `{"eventType":"Note","notes":"a"}`, func(ms int64) map[string]any {
+			return map[string]any{"created_at": time.UnixMilli(ms).UTC().Format(time.RFC3339), "timestamp": float64(ms)}
+		}},
+		{NewEntriesCollection(), `{"type":"sgv","sgv":120}`, func(ms int64) map[string]any { return map[string]any{"dateString": iso(ms)} }},
+		{NewEntriesCollection(), `{"type":"sgv","sgv":120}`, func(ms int64) map[string]any { return map[string]any{"mills": float64(ms)} }},
+		{NewEntriesCollection(), `{"type":"sgv","sgv":120}`, func(ms int64) map[string]any { return map[string]any{"sysTime": iso(ms)} }},
+		{NewDeviceStatusCollection(), `{"device":"loop://iPhone","uploader":{"battery":80}}`, func(ms int64) map[string]any { return map[string]any{"created_at": iso(ms)} }},
+	}
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("%d %v", i, slices.Sorted(maps.Keys(test.sent(0)))), func(t *testing.T) {
+			ms := stored + int64(i)*10_000
+			data := decode(t, test.document)
+			data["date"] = float64(ms)
+			created, _, httpErr := test.collection.Create(t.Context(), siteContext, data)
+			require.Nil(t, httpErr)
+			kept := func(document nsutils.Document) {
+				require.Equal(t, float64(ms), document.Fields(true)["date"])
+				require.Equal(t, iso(ms), document.Fields(false)["created_at"])
+			}
+
+			patched, httpErr := test.collection.Patch(t.Context(), siteContext, created.Identifier(), test.sent(ms))
+			require.Nil(t, httpErr)
+			kept(patched)
+
+			resent := decode(t, test.document)
+			maps.Copy(resent, test.sent(ms))
+			resent["identifier"], resent["notes"] = created.Identifier(), "changed"
+			refreshed, duplicate, httpErr := test.collection.Create(t.Context(), siteContext, resent)
+			require.Nil(t, httpErr)
+			require.True(t, duplicate)
+			kept(refreshed)
+			// A treatment sent again with changes is refreshed
+			if strings.Contains(test.document, "eventType") {
+				require.Equal(t, "changed", refreshed.Fields(true)["notes"])
+			}
+
+			_, httpErr = test.collection.Patch(t.Context(), siteContext, created.Identifier(), test.sent(ms+300))
+			require.Equal(t, nsutils.ErrCannotChangeDate, httpErr)
+		})
+	}
+}
+
+// A duration patched in minutes or in milliseconds takes the place of the stored one, to the millisecond, and is given
+// back in both: fractional minutes on API v1, whole ones on API v3, and the nearest minutes of milliseconds sent alone
+func TestPatchDuration(t *testing.T) {
+	siteContext, _ := mergeSite(t, consts.UnitsMGDL)
+	treatments := NewTreatmentCollection()
+	created, _, httpErr := treatments.Create(t.Context(), siteContext, decode(t, `{"eventType":"Temp Basal","absolute":1.2,"duration":29.833333333333332}`))
+	require.Nil(t, httpErr)
+	require.Equal(t, 1_790_000.0, created.Fields(false)["durationInMilliseconds"])
+	tests := []struct {
+		sent       string
+		v1, v3, ms float64
+	}{
+		{`{"duration":30}`, 30, 30, 1_800_000},
+		{`{"durationInMilliseconds":930000}`, 16, 16, 930_000},
+		{`{"duration":20.5}`, 20.5, 20, 1_230_000},
+	}
+	for _, test := range tests {
+		patched, httpErr := treatments.Patch(t.Context(), siteContext, created.Identifier(), decode(t, test.sent))
+		require.Nil(t, httpErr)
+		require.Equal(t, test.v1, patched.Fields(false)["duration"], test.sent)
+		require.Equal(t, test.v3, patched.Fields(true)["duration"], test.sent)
+		require.Equal(t, test.ms, patched.Fields(false)["durationInMilliseconds"], test.sent)
+	}
 }

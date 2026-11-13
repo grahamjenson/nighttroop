@@ -179,6 +179,9 @@ func ShortStringToString(source types.ShortString) string {
 func SanitizedStringToString(source types.SanitizedString) string {
 	return string(source)
 }
+func ClientIDToString(source types.ClientID) string {
+	return string(source)
+}
 func SetReadingType(source Entry) string {
 	if source.Type != nil {
 		return source.Type.String()
