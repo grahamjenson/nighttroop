@@ -100,6 +100,7 @@ type Site struct {
 	DateFormat                       *string
 	TimeFormat                       *string
 	WeekStartDay                     *string
+	NumberFormat                     *string
 	BolusDiaHours                    *float64
 	BolusOnsetMinutes                *float64
 	BolusPeakMinutes                 *float64
@@ -203,6 +204,7 @@ type SiteIdentity struct {
 	DateFormat                       *string
 	TimeFormat                       *string
 	WeekStartDay                     *string
+	NumberFormat                     *string
 	BolusDiaHours                    *float64
 	BolusOnsetMinutes                *float64
 	BolusPeakMinutes                 *float64

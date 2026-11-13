@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -29,9 +30,10 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 			identity, err := TryAuthWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetIdentityModelInSiteContext(ctx, identity)
-				// Text is in the language of the identity's settings, or the site's
-				language := cmp.Or(httputils.GetSiteContext(ctx).GetOwnSettings().GetLanguage(), new(""))
-				ctx = i18n.WithLanguages(ctx, *language, r.Header.Get("Accept-Language"))
+				// Text is in the language of the identity's settings, or the site's, and numbers in its number format
+				own := httputils.GetSiteContext(ctx).GetOwnSettings()
+				ctx = i18n.WithLanguages(ctx, *cmp.Or(own.GetLanguage(), new("")), r.Header.Get("Accept-Language"))
+				ctx = display.WithNumberFormat(ctx, *cmp.Or(own.GetNumberFormat(), new("")))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}

@@ -29,6 +29,7 @@ site:
       date_format: "Date Format"
       time_format: "Time Format"
       week_start_day: "Week Starts On"
+      number_format: "Number Format"
       alarm_urgent_low_enabled: "Urgent Low Alarm"
       range_urgent_low: "Urgent Low Under"
       alarm_low_enabled: "Low Alarm"

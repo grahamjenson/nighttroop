@@ -29,11 +29,11 @@ import (
 )
 
 // loopValue is a value from the loop's latest status, or a dash when there is none
-func loopValue(loop *sitemodels.SiteDeviceStatus, get func(*sitemodels.SiteDeviceStatus) *float64, unit string) string {
+func loopValue(ctx context.Context, loop *sitemodels.SiteDeviceStatus, get func(*sitemodels.SiteDeviceStatus) *float64, unit string) string {
 	if loop == nil {
 		return "–"
 	}
-	return display.Value(get(loop), unit)
+	return display.Value(ctx, get(loop), unit)
 }
 
 // treatment is one row of the summary's treatments, with Path the data page listing its kind
@@ -49,12 +49,12 @@ type treatment struct {
 func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 	list := []treatment{}
 	for _, t := range s.TempTargets {
-		detail := i18n.T(ctx, "site.summary.treatments.temp_target_detail", i18n.Data{"Low": display.Glucose(t.LowTarget, t.Units), "High": display.Glucose(t.HighTarget, t.Units),
+		detail := i18n.T(ctx, "site.summary.treatments.temp_target_detail", i18n.Data{"Low": display.Glucose(ctx, t.LowTarget, t.Units), "High": display.Glucose(ctx, t.HighTarget, t.Units),
 			"Units": display.Units(t.Units), "Minutes": t.DurationMinutes})
 		list = append(list, treatment{t.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_target"), "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		detail := i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
+		detail := i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(ctx, b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
 		list = append(list, treatment{b.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_basal"), "/data/temp-basals", detail})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
@@ -69,14 +69,14 @@ type intake struct {
 }
 
 // insulinAndCarbs are the summary's doses and carbs in one list, newest first, each in its own column
-func insulinAndCarbs(s *sitemodels.Summary) []intake {
+func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 	list := []intake{}
 	for _, d := range s.InsulinDoses {
-		list = append(list, intake{At: d.OccurredAt, Insulin: display.Value(&d.Dose, " U"), SMB: isSMB(d)})
+		list = append(list, intake{At: d.OccurredAt, Insulin: display.Value(ctx, &d.Dose, " U"), SMB: isSMB(d)})
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
-			list = append(list, intake{At: f.OccurredAt, Carbs: display.Value(f.Carbs, " g")})
+			list = append(list, intake{At: f.OccurredAt, Carbs: display.Value(ctx, f.Carbs, " g")})
 		}
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
@@ -275,19 +275,19 @@ func summaryContent(summary *sitemodels.Summary) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--summary--iob", i18n.T(ctx, "site.summary.iob"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--summary--iob", i18n.T(ctx, "site.summary.iob"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--summary--cob", i18n.T(ctx, "site.summary.cob"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--summary--cob", i18n.T(ctx, "site.summary.cob"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--summary--reservoir", i18n.T(ctx, "site.summary.reservoir"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--summary--reservoir", i18n.T(ctx, "site.summary.reservoir"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--summary--phone-battery", i18n.T(ctx, "site.summary.phone_battery"), loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--summary--phone-battery", i18n.T(ctx, "site.summary.phone_battery"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -341,25 +341,25 @@ func summaryContent(summary *sitemodels.Summary) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--yesterday", i18n.T(ctx, "site.summary.yesterday"), display.PerDay(summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--yesterday", i18n.T(ctx, "site.summary.yesterday"), display.PerDay(ctx, summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--last-week", i18n.T(ctx, "site.summary.last_week"), display.PerDay(summary.LastWeek.Days, summary.LastWeek.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--last-week", i18n.T(ctx, "site.summary.last_week"), display.PerDay(ctx, summary.LastWeek.Days, summary.LastWeek.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--last-fortnight", i18n.T(ctx, "site.summary.last_fortnight"), display.PerDay(summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--last-fortnight", i18n.T(ctx, "site.summary.last_fortnight"), display.PerDay(ctx, summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--last-month", i18n.T(ctx, "site.summary.last_month"), display.PerDay(summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = previous("site--summary--total-daily-dose--last-month", i18n.T(ctx, "site.summary.last_month"), display.PerDay(ctx, summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U")).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = stat.Tile("site--summary--total-daily-dose", i18n.T(ctx, "site.summary.total_daily_dose"), display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--summary--total-daily-dose", i18n.T(ctx, "site.summary.total_daily_dose"), display.PerDay(ctx, summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -413,7 +413,7 @@ func summaryContent(summary *sitemodels.Summary) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = insulinCarbsTable(insulinAndCarbs(summary)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = insulinCarbsTable(insulinAndCarbs(ctx, summary)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -610,9 +610,9 @@ func glucoseHero(summary *sitemodels.Summary) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(latest.Reading, latest.Units))
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(ctx, latest.Reading, latest.Units))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 237, Col: 258}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 237, Col: 263}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -999,23 +999,23 @@ func deviceCard(status *sitemodels.SiteDeviceStatus) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = detail(i18n.T(ctx, "site.summary.device.phone"), display.Value(status.DeviceBatteryPercent, "%")).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = detail(i18n.T(ctx, "site.summary.device.phone"), display.Value(ctx, status.DeviceBatteryPercent, "%")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = detail(i18n.T(ctx, "site.summary.device.reservoir"), display.Value(status.PumpReservoir, " U")).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = detail(i18n.T(ctx, "site.summary.device.reservoir"), display.Value(ctx, status.PumpReservoir, " U")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = detail(i18n.T(ctx, "site.summary.device.pump"), display.Value(status.PumpBatteryPercent, "%")).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = detail(i18n.T(ctx, "site.summary.device.pump"), display.Value(ctx, status.PumpBatteryPercent, "%")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = detail("IOB", display.Value(status.LoopIob, " U")).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = detail("IOB", display.Value(ctx, status.LoopIob, " U")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = detail("COB", display.Value(status.LoopCob, " g")).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = detail("COB", display.Value(ctx, status.LoopCob, " g")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

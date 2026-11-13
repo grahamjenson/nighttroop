@@ -12,6 +12,7 @@ UPDATE site_identities SET
     date_format = sqlc.narg('DateFormat'),
     time_format = sqlc.narg('TimeFormat'),
     week_start_day = sqlc.narg('WeekStartDay'),
+    number_format = sqlc.narg('NumberFormat'),
 
     -- INSULIN
     bolus_dia_hours = sqlc.narg('BolusDiaHours'),
@@ -84,6 +85,7 @@ UPDATE sites SET
     date_format = sqlc.narg('DateFormat'),
     time_format = sqlc.narg('TimeFormat'),
     week_start_day = sqlc.narg('WeekStartDay'),
+    number_format = sqlc.narg('NumberFormat'),
 
     -- INSULIN
     bolus_dia_hours = sqlc.narg('BolusDiaHours'),

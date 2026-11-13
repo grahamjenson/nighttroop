@@ -126,7 +126,7 @@ func agpPoints(ctx context.Context, g graph, agp [][]float64) [][]any {
 		}
 		ys, values := []float64{}, []string{}
 		for _, value := range percentiles {
-			ys, values = append(ys, round(g.Y(value))), append(values, display.Glucose(value, g.Units))
+			ys, values = append(ys, round(g.Y(value))), append(values, display.Glucose(ctx, value, g.Units))
 		}
 		points = append(points, []any{round(agpX(g, slot)), timeOfDay(ctx, slot*int(sitemodels.AGPSlotMs/60_000)), ys, values})
 	}
@@ -231,6 +231,6 @@ func agpLegend(p *sitemodels.SiteSummaryPeriod) []legendItem {
 }
 
 // goalGlucose is the AGP's goal for the average glucose, below 154 mg/dL, in the units
-func goalGlucose(units *consts.Units) string {
-	return "<" + display.Glucose(units.FromMGDL(154), units) + " " + display.Units(units)
+func goalGlucose(ctx context.Context, units *consts.Units) string {
+	return "<" + display.Glucose(ctx, units.FromMGDL(154), units) + " " + display.Units(units)
 }

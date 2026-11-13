@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -70,10 +71,10 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 			{ formatReadingDate(ctx, tempTarget.OccurredAt) }
 		}
 		@table.Cell(table.NumCell) {
-			{ formatGlucose(tempTarget.LowTarget, tempTarget.Units) }
+			{ formatGlucose(ctx, tempTarget.LowTarget, tempTarget.Units) }
 		}
 		@table.Cell(table.NumCell) {
-			{ formatGlucose(tempTarget.HighTarget, tempTarget.Units) }
+			{ formatGlucose(ctx, tempTarget.HighTarget, tempTarget.Units) }
 		}
 		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(tempTarget.DurationMinutes) }
@@ -89,8 +90,8 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 	{{ edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "high_target": formatGlucose(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor")} }}
-	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: i18n.T(ctx, "site.data.temp_targets.details_title", i18n.Data{"Low": formatGlucose(tempTarget.LowTarget, tempTarget.Units), "High": formatGlucose(tempTarget.HighTarget, tempTarget.Units), "Units": orDash(tempTarget.Units), "Minutes": tempTarget.DurationMinutes}), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": display.GlucoseValue(tempTarget.LowTarget, tempTarget.Units), "high_target": display.GlucoseValue(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor")} }}
+	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: i18n.T(ctx, "site.data.temp_targets.details_title", i18n.Data{"Low": formatGlucose(ctx, tempTarget.LowTarget, tempTarget.Units), "High": formatGlucose(ctx, tempTarget.HighTarget, tempTarget.Units), "Units": orDash(tempTarget.Units), "Minutes": tempTarget.DurationMinutes}), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@addmodal.Detail(edit, "insulin_needs_scale_factor", i18n.T(ctx, "site.data.temp_targets.insulin_needs"), orDash(tempTarget.InsulinNeedsScaleFactor))

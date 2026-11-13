@@ -122,9 +122,9 @@ func agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(low, p.Units))
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(ctx, low, p.Units))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 35, Col: 152}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 35, Col: 157}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -135,9 +135,9 @@ func agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(high, p.Units))
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(ctx, high, p.Units))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 35, Col: 189}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 35, Col: 199}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -150,7 +150,7 @@ func agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(display.Units(p.Units))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 35, Col: 216}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 35, Col: 226}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -174,9 +174,9 @@ func agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.agp.above", i18n.Data{"Glucose": display.Glucose(p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units), "Units": display.Units(p.Units)}))
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.agp.above", i18n.Data{"Glucose": display.Glucose(ctx, p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units), "Units": display.Units(p.Units)}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 36, Col: 258}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 36, Col: 263}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -200,9 +200,9 @@ func agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.agp.below", i18n.Data{"Glucose": display.Glucose(p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units), "Units": display.Units(p.Units)}))
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.agp.below", i18n.Data{"Glucose": display.Glucose(ctx, p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units), "Units": display.Units(p.Units)}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 37, Col: 256}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 37, Col: 261}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -265,7 +265,7 @@ func agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = metric("site--reports--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": goalGlucose(p.Units)}), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = metric("site--reports--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": goalGlucose(ctx, p.Units)}), display.GlucoseOr(ctx, p.Mean, p.Units), display.Units(p.Units)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -339,11 +339,11 @@ func agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDa
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = metric("site--reports--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), "", display.PerDay(p.Days, p.TotalDailyDose, ""), "U").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = metric("site--reports--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), "", display.PerDay(ctx, p.Days, p.TotalDailyDose, ""), "U").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = metric("site--reports--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), "", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = metric("site--reports--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), "", display.PerDay(ctx, p.Days, p.TotalDailyCarbs, ""), "g").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1156,9 +1156,9 @@ func agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Componen
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var63 string
-			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(mark, p.Units))
+			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(ctx, mark, p.Units))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 164, Col: 125}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/agp.templ`, Line: 164, Col: 130}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {

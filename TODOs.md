@@ -47,7 +47,10 @@
     1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
        medical words like hypo, time in range and AGP must not be machine translated
     1. P4: Translate the toasts of validation errors, as their messages are shared with the JSON API and stay English
-    1. P4: Show numbers with the language's decimal separator, e.g. 5,4 mmol/L
+    1. P4: Set a new site's number format from its browser's language, e.g. 1.234,5 for de-DE, as `BrowserSettings`
+       does its date format; it is 1,234.5 until changed
+    1. P4: Show the rest of the numbers in the number format: the summary graph's axes, drawn by ECharts, the
+       event groups' and device statuses' doses, the overview's differences, profile schedules and loop settings
     1. P3: Show dates' day and month names in the language, as Go's date layouts are English, and set `<html lang>`
        to the page's language
     1. P4: Translate the text the pages' scripts show, such as the passkey's errors, and the stored values shown as they

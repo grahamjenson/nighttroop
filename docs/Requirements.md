@@ -755,7 +755,7 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 ### Settings
 
-- General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
+- General settings: units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
 - Every page's text is in the language setting, the identity's, then the site's, then the browser's, and in English
   where there is no translation; the control site and public pages are in the browser's language. Only English is
@@ -763,6 +763,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Every page shows dates in the date format, the identity's, then the site's, then the default (YYYY-MM-DD), times in
   the time format chosen the same way (24-hour HH:mm:ss by default, or 12-hour, or without seconds), and both in the
   timezone chosen the same way; the logs pages too.
+- Glucose, insulin, carbs and the summary's and reports' values are shown in the number format, the identity's, then
+  the site's, then the default 1,234.5: 1.234,5 shows 5,4 mmol/L and 1.234,5 U, and 1 234,5 a space between thousands.
+  A setting's or an edit's field keeps a "." for its value, as the field takes one.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.

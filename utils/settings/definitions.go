@@ -43,6 +43,8 @@ var (
 	DateFormats   = []string{"YYYY/MM/DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY"}
 	TimeFormats   = []string{"HH:mm:ss", "hh:mm:ss a", "HH:mm", "hh:mm a"}
 	WeekStartDays = []string{"monday", "sunday"}
+	// NumberFormats write a thousand and a half with each thousands separator and decimal mark
+	NumberFormats = []string{"1,234.5", "1.234,5", "1 234,5"}
 	// The ways the Nightscout API can write each units, as a client may read only one: xDrip4iOS reads a BG check's
 	// glucose as mg/dL only when its units are exactly mg/dl
 	UnitsMgdlLabels = []string{"mg/dL", "mg/dl"}
@@ -170,6 +172,14 @@ var WeekStartDay = &SettingDefinition[string]{
 		}
 		return nil
 	},
+}
+
+var NumberFormat = &SettingDefinition[string]{
+	Identifier:   "number_format",
+	TypeString:   "string",
+	Default:      NumberFormats[0],
+	ParseFunc:    ParseString,
+	ValidateFunc: oneOf("number format", NumberFormats),
 }
 
 var BolusDIAHours = &SettingDefinition[float64]{

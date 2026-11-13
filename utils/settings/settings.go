@@ -144,6 +144,11 @@ func (m *CombinedSettingsMap) GetWeekStartDay() *string {
 	return first(m.IdentitySettingsMap.GetWeekStartDay(), m.SiteSettingsMap.GetWeekStartDay(), m.DefaultSettingsMap.GetWeekStartDay())
 }
 
+// GetNumberFormat is the identity's number format, then the site's, then the default 1,234.5
+func (m *CombinedSettingsMap) GetNumberFormat() *string {
+	return first(m.IdentitySettingsMap.GetNumberFormat(), m.SiteSettingsMap.GetNumberFormat(), m.DefaultSettingsMap.GetNumberFormat())
+}
+
 // locations are the timezones loaded, by name, as a page shows many times in one
 var locations sync.Map
 

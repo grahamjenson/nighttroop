@@ -12,12 +12,13 @@ import (
 // The boxes of figures a summary is made of, such as a site's summary and a site's page in control: tiles of one
 // figure each, and titled sections of a list
 
-// numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago"
-var numbersAndUnits = regexp.MustCompile(`[\d.–]+|[^\d.–]+`)
+// numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago",
+// a number's comma or space between its digits, as in 1.234,5 or 1 234,5, kept in it
+var numbersAndUnits = regexp.MustCompile(`[\d.–]+(?:[,\x{00a0}]\d+)*|[^\d.–]+`)
 
 // isUnit is whether a part of a tile's text is words, not a number or a dash
 func isUnit(part string) bool {
-	return strings.Trim(part, "0123456789.–") != ""
+	return strings.Trim(part, "0123456789.,\u00a0–") != ""
 }
 
 // Tile is one figure, under its label and its icon, when it has one, with anything else about it, such as earlier
