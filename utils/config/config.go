@@ -256,6 +256,9 @@ type ServerConfig struct {
 }
 
 const SITE_GET_LIMIT = 180
+
+// SITE_POST_LIMIT is an identity's writes a minute; its burst is 12 times it, a day's AAPS backlog of about 650
+// readings, device statuses and treatments uploaded at once
 const SITE_POST_LIMIT = 60
 
 // Priority is
@@ -361,8 +364,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// RATE LIMITERS, from estimates of real use rather than measured traffic
 
 		// Public RateLimits
-		GlobalRateLimit:        configIntSelect(dotenv, "GLOBAL_RATE_LIMIT", 100000), // Stop DDOS doing downloads
-		GlobalRateBurst:        configIntSelect(dotenv, "GLOBAL_RATE_BURST", 100000),
+		// Stop DDOS doing downloads: twice what 10,000 sites make, each with AAPS, AAPSClient and 10 followers polling a minute
+		GlobalRateLimit:        configIntSelect(dotenv, "GLOBAL_RATE_LIMIT", 1200000),
+		GlobalRateBurst:        configIntSelect(dotenv, "GLOBAL_RATE_BURST", 1200000),
 		GlobalIPPerMinuteLimit: configIntSelect(dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", SITE_GET_LIMIT*4), // Single IP can fully manage 4 sites
 		GlobalIPPerMinuteBurst: configIntSelect(dotenv, "GLOBAL_IP_PER_MINUTE_BURST", SITE_GET_LIMIT*8),
 
@@ -386,7 +390,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteGETPerMinuteLimit:              configIntSelect(dotenv, "SITE_GET_PER_MINUTE_LIMIT", SITE_GET_LIMIT),
 		SiteGETPerMinuteBurst:              configIntSelect(dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
 		SitePOSTPerMinuteLimit:             configIntSelect(dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
-		SitePOSTPerMinuteBurst:             configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
+		SitePOSTPerMinuteBurst:             configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*12),
 		SiteUpdateConnectorsPerMinuteLimit: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT", 1), // Stop sites from updating connector settings too much
 		SiteUpdateConnectorsPerMinuteBurst: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_BURST", 4),
 
@@ -403,7 +407,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		//
 		// Site Limits
 		MaxSites:             configIntSelect(dotenv, "MAX_SITES", 10000),
-		MaxIdentitiesPerSite: configIntSelect(dotenv, "MAX_IDENTITIES_PER_USER", 10),
+		MaxIdentitiesPerSite: configIntSelect(dotenv, "MAX_IDENTITIES_PER_USER", 100),
 
 		// Truncate Config
 		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
@@ -436,12 +440,13 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SocketPingIntervalInSeconds: configIntSelect(dotenv, "SOCKET_PING_INTERVAL_IN_SECONDS", 25), // Nightscout's, which v2 clients expect
 		SocketPingTimeoutInSeconds:  configIntSelect(dotenv, "SOCKET_PING_TIMEOUT_IN_SECONDS", 20),
 		SocketMaxPayloadBytes:       configIntSelect(dotenv, "SOCKET_MAX_PAYLOAD_BYTES", 100000),  // The largest POST body or websocket message
-		SocketMaxSessionsPerSite:    configIntSelect(dotenv, "SOCKET_MAX_SESSIONS_PER_SITE", 100), // Stop one site holding every connection
+		SocketMaxSessionsPerSite:    configIntSelect(dotenv, "SOCKET_MAX_SESSIONS_PER_SITE", 300), // Stop one site holding every connection
 		SocketMaxBufferedPackets:    configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_PACKETS", 1000), // A client too slow to collect its packets is closed
 		SocketMaxBufferedBytes:      configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_BYTES", 2000000),
 		SocketMaxPacketsPerSecond:   configFloatSelect(dotenv, "SOCKET_MAX_PACKETS_PER_SECOND", 20), // A client sending faster, past a burst of 5 seconds' worth, is closed
 		// Stop one IP holding all of a site's sessions before they are given access, keeping its followers out
-		SocketMaxUnauthPerIP: configIntSelect(dotenv, "SOCKET_MAX_UNAUTH_SESSIONS_PER_IP", 10),
+		// A household's apps, AAPS's and its followers' namespaces, reconnecting at once after a deploy
+		SocketMaxUnauthPerIP: configIntSelect(dotenv, "SOCKET_MAX_UNAUTH_SESSIONS_PER_IP", 30),
 	}
 
 	var err error

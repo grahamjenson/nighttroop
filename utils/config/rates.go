@@ -48,7 +48,9 @@ type RateLimiters struct {
 
 func newRateLimiters(config ServerConfig) *RateLimiters {
 	maxSites := config.MaxSites
-	maxIdentities := config.MaxIdentitiesPerSite
+	// The caches keep an identity's, IP's or login's limiters for as many identities a site as a household uses, not
+	// MAX_IDENTITIES_PER_USER, so a high one does not let unique IPs or names fill gigabytes; one pushed out starts full
+	maxIdentities := min(config.MaxIdentitiesPerSite, cachedIdentitiesPerSite)
 	wiggle := 2
 	// We are using the hashicorp LRU to make sure that we dont run out of memory if all users with all identitys are hitting us always
 	settings := rateDefaults(config)
@@ -84,6 +86,10 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 	}
 
 }
+
+// cachedIdentitiesPerSite is how many identities a site's limiters are kept for: AAPS, AAPSClient, 10 followers, an
+// admin and some to spare
+const cachedIdentitiesPerSite = 20
 
 func lruMust(maxEntries int) *lru.Cache[string, *rate.Limiter] {
 	cache, err := lru.New[string, *rate.Limiter](maxEntries)
