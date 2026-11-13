@@ -1421,7 +1421,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - Live updates use the site's own settings (e.g. time zone), glucose in mg/dL.
 - To each `/alarm` socket that can read:
-  - A new Announcement, its notes as the message (AAPS shows it as a notification).
+  - A new Announcement, its notes as the message (AAPS shows it as a notification). An Announcement added on the
+    site has its notification's notes as the message.
   - Each other treatment from the last 10 minutes, except Temp Basal and Temporary Override, as a `notification`
     (Nightscout's treatment notify): its event type as the title, who entered it and its notes as the message.
 
