@@ -44,6 +44,8 @@ type Treatment struct {
 	Insulin  *types.FlexibleFloat64 `json:"insulin,omitempty"`
 	SplitNow *types.FlexibleFloat64 `json:"splitNow,omitempty"`
 	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
+	// EnteredInsulin is a Combo Bolus's insulin in all, as AAPS sends an extended bolus with no insulin; it is the dose
+	EnteredInsulin *types.FlexibleFloat64 `json:"enteredinsulin,omitempty"`
 	// additional: a bolus's type, e.g. SMB, or AAPS's temp basal's, e.g. PUMP_SUSPEND
 	Type *types.ShortString `json:"type,omitempty"`
 	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
@@ -220,6 +222,15 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	// A duration sent only in milliseconds is in minutes too, the nearest, as its events keep minutes
 	if t.DurationMinutes == nil && t.DurationInMilliseconds != nil {
 		t.DurationMinutes = new(types.FlexibleInt64((*t.DurationInMilliseconds + 30_000) / 60_000))
+	}
+
+	// A Combo Bolus's enteredinsulin is its dose in all, as Nightscout's careportal sends insulin as the part given at
+	// once; AAPS's extended bolus sends no insulin and no split, as it is all given over time
+	if t.EnteredInsulin != nil && (t.EventType == nil || *t.EventType == ComboBolus) {
+		if t.Insulin == nil && t.SplitNow == nil && t.SplitExt == nil && t.EventType != nil {
+			t.SplitNow, t.SplitExt = new(types.FlexibleFloat64(0)), new(types.FlexibleFloat64(100))
+		}
+		t.Insulin = t.EnteredInsulin
 	}
 
 	if aux.EventTime != nil {

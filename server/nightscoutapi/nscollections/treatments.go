@@ -400,6 +400,14 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	// The timestamp is when it happened in UTC, as created_at is written and every client sends it, whatever its
 	// utcOffset: LoopFollow reads it before created_at and drops its offset, reading the rest as UTC
 	treatment.Timestamp = new(types.DateString(types.ISOString(time.UnixMilli(source.EventGroup.OccurredAt))))
+	// A Combo Bolus gives back its dose as enteredinsulin, and no insulin when none of it was given at once, as AAPS
+	// reads a treatment with insulin as a bolus and drops a Combo Bolus without enteredinsulin
+	if treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus && treatment.Insulin != nil {
+		treatment.EnteredInsulin = treatment.Insulin
+		if treatment.SplitNow != nil && *treatment.SplitNow == 0 {
+			treatment.Insulin = nil
+		}
+	}
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
 	treatment.Programmed = treatment.Insulin
 	if treatment.Absolute != nil {
