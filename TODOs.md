@@ -74,8 +74,9 @@
 1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at
    `apiquery.MaxQuerySkip` (32000 rows, about 110 days of glucose) and walks every row it skips
 
-1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
-   and its client
+1. P3: The events to group (`GET /data/event-groups/choices`) give a temp target's high target as its `detail` in
+   mg/dL and unrounded (e.g. "144.144" for 8 mmol/L), though its low target `amount` is in the settings' units, and
+   the list has no `units` field; give both targets in the settings' units and add `units`
 
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
