@@ -795,6 +795,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Click to edit type, time, notes and events. A new type offers only its event kinds. A removed event is in no group.
 - An event is in one group at most: grouped events are not offered, and grouping again is refused.
 - A group added or edited on the site is a Nightscout treatment, with its events.
+- A group added with events is at its earliest event's time, not the time it was added.
 - Details: the pump its app named (ID, serial, type), as AAPS sends; a sensor change's sensor code and transmitter
   ID (also in its row's events).
 

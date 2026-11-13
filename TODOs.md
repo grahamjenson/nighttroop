@@ -68,6 +68,8 @@
        uses with an admin token, beside the `settings` documents now kept
     1. P3: Count an AAPS bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal in the
        summaries, reports and IOB, as it is kept and given back but still counted as a bolus
+    1. P4: Food, insulin and temp targets added on the site are not Nightscout treatments until grouped, so AAPS and
+       other clients do not see them. Decide whether adding one on its page also adds its group
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
