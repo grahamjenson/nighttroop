@@ -1427,6 +1427,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
 - One IP (an IPv6 /64): maximum 10 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
   next gets 429.
+- When the server stops, every socket closes before the last backup. No socket write gets to a site DB after it.
 
 #### Authorize
 
