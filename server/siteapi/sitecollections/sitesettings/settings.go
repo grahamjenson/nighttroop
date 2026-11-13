@@ -33,7 +33,7 @@ type SettingsCollection struct {
 }
 
 // settingNames are the settings the pages show so far, in order, and the units labels, which only the endpoint sets
-var settingNames = []string{"units", "units_mgdl_label", "units_mmol_label", "timezone", "language", "date_format", "time_format", "week_start_day",
+var settingNames = []string{"units", "units_mgdl_label", "units_mmol_label", "timezone", "language", "date_format", "time_format", "week_start_day", "number_format",
 	"alarm_urgent_low_enabled", "range_urgent_low", "alarm_low_enabled", "range_low", "alarm_low_minutes",
 	"alarm_low_prediction_enabled", "alarm_low_prediction_minutes",
 	"alarm_high_enabled", "range_high", "alarm_high_minutes", "alarm_urgent_high_enabled", "range_urgent_high",
@@ -55,7 +55,7 @@ func settingID(name string) string {
 // showSetting is a setting's value as the page shows it, one kept in mg/dL in the settings' units
 func showSetting(setting *settings.SettingAnyType, units *consts.Units) string {
 	if mgdl, ok := setting.Value.(int64); ok && strings.HasSuffix(setting.Identifier, "_mgdl") {
-		return display.Glucose(units.FromMGDL(float64(mgdl)), units)
+		return display.GlucoseValue(units.FromMGDL(float64(mgdl)), units)
 	}
 	return fmt.Sprint(setting.Value)
 }

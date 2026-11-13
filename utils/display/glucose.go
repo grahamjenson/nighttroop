@@ -1,6 +1,7 @@
 package display
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -20,8 +21,14 @@ func Percent(v *float64) string {
 	return fmt.Sprintf("%.0f%%", math.Round(*v))
 }
 
-// Glucose is glucose in its units: mmol/L to one decimal place, and mg/dL, or glucose of no units, as a whole number
-func Glucose(v float64, units *consts.Units) string {
+// Glucose is glucose in its units, as GlucoseValue writes it, in the context's number format, as 5,4 for 1.234,5
+func Glucose(ctx context.Context, v float64, units *consts.Units) string {
+	return Number(ctx, GlucoseValue(v, units))
+}
+
+// GlucoseValue is glucose in its units, as typed into a field: mmol/L to one decimal place, and mg/dL, or glucose
+// of no units, as a whole number
+func GlucoseValue(v float64, units *consts.Units) string {
 	if units != nil && *units == consts.UnitsMMOLL {
 		return strconv.FormatFloat(v, 'f', 1, 64)
 	}
@@ -29,11 +36,11 @@ func Glucose(v float64, units *consts.Units) string {
 }
 
 // GlucoseOr is Glucose, or "–" for none
-func GlucoseOr(v *float64, units *consts.Units) string {
+func GlucoseOr(ctx context.Context, v *float64, units *consts.Units) string {
 	if v == nil {
 		return "–"
 	}
-	return Glucose(*v, units)
+	return Glucose(ctx, *v, units)
 }
 
 // Units are glucose's units as they are written, or "" for none

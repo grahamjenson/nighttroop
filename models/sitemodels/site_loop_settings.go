@@ -153,7 +153,7 @@ func loopSettingText(glucose bool, value any, units *consts.Units) string {
 		// Loop's glucose is kept in mg/dL, but sets kept before were in its profile's units, so it is guessed from
 		// its size
 		var sentIn *consts.Units
-		texts = append(texts, display.Glucose(units.FromMGDL(sentIn.ToMGDL(mgdl)), units))
+		texts = append(texts, display.GlucoseValue(units.FromMGDL(sentIn.ToMGDL(mgdl)), units))
 	}
 	if len(texts) > 0 {
 		return strings.TrimSpace(strings.Join(texts, "–") + " " + display.Units(units))

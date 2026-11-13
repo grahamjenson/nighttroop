@@ -43,7 +43,7 @@ public:
     log_in_hint: "With the admin password and a code from the app"
     log_in: "Log in"
     log_in_hint_disabled: "Check a code from your app in step 2 first."
-    passkey_hint: "Or log in with a passkey, this device's fingerprint, face or PIN, with no authenticator app."
+    passkey_hint: "Or log in with a passkey (this device's fingerprint, face or PIN), with no authenticator app."
     passkey_login: "Log in with a passkey"
   welcome_gone:
     already_shown: "These credentials have already been shown, or were not opened in time. The backup key gets a new admin login on the"
@@ -54,5 +54,5 @@ public:
     site_id: "Site ID"
     backup_key: "Backup key"
     submit: "Recover"
-    too_many_attempts: "Too many attempts, wait a bit and try again."
+    too_many_attempts: "Too many attempts. Wait a minute, then try again."
     no_match: "That site ID and backup key do not match a site."

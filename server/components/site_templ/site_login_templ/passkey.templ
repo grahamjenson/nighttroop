@@ -27,10 +27,11 @@ templ PasskeyLogin(prefix string) {
 
 // PasskeyScript makes each button with data-passkey-begin ask the browser for a passkey with the options the server
 // begins with, then send what it made or signed to finish, going where finish says once done. WebAuthn's binary
-// fields travel as base64url.
+// fields travel as base64url. A failure the browser gives no reason for says the passkey did not work, in the page's
+// language.
 templ PasskeyScript() {
-	<script>
-		function passkey(begin, finish, headers, errorID) {
+	<script data-passkey-failed={ i18n.T(ctx, "common.passkey.failed") }>
+		function passkey(begin, finish, headers, errorID, failed) {
 			const decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 			const encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 			const fail = message => document.getElementById(errorID).textContent = message;
@@ -51,10 +52,13 @@ templ PasskeyScript() {
 			}).then(r => r.json()).then(done => {
 				if (!done.redirect) throw new Error(done.error);
 				window.location = done.redirect;
-			}).catch(e => fail(e.message || 'The passkey did not work.'));
+			}).catch(e => fail(e.message || failed));
 		}
-		document.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {
-			passkey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError);
-		}));
+		{
+			const failed = document.currentScript.dataset.passkeyFailed;
+			document.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {
+				passkey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError, failed);
+			}));
+		}
 	</script>
 }

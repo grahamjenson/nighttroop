@@ -69,7 +69,7 @@ templ jobRow(job *controlmodels.Job) {
 			<span class="block max-w-xs truncate">{ job.Job }</span>
 		}
 		@table.Cell() {
-			<span class={ statusClass(job) }>{ job.JobStatus }</span>
+			<span class={ statusClass(job) }>{ i18n.Stored(ctx, "job_statuses", job.JobStatus) }</span>
 		}
 		@table.Cell() {
 			<span title={ display.DateTime(&job.CreatedAt) }>{ display.Ago(ctx, &job.CreatedAt, time.Now()) }</span>
@@ -86,7 +86,7 @@ templ JobModal(job *controlmodels.Job) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@modal.Detail(i18n.T(ctx, "control.jobs.queue"), job.Queue)
 			@modal.Detail(i18n.T(ctx, "control.jobs.job"), job.Job)
-			@modal.Detail(i18n.T(ctx, "control.jobs.status"), job.JobStatus)
+			@modal.Detail(i18n.T(ctx, "control.jobs.status"), i18n.Stored(ctx, "job_statuses", job.JobStatus))
 			@modal.Detail(i18n.T(ctx, "control.jobs.remaining_attempts"), fmt.Sprint(job.RemainingAttempts))
 			@modal.Detail(i18n.T(ctx, "control.jobs.deduping_key"), job.DedupingKey)
 			@modal.Detail(i18n.T(ctx, "control.jobs.created"), display.DateTime(&job.CreatedAt))

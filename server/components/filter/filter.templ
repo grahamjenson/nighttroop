@@ -6,7 +6,6 @@ import (
 
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -17,8 +16,9 @@ type Props struct {
 	Path string
 	// All labels the option that shows every type
 	All string
-	// Types are the types to pick from, or none for no type select
+	// Types are the types to pick from, or none for no type select, named by their messages under stored.<Stored>
 	Types    []string
+	Stored   string
 	Selected *string
 	Search   *string
 	// IDs narrow the rows to one site, request or job, each a text box named ID--Name, with dashes for underscores
@@ -79,7 +79,7 @@ templ Filter(p Props) {
 			<select id={ p.ID + "--type" } name="type" aria-label={ i18n.T(ctx, "common.filter.type") } class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm">
 			<option value="" selected?={ p.Selected == nil }>{ p.All }</option>
 			for _, t := range p.Types {
-				<option value={ t } selected?={ p.Selected != nil && *p.Selected == t }>{ display.Name(t) }</option>
+				<option value={ t } selected?={ p.Selected != nil && *p.Selected == t }>{ i18n.Stored(ctx, p.Stored, t) }</option>
 			}
 		</select>
 		}

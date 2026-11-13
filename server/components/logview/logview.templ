@@ -219,7 +219,7 @@ templ EventsTable(v View, id string, events []Row) {
 			for _, event := range events {
 				@modalRow(v, "event", event) {
 					@table.Cell() {
-						{ display.Name(event.Name) }
+						{ i18n.Stored(ctx, "events", event.Name) }
 					}
 					@aboutCell(v, event)
 					@when(v, event.At)
@@ -235,7 +235,7 @@ templ EventsTable(v View, id string, events []Row) {
 templ EventModal(v View, event Row) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
-	@modal.Modal(modal.Props{ID: v.Prefix + "--event--details", Title: display.Name(event.Name), Subtitle: v.Date(ctx, event.At)}) {
+	@modal.Modal(modal.Props{ID: v.Prefix + "--event--details", Title: i18n.Stored(ctx, "events", event.Name), Subtitle: v.Date(ctx, event.At)}) {
 		@details(v, "event", event) {
 			@aboutDetail(v, event)
 			@modal.Detail(i18n.T(ctx, "common.log_view.started"), v.Date(ctx, event.At))
@@ -301,7 +301,7 @@ templ LogsTable(v View, id string, logs []Row) {
 			for _, log := range logs {
 				@modalRow(v, "log", log) {
 					@table.Cell() {
-						{ log.Name }
+						{ i18n.Stored(ctx, "log_levels", log.Name) }
 					}
 					@table.Cell() {
 						<span class="block max-w-md truncate">{ log.Message }</span>
@@ -315,7 +315,7 @@ templ LogsTable(v View, id string, logs []Row) {
 }
 
 templ LogModal(v View, log Row) {
-	@modal.Modal(modal.Props{ID: v.Prefix + "--log--details", Title: log.Name, Subtitle: v.Date(ctx, log.At)}) {
+	@modal.Modal(modal.Props{ID: v.Prefix + "--log--details", Title: i18n.Stored(ctx, "log_levels", log.Name), Subtitle: v.Date(ctx, log.At)}) {
 		<p class="mt-2 break-all text-sm">{ log.Message }</p>
 		@details(v, "log", log) {
 			@aboutDetail(v, log)

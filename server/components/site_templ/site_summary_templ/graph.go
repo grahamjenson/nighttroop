@@ -96,7 +96,7 @@ func graph(ctx context.Context, s *sitemodels.Summary, now int64, location *time
 	chart.AddSeries(high, highs, seriesID("high"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: high, YAxis: s.RangeHigh}))
 	chart.AddSeries(i18n.T(ctx, "site.summary.graph.in_range"), inRange, append(bands, seriesID("in-range"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseInRange}))...)
 
-	insulin, smbs, carbs := treatmentPoints(s, at)
+	insulin, smbs, carbs := treatmentPoints(ctx, s, at)
 	chart.AddSeries("SMB", smbs, marker(brandNight, 7, true)...)
 	chart.AddSeries(i18n.T(ctx, "site.summary.graph.insulin"), insulin, marker(brandNight, 10, false)...)
 	chart.AddSeries(i18n.T(ctx, "site.summary.graph.carbs"), carbs, marker(amber500, 10, false)...)
@@ -256,9 +256,9 @@ func marker(colour string, size int, faint bool) []charts.SeriesOpts {
 }
 
 // treatmentPoints are the insulin doses given by hand, a loop's SMBs and the carbs, each labelled with how much
-func treatmentPoints(s *sitemodels.Summary, at localTime) (insulin, smbs, carbs []opts.ScatterData) {
+func treatmentPoints(ctx context.Context, s *sitemodels.Summary, at localTime) (insulin, smbs, carbs []opts.ScatterData) {
 	for _, d := range s.InsulinDoses {
-		point := opts.ScatterData{Name: display.Value(&d.Dose, "U"), Value: []any{at(d.OccurredAt), insulinHeight}, SymbolRotate: 180}
+		point := opts.ScatterData{Name: display.Value(ctx, &d.Dose, "U"), Value: []any{at(d.OccurredAt), insulinHeight}, SymbolRotate: 180}
 		if isSMB(d) {
 			smbs = append(smbs, point)
 		} else {
@@ -267,7 +267,7 @@ func treatmentPoints(s *sitemodels.Summary, at localTime) (insulin, smbs, carbs 
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
-			carbs = append(carbs, opts.ScatterData{Name: display.Value(f.Carbs, "g"), Value: []any{at(f.OccurredAt), carbsHeight}})
+			carbs = append(carbs, opts.ScatterData{Name: display.Value(ctx, f.Carbs, "g"), Value: []any{at(f.OccurredAt), carbsHeight}})
 		}
 	}
 	return insulin, smbs, carbs
@@ -362,16 +362,16 @@ func hoverTooltip(ctx context.Context, s *sitemodels.Summary, now int64, at loca
 		"treatment": i18n.T(ctx, "site.summary.graph.tooltip.treatment", i18n.Data{"Treatment": "{treatment}", "Time": "{time}"}),
 	}}
 	for _, r := range s.GlucoseReadings {
-		h.Readings = append(h.Readings, []any{at(r.OccurredAt), display.Glucose(r.Reading, s.Units)})
+		h.Readings = append(h.Readings, []any{at(r.OccurredAt), display.Glucose(ctx, r.Reading, s.Units)})
 	}
 	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.Basal} }) {
 		if r.values[0] != nil {
-			h.Basal = append(h.Basal, []any{at(r.start), at(r.end), display.Value(r.values[0], "")})
+			h.Basal = append(h.Basal, []any{at(r.start), at(r.end), display.Value(ctx, r.values[0], "")})
 		}
 	}
 	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.LowTarget, m.HighTarget} }) {
 		if r.values[0] != nil && r.values[1] != nil {
-			h.Target = append(h.Target, []any{at(r.start), at(r.end), display.Glucose(*r.values[0], s.Units) + "–" + display.Glucose(*r.values[1], s.Units)})
+			h.Target = append(h.Target, []any{at(r.start), at(r.end), display.Glucose(ctx, *r.values[0], s.Units) + "–" + display.Glucose(ctx, *r.values[1], s.Units)})
 		}
 	}
 	for _, d := range s.InsulinDoses {
@@ -379,12 +379,12 @@ func hoverTooltip(ctx context.Context, s *sitemodels.Summary, now int64, at loca
 		if isSMB(d) {
 			what = "site.summary.graph.tooltip.smb"
 		}
-		dose := i18n.Data{"Dose": display.Value(&d.Dose, "U")}
+		dose := i18n.Data{"Dose": display.Value(ctx, &d.Dose, "U")}
 		h.Treatments = append(h.Treatments, []any{at(d.OccurredAt), i18n.T(ctx, what, dose)})
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
-			h.Treatments = append(h.Treatments, []any{at(f.OccurredAt), i18n.T(ctx, "site.summary.graph.tooltip.carbs", i18n.Data{"Carbs": display.Value(f.Carbs, "g")})})
+			h.Treatments = append(h.Treatments, []any{at(f.OccurredAt), i18n.T(ctx, "site.summary.graph.tooltip.carbs", i18n.Data{"Carbs": display.Value(ctx, f.Carbs, "g")})})
 		}
 	}
 	data, _ := json.Marshal(h)

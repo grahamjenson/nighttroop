@@ -43,7 +43,10 @@
 
 1. Translations (the text is in `utils/i18n/locales/*.en.yaml`):
 
-    1. P2: Review the English wording in the locale files, page by page, e.g. the reports' out of date notice
+    1. P4: Use one word for the same thing across the pages, as the wording review left these for their own change:
+       "log in" or "sign in", "Push Certificates" or "Push Credentials" (the site's page and its error say Certificates,
+       control and the page's form say Credentials), "NS" or "Nightscout" for the URL and token (also in the welcome
+       page's copy-all text), and "U/hr" or "U/h" (also written in Go)
 
     1. P3: Add a first language, `<area>.<language>.yaml` beside each English file, reviewed by people who use it, as
        medical words like hypo, time in range and AGP must not be machine translated
@@ -54,11 +57,18 @@
     1. P5: Translate the refusals only an app can get, which stay English: a setting not one of its options (units,
        time zone, language, formats), and a push registration's checks (`utils/push/registration.go`)
 
+    1. P4: Set a new site's number format from its browser's language, e.g. 1.234,5 for de-DE, as `BrowserSettings`
+       does its date format; it is 1,234.5 until changed
+
+    1. P4: Show the rest of the numbers in the number format: the summary graph's axes, drawn by ECharts, the
+       event groups' and device statuses' doses, the overview's differences, profile schedules and loop settings
+
     1. P3: Show dates' day and month names in the language, as Go's date layouts are English, and set `<html lang>`
        to the page's language
 
-    1. P4: Translate the text the pages' scripts show, such as the passkey's errors, and the stored values shown as they
-       are, such as a treatment's event type
+    1. P5: Name the stored values still shown as they are, which apps send or people type, under `stored.<kind>` in
+       `stored.en.yaml`: activity, dose and notification types, a reading's measurement method, a device status's pump
+       and charging states (charging shows true or false), the push apps' ids, and the date and time formats' tokens
 
 
 1. P3: Page the site's data pages by date ("older than" a time, or a date to jump to), as paging by `skip` stops at

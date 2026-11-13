@@ -7,7 +7,7 @@ CLICK #site--settings--account-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/account
 ASSERT_TITLE My Account · Nighttroop
-ASSERT_TEXT_VISIBLE You are signed in as admin
+ASSERT_TEXT_VISIBLE You are signed in as admin, with the Admin role.
 ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.
 
 // The browser has a passkey authenticator, as a phone has, that verifies the person itself. Adding a passkey, on the

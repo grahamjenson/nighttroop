@@ -13,6 +13,8 @@ type Settings struct {
 	DateFormat     *string `json:"date_format"`
 	TimeFormat     *string `json:"time_format"`
 	WeekStartDay   *string `json:"week_start_day"`
+	// How numbers are written: 1,234.5, 1.234,5 or 1 234,5
+	NumberFormat *string `json:"number_format"`
 
 	// The alarms, each turned on with true or off with false, with the range's glucose it is under or over, or rises or
 	// drops by, in the settings' units, and the minutes it must last or rise or drop over
@@ -58,7 +60,7 @@ func (s *Settings) Fields() map[string]**string {
 		"units": &s.Units, "units_mgdl_label": &s.UnitsMgdlLabel, "units_mmol_label": &s.UnitsMmolLabel,
 		"timezone": &s.Timezone, "language": &s.Language,
 		"date_format": &s.DateFormat, "time_format": &s.TimeFormat, "week_start_day": &s.WeekStartDay,
-		"alarm_urgent_low_enabled": &s.AlarmUrgentLowEnabled, "range_urgent_low": &s.RangeUrgentLow,
+		"number_format": &s.NumberFormat, "alarm_urgent_low_enabled": &s.AlarmUrgentLowEnabled, "range_urgent_low": &s.RangeUrgentLow,
 		"alarm_low_enabled": &s.AlarmLowEnabled, "range_low": &s.RangeLow, "alarm_low_minutes": &s.AlarmLowMinutes,
 		"alarm_low_prediction_enabled": &s.AlarmLowPredictionEnabled, "alarm_low_prediction_minutes": &s.AlarmLowPredictionMinutes,
 		"alarm_high_enabled": &s.AlarmHighEnabled, "range_high": &s.RangeHigh, "alarm_high_minutes": &s.AlarmHighMinutes,

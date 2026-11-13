@@ -118,11 +118,11 @@ func overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSumm
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = bigStat("site--overview--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units), "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bigStat("site--overview--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), display.GlucoseOr(ctx, p.Mean, p.Units), display.Units(p.Units), "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bigStat("site--overview--sd", i18n.T(ctx, "site.reports.overview.standard_deviation"), display.GlucoseOr(p.SD, p.Units), display.Units(p.Units), "").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bigStat("site--overview--sd", i18n.T(ctx, "site.reports.overview.standard_deviation"), display.GlucoseOr(ctx, p.SD, p.Units), display.Units(p.Units), "").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -204,9 +204,9 @@ func overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSumm
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.overview.target_range", i18n.Data{"Low": display.Glucose(low, p.Units), "High": display.Glucose(high, p.Units), "Units": display.Units(p.Units)}))
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.overview.target_range", i18n.Data{"Low": display.Glucose(ctx, low, p.Units), "High": display.Glucose(ctx, high, p.Units), "Units": display.Units(p.Units)}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 52, Col: 179}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 52, Col: 189}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -472,11 +472,11 @@ func overviewCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSumm
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bigStat("site--overview--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), display.PerDay(p.Days, p.TotalDailyDose, ""), "U", "").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bigStat("site--overview--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), display.PerDay(ctx, p.Days, p.TotalDailyDose, ""), "U", "").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bigStat("site--overview--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g", "").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bigStat("site--overview--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), display.PerDay(ctx, p.Days, p.TotalDailyCarbs, ""), "g", "").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -586,9 +586,9 @@ func insulinSplit(p *sitemodels.SiteSummaryPeriod) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var26 string
-			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.overview.basal_split", i18n.Data{"Dose": display.Value(&p.TotalDailyBasal, " U"), "Percent": display.Percent(&basal)}))
+			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.overview.basal_split", i18n.Data{"Dose": display.Value(ctx, &p.TotalDailyBasal, " U"), "Percent": display.Percent(&basal)}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 132, Col: 257}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 132, Col: 262}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -599,9 +599,9 @@ func insulinSplit(p *sitemodels.SiteSummaryPeriod) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var27 string
-			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.overview.bolus_split", i18n.Data{"Dose": display.Value(new(bolus(p.TotalDailyDose, p.TotalDailyBasal)), " U"), "Percent": display.Percent(new(100 - basal))}))
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.overview.bolus_split", i18n.Data{"Dose": display.Value(ctx, new(bolus(p.TotalDailyDose, p.TotalDailyBasal)), " U"), "Percent": display.Percent(new(100 - basal))}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 133, Col: 297}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 133, Col: 302}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -1184,9 +1184,9 @@ func overviewGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) templ.Com
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var59 string
-			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(tick, p.Units))
+			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(ctx, tick, p.Units))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 210, Col: 108}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 210, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -1833,9 +1833,9 @@ func boundLabel(g graph, value float64, class string, p *sitemodels.SiteSummaryP
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var99 string
-		templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(value, p.Units))
+		templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(display.Glucose(ctx, value, p.Units))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 243, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/overview.templ`, Line: 243, Col: 153}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 		if templ_7745c5c3_Err != nil {

@@ -14,6 +14,9 @@ import (
 	parser "github.com/a-h/templ/parser/v2"
 	"github.com/a-h/templ/parser/v2/visitor"
 	"gopkg.in/yaml.v3"
+	"nighttroop.t1d.nz/data/db"
+	dataevents "nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -23,7 +26,9 @@ var (
 	// A message id, as written in the code: words joined by dots, e.g. site.reports.title
 	idLiteral = regexp.MustCompile(`"([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)"`)
 	// The id each i18n.T and i18n.N call shows, and each error people read is written with, where it is in the call
-	shownID     = regexp.MustCompile(`(?:i18n\.[TN]\([\w.]+(?:\(\))?,\s*|i18n\.NewError\(|CheckRange\(|FieldWithHint\()"([^"]+)"`)
+	shownID = regexp.MustCompile(`(?:i18n\.[TN]\([\w.]+(?:\(\))?,\s*|i18n\.NewError\(|CheckRange\(|FieldWithHint\()"([^"]+)"`)
+	// A group of stored values' names, under stored.<group>, as each i18n.Stored call or filter's Stored names it
+	storedGroup = regexp.MustCompile(`(?:i18n\.Stored\([\w.]+(?:\(\))?,\s*|Stored:\s*)"(\w+)"`)
 	placeholder = regexp.MustCompile(`{{\s*\.(\w+)\s*}}`)
 	// Text with a word in it
 	words = regexp.MustCompile(`[A-Za-z]{2,}`)
@@ -148,6 +153,9 @@ func TestEveryMessageShownIsInEnglishAndEveryOneIsShown(t *testing.T) {
 		for _, match := range idLiteral.FindAllStringSubmatch(source, -1) {
 			used[match[1]] = true
 		}
+		for _, match := range storedGroup.FindAllStringSubmatch(source, -1) {
+			used["stored."+match[1]] = true
+		}
 		for _, match := range shownID.FindAllStringSubmatch(source, -1) {
 			if _, ok := messages[match[1]]; !ok {
 				t.Errorf("%s: %s is not in an English locale file", path, match[1])
@@ -155,7 +163,7 @@ func TestEveryMessageShownIsInEnglishAndEveryOneIsShown(t *testing.T) {
 		}
 	}
 	for _, id := range slices.Sorted(maps.Keys(messages)) {
-		if !used[id] {
+		if group, _, _ := strings.Cut(strings.TrimPrefix(id, "stored."), "."); !used[id] && !used["stored."+group] {
 			t.Errorf("%s is in the English locale files but not in the code", id)
 		}
 	}
@@ -234,5 +242,42 @@ func TestMessagesFallBackToEnglish(t *testing.T) {
 	}
 	if got := i18n.T(ctx, "missing.message"); got != "missing.message" {
 		t.Errorf("T of a missing message = %q, want its id", got)
+	}
+}
+
+// Every value of a kind the site stores and shows has a name, so it is shown in the page's language, and a stored
+// value with none is shown as it is
+func TestStoredValuesHaveNames(t *testing.T) {
+	english, key := english(t), regexp.MustCompile(`[^a-z0-9]+`)
+	stored := map[string][]string{
+		"event_types": {}, "events": {}, "error_kinds": db.ErrorKinds,
+		"log_levels":   {string(db.LogLevelDebug), string(db.LogLevelInfo), string(db.LogLevelWarn), string(db.LogLevelError)},
+		"site_states":  {"live", "disabled", "archived", "deleted"},
+		"job_statuses": {"queued", "fetched", "completed", "failed"},
+		"sync_reasons": {"default", "error_response", "user_request"},
+	}
+	for _, eventType := range nightscoutmodels.TreatmentEventTypes {
+		stored["event_types"] = append(stored["event_types"], string(eventType))
+	}
+	for _, name := range dataevents.Persisted {
+		stored["events"] = append(stored["events"], string(name))
+	}
+	for group, values := range stored {
+		for _, value := range values {
+			id := "stored." + group + "." + strings.Trim(key.ReplaceAllString(strings.ToLower(value), "_"), "_")
+			if _, ok := english[id]; !ok {
+				t.Errorf("%s has no name: add %s", value, id)
+			}
+		}
+	}
+	ctx := context.Background()
+	if got := i18n.Stored(ctx, "event_types", "D.A.D. Alert"); got != "D.A.D. Alert" {
+		t.Errorf("Stored = %q, want its name", got)
+	}
+	if got := i18n.Stored(ctx, "events", "site_created"); got != "Site created" {
+		t.Errorf("Stored = %q, want its name", got)
+	}
+	if got := i18n.Stored(ctx, "event_types", "Pump Alarm"); got != "Pump Alarm" {
+		t.Errorf("Stored of a value with no name = %q, want it as it is", got)
 	}
 }

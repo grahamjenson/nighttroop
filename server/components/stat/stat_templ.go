@@ -19,12 +19,13 @@ import (
 // The boxes of figures a summary is made of, such as a site's summary and a site's page in control: tiles of one
 // figure each, and titled sections of a list
 
-// numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago"
-var numbersAndUnits = regexp.MustCompile(`[\d.–]+|[^\d.–]+`)
+// numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago",
+// a number's comma or space between its digits, as in 1.234,5 or 1 234,5, kept in it
+var numbersAndUnits = regexp.MustCompile(`[\d.–]+(?:[,\x{00a0}]\d+)*|[^\d.–]+`)
 
 // isUnit is whether a part of a tile's text is words, not a number or a dash
 func isUnit(part string) bool {
-	return strings.Trim(part, "0123456789.–") != ""
+	return strings.Trim(part, "0123456789.,\u00a0–") != ""
 }
 
 // Tile is one figure, under its label and its icon, when it has one, with anything else about it, such as earlier
@@ -64,7 +65,7 @@ func Tile(id, label, text string, ic func(...icon.Props) templ.Component) templ.
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 31, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 32, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -77,7 +78,7 @@ func Tile(id, label, text string, ic func(...icon.Props) templ.Component) templ.
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 33, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 34, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -172,7 +173,7 @@ func Numbers(text, unitClass string) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(part)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 46, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 47, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -186,7 +187,7 @@ func Numbers(text, unitClass string) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(part)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 48, Col: 9}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 49, Col: 9}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -235,7 +236,7 @@ func NoteTile(id, label, text, note string) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(note)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 56, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 57, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -340,7 +341,7 @@ func link(id, text, path string) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 77, Col: 8}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `stat/stat.templ`, Line: 78, Col: 8}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {

@@ -25,63 +25,64 @@ UPDATE site_identities SET
     date_format = ?6,
     time_format = ?7,
     week_start_day = ?8,
+    number_format = ?9,
 
     -- INSULIN
-    bolus_dia_hours = ?9,
-    bolus_onset_minutes = ?10,
-    bolus_peak_minutes = ?11,
+    bolus_dia_hours = ?10,
+    bolus_onset_minutes = ?11,
+    bolus_peak_minutes = ?12,
 
-    basal_dia_hours = ?12,
-    basal_onset_minutes = ?13,
-    basal_peak_minutes = ?14,
+    basal_dia_hours = ?13,
+    basal_onset_minutes = ?14,
+    basal_peak_minutes = ?15,
 
-    default_insulin_sensitivity = ?15,
-    default_carb_ratio = ?16,
-    default_basal_rate = ?17,
+    default_insulin_sensitivity = ?16,
+    default_carb_ratio = ?17,
+    default_basal_rate = ?18,
 
     -- CARBS
-    carb_max_absorption_hours = ?18,
-    carb_min_5m_impact = ?19,
+    carb_max_absorption_hours = ?19,
+    carb_min_5m_impact = ?20,
 
 
     -- ALERTS
-    alarm_urgent_low_enabled = ?20,
-    range_urgent_low_mgdl = ?21,
+    alarm_urgent_low_enabled = ?21,
+    range_urgent_low_mgdl = ?22,
 
-    alarm_low_enabled = ?22,
-    range_low_mgdl = ?23,
-    alarm_low_minutes = ?24,
-    alarm_low_prediction_enabled = ?25,
-    alarm_low_prediction_minutes = ?26,
+    alarm_low_enabled = ?23,
+    range_low_mgdl = ?24,
+    alarm_low_minutes = ?25,
+    alarm_low_prediction_enabled = ?26,
+    alarm_low_prediction_minutes = ?27,
 
-    alarm_high_enabled = ?27,
-    range_high_mgdl = ?28,
-    alarm_high_minutes = ?29,
-    alarm_urgent_high_enabled = ?30,
-    range_urgent_high_mgdl = ?31,
+    alarm_high_enabled = ?28,
+    range_high_mgdl = ?29,
+    alarm_high_minutes = ?30,
+    alarm_urgent_high_enabled = ?31,
+    range_urgent_high_mgdl = ?32,
 
-    alarm_fast_rise_enabled = ?32,
-    alarm_fast_rise_mgdl = ?33,
-    alarm_fast_rise_minutes = ?34,
+    alarm_fast_rise_enabled = ?33,
+    alarm_fast_rise_mgdl = ?34,
+    alarm_fast_rise_minutes = ?35,
 
-    alarm_fast_drop_enabled = ?35,
-    alarm_fast_drop_mgdl = ?36,
-    alarm_fast_drop_minutes = ?37,
+    alarm_fast_drop_enabled = ?36,
+    alarm_fast_drop_mgdl = ?37,
+    alarm_fast_drop_minutes = ?38,
 
-    alarm_no_data_enabled = ?38,
-    alarm_no_data_minutes = ?39,
+    alarm_no_data_enabled = ?39,
+    alarm_no_data_minutes = ?40,
 
-    alarm_device_battery_low_enabled = ?40,
-    alarm_device_battery_low_percent = ?41,
-    alarm_device_battery_low_minutes = ?42,
-    alarm_device_battery_low_devices_json = ?43,
+    alarm_device_battery_low_enabled = ?41,
+    alarm_device_battery_low_percent = ?42,
+    alarm_device_battery_low_minutes = ?43,
+    alarm_device_battery_low_devices_json = ?44,
 
-    alarm_low_reservoir_enabled = ?44,
-    alarm_low_reservoir_units = ?45,
+    alarm_low_reservoir_enabled = ?45,
+    alarm_low_reservoir_units = ?46,
 
     -- NOTIFICATIONS
-    notifications_enabled = ?46
-WHERE id = ?47 AND site_id = ?48
+    notifications_enabled = ?47
+WHERE id = ?48 AND site_id = ?49
 `
 
 type UpdateSiteIdentitySettingsParams struct {
@@ -93,6 +94,7 @@ type UpdateSiteIdentitySettingsParams struct {
 	DateFormat                       *string
 	TimeFormat                       *string
 	WeekStartDay                     *string
+	NumberFormat                     *string
 	BolusDiaHours                    *float64
 	BolusOnsetMinutes                *float64
 	BolusPeakMinutes                 *float64
@@ -145,6 +147,7 @@ func (q *Queries) UpdateSiteIdentitySettings(ctx context.Context, arg UpdateSite
 		arg.DateFormat,
 		arg.TimeFormat,
 		arg.WeekStartDay,
+		arg.NumberFormat,
 		arg.BolusDiaHours,
 		arg.BolusOnsetMinutes,
 		arg.BolusPeakMinutes,
@@ -202,63 +205,64 @@ UPDATE sites SET
     date_format = ?6,
     time_format = ?7,
     week_start_day = ?8,
+    number_format = ?9,
 
     -- INSULIN
-    bolus_dia_hours = ?9,
-    bolus_onset_minutes = ?10,
-    bolus_peak_minutes = ?11,
+    bolus_dia_hours = ?10,
+    bolus_onset_minutes = ?11,
+    bolus_peak_minutes = ?12,
 
-    basal_dia_hours = ?12,
-    basal_onset_minutes = ?13,
-    basal_peak_minutes = ?14,
+    basal_dia_hours = ?13,
+    basal_onset_minutes = ?14,
+    basal_peak_minutes = ?15,
 
-    default_insulin_sensitivity = ?15,
-    default_carb_ratio = ?16,
-    default_basal_rate = ?17,
+    default_insulin_sensitivity = ?16,
+    default_carb_ratio = ?17,
+    default_basal_rate = ?18,
 
     -- CARBS
-    carb_max_absorption_hours = ?18,
-    carb_min_5m_impact = ?19,
+    carb_max_absorption_hours = ?19,
+    carb_min_5m_impact = ?20,
 
 
     -- ALERTS
-    alarm_urgent_low_enabled = ?20,
-    range_urgent_low_mgdl = ?21,
+    alarm_urgent_low_enabled = ?21,
+    range_urgent_low_mgdl = ?22,
 
-    alarm_low_enabled = ?22,
-    range_low_mgdl = ?23,
-    alarm_low_minutes = ?24,
-    alarm_low_prediction_enabled = ?25,
-    alarm_low_prediction_minutes = ?26,
+    alarm_low_enabled = ?23,
+    range_low_mgdl = ?24,
+    alarm_low_minutes = ?25,
+    alarm_low_prediction_enabled = ?26,
+    alarm_low_prediction_minutes = ?27,
 
-    alarm_high_enabled = ?27,
-    range_high_mgdl = ?28,
-    alarm_high_minutes = ?29,
-    alarm_urgent_high_enabled = ?30,
-    range_urgent_high_mgdl = ?31,
+    alarm_high_enabled = ?28,
+    range_high_mgdl = ?29,
+    alarm_high_minutes = ?30,
+    alarm_urgent_high_enabled = ?31,
+    range_urgent_high_mgdl = ?32,
 
-    alarm_fast_rise_enabled = ?32,
-    alarm_fast_rise_mgdl = ?33,
-    alarm_fast_rise_minutes = ?34,
+    alarm_fast_rise_enabled = ?33,
+    alarm_fast_rise_mgdl = ?34,
+    alarm_fast_rise_minutes = ?35,
 
-    alarm_fast_drop_enabled = ?35,
-    alarm_fast_drop_mgdl = ?36,
-    alarm_fast_drop_minutes = ?37,
+    alarm_fast_drop_enabled = ?36,
+    alarm_fast_drop_mgdl = ?37,
+    alarm_fast_drop_minutes = ?38,
 
-    alarm_no_data_enabled = ?38,
-    alarm_no_data_minutes = ?39,
+    alarm_no_data_enabled = ?39,
+    alarm_no_data_minutes = ?40,
 
-    alarm_device_battery_low_enabled = ?40,
-    alarm_device_battery_low_percent = ?41,
-    alarm_device_battery_low_minutes = ?42,
-    alarm_device_battery_low_devices_json = ?43,
+    alarm_device_battery_low_enabled = ?41,
+    alarm_device_battery_low_percent = ?42,
+    alarm_device_battery_low_minutes = ?43,
+    alarm_device_battery_low_devices_json = ?44,
 
-    alarm_low_reservoir_enabled = ?44,
-    alarm_low_reservoir_units = ?45,
+    alarm_low_reservoir_enabled = ?45,
+    alarm_low_reservoir_units = ?46,
 
     -- NOTIFICATIONS
-    notifications_enabled = ?46
-WHERE id = ?47
+    notifications_enabled = ?47
+WHERE id = ?48
 `
 
 type UpdateSitesSettingsParams struct {
@@ -270,6 +274,7 @@ type UpdateSitesSettingsParams struct {
 	DateFormat                       *string
 	TimeFormat                       *string
 	WeekStartDay                     *string
+	NumberFormat                     *string
 	BolusDiaHours                    *float64
 	BolusOnsetMinutes                *float64
 	BolusPeakMinutes                 *float64
@@ -321,6 +326,7 @@ func (q *Queries) UpdateSitesSettings(ctx context.Context, arg UpdateSitesSettin
 		arg.DateFormat,
 		arg.TimeFormat,
 		arg.WeekStartDay,
+		arg.NumberFormat,
 		arg.BolusDiaHours,
 		arg.BolusOnsetMinutes,
 		arg.BolusPeakMinutes,

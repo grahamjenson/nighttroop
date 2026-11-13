@@ -194,3 +194,4 @@ missing, never a number or null.
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |
 | Nightscout tab (`/`) | Fixed: sent on to the site's pages |
 | Socket.IO connect, `authorize` without ack, `connected`, `dataUpdate` and deltas | Works |
+| xDrip+ and Juggluco boluses and carbs (sent as `<none>`) | Fixed: returned as Meal Bolus, Carb Correction or Correction Bolus. Before, LoopFollow showed a Note dot only |

@@ -1,0 +1,53 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// The number format is a general setting, offered as a thousand and a half written in each, 1,234.5 by default
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--settings--site--number_format>option[value=""] Default (1,234.5)
+ASSERT_TEXT_EQUALS #site--settings--site--number_format>option[value="1.234,5"] 1.234,5
+ASSERT_TEXT_EQUALS #site--settings--identity--number_format>option:last-child 1 234,5
+
+// Glucose and insulin are written with a "." by default
+GOTO /data/glucose
+ASSERT_STATUS 200
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 5.4
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> text="5.4"
+GOTO /data/insulin
+ASSERT_STATUS 200
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose 2.5
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+
+// The admin's own number format, with a decimal comma, is used over the site's
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--number_format 1.234,5
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /settings
+ASSERT_VISIBLE #site--settings--identity--number_format:has(option[value="1.234,5"][selected])
+ASSERT_VISIBLE #site--settings--site--number_format:has(option[value=""][selected])
+
+// A reading in the table and its details are written with a comma, but its edit field keeps the "." it takes
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> text="5,4"
+SCREENSHOT glucose_decimal_comma
+CLICK #glucoseReadingsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--glucose--details >> text="5,4 mmol/L"
+ASSERT_VISIBLE #site--glucose--edit--reading[value="5.4"]
+SCREENSHOT glucose_details_decimal_comma
+CLICK #site--glucose--details--close
+
+// The summary's reading and dose are written with a comma too
+GOTO /
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 5,4
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/2,5/
+SCREENSHOT summary_decimal_comma

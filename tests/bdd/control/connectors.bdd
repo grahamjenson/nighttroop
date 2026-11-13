@@ -63,7 +63,7 @@ SCREENSHOT connectors
 // Clicking a source shows its reports
 CLICK #controlConnectorsTable tbody tr >> nth=0
 ASSERT_VISIBLE #control--connector--details
-ASSERT_TEXT_VISIBLE Successes In A Row
+ASSERT_TEXT_VISIBLE Successes in a Row
 ASSERT_TEXT_VISIBLE Success EMA
 // Counts and durations are whole numbers, and the averages have one decimal place
 ASSERT_VISIBLE #control--connector--details dt:text-is("Total Syncs") + dd:text-matches("^[0-9]+$")

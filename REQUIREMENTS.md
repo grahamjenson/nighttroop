@@ -93,12 +93,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 ### Control admins
 
-- Admins (Security menu) lists every admin, newest first, with role (Admin or Read only), when made and by whom.
+- Admins (Security menu) lists every admin, newest first, with role (Admin or Read-only), when made and by whom.
   "You" marks the signed in admin. Never secrets.
 
 | Action | Rules | Result |
 | --- | --- | --- |
-| Add | Name 1 to 32 characters, unique. Role default Read only. At most 20. | Password and TOTP secret show one time in the Users & Devices credentials dialog, with its "never shown again" warning on Escape or a click beside it. |
+| Add | Name 1 to 32 characters, unique. Role default Read-only. At most 20. | Password and TOTP secret show one time in the Users & Devices credentials dialog, with its "never shown again" warning on Escape or a click beside it. |
 | Change role | Role select | Toast. A refused change puts the select back. The admin is signed out. |
 | Reset password or TOTP | Manage menu, confirm | New value shows one time in the credentials dialog. Passkeys removed. Credentials changed event, secret not logged. Signed out (old sign ins get 401); the resetting Admin is not. |
 | Delete | Manage menu, confirm dialog | Row and passkeys removed. Signed out. |
@@ -159,7 +159,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | Download DB | Live or disabled (DB here) | See below. |
 | Disable | After a confirmation | Not served. Socket.IO connections close. |
 | Archive | After disable. Needs S3. | Uploaded to S3. |
-| Hydrate | From the archived sites page | Live again. |
+| Restore | From the archived sites page | Live again. |
 | Truncate | Live or disabled, any size | Truncates all device statuses (as the 10-minute job does the newest), deletes old loop settings no record refers to, shrinks the DB. |
 
 - Download DB (`/sites/{id}/db`):
@@ -452,7 +452,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### User menu and access
 
 - User menu, with no scroll on a computer: who is signed in, My Account, Getting Started, Settings, Connectors
-  (admins), Alarms, Logs & Events, Usage (admins), Logout. Each has its icon and is marked when its page shows.
+  (admins), Alarms, Logs & Events, Usage (admins), Log out. Each has its icon and is marked when its page shows.
 - Only tabs and items the identity can open show. A non-admin has no Users & Devices or Push Certificates tab, and no
   Connectors, Logs & Events or Usage item.
 
@@ -480,8 +480,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Contents
 
 - The home page: latest glucose and its age, the loop's IOB and COB, treatments, and each device's latest status.
-- Under the graph, **Insulin & Carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
-  columns. Beside it, **Other Treatments** lists temp targets and temp basals.
+- Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
+  columns. Beside it, **Other treatments** lists temp targets and temp basals.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
 - Links: latest glucose to all readings; each other treatment's kind (Temp Basal) to its page; with no readings in its
   time, to Connectors.
@@ -554,7 +554,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   fortnight, 7 or 14 days, or to today when fewer are over. Disabled past today and one year ago.
 - Back and forward move between reports.
 - If data in its days before today changed after they were calculated (backfill, late sync, a record moved or
-  deleted), a blue notice above says it is being updated. A refresh after the rebuild removes it.
+  deleted), a blue notice above says its numbers can be out of date and tells you to reload the page. A reload after
+  the rebuild removes it.
 - Under average glucose, GMI, coefficient of variation, time CGM active and time in range: ▲ or ▼ with the amount, or
   "No change", from the previous report (previous 7 or 14 days, day before, previous month). Nothing when either has no
   value (no data, or over one year ago).
@@ -924,7 +925,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### General settings
 
-- Units, time zone, language, date and time format, week start, insulin and carb defaults.
+- Units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
 - Admins set site settings. Identities can override them.
 - Identity value, then site value, then fallback:
 
@@ -934,8 +935,15 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   | Date format | YYYY-MM-DD | |
   | Time format | 24-hour HH:mm:ss | or 12-hour, with or without seconds |
   | Timezone | UTC | |
+  | Number format | 1,234.5 | or 1.234,5 or 1 234,5 |
 
 - All pages, including logs, use them. Control and public pages use the browser's language.
+- Number format: glucose, insulin, carbs, and summary and report values use it. With 1.234,5, glucose shows 5,4 mmol/L.
+- Input fields always use a "." for the decimal point.
+- Text from page scripts (for example, why a passkey did not work) is in the page's language.
+- Stored values show their name in the page's language: treatment event types, event names, error kinds, log levels,
+  roles, site states, job statuses and connector sync reasons. A value with no name (for example, one an app sends)
+  shows as it is.
 - Phone: settings, alarms and another identity's settings are one column (label, then named Site and Yours controls);
   save buttons fit.
 
@@ -1317,7 +1325,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 | Sent                                                                     | Stored as                               |
 | ------------------------------------------------------------------------ | --------------------------------------- |
-| `eventType` `<none>` (careportal, no type)                               | Note, with its insulin and carbs        |
+| `eventType` `<none>` (careportal, no type) with insulin and carbs        | Meal bolus                              |
+| `eventType` `<none>` with carbs only                                     | Carb correction                         |
+| `eventType` `<none>` with insulin only                                   | Correction bolus                        |
+| `eventType` `<none>` with no insulin and no carbs                        | Note                                    |
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
 | `glucoseType` with the reading after a colon (e.g. `Finger: 6.7 mmol/L`) | Finger prick                            |
@@ -1326,6 +1337,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | xDrip+ `Sensor Stop`                                                     | Event group, with its event type        |
 | Sensor, site or pump part change (e.g. `Sensor Change`, `Site Change`)   | Event group of its type, with no events |
 
+- xDrip+ sends each bolus, carbs and note as `<none>`. Juggluco sends its amounts as `<none>`.
+- LoopFollow and NightscoutKit read insulin and carbs only from boluses and carb corrections.
+- A treatment sent as `Note` stays a Note, also with carbs or insulin.
 - xDrip+ treatments after a `Sensor Stop` are kept. The site can add a Sensor Stop event group.
 - v2 properties ages (`sage`, `cage`, `iage`, `bage`) and the summary use change event groups.
 - Combo bolus `splitNow` and `splitExt`: fractions now and over time (70 as 0.7), returned as sent.

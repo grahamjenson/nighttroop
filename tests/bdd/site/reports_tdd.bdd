@@ -87,7 +87,7 @@ ASSERT_VISIBLE #site--reports--tdd--table tbody tr >> nth=0 >> #site--reports--t
 ASSERT_COUNT #site--reports--tdd--so-far 1
 ASSERT_DRAWN #site--reports--tdd--chart >> text=so far
 ASSERT_VISIBLE #site--reports--tdd--help >> text=/Basal is estimated/
-ASSERT_VISIBLE #site--reports--tdd--help >> text=/Today is not over, so it is paler, marked so far/
+ASSERT_VISIBLE #site--reports--tdd--help >> text=/Today is not over yet, so it is drawn paler, marked so far/
 SCREENSHOT report_tdd
 
 // The arrow before the dates goes to the month before, which the backfilled days are not in, and the one after back,
