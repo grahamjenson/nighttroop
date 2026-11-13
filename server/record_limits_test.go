@@ -16,7 +16,8 @@ import (
 )
 
 // However many records are asked for, no endpoint returns more than a search's worth, so no request can read a whole
-// site at once, nor delete all of a type of treatment or entry at once
+// site at once, nor delete all of a type of treatment or entry at once. A Nightscout API search of readings returns up
+// to its own most, a day of 1 minute readings twice over, as xDrip+'s follower asks for that many since its newest.
 func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	handler := GetMainHandler(controlDB, config)
@@ -38,10 +39,10 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 		return out
 	}
 
-	// More glucose readings and treatments than a search returns
-	const records = apiquery.MaxQueryLimit + 50
+	// More glucose readings and treatments than a search returns, readings more than a search of them returns
+	const records, readings = apiquery.MaxQueryLimit + 50, apiquery.MaxEntriesQueryLimit + 50
 	now := time.Now()
-	for i := range records {
+	for i := range readings {
 		_, err := site.SiteDB.Queries().CreateGlucoseReading(t.Context(), sitedb.CreateGlucoseReadingParams{ID: fmt.Sprintf("reading-%d", i),
 			Mgdl: 120, ReadingType: "sgv", OccurredAt: now.Add(-time.Duration(i) * time.Minute).UnixMilli(), CreatedByIdentityName: "phone"})
 		require.NoError(t, err)
@@ -57,17 +58,17 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 	}
 
 	const absurd = "1000000"
-	for _, url := range []string{
-		"http://" + subdomain + ".localhost/data/glucose?limit=" + absurd,
-		"http://" + subdomain + ".localhost/data/event-groups?limit=" + absurd,
-		ns + "/api/v1/entries.json?count=" + absurd,
-		ns + "/api/v1/entries/sgv.json?count=" + absurd,
-		ns + "/api/v1/treatments.json?count=" + absurd,
-		ns + "/api/v1/slice/entries/dateString/sgv/2?count=" + absurd,
-		ns + "/api/v1/times/2?count=" + absurd,
-		ns + "/api/v3/entries?limit=" + absurd,
-		ns + "/api/v3/treatments?limit=" + absurd,
-		ns + "/api/v3/entries/history/0?limit=" + absurd,
+	for url, most := range map[string]int{
+		"http://" + subdomain + ".localhost/data/glucose?limit=" + absurd:      apiquery.MaxQueryLimit,
+		"http://" + subdomain + ".localhost/data/event-groups?limit=" + absurd: apiquery.MaxQueryLimit,
+		ns + "/api/v1/entries.json?count=" + absurd:                            apiquery.MaxEntriesQueryLimit,
+		ns + "/api/v1/entries/sgv.json?count=" + absurd:                        apiquery.MaxEntriesQueryLimit,
+		ns + "/api/v1/treatments.json?count=" + absurd:                         apiquery.MaxQueryLimit,
+		ns + "/api/v1/slice/entries/dateString/sgv/2?count=" + absurd:          apiquery.MaxEntriesQueryLimit,
+		ns + "/api/v1/times/2?count=" + absurd:                                 apiquery.MaxQueryLimit,
+		ns + "/api/v3/entries?limit=" + absurd:                                 apiquery.MaxEntriesQueryLimit,
+		ns + "/api/v3/treatments?limit=" + absurd:                              apiquery.MaxQueryLimit,
+		ns + "/api/v3/entries/history/0?limit=" + absurd:                       apiquery.MaxEntriesQueryLimit,
 	} {
 		result := send("GET", url+"&token="+site.PwdNSToken, "")
 		// The site API and Nightscout's v3 put the records in result
@@ -78,8 +79,14 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 		if page, ok := result.(map[string]any); ok {
 			result = page["items"]
 		}
-		require.Len(t, result, apiquery.MaxQueryLimit, url)
+		require.Len(t, result, most, url)
 	}
+
+	// xDrip+'s follower, offline for 1300 readings, is given all of them since its newest, the newest first, where the
+	// newest 1000 left the rest unread for good
+	gap := send("GET", ns+"/api/v1/entries.json?count=2880&find[date][$gt]="+fmt.Sprint(now.Add(-1300*time.Minute).UnixMilli())+"&token="+site.PwdNSToken, "").([]any)
+	require.Len(t, gap, 1300)
+	require.Equal(t, "reading-0", gap[0].(map[string]any)["_id"])
 
 	// A skip is capped too, so an absurd one stops at MaxQuerySkip, past these rows, rather than walking every row
 	page := send("GET", "http://"+subdomain+".localhost/data/glucose?skip="+absurd, "").(map[string]any)["result"].(map[string]any)
@@ -90,7 +97,7 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 	clean := send("GET", "http://"+subdomain+".localhost/data/clean_glucose?hours="+absurd+"&limit="+absurd, "")
 	require.LessOrEqual(t, len(clean.(map[string]any)["result"].(map[string]any)["items"].([]any)), apiquery.MaxQueryLimit)
 	count := send("GET", ns+"/api/v1/count/entries/where?count="+absurd+"&token="+site.PwdNSToken, "")
-	require.Equal(t, float64(apiquery.MaxQueryLimit), count.(map[string]any)["count"])
+	require.Equal(t, float64(apiquery.MaxEntriesQueryLimit), count.(map[string]any)["count"])
 
 	// Deleting a type of treatment deletes at most a search's worth each time, saying how many
 	deleted := send("DELETE", ns+"/api/v1/treatments/Note?token="+site.PwdNSToken, "")
@@ -100,9 +107,9 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 
 	// So does deleting a type of entry, soft deleting or for good, which deletes those soft deleted too
 	for _, permanent := range []string{"", "&permanent=true"} {
-		deleted = send("DELETE", ns+"/api/v1/entries/sgv?token="+site.PwdNSToken+permanent, "")
-		require.Equal(t, float64(apiquery.MaxQueryLimit), deleted.(map[string]any)["deletedCount"], permanent)
-		deleted = send("DELETE", ns+"/api/v1/entries/sgv?token="+site.PwdNSToken+permanent, "")
-		require.Equal(t, float64(records-apiquery.MaxQueryLimit), deleted.(map[string]any)["deletedCount"], permanent)
+		for _, want := range []int{apiquery.MaxQueryLimit, apiquery.MaxQueryLimit, readings - 2*apiquery.MaxQueryLimit} {
+			deleted = send("DELETE", ns+"/api/v1/entries/sgv?token="+site.PwdNSToken+permanent, "")
+			require.Equal(t, float64(want), deleted.(map[string]any)["deletedCount"], permanent)
+		}
 	}
 }

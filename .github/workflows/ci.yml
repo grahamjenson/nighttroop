@@ -142,6 +142,16 @@ jobs:
           path: .test/savedScreenshots
           include-hidden-files: true
 
+      # The page each failing .bdd or .flow file stopped on (tests/bdd/server_test.go), to download
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: .test/allScreenshots/**/failed.png
+          include-hidden-files: true
+          if-no-files-found: ignore
+
       # Go refreshes the mtime of an entry it uses that is over an hour old, so entries
       # older than 90 minutes went unused by this run. Dropping them stops the cache growing.
       - name: Trim Go build cache

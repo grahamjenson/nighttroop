@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -225,7 +226,7 @@ func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) htt
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			allowed, remainingTime := SiteHTTPActionWithinRateLimit(config, r)
 			if !allowed {
-				w.WriteHeader(http.StatusTooManyRequests)
+				writeTooManyRequests(w, remainingTime)
 				slog.InfoContext(r.Context(), "Site rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
@@ -242,7 +243,7 @@ func SiteUnauthRateLimitMiddleware(config *config.ServerConfig) func(http.Handle
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			allowed, remainingTime := SiteUnauthWithinRateLimit(config, r)
 			if !allowed {
-				w.WriteHeader(http.StatusTooManyRequests)
+				writeTooManyRequests(w, remainingTime)
 				slog.InfoContext(r.Context(), "Site unauthenticated rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
@@ -258,7 +259,7 @@ func SiteIdentityRateLimitMiddleware(config *config.ServerConfig) func(http.Hand
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			allowed, remainingTime := IdentityHTTPWithinRateLimit(config, r)
 			if !allowed {
-				w.WriteHeader(http.StatusTooManyRequests)
+				writeTooManyRequests(w, remainingTime)
 				slog.InfoContext(r.Context(), "Identity rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
@@ -310,4 +311,11 @@ func CountRoutes(tracker *usage.Tracker, name string) func(http.Handler) http.Ha
 			}
 		})
 	}
+}
+
+// writeTooManyRequests refuses a request over a rate limit, saying in Retry-After how many seconds until one is let
+// through, at least one, so a client such as AAPS waits rather than retrying at once
+func writeTooManyRequests(w http.ResponseWriter, seconds int) {
+	w.Header().Set("Retry-After", strconv.Itoa(max(1, seconds)))
+	w.WriteHeader(http.StatusTooManyRequests)
 }

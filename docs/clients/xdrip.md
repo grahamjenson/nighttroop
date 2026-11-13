@@ -1,68 +1,83 @@
 # xDrip+ (Android)
 
-How [xDrip+](https://github.com/NightscoutFoundation/xDrip) talks to Nightscout, and how that works with Nighttroop.
-It was read from xDrip+ at commit `c42cf55c`. Paths below are under `app/src/main/java/com/eveningoutpost/dexdrip/`.
+How [xDrip+](https://github.com/NightscoutFoundation/xDrip) talks to Nightscout, and how it works with Nighttroop.
 
-xDrip+ talks to Nightscout in two ways:
+## Overview
 
-- **Nightscout Sync (REST-API)** uploads readings, treatments and device status, and can download treatments
-  (`utilitymodels/NightscoutUploader.java`, driven by `utilitymodels/UploaderTask.java` and `UploaderQueue.java`).
-- **Nightscout Follower** is a data source that reads another site's readings, treatments and device status
-  (`cgm/nsfollow/NightscoutFollow.java`).
+- Source: commit `c42cf55c`. Paths are under `app/src/main/java/com/eveningoutpost/dexdrip/`.
+- Tests: `tests/api/nightscout/xdrip/`.
+- Not used: Socket.IO, API v3.
+- Not supported: the "MongoDB" upload (writes to a database directly; Nighttroop has no equivalent).
 
-It does not use Socket.IO or API v3. (Its "MongoDB" upload writes to a database directly, which Nighttroop has no
-equivalent of.) The tests are in `tests/api/nightscout/xdrip/`.
+- Modes:
+  - **Nightscout Sync (REST-API)**: uploads readings, treatments and device status, and downloads treatments
+    (`utilitymodels/NightscoutUploader.java`, from `utilitymodels/UploaderTask.java` and `UploaderQueue.java`).
+  - **Nightscout Follower**: a data source. Reads another site's readings, treatments and device status
+    (`cgm/nsfollow/NightscoutFollow.java`).
+
+## Set up
+
+1. Add a device for xDrip+. Its units are mg/dL (#524).
+2. Copy the device's Nightscout token (URL safe).
+3. Uploader: set the base URL to `https://<token>@<subdomain>.ns.<host>/api/v1/`. Separate more URLs with spaces.
+4. Follower: set the URL to `https://<token>@<site>`. xDrip+ adds a missing `/api/v1/`
+   (`cgm/nsfollow/utils/NightscoutUrl.java` `getURI`).
 
 ## Authentication
 
-Both put the secret in the URL as user info, and send its SHA1, in lowercase hex, in an `api-secret` header:
+- **xDrip+ sends:**
+  - the user info removed from the URL (`baseURI.replaceFirst("//[^@]+@", "//")`, `NightscoutUploader.java:499`)
+  - its SHA1, lowercase hex, in `api-secret`: uploader `Hashing.sha1()` (`:508`; `:407` for downloads), follower
+    `getHashedSecret`
+  - follower only: `User-Agent: xDrip+ <version>` (`NightscoutFollow.java:48-62`)
+  - no `token` query, no `Authorization` header. Nighttroop sees the token only as its SHA1.
+- **Nighttroop checks:**
+  - It keeps the SHA256 of each token's SHA1 (`site_identities.nightscout_token_digest`), and finds a 40 character
+    `api-secret` by it.
+  - A password reset gives a new token and digest.
+  - Wrong secret: 401. Read only token: reads, 403 on a write.
 
-- Uploader: the base URL is `https://<secret>@<site>/api/v1/` (several can be given, separated by spaces). The
-  user info is cut out of the URL (`baseURI.replaceFirst("//[^@]+@", "//")`, `NightscoutUploader.java:499`) and sent as
-  `Hashing.sha1()` of it (`:508`, and `:407` for downloads). A URL without `/v1/` and without a secret uses the old
-  API with no `api-secret` at all (`doLegacyRESTUploadTo`, `:544`).
-- Follower: the URL is `https://<secret>@<site>`; `/api/v1/` is added when missing (`cgm/nsfollow/utils/NightscoutUrl.java`
-  `getURI`) and `getHashedSecret` is the SHA1 of the user info. Every call sends `api-secret` and
-  `User-Agent: xDrip+ <version>` (`NightscoutFollow.java:48-62`).
+## Uploads (Nightscout Sync)
 
-Neither sends a `token` query or `Authorization` header, so a Nighttroop token is only ever seen as its SHA1. For
-Nighttroop the secret is a device's Nightscout token, which is URL safe: `https://<token>@<subdomain>.ns.<host>/api/v1/`.
-Nighttroop keeps, for each identity with a token, the SHA256 of the token's SHA1 (`site_identities.nightscout_token_digest`),
-and the Nightscout API looks up an `api-secret` of 40 characters by it. A password reset gives a new token and digest.
-A wrong secret gets 401. A read only token's SHA1 reads, and gets 403 on a write.
+`UploaderTask` collects queued readings, meter readings, calibrations and treatments (at most 300 of each) and calls
+`NightscoutUploader.uploadRest`. It sends the requests below, in this order, to each base URL, with `api-secret`.
 
-## Uploader
+### Status check
 
-`UploaderTask` collects what is queued (readings, meter readings, calibrations and treatments, at most 300 of each)
-and calls `NightscoutUploader.uploadRest`. For each base URL it calls, in order, all with `api-secret`:
+`GET status.json` (`doStatusUpdate`, `:216`), at first use, then daily (an hour after an error):
 
-### `GET status.json` (`doStatusUpdate`, `:216`)
+- Reads only `version` (`getNightscoutVersion`, `:206`); keeps the body. `0.6`, `0.7` or `0.8` stops treatment
+  downloads.
+- Nighttroop sends no `version`. xDrip+ reads "Unknown", which is allowed.
+- Gzip: on `X-Powered-By` with `Express` or `ASP.NET`, or `Accept-Encoding` with `gzip` (`checkGzipSupport`,
+  `:1069`). Nighttroop sends neither, so bodies are not gzipped.
 
-When first used, then once a day (an hour after an error). The body is stored and only `version` is read
-(`getNightscoutVersion`, `:206`): a version starting `0.6`, `0.7` or `0.8` stops treatment downloads. Nighttroop's
-status has no `version`, which xDrip+ reads as "Unknown", which is allowed. `X-Powered-By` containing `Express` or
-`ASP.NET`, or `Accept-Encoding` with `gzip`, makes it gzip later request bodies (`checkGzipSupport`, `:1069`);
-Nighttroop sends neither, so bodies are not gzipped.
+### Entries
 
-### `POST entries` (`doRESTUploadTo`, `:557`)
-
-One JSON array of every queued record, readings first, `Content-Type: application/json`:
+`POST entries` (`doRESTUploadTo`, `:557`): one JSON array of all queued records, readings first,
+`Content-Type: application/json`:
 
 | Type | Fields (`populateV1API...`) |
 | --- | --- |
-| `sgv` (`:662`) | `device` (`xDrip-<collection method>`, e.g. `xDrip-DexcomG5`, with the source when `nightscout_device_append_source_info`), `date` (ms), `dateString` and `sysTime` (`yyyy-MM-dd'T'HH:mm:ss.SSSZ` in the phone's zone, e.g. `2026-11-02T23:00:00.000+1300`), `sgv` (whole mg/dL), `delta` (mg/dL per 5 min, 3 decimals), `direction` (`DoubleUp` ... `DoubleDown`, `NONE`, `NOT COMPUTABLE` or `NotComputable`), `type`, `filtered` and `unfiltered` (raw x 1000), `rssi` (100), `noise` (1 to 4) |
-| `mbg` (`:710`, `:727`) | `device`, `type`, `date`, `dateString`, `mbg` (mg/dL, may have decimals), `sysTime`. A calibration is also sent as an `mbg` unless a blood test is within a minute of it |
-| `cal` (`:745`) | `device`, `type`, `date`, `dateString`, `slope`, `intercept`, `scale`, `sysTime`; not sent when the slope is 0 |
+| `sgv` (`:662`) | `device`, `date` (ms), `dateString`, `sysTime`, `sgv` (whole mg/dL), `delta` (mg/dL per 5 min, 3 decimals), `direction`, `type`, `filtered` and `unfiltered` (raw x 1000), `rssi` (100), `noise` (1 to 4) |
+| `mbg` (`:710`, `:727`) | `device`, `type`, `date`, `dateString`, `mbg` (mg/dL, can have decimals), `sysTime` |
+| `cal` (`:745`) | `device`, `type`, `date`, `dateString`, `slope`, `intercept`, `scale`, `sysTime`. Not sent when the slope is 0 |
 
-Only the status code is read. Anything but 2xx throws, so nothing is marked done and the whole batch, growing, is
-sent again on the next reading until its queue entries are a week old; the device status and treatments after it are
-not sent meanwhile.
+- `device`: `xDrip-<collection method>` (for example `xDrip-DexcomG5`), plus the source with
+  `nightscout_device_append_source_info`.
+- `dateString`, `sysTime`: `yyyy-MM-dd'T'HH:mm:ss.SSSZ` in the phone's zone (for example
+  `2026-11-02T23:00:00.000+1300`).
+- `direction`: `DoubleUp` ... `DoubleDown`, `NONE`, `NOT COMPUTABLE` or `NotComputable`.
+- A calibration is also sent as an `mbg`, unless a blood test is within a minute of it.
+- **Response:** only the status code is read. On a non-2xx, nothing is marked done. The whole batch, growing, is sent
+  again with the next reading, until its queue entries are a week old. Until then, the device status and treatments
+  are not sent.
 
-### `POST devicestatus` (`postDeviceStatus`, `:1119`)
+### Device status
 
-After a good entries upload, one object (not an array) for each battery: the phone always, a bridge (`bridge_battery`),
-a Wi-Fi uploader, and with `send_ob1dex_tx_battery_to_nightscout` the Dexcom transmitter
-(`utilitymodels/NightscoutBatteryDevice.java`):
+`POST devicestatus` (`postDeviceStatus`, `:1119`), after a good entries upload. One object (not an array) for each
+battery (`utilitymodels/NightscoutBatteryDevice.java`): the phone (always), a bridge (`bridge_battery`), a Wi-Fi
+uploader, the Dexcom transmitter (`send_ob1dex_tx_battery_to_nightscout`).
 
 ```json
 {"device": "Test Phone", "uploader": {"battery": 87, "type": "PHONE"}}
@@ -73,10 +88,10 @@ a Wi-Fi uploader, and with `send_ob1dex_tx_battery_to_nightscout` the Dexcom tra
 
 The transmitter's `battery` is text. A failure is logged and ignored.
 
-### Treatments (`postTreatments`, `:795`)
+### Treatments
 
-With `send_treatments_to_nightscout`. Every insert and update is a `PUT treatments` of one object
-(`populateV1APITreatmentEntry`, `:773`, then `:884`):
+With `send_treatments_to_nightscout`, each insert and update is a `PUT treatments` of one object (`postTreatments`,
+`:795`; `populateV1APITreatmentEntry`, `:773`, then `:884`):
 
 ```json
 {"timestamp": 1793612539000, "eventType": "<none>", "enteredBy": "xdrip", "notes": "pizza",
@@ -85,95 +100,113 @@ With `send_treatments_to_nightscout`. Every insert and update is a `PUT treatmen
  "sysTime": "2026-11-02T22:42:19.000+1300", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
 ```
 
-- `eventType` is `<none>` for every bolus, carbs and note (`models/Treatments.java:228`), or `Sensor Start` /
-  `Sensor Stop` (`:399`, `:424`).
-- `_id` is `uuid_to_id(uuid)` (`:245`): the uuid without dashes, cut to 24.
-- `insulinInjections` is a JSON string, only for multiple injections; `notes` is left out when empty; `carbs` and
-  `insulin` are always there, 0 when none. `enteredBy` is `xdrip` or `xdrip pos:<n>`. Treatments that came from
-  Nightscout (`enteredBy` ending `via Nightscout`) are not sent back.
-- They are sent one at a time; the first that is not 2xx stops the rest, and a 404 shows "Please ensure careportal
-  plugin is enabled". The upload is still a success, so every queued treatment is marked done.
+- `eventType`: `<none>` for bolus, carbs and note (`models/Treatments.java:228`); `Sensor Start` / `Sensor Stop`
+  (`:399`, `:424`).
+- `_id`: `uuid_to_id(uuid)` (`:245`), the uuid without dashes, cut to 24.
+- `insulinInjections`: a JSON string, only for multiple injections.
+- `notes`: left out when empty. `carbs`, `insulin`: always there, 0 when none.
+- `enteredBy`: `xdrip` or `xdrip pos:<n>`. Treatments from Nightscout (`enteredBy` ends `via Nightscout`) are not
+  sent back.
+- **Errors:** sent one at a time; the first non-2xx stops the rest. A 404 shows "Please ensure careportal plugin is
+  enabled". The upload still counts as a success, so all queued treatments are marked done.
+- **Delete:**
+  1. `GET treatments.json?find[uuid]=<uuid>`.
+  2. Take `_id` of the first result.
+  3. `DELETE treatments/<_id>`. If the lookup finds nothing, xDrip+ stops without a retry.
 
-A delete finds the treatment first, `GET treatments.json?find[uuid]=<uuid>`, takes `_id` of the first result, and sends
-`DELETE treatments/<_id>`. When the lookup finds nothing it gives up without retrying.
+### Activity
 
-### `POST activity` (`postHeartRate`, `postStepsCount`, `postMotionTracking`, `:923`)
+`POST activity` (`postHeartRate`, `postStepsCount`, `postMotionTracking`, `:923`), only in engineering mode with
+`use_pebble_health`. Arrays of up to 500 of `{"type": "hr-bpm", "timeStamp", "created_at", "bpm", "accuracy"}`,
+`{"type": "steps-total", ..., "steps"}` and `{"type": "motion-class", ..., "class"}`.
 
-Only in engineering mode with `use_pebble_health`. Arrays of up to 500 of `{"type": "hr-bpm", "timeStamp", "created_at",
-"bpm", "accuracy"}`, `{"type": "steps-total", ..., "steps"}` and `{"type": "motion-class", ..., "class"}`.
-Nighttroop keeps the `type` as the activity type, a heart rate's `bpm` as its heart rate (0 to 300) and a motion's
-`class` as its name; `accuracy` is dropped.
+Nighttroop keeps `type` as the activity type, `bpm` as the heart rate (0 to 300), `class` as the motion's name. It
+drops `accuracy`.
 
-### Treatment download (`doRESTtreatmentDownload`, `:354`)
+### Treatment download
 
-With `cloud_storage_api_download_enable`, after each upload and at most once a minute. `GET treatments` with no query
-and the header `BROKEN-If-Modified-Since` (named so on purpose, so it is ignored). A 304 skips it. On a 200 it keeps
-`Last-Modified` and skips the body when `Etag` is the same as last time. The array is read by
-`NightscoutTreatments.processTreatmentResponse`: `_id` (required), `uuid`, `eventType`, `enteredBy` (one starting
-`xdrip` is its own), `created_at` (the time, ISO 8601, required), `carbs`, `insulin`, `insulinInjections`, `notes`, and
-for a finger stick `glucoseType` `Finger`, `glucose` and `units` (`mmol` or mg/dL). A treatment matching one it has by
-uuid, `_id`, or time within a minute with the same amounts is not added again.
+- When: with `cloud_storage_api_download_enable`, after each upload, at most once a minute
+  (`doRESTtreatmentDownload`, `:354`).
+- Request: `GET treatments`, no query, header `BROKEN-If-Modified-Since` (named so on purpose, to be ignored).
+- 304: skipped. 200: keeps `Last-Modified`; skips the body if `Etag` is unchanged.
+- `NightscoutTreatments.processTreatmentResponse` reads: `_id` (required), `uuid`, `eventType`, `enteredBy` (starts
+  with `xdrip`: its own), `created_at` (ISO 8601, required), `carbs`, `insulin`, `insulinInjections`, `notes`; for a
+  finger stick `glucoseType` `Finger`, `glucose`, `units` (`mmol` or mg/dL).
+- Not added again when it matches a known treatment by uuid, `_id`, or time within a minute with the same amounts.
 
-## Follower
+## Downloads (Nightscout Follower)
 
-`NightscoutFollow.work`, about every reading interval. The base URL's paths are absolute, all `GET` with
-`api-secret` and the `User-Agent`, parsed with Gson (whole numbers tolerate decimals and text, a `{}` is an empty list):
+`NightscoutFollow.work`, about each reading interval. All `GET`, absolute paths, with `api-secret` and `User-Agent`.
+Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
 
 | Call | When | Reads |
 | --- | --- | --- |
-| `/api/v1/entries.json?count=10&rr=<now ms>` | no reading yet | each `Entry`: `date` (ms, else `sysTime` or `dateString`), `sgv` (mg/dL, read as a whole number), `filtered`, `unfiltered`, `noise`, and `_id`, `delta`, `direction`, `device`, `rssi`, `type`, which are not used |
-| `/api/v1/entries.json?count=2880&find[date][$gt]=<ms>&rr=<now ms>` | since the latest reading, at most a day back | the same |
-| `/api/v1/treatments` | `nsfollow_download_treatments`, at most once a minute | as the uploader's treatment download |
-| `/api/v1/devicestatus.json?count=1` | every 5 minutes | `uploaderBattery`, else `uploader.battery`; `isCharging`; `pump.battery.percent`; `pump.reservoir` |
+| `/api/v1/entries.json?count=10&rr=<now ms>` | No reading yet | Entries (below) |
+| `/api/v1/entries.json?count=2880&find[date][$gt]=<ms>&rr=<now ms>` | Since the latest reading, at most a day back | Entries |
+| `/api/v1/treatments` | `nsfollow_download_treatments`, at most once a minute | As the [treatment download](#treatment-download) |
+| `/api/v1/devicestatus.json?count=1` | Every 5 minutes | `uploaderBattery`, else `uploader.battery`; `isCharging`; `pump.battery.percent`; `pump.reservoir` |
 
-`rr` busts caches. Every entry is taken as a reading, whatever its `type`, unless one is within 10 seconds of it. A
-4xx on device status turns it off for 6 hours.
+- **Entries:** uses `date` (ms, else `sysTime` or `dateString`), `sgv` (mg/dL, whole number), `filtered`,
+  `unfiltered`, `noise`. Reads but does not use `_id`, `delta`, `direction`, `device`, `rssi`, `type`.
+- Every entry is a reading, whatever its `type`, unless another is within 10 seconds.
+- `rr` stops caches.
+- A 4xx on device status turns it off for 6 hours.
 
-## Quirks
+## Known problems and limits
 
-- **Units.** xDrip+ sends mg/dL with no `units`; Nighttroop takes a value over 30 as mg/dL, so readings of 30 mg/dL or
-  less would be taken as mmol/L (xDrip+ sends 39 for a sensor's LOW). The follower reads `sgv` as mg/dL, which
-  the Nightscout API always gives it in, whatever the identity's or site's units.
-- `dateString` has an offset without a colon (`+1300`), and wins over `date` when there is no `utcOffset`; both are
-  the same time.
-- The returned treatment has `enteredBy` and `uuid` as sent, so xDrip+ matches its own by them, but no
-  `insulinInjections`, and for `<none>` the eventType of its amounts: `Meal Bolus` (insulin and carbs), `Carb
-  Correction`, `Correction Bolus`, or `Note` with neither. xDrip+ matches its own by `uuid`, not eventType.
-- An `mbg` entry has no `sgv` (#514), as in Nightscout, but the follower takes every entry as a reading
-  (`cgm/nsfollow/EntryProcessor.java`), so a finger stick becomes a reading of 0, as it would from Nightscout.
-- A search gives at most 1000, newest first; the follower asks for 2880.
-- `rr` is an unknown query parameter, which is logged and ignored; it is not a filter, unlike an unknown `find[...]`,
-  which gives nothing.
+- **Units:** xDrip+ sends mg/dL without `units`. Nighttroop takes a value over 30 as mg/dL, so 30 or less is
+  mmol/L (xDrip+ sends 39 for a sensor's LOW). The follower reads `sgv` as mg/dL; the Nightscout API always gives
+  mg/dL, whatever the identity's or site's units.
+- **Times:** `dateString` has an offset without a colon (`+1300`). It wins over `date` when there is no `utcOffset`.
+  Both are the same time.
+- **Returned treatments:** no `insulinInjections`. For `<none>`, the eventType of its amounts: `Meal Bolus` (insulin
+  and carbs), `Carb Correction`, `Correction Bolus`, or `Note` (no amounts). xDrip+ finds its own by `uuid`.
+- **Gaps:** a reading search gives at most 2880, newest first, so the follower gets all of them after a gap. It was
+  1000: a follower offline for over 1000 readings never read the older ones.
+- **`rr`:** an unknown query parameter, logged and ignored. Not a filter, unlike an unknown `find[...]`, which gives
+  nothing.
 
 ## Status in Nighttroop
 
-| Interaction | Status |
-| --- | --- |
-| `api-secret` as the SHA1 of a device token (uploader and follower) | Fixed in #512 |
-| Old API (`/api/` without `/v1/`, no secret, `doLegacyRESTUploadTo`) | Not supported: Nighttroop refuses writes without a token |
-| `GET status.json` | Works (no `version`, read as allowed) |
-| `POST entries` of `sgv` and `mbg` | Works, duplicates ignored |
-| `POST entries`, a careportal `BG Check` sent back as an `mbg` with device `careportal via Nightscout` | Fixed: kept once. It was kept twice, as a reading with another device |
-| `POST entries` with a `cal` | Fixed in #512: the calibration is left out, so the batch is not refused |
-| `POST entries` with a reading of 0 or less (or over 1000 mg/dL) | Fixed: the reading is left out and the rest stored. It refused the whole batch, which xDrip+ sends again with each new reading, so nothing more uploaded |
-| `POST entries` of only readings of 0, as a failing sensor sends | Fixed: taken as `200 []` with nothing stored. It was refused, so the device status and treatments (a bolus) after it were not sent while the sensor sent 0s |
-| `POST entries` with an entry of a type Nighttroop does not know | Fixed: left out and the rest stored (up to 10 in a batch). A batch with nothing else stored is still refused |
-| `POST devicestatus`, phone and bridge battery | Fixed in #512: `uploader.battery` was only kept for Loop |
-| `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |
-| `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
-| xDrip+'s boluses and carbs on LoopFollow | Fixed in this PR: a `<none>` with amounts is a Meal Bolus, Carb Correction or Correction Bolus, as LoopFollow reads amounts only of those (it showed them as note dots); test in `xdrip/none_amounts.http` |
-| A careportal treatment with no id in the same second as an xDrip+ `<none>` bolus | Fixed in this PR: kept as its own treatment. It was merged into the bolus and took it over, its `enteredBy` and notes |
-| A treatment's `notes` with HTML, e.g. `<b>bold</b>` | Fixed in this PR: given back exactly as sent. Tags were removed, so xDrip+ appended the changed note to its own with each download |
-| `PUT treatments`, `Sensor Start`, and again to update | Works |
-| `PUT treatments`, `Sensor Stop` | Works: kept as a sensor change, and the treatments queued after it upload (it was refused, and they were lost) |
-| `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted. Any other unknown `find[...]` now gives nothing, so it deletes nothing |
-| Deleting a treatment xDrip+ downloaded, e.g. a careportal note (Undo last) | Fixed in this PR: xDrip+ only deletes one whose `_id` is 24 characters, a MongoDB ObjectId, and Nighttroop's were 8, so the delete was never sent and the treatment came back. Records made without an `_id` now get an ObjectId-shaped one |
-| `GET treatments` download, `Last-Modified` and `Etag` | Works |
-| `POST activity`, steps | Works |
-| `POST activity`, heart rate and motion | Fixed in this PR (only the time was kept) |
-| Follower `entries.json?count=10` and `find[date][$gt]` | Works when the follower's identity is in mg/dL, as a device added for xDrip+ is (#524); in mmol/L the values are wrong |
-| Follower `treatments` | Works |
-| Follower `devicestatus.json?count=1`, `uploaderBattery` | Works |
-| Follower takes `mbg` entries as readings | As in Nightscout: since #514 they carry only `mbg`, so the follower reads `sgv` 0 |
-| `enteredBy` and `uuid` given back as sent | `enteredBy` fixed in #547; `uuid` fixed in this PR |
-| Socket.IO | Not used |
+- **Works:**
+  - `GET status.json`.
+  - Entries of `sgv` and `mbg`, duplicates ignored.
+  - `Sensor Start`, and again to update. `Sensor Stop`, kept as a sensor change (was refused, and the treatments
+    queued after it were lost).
+  - Treatment download with `Last-Modified` and `Etag`. Activity steps.
+  - Follower `entries.json?count=10` and `find[date][$gt]`, with the identity in mg/dL, as a device added for xDrip+
+    is (#524). In mmol/L the values are wrong.
+  - Follower `treatments`, and `devicestatus.json?count=1` with `uploaderBattery`.
+  - Follower `mbg` entries: as in Nightscout. Since #514 they have no `sgv`. The follower takes every entry as a
+    reading (`cgm/nsfollow/EntryProcessor.java`), so a finger stick is a reading of 0.
+- **Fixed, authentication:** `api-secret` as the SHA1 of a device token (#512).
+- **Fixed, entries:**
+  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once. It was kept twice,
+    as a reading with another device.
+  - A `cal` (#512): left out, so the batch is not refused.
+  - A reading of 0 or less, or over 1000 mg/dL: left out, the rest stored. The batch was refused and sent again with
+    each reading, so nothing more uploaded.
+  - Only readings of 0 (a failing sensor): `200 []`, nothing stored. It was refused, so the device status and
+    treatments (a bolus) after it were not sent.
+  - An unknown type: left out, the rest stored (up to 10 a batch). A batch with nothing else stored is still refused.
+- **Fixed, device status (#512):**
+  - Phone and bridge battery: `uploader.battery` was only kept for Loop.
+  - Dexcom transmitter (text `battery`): the battery is left out, not the status refused.
+- **Fixed, treatments:**
+  - eventType `<none>` (bolus, carbs, note) (#512): kept as a Note.
+  - `<none>` with insulin or carbs: returned as `Meal Bolus`, `Carb Correction` or `Correction Bolus`. As a Note,
+    LoopFollow showed a dot only. Test: `xdrip/none_amounts.http`.
+  - A careportal treatment with no id, in the same second as a `<none>` bolus: kept apart. It was merged into the
+    bolus, taking its `enteredBy` and notes.
+  - `notes` with HTML (for example `<b>bold</b>`): given back as sent. Tags were removed, so xDrip+ appended the
+    changed note to its own each download.
+  - `find[uuid]=`, then `DELETE treatments/<_id>` (#512): `find[uuid]` was ignored, so the newest treatment was
+    deleted. Any other unknown `find[...]` gives nothing, so deletes nothing.
+  - Delete of a downloaded treatment (for example a careportal note, Undo last): xDrip+ deletes only a 24 character
+    `_id` (a MongoDB ObjectId). Nighttroop's had 8, so the delete was never sent and the treatment came back. Records
+    without an `_id` now get an ObjectId-shaped one.
+  - `enteredBy` (#547) and `uuid` given back as sent, so xDrip+ matches its own.
+- **Fixed, activity:** heart rate and motion (only the time was kept).
+- **Not supported:** the old API (a URL without `/v1/` and without a secret, so no `api-secret`,
+  `doLegacyRESTUploadTo`, `:544`). Writes need a token.
+- **Not used:** Socket.IO.

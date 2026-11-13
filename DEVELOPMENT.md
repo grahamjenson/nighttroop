@@ -19,7 +19,7 @@ The primary generators are:
 
 - Open pull requests against `main`, one per feature or fix, and keep each change small (see `AGENTS.md`).
 - Before opening one, run `go generate ./...` and commit what it changes (CI fails otherwise), then run `go test ./...`.
-- Keep `docs/Requirements.md`, `docs/config.md` and `clients/nighttroop/openapi.json` up to date with the change.
+- Keep `REQUIREMENTS.md`, `docs/config.md` and `clients/nighttroop/openapi.json` up to date with the change.
 - Say what changed and why, list the tests, and end the description with a `## Screenshots` section (see
   [Screenshots](#screenshots)), saying `None` when no page changes.
 - Disclose any AI use, as [AI_POLICY.md](AI_POLICY.md) asks.

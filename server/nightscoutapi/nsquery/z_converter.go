@@ -1105,6 +1105,7 @@ func QueryValueToQuery(source QueryValues) Query {
 	nsqueryQuery.Limit = GetLimitInt64(source)
 	nsqueryQuery.Skip = GetSkipInt64(source)
 	nsqueryQuery.CountGiven = GetCountGiven(source)
+	nsqueryQuery.CountAsked = GetCountAskedInt64(source)
 	if source.SgvEQ != nil {
 		xint6414 := typesFlexibleInt64ToInt64(*source.SgvEQ)
 		nsqueryQuery.SgvEQ = &xint6414

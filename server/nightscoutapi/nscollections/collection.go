@@ -60,6 +60,12 @@ type CollectionDeduplicator[NS, DM any] interface {
 	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
 }
 
+// CollectionDateDeduplicator is a CollectionDeduplicator whose duplicate is found by its date even for a model named
+// by an identifier none has, as Nightscout upserts an entry on its date and type whatever its _id
+type CollectionDateDeduplicator interface {
+	DuplicateWhateverItsIdentifier()
+}
+
 // CollectionStored is a CollectionDB that does more once a model created, replaced or refreshed is stored, outside its
 // transaction, such as keeping what it says in the control DB
 type CollectionStored[NS any] interface {
@@ -191,6 +197,9 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		if duplicateDBModel, httpErr = c.identifiedDuplicate(q, ctx, *identifier); httpErr != nil {
 			return nil, false, httpErr
 		}
+		if duplicateDBModel == nil {
+			duplicateDBModel, err = c.dateDuplicate(q, ctx, nsModel)
+		}
 	} else if deduplicator, ok := any(m).(CollectionDeduplicator[NS, DM]); ok && nsModel.GetDate() != nil {
 		duplicateDBModel, err = deduplicator.GetDuplicate(q, ctx, nsModel)
 	}
@@ -217,14 +226,46 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	if httpErr := c.stored(dbModel, err, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
+	// A treatment or reading sent already deleted, isValid false, is kept soft deleted, as Nightscout keeps isValid as
+	// sent: AAPS uploads what it deleted while offline so, and a follower would otherwise take it as current. Presets
+	// are not soft deleted, so a food or profile keeps being stored as before.
+	valid, sent := data["isValid"].(bool)
+	deleted := sent && !valid && (m.Name() == string(nsutils.Treatments) || m.Name() == string(nsutils.Entries))
+	if deleted {
+		if dbModel, httpErr = c.softDeleted(q, ctx, dbModel); httpErr != nil {
+			return nil, false, httpErr
+		}
+	}
 
 	if httpErr := c.commit(tx, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
 
+	if deleted {
+		siteContext.PublishModelChange(events.Deleted, dbModel)
+		return c.document(dbModel, siteContext), false, nil
+	}
 	siteContext.PublishModelChange(events.Created, dbModel)
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbModel, siteContext), false, nil
+}
+
+// softDeleted deletes the model just stored, as a soft delete does, and is it deleted
+func (c Collection[NS, DM]) softDeleted(q *sitedb.Queries, ctx context.Context, dbModel *DM) (*DM, *nsutils.HTTPError) {
+	id := (*dbModel).GetID()
+	if _, err := c.db.Delete(q, ctx, id, false); err != nil {
+		slog.ErrorContext(ctx, "failed to delete a model created deleted", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	deleted, err := c.db.GetModel(q, ctx, id, true)
+	if err == nil && deleted != nil {
+		err = q.MarkStale(ctx, deleted)
+	}
+	if err != nil || deleted == nil {
+		slog.ErrorContext(ctx, "failed to read a model created deleted", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	return deleted, nil
 }
 
 // repeated is the duplicate a create repeats, given the create's values when the collection is a CollectionRefresher
@@ -251,6 +292,16 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 // identifier so the client can delete or replace the document by it. Its only duplicate is the model stored with
 // it; one deleted is removed for good, as a client like Juggluco changes a document by deleting it and creating it
 // again.
+// dateDuplicate is the model one named by an identifier none has repeats, found by its date, for a collection that
+// finds duplicates so whatever their identifier
+func (c Collection[NS, DM]) dateDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error) {
+	deduplicator, ok := any(c.db).(CollectionDeduplicator[NS, DM])
+	if _, byDate := any(c.db).(CollectionDateDeduplicator); !ok || !byDate || nsModel.GetDate() == nil {
+		return nil, nil
+	}
+	return deduplicator.GetDuplicate(q, ctx, nsModel)
+}
+
 func (c Collection[NS, DM]) identifiedDuplicate(q *sitedb.Queries, ctx context.Context, identifier string) (*DM, *nsutils.HTTPError) {
 	if httpErr := nsutils.ValidateIdentifierIsntBad(identifier); httpErr != nil {
 		return nil, httpErr
@@ -515,6 +566,17 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	}
 	if nsModel, err = withUtcOffset(data, nsModel, offset); err != nil {
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	// One created with an identifier none has repeats one at its date, for a collection that finds them so
+	if replaced == nil {
+		duplicate, err := c.dateDuplicate(q, ctx, nsModel)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
+			return nil, false, nsutils.ErrInternal
+		}
+		if duplicate != nil {
+			return c.repeated(ctx, siteContext, tx, q, nsModel, duplicate)
+		}
 	}
 
 	dbCreateModel, err := m.CreateModel(q, ctx, nsModel, converterContext(siteContext), &identifier)

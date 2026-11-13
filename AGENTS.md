@@ -48,7 +48,7 @@ Use code generators where possible, especially for building models and params fo
 
 When making a change kep these documents up to date:
 
-- `docs/Requirements.md` 
+- `REQUIREMENTS.md` 
     - lists every feature, under Control, Site and Identity. A PR that adds, changes or removes a feature must update it in the same PR.
     - Write it as the file is written: one feature per line, as if to a quality tester, making sure everything works.
 
@@ -60,6 +60,25 @@ When making a change kep these documents up to date:
     - a list of active and prioritized development and feature goals.
     - update this list to remove any if not available, add any if you think something you just completed needs additional work
     - categorize the work and add priority values P0 being most important P5 being least.
+
+### Writing docs
+
+Write `REQUIREMENTS.md`, `README.md` and the Markdown files in `docs` in ASD-STE100 (Simplified Technical English):
+
+- Words
+    - Use simple words, one meaning for each word, and the same word for the same thing.
+    - Keep technical names as they are: apps, env vars, paths, API fields, UI labels.
+    - Use the present tense, the active voice, and the imperative for instructions.
+    - Do not use contractions, phrasal verbs, or noun clusters of more than 3 words.
+- Sentences
+    - A procedure step: one instruction, at most 20 words. Number the steps.
+    - A description: one topic, at most 25 words.
+    - Put a condition first: "If the token is not valid, the API returns 401."
+    - A warning: **Warning:**, the instruction, then the reason.
+- Layout
+    - Use lists and tables, not long paragraphs. A paragraph has at most 6 sentences.
+    - Put related items in a group with a short heading that says what is in it.
+    - Do not repeat facts, or explain history a reader does not need.
 
 ## SQL
 

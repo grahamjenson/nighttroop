@@ -177,7 +177,7 @@ B {
     "notes": "",
     "utcOffset": 720
  }
-ASSERT_STATUS 200
-ASSERT_EQUALS true "@isDeduplication"
-ASSERT_EQUALS ".create_first_identical_treatments_v3.identifier" "@deduplicatedIdentifier"
-ASSERT_EQUALS ".create_second_identical_treatments_v3.identifier" "@identifier"
+// Sent with isValid false, as AAPS uploads what it deleted while offline, each is kept deleted, so the second is not
+// a duplicate of the first, which is deleted
+ASSERT_STATUS 201
+ASSERT_EQUALS false "@result.isValid"

@@ -219,7 +219,7 @@ func TestSocketFailedAuthorizesSpendTheIPsBudgetNotTheSites(t *testing.T) {
 	for range 4 {
 		require.NoError(t, authorize("10.0.0.1"))
 	}
-	require.InDelta(t, 3, testConfig.RateLimiters.SiteGETLimiter(siteID).Tokens(), 0.5, "the site's GET budget is untouched")
+	require.InDelta(t, 3*config.SiteIdentitiesShare, testConfig.RateLimiters.SiteGETLimiter(siteID).Tokens(), 0.5, "the site's GET budget is untouched")
 	require.Error(t, authorize("10.0.0.1"), "past its burst the IP's authorize is unanswered")
 	require.NoError(t, authorize("10.0.0.2"), "another IP has its own budget")
 }
