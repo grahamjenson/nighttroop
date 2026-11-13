@@ -210,6 +210,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Treatment deleted offline, uploaded as a create with `isValid` false (`DataSyncSelectorV3`) | Fixed: kept deleted, sent as a delete (was valid, so AAPSClient showed deleted carbs as COB) | `created_deleted.http`, `aaps_storage.sio` |
 | Delete of a treatment that a follower already deleted | Fixed: 200, as Nightscout returns (was 404) | `delete_again.http`, `sync_v3.http` |
 | Treatment or profile store without `enteredBy` (Meal Bolus, Carb Correction, Profile Switch, profile) | Fixed: `enteredBy` is its `app`, `AAPS` (was the device name, for example `pwd_phone`) | `entered_by.http`, `loop/profile.http` |
+| `glucose` and `glucoseType` on a Question, therapy event, Exercise or Carb Correction | Fixed: kept (were dropped) | `glucose_event_types.http` |
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
 | **Device status, food and profiles** | | |
 | Device status: create, history with `srvModified` | Works | `sync_v3.http`, `flow_v3.http` |
