@@ -34,6 +34,10 @@ func (c FoodCollection) Validate(nsModel nightscoutmodels.Food, dbModel *sitedb.
 	return nil
 }
 
+func (c FoodCollection) Rows(nsModel nightscoutmodels.Food) []sitedb.TableRow {
+	return []sitedb.TableRow{{Table: "food_presets", Row: nightscoutmodels.FoodToCreate(nsModel, nightscoutmodels.ConverterContext{})}}
+}
+
 func (c FoodCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Food, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.FoodPreset, error) {
 	createParams := nightscoutmodels.FoodToCreate(nsModel, cc)
 	if overrideIdentifier != nil {

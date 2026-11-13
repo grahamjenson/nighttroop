@@ -46,8 +46,10 @@ ASSERT_STATUS 200
 ASSERT_EQUALS false "@0.autoForced"
 ASSERT_EQUALS null "@0.reasons"
 
-// How long it was to last is still refused past a year, as a column of its own was
+// How long it was to last is left out past a year, and the rest kept
 NAME original_duration_out_of_range
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "OpenAPS Offline", "created_at": "{{ time 10 }}", "duration": 30, "mode": "DISCONNECTED_PUMP", "originalDuration": 31536000001 }
-ASSERT_STATUS 400
+ASSERT_STATUS 200
+ASSERT_EQUALS "DISCONNECTED_PUMP" "@0.mode"
+ASSERT_EQUALS null "@0.originalDuration"

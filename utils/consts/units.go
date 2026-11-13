@@ -22,13 +22,6 @@ const MaxGlucoseMgdl = 1000
 // MaxFutureReading is how far ahead of now a reading can be dated, for a phone clock's error
 const MaxFutureReading = 15 * time.Minute
 
-// MaxInsulinUnits and MaxCarbsGrams are far above any real dose or meal, either way, as a negative one takes back too
-// much entered, so a typo or a made up value is refused, as the database would
-const (
-	MaxInsulinUnits = 500
-	MaxCarbsGrams   = 1000
-)
-
 var unitAliases = map[string]Units{
 	// mg/dL
 	"mg":      UnitsMGDL,

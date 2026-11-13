@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
-	"nighttroop.t1d.nz/utils/types"
 )
 
 // MaxRegistrations is the most apps on devices an identity can have pushes sent to, far more than one person has
@@ -27,8 +26,8 @@ var ErrTooManyRegistrations = fmt.Errorf("an identity can have pushes sent to at
 const maxToken = 1024
 
 var (
-	// apnsToken is an APNs device token in hex, of no fixed length: 32 bytes once, 80 from Trio now
-	apnsToken = regexp.MustCompile(fmt.Sprintf(`^[0-9a-fA-F]{64,%d}$`, types.MaxDeviceTokenLength))
+	// apnsToken is an APNs device token in hex, of no fixed length: 32 bytes once, 80 from Trio now, and at most 128
+	apnsToken = regexp.MustCompile(`^[0-9a-fA-F]{64,256}$`)
 	// fcmToken is a Firebase registration token, about 160 characters, at most maxToken
 	fcmToken = regexp.MustCompile(`^[A-Za-z0-9_:-]{32,}$`)
 )
