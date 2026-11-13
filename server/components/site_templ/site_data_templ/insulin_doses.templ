@@ -15,7 +15,7 @@ import (
 )
 
 // InsulinDosesTable shows one page of insulin doses, newest first, with buttons to the pages either side
-templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, limit int64) {
+templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, limit int64, before *int64) {
 	@listpage.Page(listpage.Props{
 		ID:          "insulin_doses_table",
 		Title:       i18n.T(ctx, "site.data.insulin_doses.title"),
@@ -32,7 +32,7 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 				{Actions: true},
 			},
 		},
-		Pager: &pager.Props{ID: "site--insulin", Path: "/data/insulin", Count: len(insulinDoses), Skip: skip, Limit: limit},
+		Pager: pager.Dated(pager.Props{ID: "site--insulin", Path: "/data/insulin", Count: len(insulinDoses), Skip: skip, Limit: limit}, before, insulinDoses, func(row *sitemodels.SiteInsulinDose) (int64, string) { return row.OccurredAt, row.ID }),
 	}) {
 		for _, insulinDose := range insulinDoses {
 			@insulinDoseRow(insulinDose)

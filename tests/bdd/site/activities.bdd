@@ -47,16 +47,16 @@ ASSERT_TEXT_VISIBLE Activity Updated
 ASSERT_NOT_VISIBLE #site--activity--details
 ASSERT_TEXT_VISIBLE Match
 
-// A page of one activity pages through them, newest first
+// A page of one activity pages to the older ones, and Newest goes back
 GOTO /data/activities?limit=1
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Walk
 CLICK #site--activity--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_VISIBLE #site--activity--newest
 ASSERT_TEXT_VISIBLE Football
-CLICK #site--activity--previous
+CLICK #site--activity--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

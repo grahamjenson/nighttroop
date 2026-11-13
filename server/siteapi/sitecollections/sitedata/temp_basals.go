@@ -109,7 +109,7 @@ func (s *TempBasalsCollection) SearchTotals(ctx context.Context, collectionTx *s
 }
 
 func (s *TempBasalsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *apiutils.Query) templ.Component {
-	return site_data_templ.TempBasalsTable(models, query.Skip, query.Limit)
+	return site_data_templ.TempBasalsTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

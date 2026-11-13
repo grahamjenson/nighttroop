@@ -16,7 +16,7 @@ import (
 )
 
 // TempTargetsTable shows one page of temp targets, newest first, with buttons to the pages either side
-templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64) {
+templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64, before *int64) {
 	{{ units := string(*glucoseUnits(ctx)) }}
 	@listpage.Page(listpage.Props{
 		ID:          "temp_targets_table",
@@ -35,7 +35,7 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 				{Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 			},
 		},
-		Pager: &pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit},
+		Pager: pager.Dated(pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit}, before, tempTargets, func(row *sitemodels.SiteTempTarget) (int64, string) { return row.OccurredAt, row.ID }),
 	}) {
 		for _, tempTarget := range tempTargets {
 			@tempTargetRow(tempTarget)

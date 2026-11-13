@@ -100,7 +100,7 @@ func (s *ProfileSwitchesCollection) SearchTotals(ctx context.Context, collection
 }
 
 func (s *ProfileSwitchesCollection) SearchHTMXResponse(models []*sitemodels.SiteProfileSwitch, query *apiutils.Query) templ.Component {
-	return site_data_templ.ProfileSwitchesTable(models, query.Skip, query.Limit)
+	return site_data_templ.ProfileSwitchesTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

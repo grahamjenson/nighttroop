@@ -22,7 +22,7 @@ import (
 )
 
 // NotificationEventsTable shows one page of notifications, newest first, with buttons to the pages either side
-func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64) templ.Component {
+func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -75,7 +75,7 @@ func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip in
 					{Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit}, before, events, func(row *sitemodels.SiteNotificationEvent) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

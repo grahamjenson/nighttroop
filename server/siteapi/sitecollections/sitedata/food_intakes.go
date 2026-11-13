@@ -101,7 +101,7 @@ func (s *FoodIntakesCollection) SearchTotals(ctx context.Context, collectionTx *
 }
 
 func (s *FoodIntakesCollection) SearchHTMXResponse(models []*sitemodels.SiteFoodIntake, query *apiutils.Query) templ.Component {
-	return site_data_templ.FoodIntakesTable(models, query.Skip, query.Limit)
+	return site_data_templ.FoodIntakesTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

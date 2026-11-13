@@ -110,7 +110,7 @@ func (s *TempTargetsCollection) SearchTotals(ctx context.Context, collectionTx *
 }
 
 func (s *TempTargetsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempTarget, query *apiutils.Query) templ.Component {
-	return site_data_templ.TempTargetsTable(models, query.Skip, query.Limit)
+	return site_data_templ.TempTargetsTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///

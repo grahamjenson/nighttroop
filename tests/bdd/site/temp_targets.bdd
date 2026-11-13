@@ -71,17 +71,17 @@ ASSERT_VISIBLE #site--temp-target--edit--notes[value="Run"]
 ASSERT_COUNT #site--temp-target--details :is(dt, label):has-text("Notes") 1
 CLICK #site--temp-target--details--close
 
-// A page of one temp target pages through them, newest first
+// A page of one temp target pages to the older ones, and Newest goes back
 GOTO /data/temp-targets?limit=1
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
-ASSERT_NOT_VISIBLE #site--temp-target--previous
+ASSERT_NOT_VISIBLE #site--temp-target--newest
 
 CLICK #site--temp-target--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_VISIBLE #site--temp-target--newest
 
-CLICK #site--temp-target--previous
+CLICK #site--temp-target--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

@@ -185,7 +185,7 @@
     "/data/event-groups": {
       "get": {
         "operationId": "ListEventGroups", "tags": ["Data"], "summary": "The site's event groups, newest first, with their events",
-        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/Before" }, { "$ref": "#/components/parameters/BeforeId" }, { "$ref": "#/components/parameters/BeforeDate" }],
         "responses": { "200": { "$ref": "#/components/responses/EventGroupList" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {

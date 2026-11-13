@@ -22,7 +22,7 @@ import (
 )
 
 // ProfileSwitchesTable shows one page of profile switches, newest first, with buttons to the pages either side
-func ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip int64, limit int64) templ.Component {
+func ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -75,7 +75,7 @@ func ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip 
 					{Label: i18n.T(ctx, "site.data.profile_switches.shift"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit}, before, profileSwitches, func(row *sitemodels.SiteProfileSwitch) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

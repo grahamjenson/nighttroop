@@ -206,7 +206,7 @@ func DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) templ.Component
 }
 
 // DeviceStatusHistory pages through one device's statuses, newest first
-func DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus, skip int64, limit int64) templ.Component {
+func DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -327,7 +327,7 @@ func DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus,
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = pager.Pager(pager.Props{ID: "site--device-status", Path: "/data/device-status?device=" + url.QueryEscape(device), Count: len(statuses), Skip: skip, Limit: limit}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = pager.Pager(*pager.Dated(pager.Props{ID: "site--device-status", Path: "/data/device-status?device=" + url.QueryEscape(device), Count: len(statuses), Skip: skip, Limit: limit}, before, statuses, func(row *sitemodels.SiteDeviceStatus) (int64, string) { return row.OccurredAt, row.ID })).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

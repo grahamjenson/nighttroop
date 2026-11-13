@@ -67,7 +67,7 @@ func eventGroupEvents(ctx context.Context, group *sitemodels.SiteEventGroup) []s
 }
 
 // EventGroupsTable shows one page of event groups, newest first, with buttons to the pages either side
-func EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limit int64) templ.Component {
+func EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -120,7 +120,7 @@ func EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limi
 					{Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--event-group", Path: "/data/event-groups", Count: len(eventGroups), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--event-group", Path: "/data/event-groups", Count: len(eventGroups), Skip: skip, Limit: limit}, before, eventGroups, func(row *sitemodels.SiteEventGroup) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
