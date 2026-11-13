@@ -198,7 +198,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
     batches, so one with a problem is still refused.
 - **Fixed, device status (#512):**
   - Phone and bridge battery: `uploader.battery` was only kept for Loop.
-  - Dexcom transmitter (text `battery`): the battery is left out, not the status refused. Its other uploader fields
+  - Dexcom transmitter (text `battery`): the battery is left out, not the status refused. The site's client errors
+    show it. Its other uploader fields
     (`days`, `daysEstimate`, `status`, `voltagea`, `voltageb`, `resistance`, `resistance_status`,
     `temperature`, `lastQueried`, `type`) come back as sent.
 - **Fixed, treatments:**
