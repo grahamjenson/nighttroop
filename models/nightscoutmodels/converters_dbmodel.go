@@ -2,6 +2,7 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -86,7 +87,7 @@ type DBModelConverter interface {
 	///////
 
 	// goverter:context siteContext
-	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map OccurredAt StartDate | UTCDateString
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | ProfilePresetEnteredBy
 	// goverter:map CreatedByAppName App
@@ -135,6 +136,12 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *types.DateString {
 	}
 
 	return nil
+}
+
+// UTCDateString is when it happened as toISOString writes it, in UTC, as LoopFollow reads a profile's startDate
+// without its offset
+func UTCDateString(ms int64) *types.DateString {
+	return new(types.DateString(types.ISOString(time.UnixMilli(ms))))
 }
 
 // SGVGlucoseReadingTypeToValue is the sgv of any reading but a meter's. As in Nightscout an entry has one of sgv and

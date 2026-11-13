@@ -276,7 +276,7 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 		pTypesShortString2 := types.ShortString((*source).CreatedByIdentityName)
 		nightscoutmodelsProfileStore.Subject = &pTypesShortString2
 		nightscoutmodelsProfileStore.EnteredBy = ProfilePresetEnteredBy(source)
-		nightscoutmodelsProfileStore.StartDate = ModelDateStringFromDateIntAndUTCOffset((*source))
+		nightscoutmodelsProfileStore.StartDate = UTCDateString((*source).OccurredAt)
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
 		nightscoutmodelsProfileStore.Mills = &pTypesDateInt
 		pTypesDateInt2 := types.DateInt((*source).OccurredAt)
