@@ -155,9 +155,9 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
 
 ## Known problems and limits
 
-- **Units:** xDrip+ sends mg/dL without `units`. Nighttroop takes a value over 30 as mg/dL, so 30 or less is
-  mmol/L (xDrip+ sends 39 for a sensor's LOW). The follower reads `sgv` as mg/dL; the Nightscout API always gives
-  mg/dL, whatever the identity's or site's units.
+- **Units:** xDrip+ sends mg/dL without `units`. Nighttroop takes an entry without `units` as mg/dL, as Nightscout
+  does, whatever the value: 39 (a sensor's LOW) and lower stay low (`low_sgv.http`). The follower reads `sgv` as
+  mg/dL; the Nightscout API always gives mg/dL, whatever the identity's or site's units.
 - **Times:** `dateString` has an offset without a colon (`+1300`). It wins over `date` when there is no `utcOffset`.
   Both are the same time.
 - **Returned treatments:** no `insulinInjections`. For `<none>`, the eventType of its amounts: `Meal Bolus` (insulin

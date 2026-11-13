@@ -48,7 +48,26 @@ func TestMergeFields(t *testing.T) {
 			var stored, sent map[string]any
 			require.NoError(t, json.Unmarshal([]byte(test.stored), &stored))
 			require.NoError(t, json.Unmarshal([]byte(test.sent), &sent))
-			merged, err := json.Marshal(mergeFields(stored, sent, test.aliases, glucose))
+			merged, err := json.Marshal(mergeFields(stored, sent, test.aliases, glucose, nil))
+			require.NoError(t, err)
+			require.JSONEq(t, test.expected, string(merged))
+		})
+	}
+}
+
+// An entry's glucose sent without units is in mg/dL, its default units, and never guessed, as a low is not mmol/L
+func TestMergeFieldsDefaultUnits(t *testing.T) {
+	tests := []struct {
+		name, stored, sent, expected string
+	}{
+		{"a low sgv sent without units is mg/dL", `{"sgv":108,"units":"mg/dL"}`, `{"sgv":28}`, `{"sgv":28,"units":"mg/dL"}`},
+		{"a low mbg sent without units is mg/dL", `{"mbg":108,"units":"mg/dL"}`, `{"mbg":5}`, `{"mbg":5,"units":"mg/dL"}`},
+		{"units sent are kept", `{"sgv":108,"units":"mg/dL"}`, `{"sgv":5.5,"units":"mmol"}`, `{"sgv":5.5,"units":"mmol"}`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			merged, err := json.Marshal(mergeFields(decode(t, test.stored), decode(t, test.sent), nil,
+				[]string{"sgv", "mbg"}, new(consts.UnitsMGDL)))
 			require.NoError(t, err)
 			require.JSONEq(t, test.expected, string(merged))
 		})

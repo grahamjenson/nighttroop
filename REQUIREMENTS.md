@@ -1193,7 +1193,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Glucose is stored and always returned in mg/dL, whatever the identity or site units, over HTTP and Socket.IO:
   - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`, profile targets.
   - Entries, treatments, profiles and their `units`.
-- Input: in the units sent with it, else guessed from the value.
+- Input: in the units sent with it.
+  - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value. A low of 30 or less
+    stays low (e.g. 28), and Dexcom's special values (1 to 12, 39) are kept as sent.
+  - Other glucose with no `units`: guessed from the value.
 - A profile, or a profile switch's `profileJson`, in mmol/L comes back in mg/dL in each glucose field:
   - `sens`, `target_low`, `target_high`.
   - Loop's `loopSettings`: `minimumBGGuard`, `preMealTargetRange`, each override preset's `targetRange`, the running
