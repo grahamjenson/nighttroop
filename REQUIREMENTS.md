@@ -1046,6 +1046,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v3 status: what the token can do to each collection (e.g. `crud` for an uploader, `r` for read only). AAPS uploads
   only with a token that can write.
 - v3 version: needs no token.
+- If a request has no token or a token that is not valid, the API returns 401 in JSON, `{"status": 401, "message"}`.
+  Other errors and Nightscout's 401 use the same JSON.
 
 ### Nightscout API: searches and deletes
 

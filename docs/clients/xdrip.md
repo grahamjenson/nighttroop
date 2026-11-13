@@ -35,7 +35,7 @@ How [xDrip+](https://github.com/NightscoutFoundation/xDrip) talks to Nightscout,
   - It keeps the SHA256 of each token's SHA1 (`site_identities.nightscout_token_digest`), and finds a 40 character
     `api-secret` by it.
   - A password reset gives a new token and digest.
-  - Wrong secret: 401. Read only token: reads, 403 on a write.
+  - Wrong secret: 401 in JSON. Read only token: reads, 403 on a write.
 
 ## Uploads (Nightscout Sync)
 

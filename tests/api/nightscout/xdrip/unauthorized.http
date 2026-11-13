@@ -1,0 +1,19 @@
+# A request with a wrong or no API secret is refused with a 401 in JSON, {status, message}, as every other error and
+# Nightscout's 401 are, so an app that reads the error's body can show why
+
+INCLUDE steps/new_ns_site.steps
+
+NAME wrong_secret
+GET http://{{ site }}/api/v1/entries.json?count=1
+H api-secret: {{ sha1 "not the token" }}
+ASSERT_STATUS 401
+ASSERT_CONTAINS "application/json" "#Content-Type.0"
+ASSERT_EQUALS 401 "@status"
+ASSERT_EXISTS "@message"
+
+NAME no_secret
+POST http://{{ site }}/api/v1/treatments
+H Content-Type: application/json
+B {"eventType": "Note", "notes": "hi", "created_at": "{{ time 1 }}"}
+ASSERT_STATUS 401
+ASSERT_EQUALS 401 "@status"
