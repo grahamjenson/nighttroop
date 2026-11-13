@@ -257,6 +257,108 @@ func (q *Queries) InsulinDoseTotals(ctx context.Context) (*InsulinDoseTotalsRow,
 	return &i, err
 }
 
+const rewriteInsulinDose = `-- name: RewriteInsulinDose :one
+
+UPDATE insulin_doses SET
+    id = ?1,
+    dose = ?2,
+    dose_type = ?3,
+    split_now = ?4,
+    split_ext = ?5,
+    automatic = ?6,
+    is_basal_insulin = ?7,
+    insulin_type = ?8,
+    unabsorbed = ?9,
+    icfg_json = ?10,
+    notes = ?11,
+    reason = ?12,
+    utc_offset_minutes = ?13,
+    occurred_at = ?14,
+    created_by_app_name = ?15,
+    created_by_device_name = ?16,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?17 AS TEXT),
+    updated_by_identity_id = ?18
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteInsulinDoseParams struct {
+	ID                    string
+	Dose                  float64
+	DoseType              *string
+	SplitNow              *float64
+	SplitExt              *float64
+	Automatic             *bool
+	IsBasalInsulin        *bool
+	InsulinType           *string
+	Unabsorbed            *float64
+	IcfgJson              *string
+	Notes                 *string
+	Reason                *string
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteInsulinDose writes every column CreateInsulinDose does over the insulin dose with the ID, as a Nightscout
+// update writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+func (q *Queries) RewriteInsulinDose(ctx context.Context, arg RewriteInsulinDoseParams) (*InsulinDose, error) {
+	row := q.queryRow(ctx, q.rewriteInsulinDoseStmt, rewriteInsulinDose,
+		arg.ID,
+		arg.Dose,
+		arg.DoseType,
+		arg.SplitNow,
+		arg.SplitExt,
+		arg.Automatic,
+		arg.IsBasalInsulin,
+		arg.InsulinType,
+		arg.Unabsorbed,
+		arg.IcfgJson,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i InsulinDose
+	err := row.Scan(
+		&i.ID,
+		&i.Dose,
+		&i.DoseType,
+		&i.SplitNow,
+		&i.SplitExt,
+		&i.Automatic,
+		&i.IsBasalInsulin,
+		&i.InsulinType,
+		&i.Unabsorbed,
+		&i.IcfgJson,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchInsulinDoses = `-- name: SearchInsulinDoses :many
 SELECT id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
 WHERE
@@ -428,7 +530,6 @@ func (q *Queries) SoftDeleteInsulinDose(ctx context.Context, arg SoftDeleteInsul
 }
 
 const updateInsulinDose = `-- name: UpdateInsulinDose :one
-
 UPDATE insulin_doses SET
     dose_type = COALESCE(?1, dose_type),
     dose = COALESCE(?2, dose),
@@ -467,9 +568,6 @@ type UpdateInsulinDoseParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateInsulinDose(ctx context.Context, arg UpdateInsulinDoseParams) (*InsulinDose, error) {
 	row := q.queryRow(ctx, q.updateInsulinDoseStmt, updateInsulinDose,
 		arg.DoseType,

@@ -226,6 +226,89 @@ func (q *Queries) NotificationEventTotals(ctx context.Context) (*NotificationEve
 	return &i, err
 }
 
+const rewriteNotificationEvent = `-- name: RewriteNotificationEvent :one
+
+UPDATE notification_events SET
+    id = ?1,
+    title = ?2,
+    severity = ?3,
+    content = ?4,
+    notification_type = ?5,
+    notes = ?6,
+    reason = ?7,
+    utc_offset_minutes = ?8,
+    occurred_at = ?9,
+    created_by_app_name = ?10,
+    created_by_device_name = ?11,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?12 AS TEXT),
+    updated_by_identity_id = ?13
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, notification_type, title, severity, content, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteNotificationEventParams struct {
+	ID                    string
+	Title                 string
+	Severity              int64
+	Content               *string
+	NotificationType      string
+	Notes                 *string
+	Reason                *string
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteNotificationEvent writes every column CreateNotificationEvent does over the notification event with the ID, as
+// a Nightscout update writes its merged document. It keeps when it was created and who by: the identity given is who
+// updated it.
+func (q *Queries) RewriteNotificationEvent(ctx context.Context, arg RewriteNotificationEventParams) (*NotificationEvent, error) {
+	row := q.queryRow(ctx, q.rewriteNotificationEventStmt, rewriteNotificationEvent,
+		arg.ID,
+		arg.Title,
+		arg.Severity,
+		arg.Content,
+		arg.NotificationType,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i NotificationEvent
+	err := row.Scan(
+		&i.ID,
+		&i.NotificationType,
+		&i.Title,
+		&i.Severity,
+		&i.Content,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchNotificationEvents = `-- name: SearchNotificationEvents :many
 SELECT id, notification_type, title, severity, content, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM notification_events
 WHERE
@@ -366,7 +449,6 @@ func (q *Queries) SoftDeleteNotificationEvent(ctx context.Context, arg SoftDelet
 }
 
 const updateNotificationEvent = `-- name: UpdateNotificationEvent :one
-
 UPDATE notification_events SET
     title = COALESCE(?1, title),
     severity = COALESCE(?2, severity),
@@ -394,9 +476,6 @@ type UpdateNotificationEventParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateNotificationEvent(ctx context.Context, arg UpdateNotificationEventParams) (*NotificationEvent, error) {
 	row := q.queryRow(ctx, q.updateNotificationEventStmt, updateNotificationEvent,
 		arg.Title,

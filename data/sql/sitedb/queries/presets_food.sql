@@ -116,6 +116,31 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- UPDATE
 --------
 
+-- name: RewriteFoodPreset :one
+-- RewriteFoodPreset writes every column CreateFoodPreset does over the food preset with the ID, as a Nightscout update
+-- writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+UPDATE food_presets SET
+    id = sqlc.arg('ID'),
+    name = sqlc.arg('Name'),
+    food_type = sqlc.arg('FoodType'),
+    absorption_time_minutes = sqlc.arg('AbsorptionTimeMinutes'),
+    carbs = sqlc.arg('Carbs'),
+    category = NULLIF(CAST(sqlc.narg('Category') AS TEXT), ''),
+    subcategory = NULLIF(CAST(sqlc.narg('Subcategory') AS TEXT), ''),
+    fat = sqlc.narg('Fat'),
+    protein = sqlc.narg('Protein'),
+    fibre = sqlc.narg('Fibre'),
+    energy = sqlc.narg('Energy'),
+    portions = sqlc.narg('Portions'),
+    pre_bolus = sqlc.narg('PreBolus'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID')
+RETURNING *;
+
 -- name: UpdateFoodPreset :one
 UPDATE food_presets SET
     name = COALESCE(sqlc.narg('Name'), name),
