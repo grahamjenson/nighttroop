@@ -135,6 +135,8 @@ type Treatment struct {
 
 	// SentJSON is the JSON it was sent as, to tell one sent again with changes from one sent the same
 	SentJSON string `json:"-"`
+	// wholeMinutes writes its duration in whole minutes, as API v3 does
+	wholeMinutes bool
 }
 
 // MaxSyncIdentifierLength is the longest syncIdentifier given back, as an Omnipod dose's is 60 to 70 characters
@@ -412,7 +414,7 @@ func (t Treatment) MarshalJSON() ([]byte, error) {
 	if t.DurationMinutes != nil {
 		out.Duration = t.DurationMinutes
 	}
-	if ms, minutes := t.DurationInMilliseconds, t.DurationMinutes; ms != nil && minutes != nil && *ms%60_000 != 0 && int64(*ms)/60_000 == int64(*minutes) {
+	if ms, minutes := t.DurationInMilliseconds, t.DurationMinutes; !t.wholeMinutes && ms != nil && minutes != nil && *ms%60_000 != 0 && int64(*ms)/60_000 == int64(*minutes) {
 		out.Duration = float64(*ms) / 60_000
 	}
 	return json.Marshal(out)
@@ -433,6 +435,14 @@ func (t Treatment) GetSubject() *string {
 // V1OnlyFields are given back only through API v1 and its sockets, not API v3 and its storage socket: Loop's
 // NightscoutKit reads v1 and drops a treatment without a timestamp, but AAPS reads v3 and drops one whose timestamp is
 // not a number
+// V3 is the treatment as API v3 and its storage socket write it: its duration in whole minutes, as AAPS reads it as a
+// whole number (RemoteTreatment.duration) and drops a treatment, or a page of them, whose duration has a fraction. Its
+// durationInMilliseconds, which AAPS reads first, is exact; API v1 gives Loop the minutes with their fraction.
+func (t Treatment) V3() any {
+	t.wholeMinutes = true
+	return t
+}
+
 func (t Treatment) V1OnlyFields() []string {
 	return []string{"timestamp"}
 }
