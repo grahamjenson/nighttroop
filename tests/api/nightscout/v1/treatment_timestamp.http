@@ -1,0 +1,25 @@
+INCLUDE steps/new_ns_site.steps
+
+// A treatment sent with a timestamp but no created_at or date is kept at its timestamp, a string or milliseconds,
+// rather than when it arrives: a 30 hour old meal kept as now is carbs a loop such as Trio counts as on board
+
+NAME upload_with_timestamps
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"eventType": "Carb Correction", "carbs": 30, "timestamp": "{{ time 1800 }}"}, {"eventType": "Note", "notes": "old", "timestamp": {{ itime 1700 }}}]
+ASSERT_STATUS 200
+
+NAME find_kept_at_their_timestamps
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$lte]={{ time 1440 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Note" "@0.eventType"
+ASSERT_EQUALS 30 "@1.carbs"
+
+NAME none_kept_as_now
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ time 60 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"

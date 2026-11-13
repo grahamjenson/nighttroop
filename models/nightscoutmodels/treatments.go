@@ -160,7 +160,7 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		SyncIdentifier json.RawMessage `json:"syncIdentifier"`
 		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
 		EventTime *types.DateString `json:"eventTime"`
-		// Shadows Timestamp, so a timestamp sent is not read
+		// Shadows Timestamp, so a timestamp sent is read only as when it was, with no created_at or date
 		Timestamp json.RawMessage `json:"timestamp"`
 		// Shadows DurationMinutes, as Loop sends minutes with a fraction, e.g. a bolus's 1.6666666666666667
 		Duration *types.FlexibleFloat64 `json:"duration"`
@@ -210,6 +210,13 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	if aux.EventTime != nil {
 		t.CreatedAt = aux.EventTime
+	}
+	// One sent with only a timestamp, a string or milliseconds, was then, not when it arrives
+	if t.CreatedAt == nil && t.Date == nil && len(aux.Timestamp) > 0 {
+		var sent types.DateString
+		if json.Unmarshal(aux.Timestamp, &sent) == nil && sent != "" {
+			t.CreatedAt = &sent
+		}
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
