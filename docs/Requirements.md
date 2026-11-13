@@ -273,6 +273,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   change any and save: every limiter of its kind, those kept and those made after, uses it at once, it says "set here",
   and the server uses it again from each start. One set back to its env default, or left blank, uses the env's from
   then on. A rate of 0 or less, or a burst under 1, is refused, and other control identities only see the rates.
+- A site's reads and writes are limited at 4 times an identity's, so one identity spending all of its own, as a phone
+  uploading a day's backlog, leaves the site's other identities theirs: a carer's carbs and AAPSClient's commands still
+  go through. A request refused over a site's or identity's limit (429) has a `Retry-After` of the seconds until one is
+  let through, at least 1.
 
 ### Resource alerts
 
