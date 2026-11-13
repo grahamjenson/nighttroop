@@ -10,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
-	"nighttroop.t1d.nz/utils/consts"
 )
 
 type EntriesCollection struct {
@@ -26,28 +25,16 @@ func NewEntriesCollection() CollectionStore {
 // Cannot change properties
 
 func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	if err := validateEntryMgdl(nsModel); err != nil {
-		return err
-	}
 	return validateEntryType(nsModel, dbModel)
 }
 
-// A patch without sgv or mbg leaves the reading as it is
-func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	if nsModel.SGV != nil || nsModel.MBG != nil {
-		if err := validateEntryMgdl(nsModel); err != nil {
-			return err
-		}
+// Rows are its reading, whose glucose is out of range when far outside real use, checked in mg/dL as it is stored; a
+// patch changes only what it sends, so one without sgv or mbg leaves the reading as it is
+func (c EntriesCollection) Rows(nsModel nightscoutmodels.Entry, patched *sitedb.GlucoseReading) []sitedb.TableRow {
+	if patched != nil {
+		return []sitedb.TableRow{{Table: "glucose_readings", Row: nightscoutmodels.EntryToUpdate(nsModel, nightscoutmodels.ConverterContext{})}}
 	}
-	return validateEntryType(nsModel, dbModel)
-}
-
-// Refuse glucose far outside real use, checked in mg/dL as it is stored
-func validateEntryMgdl(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
-	if nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxGlucoseMgdl {
-		return nsutils.BadGlucoseError
-	}
-	return nil
+	return []sitedb.TableRow{{Table: "glucose_readings", Row: nightscoutmodels.EntryToCreate(nsModel, nightscoutmodels.ConverterContext{})}}
 }
 
 func validateEntryType(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {

@@ -108,7 +108,7 @@ Nighttroop gives back (followers read it, Trio does not):
 - `pump`: all fields above while the JSON as sent is kept. After that, only the clock, battery percent and reservoir.
 - `uploader`: `battery` and `isCharging`.
 - If iOS does not know the phone's battery, Trio sends `uploader.battery` -100 (its `batteryLevel` -1 x 100).
-  Nighttroop keeps the device status without it.
+  Nighttroop keeps the device status without it, and the site's client errors show it.
 
 ### Profile
 

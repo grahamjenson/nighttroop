@@ -51,6 +51,9 @@ type CollectionDB[NS, DM any] interface {
 	HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error)
 	// Delete deletes a model, softly or, when permanent, for good
 	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
+	// Rows are the rows, by their table, the model is stored as, for its values to be checked against their columns'
+	// limits; for a patch of patched, those it changes
+	Rows(nsModel NS, patched *DM) []sitedb.TableRow
 }
 
 // CollectionDeduplicator is a CollectionDB that looks for a model already stored that a new one repeats, which a
@@ -162,24 +165,29 @@ func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteCon
 	return stored[NS]{meta: row(*dbModel), model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
-func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
 	m := c.db
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data", "error", err, "collection", m.Name())
-		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data", "error", httpErr, "collection", m.Name())
+		return nil, false, httpErr
 	}
 
 	if err := ValidateInputData(data); err != nil {
 		return nil, false, err
 	}
+	var err error
 	if nsModel, err = withUtcOffset(data, nsModel, siteUtcOffset(siteContext)); err != nil {
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
 	if err := m.Validate(nsModel, nil); err != nil {
 		return nil, false, err
+	}
+	if nsModel, httpErr = c.withinLimits(data, nsModel, nil, &left); httpErr != nil {
+		return nil, false, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -544,13 +552,14 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 	return len(found), nil
 }
 
-func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
 	m := c.db
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
-		return nil, false, nsutils.BadDataBodyError
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data to model", "error", httpErr, "collection", m.Name())
+		return nil, false, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -571,8 +580,12 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		kept := *(*replaced).GetUtcOffsetMinutes()
 		offset = func(int64) int64 { return kept }
 	}
+	var err error
 	if nsModel, err = withUtcOffset(data, nsModel, offset); err != nil {
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	if nsModel, httpErr = c.withinLimits(data, nsModel, nil, &left); httpErr != nil {
+		return nil, false, httpErr
 	}
 	// One created with an identifier none has repeats one at its date, for a collection that finds them so
 	if replaced == nil {
@@ -651,17 +664,18 @@ func (c Collection[NS, DM]) validateReplace(ctx context.Context, nsModel NS, rep
 	return nil
 }
 
-func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (nsutils.Document, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (_ nsutils.Document, httpErr *nsutils.HTTPError) {
 	m := c.db
 	patcher, ok := any(m).(CollectionPatcher[NS, DM])
 	if !ok {
 		return nil, nsutils.ErrNotImplemented
 	}
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
-		return nil, nsutils.BadDataBodyError
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data to model", "error", httpErr, "collection", m.Name())
+		return nil, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -699,6 +713,9 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	if err := validate(nsModel, updateingModel); err != nil {
 		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
+	}
+	if nsModel, httpErr = c.withinLimits(data, nsModel, updateingModel, &left); httpErr != nil {
+		return nil, httpErr
 	}
 
 	dbModel, err := patcher.UpdateModel(

@@ -33,11 +33,13 @@ type treatmentEvent interface {
 	hardDelete(ctx context.Context, q *sitedb.Queries, eventGroup sitedb.EventGroup) error
 	// addToTreatment sets the treatment's fields from the bundle's event of this kind, if it has one
 	addToTreatment(bundle *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, treatment *nightscoutmodels.Treatment)
+	// row is the bundle's event of this kind as its table's row, false when it has none
+	row(bundle *sitedb.EventGroupsBundle) (sitedb.TableRow, bool)
 }
 
 // eventKind is a treatmentEvent of events T, kept with create params C, update params U and hard delete params D
 type eventKind[T interface{ GetID() string }, C, U any, D ~struct{ ID string }] struct {
-	name string
+	name, table string
 	// of is the bundle's ID for its event of this kind, and the event
 	of func(bundle *sitedb.EventGroupsBundle) (**string, **T)
 	// prepare, when set, fills in the fields of the treatment this kind reads from its other fields
@@ -71,6 +73,14 @@ func (k eventKind[T, C, U, D]) fromTreatment(treatment nightscoutmodels.Treatmen
 		k.complete(treatment, &converted)
 	}
 	*event = &converted
+}
+
+func (k eventKind[T, C, U, D]) row(bundle *sitedb.EventGroupsBundle) (sitedb.TableRow, bool) {
+	_, event := k.of(bundle)
+	if *event == nil {
+		return sitedb.TableRow{}, false
+	}
+	return sitedb.TableRow{Table: k.table, Row: **event}, true
 }
 
 func (k eventKind[T, C, U, D]) addToTreatment(bundle *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
@@ -155,12 +165,11 @@ const (
 
 var (
 	glucoseReadings = eventKind[sitedb.GlucoseReading, sitedb.CreateGlucoseReadingParams, sitedb.UpdateGlucoseReadingParams, sitedb.HardDeleteGlucoseReadingParams]{
-		name: "glucose reading",
+		name: "glucose reading", table: "glucose_readings",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.GlucoseReading) {
 			return &b.EventGroup.GlucoseReadingID, &b.GlucoseReading
 		},
-		// A glucose of 0 or less is no reading, as AAPS sends 0 with a Bolus Wizard that used no BG
-		has:     func(source nightscoutmodels.Treatment) bool { return source.Glucose != nil && *source.Glucose > 0 },
+		has:     func(source nightscoutmodels.Treatment) bool { return isAssigned(source.Glucose) },
 		partial: nightscoutmodels.PartialTreatmentToGlucoseReading,
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.GlucoseReading) {
 			target.ReadingType = "sgv"
@@ -187,7 +196,7 @@ var (
 		delete: (*sitedb.Queries).HardDeleteGlucoseReading,
 	}
 	insulinDoses = eventKind[sitedb.InsulinDose, sitedb.CreateInsulinDoseParams, sitedb.UpdateInsulinDoseParams, sitedb.HardDeleteInsulinDoseParams]{
-		name: "insulin dose",
+		name: "insulin dose", table: "insulin_doses",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.InsulinDose) {
 			return &b.EventGroup.InsulinDoseID, &b.InsulinDose
 		},
@@ -199,7 +208,7 @@ var (
 		delete: (*sitedb.Queries).HardDeleteInsulinDose,
 	}
 	foodIntakes = eventKind[sitedb.FoodIntake, sitedb.CreateFoodIntakeParams, sitedb.UpdateFoodIntakeParams, sitedb.HardDeleteFoodIntakeParams]{
-		name: "food intake",
+		name: "food intake", table: "food_intakes",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.FoodIntake) {
 			return &b.EventGroup.FoodIntakeID, &b.FoodIntake
 		},
@@ -213,7 +222,7 @@ var (
 		delete: (*sitedb.Queries).HardDeleteFoodIntake,
 	}
 	tempBasals = eventKind[sitedb.TempBasal, sitedb.CreateTempBasalParams, sitedb.UpdateTempBasalParams, sitedb.HardDeleteTempBasalParams]{
-		name: "temp basal",
+		name: "temp basal", table: "temp_basals",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.TempBasal) {
 			return &b.EventGroup.TempBasalID, &b.TempBasal
 		},
@@ -233,7 +242,7 @@ var (
 		delete: (*sitedb.Queries).HardDeleteTempBasal,
 	}
 	tempTargets = eventKind[sitedb.TempTarget, sitedb.CreateTempTargetParams, sitedb.UpdateTempTargetParams, sitedb.HardDeleteTempTargetParams]{
-		name: "temp target",
+		name: "temp target", table: "temp_targets",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.TempTarget) {
 			return &b.EventGroup.TempTargetID, &b.TempTarget
 		},
@@ -291,7 +300,7 @@ var (
 		delete: (*sitedb.Queries).HardDeleteTempTarget,
 	}
 	profileSwitches = eventKind[sitedb.ProfileSwitch, sitedb.CreateProfileSwitchParams, sitedb.UpdateProfileSwitchParams, sitedb.HardDeleteProfileSwitchParams]{
-		name: "profile switch",
+		name: "profile switch", table: "profile_switches",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.ProfileSwitch) {
 			return &b.EventGroup.ProfileSwitchID, &b.ProfileSwitch
 		},
@@ -381,7 +390,7 @@ var (
 		delete: (*sitedb.Queries).HardDeleteProfileSwitch,
 	}
 	activities = eventKind[sitedb.Activity, sitedb.CreateActivityParams, sitedb.UpdateActivityParams, sitedb.HardDeleteActivityParams]{
-		name: "activity",
+		name: "activity", table: "activities",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.Activity) {
 			return &b.EventGroup.ActivityID, &b.Activity
 		},
@@ -395,7 +404,7 @@ var (
 		delete: (*sitedb.Queries).HardDeleteActivity,
 	}
 	notificationEvents = eventKind[sitedb.NotificationEvent, sitedb.CreateNotificationEventParams, sitedb.UpdateNotificationEventParams, sitedb.HardDeleteNotificationEventParams]{
-		name: "notification event",
+		name: "notification event", table: "notification_events",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.NotificationEvent) {
 			return &b.EventGroup.NotificationEventID, &b.NotificationEvent
 		},

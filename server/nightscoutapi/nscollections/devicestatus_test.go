@@ -1,7 +1,6 @@
 package nscollections
 
 import (
-	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -101,29 +100,34 @@ func TestDBToNightscoutDeviceStatusLoop(t *testing.T) {
 }
 
 // A battery or reservoir level out of its column's range, as a phone sends when it does not know it, is left out of the
-// device report, and of its uploader and pump as kept, and the device status sent is not changed
-func TestWithoutUnknownLevels(t *testing.T) {
+// device report, and of its uploader and pump as kept
+func TestDeviceStatusLevelsWithinLimits(t *testing.T) {
 	tests := []struct {
 		name, body                      string
 		battery, pumpBattery, reservoir *float64
 		uploaderJSON, pumpJSON          string
+		leftOut                         int
 	}{
 		{"in range", `{"uploader":{"battery":80},"pump":{"battery":{"percent":75},"reservoir":150.5}}`,
-			ptr(80.0), ptr(75.0), ptr(150.5), `{"battery":80}`, `{"battery":{"percent":75},"reservoir":150.5}`},
+			ptr(80.0), ptr(75.0), ptr(150.5), `{"battery":80}`, `{"battery":{"percent":75},"reservoir":150.5}`, 0},
 		{"edges", `{"uploaderBattery":0,"pump":{"battery":{"percent":100},"reservoir":10000}}`,
-			ptr(0.0), ptr(100.0), ptr(10000.0), "", `{"battery":{"percent":100},"reservoir":10000}`},
-		{"trio unknown battery", `{"uploader":{"battery":-100,"isCharging":true}}`, nil, nil, nil, `{"isCharging":true}`, ""},
+			ptr(0.0), ptr(100.0), ptr(10000.0), "", `{"battery":{"percent":100},"reservoir":10000}`, 0},
+		{"trio unknown battery", `{"uploader":{"battery":-100,"isCharging":true}}`, nil, nil, nil, `{"isCharging":true}`, "", 1},
 		{"out of range", `{"uploaderBattery":101,"pump":{"battery":{"percent":-1,"string":"normal"},"reservoir":-5}}`,
-			nil, nil, nil, "", `{"battery":{"string":"normal"}}`},
+			nil, nil, nil, "", `{"battery":{"string":"normal"}}`, 3},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var status nightscoutmodels.DeviceStatus
-			require.NoError(t, json.Unmarshal([]byte(tt.body), &status))
-			sent, err := json.Marshal(status)
-			require.NoError(t, err)
+			var data map[string]any
+			require.NoError(t, json.Unmarshal([]byte(tt.body), &data))
+			var left leftOut
+			status, err := deviceStatuses.decode(data, &left)
+			require.Nil(t, err)
+			status, err = deviceStatuses.withinLimits(data, status, nil, &left)
+			require.Nil(t, err)
+			require.Len(t, left, tt.leftOut)
 
-			params := NightscoutToDBCreateDeviceReport(withoutUnknownLevels(context.Background(), status), nightscoutmodels.ConverterContext{})
+			params := NightscoutToDBCreateDeviceReport(status, nightscoutmodels.ConverterContext{})
 			require.Equal(t, tt.battery, params.DeviceBatteryPercent)
 			require.Equal(t, tt.pumpBattery, params.PumpBatteryPercent)
 			require.Equal(t, tt.reservoir, params.PumpReservoir)
@@ -137,16 +141,12 @@ func TestWithoutUnknownLevels(t *testing.T) {
 					require.JSONEq(t, kept.want, *kept.got)
 				}
 			}
-
-			unchanged, err := json.Marshal(status)
-			require.NoError(t, err)
-			require.JSONEq(t, string(sent), string(unchanged))
 		})
 	}
 }
 
-// An uploader keeps each field it names, a Dexcom transmitter's from xDrip+ too, and leaves out a number that is not one
-// and a field it does not name, rather than refusing the device status
+// An uploader keeps each field it names, a Dexcom transmitter's from xDrip+ too, and leaves out a field it does not
+// name; a number that is not one is left out of the device status, which is still kept
 func TestUploaderFields(t *testing.T) {
 	var uploader nightscoutmodels.UploaderStatus
 	transmitter := `{"days": 50, "daysEstimate": "50 / 100", "status": "OK", "voltagea": 285, "voltageb": 275,
@@ -155,8 +155,12 @@ func TestUploaderFields(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(transmitter), &uploader))
 	require.JSONEq(t, transmitter, *jsonp(&uploader))
 
-	uploader = nightscoutmodels.UploaderStatus{}
-	require.NoError(t, json.Unmarshal([]byte(`{"battery": "50 days (voltage: 285/275)", "voltagea": "high",
-		"name": "phone", "log": "`+strings.Repeat("x", 100)+`"}`), &uploader))
-	require.JSONEq(t, `{"name": "phone"}`, *jsonp(&uploader))
+	var data map[string]any
+	require.NoError(t, json.Unmarshal([]byte(`{"uploader": {"battery": "50 days (voltage: 285/275)", "voltagea": "high",
+		"name": "phone", "log": "`+strings.Repeat("x", 100)+`"}}`), &data))
+	var left leftOut
+	status, err := deviceStatuses.decode(data, &left)
+	require.Nil(t, err)
+	require.JSONEq(t, `{"name": "phone"}`, *jsonp(status.Uploader))
+	require.Len(t, left, 2)
 }

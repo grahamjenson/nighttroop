@@ -70,8 +70,10 @@ B {"dose": 2, "automatic": true}
 ASSERT_STATUS 201
 ASSERT_EQUALS null "@result.automatic"
 
-// A split is still refused far outside real use, as a column of its own was
+// A split far outside real use is left out, and the dose kept
 NAME split_out_of_range
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Combo Bolus", "created_at": "{{ time 10 }}", "insulin": 3, "splitNow": 150, "splitExt": 30, "duration": 60 }
-ASSERT_STATUS 400
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@0.insulin"
+ASSERT_EQUALS null "@0.splitNow"

@@ -134,7 +134,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			}
 			// A sensor sends 0 for hours, so any number of readings out of range are left out, but each other problem
 			// can log an error, so only a few are
-			if isEntriesBatch && err == nsutils.BadGlucoseError {
+			if isEntriesBatch && err != nil && err.Column == "mgdl" {
 				outOfRange++
 				left.add("glucose out of range")
 				continue

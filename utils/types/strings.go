@@ -12,6 +12,8 @@ import (
 	"golang.org/x/net/html"
 )
 
+// ShortString is a text sent as a string, a number or a bool, kept whole: the column it is kept in, or the JSON it is
+// kept in, limits how long it may be
 type ShortString string
 
 func (s *ShortString) UnmarshalJSON(data []byte) error {
@@ -29,10 +31,6 @@ func (s *ShortString) UnmarshalJSON(data []byte) error {
 		str = strconv.FormatBool(v)
 	default:
 		str = fmt.Sprintf("%v", v)
-	}
-
-	if len(str) > 64 {
-		str = str[:64]
 	}
 
 	*s = ShortString(str)
@@ -189,26 +187,6 @@ func (s *JSONTextString) UnmarshalJSON(data []byte) error {
 		v = ""
 	}
 	*s = JSONTextString(v)
-	return nil
-}
-
-// MaxDeviceTokenLength is the longest device token kept: Apple's APNs tokens are of no fixed length, 64 hex characters
-// once and 160 from Trio now
-const MaxDeviceTokenLength = 256
-
-// DeviceTokenString is the token of an app on a device, as Loop and Trio send their APNs token, kept whole. One longer
-// than MaxDeviceTokenLength is empty, which is not registered for pushes, rather than cut or refuse the upload
-type DeviceTokenString string
-
-func (s *DeviceTokenString) UnmarshalJSON(data []byte) error {
-	var v string
-	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected a device token string, got %s", data)
-	}
-	if len(v) > MaxDeviceTokenLength {
-		v = ""
-	}
-	*s = DeviceTokenString(v)
 	return nil
 }
 

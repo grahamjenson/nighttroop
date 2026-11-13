@@ -74,11 +74,13 @@ ASSERT_EQUALS "XYZ456" "@0.transmitterId"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 
-// A pump ID past its length is refused
+// A pump ID past its length is left out, and the rest kept
 NAME pump_id_too_long
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B {"eventType": "Site Change", "pumpId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
-ASSERT_STATUS 400
+ASSERT_STATUS 200
+ASSERT_EQUALS "Site Change" "@0.eventType"
+ASSERT_EQUALS null "@0.pumpId"
 
 //////
 // THE SITE

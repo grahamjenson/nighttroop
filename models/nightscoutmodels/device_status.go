@@ -281,25 +281,3 @@ type UploaderStatus struct {
 	LastQueried      *types.FlexibleInt64   `json:"lastQueried,omitempty"`
 	Type             *types.ShortString     `json:"type,omitempty"`
 }
-
-// uploaderNumbers are the uploader's fields that are numbers
-var uploaderNumbers = map[string]bool{"battery": true, "days": true, "voltagea": true, "voltageb": true,
-	"resistance": true, "temperature": true, "lastQueried": true}
-
-// UnmarshalJSON leaves out a number that is not one, like the "50 days (voltage: 285/275)" battery xDrip+ sends for a
-// Dexcom transmitter, rather than refusing the device status
-func (u *UploaderStatus) UnmarshalJSON(data []byte) error {
-	type Alias UploaderStatus
-	var fields map[string]json.RawMessage
-	if err := json.Unmarshal(data, &fields); err != nil {
-		return err
-	}
-	for name, value := range fields {
-		var number types.FlexibleFloat64
-		if uploaderNumbers[name] && json.Unmarshal(value, &number) != nil {
-			delete(fields, name)
-		}
-	}
-	numbers, _ := json.Marshal(fields)
-	return json.Unmarshal(numbers, (*Alias)(u))
-}

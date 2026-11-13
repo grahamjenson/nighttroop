@@ -1,0 +1,34 @@
+INCLUDE steps/new_site_admin.steps
+
+// A field the database does not take and the document can be kept without is left out, and the rest kept: Trio sends
+// uploader.battery -100 when iOS does not know the phone's battery, and the device name is longer than its column
+NAME create_devicestatus_battery_unknown
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+H User-Agent: Trio
+B {"device": "{{ repeat "d" 70 }}", "created_at": "{{ time 0 }}", "uploader": {"battery": -100, "isCharging": true},
+   "pump": {"reservoir": "lots", "clock": "{{ time 0 }}"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@0.uploader.battery"
+ASSERT_EQUALS true "@0.uploader.isCharging"
+ASSERT_EQUALS null "@0.pump.reservoir"
+ASSERT_EQUALS null "@0.device"
+
+// The site's client errors show the request once, with each field left out, what it takes and what was sent
+NAME client_errors
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_CONTAINS "pump.reservoir must be a number (was \"lots\")" "@result.items.0.message"
+ASSERT_CONTAINS "device must be at most 64 characters (was 70 characters)" "@result.items.0.message"
+ASSERT_CONTAINS "uploader.battery must be between 0 and 100 (was -100)" "@result.items.0.message"
+ASSERT_EQUALS 200 "@result.items.0.attributes.status"
+ASSERT_EQUALS "Trio" "@result.items.0.attributes.client"
+
+// A field the document cannot be kept without refuses it, saying the field, what it takes and what was sent
+NAME create_entry_glucose_too_high
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"type": "sgv", "sgv": "high", "date": {{ itime 0 }}}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing body: sgv must be a number (was \"high\")" "@message"
