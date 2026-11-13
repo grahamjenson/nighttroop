@@ -261,6 +261,7 @@ type SettingsGetter interface {
 	GetDateFormat() *string
 	GetTimeFormat() *string
 	GetWeekStartDay() *string
+	GetNumberFormat() *string
 	GetBolusDiaHours() *float64
 	GetBolusOnsetMinutes() *float64
 	GetBolusPeakMinutes() *float64
@@ -319,6 +320,8 @@ func GetSettingByName(name string, in SettingsGetter) any {
 		return in.GetTimeFormat()
 	case "week_start_day":
 		return in.GetWeekStartDay()
+	case "number_format":
+		return in.GetNumberFormat()
 	case "bolus_dia_hours":
 		return in.GetBolusDiaHours()
 	case "bolus_onset_minutes":
@@ -409,6 +412,7 @@ type SettingsSetter interface {
 	SetDateFormat(v *string)
 	SetTimeFormat(v *string)
 	SetWeekStartDay(v *string)
+	SetNumberFormat(v *string)
 	SetBolusDiaHours(v *float64)
 	SetBolusOnsetMinutes(v *float64)
 	SetBolusPeakMinutes(v *float64)
@@ -458,6 +462,7 @@ func SetSettings(s SettingsSetter, g SettingsGetter) {
 	s.SetDateFormat(g.GetDateFormat())
 	s.SetTimeFormat(g.GetTimeFormat())
 	s.SetWeekStartDay(g.GetWeekStartDay())
+	s.SetNumberFormat(g.GetNumberFormat())
 	s.SetBolusDiaHours(g.GetBolusDiaHours())
 	s.SetBolusOnsetMinutes(g.GetBolusOnsetMinutes())
 	s.SetBolusPeakMinutes(g.GetBolusPeakMinutes())

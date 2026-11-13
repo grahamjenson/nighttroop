@@ -377,15 +377,15 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--reports--tdd--mean", i18n.T(ctx, "site.reports.metrics.daily_dose"), display.Value(mean, " U"), nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--reports--tdd--mean", i18n.T(ctx, "site.reports.metrics.daily_dose"), display.Value(ctx, mean, " U"), nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--reports--tdd--lowest", i18n.T(ctx, "site.reports.tdd.lowest"), display.Value(lowest, " U"), nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--reports--tdd--lowest", i18n.T(ctx, "site.reports.tdd.lowest"), display.Value(ctx, lowest, " U"), nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = stat.Tile("site--reports--tdd--highest", i18n.T(ctx, "site.reports.tdd.highest"), display.Value(highest, " U"), nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = stat.Tile("site--reports--tdd--highest", i18n.T(ctx, "site.reports.tdd.highest"), display.Value(ctx, highest, " U"), nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -695,9 +695,9 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 									}
 									ctx = templ.InitializeContext(ctx)
 									var templ_7745c5c3_Var32 string
-									templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(display.Value(value, " U"))
+									templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(display.Value(ctx, value, " U"))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 188, Col: 37}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/reports.templ`, Line: 188, Col: 42}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 									if templ_7745c5c3_Err != nil {
@@ -1114,7 +1114,7 @@ func SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSum
 									return templ_7745c5c3_Err
 								}
 								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(sum(p.TimeLow, p.TimeVeryLow)), display.Percent(p.TimeInRange),
-									display.Percent(sum(p.TimeHigh, p.TimeVeryHigh)), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
+									display.Percent(sum(p.TimeHigh, p.TimeVeryHigh)), display.PerDay(ctx, p.Days, p.TotalDailyDose, " U"), display.PerDay(ctx, p.Days, p.TotalDailyCarbs, " g")} {
 									templ_7745c5c3_Var55 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

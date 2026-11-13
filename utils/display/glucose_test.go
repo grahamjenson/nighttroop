@@ -1,6 +1,7 @@
 package display
 
 import (
+	"context"
 	"testing"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -35,7 +36,7 @@ func TestGlucose(t *testing.T) {
 		{"none", nil, &mmol, "–"},
 	}
 	for _, tt := range tests {
-		if got := GlucoseOr(tt.value, tt.units); got != tt.want {
+		if got := GlucoseOr(context.Background(), tt.value, tt.units); got != tt.want {
 			t.Errorf("%s: GlucoseOr() = %q, want %q", tt.name, got, tt.want)
 		}
 	}

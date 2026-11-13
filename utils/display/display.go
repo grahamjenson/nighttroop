@@ -4,6 +4,7 @@ package display
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -18,21 +19,22 @@ const (
 	ShortDayLayout = "Mon 2 Jan"
 )
 
-// Value is an optional number with its unit, rounded to 2 places, or a dash when it is not set
-func Value(v *float64, unit string) string {
+// Value is an optional number with its unit, rounded to 2 places in the context's number format, or a dash when it
+// is not set
+func Value(ctx context.Context, v *float64, unit string) string {
 	if v == nil {
 		return "–"
 	}
-	return fmt.Sprintf("%g%s", consts.Round(*v, 2), unit)
+	return Number(ctx, strconv.FormatFloat(consts.Round(*v, 2), 'f', -1, 64)) + unit
 }
 
 // PerDay is a period's daily dose or carbs with its unit, or a dash when none of its days had data, so a period with
 // no data does not read as a real 0
-func PerDay(days int64, v float64, unit string) string {
+func PerDay(ctx context.Context, days int64, v float64, unit string) string {
 	if days == 0 {
 		return "–"
 	}
-	return Value(&v, unit)
+	return Value(ctx, &v, unit)
 }
 
 // Ago is how long before now the time in ms was, as "just now", "5 min ago", "3 h ago" or "2 days ago",

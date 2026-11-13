@@ -162,6 +162,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		EventTime *types.DateString `json:"eventTime"`
 		// Shadows Timestamp, so a timestamp sent is read only as when it was, with no created_at or date
 		Timestamp json.RawMessage `json:"timestamp"`
+		// Shadows EventType, to tell one sent as "<none>"
+		EventType json.RawMessage `json:"eventType"`
 		// Shadows DurationMinutes, as Loop sends minutes with a fraction, e.g. a bolus's 1.6666666666666667
 		Duration *types.FlexibleFloat64 `json:"duration"`
 		*Alias
@@ -174,6 +176,18 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 
 	t.SentJSON = string(data)
+
+	if len(aux.EventType) > 0 && string(aux.EventType) != "null" {
+		var eventType TreatmentEventType
+		if err := json.Unmarshal(aux.EventType, &eventType); err != nil {
+			return err
+		}
+		var sent string
+		if json.Unmarshal(aux.EventType, &sent) == nil && strings.EqualFold(strings.TrimSpace(sent), "<none>") {
+			eventType = t.noEventType()
+		}
+		t.EventType = &eventType
+	}
 
 	// Identitfiers
 	if t.Identifier == nil {
@@ -228,6 +242,22 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// noEventType is the event type of a treatment sent with none, "<none>", as xDrip+ sends every bolus, carbs and note
+// and Juggluco its amounts: one with insulin and carbs is a Meal Bolus, one with carbs a Carb Correction and one with
+// insulin a Correction Bolus, as LoopFollow and NightscoutKit only read amounts of those, and one with neither a Note
+func (t *Treatment) noEventType() TreatmentEventType {
+	insulin, carbs := t.Insulin != nil && *t.Insulin > 0, t.Carbs != nil && *t.Carbs > 0
+	switch {
+	case insulin && carbs:
+		return MealBolus
+	case carbs:
+		return CarbCorrection
+	case insulin:
+		return CorrectionBolus
+	}
+	return Note
 }
 
 //"eventType": "Correction Bolus",
@@ -367,7 +397,8 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		}
 	}
 	// "<none>" is Nightscout's careportal's treatment with no event type, which Juggluco sends its amounts as and xDrip+
-	// gives every bolus, carbs and note, so it is a note keeping any insulin and carbs
+	// gives every bolus, carbs and note; a treatment sent so takes its type from its amounts (noEventType), and is
+	// otherwise a note
 	if strings.EqualFold(strings.TrimSpace(s), "<none>") {
 		*t = Note
 		return nil

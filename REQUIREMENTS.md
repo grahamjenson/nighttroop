@@ -924,7 +924,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### General settings
 
-- Units, time zone, language, date and time format, week start, insulin and carb defaults.
+- Units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
 - Admins set site settings. Identities can override them.
 - Identity value, then site value, then fallback:
 
@@ -934,8 +934,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   | Date format | YYYY-MM-DD | |
   | Time format | 24-hour HH:mm:ss | or 12-hour, with or without seconds |
   | Timezone | UTC | |
+  | Number format | 1,234.5 | or 1.234,5 or 1 234,5 |
 
 - All pages, including logs, use them. Control and public pages use the browser's language.
+- Number format: glucose, insulin, carbs, and summary and report values use it. With 1.234,5, glucose shows 5,4 mmol/L.
+- Input fields always use a "." for the decimal point.
 - Text from page scripts (for example, why a passkey did not work) is in the page's language.
 - Stored values show their name in the page's language: treatment event types, event names, error kinds, log levels,
   roles, site states, job statuses and connector sync reasons. A value with no name (for example, one an app sends)
@@ -1320,7 +1323,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 | Sent                                                                     | Stored as                               |
 | ------------------------------------------------------------------------ | --------------------------------------- |
-| `eventType` `<none>` (careportal, no type)                               | Note, with its insulin and carbs        |
+| `eventType` `<none>` (careportal, no type) with insulin and carbs        | Meal bolus                              |
+| `eventType` `<none>` with carbs only                                     | Carb correction                         |
+| `eventType` `<none>` with insulin only                                   | Correction bolus                        |
+| `eventType` `<none>` with no insulin and no carbs                        | Note                                    |
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
 | `glucoseType` with the reading after a colon (e.g. `Finger: 6.7 mmol/L`) | Finger prick                            |
@@ -1329,6 +1335,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | xDrip+ `Sensor Stop`                                                     | Event group, with its event type        |
 | Sensor, site or pump part change (e.g. `Sensor Change`, `Site Change`)   | Event group of its type, with no events |
 
+- xDrip+ sends each bolus, carbs and note as `<none>`. Juggluco sends its amounts as `<none>`.
+- LoopFollow and NightscoutKit read insulin and carbs only from boluses and carb corrections.
+- A treatment sent as `Note` stays a Note, also with carbs or insulin.
 - xDrip+ treatments after a `Sensor Stop` are kept. The site can add a Sensor Stop event group.
 - v2 properties ages (`sage`, `cage`, `iage`, `bage`) and the summary use change event groups.
 - Combo bolus `splitNow` and `splitExt`: fractions now and over time (70 as 0.7), returned as sent.

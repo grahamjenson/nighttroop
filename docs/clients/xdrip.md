@@ -159,7 +159,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   mg/dL, whatever the identity's or site's units.
 - **Times:** `dateString` has an offset without a colon (`+1300`). It wins over `date` when there is no `utcOffset`.
   Both are the same time.
-- **Returned treatments:** no `insulinInjections`. eventType `Note` for `<none>`.
+- **Returned treatments:** no `insulinInjections`. For `<none>`, the eventType of its amounts: `Meal Bolus` (insulin
+  and carbs), `Carb Correction`, `Correction Bolus`, or `Note` (no amounts). xDrip+ finds its own by `uuid`.
 - **Gaps:** a reading search gives at most 2880, newest first, so the follower gets all of them after a gap. It was
   1000: a follower offline for over 1000 readings never read the older ones.
 - **`rr`:** an unknown query parameter, logged and ignored. Not a filter, unlike an unknown `find[...]`, which gives
@@ -193,6 +194,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   - Dexcom transmitter (text `battery`): the battery is left out, not the status refused.
 - **Fixed, treatments:**
   - eventType `<none>` (bolus, carbs, note) (#512): kept as a Note.
+  - `<none>` with insulin or carbs: returned as `Meal Bolus`, `Carb Correction` or `Correction Bolus`. As a Note,
+    LoopFollow showed a dot only. Test: `xdrip/none_amounts.http`.
   - A careportal treatment with no id, in the same second as a `<none>` bolus: kept apart. It was merged into the
     bolus, taking its `enteredBy` and notes.
   - `notes` with HTML (for example `<b>bold</b>`): given back as sent. Tags were removed, so xDrip+ appended the

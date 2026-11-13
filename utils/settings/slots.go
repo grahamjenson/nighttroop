@@ -44,6 +44,7 @@ func (m *SettingMap) slots() []slot {
 		slotOf(DateFormat, &m.DateFormat),
 		slotOf(TimeFormat, &m.TimeFormat),
 		slotOf(WeekStartDay, &m.WeekStartDay),
+		slotOf(NumberFormat, &m.NumberFormat),
 		slotOf(BolusDIAHours, &m.BolusDiaHours),
 		slotOf(BolusOnsetMinutes, &m.BolusOnsetMinutes),
 		slotOf(BolusPeakMinutes, &m.BolusPeakMinutes),

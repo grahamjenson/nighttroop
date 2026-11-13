@@ -32,15 +32,15 @@ templ agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 			@card.Card(card.Props{ID: "site--agp--ranges", Title: i18n.T(ctx, "site.reports.agp.time_in_ranges"), Note: i18n.T(ctx, "site.reports.agp.goals_for")}) {
 				@rangesWithGoals(p, previous)
 				<ul class="mt-3 space-y-0.5 text-xs text-gray-600">
-					<li id="site--agp--target"><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.target_range") + " " }</span>{ display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }</li>
-					<li><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.very_high") + " " }</span>{ i18n.T(ctx, "site.reports.agp.above", i18n.Data{"Glucose": display.Glucose(p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units), "Units": display.Units(p.Units)}) }</li>
-					<li><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.very_low") + " " }</span>{ i18n.T(ctx, "site.reports.agp.below", i18n.Data{"Glucose": display.Glucose(p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units), "Units": display.Units(p.Units)}) }</li>
+					<li id="site--agp--target"><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.target_range") + " " }</span>{ display.Glucose(ctx, low, p.Units) }–{ display.Glucose(ctx, high, p.Units) } { display.Units(p.Units) }</li>
+					<li><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.very_high") + " " }</span>{ i18n.T(ctx, "site.reports.agp.above", i18n.Data{"Glucose": display.Glucose(ctx, p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units), "Units": display.Units(p.Units)}) }</li>
+					<li><span class="font-semibold">{ i18n.T(ctx, "site.reports.agp.very_low") + " " }</span>{ i18n.T(ctx, "site.reports.agp.below", i18n.Data{"Glucose": display.Glucose(ctx, p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units), "Units": display.Units(p.Units)}) }</li>
 				</ul>
 				<p class="mt-2 text-xs text-gray-500">{ i18n.T(ctx, "site.reports.agp.five_percent") }</p>
 			}
 			@card.Card(card.Props{ID: "site--agp--metrics", Title: i18n.T(ctx, "site.reports.agp.glucose_metrics")}) {
 				<dl class="divide-y divide-gray-200">
-					@metric("site--reports--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": goalGlucose(p.Units)}), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units)) {
+					@metric("site--reports--mean", i18n.T(ctx, "site.reports.metrics.average_glucose"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": goalGlucose(ctx, p.Units)}), display.GlucoseOr(ctx, p.Mean, p.Units), display.Units(p.Units)) {
 						@statChange("site--reports--mean", p, glucoseChange(ctx, p, previous))
 					}
 					@metric("site--reports--gmi", i18n.T(ctx, "site.reports.agp.gmi"), i18n.T(ctx, "site.reports.agp.goal", i18n.Data{"Goal": "<7%"}), oneDecimal(p.GMI), "%") {
@@ -53,8 +53,8 @@ templ agpCards(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryD
 						@statChange("site--reports--cgm-active", p, change(ctx, p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
 					}
 					@metric("site--reports--days", i18n.T(ctx, "site.reports.metrics.days_with_data"), "", fmt.Sprint(p.Days), "")
-					@metric("site--reports--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), "", display.PerDay(p.Days, p.TotalDailyDose, ""), "U")
-					@metric("site--reports--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), "", display.PerDay(p.Days, p.TotalDailyCarbs, ""), "g")
+					@metric("site--reports--daily-dose", i18n.T(ctx, "site.reports.metrics.daily_dose"), "", display.PerDay(ctx, p.Days, p.TotalDailyDose, ""), "U")
+					@metric("site--reports--daily-carbs", i18n.T(ctx, "site.reports.metrics.daily_carbs"), "", display.PerDay(ctx, p.Days, p.TotalDailyCarbs, ""), "g")
 				</dl>
 			}
 		</div>
@@ -161,7 +161,7 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 			}
 			for i, mark := range agpMarks(g, low, high) {
 				<line class={ templ.KV("stroke-gray-300", i != 1 && i != 2), templ.KV(site_data_templ.GlucoseColours["Low"].Stroke, i == 1), templ.KV(site_data_templ.GlucoseColours["High"].Stroke, i == 2) } stroke-width={ map[bool]string{true: "2", false: "1"}[i == 1 || i == 2] } x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(mark)) } y2={ f(g.Y(mark)) }></line>
-				<text class="fill-gray-600" x={ f(g.Left - 6) } y={ f(g.Y(mark) + 4) } text-anchor="end">{ display.Glucose(mark, p.Units) }</text>
+				<text class="fill-gray-600" x={ f(g.Left - 6) } y={ f(g.Y(mark) + 4) } text-anchor="end">{ display.Glucose(ctx, mark, p.Units) }</text>
 			}
 			<text class="fill-gray-500" x={ f(g.Left - 6) } y="12" text-anchor="end">{ display.Units(p.Units) }</text>
 			for _, r := range regions {

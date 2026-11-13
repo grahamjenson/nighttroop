@@ -138,9 +138,9 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 		@periodNav("TDD", "site--reports--tdd", "site--reports--title", i18n.T(ctx, "site.reports.tdd.dates", i18n.Data{"First": first.Format(display.ShortDayLayout), "Last": last.Format(display.DayLayout)}), previous, next, "month")
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			@stat.Tile("site--reports--tdd--days", i18n.T(ctx, "site.reports.tdd.days_with_insulin"), fmt.Sprint(len(over)), nil)
-			@stat.Tile("site--reports--tdd--mean", i18n.T(ctx, "site.reports.metrics.daily_dose"), display.Value(mean, " U"), nil)
-			@stat.Tile("site--reports--tdd--lowest", i18n.T(ctx, "site.reports.tdd.lowest"), display.Value(lowest, " U"), nil)
-			@stat.Tile("site--reports--tdd--highest", i18n.T(ctx, "site.reports.tdd.highest"), display.Value(highest, " U"), nil)
+			@stat.Tile("site--reports--tdd--mean", i18n.T(ctx, "site.reports.metrics.daily_dose"), display.Value(ctx, mean, " U"), nil)
+			@stat.Tile("site--reports--tdd--lowest", i18n.T(ctx, "site.reports.tdd.lowest"), display.Value(ctx, lowest, " U"), nil)
+			@stat.Tile("site--reports--tdd--highest", i18n.T(ctx, "site.reports.tdd.highest"), display.Value(ctx, highest, " U"), nil)
 		</div>
 		@card.Card(card.Props{Title: i18n.T(ctx, "site.reports.tdd.total_daily_dose")}) {
 			if len(withInsulin) > 0 {
@@ -185,7 +185,7 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 							}
 							for _, value := range []*float64{row.Basal, row.Bolus, row.Dose} {
 								@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-									{ display.Value(value, " U") }
+									{ display.Value(ctx, value, " U") }
 								}
 							}
 						}
@@ -266,7 +266,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 									}
 								}
 								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(sum(p.TimeLow, p.TimeVeryLow)), display.Percent(p.TimeInRange),
-									display.Percent(sum(p.TimeHigh, p.TimeVeryHigh)), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
+									display.Percent(sum(p.TimeHigh, p.TimeVeryHigh)), display.PerDay(ctx, p.Days, p.TotalDailyDose, " U"), display.PerDay(ctx, p.Days, p.TotalDailyCarbs, " g")} {
 									@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 										{ value }
 									}

@@ -34,7 +34,7 @@ import (
 func eventGroupEvents(ctx context.Context, group *sitemodels.SiteEventGroup) []string {
 	events := []string{}
 	if r := group.GlucoseReading; r != nil {
-		events = append(events, i18n.T(ctx, "site.data.event_groups.glucose_event", i18n.Data{"Reading": formatGlucose(r.Reading, r.Units), "Units": orDash(r.Units)}))
+		events = append(events, i18n.T(ctx, "site.data.event_groups.glucose_event", i18n.Data{"Reading": formatGlucose(ctx, r.Reading, r.Units), "Units": orDash(r.Units)}))
 	}
 	if d := group.InsulinDose; d != nil {
 		events = append(events, i18n.T(ctx, "site.data.event_groups.insulin_event", i18n.Data{"Dose": fmt.Sprintf("%g", d.Dose)}))
@@ -46,7 +46,7 @@ func eventGroupEvents(ctx context.Context, group *sitemodels.SiteEventGroup) []s
 		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_basal_event", i18n.Data{"Rate": orDash(b.Rate), "Minutes": b.DurationMinutes}))
 	}
 	if t := group.TempTarget; t != nil {
-		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_target_event", i18n.Data{"Low": formatGlucose(t.LowTarget, t.Units), "High": formatGlucose(t.HighTarget, t.Units), "Units": orDash(t.Units), "Minutes": t.DurationMinutes}))
+		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_target_event", i18n.Data{"Low": formatGlucose(ctx, t.LowTarget, t.Units), "High": formatGlucose(ctx, t.HighTarget, t.Units), "Units": orDash(t.Units), "Minutes": t.DurationMinutes}))
 	}
 	for _, other := range []struct {
 		id      *string
@@ -631,7 +631,7 @@ func eventChoiceLabel(ctx context.Context, choice *sitemodels.SiteEventChoice) s
 	if a := choice.Amount; a != nil {
 		switch choice.Kind {
 		case "glucose_reading_id", "temp_target_id":
-			parts = append(parts, formatGlucose(*a, glucoseUnits(ctx))+" "+orDash(glucoseUnits(ctx)))
+			parts = append(parts, formatGlucose(ctx, *a, glucoseUnits(ctx))+" "+orDash(glucoseUnits(ctx)))
 		case "insulin_dose_id":
 			parts = append(parts, fmt.Sprintf("%g U", *a))
 		case "food_intake_id":
