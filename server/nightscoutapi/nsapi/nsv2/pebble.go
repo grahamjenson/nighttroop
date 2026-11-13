@@ -76,7 +76,7 @@ func Pebble() func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 				}
 			}
 			dr := LastDeviceStatusFromPWD(q, r.Context())
-			if battery := GetUptimeBattery(dr); battery.Min != nil {
+			if battery := GetUptimeBattery(LastBatteryStatus(q, r.Context())); battery.Min != nil {
 				bgs[0].Battery = new(fmt.Sprint(*battery.Min.Value))
 			}
 			bgs[0].IOB = GetIOB(dr).Display

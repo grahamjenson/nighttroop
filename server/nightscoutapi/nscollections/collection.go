@@ -51,6 +51,9 @@ type CollectionDB[NS, DM any] interface {
 	HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error)
 	// Delete deletes a model, softly or, when permanent, for good
 	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
+	// Rows are the rows, by their table, the model is stored as, for its values to be checked against their columns'
+	// limits
+	Rows(nsModel NS) []sitedb.TableRow
 }
 
 // CollectionKeyed is a CollectionDB whose model sent again is found by its fallback key when no model has its
@@ -205,24 +208,29 @@ func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteCon
 	return stored[NS]{meta: row(*dbModel), model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
-func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
 	m := c.db
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data", "error", err, "collection", m.Name())
-		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data", "error", httpErr, "collection", m.Name())
+		return nil, false, httpErr
 	}
 
 	if err := ValidateInputData(data); err != nil {
 		return nil, false, err
 	}
+	var err error
 	if nsModel, err = withUtcOffset(data, nsModel, siteUtcOffset(siteContext)); err != nil {
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
 	if err := m.Validate(nsModel, nil); err != nil {
 		return nil, false, err
+	}
+	if nsModel, httpErr = c.withinLimits(data, nsModel, &left); httpErr != nil {
+		return nil, false, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -318,7 +326,7 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
-	refreshed, merged, httpErr := c.rewrite(ctx, siteContext, q, duplicate, data)
+	refreshed, merged, httpErr := c.rewrite(ctx, siteContext, q, duplicate, data, &leftOut{})
 	if httpErr != nil {
 		return nil, false, httpErr
 	}
@@ -335,14 +343,15 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 }
 
 // rewrite writes the stored model's document with the fields sent merged into it, see merged, converted and checked as
-// a create's model is, over the stored model. It is the model written and the merged one.
-func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.SiteContext, q *sitedb.Queries, stored *DM, data map[string]any) (*DM, NS, *nsutils.HTTPError) {
+// a create's model is, over the stored model, its values out of their columns' limits left out and said in left. It is
+// the model written and the merged one.
+func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.SiteContext, q *sitedb.Queries, stored *DM, data map[string]any, left *leftOut) (*DM, NS, *nsutils.HTTPError) {
 	var merged NS
 	rewriter, ok := any(c.db).(CollectionPatcher[NS, DM])
 	if !ok {
 		return nil, merged, nsutils.ErrNotImplemented
 	}
-	merged, err := c.merged(stored, data, siteContext)
+	document, merged, err := c.merged(stored, data, siteContext)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to merge the fields sent into the stored model", "error", err, "collection", c.db.Name())
 		return nil, merged, nsutils.BadDataBodyErrorWithHint(err.Error())
@@ -350,6 +359,10 @@ func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.
 	if err := c.db.Validate(merged, stored); err != nil {
 		slog.ErrorContext(ctx, "validation failed for the merged model", "error", err, "collection", c.db.Name())
 		return nil, merged, err
+	}
+	merged, httpErr := c.withinLimits(document, merged, left)
+	if httpErr != nil {
+		return nil, merged, httpErr
 	}
 	rewritten, err := rewriter.RewriteModel(q, ctx, merged, data, stored, converterContext(siteContext))
 	if httpErr := c.stored(rewritten, err, "update"); httpErr != nil {
@@ -360,7 +373,7 @@ func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.
 
 // merged is the stored model's document, as API v1 gives it, with the fields sent laid over it, see mergeFields, read
 // as a create reads the fields sent
-func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext *httputils.SiteContext) (NS, error) {
+func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext *httputils.SiteContext) (map[string]any, NS, error) {
 	var model NS
 	var aliases map[string][]string
 	var glucose []string
@@ -371,8 +384,9 @@ func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext 
 		glucose = fields.GlucoseFields()
 	}
 	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
-	err := utils.ConvertViaJSON(mergeFields(document, data, aliases, glucose), &model)
-	return model, err
+	document = mergeFields(document, data, aliases, glucose)
+	err := utils.ConvertViaJSON(document, &model)
+	return document, model, err
 }
 
 // changed is whether the rewritten model's document is not the stored one's, the server's fields left out
@@ -657,13 +671,14 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 	return len(found), nil
 }
 
-func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
 	m := c.db
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
-		return nil, false, nsutils.BadDataBodyError
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data to model", "error", httpErr, "collection", m.Name())
+		return nil, false, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -684,8 +699,12 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		kept := *(*replaced).GetUtcOffsetMinutes()
 		offset = func(int64) int64 { return kept }
 	}
+	var err error
 	if nsModel, err = withUtcOffset(data, nsModel, offset); err != nil {
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	if nsModel, httpErr = c.withinLimits(data, nsModel, &left); httpErr != nil {
+		return nil, false, httpErr
 	}
 	// One created with an identifier none has repeats one with its fallback key, for a key that finds them so
 	if replaced == nil {
@@ -766,16 +785,17 @@ func (c Collection[NS, DM]) validateReplace(ctx context.Context, nsModel NS, rep
 
 // Patch merges the fields sent into the stored model, see rewrite, once it is found not deleted, not modified since the
 // client read it, and the fields sent do not change those a document keeps
-func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (nsutils.Document, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (_ nsutils.Document, httpErr *nsutils.HTTPError) {
 	m := c.db
 	if _, ok := any(m).(CollectionPatcher[NS, DM]); !ok {
 		return nil, nsutils.ErrNotImplemented
 	}
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
-		return nil, nsutils.BadDataBodyError
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data to model", "error", httpErr, "collection", m.Name())
+		return nil, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -806,7 +826,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, err
 	}
 
-	dbModel, _, httpErr := c.rewrite(ctx, siteContext, q, updateingModel, data)
+	dbModel, _, httpErr := c.rewrite(ctx, siteContext, q, updateingModel, data, &left)
 	if httpErr != nil {
 		return nil, httpErr
 	}

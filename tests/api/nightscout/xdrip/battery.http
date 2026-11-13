@@ -1,0 +1,56 @@
+# An xDrip+ device status has only the uploader's battery, no loop. Watch faces and followers read it from
+# /api/v2/properties (upbat) and /pebble (battery), as Nightscout's upbat and pebble plugins give it from any device
+# status with an uploader: upbat from the last 30 minutes.
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME xdrip_battery_entries
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "xDrip-DexcomG6", "date": {{ itime 5 }}, "sgv": 110, "direction": "Flat", "type": "sgv"},
+   {"device": "xDrip-DexcomG6", "date": {{ itime 0 }}, "sgv": 120, "direction": "FortyFiveUp", "type": "sgv"}]
+ASSERT_STATUS 200
+
+// A battery more than 30 minutes old is not shown
+NAME xdrip_battery_old_status
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B {"device": "Test Phone", "created_at": "{{ time 40 }}", "uploader": {"battery": 20, "type": "PHONE"}}
+ASSERT_STATUS 200
+
+NAME xdrip_battery_old_upbat
+GET http://{{ site }}/api/v2/properties/upbat
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@upbat.found"
+
+NAME xdrip_battery_status
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B {"device": "Test Phone", "uploader": {"battery": 85, "type": "PHONE"}}
+ASSERT_STATUS 200
+
+NAME xdrip_battery_devicestatus
+GET http://{{ site }}/api/v1/devicestatus.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 85 "@0.uploader.battery"
+
+NAME xdrip_battery_upbat
+GET http://{{ site }}/api/v2/properties/upbat
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "85%" "@upbat.display"
+ASSERT_EQUALS 75 "@upbat.level"
+ASSERT_EQUALS 85 "@upbat.min.value"
+
+// IOB needs a loop's status, so it is still left out
+NAME xdrip_battery_pebble
+GET http://{{ site }}/pebble
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@bgs"
+ASSERT_EQUALS "120" "@bgs.0.sgv"
+ASSERT_EQUALS "85" "@bgs.0.battery"
+ASSERT_EQUALS null "@bgs.0.iob"

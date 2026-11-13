@@ -10,7 +10,7 @@ import (
 )
 
 // A client's id is given back as sent, as a string: a string as it is, a whole number with all its figures, past
-// those a float keeps, and anything else as a ShortString reads it, cut to 64 characters
+// those a float keeps, and anything else as a ShortString reads it, whole, as the column limits decide its length
 func TestClientID(t *testing.T) {
 	tests := []struct{ sent, want string }{
 		{`"4103"`, "4103"},
@@ -21,8 +21,8 @@ func TestClientID(t *testing.T) {
 		{`4103.5`, "4103.5"},
 		{`4.103e3`, "4103"},
 		{`true`, "true"},
-		{`"` + strings.Repeat("a", 70) + `"`, strings.Repeat("a", 64)},
-		{strings.Repeat("9", 70), strings.Repeat("9", 64)},
+		{`"` + strings.Repeat("a", 70) + `"`, strings.Repeat("a", 70)},
+		{strings.Repeat("9", 70), strings.Repeat("9", 70)},
 	}
 	for _, test := range tests {
 		t.Run(test.sent, func(t *testing.T) {

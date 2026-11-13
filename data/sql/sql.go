@@ -6,7 +6,7 @@ package sql
 // 3. then it will extract all statments and reference in a single file for each folder
 
 //go:generate go run ./gen/gensql.go  -folder controldb
-//go:generate go run ./gen/gensql.go  -folder sitedb
+//go:generate go run ./gen/gensql.go  -folder sitedb -limits
 //go:generate go run ./gen/gensql.go  -folder jobsdb
 //go:generate go run ./gen/gensql.go  -folder logsdb
 //go:generate go run ./gen/gensql.go  -folder livedb
