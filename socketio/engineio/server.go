@@ -16,6 +16,13 @@ import (
 	"golang.org/x/time/rate"
 )
 
+type closingKey struct{}
+
+// WithClosing is ctx for an HTTP server's BaseContext, so each session opened through it is closed when closing ends
+func WithClosing(ctx, closing context.Context) context.Context {
+	return context.WithValue(ctx, closingKey{}, closing)
+}
+
 // Config is how a Server runs its sessions; zero values take the defaults
 type Config struct {
 	PingInterval     time.Duration // how often the server (v4) or client (v3) pings, 25s by default
@@ -172,6 +179,13 @@ func (s *Server) open(r *http.Request, version int, upgrades []string) (*Session
 	session.client = client
 	s.sessions[session.id] = session
 	s.mu.Unlock()
+	// A session ends as the HTTP server shuts down, as Shutdown does not wait for or close websockets
+	if closing, ok := r.Context().Value(closingKey{}).(context.Context); ok {
+		stop := context.AfterFunc(closing, func() { session.Close("server shutting down") })
+		session.mu.Lock()
+		session.stopClosing = stop
+		session.mu.Unlock()
+	}
 
 	open := openPayload{
 		SID:          session.id,
@@ -307,6 +321,9 @@ type Session struct {
 	upgrade   chan struct{} // closed once the session is on a websocket
 	alive     chan struct{} // a pong (v4) or ping (v3) came
 	done      chan struct{}
+
+	// stopClosing stops the session being closed as the server shuts down, once it is closed
+	stopClosing func() bool
 }
 
 func newSession(server *Server, r *http.Request, version int) *Session {
@@ -388,8 +405,12 @@ func (s *Session) Close(reason string) {
 		return
 	}
 	s.closed = true
-	onClose, ws := s.onClose, s.ws
+	onClose, ws, stopClosing := s.onClose, s.ws, s.stopClosing
 	s.mu.Unlock()
+
+	if stopClosing != nil {
+		stopClosing()
+	}
 
 	s.server.remove(s.id)
 	close(s.done)

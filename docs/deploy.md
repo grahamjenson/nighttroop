@@ -70,7 +70,7 @@ The script tags the running image `nighttroop-rollback:<time>`, to start it agai
 
 `docker compose stop` sends `SIGTERM`, and kills the server after `stop_grace_period` (2 minutes). The server:
 
-1. Stops HTTP requests. Requests in progress get 5 seconds.
+1. Stops HTTP requests and closes every Socket.IO connection. Requests in progress get 5 seconds.
 2. Stops background jobs (syncs, alarms, backups). Running jobs get up to 1 minute.
 3. Backs up the control DB locally and uploads it to S3.
 4. Backs up and uploads each batch of site DBs with changes since its last upload.

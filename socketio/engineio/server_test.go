@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -368,6 +369,30 @@ func TestServerCloseEndsClients(t *testing.T) {
 			server.Close()
 			<-client.Done()
 			require.ErrorIs(t, client.Send("x"), ErrClosed)
+		})
+	}
+}
+
+// TestShutdownEndsClients checks the HTTP server's Shutdown closes each session, as it does not close websockets, so
+// no client writes to a site's DB after its final backup
+func TestShutdownEndsClients(t *testing.T) {
+	for _, transport := range transports {
+		t.Run(transport, func(t *testing.T) {
+			closed := make(chan string, 1)
+			server := NewServer(testConfig, func(s *Session) { s.OnClose(func(reason string) { closed <- reason }) })
+			ts := httptest.NewUnstartedServer(server)
+			closing, closeSessions := context.WithCancel(context.Background())
+			ts.Config.RegisterOnShutdown(closeSessions)
+			ts.Config.BaseContext = func(net.Listener) context.Context { return WithClosing(context.Background(), closing) }
+			ts.Start()
+			t.Cleanup(ts.Close)
+			client := dial(t, ts.URL, V4, transport, nil)
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+			ts.Config.Shutdown(ctx)
+			require.Equal(t, "server shutting down", <-closed)
+			<-client.Done()
+			require.Zero(t, server.Count())
 		})
 	}
 }
