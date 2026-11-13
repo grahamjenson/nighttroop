@@ -63,7 +63,8 @@
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
-    1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
+    1. P4: Return a food's Nightscout `unit`, `gi`, `hidden`, `hideafteruse` and `position` as sent; AAPS takes g and
+       none without them. Needs columns
     1. P4: Support v2 authorization roles and subjects, which AAPS 4's client control (pairing and remote commands)
        uses with an admin token, beside the `settings` documents now kept
     1. P3: Count an AAPS bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal in the

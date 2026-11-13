@@ -18,7 +18,7 @@ ASSERT_EQUALS 10 "@0.fat"
 ASSERT_EQUALS 20 "@0.protein"
 ASSERT_EQUALS 5 "@0.fibre"
 ASSERT_EQUALS 300 "@0.energy"
-ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS 2 "@0.portion"
 ASSERT_EQUALS 10 "@0.preBolus"
 
 NAME read_food_v3
@@ -72,7 +72,7 @@ ASSERT_EQUALS 15 "@0.fat"
 ASSERT_EQUALS 20 "@0.protein"
 ASSERT_EQUALS 5 "@0.fibre"
 ASSERT_EQUALS 300 "@0.energy"
-ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS 2 "@0.portion"
 ASSERT_EQUALS "Italian" "@0.subcategory"
 ASSERT_EQUALS 45 "@0.carbs"
 
