@@ -186,6 +186,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once. It was kept twice,
     as a reading with another device.
   - A `cal` (#512): left out, so the batch is not refused.
+  - A reading dated more than 15 minutes after now (X10): left out, the rest stored. It was kept, so followers showed it
+    as the current reading.
   - A reading of 0 or less, or over 1000 mg/dL: left out, the rest stored. The batch was refused and sent again with
     each reading, so nothing more uploaded.
   - Only readings of 0 (a failing sensor): `200 []`, nothing stored. It was refused, so the device status and
