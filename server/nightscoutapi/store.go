@@ -128,6 +128,11 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 			return parts[1], nil
 		}
 	}
+	if reading, ok := nts.fingerStick(ctx, siteContext, collection, identifier); httpErr == nsutils.ErrNotFound && ok {
+		if bgCheck, ok := nts.bgCheck(reading, siteContext); ok {
+			return bgCheck, nil
+		}
+	}
 	return doc, httpErr
 }
 
@@ -173,7 +178,12 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 	if query.UnknownFilter {
 		return []nsutils.Document{}, nil
 	}
-	return collectionsStore.Search(ctx, siteContext, query)
+	if collection != nsutils.Treatments {
+		return collectionsStore.Search(ctx, siteContext, query)
+	}
+	return nts.withFingerSticks(ctx, siteContext, query, func(query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
+		return collectionsStore.Search(ctx, siteContext, query)
+	})
 }
 
 func (nts *NightTroopAPIStore) History(ctx context.Context, collection nsutils.Collection, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
@@ -184,7 +194,11 @@ func (nts *NightTroopAPIStore) History(ctx context.Context, collection nsutils.C
 	if query.UnknownFilter {
 		return []nsutils.Document{}, nil
 	}
-	return collectionsStore.History(ctx, siteContext, since, query)
+	docs, httpErr := collectionsStore.History(ctx, siteContext, since, query)
+	if httpErr != nil || collection != nsutils.Treatments {
+		return docs, httpErr
+	}
+	return nts.historyWithFingerSticks(ctx, siteContext, since, query, docs)
 }
 
 func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
@@ -208,7 +222,12 @@ func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return err
 	}
-	return collectionsStore.Delete(ctx, siteContext, identifier, permanent)
+	httpErr := collectionsStore.Delete(ctx, siteContext, identifier, permanent)
+	// A BG Check given for a meter reading is deleted with its reading, as a finger stick deleted in AAPS
+	if reading, ok := nts.fingerStick(ctx, siteContext, collection, identifier); httpErr == nsutils.ErrNotFound && ok {
+		return nts.Delete(ctx, nsutils.Entries, reading.ID, permanent)
+	}
+	return httpErr
 }
 
 func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutils.Collection, typeString string, permanent bool) (int, *nsutils.HTTPError) {

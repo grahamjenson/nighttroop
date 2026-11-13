@@ -168,6 +168,15 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.eventsToGroupStmt, err = db.PrepareContext(ctx, eventsToGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query EventsToGroup: %w", err)
 	}
+	if q.fingerSticksStmt, err = db.PrepareContext(ctx, fingerSticks); err != nil {
+		return nil, fmt.Errorf("error preparing query FingerSticks: %w", err)
+	}
+	if q.fingerSticksAscendingStmt, err = db.PrepareContext(ctx, fingerSticksAscending); err != nil {
+		return nil, fmt.Errorf("error preparing query FingerSticksAscending: %w", err)
+	}
+	if q.fingerSticksChangedStmt, err = db.PrepareContext(ctx, fingerSticksChanged); err != nil {
+		return nil, fmt.Errorf("error preparing query FingerSticksChanged: %w", err)
+	}
 	if q.foodIntakeTotalsStmt, err = db.PrepareContext(ctx, foodIntakeTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query FoodIntakeTotals: %w", err)
 	}
@@ -245,6 +254,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.glucoseReadingHistoryIDsStmt, err = db.PrepareContext(ctx, glucoseReadingHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query GlucoseReadingHistoryIDs: %w", err)
+	}
+	if q.glucoseReadingInTreatmentStmt, err = db.PrepareContext(ctx, glucoseReadingInTreatment); err != nil {
+		return nil, fmt.Errorf("error preparing query GlucoseReadingInTreatment: %w", err)
 	}
 	if q.glucoseReadingTotalsStmt, err = db.PrepareContext(ctx, glucoseReadingTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query GlucoseReadingTotals: %w", err)
@@ -761,6 +773,21 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing eventsToGroupStmt: %w", cerr)
 		}
 	}
+	if q.fingerSticksStmt != nil {
+		if cerr := q.fingerSticksStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing fingerSticksStmt: %w", cerr)
+		}
+	}
+	if q.fingerSticksAscendingStmt != nil {
+		if cerr := q.fingerSticksAscendingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing fingerSticksAscendingStmt: %w", cerr)
+		}
+	}
+	if q.fingerSticksChangedStmt != nil {
+		if cerr := q.fingerSticksChangedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing fingerSticksChangedStmt: %w", cerr)
+		}
+	}
 	if q.foodIntakeTotalsStmt != nil {
 		if cerr := q.foodIntakeTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing foodIntakeTotalsStmt: %w", cerr)
@@ -889,6 +916,11 @@ func (q *Queries) Close() error {
 	if q.glucoseReadingHistoryIDsStmt != nil {
 		if cerr := q.glucoseReadingHistoryIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing glucoseReadingHistoryIDsStmt: %w", cerr)
+		}
+	}
+	if q.glucoseReadingInTreatmentStmt != nil {
+		if cerr := q.glucoseReadingInTreatmentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing glucoseReadingInTreatmentStmt: %w", cerr)
 		}
 	}
 	if q.glucoseReadingTotalsStmt != nil {
@@ -1428,6 +1460,9 @@ type Queries struct {
 	eventGroupHistoryIDsStmt                    *sql.Stmt
 	eventGroupTotalsStmt                        *sql.Stmt
 	eventsToGroupStmt                           *sql.Stmt
+	fingerSticksStmt                            *sql.Stmt
+	fingerSticksAscendingStmt                   *sql.Stmt
+	fingerSticksChangedStmt                     *sql.Stmt
 	foodIntakeTotalsStmt                        *sql.Stmt
 	foodPresetAscendingIDsStmt                  *sql.Stmt
 	foodPresetHistoryIDsStmt                    *sql.Stmt
@@ -1454,6 +1489,7 @@ type Queries struct {
 	getTempTargetStmt                           *sql.Stmt
 	glucoseReadingAscendingIDsStmt              *sql.Stmt
 	glucoseReadingHistoryIDsStmt                *sql.Stmt
+	glucoseReadingInTreatmentStmt               *sql.Stmt
 	glucoseReadingTotalsStmt                    *sql.Stmt
 	hardDeleteActivitiesByTypeStmt              *sql.Stmt
 	hardDeleteActivityStmt                      *sql.Stmt
@@ -1598,6 +1634,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		eventGroupHistoryIDsStmt:                    q.eventGroupHistoryIDsStmt,
 		eventGroupTotalsStmt:                        q.eventGroupTotalsStmt,
 		eventsToGroupStmt:                           q.eventsToGroupStmt,
+		fingerSticksStmt:                            q.fingerSticksStmt,
+		fingerSticksAscendingStmt:                   q.fingerSticksAscendingStmt,
+		fingerSticksChangedStmt:                     q.fingerSticksChangedStmt,
 		foodIntakeTotalsStmt:                        q.foodIntakeTotalsStmt,
 		foodPresetAscendingIDsStmt:                  q.foodPresetAscendingIDsStmt,
 		foodPresetHistoryIDsStmt:                    q.foodPresetHistoryIDsStmt,
@@ -1624,6 +1663,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getTempTargetStmt:                           q.getTempTargetStmt,
 		glucoseReadingAscendingIDsStmt:              q.glucoseReadingAscendingIDsStmt,
 		glucoseReadingHistoryIDsStmt:                q.glucoseReadingHistoryIDsStmt,
+		glucoseReadingInTreatmentStmt:               q.glucoseReadingInTreatmentStmt,
 		glucoseReadingTotalsStmt:                    q.glucoseReadingTotalsStmt,
 		hardDeleteActivitiesByTypeStmt:              q.hardDeleteActivitiesByTypeStmt,
 		hardDeleteActivityStmt:                      q.hardDeleteActivityStmt,

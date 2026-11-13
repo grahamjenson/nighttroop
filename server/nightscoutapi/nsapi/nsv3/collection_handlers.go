@@ -38,6 +38,7 @@ func Search(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
+		query.V3 = true
 		records, err := store.Search(r.Context(), collection, query)
 		if err != nil {
 			apiutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
@@ -122,6 +123,7 @@ func History(store nsutils.Store) http.HandlerFunc {
 
 		// History returns deleted documents too (isValid false), so clients learn of deletions, the oldest change
 		// first, so a client paging from the newest srvModified it got gets them all
+		query.V3 = true
 		records, err := store.History(r.Context(), collection, since, query)
 		if err != nil {
 			nsutils.WriteError(w, err)

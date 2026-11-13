@@ -286,7 +286,7 @@ site:
       download_data: "Download Data"
       download_note: "All the site's data as it is now, as a zipped SQLite file any SQLite browser can open."
       truncate: "Truncate"
-      truncate_note: "Clears what nothing reads again: the loop status and pump details on all but each device's newest status. Thins older device statuses, deletes those over 30 days old, and deletes loop settings nothing refers to. Readings, treatments, profiles and everything else are kept. The DB is then shrunk."
+      truncate_note: "Clears what nothing reads again: the predictions on loop statuses over a day old, and the pump details on all but each device's newest status. Thins older device statuses, deletes those over 30 days old, and deletes loop settings nothing refers to. Readings, treatments, profiles and everything else are kept. The DB is then shrunk."
       truncate_confirm: "Truncate the site's device statuses? This cannot be undone."
       truncated: "Site Truncated"
       truncated_reports: "Its device statuses were truncated."
