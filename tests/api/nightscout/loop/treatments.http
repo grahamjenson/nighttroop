@@ -48,6 +48,29 @@ ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "6B9F1A1C-2D3E-4F50-8A1B-2C3D4E5F6071" "@0.syncIdentifier"
 ASSERT_EQUALS "2026-11-02T08:50:00Z" "@0.userEnteredAt"
 
+# A carb entry edited to another time is sent again with its _id and its new time, which moves it, as Nightscout's
+# v1 replaces the whole treatment; Loop sends it again until it is taken
+NAME loop_move_carbs
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B {"_id": "{{ .carbs_id }}", "created_at": "{{ time 100 }}", "timestamp": "{{ time 100 }}", "enteredBy": "loop://iPhone", "eventType": "Carb Correction", "carbs": 30, "absorptionTime": 120, "foodType": "🍕", "syncIdentifier": "6B9F1A1C-2D3E-4F50-8A1B-2C3D4E5F6071", "userEnteredAt": "2026-11-02T08:50:00Z", "userLastModifiedAt": "{{ time 60 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".carbs_id" "@_id"
+ASSERT_EQUALS 30 "@carbs"
+SET carbs_moved_at {{ dig "loop_move_carbs.created_at" }}
+
+NAME loop_carbs_moved
+GET http://{{ site }}/api/v1/treatments?find[eventType]=Carb+Correction&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".carbs_id" "@0._id"
+ASSERT_EQUALS ".carbs_moved_at" "@0.created_at"
+ASSERT_EQUALS ".carbs_moved_at" "@0.timestamp"
+ASSERT_EQUALS 30 "@0.carbs"
+
 NAME loop_carbs_as_sent_v3
 GET http://{{ site }}/api/v3/treatments/{{ .carbs_id }}
 H Authorization: Bearer {{ jwt }}
@@ -285,12 +308,26 @@ ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D" "@0._id"
 ASSERT_EQUALS 12.483333333333333 "@0.duration"
 
+# Its start time edited, it is posted again with the same _id and the new time, which moves it
+NAME loop_move_override
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [{"_id": "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D", "created_at": "{{ time 61 }}", "timestamp": "{{ time 61 }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "🏃 Running", "duration": 12.483333333333333, "insulinNeedsScaleFactor": 0.8, "correctionRange": [140, 160]}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D" "@0._id"
+SET override_moved_at {{ dig "loop_move_override.0.created_at" }}
+
 NAME override_updated_not_duplicated
 GET http://{{ site }}/api/v1/treatments?find[eventType]=Temporary+Override&count=10
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
-ASSERT_EQUALS 12.483333333333333 "@1.duration"
+ASSERT_EQUALS "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D" "@0._id"
+ASSERT_EQUALS 12.483333333333333 "@0.duration"
+ASSERT_EQUALS ".override_moved_at" "@0.created_at"
 
 # NightscoutClient.deleteTreatmentsById: DELETE /api/v1/treatments/<uuid>, with no body
 NAME loop_delete_override

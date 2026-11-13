@@ -1066,6 +1066,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.
+- An API v1 replace of a treatment (`PUT /api/v1/treatments`, or a POST with the `_id` of one kept) may move its time
+  and `utcOffset`, as Nightscout's v1 replaces the whole treatment and Loop sends a carb entry or override edited to
+  another time again with its `_id`; an API v3 replace, and a v1 replace of any other document, still refuses a
+  change to its date or `utcOffset`.
 - A treatment with `eventType` `<none>`, Nightscout careportal's treatment with no type, is a Note keeping its
   insulin and carbs.
 - A treatment with AAPS's `eventType` `SettingsExport`, sent when its settings are exported, is a Note.

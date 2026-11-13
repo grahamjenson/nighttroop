@@ -122,3 +122,17 @@ func ModifiedSince(ctx context.Context, modified int64) bool {
 	since, ok := ctx.Value(unmodifiedSinceKey{}).(time.Time)
 	return ok && modified/1000 > since.Unix()
 }
+
+type movableDateKey struct{}
+
+// WithMovableDate is the context of a replace that may move a document's date and UTC offset, as an API v1 replace of
+// a treatment may; API v3 keeps them
+func WithMovableDate(ctx context.Context) context.Context {
+	return context.WithValue(ctx, movableDateKey{}, true)
+}
+
+// DateMovable is whether the context's replace may move the document's date and UTC offset
+func DateMovable(ctx context.Context) bool {
+	movable, _ := ctx.Value(movableDateKey{}).(bool)
+	return movable
+}
