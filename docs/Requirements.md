@@ -827,6 +827,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
+- A treatment or reading created with `isValid` false, as AAPS uploads one it deleted while offline, is kept deleted:
+  it is not found or searched, the history has it with `isValid` false, and it goes to the storage sockets as a
+  delete, so followers such as AAPSClient do not bring it back. A food or profile is stored as before.
 - A v3 history is the documents with a `srvModified` at or after its time, the oldest first, then by date, as in
   Nightscout, at most its `limit`, and its `ETag` is the newest `srvModified`, so an app paging from the `ETag`, as
   AAPS does, gets every change, and the last profile store in a profile history is the newest changed.

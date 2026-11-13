@@ -217,14 +217,46 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	if httpErr := c.stored(dbModel, err, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
+	// A treatment or reading sent already deleted, isValid false, is kept soft deleted, as Nightscout keeps isValid as
+	// sent: AAPS uploads what it deleted while offline so, and a follower would otherwise take it as current. Presets
+	// are not soft deleted, so a food or profile keeps being stored as before.
+	valid, sent := data["isValid"].(bool)
+	deleted := sent && !valid && (m.Name() == string(nsutils.Treatments) || m.Name() == string(nsutils.Entries))
+	if deleted {
+		if dbModel, httpErr = c.softDeleted(q, ctx, dbModel); httpErr != nil {
+			return nil, false, httpErr
+		}
+	}
 
 	if httpErr := c.commit(tx, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
 
+	if deleted {
+		siteContext.PublishModelChange(events.Deleted, dbModel)
+		return c.document(dbModel, siteContext), false, nil
+	}
 	siteContext.PublishModelChange(events.Created, dbModel)
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbModel, siteContext), false, nil
+}
+
+// softDeleted deletes the model just stored, as a soft delete does, and is it deleted
+func (c Collection[NS, DM]) softDeleted(q *sitedb.Queries, ctx context.Context, dbModel *DM) (*DM, *nsutils.HTTPError) {
+	id := (*dbModel).GetID()
+	if _, err := c.db.Delete(q, ctx, id, false); err != nil {
+		slog.ErrorContext(ctx, "failed to delete a model created deleted", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	deleted, err := c.db.GetModel(q, ctx, id, true)
+	if err == nil && deleted != nil {
+		err = q.MarkStale(ctx, deleted)
+	}
+	if err != nil || deleted == nil {
+		slog.ErrorContext(ctx, "failed to read a model created deleted", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	return deleted, nil
 }
 
 // repeated is the duplicate a create repeats, given the create's values when the collection is a CollectionRefresher
