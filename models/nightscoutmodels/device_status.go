@@ -1,7 +1,6 @@
 package nightscoutmodels
 
 import (
-	"cmp"
 	"encoding/json"
 	"log/slog"
 	"nighttroop.t1d.nz/utils/types"
@@ -26,9 +25,8 @@ type DeviceStatus struct {
 	// OverrideRaw is Loop's override in force
 	OverrideRaw *json.RawMessage `json:"override,omitempty"`
 
-	// Date Fields
-	Date      *types.DateInt    `json:"date,omitempty"` // Unix timestamp in milliseconds
-	CreatedAt *types.DateString `json:"created_at,omitempty"`
+	// Date is when it was, read from and written as its TimeAliases
+	Date *types.DateInt `json:"-"`
 
 	// Default String Fields
 	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
@@ -43,6 +41,10 @@ type DeviceStatus struct {
 }
 
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
+	date, offset, err := deviceStatusTimes.Read(data)
+	if err != nil {
+		return err
+	}
 	type Alias DeviceStatus
 	aux := struct {
 		ID *types.IdentifierString `json:"_id"`
@@ -61,13 +63,7 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 		t.Identifier = aux.ID
 	}
 
-	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
-	if t.CreatedAt != nil {
-		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			date, offset := t.CreatedAt.MillisSentOffset()
-			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
-		}
-	}
+	t.Date, t.UtcOffsetMinutes = date, offset
 	// Loop's pump says the phone's offset, where its UTC times do not
 	if t.UtcOffsetMinutes == nil && t.Pump != nil && t.Pump.SecondsFromGMT != nil && max(*t.Pump.SecondsFromGMT, -*t.Pump.SecondsFromGMT) <= 24*60*60 {
 		t.UtcOffsetMinutes = new(*t.Pump.SecondsFromGMT / 60)
@@ -101,6 +97,13 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// deviceStatusTimes are when a device status was
+var deviceStatusTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "created_at"}}
+
+func (t DeviceStatus) TimeAliases() types.TimeAliases {
+	return deviceStatusTimes
 }
 
 func (t DeviceStatus) GetDevice() *string {

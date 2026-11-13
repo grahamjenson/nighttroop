@@ -76,6 +76,28 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- UPDATE
 --------
 
+-- name: RewriteNotificationEvent :one
+-- RewriteNotificationEvent writes every column CreateNotificationEvent does over the notification event with the ID, as
+-- a Nightscout update writes its merged document. It keeps when it was created and who by: the identity given is who
+-- updated it.
+UPDATE notification_events SET
+    id = sqlc.arg('ID'),
+    title = sqlc.arg('Title'),
+    severity = sqlc.arg('Severity'),
+    content = sqlc.arg('Content'),
+    notification_type = sqlc.arg('NotificationType'),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
+
 -- name: UpdateNotificationEvent :one
 UPDATE notification_events SET
     title = COALESCE(sqlc.narg('Title'), title),

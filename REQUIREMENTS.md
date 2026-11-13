@@ -1022,7 +1022,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - **v1**:
   - entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters.
   - status, versions, verifyauth, slice, count, times, echo, experiments/test, notifications/ack, adminnotifies.
-- **v2**: authorization (a JWT for a token, a check of one JWT permission), properties, summary.
+- **v2**: authorization (a JWT for a token, a check of one JWT permission, roles and subjects), properties, summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection; version, status, lastModified,
   settings.
 - **Socket.IO**: live updates and alarms, over long polling or websockets.
@@ -1073,6 +1073,13 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v3 status: what the token can do to each collection (e.g. `crud` for an uploader, `r` for read only). AAPS uploads
   only with a token that can write.
 - v3 version: needs no token.
+- v2 roles and subjects (AAPS pairs a client by QR code with them):
+  - Roles: a fixed list, `admin`, `readable` and `aaps-client`. A role sent is given back, and not kept.
+  - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
+  - Add a subject: a device that can read and write, for AAPSClient, with mg/dL units written `mg/dl`.
+  - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
+  - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
+  - Delete a subject: its identity is deleted, so its token gets 401. A device cannot delete itself.
 - If a request has no token or a token that is not valid, the API returns 401 in JSON, `{"status": 401, "message"}`.
   Other errors and Nightscout's 401 use the same JSON.
 
@@ -1092,7 +1099,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - A field with no `$eq` (e.g. `find[srvCreated]`): nothing.
 - Treatment filters (Trio, iAPS): `find[carbs][$exists]` (also `duration`), `enteredBy`, and `find[enteredBy][$ne]`
   (repeated or in `find[$and][n]`).
-- Entry filter: `find[device]` (also `$eq`) gives the entries of that device only.
+- Device filter, in every collection: v1 `find[device]` (also `$eq`), v3 `device` (also `device$eq`).
+  - The result has only the records of that device.
+  - If no record has that device, the result is empty.
 
 #### Date filters
 
@@ -1128,6 +1137,15 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - `If-Unmodified-Since` on a replace or patch of a document changed in a later second: 412, no change. The server
   checks in the same transaction as the change.
+- A patch puts the fields it sends on the stored document, as a JSON merge patch (RFC 7386) does. The server then reads
+  the result as a create, and writes all of the record:
+  - A field it does not send stays as stored.
+  - A field it sends as `null` has no value after the patch.
+  - An object it sends is merged into the stored object. A device status `pump` with only `reservoir` keeps its `model`.
+  - A list it sends replaces the stored list.
+  - A field it sends replaces the stored fields with the same data: `duration` replaces `durationInMilliseconds`.
+  - If it sends glucose or `units`, the stored glucose it does not send is converted to those units.
+  - A treatment that gets or loses carbs, insulin or glucose gets or loses that event.
 - A patch of a temp target keeps the fields it does not send:
   - `{"duration": 30}` keeps the targets.
   - `{"targetTop": 9, "units": "mmol"}` keeps the bottom target and duration.
@@ -1195,13 +1213,25 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 ### Nightscout API: dates and times
 
+#### Time fields
+
+- Each collection reads its time from the first of its time fields sent, in this order:
+  - Treatment: `date`, `eventTime`, `created_at`, `timestamp`.
+  - Entry: `date`, `dateString`, `mills`, `sysTime`.
+  - Device status, activity: `date`, `created_at`.
+  - Profile: `date`, `startDate`, `mills`.
+- A time field sent later in ms, in the same second, gives the time its ms.
+- A time field that is not a time: refused (400). Exception: a treatment's `timestamp`, which is then not read.
+- Each time field is written from the time: `date` and `mills` in ms, the others as `created_at` is.
+
 #### UTC offset
 
 - A document with a date and no `utcOffset` (e.g. an AAPS device status): the site timezone's offset at that date.
 - A replace with no `utcOffset`: keeps the replaced document's offset.
-- A UTC time with `Z` (Loop) and no `utcOffset`, in a treatment's or device status's `created_at` or a profile's
-  `startDate`: the site timezone's offset. A Loop device status: its pump's `secondsFromGMT` (the phone's offset).
-- A time with an offset (e.g. `+13:00`), or a sent `utcOffset`: kept.
+- A UTC time with `Z` (Loop) and no `utcOffset`, in a treatment's or device status's `created_at`, a profile's
+  `startDate` or an entry's `dateString`: the site timezone's offset. A Loop device status: its pump's
+  `secondsFromGMT` (the phone's offset).
+- A time with an offset (e.g. `+13:00`), or a sent `utcOffset`: kept. The first time string sent gives the offset.
 - Juggluco's `-03:-30` zone in a `dateString`: read as `-03:30`.
 
 #### Time format
@@ -1210,11 +1240,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - `…23.940Z` comes back as sent, not `…23.94Z`. `…23Z` comes back as `…23.000Z`.
 - Same format:
   - Treatment `timestamp`, profile `startDate`: always UTC, whatever `utcOffset` (LoopFollow).
-  - Entry `dateString`: in its UTC offset. Trio's deleteGlucose finds and deletes an entry by the `.SSS` `dateString`
-    it sent.
+  - Entry `dateString`: always UTC, whatever `utcOffset`. Trio's deleteGlucose finds and deletes an entry by the
+    `.SSS` `dateString` it sent.
 - Dates kept as sent (e.g. device status `pump.clock`, which LoopFollow reads without fractional seconds): unchanged.
-- Entry `date`: kept to the ms, a fraction dropped, also when the `dateString` has whole seconds (Loop). The
-  `dateString` gives the UTC offset.
+- Entry `date`: kept to the ms, a fraction dropped, also when the `dateString` has whole seconds (Loop).
 
 #### Treatment times
 
@@ -1250,8 +1279,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Duplicate uploads are ignored.
 - A treatment with the date and type of a stored one, or its identifier and date (Loop sends a temp basal or bolus again
   when it ends, Trio a temp target or override run):
-  - Merged into it. Its `_id` and the fields not sent are kept.
-  - Followers get it as changed. Sent again unchanged: no change.
+  - Merged into it as a patch is. Its `_id` and the fields not sent are kept.
+  - Followers get it as changed. Sent again unchanged, or with changes that do not change the document: no change.
 - Treatment with no app id (`_id`, `identifier`, xDrip+'s `uuid`, Loop's `syncIdentifier`, Trio's `id`): a duplicate
   only if the stored one has no app id and the same carbs and insulin (zero is none), as in Nightscout. Else a new
   treatment:
@@ -1303,6 +1332,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - `direction`: a Nightscout name (e.g. `Flat`, `RATE OUT OF RANGE`), from any letter case or an arrow (`↗`, `↓↓`).
   Unknown: `NOT COMPUTABLE`. Empty: left out.
 - `noise`: a whole number.
+- If a reading is dated more than 15 minutes after now, the API refuses it (400 "date is in the future"). A v1 batch
+  leaves it out and stores the rest. Up to 15 minutes allows for a phone clock that is fast.
 - Trio reads a fetch of readings as one list, and gets none if one is not valid, including readings stored before.
 - Type `cal` (CGM calibration slope and intercept): accepted, not stored. The finger pricks sent with it are kept.
 
@@ -1574,16 +1605,21 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 Every 10 minutes, the server truncates every site:
 
-- Loop status, and pump as sent: kept only on each device's newest status with one. A newer status without one does
-  not change this. The others keep:
-  - Their IOB and COB, extracted on write. The Nightscout API returns them as `openaps` or `loop`.
-  - Their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. The Nightscout
-    API returns them as `pump`.
+- Loop status (`openaps` or `loop`): kept as sent for 1 day. Followers (e.g. LoopFollow) read a day of statuses.
+  - If a status is more than 1 day older than now and its device's newest status, the predictions are removed.
+  - Predictions are Loop's `predicted.values`, and the `predBGs` in `suggested` and `enacted`.
+  - All other fields stay as sent, e.g. `name`, `timestamp`, `iob`, `cob`, `recommendedBolus`, `enacted`,
+    `predicted.startDate`, and `suggested.bg`, `ISF`, `eventualBG`.
+  - The status does not get a new `srvModified`.
+- Pump as sent: kept only on each device's newest status with one. A newer status without one does not change this.
+  The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`.
+  The Nightscout API returns them as `pump`.
 - Statuses kept for each device: all of the last hour, then the newest in each 10 minutes to 1 week old, each 20
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
   - All statuses over 30 days old are deleted, also newest and deleted ones.
-- The job reads statuses of the last day, and thins again those that became 1 or 2 weeks old in that day.
+- The job reads statuses of the last day, and statuses that became 1 day old in that day. It thins again those that
+  became 1 or 2 weeks old in that day.
 - A site truncate reads all statuses. It also clears those older than a day (e.g. a device's newest from before it
   stopped reports for a day).
 
@@ -1767,7 +1803,8 @@ Every 10 minutes, the server truncates every site:
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
 - "Truncate", after a confirmation, does as control's Truncate:
-  - Clears the loop status and pump as sent from all but each device's newest status.
+  - Removes the predictions from loop statuses over 1 day old.
+  - Clears the pump as sent from all but each device's newest status.
   - Thins device statuses, and deletes those over 30 days old.
   - Deletes loop settings that no profile or device status refers to, except each app's last seen.
   - Shrinks the DB, and keeps all else, as the card says.

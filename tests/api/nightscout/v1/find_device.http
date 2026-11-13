@@ -1,0 +1,99 @@
+INCLUDE steps/new_ns_site.steps
+
+// A search by device gives that device's records alone, in every collection, as Nightscout's does: v1's
+// find[device] and find[device][$eq], and v3's device and device$eq. A device with no records gives none.
+
+NAME device_statuses
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 10 }}", "uploader": {"battery": 60}},
+   {"device": "openaps://probe", "created_at": "{{ time 9 }}", "uploader": {"battery": 70}}]
+ASSERT_STATUS 200
+
+NAME treatments
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"device": "loop://iPhone", "eventType": "Note", "notes": "loop", "created_at": "{{ time 8 }}"},
+   {"device": "openaps://probe", "eventType": "Note", "notes": "openaps", "created_at": "{{ time 7 }}"}]
+ASSERT_STATUS 200
+
+NAME entries
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "loop://iPhone", "type": "sgv", "sgv": 150, "date": {{ itime 6 }}},
+   {"device": "openaps://probe", "type": "sgv", "sgv": 155, "date": {{ itime 5 }}}]
+ASSERT_STATUS 200
+
+NAME device_status_v1
+GET http://{{ site }}/api/v1/devicestatus.json?find[device]=loop://iPhone
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "loop://iPhone" "@0.device"
+
+NAME device_status_v1_eq
+GET http://{{ site }}/api/v1/devicestatus.json?find[device][$eq]=openaps://probe
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "openaps://probe" "@0.device"
+
+NAME device_status_v1_nobody
+GET http://{{ site }}/api/v1/devicestatus.json?find[device]=nobody-xyz
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME device_status_v3
+GET http://{{ site }}/api/v3/devicestatus?device=loop://iPhone
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "loop://iPhone" "@result.0.device"
+
+NAME device_status_v3_eq
+GET http://{{ site }}/api/v3/devicestatus?device$eq=openaps://probe
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "openaps://probe" "@result.0.device"
+
+NAME treatments_v1
+GET http://{{ site }}/api/v1/treatments.json?find[device]=loop://iPhone
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "loop" "@0.notes"
+
+NAME treatments_v1_nobody
+GET http://{{ site }}/api/v1/treatments.json?find[device]=nobody-xyz
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME treatments_v3_eq
+GET http://{{ site }}/api/v3/treatments?device$eq=openaps://probe
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "openaps" "@result.0.notes"
+
+NAME entries_v3
+GET http://{{ site }}/api/v3/entries?device=openaps://probe
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 155 "@result.0.sgv"
+
+NAME entries_v3_eq
+GET http://{{ site }}/api/v3/entries?device$eq=loop://iPhone
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 150 "@result.0.sgv"
+
+NAME entries_v1_nobody
+GET http://{{ site }}/api/v1/entries.json?find[device]=nobody-xyz
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"

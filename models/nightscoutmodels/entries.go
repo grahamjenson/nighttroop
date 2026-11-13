@@ -1,7 +1,6 @@
 package nightscoutmodels
 
 import (
-	"cmp"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -36,16 +35,13 @@ type Entry struct {
 	Unfiltered *types.FlexibleFloat64 `json:"unfiltered,omitempty"`
 	RSSI       *types.FlexibleFloat64 `json:"rssi,omitempty"`
 	Noise      *types.FlexibleFloat64 `json:"noise,omitempty"`
-	SysTime    *types.DateString      `json:"sysTime,omitempty"`
 
 	// AAPS's calibration is an mbg with isCalibration, and the sensor's reading then in mg/dL
 	IsCalibration       *bool                  `json:"isCalibration,omitempty"`
 	SensorMgdlAtPairing *types.FlexibleFloat64 `json:"sensorMgdlAtPairing,omitempty"`
 
-	// Date fields
-	Date             *types.DateInt       `json:"date,omitempty"`
-	DateString       *types.DateString    `json:"dateString,omitempty"`
-	Mills            *types.DateInt       `json:"mills,omitempty"`
+	// Date is when it was, read from and written as its TimeAliases
+	Date             *types.DateInt       `json:"-"`
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`
 
 	// Default String Fields
@@ -58,6 +54,10 @@ type Entry struct {
 }
 
 func (t *Entry) UnmarshalJSON(data []byte) error {
+	date, offset, err := entryTimes.Read(data)
+	if err != nil {
+		return err
+	}
 	type Alias Entry
 	aux := struct {
 		ID *types.IdentifierString `json:"_id"`
@@ -94,21 +94,20 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	// A date sent is kept, with its milliseconds, which Loop's dateString does not have; the dateString gives the
-	// date when it is not sent, and the UTC offset when it is not sent
-	if t.DateString != nil {
-		date, offset := t.DateString.MillisUTCOffset()
-		t.Date, t.UtcOffsetMinutes = cmp.Or(t.Date, date), cmp.Or(t.UtcOffsetMinutes, offset)
-	}
-
-	if t.Mills != nil && t.Date == nil {
-		t.Date = t.Mills
-	}
-
 	t.Direction = EntryDirection(t.Direction)
 	t.Noise = WholeNoise((*float64)(t.Noise))
 
+	t.Date, t.UtcOffsetMinutes = date, offset
 	return nil
+}
+
+// entryTimes are when a reading was: a date sent is kept, with its milliseconds, which Loop's dateString does not
+// have, and xDrip4iOS's sysTime is read but not given back
+var entryTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "dateString"}, {Name: "mills", Millis: true},
+	{Name: "sysTime", Write: types.WriteNever}}
+
+func (t Entry) TimeAliases() types.TimeAliases {
+	return entryTimes
 }
 
 // directions are Nightscout's directions, by their names in any case and by their arrows, as Trio reads a fetch of
@@ -206,4 +205,9 @@ func (t Entry) GetUtcOffsetMinutes() *int64 {
 
 func (t Entry) GetIdentifier() *string {
 	return t.Identifier.Stringp()
+}
+
+// GlucoseFields are the fields whose glucose is in the entry's units
+func (t Entry) GlucoseFields() []string {
+	return []string{"sgv", "mbg"}
 }

@@ -29,22 +29,29 @@ func (c DeviceStatusCollection) Validate(nsModel nightscoutmodels.DeviceStatus, 
 }
 
 func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
-	nsModel = withoutUnknownLevels(ctx, nsModel)
-	createParams := NightscoutToDBCreateDeviceReport(nsModel, cc)
-
+	createParams, err := deviceReportParams(q, ctx, nsModel, cc)
+	if err != nil {
+		return nil, err
+	}
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}
+	return q.CreateDeviceReport(ctx, createParams)
+}
+
+// deviceReportParams are a device status's columns, with its configuration recorded
+func deviceReportParams(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext) (sitedb.CreateDeviceReportParams, error) {
+	nsModel = withoutUnknownLevels(ctx, nsModel)
+	createParams := NightscoutToDBCreateDeviceReport(nsModel, cc)
 	// AAPS's configuration is kept once in loop_settings, and the report refers to it
 	if nsModel.Configuration != nil {
 		id, err := recordLoopSettings(q, ctx, aapsApp, fromDeviceStatus, nsModel.Configuration, createParams.OccurredAt, createParams.CreatedByDeviceName)
 		if err != nil {
-			return nil, err
+			return createParams, err
 		}
 		createParams.ConfigurationID = id
 	}
-
-	return q.CreateDeviceReport(ctx, createParams)
+	return createParams, nil
 }
 
 // FallbackKey is a device status's date and device
@@ -71,13 +78,29 @@ func (c DeviceStatusCollection) Delete(q *sitedb.Queries, ctx context.Context, i
 	return q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
-	nsModel = withoutUnknownLevels(ctx, nsModel)
-	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
-	updateParams.ID = identifier
-	// An update changes its pump and uploader, kept as sent; its columns are as it was made
-	updateParams.PumpJson, updateParams.UploaderJson = jsonp(nsModel.Pump), jsonp(nsModel.Uploader)
-	return q.UpdateDeviceReport(ctx, updateParams)
+// RewriteModel keeps what the report's document cannot give back unless it is sent: its pump and loop status, whose
+// JSON is kept only on its device's newest report, its configuration, kept in loop_settings and given as the identity
+// may see it, and the pump's state and charging, which only a connector sets
+func (c DeviceStatusCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, sent map[string]any, stored *sitedb.DeviceReport, cc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
+	params, err := deviceReportParams(q, ctx, nsModel, cc)
+	if err != nil {
+		return nil, err
+	}
+	if _, ok := sent["pump"]; !ok {
+		params.PumpReservoir, params.PumpBatteryPercent, params.PumpClock = stored.PumpReservoir, stored.PumpBatteryPercent, stored.PumpClock
+		params.PumpManufacturer, params.PumpModel, params.PumpID = stored.PumpManufacturer, stored.PumpModel, stored.PumpID
+		params.PumpSuspended, params.PumpBolusing, params.PumpJson = stored.PumpSuspended, stored.PumpBolusing, stored.PumpJson
+	}
+	_, sentOpenAPS := sent["openaps"]
+	if _, sentLoop := sent["loop"]; !sentOpenAPS && !sentLoop {
+		params.LoopName, params.LoopStatusJson, params.LoopIob = stored.LoopName, stored.LoopStatusJson, stored.LoopIob
+		params.LoopIobBasal, params.LoopIobTreatment, params.LoopCob = stored.LoopIobBasal, stored.LoopIobTreatment, stored.LoopCob
+	}
+	if _, ok := sent["configuration"]; !ok {
+		params.ConfigurationID = stored.ConfigurationID
+	}
+	params.ID, params.PumpState, params.PumpChargingState = stored.ID, stored.PumpState, stored.PumpChargingState
+	return q.RewriteDeviceReport(ctx, sitedb.RewriteDeviceReportParams(params))
 }
 
 func (c DeviceStatusCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
@@ -181,8 +204,8 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 		nsModel.ConfigurationRaw = &configuration
 	}
 
-	// The loop's status goes back as its openaps or loop object, as it was sent, or, once a newer one came in and it was
-	// cleared, as what was extracted of it, its IOB and COB
+	// The loop's status goes back as its openaps or loop object, as it was sent, without its predictions once a day old,
+	// or, for one cleared whole by an earlier truncate, as what was extracted of it, its IOB and COB
 	if source.LoopName != nil {
 		status := extractedLoopStatus(*source.LoopName, source)
 		if source.LoopStatusJson != nil {
