@@ -22,14 +22,17 @@ func TestRecordClientErrors(t *testing.T) {
 		name    string
 		status  int
 		body    string
+		leftOut string
 		message string
 	}{
-		{"a 400 is recorded with its JSON's message", http.StatusBadRequest, `{"status":400,"message":"invalid collection"}`, "400 Bad Request: invalid collection"},
-		{"a 422 is recorded with its text", http.StatusUnprocessableEntity, "glucose above 1000 mg/dL", "422 Unprocessable Entity: glucose above 1000 mg/dL"},
-		{"a 405 is recorded without a body", http.StatusMethodNotAllowed, "", "405 Method Not Allowed"},
-		{"a 401 is not recorded", http.StatusUnauthorized, `{"status":401,"message":"Missing or bad access token or JWT"}`, ""},
-		{"a 404 is not recorded", http.StatusNotFound, "Not Found", ""},
-		{"a 200 is not recorded", http.StatusOK, `{"message":"ok"}`, ""},
+		{"a 400 is recorded with its JSON's message", http.StatusBadRequest, `{"status":400,"message":"invalid collection"}`, "", "400 Bad Request: invalid collection"},
+		{"a 422 is recorded with its text", http.StatusUnprocessableEntity, "glucose above 1000 mg/dL", "", "422 Unprocessable Entity: glucose above 1000 mg/dL"},
+		{"a 405 is recorded without a body", http.StatusMethodNotAllowed, "", "", "405 Method Not Allowed"},
+		{"a 401 is not recorded", http.StatusUnauthorized, `{"status":401,"message":"Missing or bad access token or JWT"}`, "", ""},
+		{"a 404 is not recorded", http.StatusNotFound, "Not Found", "", ""},
+		{"a 200 is not recorded", http.StatusOK, `{"message":"ok"}`, "", ""},
+		{"a 200 that left out part of what was sent is recorded with why", http.StatusOK, `[]`, "Stored 2 entries and left out 1: 1 unknown entry type: bad",
+			"200 OK: Stored 2 entries and left out 1: 1 unknown entry type: bad"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -38,6 +41,9 @@ func TestRecordClientErrors(t *testing.T) {
 			AddStandardMiddleware(router, cfg, controlDB)
 			router.Post("/api/v1/{collection}", func(w http.ResponseWriter, r *http.Request) {
 				SetIdentityModelInSiteContext(r.Context(), &controldb.SiteIdentity{Name: "pwd_phone", Role: consts.IdentityRoleDevicePWDPhone})
+				if test.leftOut != "" {
+					SetLeftOut(r.Context(), test.leftOut)
+				}
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(test.status)
 				w.Write([]byte(test.body))
