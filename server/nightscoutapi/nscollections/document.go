@@ -6,7 +6,10 @@ import (
 	"encoding/json/jsontext"
 	"slices"
 	"strconv"
+	"strings"
 
+	"nighttroop.t1d.nz/models/nightscoutmodels"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
@@ -101,6 +104,32 @@ func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
 	written := jsontext.Value(append(out, '}'))
 	_ = written.Canonicalize(jsontext.EscapeForJS(true))
 	return json.RawMessage(written)
+}
+
+// carbsSuffix ends the identifier of a treatment's carbs part, its treatment's identifier with it
+const carbsSuffix = "carbs"
+
+// CarbsPartOf is the identifier of the treatment a carbs part's identifier is of
+func CarbsPartOf(identifier string) (string, bool) {
+	return strings.CutSuffix(identifier, carbsSuffix)
+}
+
+// V3Parts are the documents API v3 lists and its storage socket sends for it: a treatment with both insulin and carbs
+// as its insulin and its carbs, as AAPS reads only one of them from a document, the carbs with the treatment's
+// identifier and carbsSuffix. One whose identifier is too long to add carbsSuffix to stays one.
+func (s stored[NS]) V3Parts() []nsutils.Document {
+	treatment, ok := any(s.model).(nightscoutmodels.Treatment)
+	if !ok || nsutils.ValidateIdentifierIsntBad(s.id+carbsSuffix) != nil {
+		return []nsutils.Document{s}
+	}
+	insulin, carbs, split := treatment.SplitCarbs()
+	if !split {
+		return []nsutils.Document{s}
+	}
+	insulinPart := stored[nightscoutmodels.Treatment]{meta: s.meta, model: insulin, unitsLabels: s.unitsLabels}
+	carbsPart := stored[nightscoutmodels.Treatment]{meta: s.meta, model: carbs, unitsLabels: s.unitsLabels}
+	carbsPart.id += carbsSuffix
+	return []nsutils.Document{insulinPart, carbsPart}
 }
 
 // server are the server's fields, over the model's, and the one of _id and identifier the API version does not have.
