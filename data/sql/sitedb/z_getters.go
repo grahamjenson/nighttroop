@@ -2576,6 +2576,16 @@ func (m *InsulinDose) SetIcfgJson(v *string) {
 	m.IcfgJson = v
 }
 
+// GetGivenAtOnce returns the GivenAtOnce value.
+func (m InsulinDose) GetGivenAtOnce() *float64 {
+	return m.GivenAtOnce
+}
+
+// SetGivenAtOnce sets the GivenAtOnce value and returns the updated InsulinDose.
+func (m *InsulinDose) SetGivenAtOnce(v *float64) {
+	m.GivenAtOnce = v
+}
+
 // GetNotes returns the Notes value.
 func (m InsulinDose) GetNotes() *string {
 	return m.Notes
@@ -2804,6 +2814,16 @@ func (m InsulinDosesVw) GetIcfgJson() *string {
 // SetIcfgJson sets the IcfgJson value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetIcfgJson(v *string) {
 	m.IcfgJson = v
+}
+
+// GetGivenAtOnce returns the GivenAtOnce value.
+func (m InsulinDosesVw) GetGivenAtOnce() *float64 {
+	return m.GivenAtOnce
+}
+
+// SetGivenAtOnce sets the GivenAtOnce value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetGivenAtOnce(v *float64) {
+	m.GivenAtOnce = v
 }
 
 // GetNotes returns the Notes value.
@@ -11556,6 +11576,16 @@ func (m *CreateInsulinDoseParams) SetIcfgJson(v *string) {
 	m.IcfgJson = v
 }
 
+// GetGivenAtOnce returns the GivenAtOnce value.
+func (m CreateInsulinDoseParams) GetGivenAtOnce() *float64 {
+	return m.GivenAtOnce
+}
+
+// SetGivenAtOnce sets the GivenAtOnce value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetGivenAtOnce(v *float64) {
+	m.GivenAtOnce = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateInsulinDoseParams) GetNotes() *string {
 	return m.Notes
@@ -11764,6 +11794,16 @@ func (m RewriteInsulinDoseParams) GetIcfgJson() *string {
 // SetIcfgJson sets the IcfgJson value and returns the updated RewriteInsulinDoseParams.
 func (m *RewriteInsulinDoseParams) SetIcfgJson(v *string) {
 	m.IcfgJson = v
+}
+
+// GetGivenAtOnce returns the GivenAtOnce value.
+func (m RewriteInsulinDoseParams) GetGivenAtOnce() *float64 {
+	return m.GivenAtOnce
+}
+
+// SetGivenAtOnce sets the GivenAtOnce value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetGivenAtOnce(v *float64) {
+	m.GivenAtOnce = v
 }
 
 // GetNotes returns the Notes value.
@@ -12244,6 +12284,16 @@ func (m UpdateInsulinDoseParams) GetIcfgJson() *string {
 // SetIcfgJson sets the IcfgJson value and returns the updated UpdateInsulinDoseParams.
 func (m *UpdateInsulinDoseParams) SetIcfgJson(v *string) {
 	m.IcfgJson = v
+}
+
+// GetGivenAtOnce returns the GivenAtOnce value.
+func (m UpdateInsulinDoseParams) GetGivenAtOnce() *float64 {
+	return m.GivenAtOnce
+}
+
+// SetGivenAtOnce sets the GivenAtOnce value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetGivenAtOnce(v *float64) {
+	m.GivenAtOnce = v
 }
 
 // GetNotes returns the Notes value.

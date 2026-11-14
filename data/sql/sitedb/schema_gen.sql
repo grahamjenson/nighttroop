@@ -354,7 +354,8 @@ CREATE TABLE insulin_doses (
     -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), whether a loop gave it
     -- (automatic, Loop's, as LoopFollow shows it as an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), the
     -- insulin it is of (insulin_type, Loop's, e.g. Novolog), a bolus's units not absorbed (unabsorbed, Loop's), and the
-    -- insulin AAPS says it was given with, its label, peak and end times and concentration (icfg_json)
+    -- insulin AAPS says it was given with, its label, peak and end times and concentration (icfg_json), and a combo
+    -- bolus's units given at once as sent beside its dose in all, Nightscout's careportal's insulin (given_at_once)
     split_now REAL CHECK(split_now BETWEEN 0 AND 1),
     split_ext REAL CHECK(split_ext BETWEEN 0 AND 1),
     automatic INTEGER CHECK(automatic IN (0, 1)),
@@ -362,6 +363,7 @@ CREATE TABLE insulin_doses (
     insulin_type TEXT CHECK(length(insulin_type) <= 64),
     unabsorbed REAL CHECK(unabsorbed BETWEEN 0 AND 500),
     icfg_json TEXT CHECK(length(icfg_json) <= 1024 AND json_valid(icfg_json)),
+    given_at_once REAL CHECK(given_at_once BETWEEN -500 AND 500),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

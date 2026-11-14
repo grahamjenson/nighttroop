@@ -350,12 +350,15 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	}
 	// The duration sent in milliseconds is kept with the minutes its event keeps, as AAPS reads it before the minutes
 	treatment.Duration = treatment.Duration.WithMs(source.EventGroup.DurationMs)
-	// A Combo Bolus gives back its dose as enteredinsulin, with no insulin when none was given at once, and the part
-	// extended as relative units an hour, as Nightscout's careportal sends them: AAPS reads a treatment with insulin as
-	// a bolus, and drops a Combo Bolus without enteredinsulin
+	// A Combo Bolus gives back its dose as enteredinsulin, its insulin given at once as sent, none when none was, and the
+	// part extended as relative units an hour, as Nightscout's careportal sends them: AAPS reads a treatment with
+	// insulin as a bolus, and drops a Combo Bolus without enteredinsulin
 	if treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus && treatment.Insulin != nil {
 		dose := treatment.Insulin.Float64()
 		treatment.EnteredInsulin = treatment.Insulin
+		if treatment.GivenAtOnce != nil {
+			treatment.Insulin = treatment.GivenAtOnce
+		}
 		if now := treatment.SplitNow; now != nil && now.Float64() == 0 {
 			treatment.Insulin = nil
 		}

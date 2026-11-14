@@ -13,6 +13,7 @@ INSERT INTO insulin_doses (
     insulin_type,
     unabsorbed,
     icfg_json,
+    given_at_once,
 
     notes,
     reason,
@@ -24,7 +25,7 @@ INSERT INTO insulin_doses (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -106,6 +107,7 @@ UPDATE insulin_doses SET
     insulin_type = sqlc.arg('InsulinType'),
     unabsorbed = sqlc.arg('Unabsorbed'),
     icfg_json = sqlc.arg('IcfgJson'),
+    given_at_once = sqlc.arg('GivenAtOnce'),
     notes = sqlc.arg('Notes'),
     reason = sqlc.arg('Reason'),
     utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
@@ -129,6 +131,7 @@ UPDATE insulin_doses SET
     insulin_type = COALESCE(NULLIF(CAST(sqlc.narg('InsulinType') AS TEXT), ''), insulin_type),
     unabsorbed = COALESCE(sqlc.narg('Unabsorbed'), unabsorbed),
     icfg_json = COALESCE(sqlc.narg('IcfgJson'), icfg_json),
+    given_at_once = COALESCE(sqlc.narg('GivenAtOnce'), given_at_once),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

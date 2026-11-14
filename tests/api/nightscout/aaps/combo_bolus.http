@@ -82,7 +82,8 @@ ASSERT_EQUALS 1 "@result.relative"
 ASSERT_EQUALS null "@result.insulin"
 
 // Nightscout's careportal sends the insulin given at once as insulin, all of it as enteredinsulin, the dose, and the
-// part extended as relative. All of it is the dose, so the 2 U extended are not lost
+// part extended as relative. All of it is the dose, so the 2 U extended are not lost, and its insulin is given back as
+// sent, so AAPS takes the 1 U given at once as its bolus
 NAME add_careportal_combo
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -94,7 +95,7 @@ GET http://{{ site }}/api/v1/treatments.json?count=1
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 3 "@0.enteredinsulin"
-ASSERT_EQUALS 3 "@0.insulin"
+ASSERT_EQUALS 1 "@0.insulin"
 ASSERT_EQUALS 1.005 "@0.relative"
 ASSERT_EQUALS 33 "@0.splitNow"
 
@@ -103,3 +104,19 @@ GET http://{{ site }}/api/v3/treatments?limit=1&sort$desc=date&eventType=Combo+B
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 3 "@result.0.enteredinsulin"
+ASSERT_EQUALS 1 "@result.0.insulin"
+SET careportal_id {{ dig "careportal_combo_v3.result.0.identifier" }}
+
+// A patch that leaves insulin out keeps the part given at once
+NAME patch_careportal_combo
+PATCH http://{{ site }}/api/v3/treatments/{{ .careportal_id }}
+H Authorization: Bearer {{ jwt }}
+B {"notes": "lunch"}
+ASSERT_STATUS 200
+
+NAME patched_careportal_combo
+GET http://{{ site }}/api/v3/treatments/{{ .careportal_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@result.insulin"
+ASSERT_EQUALS 3 "@result.enteredinsulin"

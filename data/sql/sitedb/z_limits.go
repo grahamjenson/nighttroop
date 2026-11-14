@@ -203,6 +203,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"InsulinType":           {Column: "insulin_type", MaxLength: 64},
 		"Unabsorbed":            {Column: "unabsorbed", Min: new(0.0), Max: new(500.0)},
 		"IcfgJson":              {Column: "icfg_json", MaxLength: 1024},
+		"GivenAtOnce":           {Column: "given_at_once", Min: new(-500.0), Max: new(500.0)},
 		"Notes":                 {Column: "notes", MaxLength: 1024},
 		"Reason":                {Column: "reason", MaxLength: 64},
 		"DeletedAt":             {Column: "deleted_at"},

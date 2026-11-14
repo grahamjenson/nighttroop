@@ -1441,6 +1441,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     `splitExt` 100 (AAPS).
   - An `insulin` up to `enteredinsulin` is the part given at once (Nightscout's careportal), and the dose is still
     `enteredinsulin`. A larger `insulin` (for example a patch) is the new dose.
+  - An `insulin` sent with `enteredinsulin` is returned as sent (the part given at once).
   - Returned with `enteredinsulin`, and with no `insulin` when `splitNow` is 0. AAPS reads a treatment with `insulin` as
     a bolus, and drops a Combo Bolus with no `enteredinsulin`.
   - Returned with `relative`: the units an hour of the extended part, from the dose, `splitExt` and `duration`.

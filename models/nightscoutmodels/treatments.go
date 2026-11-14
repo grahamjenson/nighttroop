@@ -46,6 +46,9 @@ type Treatment struct {
 	// as Nightscout's careportal and AAPS send them; its insulin is the part given at once
 	EnteredInsulin *types.FlexibleFloat64 `json:"enteredinsulin,omitempty"`
 	Relative       *types.FlexibleFloat64 `json:"relative,omitempty"`
+	// GivenAtOnce is a Combo Bolus's insulin sent beside its enteredinsulin, the part given at once, given back as its
+	// insulin as sent
+	GivenAtOnce *types.FlexibleFloat64 `json:"-"`
 	// additional: a bolus's type, e.g. SMB, or AAPS's temp basal's, e.g. PUMP_SUSPEND
 	Type *types.ShortString `json:"type,omitempty"`
 	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
@@ -220,7 +223,7 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		if t.Insulin == nil && t.SplitNow == nil && t.SplitExt == nil && t.EventType != nil {
 			t.SplitNow, t.SplitExt = new(types.FlexibleFloat64(0)), new(types.FlexibleFloat64(100))
 		}
-		t.Insulin = t.EnteredInsulin
+		t.GivenAtOnce, t.Insulin = t.Insulin, t.EnteredInsulin
 	}
 
 	t.Date, t.UtcOffsetMinutes = date, offset

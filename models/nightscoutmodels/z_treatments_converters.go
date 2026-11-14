@@ -453,6 +453,10 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		xstring3 := *source.IcfgJson
 		sitedbCreateInsulinDoseParams.IcfgJson = &xstring3
 	}
+	if source.GivenAtOnce != nil {
+		xfloat644 := *source.GivenAtOnce
+		sitedbCreateInsulinDoseParams.GivenAtOnce = &xfloat644
+	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
 		sitedbCreateInsulinDoseParams.Notes = &xstring4
@@ -690,6 +694,10 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 		sitedbInsulinDose.Unabsorbed = &xfloat64
 	}
 	sitedbInsulinDose.IcfgJson = InsulinConfigToJSON(source.ICfg)
+	if source.GivenAtOnce != nil {
+		xfloat642 := FlexibleFloat64ToFloat64(*source.GivenAtOnce)
+		sitedbInsulinDose.GivenAtOnce = &xfloat642
+	}
 	if source.Notes != nil {
 		xstring3 := SanitizedStringToString(*source.Notes)
 		sitedbInsulinDose.Notes = &xstring3
@@ -1283,6 +1291,10 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 		target.Insulin = &pTypesFlexibleFloat64
 		target.SplitNow = MultiplierToPercentage(source.SplitNow)
 		target.SplitExt = MultiplierToPercentage(source.SplitExt)
+		if source.GivenAtOnce != nil {
+			typesFlexibleFloat64 := types.FlexibleFloat64(*source.GivenAtOnce)
+			target.GivenAtOnce = &typesFlexibleFloat64
+		}
 		if source.DoseType != nil {
 			typesShortString := types.ShortString(*source.DoseType)
 			target.Type = &typesShortString
@@ -1309,8 +1321,8 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 			target.InsulinType = &typesShortString3
 		}
 		if source.Unabsorbed != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*source.Unabsorbed)
-			target.Unabsorbed = &typesFlexibleFloat64
+			typesFlexibleFloat642 := types.FlexibleFloat64(*source.Unabsorbed)
+			target.Unabsorbed = &typesFlexibleFloat642
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)

@@ -1093,6 +1093,10 @@ func InsulinDoseFromView(source InsulinDosesVw) InsulinDose {
 		xstring3 := *source.IcfgJson
 		sitedbInsulinDose.IcfgJson = &xstring3
 	}
+	if source.GivenAtOnce != nil {
+		xfloat644 := *source.GivenAtOnce
+		sitedbInsulinDose.GivenAtOnce = &xfloat644
+	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
 		sitedbInsulinDose.Notes = &xstring4
@@ -1179,6 +1183,10 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 		xstring3 := *source.IcfgJson
 		sitedbCreateInsulinDoseParams.IcfgJson = &xstring3
 	}
+	if source.GivenAtOnce != nil {
+		xfloat644 := *source.GivenAtOnce
+		sitedbCreateInsulinDoseParams.GivenAtOnce = &xfloat644
+	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
 		sitedbCreateInsulinDoseParams.Notes = &xstring4
@@ -1242,6 +1250,10 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	if source.IcfgJson != nil {
 		xstring3 := *source.IcfgJson
 		sitedbUpdateInsulinDoseParams.IcfgJson = &xstring3
+	}
+	if source.GivenAtOnce != nil {
+		xfloat644 := *source.GivenAtOnce
+		sitedbUpdateInsulinDoseParams.GivenAtOnce = &xfloat644
 	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
@@ -2630,6 +2642,10 @@ func sitedbInsulinDosesVwToSitedbInsulinDosesVw(source InsulinDosesVw) InsulinDo
 	if source.IcfgJson != nil {
 		xstring4 := *source.IcfgJson
 		sitedbInsulinDosesVw.IcfgJson = &xstring4
+	}
+	if source.GivenAtOnce != nil {
+		xfloat645 := *source.GivenAtOnce
+		sitedbInsulinDosesVw.GivenAtOnce = &xfloat645
 	}
 	if source.Notes != nil {
 		xstring5 := *source.Notes

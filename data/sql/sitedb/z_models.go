@@ -296,6 +296,7 @@ type InsulinDose struct {
 	InsulinType           *string
 	Unabsorbed            *float64
 	IcfgJson              *string
+	GivenAtOnce           *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -322,6 +323,7 @@ type InsulinDosesVw struct {
 	InsulinType           *string
 	Unabsorbed            *float64
 	IcfgJson              *string
+	GivenAtOnce           *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64

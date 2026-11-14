@@ -70,8 +70,6 @@
        search yet; filtering in the oldest first query would need each search's filters there too
     1. P3: Keep a Combo Bolus's `isEmulatingTempBasal`, and an AAPS emulated extended bolus's Temp Basal
        `extendedEmulated`, as sent; without it AAPSClient shows the extended bolus as a temp basal. Needs columns
-    1. P4: A careportal Combo Bolus gives back all its insulin as `insulin`, not the part given at once as sent, so AAPS
-       takes it as a bolus of all of it. Keep the part given at once to give it back
     1. P4: Return a food's Nightscout `unit`, `gi`, `hidden`, `hideafteruse` and `position` as sent; AAPS takes g and
        none without them. Needs columns
     1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another
