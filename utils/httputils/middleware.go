@@ -230,6 +230,15 @@ func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) htt
 				slog.InfoContext(r.Context(), "Site rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
+			// A site flagged for abuse spends its flagged write limit too, whatever the identity, API or route
+			if siteContext := GetSiteContext(r.Context()); siteContext.HTTPAction == HTTPActionWrite {
+				if allowed, remainingTime := FlaggedSiteWritesWithinRateLimit(siteContext, 1); !allowed {
+					writeTooManyRequests(w, remainingTime)
+					_, _ = w.Write([]byte(SiteOverStorageMessage))
+					slog.InfoContext(r.Context(), "Flagged site write rate limit exceeded", "remainingTime", remainingTime)
+					return
+				}
+			}
 
 			next.ServeHTTP(w, r)
 		})
@@ -316,6 +325,11 @@ func CountRoutes(tracker *usage.Tracker, name string) func(http.Handler) http.Ha
 // writeTooManyRequests refuses a request over a rate limit, saying in Retry-After how many seconds until one is let
 // through, at least one, so a client such as AAPS waits rather than retrying at once
 func writeTooManyRequests(w http.ResponseWriter, seconds int) {
-	w.Header().Set("Retry-After", strconv.Itoa(max(1, seconds)))
+	SetRetryAfter(w, seconds)
 	w.WriteHeader(http.StatusTooManyRequests)
+}
+
+// SetRetryAfter says when a refused request can be sent again, at least a second from now
+func SetRetryAfter(w http.ResponseWriter, seconds int) {
+	w.Header().Set("Retry-After", strconv.Itoa(max(1, seconds)))
 }

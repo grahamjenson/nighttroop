@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type HTTPError struct {
@@ -106,6 +107,9 @@ var (
 	ErrTooManyBatchWrites = &HTTPError{Status: http.StatusTooManyRequests, Message: "Too many records written: send them again shortly"}
 	ErrTooManyProfiles = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many profiles: at most %d in a store", consts.MaxProfilesPerStore)}
 )
+
+// ErrSiteOverStorage is a batch that would take a site flagged for abuse past its flagged write limit
+var ErrSiteOverStorage = &HTTPError{Status: http.StatusTooManyRequests, Message: httputils.SiteOverStorageMessage}
 
 // Bad Updates
 var (
