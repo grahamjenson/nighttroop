@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
 )
@@ -349,12 +350,17 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	}
 	// The duration sent in milliseconds is kept with the minutes its event keeps, as AAPS reads it before the minutes
 	treatment.Duration = treatment.Duration.WithMs(source.EventGroup.DurationMs)
-	// A Combo Bolus gives back its dose as enteredinsulin, and no insulin when none of it was given at once, as AAPS
-	// reads a treatment with insulin as a bolus and drops a Combo Bolus without enteredinsulin
+	// A Combo Bolus gives back its dose as enteredinsulin, with no insulin when none was given at once, and the part
+	// extended as relative units an hour, as Nightscout's careportal sends them: AAPS reads a treatment with insulin as
+	// a bolus, and drops a Combo Bolus without enteredinsulin
 	if treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus && treatment.Insulin != nil {
+		dose := treatment.Insulin.Float64()
 		treatment.EnteredInsulin = treatment.Insulin
-		if treatment.SplitNow != nil && *treatment.SplitNow == 0 {
+		if now := treatment.SplitNow; now != nil && now.Float64() == 0 {
 			treatment.Insulin = nil
+		}
+		if ext, minutes := treatment.SplitExt, treatment.Duration.MinutesOrZero(); ext != nil && ext.Float64() > 0 && minutes > 0 {
+			treatment.Relative = new(types.FlexibleFloat64(consts.Round(dose*ext.Float64()/100*60/float64(minutes), 3)))
 		}
 	}
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
