@@ -946,6 +946,16 @@ func (m *EventGroup) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
+// GetEndID returns the EndID value.
+func (m EventGroup) GetEndID() *string {
+	return m.EndID
+}
+
+// SetEndID sets the EndID value and returns the updated EventGroup.
+func (m *EventGroup) SetEndID(v *string) {
+	m.EndID = v
+}
+
 // GetSensorCode returns the SensorCode value.
 func (m EventGroup) GetSensorCode() *string {
 	return m.SensorCode
@@ -9996,6 +10006,16 @@ func (m *CreateEventGroupParams) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
+// GetEndID returns the EndID value.
+func (m CreateEventGroupParams) GetEndID() *string {
+	return m.EndID
+}
+
+// SetEndID sets the EndID value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetEndID(v *string) {
+	m.EndID = v
+}
+
 // GetSensorCode returns the SensorCode value.
 func (m CreateEventGroupParams) GetSensorCode() *string {
 	return m.SensorCode
@@ -10734,6 +10754,16 @@ func (m RewriteEventGroupParams) GetPumpType() *string {
 // SetPumpType sets the PumpType value and returns the updated RewriteEventGroupParams.
 func (m *RewriteEventGroupParams) SetPumpType(v *string) {
 	m.PumpType = v
+}
+
+// GetEndID returns the EndID value.
+func (m RewriteEventGroupParams) GetEndID() *string {
+	return m.EndID
+}
+
+// SetEndID sets the EndID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetEndID(v *string) {
+	m.EndID = v
 }
 
 // GetSensorCode returns the SensorCode value.

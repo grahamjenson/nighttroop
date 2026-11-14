@@ -1,0 +1,31 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS ends a temp basal, as when the pump is reconnected, with a patch of its real duration and endId, the pump's id
+// of the record that ended it. Its endId is kept and given back as its pumpId is
+NAME add_temp_basal
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": {{ itime 20 }}, "rate": 0, "absolute": 0, "duration": 30, "type": "PUMP_SUSPEND", "pumpId": 1794506334100, "pumpType": "VIRTUAL", "pumpSerial": "S1", "app": "AAPS"}
+ASSERT_STATUS 201
+SET tb_id {{ .add_temp_basal.identifier }}
+
+NAME end_temp_basal
+PATCH http://{{ site }}/api/v3/treatments/{{ .tb_id }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 15, "durationInMilliseconds": 900000, "endId": 1794506334227}
+ASSERT_STATUS 200
+
+NAME ended_temp_basal_v3
+GET http://{{ site }}/api/v3/treatments/{{ .tb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "1794506334227" "@result.endId"
+ASSERT_EQUALS 15 "@result.duration"
+ASSERT_EQUALS "1794506334100" "@result.pumpId"
+
+NAME ended_temp_basal_v1
+GET http://{{ site }}/api/v1/treatments.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "1794506334227" "@0.endId"
