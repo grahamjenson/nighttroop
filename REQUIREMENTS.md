@@ -1547,6 +1547,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 ### Nightscout API: food and activities
 
 - Food: `type` `food` (AAPS loads only that type).
+- Food `portion`: the amount its carbs are for, as AAPS reads it. A food sent with `portions` keeps it as its `portion`.
+- Food `utcOffset`: the site timezone's offset at its date, as a food keeps no offset.
 - Activity (xDrip+): `type` is the activity type, a heart rate's `bpm` its heart rate, a motion's `class` its name.
 
 ### Nightscout API: Socket.IO

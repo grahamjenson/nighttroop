@@ -221,7 +221,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Device status `openaps` over 1 day old, in the client's 48 hours | Changed: as sent, without `predBGs` in `suggested` and `enacted`, and with the same `srvModified` | `loopfollow/devicestatus_day.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | Works: the pump object comes back as sent | `sync_v3.http` |
 | Food: create | Works | `sync_v3.http` |
-| Food: read | Works: `type` `food`. `portion`, `unit` and `gi` not kept yet (TODO P4) | `sync_v3.http` |
+| Food: read | Works: `type` `food`. `portion` fixed (was returned as `portions`, so AAPS took 0). `utcOffset` fixed (was 0). `unit`, `gi`, `hidden`, `hideafteruse` and `position` not kept yet (TODO P4) | `sync_v3.http`, `food_portion.http`, `utc_offset.http` |
 | Profile store: create, newest, history | Works | `sync_v3.http`, `flow_v3.http`, `history_paging.http` |
 | **Socket.IO and client control** | | |
 | `/storage` subscribe, `create`, `update`, `delete` | Works | `aaps_storage.sio`, `storage.sio` |

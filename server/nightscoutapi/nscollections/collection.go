@@ -213,7 +213,12 @@ func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext
 
 // document is a database model as this collection's document
 func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteContext) nsutils.Document {
-	return stored[NS]{meta: row(*dbModel), model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
+	m := row(*dbModel)
+	// One kept with no offset, a food or a profile sent without one, is in the site's timezone, as Nightscout's
+	if (*dbModel).GetUtcOffsetMinutes() == nil {
+		m.utcOffset = siteUtcOffset(siteContext)(m.occurredAt)
+	}
+	return stored[NS]{meta: m, model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
 func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
