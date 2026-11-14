@@ -1,0 +1,28 @@
+// AAPS sends a finger stick typed in as a BG Check with glucoseType "Manual" (TE.MeterType.MANUAL)
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME add_manual_bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 1 }},
+    "enteredBy": "AndroidAPS",
+    "eventType": "BG Check",
+    "glucose": 6.8,
+    "glucoseType": "Manual",
+    "isValid": true,
+    "units": "mmol",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME get_manual_bg_check
+GET http://{{ site }}/api/v3/treatments/{{ .add_manual_bg_check.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "BG Check" "@result.eventType"
+ASSERT_EQUALS "Manual" "@result.glucoseType"
+ASSERT_EQUALS 122.522 "@result.glucose"
+ASSERT_EQUALS "mg/dl" "@result.units"

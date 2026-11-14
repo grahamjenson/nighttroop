@@ -27,9 +27,6 @@ func NewEntriesCollection() CollectionStore {
 // Cannot change properties
 
 func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	if err := validateEntryMgdl(nsModel); err != nil {
-		return err
-	}
 	if err := validateEntryDate(nsModel); err != nil {
 		return err
 	}
@@ -45,12 +42,9 @@ func validateEntryDate(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
 	return nil
 }
 
-// Refuse glucose far outside real use, checked in mg/dL as it is stored
-func validateEntryMgdl(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
-	if nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxGlucoseMgdl {
-		return nsutils.BadGlucoseError
-	}
-	return nil
+// Rows are its reading, whose glucose is out of range when far outside real use, checked in mg/dL as it is stored
+func (c EntriesCollection) Rows(nsModel nightscoutmodels.Entry) []sitedb.TableRow {
+	return []sitedb.TableRow{{Table: "glucose_readings", Row: nightscoutmodels.EntryToCreate(nsModel, nightscoutmodels.ConverterContext{})}}
 }
 
 func validateEntryType(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {

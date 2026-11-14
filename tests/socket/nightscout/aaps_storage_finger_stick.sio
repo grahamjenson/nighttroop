@@ -1,0 +1,37 @@
+# AAPS takes finger sticks only from BG Check treatments, so its /storage socket subscribed to treatments gets a meter
+# reading in no treatment, as xDrip+ sends a blood test, as a read-only BG Check, as API v3 gives it. See docs/clients/aaps.md
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /storage
+T 5s
+
+NAME subscribe
+EMIT subscribe
+B {"accessToken":"{{ token }}","collections":["treatments"]}
+ACK
+ASSERT_EQUALS true "@success"
+
+NAME xdrip_finger_stick
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"mbg","mbg":118,"device":"Manual Entry","date":{{ itime 5 }}}]
+ASSERT_STATUS 200
+
+NAME bg_check_created
+WAIT create
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS "BG Check" "@doc.eventType"
+ASSERT_EQUALS 118 "@doc.glucose"
+ASSERT_EQUALS "Finger" "@doc.glucoseType"
+ASSERT_EQUALS true "@doc.isReadOnly"
+ASSERT_EXISTS "@doc.srvModified"
+
+NAME disconnect
+DISCONNECT
