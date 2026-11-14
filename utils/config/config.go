@@ -158,6 +158,8 @@ type ServerConfig struct {
 	SiteGETPerMinuteBurst              int
 	SitePOSTPerMinuteLimit             int
 	SitePOSTPerMinuteBurst             int
+	SitePOSTFlaggedPerMinuteLimit      int
+	SitePOSTFlaggedPerMinuteBurst      int
 	SiteUpdateConnectorsPerMinuteLimit int
 	SiteUpdateConnectorsPerMinuteBurst int
 
@@ -260,6 +262,9 @@ const SITE_GET_LIMIT = 180
 // SITE_POST_LIMIT is an identity's writes a minute; its burst is 12 times it, a day's AAPS backlog of about 650
 // readings, device statuses and treatments uploaded at once
 const SITE_POST_LIMIT = 60
+
+// SITE_POST_FLAGGED_LIMIT is the writes a minute of a site flagged for abuse, 1/20 of a site's; its burst is 3 times it
+const SITE_POST_FLAGGED_LIMIT = SITE_POST_LIMIT * SiteIdentitiesShare / 20
 
 // Priority is
 // 1. Args
@@ -391,6 +396,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteGETPerMinuteBurst:              configIntSelect(dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
 		SitePOSTPerMinuteLimit:             configIntSelect(dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
 		SitePOSTPerMinuteBurst:             configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*12),
+		SitePOSTFlaggedPerMinuteLimit:      configIntSelect(dotenv, "SITE_POST_FLAGGED_PER_MINUTE_LIMIT", SITE_POST_FLAGGED_LIMIT),
+		SitePOSTFlaggedPerMinuteBurst:      configIntSelect(dotenv, "SITE_POST_FLAGGED_PER_MINUTE_BURST", SITE_POST_FLAGGED_LIMIT*3),
 		SiteUpdateConnectorsPerMinuteLimit: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT", 1), // Stop sites from updating connector settings too much
 		SiteUpdateConnectorsPerMinuteBurst: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_BURST", 4),
 
@@ -763,6 +770,8 @@ func printServerConfig(config ServerConfig) {
 		"SiteGETPerMinuteBurst", config.SiteGETPerMinuteBurst,
 		"SitePOSTPerMinuteLimit r/s", config.SitePOSTPerMinuteLimit,
 		"SitePOSTPerMinuteBurst", config.SitePOSTPerMinuteBurst,
+		"SitePOSTFlaggedPerMinuteLimit r/s", config.SitePOSTFlaggedPerMinuteLimit,
+		"SitePOSTFlaggedPerMinuteBurst", config.SitePOSTFlaggedPerMinuteBurst,
 		"SiteCreateGlobalPerMinuteLimit r/s", config.SiteCreateGlobalPerMinuteLimit,
 		"SiteCreateGlobalPerMinuteBurst", config.SiteCreateGlobalPerMinuteBurst,
 		"SiteCreateIPPerMinuteLimit r/s", config.SiteCreateIPPerMinuteLimit,

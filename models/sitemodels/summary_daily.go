@@ -87,7 +87,7 @@ func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
 // NewSummaryDaily is the day named date from start until end, built from readings, doses, food, loop reports and
 // minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, and its times very
 // low, low, high and very high of those outside it, with their mean and standard deviation. Its total daily dose is
-// the doses and the basal in force each minute from minutesSince, its glucose is the newest reading in each 5 minutes,
+// the doses' insulin in it and the basal in force each minute from minutesSince, its glucose is the newest reading in each 5 minutes,
 // and its loop IOB and COB the newest report's, newest first, in each 5 minutes, or else in the 5 minutes before,
 // rounded to 2 decimals.
 func NewSummaryDaily(date, timezone string, start, end int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
@@ -127,9 +127,7 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 		day.GlucoseMeanMgdl, day.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
 	}
 	for _, d := range doses {
-		if within(d.OccurredAt) {
-			day.TotalDailyDose += d.Dose
-		}
+		day.TotalDailyDose += insulinWithin(d, start, end)
 	}
 	for i, m := range minutes {
 		if within(minutesSince+int64(i)*60_000) && m.Basal != nil {
@@ -317,4 +315,27 @@ func NewSummaryPeriod(period, date, timezone string, start, end, until int64, da
 	agpJSON, _ := json.Marshal(agp)
 	row.AgpMgdlJson = new(string(agpJSON))
 	return row
+}
+
+// insulinWithin is a dose's units given from start until end: its dose given at once, when it is then, and the share
+// of its extended dose, spread evenly over its extended duration, that is then, so one over midnight is split between
+// the days, and a day not yet over has what is due in it. An extended dose with no duration is given at once.
+func insulinWithin(d *sitedb.InsulinDose, start, end int64) float64 {
+	units := 0.0
+	if d.OccurredAt >= start && d.OccurredAt < end {
+		units = d.Dose
+	}
+	if d.ExtendedDose == nil || *d.ExtendedDose <= 0 {
+		return units
+	}
+	if d.ExtendedDurationMs == nil || *d.ExtendedDurationMs <= 0 {
+		if d.OccurredAt >= start && d.OccurredAt < end {
+			units += *d.ExtendedDose
+		}
+		return units
+	}
+	if overlap := min(d.OccurredAt+*d.ExtendedDurationMs, end) - max(d.OccurredAt, start); overlap > 0 {
+		units += *d.ExtendedDose * float64(overlap) / float64(*d.ExtendedDurationMs)
+	}
+	return units
 }

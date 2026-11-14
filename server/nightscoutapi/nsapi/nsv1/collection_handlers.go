@@ -110,6 +110,12 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			nsutils.WriteError(w, nsutils.ErrTooManyBatchWrites)
 			return
 		}
+		// A site flagged for abuse spends a flagged write for each record, so a batch cannot get around its limit
+		if allowed, seconds := httputils.FlaggedSiteWritesWithinRateLimit(httputils.GetSiteContext(r.Context()), len(arrayOfModels)-1); !allowed {
+			httputils.SetRetryAfter(w, seconds)
+			nsutils.WriteError(w, nsutils.ErrSiteOverStorage)
+			return
+		}
 
 		// Loop over the array of models sent. A batch of any collection leaves out a document it cannot store and stores
 		// the rest, as Nightscout stores them all: xDrip+ sends a failed entries batch again with every new reading added,

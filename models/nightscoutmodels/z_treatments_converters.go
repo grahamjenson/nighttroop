@@ -166,9 +166,13 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring22 := *source.BolusCalculatorResultJson
 		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring22
 	}
+	if source.EmulatedTreatmentJson != nil {
+		xstring23 := *source.EmulatedTreatmentJson
+		sitedbCreateEventGroupParams.EmulatedTreatmentJson = &xstring23
+	}
 	if source.SyncIdentifier != nil {
-		xstring23 := *source.SyncIdentifier
-		sitedbCreateEventGroupParams.SyncIdentifier = &xstring23
+		xstring24 := *source.SyncIdentifier
+		sitedbCreateEventGroupParams.SyncIdentifier = &xstring24
 	}
 	if source.ClientCreatedAt != nil {
 		xint644 := *source.ClientCreatedAt
@@ -180,12 +184,12 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
-		xstring24 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring24
+		xstring25 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring25
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring25 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring25
+		xstring26 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring26
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateEventGroupParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -201,6 +205,7 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		typesJSONTextString := types.JSONTextString(*source.BolusCalculatorResultJson)
 		nightscoutmodelsTreatment.BolusCalculatorResult = &typesJSONTextString
 	}
+	nightscoutmodelsTreatment.EmulatedTreatment = StringToRawJSON(source.EmulatedTreatmentJson)
 	nightscoutmodelsTreatment.Duration = MinutesToDuration(source.DurationMinutes)
 	if source.OriginalDurationMs != nil {
 		typesFlexibleInt64 := types.FlexibleInt64(*source.OriginalDurationMs)
@@ -433,13 +438,13 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		xstring := *source.DoseType
 		sitedbCreateInsulinDoseParams.DoseType = &xstring
 	}
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbCreateInsulinDoseParams.SplitNow = &xfloat64
+	if source.ExtendedDose != nil {
+		xfloat64 := *source.ExtendedDose
+		sitedbCreateInsulinDoseParams.ExtendedDose = &xfloat64
 	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
+	if source.ExtendedDurationMs != nil {
+		xint64 := *source.ExtendedDurationMs
+		sitedbCreateInsulinDoseParams.ExtendedDurationMs = &xint64
 	}
 	if source.Automatic != nil {
 		xbool := *source.Automatic
@@ -454,8 +459,8 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		sitedbCreateInsulinDoseParams.InsulinType = &xstring2
 	}
 	if source.Unabsorbed != nil {
-		xfloat643 := *source.Unabsorbed
-		sitedbCreateInsulinDoseParams.Unabsorbed = &xfloat643
+		xfloat642 := *source.Unabsorbed
+		sitedbCreateInsulinDoseParams.Unabsorbed = &xfloat642
 	}
 	if source.IcfgJson != nil {
 		xstring3 := *source.IcfgJson
@@ -470,8 +475,8 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		sitedbCreateInsulinDoseParams.Reason = &xstring5
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		sitedbCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		sitedbCreateInsulinDoseParams.UtcOffsetMinutes = &xint642
 	}
 	sitedbCreateInsulinDoseParams.OccurredAt = source.OccurredAt
 	if source.CreatedByAppName != nil {
@@ -679,8 +684,14 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 		xstring := ShortStringToString(*source.Type)
 		sitedbInsulinDose.DoseType = &xstring
 	}
-	sitedbInsulinDose.SplitNow = PercentageToMultiplier(source.SplitNow)
-	sitedbInsulinDose.SplitExt = PercentageToMultiplier(source.SplitExt)
+	if source.ExtendedDose != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.ExtendedDose)
+		sitedbInsulinDose.ExtendedDose = &xfloat64
+	}
+	if source.ExtendedDurationMs != nil {
+		xint64 := *source.ExtendedDurationMs
+		sitedbInsulinDose.ExtendedDurationMs = &xint64
+	}
 	if source.Automatic != nil {
 		xbool := *source.Automatic
 		sitedbInsulinDose.Automatic = &xbool
@@ -694,8 +705,8 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 		sitedbInsulinDose.InsulinType = &xstring2
 	}
 	if source.Unabsorbed != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Unabsorbed)
-		sitedbInsulinDose.Unabsorbed = &xfloat64
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Unabsorbed)
+		sitedbInsulinDose.Unabsorbed = &xfloat642
 	}
 	sitedbInsulinDose.IcfgJson = InsulinConfigToJSON(source.ICfg)
 	if source.Notes != nil {
@@ -707,8 +718,8 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 		sitedbInsulinDose.Reason = &xstring4
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbInsulinDose.UtcOffsetMinutes = &xint64
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbInsulinDose.UtcOffsetMinutes = &xint642
 	}
 	sitedbInsulinDose.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
@@ -1142,6 +1153,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		sitedbEventGroup.SyncIdentifier = &xstring12
 	}
 	sitedbEventGroup.ClientCreatedAt = DateStringToMillis(source.CreationDate)
+	sitedbEventGroup.EmulatedTreatmentJson = RawJSONToString(source.EmulatedTreatment)
 	if source.Notes != nil {
 		xstring13 := SanitizedStringToString(*source.Notes)
 		sitedbEventGroup.Notes = &xstring13
@@ -1293,8 +1305,14 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 	if source != nil {
 		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.Dose)
 		target.Insulin = &pTypesFlexibleFloat64
-		target.SplitNow = MultiplierToPercentage(source.SplitNow)
-		target.SplitExt = MultiplierToPercentage(source.SplitExt)
+		if source.ExtendedDose != nil {
+			typesFlexibleFloat64 := types.FlexibleFloat64(*source.ExtendedDose)
+			target.ExtendedDose = &typesFlexibleFloat64
+		}
+		if source.ExtendedDurationMs != nil {
+			xint64 := *source.ExtendedDurationMs
+			target.ExtendedDurationMs = &xint64
+		}
 		if source.DoseType != nil {
 			typesShortString := types.ShortString(*source.DoseType)
 			target.Type = &typesShortString
@@ -1321,8 +1339,8 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 			target.InsulinType = &typesShortString3
 		}
 		if source.Unabsorbed != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*source.Unabsorbed)
-			target.Unabsorbed = &typesFlexibleFloat64
+			typesFlexibleFloat642 := types.FlexibleFloat64(*source.Unabsorbed)
+			target.Unabsorbed = &typesFlexibleFloat642
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)

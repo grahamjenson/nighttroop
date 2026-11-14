@@ -745,10 +745,10 @@
           {
             "type": "object",
             "properties": {
-              "dose": { "type": "number", "format": "double", "description": "Units of insulin" },
+              "dose": { "type": "number", "format": "double", "description": "Units of insulin given at once" },
               "dose_type": { "type": "string" },
-              "split_now": { "type": "number", "format": "double" },
-              "split_ext": { "type": "number", "format": "double" },
+              "extended_dose": { "type": "number", "format": "double", "description": "A combo or extended bolus's units given evenly over extended_duration_minutes after the dose" },
+              "extended_duration_minutes": { "type": "integer", "format": "int64", "description": "How long the extended dose is given over" },
               "automatic": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site" }
             }
           }

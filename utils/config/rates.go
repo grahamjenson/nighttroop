@@ -29,6 +29,8 @@ type RateLimiters struct {
 
 	identityPOSTRateLimiters *lru.Cache[string, *rate.Limiter]
 	sitePOSTRateLimiters     *lru.Cache[string, *rate.Limiter]
+	// siteFlaggedPOSTRateLimiters are the far lower write limits of sites flagged for abuse, spent as well as their own
+	siteFlaggedPOSTRateLimiters *lru.Cache[string, *rate.Limiter]
 
 	siteUpdateConnectorsRateLimiters *lru.Cache[string, *rate.Limiter]
 	siteIdentityCreateRateLimiters   *lru.Cache[string, *rate.Limiter]
@@ -70,6 +72,8 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 
 		identityPOSTRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		sitePOSTRateLimiters:     lruMust(maxSites * wiggle),
+
+		siteFlaggedPOSTRateLimiters: lruMust(maxSites * wiggle),
 
 		siteUpdateConnectorsRateLimiters: lruMust(maxSites * wiggle),
 		siteIdentityCreateRateLimiters:   lruMust(maxSites * wiggle),
@@ -168,6 +172,11 @@ func (r *RateLimiters) SiteGETLimiter(subdomain string) *rate.Limiter {
 
 func (r *RateLimiters) SitePOSTLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateScaledLimiter(r.sitePOSTRateLimiters, subdomain, "site_post", SiteIdentitiesShare)
+}
+
+// SiteFlaggedPOSTLimiter is the writes of a site flagged for abuse, which spend it as well as the site's own limit
+func (r *RateLimiters) SiteFlaggedPOSTLimiter(subdomain string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.siteFlaggedPOSTRateLimiters, subdomain, "site_post_flagged")
 }
 
 func (r *RateLimiters) SiteUpdateConnectorsLimiter(subdomain string) *rate.Limiter {
@@ -280,6 +289,7 @@ func rateDefaults(c ServerConfig) []RateSetting {
 		{Name: "site_push", Env: "SITE_PUSH_PER_MINUTE", Default: Rate{float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst}},
 		{Name: "site_report_print", Env: "SITE_REPORT_PRINT_PER_MINUTE", Default: Rate{float64(c.SiteReportPrintPerMinuteLimit), c.SiteReportPrintPerMinuteBurst}},
 		{Name: "login_name", Env: "SITE_LOGIN_NAME_PER_MINUTE", Default: Rate{float64(c.SiteLoginNamePerMinuteLimit), c.SiteLoginNamePerMinuteBurst}},
+		{Name: "site_post_flagged", Env: "SITE_POST_FLAGGED_PER_MINUTE", Default: Rate{float64(c.SitePOSTFlaggedPerMinuteLimit), c.SitePOSTFlaggedPerMinuteBurst}},
 	}
 	for i := range settings {
 		settings[i].Rate = settings[i].Default
@@ -352,6 +362,7 @@ func (r *RateLimiters) kinds() []limiterKind {
 		{"site_download", "site", "site_download", r.siteDownloadRateLimiters.Values(), 1},
 		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values(), 1},
 		{"site_report_print", "site", "site_report_print", r.siteReportPrintRateLimiters.Values(), 1},
+		{"site_post_flagged", "site", "site_post_flagged", r.siteFlaggedPOSTRateLimiters.Values(), 1},
 	}
 }
 

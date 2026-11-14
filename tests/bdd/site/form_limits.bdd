@@ -2,13 +2,13 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // An insulin dose's inputs take what its columns take, narrowed where a dose is less: its dose to 100 units either way,
-// its split as the percent of its column's fraction, and its texts to their columns' lengths
+// its extended dose to its column's, and its texts to their columns' lengths
 GOTO /data/insulin
 ASSERT_STATUS 200
 CLICK #site--insulin--add
 ASSERT_VISIBLE #site--insulin--create--modal
 ASSERT_VISIBLE #site--insulin--create--dose[min="-100"][max="100"][step="any"]
-ASSERT_VISIBLE #site--insulin--create--split-now[min="0"][max="100"][data-percent]
+ASSERT_VISIBLE #site--insulin--create--extended-dose[min="0"][max="500"][step="any"]
 ASSERT_VISIBLE #site--insulin--create--dose-type[maxlength="32"]
 ASSERT_VISIBLE #site--insulin--create--notes[maxlength="1024"]
 SCREENSHOT insulin_dose_limits

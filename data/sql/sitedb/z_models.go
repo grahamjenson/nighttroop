@@ -118,6 +118,7 @@ type EventGroup struct {
 	BolusCalculatorResultJson *string
 	SyncIdentifier            *string
 	ClientCreatedAt           *int64
+	EmulatedTreatmentJson     *string
 	Notes                     *string
 	Reason                    *string
 	DurationMinutes           *int64
@@ -295,8 +296,8 @@ type InsulinDose struct {
 	ID                    string
 	Dose                  float64
 	DoseType              *string
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string
@@ -321,8 +322,8 @@ type InsulinDosesVw struct {
 	ID                    *string
 	Dose                  *float64
 	DoseType              *string
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string

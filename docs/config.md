@@ -159,6 +159,7 @@ settings keep that value, which replaces the env value until set back.
 | `SITE_CREATE_IP_PER_MINUTE_LIMIT` / `_BURST` | `0.1` / `1` | Sites created from one IP: one each 10 minutes. |
 | `SITE_GET_PER_MINUTE_LIMIT` / `_BURST` | `180` / `360` | An identity's authenticated reads. Its site's total can be 4 times this, so one identity cannot use it all. |
 | `SITE_POST_PER_MINUTE_LIMIT` / `_BURST` | `60` / `720` | An identity's authenticated writes. Its site's total can be 4 times this, so a phone that uploads a backlog leaves room for a carer's app or AAPSClient. |
+| `SITE_POST_FLAGGED_PER_MINUTE_LIMIT` / `_BURST` | `12` / `36` | Writes of a site flagged for abuse (its DB is over 3 times its size limit), spent as well as its other write limits. A v1 or live update upload costs one for each record. |
 | `SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's saves of connector settings, to add or change one. |
 | `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities and credential resets. Each hashes a password with bcrypt or makes a TOTP secret. |
 | `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads. Each copies its whole DB. |

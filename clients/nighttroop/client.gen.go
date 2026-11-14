@@ -307,20 +307,24 @@ type InsulinDose struct {
 	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
 	CreatedByIdentityName *string `json:"created_by_identity_name,omitempty"`
 
-	// Dose Units of insulin
+	// Dose Units of insulin given at once
 	Dose     *float64 `json:"dose,omitempty"`
 	DoseType *string  `json:"dose_type,omitempty"`
-	Id       *string  `json:"id,omitempty"`
-	Notes    *string  `json:"notes,omitempty"`
+
+	// ExtendedDose A combo or extended bolus's units given evenly over extended_duration_minutes after the dose
+	ExtendedDose *float64 `json:"extended_dose,omitempty"`
+
+	// ExtendedDurationMinutes How long the extended dose is given over
+	ExtendedDurationMinutes *int64  `json:"extended_duration_minutes,omitempty"`
+	Id                      *string `json:"id,omitempty"`
+	Notes                   *string `json:"notes,omitempty"`
 
 	// OccurredAt Now, if not sent when creating
-	OccurredAt            *int64   `json:"occurred_at,omitempty"`
-	Reason                *string  `json:"reason,omitempty"`
-	SplitExt              *float64 `json:"split_ext,omitempty"`
-	SplitNow              *float64 `json:"split_now,omitempty"`
-	UpdatedAt             *int64   `json:"updated_at,omitempty"`
-	UpdatedByIdentityName *string  `json:"updated_by_identity_name,omitempty"`
-	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes,omitempty"`
+	OccurredAt            *int64  `json:"occurred_at,omitempty"`
+	Reason                *string `json:"reason,omitempty"`
+	UpdatedAt             *int64  `json:"updated_at,omitempty"`
+	UpdatedByIdentityName *string `json:"updated_by_identity_name,omitempty"`
+	UtcOffsetMinutes      *int64  `json:"utc_offset_minutes,omitempty"`
 }
 
 // LoginRequest defines model for LoginRequest.

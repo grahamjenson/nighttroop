@@ -121,6 +121,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map . EnteredBy | EventGroupEnteredBy
 	// goverter:map Uuid UUID
 	// goverter:map BolusCalculatorResultJson BolusCalculatorResult
+	// goverter:map EmulatedTreatmentJson EmulatedTreatment | StringToRawJSON
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -142,8 +143,6 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Dose Insulin
 	// goverter:map DoseType Type
-	// goverter:map SplitNow SplitNow | MultiplierToPercentage
-	// goverter:map SplitExt SplitExt | MultiplierToPercentage
 	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
@@ -223,8 +222,6 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Insulin Dose
 	// goverter:map Type DoseType
-	// goverter:map SplitNow SplitNow | PercentageToMultiplier
-	// goverter:map SplitExt SplitExt | PercentageToMultiplier
 	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose
 
@@ -283,6 +280,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Duration DurationMinutes | DurationToMinutesP
 	// goverter:map Duration DurationMs | DurationToMs
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
+	// goverter:map EmulatedTreatment EmulatedTreatmentJson | RawJSONToString
 	// goverter:map SentJSON SentHash | SentHash
 	// goverter:map CreationDate ClientCreatedAt | DateStringToMillis
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
@@ -438,4 +436,22 @@ func MillisToDateString(source *int64) *types.DateString {
 		return nil
 	}
 	return new(types.DateStringFromInt64AndUTCOffset(*source, nil))
+}
+
+// RawJSONToString is JSON sent as it is, kept as its text
+func RawJSONToString(raw *json.RawMessage) *string {
+	if raw == nil || len(*raw) == 0 || string(*raw) == "null" {
+		return nil
+	}
+	text := string(*raw)
+	return &text
+}
+
+// StringToRawJSON is JSON kept as its text, given back as it was sent
+func StringToRawJSON(text *string) *json.RawMessage {
+	if text == nil {
+		return nil
+	}
+	raw := json.RawMessage(*text)
+	return &raw
 }
