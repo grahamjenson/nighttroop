@@ -1634,6 +1634,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - A polling client upgrades to a websocket at once: the probe ends its waiting poll. The JavaScript client (AAPS,
   Nightscout pages) does not reconnect each minute.
+- A websocket from a browser opens only from the site's own host and port: from another origin, 403. The scheme's
+  default port (`:443` for https, `:80` for http) in the `Origin` or the `Host` but not both is the same origin. A
+  client that sends no `Origin` opens it.
 - No namespace joined in 45 seconds: closed.
 - No access in 30 seconds: the socket and its connection close. Access comes from an `authorize` that can read or
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
