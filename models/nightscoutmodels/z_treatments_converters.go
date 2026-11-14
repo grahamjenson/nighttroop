@@ -110,7 +110,6 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xint642 := *source.DurationMs
 		sitedbCreateEventGroupParams.DurationMs = &xint642
 	}
-	sitedbCreateEventGroupParams.DurationFraction = source.DurationFraction
 	if source.EnteredBy != nil {
 		xstring11 := *source.EnteredBy
 		sitedbCreateEventGroupParams.EnteredBy = &xstring11
@@ -1165,7 +1164,6 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 	}
 	sitedbEventGroup.DurationMinutes = DurationToMinutesP(source.Duration)
 	sitedbEventGroup.DurationMs = DurationToMs(source.Duration)
-	sitedbEventGroup.DurationFraction = DurationToFraction(source.Duration)
 	if source.UtcOffsetMinutes != nil {
 		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbEventGroup.UtcOffsetMinutes = &xint642

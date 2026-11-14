@@ -4,7 +4,7 @@ INCLUDE steps/ns_units_mgdl.steps
 // AAPS sends a treatment's duration in whole minutes as duration, and to the millisecond as durationInMilliseconds,
 // which it reads back before duration (TreatmentMapper), so durationInMilliseconds is given back as sent. API v3 gives
 // duration in whole minutes, as AAPS reads it as a whole number and drops a treatment, or a page of them, with a
-// fraction; API v1 gives it as sent, as Nightscout does
+// fraction; API v1 gives it with its fraction, as Loop sends and reads it
 
 // TT.toNSTemporaryTarget
 NAME add_temp_target
@@ -61,13 +61,12 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 5 "@result.0.duration"
 ASSERT_EQUALS 359587 "@result.0.durationInMilliseconds"
 
-// API v1 gives the whole minutes sent, as Nightscout does
+// API v1 gives the nearest whole minutes, as Trio and xDrip4iOS read a whole number
 NAME ended_temp_target_v1
 GET http://{{ site }}/api/v1/treatments/{{ .add_temp_target.identifier }}
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 5 "@0.duration"
-ASSERT_EQUALS 359587 "@0.durationInMilliseconds"
+ASSERT_EQUALS 6 "@0.duration"
 
 // A pump reconnected 43 s into a suspend ends its temp basal with a duration of 0 and 43491 ms
 NAME add_suspend

@@ -369,8 +369,6 @@ CREATE TABLE event_groups (
     -- the duration to the millisecond, as sent (durationInMilliseconds), at most a year, as AAPS ends a temp target early
     -- to the millisecond and reads it back before the minutes
     duration_ms INTEGER CHECK(duration_ms BETWEEN 0 AND 31536000000),
-    -- whether the duration was sent in minutes with a fraction, which API v1 gives back as sent, as Nightscout keeps it
-    duration_fraction INTEGER NOT NULL DEFAULT 0 CHECK(duration_fraction IN (0, 1)),
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),

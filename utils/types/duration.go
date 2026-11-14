@@ -13,9 +13,6 @@ type Duration struct {
 	Minutes int64
 	// Ms is to the millisecond, nil when it is its minutes
 	Ms *int64
-	// Fraction is whether its minutes were sent with a fraction, which API v1 gives back, as Nightscout gives back the
-	// minutes sent: whole minutes sent with milliseconds that are not, as AAPS sends, are given back whole
-	Fraction bool
 	// wholeMinutes writes its duration in whole minutes, as API v3 does
 	wholeMinutes bool
 }
@@ -32,8 +29,8 @@ type SentDuration struct {
 func (s SentDuration) Duration() *Duration {
 	if s.DurationMinutes != nil {
 		minutes := s.DurationMinutes.Float64()
-		d := Duration{Minutes: int64(minutes), Ms: s.DurationInMilliseconds.Int64p(), Fraction: minutes != math.Trunc(minutes)}
-		if d.Ms == nil && d.Fraction {
+		d := Duration{Minutes: int64(minutes), Ms: s.DurationInMilliseconds.Int64p()}
+		if d.Ms == nil && minutes != math.Trunc(minutes) {
 			d.Ms = new(int64(math.Round(minutes * 60_000)))
 		}
 		return &d
@@ -57,13 +54,13 @@ func DurationOfMs(ms *int64) *Duration {
 	return &Duration{Minutes: (*ms + 30_000) / 60_000, Ms: ms}
 }
 
-// WithMs is the duration to the millisecond, the milliseconds kept with it and whether its minutes were sent with a
-// fraction, or of those milliseconds when it has no minutes
-func (d *Duration) WithMs(ms *int64, fraction bool) *Duration {
-	if ms == nil {
-		return d
+// WithMs is the duration to the millisecond, the milliseconds kept with it, or of those milliseconds when it has no
+// minutes
+func (d *Duration) WithMs(ms *int64) *Duration {
+	if d == nil || ms == nil {
+		return cmp.Or(d, DurationOfMs(ms))
 	}
-	return &Duration{Minutes: cmp.Or(d, DurationOfMs(ms)).Minutes, Ms: ms, Fraction: fraction}
+	return &Duration{Minutes: d.Minutes, Ms: ms}
 }
 
 // MinutesP are its whole minutes, nil when there is none
@@ -115,17 +112,18 @@ type DurationFields struct {
 	DurationInMilliseconds *int64 `json:"durationInMilliseconds,omitempty"`
 }
 
-// Fields are it as it is written: in both minutes and milliseconds, as a client may read either. Its minutes have the
-// fraction of its milliseconds when they were sent with one, as Loop's NightscoutKit and LoopFollow read them, unless it
-// is written in whole minutes, as AAPS reads them as a whole number and drops a treatment with a fraction.
+// Fields are it as it is written: in both minutes and milliseconds, as a client may read either. Its minutes are
+// whole, as Trio, xDrip4iOS and AAPS read them as a whole number and drop a page with a fraction: on API v1 its
+// milliseconds to the nearest minute, so a Loop bolus or temp basal of under a minute is not 0, and in its minutes
+// when written in whole minutes, as API v3 does. The milliseconds have the rest.
 func (d *Duration) Fields() DurationFields {
 	if d == nil {
 		return DurationFields{}
 	}
 	ms := d.Milliseconds()
 	fields := DurationFields{DurationMinutes: d.Minutes, DurationInMilliseconds: &ms}
-	if d.Fraction && !d.wholeMinutes && ms%60_000 != 0 && ms/60_000 == d.Minutes {
-		fields.DurationMinutes = float64(ms) / 60_000
+	if !d.wholeMinutes && ms/60_000 == d.Minutes {
+		fields.DurationMinutes = (ms + 30_000) / 60_000
 	}
 	return fields
 }

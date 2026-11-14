@@ -1056,16 +1056,6 @@ func (m *EventGroup) SetDurationMs(v *int64) {
 	m.DurationMs = v
 }
 
-// GetDurationFraction returns the DurationFraction value.
-func (m EventGroup) GetDurationFraction() bool {
-	return m.DurationFraction
-}
-
-// SetDurationFraction sets the DurationFraction value and returns the updated EventGroup.
-func (m *EventGroup) SetDurationFraction(v bool) {
-	m.DurationFraction = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m EventGroup) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -9976,16 +9966,6 @@ func (m *CreateEventGroupParams) SetDurationMs(v *int64) {
 	m.DurationMs = v
 }
 
-// GetDurationFraction returns the DurationFraction value.
-func (m CreateEventGroupParams) GetDurationFraction() bool {
-	return m.DurationFraction
-}
-
-// SetDurationFraction sets the DurationFraction value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetDurationFraction(v bool) {
-	m.DurationFraction = v
-}
-
 // GetEnteredBy returns the EnteredBy value.
 func (m CreateEventGroupParams) GetEnteredBy() *string {
 	return m.EnteredBy
@@ -10744,16 +10724,6 @@ func (m RewriteEventGroupParams) GetDurationMs() *int64 {
 // SetDurationMs sets the DurationMs value and returns the updated RewriteEventGroupParams.
 func (m *RewriteEventGroupParams) SetDurationMs(v *int64) {
 	m.DurationMs = v
-}
-
-// GetDurationFraction returns the DurationFraction value.
-func (m RewriteEventGroupParams) GetDurationFraction() bool {
-	return m.DurationFraction
-}
-
-// SetDurationFraction sets the DurationFraction value and returns the updated RewriteEventGroupParams.
-func (m *RewriteEventGroupParams) SetDurationFraction(v bool) {
-	m.DurationFraction = v
 }
 
 // GetEnteredBy returns the EnteredBy value.

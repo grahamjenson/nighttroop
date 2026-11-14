@@ -222,7 +222,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | `glucose` and `glucoseType` on a Question, therapy event, Exercise or Carb Correction | Fixed: kept (were dropped) | `glucose_event_types.http` |
 | Temp basal or extended bolus ended by a patch with `endId` (the pump's id of the record that ended it) | Fixed: `endId` kept and returned, as `pumpId` is (was dropped) | `temp_basal_end_id.http` |
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
-| Temp target or temp basal ended early by a patch (`duration` 2, `durationInMilliseconds` 120750), read on API v1 | Fixed: API v1 gives the whole minutes sent, 2, as Nightscout does (was 2.0125, which a follower that reads `duration` as an Int can drop with its page) | `duration_v1_whole.http`, `duration_ms.http` |
+| Temp target or temp basal ended early (`PATCH` of `duration` 2 and `durationInMilliseconds` 120750) | Fixed: API v1 gives the nearest whole minutes, 2 (was 2.0125, so a client that reads a whole number dropped the page) | `duration_v1_whole.http` |
 | **Device status, food and profiles** | | |
 | Device status: create, history with `srvModified` | Works | `sync_v3.http`, `flow_v3.http` |
 | Device status `openaps` over 1 day old, in the client's 48 hours | Changed: as sent, without `predBGs` in `suggested` and `enacted`, and with the same `srvModified` | `loopfollow/devicestatus_day.http` |
