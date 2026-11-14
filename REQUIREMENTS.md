@@ -1066,9 +1066,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - `/pebble` (Pebble and other watch faces):
   - The newest `count` readings of the last two days. Default 1, maximum 1000.
   - Each glucose is a string in the `units` asked for (`mmol` or `mg/dl`), else the settings' units, with its trend
-    number.
-  - The newest also has the delta, uploader battery and IOB, as in Nightscout.
-  - The battery is from any device status, as `upbat`. The IOB is from a loop's device status.
+    number. No direction, or a direction with no number (e.g. `TripleUp`), is 8 (`NOT COMPUTABLE`), as in Nightscout.
+  - The newest also has the delta, uploader battery, IOB (a string) and COB (a number), as in Nightscout.
+  - The battery is from any device status, as `upbat`. The IOB and COB are from a loop's device status.
 
 #### v2 properties
 
