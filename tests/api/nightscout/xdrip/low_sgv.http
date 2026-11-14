@@ -1,6 +1,6 @@
 # xDrip+ sends sgv and mbg in mg/dL, with no units, as Nightscout's entries are. A low reading, at or below 30, is kept
-# in mg/dL and is never read as mmol/L, so a follower alarms on a low and not on a high. Dexcom's special values (1 to
-# 12, and 39 for LOW) are kept as sent. The bodies are as NightscoutUploader builds them, see docs/clients/xdrip.md.
+# in mg/dL and is never read as mmol/L, so a follower alarms on a low and not on a high. 39, a sensor's LOW, is kept as
+# sent; Dexcom's error codes, 1 to 12, are left out, as they are not glucose. The bodies are as NightscoutUploader builds them, see docs/clients/xdrip.md.
 # The site's units are mmol/L, which do not change the units of what is sent.
 
 INCLUDE steps/new_ns_site.steps
@@ -18,11 +18,10 @@ B [
   {"type": "mbg", "dateString": "{{ javatime 1 }}", "date": {{ itime 1 }}, "mbg": 25, "device": "xDrip-DexcomG6"}
  ]
 ASSERT_STATUS 200
-ASSERT_LENGTH 4 "@"
+ASSERT_LENGTH 3 "@"
 ASSERT_EQUALS 28 "@0.sgv"
 ASSERT_EQUALS 39 "@1.sgv"
-ASSERT_EQUALS 5 "@2.sgv"
-ASSERT_EQUALS 25 "@3.mbg"
+ASSERT_EQUALS 25 "@2.mbg"
 
 // A reading sent with its units is in those units
 NAME xdrip_upload_mmol_entry
@@ -38,10 +37,9 @@ NAME xdrip_low_entries_stored
 GET http://{{ site }}/api/v1/entries.json?count=10
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 5 "@"
+ASSERT_LENGTH 4 "@"
 ASSERT_EQUALS 99.099 "@0.sgv"
 ASSERT_EQUALS 25 "@1.mbg"
-ASSERT_EQUALS 5 "@2.sgv"
-ASSERT_EQUALS 39 "@3.sgv"
-ASSERT_EQUALS 28 "@4.sgv"
-ASSERT_EQUALS "mg/dl" "@4.units"
+ASSERT_EQUALS 39 "@2.sgv"
+ASSERT_EQUALS 28 "@3.sgv"
+ASSERT_EQUALS "mg/dl" "@3.units"

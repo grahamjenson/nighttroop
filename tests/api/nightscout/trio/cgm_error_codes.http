@@ -1,0 +1,33 @@
+INCLUDE steps/new_ns_site.steps
+
+// A CGM's error codes, a sgv of 1 to 12 (Dexcom's special values), are not glucose: a batch leaves them out, as it
+// does a reading of 0, so a follower never reads one as a severe low. Trio with Nightscout as its CGM shows one as 39
+// mg/dL, alarms and cuts insulin.
+
+NAME upload_with_error_codes
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+    {"device": "x", "type": "sgv", "sgv": 5, "date": {{ itime 20 }}, "direction": "NONE"},
+    {"device": "x", "type": "sgv", "sgv": 12, "date": {{ itime 15 }}, "direction": "NONE"},
+    {"device": "x", "type": "sgv", "sgv": 39, "date": {{ itime 10 }}, "direction": "Flat"},
+    {"device": "x", "type": "sgv", "sgv": 40, "date": {{ itime 5 }}, "direction": "Flat"}
+  ]
+ASSERT_STATUS 200
+
+NAME trio_fetches_readings
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 40 "@0.sgv"
+ASSERT_EQUALS 39 "@1.sgv"
+
+NAME only_error_codes
+POST http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"device": "x", "type": "sgv", "sgv": 6, "date": {{ itime 3 }}, "direction": "NONE"}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"

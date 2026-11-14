@@ -1266,7 +1266,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Entries, treatments, profiles and their `units`.
 - Input: in the units sent with it.
   - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value. A low of 30 or less
-    stays low (e.g. 28), and Dexcom's special values (1 to 12, 39) are kept as sent.
+    stays low (e.g. 28), and 39 (a sensor's LOW) is kept as sent. Dexcom's error codes (1 to 12) are not kept.
   - Other glucose with no `units`: guessed from the value.
 - A profile, or a profile switch's `profileJson`, in mmol/L comes back in mg/dL in each glucose field:
   - `sens`, `target_low`, `target_high`.
@@ -1537,6 +1537,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - An entry batch (see `docs/clients/xdrip.md`):
   - Calibration (`type` `cal`): left out, its readings kept.
   - Reading out of range (0 or less, or over 1000 mg/dL): left out, the rest stored.
+  - `sgv` of 1 to 12 (a CGM error code, e.g. a Dexcom special value): out of range. It is not glucose, so a follower
+    does not show it as a severe low.
   - Only readings out of range: 200, `[]`, nothing stored. One such reading sent alone: refused.
   - Readings out of range are not counted in the 10 of the v1 batch rule, and alone do not show in the client errors.
   - Other entries with a problem (e.g. unknown `type`): as the v1 batch rule.

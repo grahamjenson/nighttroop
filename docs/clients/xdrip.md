@@ -160,7 +160,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
 ## Known problems and limits
 
 - **Units:** xDrip+ sends mg/dL without `units`. Nighttroop takes an entry without `units` as mg/dL, as Nightscout
-  does, whatever the value: 39 (a sensor's LOW) and lower stay low (`low_sgv.http`). The follower reads `sgv` as
+  does, whatever the value: 39 (a sensor's LOW) and lower stay low (`low_sgv.http`). A `sgv` of 1 to 12 is a CGM
+  error code, so a batch leaves it out, as Trio reads one as a severe low. The follower reads `sgv` as
   mg/dL; the Nightscout API always gives mg/dL, whatever the identity's or site's units.
 - **Times:** `dateString` has an offset without a colon (`+1300`). It wins over `date` when there is no `utcOffset`.
   Both are the same time.
