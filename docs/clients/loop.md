@@ -83,6 +83,8 @@ are left out. Loop does not keep the returned `_id`s.
 | `trendRate` | number | mg/dL per minute, when known |
 | `isCalibration` | bool | |
 
+- Nighttroop stores the `trend` of the `direction`, and gives both back. A `trend` sent alone gives the `direction`.
+
 ### Treatments: `POST`, `PUT` and `DELETE /api/v1/treatments`
 
 - All: `created_at` and `timestamp` (the same ISO date), `enteredBy`, `eventType`. Optional: `notes`, `insulinType`,

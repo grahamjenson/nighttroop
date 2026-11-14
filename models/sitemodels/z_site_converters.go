@@ -6,6 +6,7 @@ package sitemodels
 import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+	nightscoutmodels "nighttroop.t1d.nz/models/nightscoutmodels"
 	consts "nighttroop.t1d.nz/utils/consts"
 	errors "nighttroop.t1d.nz/utils/errors"
 	httputils "nighttroop.t1d.nz/utils/httputils"
@@ -1006,10 +1007,7 @@ func GlucoseReadingFromDB(source *sitedb.GlucoseReading, context *httputils.Site
 			xfloat64 := *(*source).Delta
 			sitemodelsSiteGlucoseReading.Delta = &xfloat64
 		}
-		if (*source).Direction != nil {
-			xstring2 := *(*source).Direction
-			sitemodelsSiteGlucoseReading.Direction = &xstring2
-		}
+		sitemodelsSiteGlucoseReading.Direction = nightscoutmodels.TrendDirection((*source).Trend)
 		if (*source).Noise != nil {
 			xfloat642 := *(*source).Noise
 			sitemodelsSiteGlucoseReading.Noise = &xfloat642
@@ -1036,17 +1034,17 @@ func GlucoseReadingFromDB(source *sitedb.GlucoseReading, context *httputils.Site
 		sitemodelsSiteGlucoseReading.CreatedAt = (*source).CreatedAt
 		sitemodelsSiteGlucoseReading.UpdatedAt = (*source).UpdatedAt
 		if (*source).CreatedByAppName != nil {
-			xstring3 := *(*source).CreatedByAppName
-			sitemodelsSiteGlucoseReading.CreatedByAppName = &xstring3
+			xstring2 := *(*source).CreatedByAppName
+			sitemodelsSiteGlucoseReading.CreatedByAppName = &xstring2
 		}
 		if (*source).CreatedByDeviceName != nil {
-			xstring4 := *(*source).CreatedByDeviceName
-			sitemodelsSiteGlucoseReading.CreatedByDeviceName = &xstring4
+			xstring3 := *(*source).CreatedByDeviceName
+			sitemodelsSiteGlucoseReading.CreatedByDeviceName = &xstring3
 		}
 		sitemodelsSiteGlucoseReading.CreatedByIdentityName = (*source).CreatedByIdentityName
 		if (*source).UpdatedByIdentityName != nil {
-			xstring5 := *(*source).UpdatedByIdentityName
-			sitemodelsSiteGlucoseReading.UpdatedByIdentityName = &xstring5
+			xstring4 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteGlucoseReading.UpdatedByIdentityName = &xstring4
 		}
 		pSitemodelsSiteGlucoseReading = &sitemodelsSiteGlucoseReading
 	}
@@ -1067,10 +1065,7 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 			xfloat64 := *(*source).Delta
 			sitedbCreateGlucoseReadingParams.Delta = &xfloat64
 		}
-		if (*source).Direction != nil {
-			xstring2 := *(*source).Direction
-			sitedbCreateGlucoseReadingParams.Direction = &xstring2
-		}
+		sitedbCreateGlucoseReadingParams.Trend = nightscoutmodels.DirectionTrend((*source).Direction)
 		if (*source).Noise != nil {
 			xfloat642 := *(*source).Noise
 			sitedbCreateGlucoseReadingParams.Noise = &xfloat642
@@ -1088,12 +1083,12 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 			sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
 		}
 		if (*source).Notes != nil {
-			xstring3 := *(*source).Notes
-			sitedbCreateGlucoseReadingParams.Notes = &xstring3
+			xstring2 := *(*source).Notes
+			sitedbCreateGlucoseReadingParams.Notes = &xstring2
 		}
 		if (*source).Reason != nil {
-			xstring4 := *(*source).Reason
-			sitedbCreateGlucoseReadingParams.Reason = &xstring4
+			xstring3 := *(*source).Reason
+			sitedbCreateGlucoseReadingParams.Reason = &xstring3
 		}
 		if (*source).UtcOffsetMinutes != nil {
 			xint64 := *(*source).UtcOffsetMinutes
@@ -1101,12 +1096,12 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 		}
 		sitedbCreateGlucoseReadingParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
 		if (*source).CreatedByAppName != nil {
-			xstring5 := *(*source).CreatedByAppName
-			sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring5
+			xstring4 := *(*source).CreatedByAppName
+			sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring4
 		}
 		if (*source).CreatedByDeviceName != nil {
-			xstring6 := *(*source).CreatedByDeviceName
-			sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring6
+			xstring5 := *(*source).CreatedByDeviceName
+			sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring5
 		}
 		sitedbCreateGlucoseReadingParams.CreatedByIdentityName = ContextIdentityNameValue(context)
 		sitedbCreateGlucoseReadingParams.CreatedByIdentityID = ContextIdentityID(context)
@@ -1121,10 +1116,7 @@ func GlucoseReadingToUpdate(source *SiteGlucoseReading, context *httputils.SiteC
 			xfloat64 := *(*source).Delta
 			sitedbUpdateGlucoseReadingParams.Delta = &xfloat64
 		}
-		if (*source).Direction != nil {
-			xstring := *(*source).Direction
-			sitedbUpdateGlucoseReadingParams.Direction = &xstring
-		}
+		sitedbUpdateGlucoseReadingParams.Trend = nightscoutmodels.DirectionTrend((*source).Direction)
 		if (*source).Noise != nil {
 			xfloat642 := *(*source).Noise
 			sitedbUpdateGlucoseReadingParams.Noise = &xfloat642
@@ -1142,12 +1134,12 @@ func GlucoseReadingToUpdate(source *SiteGlucoseReading, context *httputils.SiteC
 			sitedbUpdateGlucoseReadingParams.Rssi = &xfloat645
 		}
 		if (*source).Notes != nil {
-			xstring2 := *(*source).Notes
-			sitedbUpdateGlucoseReadingParams.Notes = &xstring2
+			xstring := *(*source).Notes
+			sitedbUpdateGlucoseReadingParams.Notes = &xstring
 		}
 		if (*source).Reason != nil {
-			xstring3 := *(*source).Reason
-			sitedbUpdateGlucoseReadingParams.Reason = &xstring3
+			xstring2 := *(*source).Reason
+			sitedbUpdateGlucoseReadingParams.Reason = &xstring2
 		}
 		sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = ContextIdentityID(context)
 		sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = ContextIdentityName(context)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -20,10 +21,6 @@ const (
 	// pebbleMinutes is how far back /pebble's readings go, Nightscout's two days
 	pebbleMinutes = 48 * 60
 )
-
-// pebbleTrends are Nightscout's trend numbers for each direction, which watch faces show arrows for
-var pebbleTrends = map[string]int{"NONE": 0, "DoubleUp": 1, "SingleUp": 2, "FortyFiveUp": 3, "Flat": 4, "FortyFiveDown": 5,
-	"SingleDown": 6, "DoubleDown": 7, "NOT COMPUTABLE": 8, "RATE OUT OF RANGE": 9}
 
 // pebbleBG is a reading as Nightscout's /pebble has it: the glucose as a string in the units asked for, and on the
 // newest the delta, the uploader's battery, IOB and COB
@@ -64,8 +61,8 @@ func Pebble() func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 			if i == count || reading.OccurredAt < cutoff {
 				break
 			}
-			bgs = append(bgs, pebbleBG{SGV: pebbleGlucose(units, reading.Mgdl), Trend: pebbleTrend(reading.Direction),
-				Direction: reading.Direction, Datetime: reading.OccurredAt})
+			bgs = append(bgs, pebbleBG{SGV: pebbleGlucose(units, reading.Mgdl), Trend: pebbleTrend(reading.Trend),
+				Direction: nightscoutmodels.TrendDirection(reading.Trend), Datetime: reading.OccurredAt})
 		}
 		if len(bgs) > 0 {
 			bgs[0].BGDelta = new(0.0)
@@ -94,13 +91,11 @@ func pebbleGlucose(units consts.Units, mgdl float64) string {
 	return strconv.FormatFloat(mgdl, 'f', 0, 64)
 }
 
-// pebbleTrend is a direction's trend number, 8 (NOT COMPUTABLE) when it has none or one without a number, e.g.
-// TripleUp, as Nightscout's directionToTrend
-func pebbleTrend(direction *string) int {
-	if direction != nil {
-		if trend, ok := pebbleTrends[*direction]; ok {
-			return trend
-		}
+// pebbleTrend is a reading's trend number, which watch faces show arrows for, 8 (NOT COMPUTABLE) when it has none or one
+// Nightscout has no number for, e.g. TripleUp, as Nightscout's directionToTrend
+func pebbleTrend(trend *int64) int {
+	if trend := nightscoutmodels.EntryTrend(trend); trend != nil {
+		return int(*trend)
 	}
-	return pebbleTrends["NOT COMPUTABLE"]
+	return int(*nightscoutmodels.DirectionTrend(new("NOT COMPUTABLE")))
 }

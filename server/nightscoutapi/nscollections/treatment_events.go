@@ -195,7 +195,7 @@ var (
 		// A reading the site put in the group, such as a CGM's, keeps what a treatment does not have of it, and its type
 		// when it has no glucose type to tell it
 		kept: func(stored, event *sitedb.GlucoseReading) {
-			event.Delta, event.Direction, event.Noise, event.Filtered = stored.Delta, stored.Direction, stored.Noise, stored.Filtered
+			event.Delta, event.Trend, event.Noise, event.Filtered = stored.Delta, stored.Trend, stored.Noise, stored.Filtered
 			event.Unfiltered, event.Rssi, event.IsCalibration = stored.Unfiltered, stored.Rssi, stored.IsCalibration
 			event.SensorMgdlAtPairing = stored.SensorMgdlAtPairing
 			if event.MeasurementMethod == nil {
