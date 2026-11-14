@@ -1405,6 +1405,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - `created_at` also as `timestamp`.
   - A bolus's insulin also as `programmed`.
   - A temp basal's `temp` `absolute`.
+- A Combo Bolus (extended bolus):
+  - `enteredinsulin` is all its insulin, the dose. Sent with no `insulin` and no split, it is all extended: `splitNow` 0,
+    `splitExt` 100 (AAPS).
+  - Returned with `enteredinsulin`, and with no `insulin` when `splitNow` is 0. AAPS reads a treatment with `insulin` as
+    a bolus, and drops a Combo Bolus with no `enteredinsulin`.
 - `timestamp`: only API v1 and its sockets. API v3 and its storage socket leave it out (AAPS drops a treatment, or a
   page, whose `timestamp` is a date).
 - A treatment with both insulin and carbs (a Meal Bolus from xDrip+ or the careportal), on API v3 searches, history
