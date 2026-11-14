@@ -315,6 +315,7 @@ type Session struct {
 	probing   bool // the client is upgrading, so a poll is ended at once, as it waits for its poll to end to upgrade
 	posting   bool
 	closed    bool
+	reason    string // why it closed, for a close handler set after
 	onMessage func(data string)
 	onClose   func(reason string)
 	notify    chan struct{} // wakes the waiting poll, or the websocket writer
@@ -360,11 +361,18 @@ func (s *Session) OnMessage(handler func(data string)) {
 	s.mu.Unlock()
 }
 
-// OnClose sets the handler called once when the session closes
+// OnClose sets the handler called once when the session closes. One set once it is closed, as the server can close a
+// session after its open packet is sent but before onConnection sets it, is called at once.
 func (s *Session) OnClose(handler func(reason string)) {
 	s.mu.Lock()
-	s.onClose = handler
+	closed, reason := s.closed, s.reason
+	if !closed {
+		s.onClose = handler
+	}
 	s.mu.Unlock()
+	if closed && handler != nil {
+		handler(reason)
+	}
 }
 
 // Done is closed when the session closes
@@ -404,7 +412,7 @@ func (s *Session) Close(reason string) {
 		s.mu.Unlock()
 		return
 	}
-	s.closed = true
+	s.closed, s.reason = true, reason
 	onClose, ws, stopClosing := s.onClose, s.ws, s.stopClosing
 	s.mu.Unlock()
 

@@ -397,6 +397,41 @@ func TestShutdownEndsClients(t *testing.T) {
 	}
 }
 
+// TestOnCloseAfterClose checks a close handler set once the session is closed still runs, with its reason, as the server
+// can close a session, as when shutting down, after its open packet is sent but before onConnection sets the handler
+func TestOnCloseAfterClose(t *testing.T) {
+	// An upgrade opens its session over polling, so is the same as polling here
+	for _, transport := range []string{"polling", "websocket"} {
+		t.Run(transport, func(t *testing.T) {
+			connected, release, closed := make(chan *Session, 1), make(chan struct{}), make(chan string, 1)
+			server := NewServer(testConfig, func(s *Session) {
+				connected <- s
+				<-release
+				s.OnClose(func(reason string) { closed <- reason })
+			})
+			ts := httptest.NewServer(server)
+			t.Cleanup(ts.Close)
+			// A polling handshake is answered once onConnection returns, so the client waits on its own
+			go func() {
+				if transport == "websocket" {
+					DialOverWebSocket(context.Background(), ts.URL, V4, nil)
+				} else {
+					Dial(context.Background(), ts.URL, V4, nil, nil)
+				}
+			}()
+			<-connected
+			server.Close()
+			close(release)
+			select {
+			case reason := <-closed:
+				require.Equal(t, "server shutting down", reason)
+			case <-time.After(time.Second):
+				t.Fatal("the close handler set after the session closed never ran")
+			}
+		})
+	}
+}
+
 // upgrade probes and upgrades the session sid by hand
 func upgrade(t *testing.T, base string, version int, sid string) *WebSocket {
 	ws, err := DialWebSocket(context.Background(), base, version, sid)
