@@ -157,11 +157,8 @@ func (c Collection[NS, DM]) requiredOfType(data map[string]any, path []string, o
 		instead = "x"
 	}
 	set(data, path, instead)
-	with, ok := c.rows(data)
-	unstable := c.unstable(data, with)
-	remove(data, path)
-	without, ok2 := c.rows(data)
-	if !ok || !ok2 {
+	with, without, unstable, ok := c.rowsWithout(data, path)
+	if !ok {
 		return false
 	}
 	for key, value := range with {
@@ -190,7 +187,7 @@ func (c Collection[NS, DM]) withinLimits(data map[string]any, nsModel NS, left *
 		return nsModel, nil
 	}
 	slices.Sort(keys)
-	fields := c.fieldsOf(data, values, keys)
+	fields := c.fieldsOf(data, keys)
 	for _, key := range keys {
 		value, field := values[key], fields[key]
 		name, sent := value.Limit.Column, value.Value
@@ -221,19 +218,15 @@ func (c Collection[NS, DM]) withinLimits(data map[string]any, nsModel NS, left *
 
 // fieldsOf are the fields sent each value out of its limits is from, nil for one that is from none, found by leaving
 // out each field sent in turn. Of those that change the value, the field is the one that best tells it: see better.
-func (c Collection[NS, DM]) fieldsOf(data map[string]any, values map[string]sitedb.ColumnValue, keys []string) map[string][]string {
+func (c Collection[NS, DM]) fieldsOf(data map[string]any, keys []string) map[string][]string {
 	fields, best := map[string][]string{}, map[string]fieldScore{}
-	unstable := c.unstable(data, values)
 	for _, field := range sentFields(data, nil) {
-		sent := get(data, field)
-		remove(data, field)
-		without, ok := c.rows(data)
-		set(data, field, sent)
+		with, without, unstable, ok := c.rowsWithout(data, field)
 		if !ok {
 			continue
 		}
 		changes := 0
-		for key, value := range values {
+		for key, value := range with {
 			if other, kept := without[key]; !unstable[key] && (!kept || other.Value != value.Value) {
 				changes++
 			}
@@ -241,11 +234,13 @@ func (c Collection[NS, DM]) fieldsOf(data map[string]any, values map[string]site
 		for _, key := range keys {
 			value, kept := without[key]
 			score := fieldScore{depth: len(field), changes: changes}
-			score.gone = !kept || value.Value == nil || (reflect.ValueOf(value.Value).IsZero() && !reflect.ValueOf(values[key].Value).IsZero())
+			score.gone = !kept || value.Value == nil || (reflect.ValueOf(value.Value).IsZero() && !reflect.ValueOf(with[key].Value).IsZero())
 			switch {
 			case score.gone || value.Taken():
 				score.class = 2
-			case value.Value != values[key].Value:
+			case unstable[key]:
+				continue
+			case value.Value != with[key].Value:
 				score.class = 1
 			default:
 				continue
@@ -285,17 +280,25 @@ func btoi(b bool) int {
 	return 0
 }
 
-// unstable are the values of the rows that are not the same each time data is converted, as a new row's identifier,
-// which no field sent is the one they are from
-func (c Collection[NS, DM]) unstable(data map[string]any, values map[string]sitedb.ColumnValue) map[string]bool {
-	unstable := map[string]bool{}
+// rowsWithout are the rows data would be stored as with the field and without it, false when either is not a model.
+// unstable are the values not the same each time data is converted, as a new row's identifier or a date of the time
+// now, which the field does not change: the rows with it are made just before and just after those without it, so a
+// value the same in both was the same without it too, unless the field changed it.
+func (c Collection[NS, DM]) rowsWithout(data map[string]any, field []string) (with, without map[string]sitedb.ColumnValue,
+	unstable map[string]bool, ok bool) {
+	with, ok = c.rows(data)
+	sent := get(data, field)
+	remove(data, field)
+	without, ok2 := c.rows(data)
+	set(data, field, sent)
 	again, _ := c.rows(data)
-	for key, value := range values {
+	unstable = map[string]bool{}
+	for key, value := range with {
 		if other, kept := again[key]; !kept || other.Value != value.Value {
 			unstable[key] = true
 		}
 	}
-	return unstable
+	return with, without, unstable, ok && ok2
 }
 
 // sentFields are the paths of the fields in data, each object's before the object, by name, at most maxFieldsTried
