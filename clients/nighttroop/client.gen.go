@@ -139,6 +139,9 @@ type CreatedSite struct {
 	// BackupKey Gets a new admin login on the recover page; it works once
 	BackupKey string `json:"backup_key"`
 
+	// PwdNsUrl The PWD phone's Nightscout URL, on the site's Nightscout host
+	PwdNsUrl string `json:"pwd_ns_url"`
+
 	// PwdNstoken The PWD phone's Nightscout token
 	PwdNstoken string `json:"pwd_nstoken"`
 
@@ -148,6 +151,9 @@ type CreatedSite struct {
 
 	// TotpSecret The admin's TOTP secret
 	TotpSecret string `json:"totp_secret"`
+
+	// Url The site's URL, for the browser and the site's API
+	Url string `json:"url"`
 }
 
 // Error defines model for Error.
@@ -439,6 +445,11 @@ type SearchPage struct {
 	Limit *int64 `json:"limit,omitempty"`
 	Skip  *int64 `json:"skip,omitempty"`
 	Total *int64 `json:"total,omitempty"`
+}
+
+// SiteCreationRefused defines model for SiteCreationRefused.
+type SiteCreationRefused struct {
+	Error string `json:"error"`
 }
 
 // Summary The parts of the summary described here; the rest is kept in AdditionalProperties
@@ -9202,6 +9213,8 @@ type CreateSiteResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *CreatedSite
+	JSON403      *SiteCreationRefused
+	JSON429      *SiteCreationRefused
 	JSONDefault  *Error
 }
 
@@ -12668,6 +12681,20 @@ func ParseCreateSiteResponse(rsp *http.Response) (*CreateSiteResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest SiteCreationRefused
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest SiteCreationRefused
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
