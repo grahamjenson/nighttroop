@@ -292,10 +292,11 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-// Replace If not found will return 404
+// Replace If not found will return 404. It changes a record, so needs update, as v3's does: a caregiver can add a
+// device status but not change one
 func Replace(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionUpdate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return

@@ -21,7 +21,8 @@ How xDrip4iOS talks to Nightscout, and how each part works with Nighttroop.
    - The app removes a trailing `/` and any `/api/v1`, and takes a port from it
      (`SettingsViewNightscoutSettingsViewModel`).
 4. Set **Token** to the device's Nightscout token.
-   - Master: a PWD phone or a read and write device. Follow only: a read only device.
+   - Master: a PWD phone. A Caregiver device (`device_read_write`) cannot upload readings. Follow only: a read
+     only device.
 5. Leave **API_SECRET** empty, or put the token in it.
    - Nighttroop has no API secret. The app sends only its SHA1, which Nighttroop takes only as the SHA1 of a device's
      token (#512). Anything else gets 401.
@@ -71,8 +72,8 @@ How xDrip4iOS talks to Nightscout, and how each part works with Nighttroop.
   - 2xx: verified.
   - 401: "API_SECRET is not valid" or "Token is not valid".
   - 400: shows the body.
-  - Nightscout needs an admin. Nighttroop needs an identity that can upload readings: a PWD phone or read and write
-    device passes, and a read only token gets 401.
+  - Nightscout needs an admin. Nighttroop needs an identity that can upload readings: a PWD phone passes. A
+    Caregiver or read only token gets 401.
 - **Service status** (`FollowerServiceStatusMonitor`): `GET /api/v1/status.json`, no credentials. Reads `status`
   (`ok` is operational).
 
@@ -263,6 +264,9 @@ Tests are in `tests/api/nightscout/xdrip4ios/`, unless a path is given.
   - A BG check from a device not added for xDrip4iOS was sent again every 15 s. It came back as `mg/dL`, so the
     app read 110 as 1982 and did not match it. Now the device's first upload in `mg/dl` sets its label to `mg/dl`
     (`tests/api/nighttroop/settings/units_label_learned.http`).
+- **Changed:** a Caregiver device (`device_read_write`) as the master. It writes only treatments, so it cannot
+  upload, rewrite or delete readings (403), and the Test button gets 401. It worked before. Use a PWD phone
+  (`tests/api/nighttroop/settings/identities_caregiver.http`).
 - **Will not fix:** `GET /api/v1/status.json` without credentials gets 401, as from a Nightscout with
   `AUTH_DEFAULT_ROLES=denied`. The follower service status shows a fetch error. A 200 would let LoopFollow connect
   without a token (`auth.http`).

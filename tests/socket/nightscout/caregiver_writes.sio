@@ -1,0 +1,71 @@
+# A Caregiver device (device_read_write) writes treatments on a socket, as on the REST API, but cannot change or delete
+# the readings, profiles or device statuses the PWD phone uploads
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .login_admin.token }}
+
+NAME create_caregiver
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "device_read_write"}
+ASSERT_STATUS 201
+SET carer_token {{ .create_caregiver.result.ns_token }}
+
+NAME connect
+CONNECT http://{{ .ns_site }}/socket.io/?EIO=3
+
+NAME authorize
+EMIT authorize
+B {"client":"LoopFollow","secret":"{{ .carer_token }}"}
+ACK
+ASSERT_EQUALS true "@read"
+ASSERT_EQUALS false "@write"
+ASSERT_EQUALS true "@write_treatment"
+
+NAME add_treatment
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Note","notes":"lunch"}}
+ACK
+ASSERT_LENGTH 1 "@"
+SET treatment_id {{ dig "add_treatment.0._id" }}
+
+NAME remove_treatment
+EMIT dbRemove
+B {"collection":"treatments","_id":"{{ .treatment_id }}"}
+ACK
+ASSERT_EQUALS "success" "@result"
+
+NAME add_entry_refused
+EMIT dbAdd
+B {"collection":"entries","data":{"type":"sgv","sgv":40}}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
+
+NAME remove_entry_refused
+EMIT dbRemove
+B {"collection":"entries","_id":"anything"}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
+
+NAME update_profile_refused
+EMIT dbUpdate
+B {"collection":"profile","_id":"anything","data":{"defaultProfile":"Other"}}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
+
+NAME remove_devicestatus_refused
+EMIT dbRemove
+B {"collection":"devicestatus","_id":"anything"}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"

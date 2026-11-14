@@ -140,7 +140,7 @@ site:
         about: "A person who signs in, views reports and uses Nightscout features."
       device_card:
         title: "Device"
-        about: "A phone, SugarPixel or display. Devices use the Nightscout API but cannot sign in. The PWD phone's credentials go into your loop (AAPS, Trio...)."
+        about: "A phone, SugarPixel or display. Devices use the Nightscout API but cannot sign in. The PWD phone's credentials go into your loop (AAPS, Trio...). A Caregiver device, such as LoopFollow or Nightguard, reads everything and adds, changes and deletes treatments, but cannot change readings, profiles or device statuses."
       users: "Admins & Users"
       devices: "Devices"
       heads:
@@ -158,7 +158,7 @@ site:
         user_read_only: "Read-only user"
         clinician: "Clinician"
         device_read: "Read"
-        device_read_write: "Read+Write"
+        device_read_write: "Caregiver"
         device_pwd_phone: "PWD Phone"
       clients_none: "None yet"
       clients_shared: "Used by more than one app"
@@ -228,7 +228,7 @@ site:
         xdrip4ios:
           step_1: "Open *Settings*, then *Nightscout*, and set *URL* to {url}"
           step_2: "Set *Token*, or *API_SECRET* instead, to {token}"
-          step_3: "Keep it the *Master* to upload, as a PWD Phone or Read+Write device, or make it a *Follower* of Nightscout to only read."
+          step_3: "Keep it the *Master* to upload, as a PWD Phone device, or make it a *Follower* of Nightscout to only read."
         nightguard:
           step_1: "Open *Configuration*, and set *URL* to {nightguard}"
         sugarpixel:

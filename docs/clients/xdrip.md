@@ -18,6 +18,8 @@ How [xDrip+](https://github.com/NightscoutFoundation/xDrip) talks to Nightscout,
 ## Set up
 
 1. Add a device for xDrip+. Its units are mg/dL (#524).
+   - Uploader: use the PWD Phone role. A Caregiver device (`device_read_write`) cannot upload readings (403).
+   - Follower: Read is sufficient.
 2. Copy the device's Nightscout token (URL safe).
 3. Uploader: set the base URL to `https://<token>@<subdomain>.ns.<host>/api/v1/`. Separate more URLs with spaces.
 4. Follower: set the URL to `https://<token>@<site>`. xDrip+ adds a missing `/api/v1/`
@@ -194,6 +196,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   - Follower with Nightscout upload on: it uploads each reading it downloads (whole `sgv`, `Flat`, device
     `xDrip-NSFollower Nightscout Follow`). The looper's reading is kept, and gets only the fields it does not have.
     It was overwritten. Test: `xdrip/follower_echo.http`.
+  - Follower with Nightscout upload on and a Caregiver token: its readings are refused (403). xDrip+ then sends the
+    batch again, and sends no device status or treatments. Turn upload off on a follower.
   - A `cal` (#512): left out, so the batch is not refused.
   - A reading dated more than 15 minutes after now (X10): left out, the rest stored. It was kept, so followers showed it
     as the current reading.
