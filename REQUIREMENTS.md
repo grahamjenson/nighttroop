@@ -499,6 +499,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   scroll sideways; Data and Settings tabs wrap above the page. No page gets wider. The user menu is unchanged.
 - Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns. Quick clicks show the
   last one clicked.
+- A box that has focus keeps its value when the page changes, for example a date picked or a search sent with Enter.
 
 ### Summary
 
