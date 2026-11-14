@@ -24,6 +24,8 @@ type ProfileStore struct {
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 	// EnteredBy is who uploaded it, as for treatments; Trio, iAPS and Loop need it to import or read a profile
 	EnteredBy *types.ShortString `json:"enteredBy,omitempty"`
+	// ProfileName is the name of the settings profile the app has on, as iAPS sends it
+	ProfileName *types.ShortString `json:"profile,omitempty"`
 
 	// Date is when it started, read from and written as its TimeAliases
 	Date             *types.DateInt       `json:"-"`
