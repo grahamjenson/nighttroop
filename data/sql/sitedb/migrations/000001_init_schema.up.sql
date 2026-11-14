@@ -319,15 +319,15 @@ CREATE TABLE event_groups (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     group_type TEXT NOT NULL CHECK(length(group_type) > 0 AND length(group_type) <= 32),
 
-    glucose_reading_id TEXT UNIQUE REFERENCES glucose_readings(id) ON DELETE RESTRICT,
-    insulin_dose_id TEXT UNIQUE REFERENCES insulin_doses(id) ON DELETE RESTRICT,
-    food_intake_id TEXT UNIQUE REFERENCES food_intakes(id) ON DELETE RESTRICT,
-    temp_basal_id TEXT UNIQUE REFERENCES temp_basals(id) ON DELETE RESTRICT,
-    temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
-    profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
+    glucose_reading_id TEXT REFERENCES glucose_readings(id) ON DELETE RESTRICT,
+    insulin_dose_id TEXT REFERENCES insulin_doses(id) ON DELETE RESTRICT,
+    food_intake_id TEXT REFERENCES food_intakes(id) ON DELETE RESTRICT,
+    temp_basal_id TEXT REFERENCES temp_basals(id) ON DELETE RESTRICT,
+    temp_target_id TEXT REFERENCES temp_targets(id) ON DELETE RESTRICT,
+    profile_switch_id TEXT REFERENCES profile_switches(id) ON DELETE RESTRICT,
 
-    activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
-    notification_event_id TEXT UNIQUE REFERENCES notification_events(id) ON DELETE RESTRICT,
+    activity_id TEXT REFERENCES activities(id) ON DELETE RESTRICT,
+    notification_event_id TEXT REFERENCES notification_events(id) ON DELETE RESTRICT,
 
     -- who the app says entered it, as Nightscout keeps it, e.g. loop://iPhone or xdrip
     entered_by TEXT CHECK(length(entered_by) <= 64),
@@ -658,6 +658,18 @@ CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(r
 -- So are a type's newest treatments, which a delete by type and each Nightscout properties request find (a sensor or
 -- site change is a treatment), rather than sorting all of a type, or reading every treatment to find none of a type
 CREATE INDEX event_groups_group_type_occurred_at_idx ON event_groups(group_type, occurred_at);
+
+-- An event group has at most one of each event, and each event is in at most one group. Each index holds only the
+-- groups with that event, not a NULL for every other group, as a UNIQUE column would: this saves about 60 bytes a group.
+-- A lookup or a foreign key check by the event's id (x = ?) still uses it.
+CREATE UNIQUE INDEX event_groups_glucose_reading_id_idx ON event_groups(glucose_reading_id) WHERE glucose_reading_id IS NOT NULL;
+CREATE UNIQUE INDEX event_groups_insulin_dose_id_idx ON event_groups(insulin_dose_id) WHERE insulin_dose_id IS NOT NULL;
+CREATE UNIQUE INDEX event_groups_food_intake_id_idx ON event_groups(food_intake_id) WHERE food_intake_id IS NOT NULL;
+CREATE UNIQUE INDEX event_groups_temp_basal_id_idx ON event_groups(temp_basal_id) WHERE temp_basal_id IS NOT NULL;
+CREATE UNIQUE INDEX event_groups_temp_target_id_idx ON event_groups(temp_target_id) WHERE temp_target_id IS NOT NULL;
+CREATE UNIQUE INDEX event_groups_profile_switch_id_idx ON event_groups(profile_switch_id) WHERE profile_switch_id IS NOT NULL;
+CREATE UNIQUE INDEX event_groups_activity_id_idx ON event_groups(activity_id) WHERE activity_id IS NOT NULL;
+CREATE UNIQUE INDEX event_groups_notification_event_id_idx ON event_groups(notification_event_id) WHERE notification_event_id IS NOT NULL;
 CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
 CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_store_id);
 
