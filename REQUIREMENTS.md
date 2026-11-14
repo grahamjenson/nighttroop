@@ -363,6 +363,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - If a control admin turns public site creation off, the home page says so in place of the offer, and creation is
     refused.
 - A site never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
+- API (`POST /site` with `Accept: application/json`):
+  - Returns the credentials, the site URL (`url`) and the phone's Nightscout URL (`pwd_ns_url`).
+  - Every refusal is JSON with an `error` field:
+
+    | Refusal | Status | `error` |
+    |---|---|---|
+    | Over the rate limit | 429, with `Retry-After` the seconds the page shows | `Too many requests` |
+    | Server holds `MAX_SITES` | 429 | `Full: Too many sites` |
+    | Public site creation off | 403 | `Creating sites is turned off` |
 
 #### Welcome page
 

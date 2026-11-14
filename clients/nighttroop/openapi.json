@@ -22,6 +22,12 @@
         "security": [],
         "responses": {
           "200": { "description": "The new site", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatedSite" } } } },
+          "403": { "description": "A control admin turned public site creation off", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SiteCreationRefused" } } } },
+          "429": {
+            "description": "Over the IP's or the server's site creation rate limit (\"Too many requests\", with Retry-After), or the server holds MAX_SITES (\"Full: Too many sites\")",
+            "headers": { "Retry-After": { "description": "The seconds until a site can be created, on a rate limit only", "schema": { "type": "integer" } } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SiteCreationRefused" } } }
+          },
           "default": { "$ref": "#/components/responses/Error" }
         }
       }
@@ -660,15 +666,22 @@
       },
       "CreatedSite": {
         "type": "object",
-        "required": ["site_subdomain", "api_key", "totp_secret", "backup_key", "pwd_nstoken", "read_only_nstoken"],
+        "required": ["site_subdomain", "url", "api_key", "totp_secret", "backup_key", "pwd_ns_url", "pwd_nstoken", "read_only_nstoken"],
         "properties": {
           "site_subdomain": { "type": "string" },
+          "url": { "type": "string", "description": "The site's URL, for the browser and the site's API" },
+          "pwd_ns_url": { "type": "string", "description": "The PWD phone's Nightscout URL, on the site's Nightscout host" },
           "api_key": { "type": "string", "description": "The admin's password" },
           "totp_secret": { "type": "string", "description": "The admin's TOTP secret" },
           "backup_key": { "type": "string", "description": "Gets a new admin login on the recover page; it works once" },
           "pwd_nstoken": { "type": "string", "description": "The PWD phone's Nightscout token" },
           "read_only_nstoken": { "type": "string", "description": "The read only device's Nightscout token" }
         }
+      },
+      "SiteCreationRefused": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } }
       },
       "LoginRequest": {
         "type": "object",
