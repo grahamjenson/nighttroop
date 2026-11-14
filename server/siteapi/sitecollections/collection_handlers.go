@@ -577,7 +577,9 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // RegenerateSummariesHandler asks for the site's summaries to be built again from its data, which a background job
-// does, as a year of them takes a while. Only its admins can, and asking again before it runs asks once.
+// does, as a year of them takes a while. Only its admins can, and asking again before it runs asks once. As each build
+// reads a year of the site's data, it shares the site's few downloads a minute, so asking again once it ran cannot keep
+// the server building.
 func RegenerateSummariesHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionSearch)
 	if siteContext == nil {
@@ -585,6 +587,10 @@ func RegenerateSummariesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
+		return
+	}
+	if allowed, wait := httputils.WithinRateLimitAll(siteContext.Config.RateLimiters.SiteDownloadLimiter(siteContext.SiteID)); !allowed {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(wait))
 		return
 	}
 	siteContext.ControlDB.Logs.SummariesRegenerationRequestedEvent(r.Context(), siteContext.SiteID, siteContext.IdentityModel.Name)

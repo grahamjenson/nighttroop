@@ -23,6 +23,8 @@
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
     1. P3: Show a site's abuse flag (`FlaggedForAbuse`) on the control sites list and site details, and record an event
        when a site is first flagged, so a control admin can see which sites the server throttles
+    1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
+       begun at once push out others' before they finish
 
 ## Before Prod Deployment
 

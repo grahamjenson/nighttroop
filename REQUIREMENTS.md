@@ -649,6 +649,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - A background job rebuilds from site data the last year's days with data, yesterday, and their weeks, fortnights
     and months.
   - Recorded as an event. A repeat before it runs gives one job.
+  - Shares the site's few downloads a minute with Truncate and Download Data. Over it, the site refuses it (429).
 
 #### Summary builds
 
@@ -1986,7 +1987,7 @@ harder:
   - Shrinks the DB, and keeps all else, as the card says.
   - Shows the storage again, a toast of the new DB size, and a "Site truncated" event with the admin.
 - "Download Data" downloads `<site>-<date>.zip`, with a DB snapshot `<site>-<date>.sqlite`.
-- Truncate and Download Data share the site's few downloads a minute.
+- Truncate, Download Data and Regenerate summaries share the site's few downloads a minute.
 - The JSON API (in `openapi.json`) gives the same storage, in `result`:
   - `GET /usage`: `size_kb`, `limit_kb`, `before_size_kb` (null) and `tables`.
   - Each table has `name`, `bytes` and `records`, the largest first, as last measured.
