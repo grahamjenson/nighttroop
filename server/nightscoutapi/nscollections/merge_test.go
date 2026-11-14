@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -240,7 +241,7 @@ func TestEntryMergeKeepsWhatOnlyTheDatabaseHas(t *testing.T) {
 	reading, err := q.GetGlucoseReading(t.Context(), sitedb.GetGlucoseReadingParams{ID: created.Identifier()})
 	require.NoError(t, err)
 	params := sitedb.RewriteGlucoseReadingParams{ID: reading.ID, Mgdl: reading.Mgdl, ReadingType: reading.ReadingType,
-		Direction: reading.Direction, Notes: new("site note"), OccurredAt: reading.OccurredAt, UtcOffsetMinutes: reading.UtcOffsetMinutes,
+		Trend: reading.Trend, Notes: new("site note"), OccurredAt: reading.OccurredAt, UtcOffsetMinutes: reading.UtcOffsetMinutes,
 		CreatedByDeviceName: reading.CreatedByDeviceName, CreatedByIdentityName: "admin"}
 	_, err = q.RewriteGlucoseReading(t.Context(), params)
 	require.NoError(t, err)
@@ -251,7 +252,7 @@ func TestEntryMergeKeepsWhatOnlyTheDatabaseHas(t *testing.T) {
 	reading, err = q.GetGlucoseReading(t.Context(), sitedb.GetGlucoseReadingParams{ID: created.Identifier()})
 	require.NoError(t, err)
 	require.Equal(t, "site note", *reading.Notes)
-	require.Equal(t, "Flat", *reading.Direction)
+	require.Equal(t, "Flat", *nightscoutmodels.TrendDirection(reading.Trend))
 }
 
 // A time sent as any of a document's time aliases, as created_at in whole seconds beside a timestamp in ms too, is read

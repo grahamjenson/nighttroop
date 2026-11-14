@@ -1,0 +1,81 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS sends an extended bolus as a Combo Bolus with its insulin in enteredinsulin and no insulin. It is kept as the
+// dose, and given back as enteredinsulin with no insulin, as AAPS reads a treatment with insulin as a bolus
+SET eb_at {{ itime 10 }}
+
+NAME add_extended_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Combo Bolus", "date": {{ .eb_at }}, "enteredinsulin": 2.0, "duration": 60, "rate": 2.0, "isEmulatingTempBasal": false, "pumpId": 1794605395246, "pumpType": "VIRTUAL", "pumpSerial": "S1", "app": "AAPS"}
+ASSERT_STATUS 201
+SET eb_id {{ .add_extended_bolus.identifier }}
+
+NAME extended_bolus_v3
+GET http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.enteredinsulin"
+ASSERT_EQUALS null "@result.insulin"
+ASSERT_EQUALS 0 "@result.splitNow"
+ASSERT_EQUALS 100 "@result.splitExt"
+ASSERT_EQUALS 60 "@result.duration"
+
+NAME extended_bolus_v1
+GET http://{{ site }}/api/v1/treatments.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@0.enteredinsulin"
+ASSERT_EQUALS null "@0.insulin"
+
+// Sent again, it is the same one
+NAME add_extended_bolus_again
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Combo Bolus", "date": {{ .eb_at }}, "enteredinsulin": 2.0, "duration": 60, "rate": 2.0, "isEmulatingTempBasal": false, "pumpId": 1794605395246, "pumpType": "VIRTUAL", "pumpSerial": "S1", "app": "AAPS"}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@isDeduplication"
+
+// A patch is merged into the stored treatment: one that leaves its insulin out keeps the dose, and one that sends
+// insulin changes it
+NAME patch_extended_bolus_duration
+PATCH http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 30}
+ASSERT_STATUS 200
+
+NAME patched_duration_keeps_dose
+GET http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.enteredinsulin"
+ASSERT_EQUALS 30 "@result.duration"
+
+NAME patch_extended_bolus_insulin
+PATCH http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+B {"insulin": 2.5}
+ASSERT_STATUS 200
+
+NAME patched_insulin_is_dose
+GET http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@result.enteredinsulin"
+ASSERT_EQUALS null "@result.insulin"
+
+// Nightscout's careportal sends the insulin given at once as insulin, and all of it as enteredinsulin, the dose
+NAME add_careportal_combo
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Combo Bolus", "created_at": "{{ time 5 }}", "insulin": 1.5, "enteredinsulin": 3, "splitNow": 50, "splitExt": 50, "duration": 60}
+ASSERT_STATUS 200
+
+NAME careportal_combo_v1
+GET http://{{ site }}/api/v1/treatments.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@0.enteredinsulin"
+ASSERT_EQUALS 3 "@0.insulin"
+ASSERT_EQUALS 50 "@0.splitNow"

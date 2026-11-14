@@ -185,6 +185,7 @@ sends `count=500&sort$desc=dateString`.
     whole list.
 - Nighttroop gives `direction` as a Nightscout name from any case or arrow (`NOT COMPUTABLE` if unknown), and
   `noise` as a whole number. Thus one uploader's reading cannot stop Trio's glucose.
+- Nighttroop gives `trend` only as Nightscout's 0 to 9: none for `TripleUp` or `TripleDown`.
 
 ### Profile import: `GET /api/v1/profile.json?count=1`
 

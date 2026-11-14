@@ -3,6 +3,7 @@ package nightscoutmodels
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -42,6 +43,8 @@ type Treatment struct {
 	Insulin  *types.FlexibleFloat64 `json:"insulin,omitempty"`
 	SplitNow *types.FlexibleFloat64 `json:"splitNow,omitempty"`
 	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
+	// EnteredInsulin is a Combo Bolus's insulin in all, as AAPS sends an extended bolus with no insulin; it is the dose
+	EnteredInsulin *types.FlexibleFloat64 `json:"enteredinsulin,omitempty"`
 	// additional: a bolus's type, e.g. SMB, or AAPS's temp basal's, e.g. PUMP_SUSPEND
 	Type *types.ShortString `json:"type,omitempty"`
 	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
@@ -207,6 +210,16 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	t.Duration = aux.SentDuration.Duration()
 
+	// A Combo Bolus's enteredinsulin is its dose in all when it has no insulin, as AAPS's extended bolus, all given over
+	// time, sends no insulin and no split, or when its insulin is the part given at once, as Nightscout's careportal
+	// sends it; other insulin, as a patch merged into the stored treatment sends, is the dose
+	if t.EnteredInsulin != nil && (t.EventType == nil || *t.EventType == ComboBolus) && (t.Insulin == nil || t.insulinIsGivenAtOnce()) {
+		if t.Insulin == nil && t.SplitNow == nil && t.SplitExt == nil && t.EventType != nil {
+			t.SplitNow, t.SplitExt = new(types.FlexibleFloat64(0)), new(types.FlexibleFloat64(100))
+		}
+		t.Insulin = t.EnteredInsulin
+	}
+
 	t.Date, t.UtcOffsetMinutes = date, offset
 	return nil
 }
@@ -221,6 +234,11 @@ var treatmentTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "eve
 
 func (t Treatment) TimeAliases() types.TimeAliases {
 	return treatmentTimes
+}
+
+// insulinIsGivenAtOnce is whether a Combo Bolus's insulin is the part of its enteredinsulin given at once, by splitNow
+func (t *Treatment) insulinIsGivenAtOnce() bool {
+	return t.SplitNow != nil && math.Abs(t.Insulin.Float64()-t.EnteredInsulin.Float64()*t.SplitNow.Float64()/100) < 0.01
 }
 
 // noEventType is the event type of a treatment sent with none, "<none>", as xDrip+ sends every bolus, carbs and note

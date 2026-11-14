@@ -68,6 +68,8 @@
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
+    1. P3: Keep a Combo Bolus's `relative` and `isEmulatingTempBasal`, and an AAPS emulated extended bolus's Temp Basal
+       `extendedEmulated`, as sent; without it AAPSClient shows the extended bolus as a temp basal. Needs columns
     1. P4: Return a food's Nightscout `unit`, `gi`, `hidden`, `hideafteruse` and `position` as sent; AAPS takes g and
        none without them. Needs columns
     1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another

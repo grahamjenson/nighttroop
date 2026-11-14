@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -30,6 +31,7 @@ type Entry struct {
 	MBG       *types.FlexibleFloat64 `json:"mbg,omitempty"`
 	Direction *string                `json:"direction,omitempty"`
 	Trend     *types.FlexibleFloat64 `json:"trend,omitempty"`
+	Delta     *types.FlexibleFloat64 `json:"delta,omitempty"` // mg/dL since the reading before, as sent
 	Units     *consts.Units          `json:"units,omitempty"`
 
 	Filtered   *types.FlexibleFloat64 `json:"filtered,omitempty"`
@@ -95,6 +97,10 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 	}
 
 	t.Direction = EntryDirection(t.Direction)
+	// A trend sent without a direction gives it, as a client may send only Nightscout's trend number, 0 to 9
+	if t.Direction == nil && t.Trend != nil && t.Trend.Float64() == math.Trunc(t.Trend.Float64()) && t.Trend.Float64() < nightscoutTrends {
+		t.Direction = TrendDirection(new(int64(t.Trend.Float64())))
+	}
 	t.Noise = WholeNoise((*float64)(t.Noise))
 
 	t.Date, t.UtcOffsetMinutes = date, offset
@@ -137,6 +143,45 @@ func EntryDirection(direction *string) *string {
 		return &name
 	}
 	return new("NOT COMPUTABLE")
+}
+
+// trends are the directions by their trend number: Nightscout's 0 to 9, then TripleUp and TripleDown, which Nighttroop
+// accepts and Nightscout has no number for
+var trends = []string{"NONE", "DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown",
+	"DoubleDown", "NOT COMPUTABLE", "RATE OUT OF RANGE", "TripleUp", "TripleDown"}
+
+// nightscoutTrends are how many trend numbers Nightscout has
+const nightscoutTrends = 10
+
+// DirectionTrend is a direction's trend number, as EntryDirection names it, and none for none
+func DirectionTrend(direction *string) *int64 {
+	if name := EntryDirection(direction); name != nil {
+		return new(int64(slices.Index(trends, *name)))
+	}
+	return nil
+}
+
+// TrendDirection is a trend number's direction, and none for none or a number without one
+func TrendDirection(trend *int64) *string {
+	if trend == nil || *trend < 0 || *trend >= int64(len(trends)) {
+		return nil
+	}
+	return new(trends[*trend])
+}
+
+// EntryTrend is a trend number as an entry gives it back, Nightscout's 0 to 9, and none for TripleUp and TripleDown, as
+// Trio reads it as Nightscout's
+func EntryTrend(trend *int64) *types.FlexibleFloat64 {
+	if trend == nil || *trend >= nightscoutTrends {
+		return nil
+	}
+	return new(types.FlexibleFloat64(*trend))
+}
+
+// MergeAliases are the fields a merge takes out of the stored entry when one is sent: the direction and the trend say
+// the same, and a direction sent wins over a trend
+func (t Entry) MergeAliases() map[string][]string {
+	return map[string][]string{"direction": {"trend"}, "trend": {"direction"}}
 }
 
 // WholeNoise is a CGM's noise as the whole number Nightscout's apps read, as Trio refuses a fraction
