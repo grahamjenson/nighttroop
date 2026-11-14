@@ -1033,6 +1033,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - Each site has a Nightscout compatible API at `<site>.ns.<host>`, for AAPS, Loop, Trio, xDrip+ and followers.
 - The Nightscout host root opens the site's own pages (LoopFollow's Nightscout tab).
+- A path with repeated slashes is the same as the path with one slash, with the same auth. For example,
+  `//api/v1/entries` (a Nightscout URL typed with a trailing `/`) is `/api/v1/entries`, and `//socket.io/` is
+  `/socket.io/`.
 - **v1**:
   - entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters.
   - status, versions, verifyauth, slice, count, times, echo, experiments/test, notifications/ack, adminnotifies.

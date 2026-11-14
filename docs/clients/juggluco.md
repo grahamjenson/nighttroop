@@ -13,15 +13,16 @@ How the Juggluco Nightscout uploader talks to Nightscout, and how it works with 
 - Source: commit `d8233ce` (2026-10-29). Native C++ in `Common/src/main/cpp/net/watchserver/` (`uploader.cpp`,
   `uploadtreatment.cpp`, `common.cpp`, `datestring.hpp`), which calls Java in
   `Common/src/main/java/tk/glucodata/NightPost.java` for HTTP.
-- Tests: `tests/api/nightscout/juggluco/upload_v3.http`, `upload_v1.http` and `long_acting.http`. The v1 tests
+- Tests: `tests/api/nightscout/juggluco/upload_v3.http`, `upload_v1.http`, `long_acting.http` and
+  `trailing_slash.http`. The v1 tests
   send the token's SHA1 in `api-secret`, as Juggluco does.
 
 ## Set up
 
 1. In Juggluco, open Settings, Nightscout upload.
 2. Set **Nightscout URL** to the site's Nightscout host, for example `https://<site>.ns.<host>`.
-   - Do not add a trailing `/`. Juggluco adds paths such as `/api/v1/entries` to the URL exactly as typed, so it
-     gives `//api/...` (`makeuploadurls`, `uploader.cpp:66`).
+   - A trailing `/` is accepted. Juggluco adds paths such as `/api/v1/entries` to the URL exactly as typed, so it
+     gives `//api/...` (`makeuploadurls`, `uploader.cpp:66`). Nighttroop reads `//` as `/`.
 3. Set **Secret** to a device's Nightscout token. Juggluco keeps it as typed (`setNightUploader`,
    `settings/javasettings.cpp:1482`).
 4. Tick **test V3**. This checkbox is only on phones (`NightPost.config`). Wear OS always uses v1.
@@ -170,6 +171,8 @@ Every amount has `eventType` `<none>` (Nightscout careportal's "no event type").
   - v1 `DELETE /api/v1/treatments/<_id>`: 200.
   - v1 `PUT /api/v1/treatments` of one amount, and of a changed one after its delete: 200. Fixed in #508 for a
     changed time.
+  - A Nightscout URL with a trailing `/`: `//api/v1/entries` and `//api/v3/...` are read as `/api/...` (was 404, and
+    Juggluco did not show an error).
 - **Fixed in #508:**
   - v3 entries keep Juggluco's `identifier`: a create that names its `identifier` keeps it.
   - v3 `POST /api/v3/treatments` with `eventType` `<none>`: a Note, with insulin and carbs (was 400).
