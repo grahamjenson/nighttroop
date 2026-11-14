@@ -26,6 +26,12 @@ overrides:
       - column: "profile_presets.is_default"
         go_type:
           type: "bool"
+      - column: "food_presets.hidden"
+        go_type:
+          type: "*bool"
+      - column: "food_presets.hide_after_use"
+        go_type:
+          type: "*bool"
       - column: "glucose_readings.is_calibration"
         go_type:
           type: "*bool"

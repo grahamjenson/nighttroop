@@ -166,6 +166,10 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 			typesShortString3 := types.ShortString(*(*source).Subcategory)
 			nightscoutmodelsFood.Subcategory = &typesShortString3
 		}
+		if (*source).Unit != nil {
+			typesShortString4 := types.ShortString(*(*source).Unit)
+			nightscoutmodelsFood.Unit = &typesShortString4
+		}
 		if (*source).AbsorptionTimeMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).AbsorptionTimeMinutes)
 			nightscoutmodelsFood.AbsorptionTimeMinutes = &typesFlexibleInt64
@@ -194,17 +198,33 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).Energy)
 			nightscoutmodelsFood.Energy = &typesFlexibleFloat646
 		}
+		if (*source).Gi != nil {
+			typesFlexibleFloat647 := types.FlexibleFloat64(*(*source).Gi)
+			nightscoutmodelsFood.GI = &typesFlexibleFloat647
+		}
 		if (*source).Portions != nil {
-			typesFlexibleFloat647 := types.FlexibleFloat64(*(*source).Portions)
-			nightscoutmodelsFood.Portions = &typesFlexibleFloat647
+			typesFlexibleFloat648 := types.FlexibleFloat64(*(*source).Portions)
+			nightscoutmodelsFood.Portions = &typesFlexibleFloat648
+		}
+		if (*source).HideAfterUse != nil {
+			typesFlexibleBool := types.FlexibleBool(*(*source).HideAfterUse)
+			nightscoutmodelsFood.HideAfterUse = &typesFlexibleBool
+		}
+		if (*source).Hidden != nil {
+			typesFlexibleBool2 := types.FlexibleBool(*(*source).Hidden)
+			nightscoutmodelsFood.Hidden = &typesFlexibleBool2
+		}
+		if (*source).Position != nil {
+			typesFlexibleInt642 := types.FlexibleInt64(*(*source).Position)
+			nightscoutmodelsFood.Position = &typesFlexibleInt642
 		}
 		if (*source).CreatedByDeviceName != nil {
-			typesShortString4 := types.ShortString(*(*source).CreatedByDeviceName)
-			nightscoutmodelsFood.Device = &typesShortString4
+			typesShortString5 := types.ShortString(*(*source).CreatedByDeviceName)
+			nightscoutmodelsFood.Device = &typesShortString5
 		}
 		if (*source).CreatedByAppName != nil {
-			typesShortString5 := types.ShortString(*(*source).CreatedByAppName)
-			nightscoutmodelsFood.App = &typesShortString5
+			typesShortString6 := types.ShortString(*(*source).CreatedByAppName)
+			nightscoutmodelsFood.App = &typesShortString6
 		}
 		pTypesShortString2 := types.ShortString((*source).CreatedByIdentityName)
 		nightscoutmodelsFood.Subject = &pTypesShortString2

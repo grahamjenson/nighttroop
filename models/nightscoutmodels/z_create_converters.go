@@ -3,7 +3,10 @@
 
 package nightscoutmodels
 
-import sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+import (
+	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+	types "nighttroop.t1d.nz/utils/types"
+)
 
 func ActivityToCreate(source Activity, context ConverterContext) sitedb.CreateActivityParams {
 	var sitedbCreateActivityParams sitedb.CreateActivityParams
@@ -180,13 +183,33 @@ func FoodToCreate(source Food, context ConverterContext) sitedb.CreateFoodPreset
 		xfloat647 := FlexibleFloat64ToFloat64(*source.PreBolus)
 		sitedbCreateFoodPresetParams.PreBolus = &xfloat647
 	}
+	if source.Unit != nil {
+		xstring4 := ShortStringToString(*source.Unit)
+		sitedbCreateFoodPresetParams.Unit = &xstring4
+	}
+	if source.GI != nil {
+		xfloat648 := FlexibleFloat64ToFloat64(*source.GI)
+		sitedbCreateFoodPresetParams.Gi = &xfloat648
+	}
+	if source.Hidden != nil {
+		xbool := typesFlexibleBoolToBool(*source.Hidden)
+		sitedbCreateFoodPresetParams.Hidden = &xbool
+	}
+	if source.HideAfterUse != nil {
+		xbool2 := typesFlexibleBoolToBool(*source.HideAfterUse)
+		sitedbCreateFoodPresetParams.HideAfterUse = &xbool2
+	}
+	if source.Position != nil {
+		xint642 := FlexibleInt64ToInt64(*source.Position)
+		sitedbCreateFoodPresetParams.Position = &xint642
+	}
 	if source.App != nil {
-		xstring4 := ShortStringToString(*source.App)
-		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring4
+		xstring5 := ShortStringToString(*source.App)
+		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring5
 	}
 	if source.Device != nil {
-		xstring5 := ShortStringToString(*source.Device)
-		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring5
+		xstring6 := ShortStringToString(*source.Device)
+		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateFoodPresetParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -219,4 +242,7 @@ func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) 
 	sitedbCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateProfilePresetParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateProfilePresetParams
+}
+func typesFlexibleBoolToBool(source types.FlexibleBool) bool {
+	return bool(source)
 }

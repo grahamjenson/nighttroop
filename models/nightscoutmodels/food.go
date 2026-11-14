@@ -18,7 +18,8 @@ type Food struct {
 	Category    *types.ShortString `json:"category,omitempty"`
 	Subcategory *types.ShortString `json:"subcategory,omitempty"`
 
-	Unit *FoodUnit `json:"unit,omitempty"`
+	// Unit is the unit of its portion, e.g. g, ml or pcs
+	Unit *types.ShortString `json:"unit,omitempty"`
 
 	AbsorptionTimeMinutes *types.FlexibleInt64   `json:"absorptionTime,omitempty"`
 	PreBolus              *types.FlexibleFloat64 `json:"preBolus,omitempty"`
@@ -70,18 +71,6 @@ func (t *Food) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
-
-type FoodUnit string
-
-const (
-	UnitGram      FoodUnit = "g"
-	UnitOunce     FoodUnit = "oz"
-	UnitPortion   FoodUnit = "portion"
-	UnitServing   FoodUnit = "serving"
-	UnitItem      FoodUnit = "item"
-	UnitPackage   FoodUnit = "package"
-	UnitContainer FoodUnit = "container"
-)
 
 func (t Food) GetDevice() *string {
 	return t.Device.Stringp()

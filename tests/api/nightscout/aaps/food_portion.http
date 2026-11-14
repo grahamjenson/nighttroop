@@ -33,3 +33,47 @@ GET http://{{ site }}/api/v3/food/{{ .add_food_portions.identifier }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 2 "@result.portion"
+
+// A food keeps Nightscout's unit, glycaemic index, hidden, hide after use and position as sent, as AAPS reads its unit
+// (g when there is none) and gi
+NAME add_food_all_fields
+POST http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B {"type": "food", "name": "Milk", "category": "Dairy", "portion": 250, "unit": "ml", "carbs": 12, "fat": 8, "protein": 8, "energy": 600, "gi": 2, "hidden": false, "hideafteruse": true, "position": 3}
+ASSERT_STATUS 201
+
+NAME food_all_fields_v3
+GET http://{{ site }}/api/v3/food/{{ .add_food_all_fields.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ml" "@result.unit"
+ASSERT_EQUALS 2 "@result.gi"
+ASSERT_EQUALS false "@result.hidden"
+ASSERT_EQUALS true "@result.hideafteruse"
+ASSERT_EQUALS 3 "@result.position"
+ASSERT_EQUALS 250 "@result.portion"
+
+NAME food_all_fields_v1
+GET http://{{ site }}/api/v1/food.json?find[name]=Milk
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ml" "@0.unit"
+ASSERT_EQUALS 2 "@0.gi"
+ASSERT_EQUALS false "@0.hidden"
+ASSERT_EQUALS true "@0.hideafteruse"
+ASSERT_EQUALS 3 "@0.position"
+
+// A patch changes only what it sends
+NAME patch_food_position
+PATCH http://{{ site }}/api/v3/food/{{ .add_food_all_fields.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"position": 5, "hidden": true}
+ASSERT_STATUS 200
+
+NAME patched_food
+GET http://{{ site }}/api/v3/food/{{ .add_food_all_fields.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 5 "@result.position"
+ASSERT_EQUALS true "@result.hidden"
+ASSERT_EQUALS "ml" "@result.unit"
