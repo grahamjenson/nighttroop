@@ -277,6 +277,9 @@ A day's summary cannot be rebuilt once its raw rows start to go. So:
 - A site over its limit is compacted with shorter ages (example: half of each), down to a floor: never less than 2
   days of full data.
 - Control's **Truncate** button runs the same compaction now, with those shorter ages, and vacuums the DB.
+- **Today:** the 10-minute job truncates a site over 1.5 times its limit harder. It clears JSON over a day old, deletes
+  device reports over 7 days old and, if still over, readings and treatments over 90 days old. See
+  `REQUIREMENTS.md`, "Truncation of a site far over its size limit".
 
 ## What a person sees
 

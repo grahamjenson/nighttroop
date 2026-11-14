@@ -65,6 +65,87 @@ DELETE FROM device_reports WHERE device_reports.id IN (
     )
 );
 
--- name: DeleteOldDeviceReports :exec
--- Every device report that occurred before Before, 30 days ago, is deleted, a deleted one too, by the occurred_at index
+-- name: DeleteOldDeviceReports :execrows
+-- Every device report that occurred before Before, 30 days ago, or 7 for a site far over its size limit, is deleted, a
+-- deleted one too, by the occurred_at index
 DELETE FROM device_reports WHERE occurred_at < @before;
+
+-- A site far over its DB size limit first has the JSON that matters only while recent cleared from its records that
+-- occurred before Before, a day ago, but each device's newest report and the newest profile switch, which followers and
+-- the current profile read. Their updated_at stays, so clients do not fetch them again.
+-- name: ClearOldDeviceReportJSON :execrows
+UPDATE device_reports SET loop_status_json = NULL, override_json = NULL, pump_json = NULL, uploader_json = NULL
+WHERE device_reports.occurred_at < @before
+    AND COALESCE(loop_status_json, override_json, pump_json, uploader_json) IS NOT NULL
+    AND device_reports.occurred_at < (SELECT MAX(newest.occurred_at) FROM device_reports AS newest
+        WHERE newest.created_by_device_name IS device_reports.created_by_device_name AND newest.deleted_at IS NULL);
+
+-- name: ClearOldBolusCalculatorJSON :execrows
+UPDATE event_groups SET bolus_calculator_result_json = NULL
+WHERE event_groups.occurred_at < @before AND bolus_calculator_result_json IS NOT NULL;
+
+-- name: ClearOldInsulinDoseJSON :execrows
+UPDATE insulin_doses SET icfg_json = NULL WHERE insulin_doses.occurred_at < @before AND icfg_json IS NOT NULL;
+
+-- name: ClearOldProfileSwitchJSON :execrows
+UPDATE profile_switches SET icfg_json = NULL WHERE profile_switches.occurred_at < @before AND icfg_json IS NOT NULL
+    AND profile_switches.occurred_at < (SELECT MAX(newest.occurred_at) FROM profile_switches AS newest
+        WHERE newest.deleted_at IS NULL);
+
+-- If such a site is still over, its treatments and readings that occurred before Before, 90 days ago, are deleted, the
+-- deleted ones too, but the newest not deleted of each group type, reading type and table, as a sensor's, site's or
+-- profile's age and the current profile read the newest however old. The groups go first, so the events they refer to
+-- are kept. The summaries are kept and are not marked stale.
+-- name: DeleteOldEventGroups :execrows
+DELETE FROM event_groups WHERE event_groups.occurred_at < @before
+    AND event_groups.occurred_at < (SELECT MAX(newest.occurred_at)
+    FROM event_groups AS newest WHERE newest.group_type = event_groups.group_type AND newest.deleted_at IS NULL);
+
+-- name: DeleteOldGlucoseReadings :execrows
+DELETE FROM glucose_readings WHERE glucose_readings.occurred_at < @before
+    AND glucose_readings.id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading_id IS NOT NULL)
+    AND glucose_readings.occurred_at < (SELECT MAX(newest.occurred_at) FROM glucose_readings AS newest
+        WHERE newest.deleted_at IS NULL
+        AND newest.reading_type = glucose_readings.reading_type);
+
+-- name: DeleteOldInsulinDoses :execrows
+DELETE FROM insulin_doses WHERE insulin_doses.occurred_at < @before
+    AND insulin_doses.id NOT IN (SELECT insulin_dose_id FROM event_groups WHERE insulin_dose_id IS NOT NULL)
+    AND insulin_doses.occurred_at < (SELECT MAX(newest.occurred_at) FROM insulin_doses AS newest
+        WHERE newest.deleted_at IS NULL);
+
+-- name: DeleteOldFoodIntakes :execrows
+DELETE FROM food_intakes WHERE food_intakes.occurred_at < @before
+    AND food_intakes.id NOT IN (SELECT food_intake_id FROM event_groups WHERE food_intake_id IS NOT NULL)
+    AND food_intakes.occurred_at < (SELECT MAX(newest.occurred_at) FROM food_intakes AS newest
+        WHERE newest.deleted_at IS NULL);
+
+-- name: DeleteOldTempBasals :execrows
+DELETE FROM temp_basals WHERE temp_basals.occurred_at < @before
+    AND temp_basals.id NOT IN (SELECT temp_basal_id FROM event_groups WHERE temp_basal_id IS NOT NULL)
+    AND temp_basals.occurred_at < (SELECT MAX(newest.occurred_at) FROM temp_basals AS newest
+        WHERE newest.deleted_at IS NULL);
+
+-- name: DeleteOldTempTargets :execrows
+DELETE FROM temp_targets WHERE temp_targets.occurred_at < @before
+    AND temp_targets.id NOT IN (SELECT temp_target_id FROM event_groups WHERE temp_target_id IS NOT NULL)
+    AND temp_targets.occurred_at < (SELECT MAX(newest.occurred_at) FROM temp_targets AS newest
+        WHERE newest.deleted_at IS NULL);
+
+-- name: DeleteOldProfileSwitches :execrows
+DELETE FROM profile_switches WHERE profile_switches.occurred_at < @before
+    AND profile_switches.id NOT IN (SELECT profile_switch_id FROM event_groups WHERE profile_switch_id IS NOT NULL)
+    AND profile_switches.occurred_at < (SELECT MAX(newest.occurred_at) FROM profile_switches AS newest
+        WHERE newest.deleted_at IS NULL);
+
+-- name: DeleteOldActivities :execrows
+DELETE FROM activities WHERE activities.occurred_at < @before
+    AND activities.id NOT IN (SELECT activity_id FROM event_groups WHERE activity_id IS NOT NULL)
+    AND activities.occurred_at < (SELECT MAX(newest.occurred_at) FROM activities AS newest
+        WHERE newest.deleted_at IS NULL);
+
+-- name: DeleteOldNotificationEvents :execrows
+DELETE FROM notification_events WHERE notification_events.occurred_at < @before
+    AND notification_events.id NOT IN (SELECT notification_event_id FROM event_groups WHERE notification_event_id IS NOT NULL)
+    AND notification_events.occurred_at < (SELECT MAX(newest.occurred_at) FROM notification_events AS newest
+        WHERE newest.deleted_at IS NULL);

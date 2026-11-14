@@ -1761,6 +1761,31 @@ Every 10 minutes, the server truncates every site:
 - A site truncate reads all statuses. It also clears those older than a day (e.g. a device's newest from before it
   stopped reports for a day).
 
+#### Truncation of a site far over its size limit
+
+If a site's DB is over 1.5 times its DB size limit (30 MB at the 20 MB default), the 10-minute job also truncates it
+harder:
+
+1. Step 1:
+   - It clears JSON that is necessary only for recent records, from records over 1 day old:
+     - device status: loop status, override, pump and uploader;
+     - treatment: AAPS's bolus calculator result;
+     - insulin and profile switch: the insulin configuration (`icfg`).
+   - Each device's newest status and the newest profile switch keep their JSON.
+   - It deletes device statuses over 7 days old, and the loop settings no record refers to.
+2. Step 2, only if the site is still over 1.5 times its limit:
+   - It deletes readings and treatments over 90 days old, deleted ones too.
+   - It keeps the newest of each treatment type, of each reading type, and of each event table. The current
+     profile, and sensor, site and insulin ages, read the newest however old.
+   - It keeps the summaries of those days, weeks and months. They are not marked stale.
+- After each step that changed records, the job shrinks the DB.
+- If a step changed records, the job records the new DB size. A "Site truncated" event by "size limit" shows the size
+  before and after.
+- If the DB is not on disk (in memory), or the site has no limit, the job does not do this.
+- Records keep their `updated_at`, so clients do not read them again.
+- **Note:** Regenerate summaries rebuilds from site data. It removes the summaries of days whose records step 2
+  deleted.
+
 #### Rate limits
 
 - Reads and writes are rate limited for each site, identity and IP. Live sessions are capped for each site.

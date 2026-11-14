@@ -659,6 +659,39 @@ func (q *Queries) GetSite(ctx context.Context, arg GetSiteParams) (*Site, error)
 	return &i, err
 }
 
+const getSiteDBSizeLimits = `-- name: GetSiteDBSizeLimits :many
+SELECT id, max_db_size_kb_limit FROM sites WHERE max_db_size_kb_limit IS NOT NULL
+`
+
+type GetSiteDBSizeLimitsRow struct {
+	ID               string
+	MaxDbSizeKbLimit *int64
+}
+
+// Each site's DB size limit, for the truncate job to find the sites far over theirs without a query for each
+func (q *Queries) GetSiteDBSizeLimits(ctx context.Context) ([]*GetSiteDBSizeLimitsRow, error) {
+	rows, err := q.query(ctx, q.getSiteDBSizeLimitsStmt, getSiteDBSizeLimits)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetSiteDBSizeLimitsRow
+	for rows.Next() {
+		var i GetSiteDBSizeLimitsRow
+		if err := rows.Scan(&i.ID, &i.MaxDbSizeKbLimit); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSiteIDsWithAlarms = `-- name: GetSiteIDsWithAlarms :many
 SELECT id FROM sites WHERE state = 'live' AND (
     alarm_urgent_low_enabled OR alarm_low_enabled OR alarm_urgent_high_enabled OR alarm_high_enabled OR alarm_no_data_enabled

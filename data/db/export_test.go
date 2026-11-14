@@ -17,3 +17,6 @@ func TruncateSiteSince(ctx context.Context, site *SiteDB, since int64) error { r
 
 // StartSetupIfNoAdmin checks again, as the server does as it starts, whether it has an admin or is to be set up
 func (db *ControlDB) StartSetupIfNoAdmin(ctx context.Context) error { return db.startSetupIfNoAdmin(ctx) }
+
+// SetSizeKB makes sizeKB the site DB's size, for a test of a DB in memory
+func (db *SiteDB) SetSizeKB(sizeKB func() *int64) { db.sizeKB = sizeKB }

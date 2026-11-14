@@ -451,7 +451,7 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	if err := truncateSite(ctx, site, 0); err != nil {
 		return nil, err
 	}
-	if err := site.Queries().DeleteUnreferencedLoopSettings(ctx); err != nil {
+	if _, err := site.Queries().DeleteUnreferencedLoopSettings(ctx); err != nil {
 		return nil, fmt.Errorf("cannot delete the unreferenced loop settings of site %s: %w", subdomain, err)
 	}
 	if err := site.Vacuum(ctx); err != nil {
@@ -466,13 +466,98 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 }
 
 // TruncateSites truncates every open site, as the job every 10 minutes does, without shrinking their DBs, as SQLite
-// uses the space again for what comes next. It goes on past a site it cannot truncate, returning each one's error.
+// uses the space again for what comes next. It truncates harder a site far over its DB size limit. It goes on past a
+// site it cannot truncate, returning each one's error.
 func (db *ControlDB) TruncateSites(ctx context.Context) error {
-	var errs []error
+	limits, err := db.Queries.GetSiteDBSizeLimits(ctx)
+	errs := []error{err}
+	limitsKB := map[string]int64{}
+	for _, limit := range limits {
+		limitsKB[limit.ID] = *limit.MaxDbSizeKbLimit
+	}
 	for _, site := range db.sites.all() {
-		errs = append(errs, truncateSite(aslog.WithSite(ctx, site.Subdomain), site, time.Now().Add(-truncateLooksBack).UnixMilli()))
+		siteCtx := aslog.WithSite(ctx, site.Subdomain)
+		err := truncateSite(siteCtx, site, time.Now().Add(-truncateLooksBack).UnixMilli())
+		if limitKB, ok := limitsKB[site.Subdomain]; ok && err == nil {
+			err = db.hardTruncateSite(siteCtx, site, limitKB)
+		}
+		errs = append(errs, err)
 	}
 	return errors.Join(errs...)
+}
+
+// hardTruncateSizeFactor is how many times its DB size limit a site's DB must be for the job to truncate it harder, as
+// a site can fill its DB on purpose. An honest Loop user grows about 4.4 MB a month after the job's truncate, so takes
+// about 7 months to pass it at the default limit of 20 MB.
+const hardTruncateSizeFactor = 1.5
+
+const (
+	// hardTruncateJSONKeptFor is how long a site over hardTruncateSizeFactor keeps JSON that matters only while
+	// recent, hardTruncateReportsKeptFor its device reports, and hardTruncateRecordsKeptFor its readings and treatments
+	hardTruncateJSONKeptFor    = 24 * time.Hour
+	hardTruncateReportsKeptFor = 7 * 24 * time.Hour
+	hardTruncateRecordsKeptFor = 90 * 24 * time.Hour
+	// hardTruncatedBy is who the "Site truncated" event of a hard truncate says truncated the site
+	hardTruncatedBy = "size limit"
+)
+
+// hardTruncateSite truncates the site harder while its DB is over hardTruncateSizeFactor times its limit, limitKB.
+// First it clears the JSON that matters only while recent, and deletes device reports over 7 days old and the loop
+// settings no record refers to. If the site is still over, it deletes its readings and treatments over 90 days old,
+// but the newest of each type. After each step that changed records it shrinks the DB, so its size shows them. If any
+// changed, it records the new size and logs a "Site truncated" event.
+func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB int64) error {
+	over := func(sizeKB *int64) bool {
+		return sizeKB != nil && float64(*sizeKB) > hardTruncateSizeFactor*float64(limitKB)
+	}
+	beforeKB := site.EstimatedSizeKB()
+	if !over(beforeKB) {
+		return nil
+	}
+	started, q := time.Now(), site.Queries()
+	var changed int64
+	count := func(rows int64, err error) error { changed += rows; return err }
+	dayAgo := sitedb.ClearOldDeviceReportJSONParams{Before: started.Add(-hardTruncateJSONKeptFor).UnixMilli()}
+	weekAgo := sitedb.DeleteOldDeviceReportsParams{Before: started.Add(-hardTruncateReportsKeptFor).UnixMilli()}
+	err := errors.Join(
+		count(q.ClearOldDeviceReportJSON(ctx, dayAgo)),
+		count(q.ClearOldBolusCalculatorJSON(ctx, sitedb.ClearOldBolusCalculatorJSONParams(dayAgo))),
+		count(q.ClearOldInsulinDoseJSON(ctx, sitedb.ClearOldInsulinDoseJSONParams(dayAgo))),
+		count(q.ClearOldProfileSwitchJSON(ctx, sitedb.ClearOldProfileSwitchJSONParams(dayAgo))),
+		count(q.DeleteOldDeviceReports(ctx, weekAgo)),
+		count(q.DeleteUnreferencedLoopSettings(ctx)),
+	)
+	if err == nil && changed > 0 {
+		err = site.Vacuum(ctx)
+	}
+	if sizeKB := site.EstimatedSizeKB(); err == nil && over(sizeKB) {
+		// The groups go first, as the events they refer to are kept
+		old := sitedb.DeleteOldEventGroupsParams{Before: started.Add(-hardTruncateRecordsKeptFor).UnixMilli()}
+		step1 := changed
+		err = errors.Join(
+			count(q.DeleteOldEventGroups(ctx, old)),
+			count(q.DeleteOldGlucoseReadings(ctx, sitedb.DeleteOldGlucoseReadingsParams(old))),
+			count(q.DeleteOldInsulinDoses(ctx, sitedb.DeleteOldInsulinDosesParams(old))),
+			count(q.DeleteOldFoodIntakes(ctx, sitedb.DeleteOldFoodIntakesParams(old))),
+			count(q.DeleteOldTempBasals(ctx, sitedb.DeleteOldTempBasalsParams(old))),
+			count(q.DeleteOldTempTargets(ctx, sitedb.DeleteOldTempTargetsParams(old))),
+			count(q.DeleteOldProfileSwitches(ctx, sitedb.DeleteOldProfileSwitchesParams(old))),
+			count(q.DeleteOldActivities(ctx, sitedb.DeleteOldActivitiesParams(old))),
+			count(q.DeleteOldNotificationEvents(ctx, sitedb.DeleteOldNotificationEventsParams(old))),
+		)
+		if err == nil && changed > step1 {
+			err = site.Vacuum(ctx)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("cannot truncate site %s harder: %w", site.Subdomain, err)
+	}
+	if changed == 0 {
+		return nil
+	}
+	afterKB := site.EstimatedSizeKB()
+	db.Logs.SiteTruncatedEvent(ctx, site.Subdomain, hardTruncatedBy, started, beforeKB, afterKB)
+	return db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: afterKB, ID: site.Subdomain})
 }
 
 // truncateLooksBack is how far back the job looks for device reports written, or loop statuses turned a day old, to
@@ -497,7 +582,7 @@ func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 		return fmt.Errorf("cannot thin the device reports of site %s: %w", site.Subdomain, err)
 	}
 	before := now.Add(-deviceReportsKeptFor).UnixMilli()
-	if err := site.Queries().DeleteOldDeviceReports(ctx, sitedb.DeleteOldDeviceReportsParams{Before: before}); err != nil {
+	if _, err := site.Queries().DeleteOldDeviceReports(ctx, sitedb.DeleteOldDeviceReportsParams{Before: before}); err != nil {
 		return fmt.Errorf("cannot delete the old device reports of site %s: %w", site.Subdomain, err)
 	}
 	return nil
