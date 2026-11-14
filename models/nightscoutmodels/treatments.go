@@ -3,6 +3,7 @@ package nightscoutmodels
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -209,9 +210,10 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	t.Duration = aux.SentDuration.Duration()
 
-	// A Combo Bolus's enteredinsulin is its dose in all, as Nightscout's careportal sends insulin as the part given at
-	// once; AAPS's extended bolus sends no insulin and no split, as it is all given over time
-	if t.EnteredInsulin != nil && (t.EventType == nil || *t.EventType == ComboBolus) {
+	// A Combo Bolus's enteredinsulin is its dose in all when it has no insulin, as AAPS's extended bolus, all given over
+	// time, sends no insulin and no split, or when its insulin is the part given at once, as Nightscout's careportal
+	// sends it; other insulin, as a patch merged into the stored treatment sends, is the dose
+	if t.EnteredInsulin != nil && (t.EventType == nil || *t.EventType == ComboBolus) && (t.Insulin == nil || t.insulinIsGivenAtOnce()) {
 		if t.Insulin == nil && t.SplitNow == nil && t.SplitExt == nil && t.EventType != nil {
 			t.SplitNow, t.SplitExt = new(types.FlexibleFloat64(0)), new(types.FlexibleFloat64(100))
 		}
@@ -232,6 +234,11 @@ var treatmentTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "eve
 
 func (t Treatment) TimeAliases() types.TimeAliases {
 	return treatmentTimes
+}
+
+// insulinIsGivenAtOnce is whether a Combo Bolus's insulin is the part of its enteredinsulin given at once, by splitNow
+func (t *Treatment) insulinIsGivenAtOnce() bool {
+	return t.SplitNow != nil && math.Abs(t.Insulin.Float64()-t.EnteredInsulin.Float64()*t.SplitNow.Float64()/100) < 0.01
 }
 
 // noEventType is the event type of a treatment sent with none, "<none>", as xDrip+ sends every bolus, carbs and note

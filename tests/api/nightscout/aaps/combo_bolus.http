@@ -37,6 +37,34 @@ B {"eventType": "Combo Bolus", "date": {{ .eb_at }}, "enteredinsulin": 2.0, "dur
 ASSERT_STATUS 200
 ASSERT_EQUALS true "@isDeduplication"
 
+// A patch is merged into the stored treatment: one that leaves its insulin out keeps the dose, and one that sends
+// insulin changes it
+NAME patch_extended_bolus_duration
+PATCH http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 30}
+ASSERT_STATUS 200
+
+NAME patched_duration_keeps_dose
+GET http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.enteredinsulin"
+ASSERT_EQUALS 30 "@result.duration"
+
+NAME patch_extended_bolus_insulin
+PATCH http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+B {"insulin": 2.5}
+ASSERT_STATUS 200
+
+NAME patched_insulin_is_dose
+GET http://{{ site }}/api/v3/treatments/{{ .eb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@result.enteredinsulin"
+ASSERT_EQUALS null "@result.insulin"
+
 // Nightscout's careportal sends the insulin given at once as insulin, and all of it as enteredinsulin, the dose
 NAME add_careportal_combo
 POST http://{{ site }}/api/v1/treatments
