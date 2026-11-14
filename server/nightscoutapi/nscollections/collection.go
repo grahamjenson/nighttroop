@@ -422,7 +422,8 @@ func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.
 }
 
 // merged is the stored model's document, as API v1 gives it, with the fields sent laid over it, see mergeFields, read
-// as a create reads the fields sent
+// as a create reads the fields sent. Its duration is the stored whole minutes, as API v3 gives them, as API v1 gives the
+// nearest ones, which would be read back as sent
 func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext *httputils.SiteContext) (map[string]any, NS, error) {
 	var model NS
 	var aliases map[string][]string
@@ -437,7 +438,11 @@ func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext 
 	if fields, ok := any(model).(interface{ DefaultGlucoseUnits() *consts.Units }); ok {
 		defaultUnits = fields.DefaultGlucoseUnits()
 	}
-	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
+	storedDocument := c.document(stored, withoutSiteDB(siteContext))
+	document := storedDocument.Fields(false)
+	if minutes, ok := storedDocument.Fields(true)["duration"]; ok {
+		document["duration"] = minutes
+	}
 	document = mergeFields(document, data, aliases, glucose, defaultUnits)
 	err := utils.ConvertViaJSON(document, &model)
 	return document, model, err
