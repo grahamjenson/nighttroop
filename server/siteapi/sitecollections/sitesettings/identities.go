@@ -177,11 +177,7 @@ func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapi
 	if err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.bad_id", i18n.Data{"ID": id}))
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
+	identity, err := siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).GetSiteIdentityByID, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 	if err != nil {
 		return nil, err
 	}
@@ -202,11 +198,7 @@ func (s *IdentitiesCollection) GetHTMXResponse(model *sitemodels.UserIdentity) t
 // ///
 
 func (s *IdentitiesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, error) {
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.SiteID})
+	identities, err := siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).AllSiteIdentities, controldb.AllSiteIdentitiesParams{SiteID: siteContext.SiteID})
 	if err != nil {
 		return nil, err
 	}

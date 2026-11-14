@@ -499,6 +499,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   scroll sideways; Data and Settings tabs wrap above the page. No page gets wider. The user menu is unchanged.
 - Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns. Quick clicks show the
   last one clicked.
+- A box that has focus keeps its value when the page changes, for example a date picked or a search sent with Enter.
 
 ### Summary
 
@@ -649,6 +650,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - A background job rebuilds from site data the last year's days with data, yesterday, and their weeks, fortnights
     and months.
   - Recorded as an event. A repeat before it runs gives one job.
+  - Shares the site's few downloads a minute with Truncate and Download Data. Over it, the site refuses it (429).
 
 #### Summary builds
 
@@ -1137,6 +1139,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v3 status: what the token can do to each collection (e.g. `crud` for an uploader, `r` for read only). AAPS uploads
   only with a token that can write.
 - v3 version: needs no token.
+- Versions: the same Nightscout `version` (`15.0.9`) in v1 status, v3 status and v3 version. v1 status also has
+  `versionNum` (`150009`), which AAPS 3.4 needs to be at least 150000.
+- API v3 version: the same `apiVersion` (`3.0.4`) in v3 status, v3 version and v1 versions.
 - v2 roles and subjects (AAPS pairs a client by QR code with them):
   - Roles: a fixed list, `admin`, `readable` and `aaps-client`. A role sent is given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
@@ -1183,6 +1188,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - A filter on a field other than the date: a page has the matches of the page the dates alone give, still in order,
   and can have fewer than `limit`.
 - `skip`: maximum 32000 (Nightguard reads 32 pages of 1000). Negative is 0.
+- A v1 search with no `count` gives the same number as Nightscout, newest first:
+  - Entries and device statuses: 10, with or without a `find`.
+  - Treatments: 100 (xDrip+ follower). With a `find`: 1000 (xDrip4iOS).
+  - Food and activities: all, at most 1000.
 
 #### Deletes
 
@@ -1988,7 +1997,7 @@ harder:
   - Shrinks the DB, and keeps all else, as the card says.
   - Shows the storage again, a toast of the new DB size, and a "Site truncated" event with the admin.
 - "Download Data" downloads `<site>-<date>.zip`, with a DB snapshot `<site>-<date>.sqlite`.
-- Truncate and Download Data share the site's few downloads a minute.
+- Truncate, Download Data and Regenerate summaries share the site's few downloads a minute.
 - The JSON API (in `openapi.json`) gives the same storage, in `result`:
   - `GET /usage`: `size_kb`, `limit_kb`, `before_size_kb` (null) and `tables`.
   - Each table has `name`, `bytes` and `records`, the largest first, as last measured.

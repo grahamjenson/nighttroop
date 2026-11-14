@@ -44,10 +44,12 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 20
 ASSERT_NOT_VISIBLE #site--glucose--newest
 
-// A date jumps to the readings on or before that day, yesterday's from its end, and keeps the day it shows
+// A date jumps to the readings on or before that day, yesterday's from its end, and keeps the day it shows, in the box
+// still focused
 INPUT #site--glucose--date {{ date -1 }}
 WAIT_VISIBLE 5 #site--glucose--newest
 ASSERT_VISIBLE #site--glucose--date[value="{{ date -1 }}"]
+ASSERT_TEXT_EQUALS #site--glucose--date {{ date -1 }}
 ASSERT_COUNT #glucoseReadingsTable tbody tr:not([data-empty]) 20
 ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> text=/23:5\d/
 ASSERT_VISIBLE #site--glucose--next

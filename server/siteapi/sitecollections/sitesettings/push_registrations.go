@@ -99,11 +99,7 @@ func (s *PushRegistrationsCollection) GetRow(ctx context.Context, collectionTx *
 	if err != nil {
 		return nil, apiutils.ErrNotFound
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetPushRegistration(ctx, controldb.GetPushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
+	return siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).GetPushRegistration, controldb.GetPushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
 		IdentityID: PushIdentity(siteContext)})
 }
 
@@ -117,11 +113,7 @@ func (s *PushRegistrationsCollection) GetHTMXResponse(model *sitemodels.PushRegi
 
 // SearchRows is the signed in identity's registrations, newest first
 func (s *PushRegistrationsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*controldb.PushRegistration, error) {
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	return q.SearchPushRegistrations(ctx, controldb.SearchPushRegistrationsParams{SiteID: siteContext.SiteID,
+	return siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).SearchPushRegistrations, controldb.SearchPushRegistrationsParams{SiteID: siteContext.SiteID,
 		IdentityID: &siteContext.IdentityModel.ID, Skip: query.Skip, Limit: query.Limit})
 }
 
@@ -140,11 +132,7 @@ func (s *PushRegistrationsCollection) DeleteRow(ctx context.Context, collectionT
 	if err != nil {
 		return apiutils.ErrNotFound
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return err
-	}
-	_, err = q.DeletePushRegistration(ctx, controldb.DeletePushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
+	_, err = siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).DeletePushRegistration, controldb.DeletePushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
 		IdentityID: PushIdentity(siteContext)})
 	return err
 }

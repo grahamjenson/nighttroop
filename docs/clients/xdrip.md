@@ -48,7 +48,7 @@ How [xDrip+](https://github.com/NightscoutFoundation/xDrip) talks to Nightscout,
 
 - Reads only `version` (`getNightscoutVersion`, `:206`); keeps the body. `0.6`, `0.7` or `0.8` stops treatment
   downloads.
-- Nighttroop sends no `version`. xDrip+ reads "Unknown", which is allowed.
+- Nighttroop sends `version` `15.0.9`, which is allowed.
 - Gzip: on `X-Powered-By` with `Express` or `ASP.NET`, or `Accept-Encoding` with `gzip` (`checkGzipSupport`,
   `:1069`). Nighttroop sends neither, so bodies are not gzipped.
 
@@ -138,6 +138,7 @@ drops `accuracy`.
   with `xdrip`: its own), `created_at` (ISO 8601, required), `carbs`, `insulin`, `insulinInjections`, `notes`; for a
   finger stick `glucoseType` `Finger`, `glucose`, `units` (`mmol` or mg/dL).
 - Not added again when it matches a known treatment by uuid, `_id`, or time within a minute with the same amounts.
+- Nighttroop, as Nightscout, gives the newest 100 treatments. It gave 1000 (`xdrip/default_counts.http`).
 
 ## Downloads (Nightscout Follower)
 
