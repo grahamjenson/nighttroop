@@ -1931,6 +1931,12 @@ Every 10 minutes, the server truncates every site:
   - Shows the storage again, a toast of the new DB size, and a "Site truncated" event with the admin.
 - "Download Data" downloads `<site>-<date>.zip`, with a DB snapshot `<site>-<date>.sqlite`.
 - Truncate and Download Data share the site's few downloads a minute.
+- The JSON API (in `openapi.json`) gives the same storage, in `result`:
+  - `GET /usage`: `size_kb`, `limit_kb`, `before_size_kb` (null) and `tables`.
+  - Each table has `name`, `bytes` and `records`, the largest first, as last measured.
+  - If the server cannot measure the tables, `tables` is empty.
+  - `POST /usage/truncate`: the same fields. `size_kb` is the size after the truncate, `before_size_kb` the size before.
+  - `GET /usage/download`: the zip of Download Data.
 
 ### Own settings and alarms
 

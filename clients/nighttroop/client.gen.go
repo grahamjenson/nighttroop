@@ -452,6 +452,29 @@ type SiteCreationRefused struct {
 	Error string `json:"error"`
 }
 
+// SiteTable A table of a site's DB
+type SiteTable struct {
+	// Bytes The bytes the table and its indexes take in the DB file
+	Bytes   int64  `json:"bytes"`
+	Name    string `json:"name"`
+	Records int64  `json:"records"`
+}
+
+// SiteUsage A site's storage, as its Usage page shows it
+type SiteUsage struct {
+	// BeforeSizeKb The DB size in KB before a truncate; null in GET /usage, or when it was never measured
+	BeforeSizeKb *int64 `json:"before_size_kb"`
+
+	// LimitKb The DB size limit in KB, null when there is none
+	LimitKb *int64 `json:"limit_kb"`
+
+	// SizeKb The DB size in KB; after a truncate, the size after it. Null when it was never measured.
+	SizeKb *int64 `json:"size_kb"`
+
+	// Tables The DB's tables as last measured, largest first; empty when they cannot be measured
+	Tables []SiteTable `json:"tables"`
+}
+
 // Summary The parts of the summary described here; the rest is kept in AdditionalProperties
 type Summary struct {
 	FoodIntakes          *[]FoodIntake          `json:"food_intakes,omitempty"`
@@ -827,6 +850,13 @@ type PasskeyOptions struct {
 // PasskeySignedIn defines model for PasskeySignedIn.
 type PasskeySignedIn struct {
 	Redirect *string `json:"redirect,omitempty"`
+}
+
+// SiteUsageResult defines model for SiteUsageResult.
+type SiteUsageResult struct {
+	// Result A site's storage, as its Usage page shows it
+	Result *SiteUsage `json:"result,omitempty"`
+	Status *int       `json:"status,omitempty"`
 }
 
 // EventGroupBody defines model for EventGroupBody.
@@ -2076,6 +2106,15 @@ type ClientInterface interface {
 	// GetSummary request
 	GetSummary(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetUsage request
+	GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DownloadSiteData request
+	DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// TruncateSite request
+	TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// WelcomePasskeyBegin request
 	WelcomePasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -3263,6 +3302,42 @@ func (c *Client) CreateSite(ctx context.Context, reqEditors ...RequestEditorFn) 
 
 func (c *Client) GetSummary(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetUsageRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDownloadSiteDataRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTruncateSiteRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -7084,6 +7159,87 @@ func NewGetSummaryRequest(server string, params *GetSummaryParams) (*http.Reques
 	return req, nil
 }
 
+// NewGetUsageRequest generates requests for GetUsage
+func NewGetUsageRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDownloadSiteDataRequest generates requests for DownloadSiteData
+func NewDownloadSiteDataRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage/download")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewTruncateSiteRequest generates requests for TruncateSite
+func NewTruncateSiteRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage/truncate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewWelcomePasskeyBeginRequest generates requests for WelcomePasskeyBegin
 func NewWelcomePasskeyBeginRequest(server string) (*http.Request, error) {
 	var err error
@@ -7468,6 +7624,15 @@ type ClientWithResponsesInterface interface {
 
 	// GetSummaryWithResponse request
 	GetSummaryWithResponse(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*GetSummaryResponse, error)
+
+	// GetUsageWithResponse request
+	GetUsageWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsageResponse, error)
+
+	// DownloadSiteDataWithResponse request
+	DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error)
+
+	// TruncateSiteWithResponse request
+	TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error)
 
 	// WelcomePasskeyBeginWithResponse request
 	WelcomePasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*WelcomePasskeyBeginResponse, error)
@@ -9257,6 +9422,74 @@ func (r GetSummaryResponse) StatusCode() int {
 	return 0
 }
 
+type GetUsageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SiteUsageResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetUsageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetUsageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DownloadSiteDataResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DownloadSiteDataResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DownloadSiteDataResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type TruncateSiteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SiteUsageResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r TruncateSiteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TruncateSiteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type WelcomePasskeyBeginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -10170,6 +10403,33 @@ func (c *ClientWithResponses) GetSummaryWithResponse(ctx context.Context, params
 		return nil, err
 	}
 	return ParseGetSummaryResponse(rsp)
+}
+
+// GetUsageWithResponse request returning *GetUsageResponse
+func (c *ClientWithResponses) GetUsageWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsageResponse, error) {
+	rsp, err := c.GetUsage(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetUsageResponse(rsp)
+}
+
+// DownloadSiteDataWithResponse request returning *DownloadSiteDataResponse
+func (c *ClientWithResponses) DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error) {
+	rsp, err := c.DownloadSiteData(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDownloadSiteDataResponse(rsp)
+}
+
+// TruncateSiteWithResponse request returning *TruncateSiteResponse
+func (c *ClientWithResponses) TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error) {
+	rsp, err := c.TruncateSite(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTruncateSiteResponse(rsp)
 }
 
 // WelcomePasskeyBeginWithResponse request returning *WelcomePasskeyBeginResponse
@@ -12724,6 +12984,98 @@ func ParseGetSummaryResponse(rsp *http.Response) (*GetSummaryResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SummaryList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUsageResponse parses an HTTP response from a GetUsageWithResponse call
+func ParseGetUsageResponse(rsp *http.Response) (*GetUsageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetUsageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SiteUsageResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDownloadSiteDataResponse parses an HTTP response from a DownloadSiteDataWithResponse call
+func ParseDownloadSiteDataResponse(rsp *http.Response) (*DownloadSiteDataResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DownloadSiteDataResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseTruncateSiteResponse parses an HTTP response from a TruncateSiteWithResponse call
+func ParseTruncateSiteResponse(rsp *http.Response) (*TruncateSiteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TruncateSiteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SiteUsageResult
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

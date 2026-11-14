@@ -6,7 +6,7 @@
     "description": "Nighttroop's JSON API. Each endpoint gives the host it is on: POST /site is on the public host; /api/... is the Nightscout API, on a site's Nightscout host; everything else is on a site's host, with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings, except on the Nightscout API, which always gives it in mg/dL, as Nightscout does; a Nightscout document says its units in its units field."
   },
   "tags": [
-    { "name": "Site", "description": "Creating a site, signing in, and its summary, on the public host and a site's host" },
+    { "name": "Site", "description": "Creating a site, signing in, its summary and its usage, on the public host and a site's host" },
     { "name": "Data", "description": "A site's records, loop settings and summaries, on a site's host" },
     { "name": "Settings", "description": "The signed in identity's settings, on a site's host" },
     { "name": "Nightscout", "description": "The Nightscout API, on a site's Nightscout host, for Nightscout's apps and devices" }
@@ -267,6 +267,32 @@
         "summary": "Asks for the site's last year of summaries to be built again from its data, by a background job; admins only",
         "responses": {
           "202": { "description": "The regeneration is queued", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "object", "properties": { "regenerating": { "type": "boolean" } } } } } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/usage": {
+      "get": {
+        "operationId": "GetUsage", "tags": ["Site"],
+        "summary": "The site's storage: its DB size, measured now, against its limit, and its tables as last measured; admins only",
+        "responses": { "200": { "$ref": "#/components/responses/SiteUsageResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/usage/truncate": {
+      "post": {
+        "operationId": "TruncateSite", "tags": ["Site"],
+        "summary": "Truncates the site's device statuses and old loop settings, and shrinks its DB; admins only",
+        "description": "Shares the site's few downloads a minute with GET /usage/download; over it, the reply is 429. The result's size_kb is the size after, and before_size_kb the size before.",
+        "responses": { "200": { "$ref": "#/components/responses/SiteUsageResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/usage/download": {
+      "get": {
+        "operationId": "DownloadSiteData", "tags": ["Site"],
+        "summary": "A snapshot of the site's DB, as <site>-<date>.zip holding <site>-<date>.sqlite; admins only",
+        "description": "Shares the site's few downloads a minute with POST /usage/truncate; over it, the reply is 429. The zip is sent as it is made, so an error after it starts cuts it short.",
+        "responses": {
+          "200": { "description": "The zip, as an attachment", "content": { "application/zip": { "schema": { "type": "string", "format": "binary" } } } },
           "default": { "$ref": "#/components/responses/Error" }
         }
       }
@@ -613,6 +639,7 @@
       "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } }] } } } } } },
       "EventGroupResult": { "description": "An event group", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/EventGroup" } } } } } },
       "EventGroupList": { "description": "Event groups, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/EventGroup" } } } }] } } } } } },
+      "SiteUsageResult": { "description": "The site's storage", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/SiteUsage" } } } } } },
       "EventChoiceList": { "description": "The events that can be grouped, by kind", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/EventChoice" } } } } } } },
       "NsError": { "description": "A Nightscout error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
       "NsObject": { "description": "A Nightscout response", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
@@ -969,6 +996,27 @@
       "SummaryList": {
         "type": "object",
         "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/Summary" } } } }] } }
+      },
+      "SiteUsage": {
+        "type": "object",
+        "description": "A site's storage, as its Usage page shows it",
+        "required": ["size_kb", "limit_kb", "before_size_kb", "tables"],
+        "properties": {
+          "size_kb": { "type": "integer", "format": "int64", "nullable": true, "description": "The DB size in KB; after a truncate, the size after it. Null when it was never measured." },
+          "limit_kb": { "type": "integer", "format": "int64", "nullable": true, "description": "The DB size limit in KB, null when there is none" },
+          "before_size_kb": { "type": "integer", "format": "int64", "nullable": true, "description": "The DB size in KB before a truncate; null in GET /usage, or when it was never measured" },
+          "tables": { "type": "array", "description": "The DB's tables as last measured, largest first; empty when they cannot be measured", "items": { "$ref": "#/components/schemas/SiteTable" } }
+        }
+      },
+      "SiteTable": {
+        "type": "object",
+        "description": "A table of a site's DB",
+        "required": ["name", "bytes", "records"],
+        "properties": {
+          "name": { "type": "string" },
+          "bytes": { "type": "integer", "format": "int64", "description": "The bytes the table and its indexes take in the DB file" },
+          "records": { "type": "integer", "format": "int64" }
+        }
       }
     }
   }
