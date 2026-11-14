@@ -3,6 +3,10 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
+    1. P2: Regenerate summaries rebuilds from site data, so it removes the summaries of days whose records the
+       truncate of a site far over its size limit deleted: keep a day's summary when its records are gone
+    1. P3: A site far over its size limit that keeps writing changes records on each truncate, so its DB is vacuumed
+       every 10 minutes: vacuum only when its free pages are a large part of it
 1. Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
 1. e2e bakup_key testing. Control

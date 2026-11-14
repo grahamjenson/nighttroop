@@ -85,7 +85,8 @@ each setting whose value differs, was added or was removed, old then new:
 - Truncating a site (My Account's Truncate, or control's) deletes the sets no profile or device report refers to
   (examples: their device reports were thinned or deleted, or a profile was deleted).
 - It keeps each app's last seen set: its current settings, which AAPS sends only now and then.
-- The job every 10 minutes does not delete sets.
+- The job every 10 minutes does not delete sets. Exception: if a site is over 1.5 times its DB size limit, the job
+  deletes them as a truncate does.
 - Deleting a site deletes its whole DB, with `loop_settings`.
 
 ## History and limits

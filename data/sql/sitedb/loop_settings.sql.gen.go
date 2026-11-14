@@ -22,7 +22,7 @@ func (q *Queries) DeleteLoopSettings(ctx context.Context, arg DeleteLoopSettings
 	return q.exec(ctx, q.deleteLoopSettingsStmt, deleteLoopSettings, arg.ID)
 }
 
-const deleteUnreferencedLoopSettings = `-- name: DeleteUnreferencedLoopSettings :exec
+const deleteUnreferencedLoopSettings = `-- name: DeleteUnreferencedLoopSettings :execrows
 DELETE FROM loop_settings WHERE id NOT IN (
     SELECT loop_settings_id FROM profile_presets WHERE loop_settings_id IS NOT NULL
     UNION SELECT remote_settings_id FROM profile_presets WHERE remote_settings_id IS NOT NULL
@@ -32,9 +32,12 @@ DELETE FROM loop_settings WHERE id NOT IN (
 
 // Deletes the sets no profile or device report refers to any more, as when the reports sent with them were thinned,
 // but each app's last seen, its settings now, which AAPS sends only now and then
-func (q *Queries) DeleteUnreferencedLoopSettings(ctx context.Context) error {
-	_, err := q.exec(ctx, q.deleteUnreferencedLoopSettingsStmt, deleteUnreferencedLoopSettings)
-	return err
+func (q *Queries) DeleteUnreferencedLoopSettings(ctx context.Context) (int64, error) {
+	result, err := q.exec(ctx, q.deleteUnreferencedLoopSettingsStmt, deleteUnreferencedLoopSettings)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getLoopSettings = `-- name: GetLoopSettings :one

@@ -9,6 +9,62 @@ import (
 	"context"
 )
 
+const clearOldBolusCalculatorJSON = `-- name: ClearOldBolusCalculatorJSON :execrows
+UPDATE event_groups SET bolus_calculator_result_json = NULL
+WHERE event_groups.occurred_at < ?1 AND bolus_calculator_result_json IS NOT NULL
+`
+
+type ClearOldBolusCalculatorJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearOldBolusCalculatorJSON(ctx context.Context, arg ClearOldBolusCalculatorJSONParams) (int64, error) {
+	result, err := q.exec(ctx, q.clearOldBolusCalculatorJSONStmt, clearOldBolusCalculatorJSON, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const clearOldDeviceReportJSON = `-- name: ClearOldDeviceReportJSON :execrows
+UPDATE device_reports SET loop_status_json = NULL, override_json = NULL, pump_json = NULL, uploader_json = NULL
+WHERE device_reports.occurred_at < ?1
+    AND COALESCE(loop_status_json, override_json, pump_json, uploader_json) IS NOT NULL
+    AND device_reports.occurred_at < (SELECT MAX(newest.occurred_at) FROM device_reports AS newest
+        WHERE newest.created_by_device_name IS device_reports.created_by_device_name AND newest.deleted_at IS NULL)
+`
+
+type ClearOldDeviceReportJSONParams struct {
+	Before int64
+}
+
+// A site far over its DB size limit first has the JSON that matters only while recent cleared from its records that
+// occurred before Before, a day ago, but each device's newest report and the newest profile switch, which followers and
+// the current profile read. Their updated_at stays, so clients do not fetch them again.
+func (q *Queries) ClearOldDeviceReportJSON(ctx context.Context, arg ClearOldDeviceReportJSONParams) (int64, error) {
+	result, err := q.exec(ctx, q.clearOldDeviceReportJSONStmt, clearOldDeviceReportJSON, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const clearOldInsulinDoseJSON = `-- name: ClearOldInsulinDoseJSON :execrows
+UPDATE insulin_doses SET icfg_json = NULL WHERE insulin_doses.occurred_at < ?1 AND icfg_json IS NOT NULL
+`
+
+type ClearOldInsulinDoseJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearOldInsulinDoseJSON(ctx context.Context, arg ClearOldInsulinDoseJSONParams) (int64, error) {
+	result, err := q.exec(ctx, q.clearOldInsulinDoseJSONStmt, clearOldInsulinDoseJSON, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const clearOldLoopStatuses = `-- name: ClearOldLoopStatuses :exec
 UPDATE device_reports
 SET loop_status_json = json_remove(device_reports.loop_status_json, '$.predicted.values', '$.suggested.predBGs', '$.enacted.predBGs')
@@ -44,6 +100,24 @@ func (q *Queries) ClearOldLoopStatuses(ctx context.Context, arg ClearOldLoopStat
 	return err
 }
 
+const clearOldProfileSwitchJSON = `-- name: ClearOldProfileSwitchJSON :execrows
+UPDATE profile_switches SET icfg_json = NULL WHERE profile_switches.occurred_at < ?1 AND icfg_json IS NOT NULL
+    AND profile_switches.occurred_at < (SELECT MAX(newest.occurred_at) FROM profile_switches AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type ClearOldProfileSwitchJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearOldProfileSwitchJSON(ctx context.Context, arg ClearOldProfileSwitchJSONParams) (int64, error) {
+	result, err := q.exec(ctx, q.clearOldProfileSwitchJSONStmt, clearOldProfileSwitchJSON, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const clearOldPumps = `-- name: ClearOldPumps :exec
 UPDATE device_reports SET pump_json = NULL
 WHERE device_reports.updated_at >= ?1 AND device_reports.pump_json IS NOT NULL
@@ -67,7 +141,26 @@ func (q *Queries) ClearOldPumps(ctx context.Context, arg ClearOldPumpsParams) er
 	return err
 }
 
-const deleteOldDeviceReports = `-- name: DeleteOldDeviceReports :exec
+const deleteOldActivities = `-- name: DeleteOldActivities :execrows
+DELETE FROM activities WHERE activities.occurred_at < ?1
+    AND activities.id NOT IN (SELECT activity_id FROM event_groups WHERE activity_id IS NOT NULL)
+    AND activities.occurred_at < (SELECT MAX(newest.occurred_at) FROM activities AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type DeleteOldActivitiesParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldActivities(ctx context.Context, arg DeleteOldActivitiesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldActivitiesStmt, deleteOldActivities, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldDeviceReports = `-- name: DeleteOldDeviceReports :execrows
 DELETE FROM device_reports WHERE occurred_at < ?1
 `
 
@@ -75,10 +168,170 @@ type DeleteOldDeviceReportsParams struct {
 	Before int64
 }
 
-// Every device report that occurred before Before, 30 days ago, is deleted, a deleted one too, by the occurred_at index
-func (q *Queries) DeleteOldDeviceReports(ctx context.Context, arg DeleteOldDeviceReportsParams) error {
-	_, err := q.exec(ctx, q.deleteOldDeviceReportsStmt, deleteOldDeviceReports, arg.Before)
-	return err
+// Every device report that occurred before Before, 30 days ago, or 7 for a site far over its size limit, is deleted, a
+// deleted one too, by the occurred_at index
+func (q *Queries) DeleteOldDeviceReports(ctx context.Context, arg DeleteOldDeviceReportsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldDeviceReportsStmt, deleteOldDeviceReports, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldEventGroups = `-- name: DeleteOldEventGroups :execrows
+DELETE FROM event_groups WHERE event_groups.occurred_at < ?1
+    AND event_groups.occurred_at < (SELECT MAX(newest.occurred_at)
+    FROM event_groups AS newest WHERE newest.group_type = event_groups.group_type AND newest.deleted_at IS NULL)
+`
+
+type DeleteOldEventGroupsParams struct {
+	Before int64
+}
+
+// If such a site is still over, its treatments and readings that occurred before Before, 90 days ago, are deleted, the
+// deleted ones too, but the newest not deleted of each group type, reading type and table, as a sensor's, site's or
+// profile's age and the current profile read the newest however old. The groups go first, so the events they refer to
+// are kept. The summaries are kept and are not marked stale.
+func (q *Queries) DeleteOldEventGroups(ctx context.Context, arg DeleteOldEventGroupsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldEventGroupsStmt, deleteOldEventGroups, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldFoodIntakes = `-- name: DeleteOldFoodIntakes :execrows
+DELETE FROM food_intakes WHERE food_intakes.occurred_at < ?1
+    AND food_intakes.id NOT IN (SELECT food_intake_id FROM event_groups WHERE food_intake_id IS NOT NULL)
+    AND food_intakes.occurred_at < (SELECT MAX(newest.occurred_at) FROM food_intakes AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type DeleteOldFoodIntakesParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldFoodIntakes(ctx context.Context, arg DeleteOldFoodIntakesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldFoodIntakesStmt, deleteOldFoodIntakes, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldGlucoseReadings = `-- name: DeleteOldGlucoseReadings :execrows
+DELETE FROM glucose_readings WHERE glucose_readings.occurred_at < ?1
+    AND glucose_readings.id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading_id IS NOT NULL)
+    AND glucose_readings.occurred_at < (SELECT MAX(newest.occurred_at) FROM glucose_readings AS newest
+        WHERE newest.deleted_at IS NULL
+        AND newest.reading_type = glucose_readings.reading_type)
+`
+
+type DeleteOldGlucoseReadingsParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldGlucoseReadings(ctx context.Context, arg DeleteOldGlucoseReadingsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldGlucoseReadingsStmt, deleteOldGlucoseReadings, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldInsulinDoses = `-- name: DeleteOldInsulinDoses :execrows
+DELETE FROM insulin_doses WHERE insulin_doses.occurred_at < ?1
+    AND insulin_doses.id NOT IN (SELECT insulin_dose_id FROM event_groups WHERE insulin_dose_id IS NOT NULL)
+    AND insulin_doses.occurred_at < (SELECT MAX(newest.occurred_at) FROM insulin_doses AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type DeleteOldInsulinDosesParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldInsulinDoses(ctx context.Context, arg DeleteOldInsulinDosesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldInsulinDosesStmt, deleteOldInsulinDoses, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldNotificationEvents = `-- name: DeleteOldNotificationEvents :execrows
+DELETE FROM notification_events WHERE notification_events.occurred_at < ?1
+    AND notification_events.id NOT IN (SELECT notification_event_id FROM event_groups WHERE notification_event_id IS NOT NULL)
+    AND notification_events.occurred_at < (SELECT MAX(newest.occurred_at) FROM notification_events AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type DeleteOldNotificationEventsParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldNotificationEvents(ctx context.Context, arg DeleteOldNotificationEventsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldNotificationEventsStmt, deleteOldNotificationEvents, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldProfileSwitches = `-- name: DeleteOldProfileSwitches :execrows
+DELETE FROM profile_switches WHERE profile_switches.occurred_at < ?1
+    AND profile_switches.id NOT IN (SELECT profile_switch_id FROM event_groups WHERE profile_switch_id IS NOT NULL)
+    AND profile_switches.occurred_at < (SELECT MAX(newest.occurred_at) FROM profile_switches AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type DeleteOldProfileSwitchesParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldProfileSwitches(ctx context.Context, arg DeleteOldProfileSwitchesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldProfileSwitchesStmt, deleteOldProfileSwitches, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldTempBasals = `-- name: DeleteOldTempBasals :execrows
+DELETE FROM temp_basals WHERE temp_basals.occurred_at < ?1
+    AND temp_basals.id NOT IN (SELECT temp_basal_id FROM event_groups WHERE temp_basal_id IS NOT NULL)
+    AND temp_basals.occurred_at < (SELECT MAX(newest.occurred_at) FROM temp_basals AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type DeleteOldTempBasalsParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldTempBasals(ctx context.Context, arg DeleteOldTempBasalsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldTempBasalsStmt, deleteOldTempBasals, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteOldTempTargets = `-- name: DeleteOldTempTargets :execrows
+DELETE FROM temp_targets WHERE temp_targets.occurred_at < ?1
+    AND temp_targets.id NOT IN (SELECT temp_target_id FROM event_groups WHERE temp_target_id IS NOT NULL)
+    AND temp_targets.occurred_at < (SELECT MAX(newest.occurred_at) FROM temp_targets AS newest
+        WHERE newest.deleted_at IS NULL)
+`
+
+type DeleteOldTempTargetsParams struct {
+	Before int64
+}
+
+func (q *Queries) DeleteOldTempTargets(ctx context.Context, arg DeleteOldTempTargetsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deleteOldTempTargetsStmt, deleteOldTempTargets, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const thinOldDeviceReports = `-- name: ThinOldDeviceReports :exec

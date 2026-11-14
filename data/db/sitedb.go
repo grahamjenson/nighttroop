@@ -22,6 +22,8 @@ type SiteDB struct {
 	// tablesMeasuredKB is the DB's size when its tables were last measured, so they are measured again only once it
 	// changes
 	tablesMeasuredKB atomic.Int64
+	// sizeKB, when set, is the DB's size in place of its size on disk, for a test of a DB in memory
+	sizeKB func() *int64
 }
 
 func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) (*SiteDB, error) {
@@ -46,6 +48,9 @@ func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) 
 
 // EstimatedSizeKB is the site DB's size on disk in KB, its file and write-ahead log, or nil for one in memory
 func (db *SiteDB) EstimatedSizeKB() *int64 {
+	if db.sizeKB != nil {
+		return db.sizeKB()
+	}
 	if db.InMemory {
 		return nil
 	}

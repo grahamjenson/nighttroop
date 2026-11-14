@@ -18036,6 +18036,36 @@ func (m *UpsertSummaryPeriodParams) SetTotalDailyBasal(v float64) {
 	m.TotalDailyBasal = v
 }
 
+// GetBefore returns the Before value.
+func (m ClearOldBolusCalculatorJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldBolusCalculatorJSONParams.
+func (m *ClearOldBolusCalculatorJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearOldDeviceReportJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldDeviceReportJSONParams.
+func (m *ClearOldDeviceReportJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearOldInsulinDoseJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldInsulinDoseJSONParams.
+func (m *ClearOldInsulinDoseJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
 // GetNow returns the Now value.
 func (m ClearOldLoopStatusesParams) GetNow() int64 {
 	return m.Now
@@ -18056,6 +18086,16 @@ func (m *ClearOldLoopStatusesParams) SetSince(v int64) {
 	m.Since = v
 }
 
+// GetBefore returns the Before value.
+func (m ClearOldProfileSwitchJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldProfileSwitchJSONParams.
+func (m *ClearOldProfileSwitchJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
 // GetSince returns the Since value.
 func (m ClearOldPumpsParams) GetSince() int64 {
 	return m.Since
@@ -18067,12 +18107,102 @@ func (m *ClearOldPumpsParams) SetSince(v int64) {
 }
 
 // GetBefore returns the Before value.
+func (m DeleteOldActivitiesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldActivitiesParams.
+func (m *DeleteOldActivitiesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
 func (m DeleteOldDeviceReportsParams) GetBefore() int64 {
 	return m.Before
 }
 
 // SetBefore sets the Before value and returns the updated DeleteOldDeviceReportsParams.
 func (m *DeleteOldDeviceReportsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldEventGroupsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldEventGroupsParams.
+func (m *DeleteOldEventGroupsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldFoodIntakesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldFoodIntakesParams.
+func (m *DeleteOldFoodIntakesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldGlucoseReadingsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldGlucoseReadingsParams.
+func (m *DeleteOldGlucoseReadingsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldInsulinDosesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldInsulinDosesParams.
+func (m *DeleteOldInsulinDosesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldNotificationEventsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldNotificationEventsParams.
+func (m *DeleteOldNotificationEventsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldProfileSwitchesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldProfileSwitchesParams.
+func (m *DeleteOldProfileSwitchesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldTempBasalsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldTempBasalsParams.
+func (m *DeleteOldTempBasalsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldTempTargetsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldTempTargetsParams.
+func (m *DeleteOldTempTargetsParams) SetBefore(v int64) {
 	m.Before = v
 }
 

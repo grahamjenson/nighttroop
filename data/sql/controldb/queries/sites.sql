@@ -20,6 +20,10 @@ SELECT * FROM sites;
 -- name: GetSite :one
 SELECT * FROM sites WHERE id = ? AND state = 'live';
 
+-- name: GetSiteDBSizeLimits :many
+-- Each site's DB size limit, for the truncate job to find the sites far over theirs without a query for each
+SELECT id, max_db_size_kb_limit FROM sites WHERE max_db_size_kb_limit IS NOT NULL;
+
 
 -- name: SearchSites :many
 SELECT * FROM sites
