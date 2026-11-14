@@ -1816,6 +1816,56 @@ func (m *FoodPreset) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUnit returns the Unit value.
+func (m FoodPreset) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated FoodPreset.
+func (m *FoodPreset) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m FoodPreset) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated FoodPreset.
+func (m *FoodPreset) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m FoodPreset) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated FoodPreset.
+func (m *FoodPreset) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m FoodPreset) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated FoodPreset.
+func (m *FoodPreset) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m FoodPreset) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated FoodPreset.
+func (m *FoodPreset) SetPosition(v *int64) {
+	m.Position = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m FoodPreset) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -16036,6 +16086,56 @@ func (m *CreateFoodPresetParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUnit returns the Unit value.
+func (m CreateFoodPresetParams) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m CreateFoodPresetParams) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m CreateFoodPresetParams) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m CreateFoodPresetParams) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m CreateFoodPresetParams) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetPosition(v *int64) {
+	m.Position = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m CreateFoodPresetParams) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
@@ -16324,6 +16424,56 @@ func (m RewriteFoodPresetParams) GetPreBolus() *float64 {
 // SetPreBolus sets the PreBolus value and returns the updated RewriteFoodPresetParams.
 func (m *RewriteFoodPresetParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
+}
+
+// GetUnit returns the Unit value.
+func (m RewriteFoodPresetParams) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m RewriteFoodPresetParams) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m RewriteFoodPresetParams) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m RewriteFoodPresetParams) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m RewriteFoodPresetParams) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetPosition(v *int64) {
+	m.Position = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -16774,6 +16924,56 @@ func (m UpdateFoodPresetParams) GetPreBolus() *float64 {
 // SetPreBolus sets the PreBolus value and returns the updated UpdateFoodPresetParams.
 func (m *UpdateFoodPresetParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
+}
+
+// GetUnit returns the Unit value.
+func (m UpdateFoodPresetParams) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m UpdateFoodPresetParams) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m UpdateFoodPresetParams) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m UpdateFoodPresetParams) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m UpdateFoodPresetParams) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetPosition(v *int64) {
+	m.Position = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.

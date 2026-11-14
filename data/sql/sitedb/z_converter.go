@@ -750,18 +750,38 @@ func FoodPresetToCreate(source FoodPreset) CreateFoodPresetParams {
 		xfloat647 := *source.PreBolus
 		sitedbCreateFoodPresetParams.PreBolus = &xfloat647
 	}
+	if source.Unit != nil {
+		xstring4 := *source.Unit
+		sitedbCreateFoodPresetParams.Unit = &xstring4
+	}
+	if source.Gi != nil {
+		xfloat648 := *source.Gi
+		sitedbCreateFoodPresetParams.Gi = &xfloat648
+	}
+	if source.Hidden != nil {
+		xbool := *source.Hidden
+		sitedbCreateFoodPresetParams.Hidden = &xbool
+	}
+	if source.HideAfterUse != nil {
+		xbool2 := *source.HideAfterUse
+		sitedbCreateFoodPresetParams.HideAfterUse = &xbool2
+	}
+	if source.Position != nil {
+		xint642 := *source.Position
+		sitedbCreateFoodPresetParams.Position = &xint642
+	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateFoodPresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint642 := *source.CreatedByIdentityID
-		sitedbCreateFoodPresetParams.CreatedByIdentityID = &xint642
+		xint643 := *source.CreatedByIdentityID
+		sitedbCreateFoodPresetParams.CreatedByIdentityID = &xint643
 	}
 	return sitedbCreateFoodPresetParams
 }
@@ -813,13 +833,33 @@ func FoodPresetToUpdate(source FoodPreset) UpdateFoodPresetParams {
 		xfloat647 := *source.PreBolus
 		sitedbUpdateFoodPresetParams.PreBolus = &xfloat647
 	}
+	if source.Unit != nil {
+		xstring4 := *source.Unit
+		sitedbUpdateFoodPresetParams.Unit = &xstring4
+	}
+	if source.Gi != nil {
+		xfloat648 := *source.Gi
+		sitedbUpdateFoodPresetParams.Gi = &xfloat648
+	}
+	if source.Hidden != nil {
+		xbool := *source.Hidden
+		sitedbUpdateFoodPresetParams.Hidden = &xbool
+	}
+	if source.HideAfterUse != nil {
+		xbool2 := *source.HideAfterUse
+		sitedbUpdateFoodPresetParams.HideAfterUse = &xbool2
+	}
+	if source.Position != nil {
+		xint642 := *source.Position
+		sitedbUpdateFoodPresetParams.Position = &xint642
+	}
 	if source.UpdatedByIdentityID != nil {
-		xint642 := *source.UpdatedByIdentityID
-		sitedbUpdateFoodPresetParams.UpdatedByIdentityID = &xint642
+		xint643 := *source.UpdatedByIdentityID
+		sitedbUpdateFoodPresetParams.UpdatedByIdentityID = &xint643
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring4 := *source.UpdatedByIdentityName
-		sitedbUpdateFoodPresetParams.UpdatedByIdentityName = &xstring4
+		xstring5 := *source.UpdatedByIdentityName
+		sitedbUpdateFoodPresetParams.UpdatedByIdentityName = &xstring5
 	}
 	sitedbUpdateFoodPresetParams.ID = source.ID
 	return sitedbUpdateFoodPresetParams

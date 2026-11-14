@@ -1612,6 +1612,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - Food: `type` `food` (AAPS loads only that type).
 - Food `portion`: the amount its carbs are for, as AAPS reads it. A food sent with `portions` keeps it as its `portion`.
+- Food `unit` (e.g. `g`, `ml`, `pcs`), `gi`, `hidden`, `hideafteruse` and `position`: kept and returned as sent. AAPS
+  reads `unit` (`g` when there is none) and `gi`.
 - Food `utcOffset`: the site timezone's offset at its date, as a food keeps no offset.
 - Activity (xDrip+): `type` is the activity type, a heart rate's `bpm` its heart rate, a motion's `class` its name.
 
