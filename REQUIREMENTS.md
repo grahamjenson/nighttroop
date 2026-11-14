@@ -1803,6 +1803,9 @@ harder:
   (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT` / `_BURST`).
   - All identities, the site pages and API, the Nightscout API and live updates share this limit.
   - A v1 upload or a live update upload costs one flagged write for each record.
+  - An upload with more records than the burst (for example, a backlog after an outage) is accepted if the limit is
+    full. It costs all its records, so the next write waits until the limit has them back. Test: a 40 record upload is
+    accepted, and a write right after it gets 429.
   - Over it: 429, with `Retry-After` and the message `Too many writes: this site's data is far over its storage limit`.
   - Live updates: the write is refused with that message.
 - Reads of a flagged site, and sites that are not flagged, do not change.

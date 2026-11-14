@@ -127,16 +127,24 @@ func SiteFlaggedForAbuse(siteContext *SiteContext) bool {
 
 // FlaggedSiteWritesWithinRateLimit spends n writes from the flagged write limit of a site flagged for abuse, none unless
 // it has them all now, and none of a site that is not flagged. It is when to try again if refused, in seconds.
+// n more than the burst, less the write the request spent already, as a backlog after an outage, is let through when the
+// bucket is full. It still spends every write, so the site waits for them all before its next write.
 func FlaggedSiteWritesWithinRateLimit(siteContext *SiteContext, n int) (bool, int) {
 	if n <= 0 || !SiteFlaggedForAbuse(siteContext) {
 		return true, 0
 	}
 	now := time.Now()
-	writes := siteContext.Config.RateLimiters.SiteFlaggedPOSTLimiter(siteContext.SiteID).ReserveN(now, n)
+	limiter := siteContext.Config.RateLimiters.SiteFlaggedPOSTLimiter(siteContext.SiteID)
+	first := min(n, max(limiter.Burst()-1, 1))
+	writes := limiter.ReserveN(now, first)
 	if writes.OK() && writes.DelayFrom(now) == 0 {
+		// A reservation is at most the burst, so the rest is spent in parts, which the limiter lets go below empty
+		for rest := n - first; rest > 0; rest -= first {
+			limiter.ReserveN(now, min(rest, first))
+		}
 		return true, 0
 	}
-	// More than its burst is never let through, so there is no time to wait for
+	// A burst of 0 never lets a write through, so there is no time to wait for
 	delay := time.Duration(0)
 	if writes.OK() {
 		delay = writes.DelayFrom(now)

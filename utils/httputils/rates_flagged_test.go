@@ -79,14 +79,54 @@ func TestFlaggedSiteBatchCostsEachRecord(t *testing.T) {
 	require.False(t, allowed)
 	require.InDelta(t, 120, seconds, 1)
 	require.InDelta(t, 6, limiter.Tokens(), 0.1)
-	// A batch past its burst is never let through
+	// A batch past its burst waits for a full bucket
 	allowed, seconds = httputils.FlaggedSiteWritesWithinRateLimit(flagged, 99)
 	require.False(t, allowed)
-	require.Zero(t, seconds)
+	require.InDelta(t, 870, seconds, 1)
 
 	// A batch of 100 from a site that is not flagged costs none
 	allowed, _ = httputils.FlaggedSiteWritesWithinRateLimit(flaggedTestContext(cfg, "batchhonestzzz", 20480, nil), 99)
 	require.True(t, allowed)
+}
+
+// A flagged site's backlog past its burst, as xDrip+ or Loop sends after an outage, is let through when the bucket is
+// full, and spends every record, so the site waits for them all before its next write
+func TestFlaggedSiteBacklogPastBurst(t *testing.T) {
+	cfg := testutils.GetTestServerConfig()
+	limiter := cfg.RateLimiters.SiteFlaggedPOSTLimiter("backlogzzz")
+	limiter.SetLimit(rate.Limit(12.0 / 60))
+	limiter.SetBurst(36)
+	// As a v1 batch POST: the middleware spends one write, then the handler one for each record past the first
+	batch := 0
+	upload := httputils.SiteRateLimitMiddleware(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if allowed, seconds := httputils.FlaggedSiteWritesWithinRateLimit(httputils.GetSiteContext(r.Context()), batch-1); !allowed {
+			httputils.SetRetryAfter(w, seconds)
+			w.WriteHeader(http.StatusTooManyRequests)
+		}
+	}))
+	post := func(siteID string, records int) *httptest.ResponseRecorder {
+		batch = records
+		w := httptest.NewRecorder()
+		upload.ServeHTTP(w, flaggedTestRequest(cfg, siteID, 1<<20, httputils.HTTPActionWrite, nil))
+		return w
+	}
+
+	require.Equal(t, http.StatusOK, post("backlogzzz", 40).Code)
+	require.InDelta(t, -4, limiter.Tokens(), 0.1)
+	// The next is refused until the bucket has the 4 records past its burst and a write back, at 12 a minute
+	refused := post("backlogzzz", 40)
+	require.Equal(t, http.StatusTooManyRequests, refused.Code)
+	require.Contains(t, []string{"24", "25"}, refused.Header().Get("Retry-After"))
+	require.Equal(t, http.StatusTooManyRequests, post("backlogzzz", 1).Code)
+
+	// A batch within the burst costs each record as before, and is refused unless the bucket has them all
+	normal := cfg.RateLimiters.SiteFlaggedPOSTLimiter("normalzzz")
+	normal.SetLimit(rate.Limit(12.0 / 60))
+	normal.SetBurst(36)
+	require.Equal(t, http.StatusOK, post("normalzzz", 30).Code)
+	require.InDelta(t, 6, normal.Tokens(), 0.1)
+	require.Equal(t, http.StatusTooManyRequests, post("normalzzz", 10).Code)
+	require.InDelta(t, 5, normal.Tokens(), 0.1)
 }
 
 // The flag uses the DB's size on disk now, not the size last recorded, which can be minutes old
