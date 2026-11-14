@@ -33,6 +33,10 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 	if len(nsModel.Store) > consts.MaxProfilesPerStore {
 		return nsutils.ErrTooManyProfiles
 	}
+	// A store with no profile would be kept as nothing, and given back empty as if stored
+	if len(nsModel.Store) == 0 {
+		return nsutils.BadDataBodyErrorWithHint("store must have at least one profile")
+	}
 	if dbModel == nil {
 		return nil
 	}
