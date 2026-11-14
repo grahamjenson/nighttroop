@@ -11,6 +11,8 @@
 1. e2e restore/archiving/hydration testing
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
+    1. P4: A Nightscout search spends about a third of writing each document in `Canonicalize`, which reads the
+       document again to sort its fields and format its values: write them in that form the first time
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
@@ -28,6 +30,8 @@
        `siteapiutils.readWriteRoles`): limit it there the same way
     1. P3: A Caregiver device can add a device status on REST but not on the socket, which gives `write` for all
        collections at once: check each collection's create, update and delete on the socket as REST does
+    1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
+       begun at once push out others' before they finish
 
 ## Before Prod Deployment
 

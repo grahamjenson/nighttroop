@@ -102,15 +102,13 @@ func model[NS any](t *testing.T, sent string) NS {
 	return out
 }
 
-// A document is written from its model's JSON with the fields, and values, it had when it was read back as a map
-// first, in either API version and with or without fields asked for: the server's over the model's, units labelled
-// as the settings write them, and HTML, nested objects and numbers as they were
-func TestDocumentJSONIsItsFields(t *testing.T) {
+// testDocuments are documents of each kind, with HTML, escapes, nested objects, numbers and units to write
+func testDocuments(t *testing.T) map[string]nsutils.Document {
 	m := meta{id: "0123456789abcdef01234567", srvCreated: 1_700_000_001_000, srvModified: 1_700_000_002_000,
 		occurredAt: 1_700_000_000_000, utcOffset: 780, subject: "Tom & <Jerry>"}
 	deleted := m
 	deleted.deletedAt = new(int64(1_700_000_003_000))
-	documents := map[string]nsutils.Document{
+	return map[string]nsutils.Document{
 		"entry": dayOfEntries()[0],
 		"labelled units": stored[nightscoutmodels.Treatment]{meta: m, unitsLabels: map[string]string{"mg/dL": "mg/dl"},
 			model: model[nightscoutmodels.Treatment](t, `{"eventType":"BG Check","glucose":5.5,"units":"mg/dl","glucoseType":"Finger"}`)},
@@ -121,7 +119,39 @@ func TestDocumentJSONIsItsFields(t *testing.T) {
 		"setting": stored[setting]{meta: m, model: setting{Identifier: "units", Value: map[string]any{"z": 1, "a": []any{1.5, "x"}}, Type: "json"}},
 		"empty":   stored[setting]{},
 	}
-	for name, document := range documents {
+}
+
+// A search's response is its documents' JSON as an encoder writes them: an array on API v1, and its result on API v3
+// with each treatment's parts, an empty one when there are none
+func TestWriteRecordsIsItsDocumentsJSON(t *testing.T) {
+	documents := []nsutils.Document{fieldsDocument{id: "bg", fields: map[string]any{"enteredBy": "Tom & <Jerry> ", "glucose": 5.0}}}
+	for _, document := range testDocuments(t) {
+		documents = append(documents, document)
+	}
+	for _, records := range [][]nsutils.Document{nil, documents, dayOfEntries()} {
+		v1, v3 := []json.RawMessage{}, []json.RawMessage{}
+		for _, record := range records {
+			v1 = append(v1, record.JSON(false, nil))
+		}
+		for _, part := range nsutils.V3Parts(records) {
+			v3 = append(v3, part.JSON(true, nil))
+		}
+		response := httptest.NewRecorder()
+		nsutils.WriteRecordsV1(response, records, nil)
+		require.Equal(t, written(t, v1), response.Body.String())
+		require.Equal(t, "application/json", response.Header().Get("Content-Type"))
+		response = httptest.NewRecorder()
+		nsutils.WriteRecordsV3(response, records, nil)
+		require.Equal(t, written(t, map[string]any{"status": 200, "result": v3}), response.Body.String())
+		require.Equal(t, 200, response.Code)
+	}
+}
+
+// A document is written from its model's JSON with the fields, and values, it had when it was read back as a map
+// first, in either API version and with or without fields asked for: the server's over the model's, units labelled
+// as the settings write them, and HTML, nested objects and numbers as they were
+func TestDocumentJSONIsItsFields(t *testing.T) {
+	for name, document := range testDocuments(t) {
 		for _, v3 := range []bool{false, true} {
 			for _, only := range [][]string{nil, {"_id", "identifier", "units", "notes", "date", "openaps", "value", "missing"}} {
 				var want map[string]any
