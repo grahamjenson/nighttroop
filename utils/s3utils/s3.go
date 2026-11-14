@@ -243,12 +243,17 @@ func (c *S3Client) TestObjectPath() string {
 type UploadFunc func(ctx context.Context, key string, retention Retention, paths []string) error
 type DownloadFunc func(ctx context.Context, key string, outpath string) (int64, bool, error)
 
+// transferTimeout is the longest an upload or download takes: an S3 that stops answering mid transfer would otherwise
+// hold the backup job, and every later backup, until a restart
+var transferTimeout = 30 * time.Minute
+
 func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Retention, paths []string) error {
 	if !c.ServerConfig.Status.S3Working {
 		return nil
 	}
 	// The upload finishes even if what asked for it is cancelled, logging with its job, request or site
-	ctx = context.WithoutCancel(ctx)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), transferTimeout)
+	defer cancel()
 
 	// Creating the pipes
 	pr, pw := io.Pipe()
@@ -307,7 +312,8 @@ func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath 
 	info := ""
 	defer aslog.TrackTime(ctx, time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
 
-	ctx = context.WithoutCancel(ctx)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), transferTimeout)
+	defer cancel()
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),
