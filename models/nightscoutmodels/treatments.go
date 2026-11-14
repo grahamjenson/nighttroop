@@ -110,6 +110,9 @@ type Treatment struct {
 	PumpID     *types.ClientID    `json:"pumpId,omitempty"`
 	PumpSerial *types.ShortString `json:"pumpSerial,omitempty"`
 	PumpType   *types.ShortString `json:"pumpType,omitempty"`
+	// EndingPumpID is the pump's id of the record that ended it, AAPS's endId, as it sends when the pump ends a temp
+	// basal or extended bolus early, given back as sent
+	EndingPumpID *types.ClientID `json:"endId,omitempty"`
 
 	Notes     *types.SanitizedString `json:"notes,omitempty"`
 	EnteredBy *types.ShortString     `json:"enteredBy,omitempty"`
