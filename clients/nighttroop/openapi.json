@@ -442,7 +442,7 @@
     },
     "/api/v2/properties": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV2Properties", "tags": ["Nightscout"], "summary": "The site's current values, such as its latest glucose, delta, IOB and COB", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV2Properties", "tags": ["Nightscout"], "summary": "The site's current values, such as its latest glucose, delta, IOB, COB, pump and loop", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v2/properties/{names}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
