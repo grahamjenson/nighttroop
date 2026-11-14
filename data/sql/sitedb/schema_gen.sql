@@ -277,6 +277,13 @@ CREATE TABLE food_presets (
     energy REAL CHECK(energy BETWEEN -20000 AND 20000),
     portions REAL CHECK(portions BETWEEN -1000 AND 1000),
     pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440),
+    -- And as Nightscout's food editor and AAPS keep them: the unit of its portion (e.g. g, ml, pcs), its glycaemic
+    -- index, whether it is hidden from a list or hidden once used, and its place in a list
+    unit TEXT CHECK(length(unit) <= 32),
+    gi REAL CHECK(gi BETWEEN 0 AND 1000),
+    hidden INTEGER CHECK(hidden IN (0, 1)),
+    hide_after_use INTEGER CHECK(hide_after_use IN (0, 1)),
+    position INTEGER CHECK(position BETWEEN -100000 AND 100000),
 
     -- Default Stuff
 

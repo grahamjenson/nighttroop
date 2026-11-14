@@ -72,8 +72,6 @@
        `extendedEmulated`, as sent; without it AAPSClient shows the extended bolus as a temp basal. Needs columns
     1. P4: A careportal Combo Bolus gives back all its insulin as `insulin`, not the part given at once as sent, so AAPS
        takes it as a bolus of all of it. Keep the part given at once to give it back
-    1. P4: Return a food's Nightscout `unit`, `gi`, `hidden`, `hideafteruse` and `position` as sent; AAPS takes g and
-       none without them. Needs columns
     1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another
        server; AAPS pairing a client again after that gets no token. Keep it in the DB if this is a problem
     1. P3: Count an AAPS or Juggluco bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal
