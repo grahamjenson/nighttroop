@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/clients/nighttroop"
@@ -25,6 +26,8 @@ type CreateUserResponse struct {
 	BackupKey       string `json:"backup_key"`
 	PWDNSToken      string `json:"pwd_nstoken"`
 	ReadOnlyNSToken string `json:"read_only_nstoken"`
+	URL             string `json:"url"`
+	PWDNSURL        string `json:"pwd_ns_url"`
 }
 
 func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
@@ -41,6 +44,8 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 	return func(w http.ResponseWriter, r *http.Request) {
 		allowed, remainingTime := httputils.CreateSiteWithinRateLimit(config, r)
 		if !allowed {
+			// The seconds the page shows, so a script knows how long to wait
+			w.Header().Set("Retry-After", strconv.Itoa(remainingTime+1))
 			if httputils.GetAcceptType(r).API() {
 				apiutils.WriteJSON(w, http.StatusTooManyRequests, map[string]string{
 					"error": "Too many requests",
@@ -64,7 +69,11 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 
 		// MAX_SITES is a hard limit on the public creating sites, though not on a control admin
 		if controlDB.GetNSitesDBs() >= config.MaxSites {
-			// Plain text, as there is no page for a full server yet, unlike the rate limit's above
+			if httputils.GetAcceptType(r).API() {
+				apiutils.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "Full: Too many sites"})
+				return
+			}
+			// A browser gets plain text, as there is no page for a full server yet, unlike the rate limit's above
 			http.Error(w, "Full: Too many sites", http.StatusTooManyRequests)
 			return
 		}
@@ -90,6 +99,8 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			TOTPSecret:      siteCreateResult.TotpSecret,
 			PWDNSToken:      siteCreateResult.PwdNSToken,
 			ReadOnlyNSToken: siteCreateResult.ReadOnlyNSToken,
+			URL:             siteCreateResult.SiteDB.URL(),
+			PWDNSURL:        siteCreateResult.SiteDB.NSURL(),
 		}
 
 		slog.InfoContext(r.Context(), "Number of Sites", "count", controlDB.GetNSitesDBs(), "routines", runtime.NumGoroutine())
