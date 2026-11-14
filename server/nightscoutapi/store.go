@@ -149,9 +149,6 @@ func foundParts(doc nsutils.Document, err *nsutils.HTTPError) []nsutils.Document
 	return []nsutils.Document{doc}
 }
 
-// v3ServerFields are the fields API v3 gives that the server keeps, which a create cannot be sent
-var v3ServerFields = []string{"srvCreated", "srvModified", "subject", "isValid", "isReadOnly"}
-
 // SplitV3 makes a treatment API v3 gives as its insulin and its carbs two treatments, before a change or delete of
 // either through API v3, so it changes only that one, as AAPS changes and deletes them on their own: its carbs become a
 // treatment with the carbs part's identifier, and are taken out of it
@@ -168,7 +165,7 @@ func (nts *NightTroopAPIStore) SplitV3(ctx context.Context, collection nsutils.C
 		return nil
 	}
 	carbs := parts[1].Fields(true)
-	for _, server := range v3ServerFields {
+	for _, server := range []string{"srvCreated", "srvModified", "subject", "isValid", "isReadOnly"} {
 		delete(carbs, server)
 	}
 	if _, _, err := nts.Create(ctx, collection, carbs); err != nil {
@@ -247,8 +244,8 @@ var carbsFields = []string{"carbs", "protein", "fat", "foodType", "absorptionTim
 
 // withoutCarbsPart is a treatment sent with carbs without them, once its carbs part is stored as its own treatment, see
 // SplitV3, as xDrip+ sends a treatment again when it is edited or its upload queue sends it again. Its carbs go to the
-// carbs part, so they are not counted twice. If the carbs part is deleted, it stays deleted, as AAPS deleted it, unless
-// the carbs sent are not the ones deleted. The treatment keeps the event type it has with its carbs.
+// carbs part, so they are not counted twice. If the carbs part is deleted, it stays deleted whatever carbs are sent, as
+// AAPS deleted it and the loop would otherwise dose for them. The treatment keeps the event type it has with its carbs.
 func (nts *NightTroopAPIStore) withoutCarbsPart(ctx context.Context, store nscollections.CollectionStore, siteContext *httputils.SiteContext, identifier string, data map[string]any) (map[string]any, *nsutils.HTTPError) {
 	partID := nscollections.CarbsPart(identifier)
 	var whole nightscoutmodels.Treatment
@@ -269,12 +266,6 @@ func (nts *NightTroopAPIStore) withoutCarbsPart(ctx context.Context, store nscol
 	rest["eventType"] = whole.EventType.String()
 	if stored["isValid"] == true && slices.ContainsFunc(carbsFields, func(name string) bool { return !reflect.DeepEqual(stored[name], carbs[name]) }) {
 		_, err = nts.Patch(ctx, nsutils.Treatments, partID, carbs)
-	} else if stored["isValid"] == false && stored["carbs"] != any(whole.Carbs.Float64()) {
-		maps.Copy(stored, carbs)
-		for _, server := range v3ServerFields {
-			delete(stored, server)
-		}
-		_, _, err = nts.Create(ctx, nsutils.Treatments, stored)
 	}
 	return rest, err
 }

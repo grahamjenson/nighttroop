@@ -1469,7 +1469,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   identifier. Only the part asked for changes.
   - If the treatment is sent again with carbs (an xDrip+ edit or upload retry), its carbs go to the carbs treatment.
     API v1 and v3 give the carbs once.
-  - If the carbs treatment is deleted, it stays deleted. If the carbs sent are different, it comes back with them.
+  - If the carbs treatment is deleted, it stays deleted, whatever carbs are sent.
   - API v3 gives no second carbs part for a treatment whose carbs treatment exists, deleted or not.
 - A meter reading (`mbg`) that no treatment has, and that AAPS did not send, is also a treatment on API v3. This
   applies to searches by date only, history, and the storage socket. AAPS takes finger sticks only from BG Checks.

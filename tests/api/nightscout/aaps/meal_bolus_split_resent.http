@@ -139,7 +139,7 @@ ASSERT_EQUALS "7b2c3d4e5f60718293a4b5c6" "@result.3.identifier"
 ASSERT_EQUALS true "@result.3.isValid"
 ASSERT_EQUALS null "@result.3.carbs"
 
-// xDrip+ sends it with other carbs: they are a change made after the delete, so they come back
+// xDrip+ sends it with other carbs: the carbs stay deleted, as AAPS deleted them and the loop would dose for them
 NAME xdrip_changes_deleted_carbs
 PUT http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -147,19 +147,25 @@ B {"eventType": "<none>", "enteredBy": "xdrip", "uuid": "5d0e2a7b-8f3c-4b1a-a6d2
    "_id": "7b2c3d4e5f60718293a4b5c6", "insulin": 2, "carbs": 20, "created_at": "{{ .second_meal_at }}"}
 ASSERT_STATUS 200
 
-NAME v3_carbs_back
+NAME v3_carbs_still_deleted
 GET http://{{ site }}/api/v3/treatments/7b2c3d4e5f60718293a4b5c6carbs
 H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 200
-ASSERT_EQUALS 20 "@result.carbs"
-ASSERT_EQUALS true "@result.isValid"
+ASSERT_STATUS 410
 
-NAME v1_carbs_back_once
-GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ .between }}&find[eventType]=Carb%20Correction
+NAME v1_still_no_carbs
+GET http://{{ site }}/api/v1/treatments.json?find[created_at][$gte]={{ .between }}
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_EQUALS 20 "@0.carbs"
+ASSERT_EQUALS 2 "@0.insulin"
+ASSERT_EQUALS null "@0.carbs"
+
+NAME v3_still_no_carbs
+GET http://{{ site }}/api/v3/treatments?limit=10&date$gte={{ .between_ms }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS null "@result.0.carbs"
 
 // A treatment given carbs again on API v3, once its carbs are their own treatment, gives one carbs part there
 NAME aaps_gives_insulin_carbs
