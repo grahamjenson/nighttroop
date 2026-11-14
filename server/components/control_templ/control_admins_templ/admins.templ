@@ -184,7 +184,7 @@ templ addForm() {
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
 		@field.Field("control--admins--add--name", i18n.T(ctx, "control.admins.name"), "w-40") {
-			@input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": "32", "autocomplete": "off"}})
+			@input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": fmt.Sprint(controlmodels.AdminNameLimit.MaxLength), "autocomplete": "off"}})
 		}
 		@field.Field("control--admins--add--role", i18n.T(ctx, "control.admins.role"), "w-36") {
 			<select id="control--admins--add--role" name="role" class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">

@@ -886,7 +886,7 @@ func addForm() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": "32", "autocomplete": "off"}}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": fmt.Sprint(controlmodels.AdminNameLimit.MaxLength), "autocomplete": "off"}}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

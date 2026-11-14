@@ -38,9 +38,6 @@ const FIRST_READ_ONLY_NAME = "read_only"
 
 const CONTROL_IDENTITY_SUBDOMAIN = "control"
 
-// The control DB schema has CHECK(length(name) <= 32) on identity names
-const MAX_IDENTITY_NAME_LENGTH = 32
-
 type ControlRole string
 
 const (

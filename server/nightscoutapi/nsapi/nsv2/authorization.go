@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hashicorp/golang-lru/v2/expirable"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
@@ -36,8 +37,8 @@ type subject struct {
 	AccessToken *string  `json:"accessToken,omitempty"`
 }
 
-// maxSubjectName is the longest name an identity can have
-const maxSubjectName = 32
+// subjectNameLimit is what a site identity's name takes, as its table checks
+var subjectNameLimit, _ = controldb.ColumnLimitOf("site_identities", "Name")
 
 // aapsClient is the role AAPS gives a client it pairs, a device of the site that reads and writes
 const aapsClient = "aaps-client"
@@ -117,8 +118,8 @@ func createSubject(w http.ResponseWriter, r *http.Request, siteContext *httputil
 		nsutils.WriteError(w, nsutils.ErrBadRequest)
 		return
 	}
-	if len(sent.Name) > maxSubjectName {
-		nsutils.WriteError(w, nsutils.BadDataBodyErrorWithHint("name must be at most "+strconv.Itoa(maxSubjectName)+" characters"))
+	if len(sent.Name) > subjectNameLimit.MaxLength {
+		nsutils.WriteError(w, nsutils.BadDataBodyErrorWithHint("name must be at most "+strconv.Itoa(subjectNameLimit.MaxLength)+" characters"))
 		return
 	}
 	tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)

@@ -44,6 +44,14 @@ ASSERT_STATUS 400
 ASSERT_EQUALS "application/json" "#Content-Type.0"
 ASSERT_CONTAINS "Unknown role" "@message"
 
+// A name longer than its column takes is refused
+NAME create_device_name_too_long
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "{{ repeat "a" 33 }}", "role": "device_read"}
+ASSERT_STATUS 400
+
 // Credentials are only shown when the identity is created
 NAME get_device
 GET http://{{ site }}/settings/identities/{{ .device_id }}
