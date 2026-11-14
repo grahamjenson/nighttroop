@@ -84,6 +84,7 @@ type Site struct {
 	CreatedAt                        int64
 	MaxDbSizeKbLimit                 *int64
 	EstimatedDbSizeKb                *int64
+	AbuseScore                       float64
 	TableSizesJson                   types.TableSizes
 	LastSeenAt                       *int64
 	LastWriteAt                      *int64
@@ -176,6 +177,7 @@ type SiteConnector struct {
 	TotalEma                   *float64
 	SuccessEma                 *float64
 	FailureEma                 *float64
+	FailureRateEma             float64
 	LastSyncDuration           *int64
 }
 

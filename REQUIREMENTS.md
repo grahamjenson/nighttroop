@@ -329,8 +329,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A site's reads and writes have 4 times an identity's limit. Test: one identity spends all its own (for example, a
   day's backlog upload). A carer's carbs and AAPSClient's commands still go through.
 - Over a site's or identity's limit: 429, with `Retry-After` the seconds until one is accepted, at least 1.
-- A site flagged for abuse also spends its flagged writes limit (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT`). See
-  [Abuse flag](#abuse-flag).
+- A site at abuse level OverUse or above also spends its flagged writes limit (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT`).
+  See [Abuse levels](#abuse-levels).
 
 ### Resource alerts
 
@@ -1793,22 +1793,42 @@ harder:
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`). One with a valid token does not.
   - An IP with no budget left is refused before its token is checked.
 - IP limits (requests, sign ins, recoveries and site creation) cover the whole IPv6 /64.
-
-#### Abuse flag
-
-- The server flags a site for abuse if its DB is over 3 times its DB size limit (60 MB for a 20 MB limit).
-  - The server uses the DB size on disk at each write, not the size it recorded last.
-  - If the size or the limit is not known, the site is not flagged.
-- Each write of a flagged site also spends the site's flagged writes limit: 12 a minute, burst 36
-  (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT` / `_BURST`).
-  - All identities, the site pages and API, the Nightscout API and live updates share this limit.
-  - A v1 upload or a live update upload costs one flagged write for each record.
-  - Over it: 429, with `Retry-After` and the message `Too many writes: this site's data is far over its storage limit`.
-  - Live updates: the write is refused with that message.
-- Reads of a flagged site, and sites that are not flagged, do not change.
 - A request's IP is its TCP peer.
   - Behind a trusted proxy (`TRUSTED_PROXIES`): the hop before it in `X-Forwarded-For`, or on Fly.io `Fly-Client-IP`.
   - Any other peer that sets these headers keeps its own IP's limits.
+
+#### Abuse levels
+
+- Every 5 minutes, the resource check gives each open site an abuse score from 0 to 1, and keeps it.
+- The score has these signals, each from 0 to 1:
+  - Size: 0 at or under its DB size limit, 0.4 at 2 times it, 0.8 at 3 times it, 1 at 3.5 times it or more.
+    - If the size or the limit is not known, this signal is 0.
+  - Connectors: the highest failure rate of the site's connectors, at most 0.39.
+    - Each failed sync moves a connector's failure rate 1/5 of the way to 1. Each sync that works moves it 1/5 of the
+      way to 0.
+  - Refusals by the rate limits: not used yet, always 0.
+- Only the size can make the score 0.8 or more. The other signals together are at most 0.79.
+- The score gives the level:
+
+| Level   | Score         | Writes of the site                            |
+|---------|---------------|-----------------------------------------------|
+| Good    | under 0.2     | No change.                                    |
+| Fair    | 0.2 to < 0.4  | No change.                                    |
+| OverUse | 0.4 to < 0.6  | Each write costs 1 flagged write.             |
+| Abusive | 0.6 to < 0.8  | Each write costs 4 flagged writes.            |
+| Blocked | 0.8 or more   | Each write costs 4 flagged writes, for now.   |
+
+- At each write, the level is the higher of these two:
+  - the level of the score the server kept last;
+  - the level of the DB size on disk now.
+- The flagged writes limit of a site is 12 a minute, burst 36 (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT` / `_BURST`).
+  - All identities, the site pages and API, the Nightscout API and live updates share this limit.
+  - A v1 upload or a live update upload costs flagged writes for each record.
+  - Over it: 429, with `Retry-After` and the message `Too many writes: this site's data is far over its storage limit`.
+  - Live updates: the write is refused with that message.
+- Reads do not change at any level.
+- The truncate job does not use the levels yet. See
+  [Truncation of a site far over its size limit](#truncation-of-a-site-far-over-its-size-limit).
 
 #### Server load
 

@@ -30,7 +30,14 @@ func flaggedTestContext(cfg *config.ServerConfig, siteID string, sizeKB int64, s
 	return httputils.GetSiteContext(flaggedTestRequest(cfg, siteID, sizeKB, httputils.HTTPActionWrite, siteDB).Context())
 }
 
-// A site over 3 times its size limit spends its flagged write limit too, so it is refused far sooner than one under
+// Sizes, in KB, of sites at each abuse level from their size alone, with a 20 MB limit
+const (
+	fairKB    = 39000 // 1.9 times its limit
+	overUseKB = 45000 // 2.2 times
+	abusiveKB = 55300 // 2.7 times
+)
+
+// A site at abuse level OverUse spends its flagged write limit too, so it is refused far sooner than one under it
 func TestFlaggedSiteWritesAreLimited(t *testing.T) {
 	cfg := testutils.GetTestServerConfig()
 	limited := httputils.SiteRateLimitMiddleware(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
@@ -44,7 +51,7 @@ func TestFlaggedSiteWritesAreLimited(t *testing.T) {
 		limiter.SetLimit(rate.Limit(1.0 / 30))
 		limiter.SetBurst(3)
 	}
-	flagged := flaggedTestRequest(cfg, "flaggedzzz", 3*20480+1, httputils.HTTPActionWrite, nil)
+	flagged := flaggedTestRequest(cfg, "flaggedzzz", overUseKB, httputils.HTTPActionWrite, nil)
 
 	for range 3 {
 		require.Equal(t, http.StatusOK, serve(flagged).Code)
@@ -54,23 +61,23 @@ func TestFlaggedSiteWritesAreLimited(t *testing.T) {
 	require.Contains(t, []string{"29", "30"}, refused.Header().Get("Retry-After"))
 	require.Equal(t, httputils.SiteOverStorageMessage, refused.Body.String())
 	// Its reads are not limited by it
-	require.Equal(t, http.StatusOK, serve(flaggedTestRequest(cfg, "flaggedzzz", 3*20480+1, httputils.HTTPActionRead, nil)).Code)
+	require.Equal(t, http.StatusOK, serve(flaggedTestRequest(cfg, "flaggedzzz", overUseKB, httputils.HTTPActionRead, nil)).Code)
 
-	// A site that is not flagged spends none of it
-	honest := flaggedTestRequest(cfg, "honestzzz", 3*20480, httputils.HTTPActionWrite, nil)
+	// A site at Fair spends none of it
+	honest := flaggedTestRequest(cfg, "honestzzz", fairKB, httputils.HTTPActionWrite, nil)
 	for range 10 {
 		require.Equal(t, http.StatusOK, serve(honest).Code)
 	}
 	require.InDelta(t, 3, cfg.RateLimiters.SiteFlaggedPOSTLimiter("honestzzz").Tokens(), 0.1)
 }
 
-// A flagged site's batch spends a flagged write for each record, and none unless it has them all
+// A batch of a site at OverUse spends a flagged write for each record, and none unless it has them all
 func TestFlaggedSiteBatchCostsEachRecord(t *testing.T) {
 	cfg := testutils.GetTestServerConfig()
 	limiter := cfg.RateLimiters.SiteFlaggedPOSTLimiter("batchflagzzz")
 	limiter.SetLimit(rate.Limit(1.0 / 30))
 	limiter.SetBurst(36)
-	flagged := flaggedTestContext(cfg, "batchflagzzz", 1<<20, nil)
+	flagged := flaggedTestContext(cfg, "batchflagzzz", overUseKB, nil)
 
 	allowed, _ := httputils.FlaggedSiteWritesWithinRateLimit(flagged, 30)
 	require.True(t, allowed)
@@ -84,23 +91,47 @@ func TestFlaggedSiteBatchCostsEachRecord(t *testing.T) {
 	require.False(t, allowed)
 	require.Zero(t, seconds)
 
-	// A batch of 100 from a site that is not flagged costs none
-	allowed, _ = httputils.FlaggedSiteWritesWithinRateLimit(flaggedTestContext(cfg, "batchhonestzzz", 20480, nil), 99)
+	// A batch of 100 from a site at Fair costs none
+	allowed, _ = httputils.FlaggedSiteWritesWithinRateLimit(flaggedTestContext(cfg, "batchhonestzzz", fairKB, nil), 99)
 	require.True(t, allowed)
 }
 
-// The flag uses the DB's size on disk now, not the size last recorded, which can be minutes old
-func TestSiteFlaggedForAbuseUsesLiveSize(t *testing.T) {
+// Each write of a site at Abusive or above costs 4 flagged writes
+func TestAbusiveSiteWritesCostFour(t *testing.T) {
+	cfg := testutils.GetTestServerConfig()
+	for sizeKB, siteID := range map[int64]string{abusiveKB: "abusivezzz", 1 << 20: "blockedzzz"} {
+		limiter := cfg.RateLimiters.SiteFlaggedPOSTLimiter(siteID)
+		limiter.SetLimit(rate.Limit(1.0 / 30))
+		limiter.SetBurst(36)
+		abusive := flaggedTestContext(cfg, siteID, sizeKB, nil)
+
+		allowed, _ := httputils.FlaggedSiteWritesWithinRateLimit(abusive, 5)
+		require.True(t, allowed)
+		require.InDelta(t, 16, limiter.Tokens(), 0.1)
+		allowed, _ = httputils.FlaggedSiteWritesWithinRateLimit(abusive, 5)
+		require.False(t, allowed)
+		require.InDelta(t, 16, limiter.Tokens(), 0.1)
+	}
+}
+
+// The level is the higher of the level last stored and the level of the DB's size on disk now, as the stored score
+// can be minutes old
+func TestSiteAbuseLevelUsesLiveSize(t *testing.T) {
 	cfg := testutils.GetTestServerConfig()
 	path := filepath.Join(t.TempDir(), "site.db")
 	require.NoError(t, os.WriteFile(path, nil, 0o600))
 	siteDB := &db.SiteDB{DB: &sitedb.DB{Path: path}}
 
 	// Recorded as far over, but small now, as it was truncated
-	require.False(t, httputils.SiteFlaggedForAbuse(flaggedTestContext(cfg, "livezzz", 1<<20, siteDB)))
+	require.Equal(t, controldb.AbuseGood, httputils.SiteAbuseLevel(flaggedTestContext(cfg, "livezzz", 1<<20, siteDB)))
 	// Recorded as small, but grown since, and the context's model is not changed
-	require.NoError(t, os.Truncate(path, (3*20480+1)*1024))
+	require.NoError(t, os.Truncate(path, abusiveKB*1024))
 	siteContext := flaggedTestContext(cfg, "livezzz", 10, siteDB)
-	require.True(t, httputils.SiteFlaggedForAbuse(siteContext))
+	require.Equal(t, controldb.AbuseAbusive, httputils.SiteAbuseLevel(siteContext))
 	require.Equal(t, int64(10), *siteContext.SiteModel.EstimatedDbSizeKb)
+
+	// Small now, but stored as OverUse, from signals other than its size
+	siteContext.SiteModel.AbuseScore = 0.45
+	require.NoError(t, os.Truncate(path, 0))
+	require.Equal(t, controldb.AbuseOverUse, httputils.SiteAbuseLevel(siteContext))
 }

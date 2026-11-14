@@ -673,6 +673,42 @@ func (db *ControlDB) RecordSiteSizes(ctx context.Context, sites []*SiteDB) error
 	return tx.Commit()
 }
 
+// RecordAbuseScores scores each site for abuse, from its DB's size now and its connectors' failures, and keeps the
+// scores in one transaction, so a request reads its site's level without measuring them
+func (db *ControlDB) RecordAbuseScores(ctx context.Context, sites []*SiteDB) error {
+	limits, err := db.Queries.GetSiteDBSizeLimits(ctx)
+	failures, failuresErr := db.Queries.GetSiteConnectorFailureRates(ctx)
+	if err := errors.Join(err, failuresErr); err != nil {
+		return fmt.Errorf("cannot score sites for abuse: %w", err)
+	}
+	signals := map[string]*controldb.AbuseSignals{}
+	for _, site := range sites {
+		signals[site.Subdomain] = &controldb.AbuseSignals{SizeKB: site.EstimatedSizeKB()}
+	}
+	for _, limit := range limits {
+		if site := signals[limit.ID]; site != nil {
+			site.LimitKB = limit.MaxDbSizeKbLimit
+		}
+	}
+	for _, failure := range failures {
+		if site := signals[failure.SiteID]; site != nil {
+			site.ConnectorFailures = failure.FailureRate
+		}
+	}
+	tx, err := db.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("cannot record abuse scores: %w", err)
+	}
+	defer tx.Rollback()
+	q := db.Queries.WithTx(tx)
+	for id, site := range signals {
+		if err := q.UpdateSiteAbuseScore(ctx, controldb.UpdateSiteAbuseScoreParams{AbuseScore: site.Score(), ID: id}); err != nil {
+			return fmt.Errorf("cannot record site %s abuse score: %w", id, err)
+		}
+	}
+	return tx.Commit()
+}
+
 // RecordSiteSize measures one site's DB on disk now and keeps its size, as RecordSiteSizes does every site's, so a page
 // showing it shows now's size rather than the last resource check's. A site whose DB is not open here, or is in
 // memory, keeps the size it has.

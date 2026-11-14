@@ -230,7 +230,7 @@ func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) htt
 				slog.InfoContext(r.Context(), "Site rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
-			// A site flagged for abuse spends its flagged write limit too, whatever the identity, API or route
+			// A site at abuse level OverUse or above spends its flagged write limit too, whatever the identity, API or route
 			if siteContext := GetSiteContext(r.Context()); siteContext.HTTPAction == HTTPActionWrite {
 				if allowed, remainingTime := FlaggedSiteWritesWithinRateLimit(siteContext, 1); !allowed {
 					writeTooManyRequests(w, remainingTime)

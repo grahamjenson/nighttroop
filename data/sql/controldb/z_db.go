@@ -177,6 +177,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteStmt, err = db.PrepareContext(ctx, getSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSite: %w", err)
 	}
+	if q.getSiteConnectorFailureRatesStmt, err = db.PrepareContext(ctx, getSiteConnectorFailureRates); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteConnectorFailureRates: %w", err)
+	}
 	if q.getSiteDBSizeLimitsStmt, err = db.PrepareContext(ctx, getSiteDBSizeLimits); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteDBSizeLimits: %w", err)
 	}
@@ -302,6 +305,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateRateLimitsStmt, err = db.PrepareContext(ctx, updateRateLimits); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateRateLimits: %w", err)
+	}
+	if q.updateSiteAbuseScoreStmt, err = db.PrepareContext(ctx, updateSiteAbuseScore); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteAbuseScore: %w", err)
 	}
 	if q.updateSiteDBSizeStmt, err = db.PrepareContext(ctx, updateSiteDBSize); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDBSize: %w", err)
@@ -599,6 +605,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSiteStmt: %w", cerr)
 		}
 	}
+	if q.getSiteConnectorFailureRatesStmt != nil {
+		if cerr := q.getSiteConnectorFailureRatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteConnectorFailureRatesStmt: %w", cerr)
+		}
+	}
 	if q.getSiteDBSizeLimitsStmt != nil {
 		if cerr := q.getSiteDBSizeLimitsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteDBSizeLimitsStmt: %w", cerr)
@@ -809,6 +820,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateRateLimitsStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteAbuseScoreStmt != nil {
+		if cerr := q.updateSiteAbuseScoreStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteAbuseScoreStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteDBSizeStmt != nil {
 		if cerr := q.updateSiteDBSizeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteDBSizeStmt: %w", cerr)
@@ -959,6 +975,7 @@ type Queries struct {
 	getPushRegistrationStmt                 *sql.Stmt
 	getServerSettingsStmt                   *sql.Stmt
 	getSiteStmt                             *sql.Stmt
+	getSiteConnectorFailureRatesStmt        *sql.Stmt
 	getSiteDBSizeLimitsStmt                 *sql.Stmt
 	getSiteIDsWithAlarmsStmt                *sql.Stmt
 	getSiteIdentityStmt                     *sql.Stmt
@@ -1001,6 +1018,7 @@ type Queries struct {
 	updateControlPasskeyUsedStmt            *sql.Stmt
 	updatePublicSiteCreationStmt            *sql.Stmt
 	updateRateLimitsStmt                    *sql.Stmt
+	updateSiteAbuseScoreStmt                *sql.Stmt
 	updateSiteDBSizeStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
 	updateSiteIdentityDateFlagsStmt         *sql.Stmt
@@ -1070,6 +1088,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getPushRegistrationStmt:                 q.getPushRegistrationStmt,
 		getServerSettingsStmt:                   q.getServerSettingsStmt,
 		getSiteStmt:                             q.getSiteStmt,
+		getSiteConnectorFailureRatesStmt:        q.getSiteConnectorFailureRatesStmt,
 		getSiteDBSizeLimitsStmt:                 q.getSiteDBSizeLimitsStmt,
 		getSiteIDsWithAlarmsStmt:                q.getSiteIDsWithAlarmsStmt,
 		getSiteIdentityStmt:                     q.getSiteIdentityStmt,
@@ -1112,6 +1131,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateControlPasskeyUsedStmt:            q.updateControlPasskeyUsedStmt,
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
 		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
+		updateSiteAbuseScoreStmt:                q.updateSiteAbuseScoreStmt,
 		updateSiteDBSizeStmt:                    q.updateSiteDBSizeStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:         q.updateSiteIdentityDateFlagsStmt,
