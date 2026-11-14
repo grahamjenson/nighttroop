@@ -202,18 +202,22 @@ func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) 
 		xstring := ShortStringToString(*source.EnteredBy)
 		sitedbCreateProfilePresetParams.EnteredBy = &xstring
 	}
+	if source.ProfileName != nil {
+		xstring2 := ShortStringToString(*source.ProfileName)
+		sitedbCreateProfilePresetParams.ProfileName = &xstring2
+	}
 	sitedbCreateProfilePresetParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.App != nil {
-		xstring2 := ShortStringToString(*source.App)
-		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring2
+		xstring3 := ShortStringToString(*source.App)
+		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring3
 	}
 	if source.Device != nil {
-		xstring3 := ShortStringToString(*source.Device)
-		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring3
+		xstring4 := ShortStringToString(*source.Device)
+		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring4
 	}
 	sitedbCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateProfilePresetParams.CreatedByIdentityID = AssignCreatedByID(context)

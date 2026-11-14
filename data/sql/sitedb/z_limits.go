@@ -264,6 +264,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"LoopSettingsID":           {Column: "loop_settings_id", MinLength: 64, MaxLength: 64},
 		"RemoteSettingsID":         {Column: "remote_settings_id", MinLength: 64, MaxLength: 64},
 		"EnteredBy":                {Column: "entered_by", MaxLength: 64},
+		"ProfileName":              {Column: "profile_name", MaxLength: 64},
 		"UtcOffsetMinutes":         {Column: "utc_offset_minutes", Min: new(-1440.0), Max: new(1440.0)},
 		"OccurredAt":               {Column: "occurred_at", Required: true, Min: new(0.0), Max: new(253402300799999.0)},
 		"CreatedAt":                {Column: "created_at", Required: true},

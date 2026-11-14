@@ -22,6 +22,9 @@ type Store interface {
 	// If duplicate it will return the existing record and a boolean indicating it was a duplicate
 	Create(ctx context.Context, collection Collection, data map[string]any) (Document, bool, *HTTPError)
 
+	// SplitV3 makes a document API v3 gives as more than one that many, before API v3 changes or deletes one of them
+	SplitV3(ctx context.Context, collection Collection, identifier string) *HTTPError
+
 	// Get will retrieve a record from the collection by its identifier, or return an error if it fails.
 	Get(ctx context.Context, collection Collection, identifier string, query nsquery.Query) (Document, *HTTPError)
 

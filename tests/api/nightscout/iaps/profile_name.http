@@ -1,0 +1,59 @@
+// iAPS uploads its profile with "profile", the name of its settings profile the user chose, next to defaultProfile and
+// store, which are always "default" (uploadProfileAndSettings in FreeAPS/Sources/Services/Network/NightscoutManager.swift,
+// NightscoutProfileStore in FreeAPS/Sources/Models/NightscoutStatus.swift). As in Nightscout, it is kept as sent.
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME iaps_upload_profile
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "defaultProfile" : "default", "startDate" : "{{ date -1 }}T12:20:00.000Z", "mills" : {{ dayms -1 740 }}, "units" : "mg/dl", "enteredBy" : "iAPS",
+  "store" : { "default" : {
+    "dia" : 6, "carbs_hr" : 21, "delay" : 0, "timezone" : "Europe/Stockholm",
+    "target_low" : [ { "time" : "00:00", "value" : 100, "timeAsSeconds" : 0 } ],
+    "target_high" : [ { "time" : "00:00", "value" : 100, "timeAsSeconds" : 0 } ],
+    "sens" : [ { "time" : "00:00", "value" : 50, "timeAsSeconds" : 0 } ],
+    "basal" : [ { "time" : "00:00", "value" : 0.8, "timeAsSeconds" : 0 } ],
+    "carbratio" : [ { "time" : "00:00", "value" : 10, "timeAsSeconds" : 0 } ],
+    "units" : "mg/dl"
+  } },
+  "profile" : "Sport"
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sport" "@0.profile"
+ASSERT_EQUALS "default" "@0.defaultProfile"
+
+NAME iaps_fetch_profile
+GET http://{{ site }}/api/v1/profile.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Sport" "@0.profile"
+ASSERT_EQUALS "default" "@0.defaultProfile"
+
+NAME iaps_current_profile
+GET http://{{ site }}/api/v1/profile/current
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sport" "@profile"
+
+NAME iaps_profile_v3
+GET http://{{ site }}/api/v3/profile/{{ dig "iaps_upload_profile.0._id" }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sport" "@result.profile"
+
+// A profile without a name, as iAPS sends before one is chosen, has none
+NAME iaps_upload_profile_no_name
+POST http://{{ site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "defaultProfile" : "default", "startDate" : "{{ date -1 }}T12:25:00.000Z", "mills" : {{ dayms -1 745 }}, "units" : "mg/dl", "enteredBy" : "iAPS",
+  "store" : { "default" : { "dia" : 6, "basal" : [ { "time" : "00:00", "value" : 0.8, "timeAsSeconds" : 0 } ] } }
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@0.profile"
+

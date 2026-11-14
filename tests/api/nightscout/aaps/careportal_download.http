@@ -27,10 +27,12 @@ NAME aaps_reads_history
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 3 "@result"
+// The Meal Bolus is two, its insulin and its carbs, as AAPS reads one record from a document
+ASSERT_LENGTH 4 "@result"
 ASSERT_EQUALS null "@result.0.timestamp"
 ASSERT_EQUALS null "@result.1.timestamp"
 ASSERT_EQUALS null "@result.2.timestamp"
+ASSERT_EQUALS null "@result.3.timestamp"
 ASSERT_EXISTS "@result.0.date"
 
 NAME aaps_reads_one

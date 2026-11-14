@@ -166,6 +166,7 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
 - **AAPS:** gets an xDrip+ blood test (`mbg`) as a BG Check from API v3.
 - **Returned treatments:** no `insulinInjections`. For `<none>`, the eventType of its amounts: `Meal Bolus` (insulin
   and carbs), `Carb Correction`, `Correction Bolus`, or `Note` (no amounts). xDrip+ finds its own by `uuid`.
+- **AAPS:** reads a Meal Bolus with insulin and carbs from API v3 as two treatments, so it gets both.
 - **Gaps:** a reading search gives at most 2880, newest first, so the follower gets all of them after a gap. It was
   1000: a follower offline for over 1000 readings never read the older ones.
 - **`rr`:** an unknown query parameter, logged and ignored. Not a filter, unlike an unknown `find[...]`, which gives

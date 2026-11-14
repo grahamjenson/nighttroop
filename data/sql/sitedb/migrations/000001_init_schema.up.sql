@@ -523,6 +523,8 @@ CREATE TABLE profile_presets (
     remote_settings_id TEXT CHECK(length(remote_settings_id) = 64),
     -- Who the app said uploaded it (enteredBy), e.g. Loop, as tools pick a loop's profiles by it
     entered_by TEXT CHECK(length(entered_by) <= 64),
+    -- The name of the settings profile the app has on, as iAPS sends it in profile
+    profile_name TEXT CHECK(length(profile_name) <= 64),
 
     -- Default Stuff
 

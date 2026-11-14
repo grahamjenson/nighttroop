@@ -3536,6 +3536,16 @@ func (m *ProfilePreset) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
+// GetProfileName returns the ProfileName value.
+func (m ProfilePreset) GetProfileName() *string {
+	return m.ProfileName
+}
+
+// SetProfileName sets the ProfileName value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetProfileName(v *string) {
+	m.ProfileName = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m ProfilePreset) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
@@ -16874,6 +16884,16 @@ func (m CreateProfilePresetParams) GetEnteredBy() *string {
 // SetEnteredBy sets the EnteredBy value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
+}
+
+// GetProfileName returns the ProfileName value.
+func (m CreateProfilePresetParams) GetProfileName() *string {
+	return m.ProfileName
+}
+
+// SetProfileName sets the ProfileName value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetProfileName(v *string) {
+	m.ProfileName = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
