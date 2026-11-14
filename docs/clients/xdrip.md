@@ -138,6 +138,7 @@ drops `accuracy`.
   with `xdrip`: its own), `created_at` (ISO 8601, required), `carbs`, `insulin`, `insulinInjections`, `notes`; for a
   finger stick `glucoseType` `Finger`, `glucose`, `units` (`mmol` or mg/dL).
 - Not added again when it matches a known treatment by uuid, `_id`, or time within a minute with the same amounts.
+- Nighttroop, as Nightscout, gives the newest 100 treatments. It gave 1000 (`xdrip/default_counts.http`).
 
 ## Downloads (Nightscout Follower)
 

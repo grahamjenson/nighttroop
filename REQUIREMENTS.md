@@ -1183,6 +1183,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - A filter on a field other than the date: a page has the matches of the page the dates alone give, still in order,
   and can have fewer than `limit`.
 - `skip`: maximum 32000 (Nightguard reads 32 pages of 1000). Negative is 0.
+- A v1 search with no `count` gives the same number as Nightscout, newest first:
+  - Entries and device statuses: 10, with or without a `find`.
+  - Treatments: 100 (xDrip+ follower). With a `find`: 1000 (xDrip4iOS).
+  - Food and activities: all, at most 1000.
 
 #### Deletes
 
