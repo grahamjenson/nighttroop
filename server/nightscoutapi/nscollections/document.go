@@ -89,9 +89,11 @@ func (s stored[NS]) JSON(v3 bool, only []string) json.RawMessage {
 			// The value as it is in the model's JSON, which the decoder's own is only until it reads on
 			decoded, _ := decoder.ReadValue()
 			value := raw[int(decoder.InputOffset())-len(decoded) : decoder.InputOffset()]
-			var units string
-			if name == "units" && json.Unmarshal(value, &units) == nil && s.unitsLabels[units] != "" {
-				value = quote(s.unitsLabels[units])
+			if name == "units" {
+				var units string
+				if json.Unmarshal(value, &units) == nil && s.unitsLabels[units] != "" {
+					value = quote(s.unitsLabels[units])
+				}
 			}
 			if !slices.ContainsFunc(server, func(f field) bool { return f.name == name }) {
 				add(name, value)
@@ -142,7 +144,8 @@ func (s stored[NS]) server(v3 bool) ([]field, string) {
 	if timed, ok := any(s.model).(interface{ TimeAliases() types.TimeAliases }); ok {
 		aliases = append(aliases, timed.TimeAliases()...)
 	}
-	fields := []field{}
+	// Room for the server's fields after the aliases, so it is made once
+	fields := make([]field, 0, len(aliases)+7)
 	for _, written := range aliases.Written(s.occurredAt, v3) {
 		if !slices.ContainsFunc(fields, func(f field) bool { return f.name == written[0] }) {
 			fields = append(fields, field{written[0], []byte(written[1])})
