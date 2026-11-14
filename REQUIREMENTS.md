@@ -1145,6 +1145,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
   - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
   - Delete a subject: its identity is deleted, so its token gets 401. A device cannot delete itself.
+  - Delete a subject that AAPS did not add (an admin, a user or another device): 404, and the identity stays.
 - If a request has no token or a token that is not valid, the API returns 401 in JSON, `{"status": 401, "message"}`.
   Other errors and Nightscout's 401 use the same JSON.
 
