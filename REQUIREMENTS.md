@@ -1284,6 +1284,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Treatment: `date`, `eventTime`, `created_at`, `timestamp`.
   - Entry: `date`, `dateString`, `mills`, `sysTime`.
   - Device status, activity: `date`, `created_at`.
+  - Device status with neither: its loop's time, `openaps.suggested.timestamp` then `loop.timestamp`, if it is not
+    more than 15 minutes ahead. If there is none, the time it arrives.
   - Profile: `date`, `startDate`, `mills`.
 - A time field sent later in ms, in the same second, gives the time its ms.
 - A time field that is not a time: refused (400). Exception: a treatment's `timestamp`, which is then not read.

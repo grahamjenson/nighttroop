@@ -1,0 +1,32 @@
+INCLUDE steps/new_ns_site.steps
+
+// After an outage Trio uploads its queued loops newest first and with no created_at. Each is kept at its loop's time,
+// openaps.suggested.timestamp, not when it arrives, so the newest is still the one followers read as current
+
+NAME trio_uploads_newest_loop
+POST http://{{ site }}/api/v1/devicestatus.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"device": "Trio", "openaps": {"suggested": {"timestamp": "{{ time 10 }}", "bg": 111}, "enacted": {"timestamp": "{{ time 10 }}"}}, "pump": {"reservoir": 100}}
+ASSERT_STATUS 200
+
+NAME trio_uploads_old_loop
+POST http://{{ site }}/api/v1/devicestatus.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"device": "Trio", "openaps": {"suggested": {"timestamp": "{{ time 2040 }}", "bg": 222}, "enacted": {"timestamp": "{{ time 2040 }}"}}, "pump": {"reservoir": 100}}
+ASSERT_STATUS 200
+
+NAME follower_reads_current
+GET http://{{ site }}/api/v1/devicestatus.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 111 "@0.openaps.suggested.bg"
+
+NAME old_loop_kept_at_its_time
+GET http://{{ site }}/api/v1/devicestatus.json?find[created_at][$lte]={{ time 1440 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 222 "@0.openaps.suggested.bg"
