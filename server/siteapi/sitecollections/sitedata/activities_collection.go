@@ -37,12 +37,7 @@ func (s *ActivitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	if model.ActivityType == "" {
 		model.ActivityType = defaultActivityType
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-
-	return q.CreateActivity(ctx, sitemodels.ActivityToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateActivity, sitemodels.ActivityToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add an activity in
