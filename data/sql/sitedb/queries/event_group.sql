@@ -32,6 +32,7 @@ INSERT INTO event_groups (
     sensor_code,
     transmitter_id,
     bolus_calculator_result_json,
+    emulated_treatment_json,
     sync_identifier,
     client_created_at,
 
@@ -71,6 +72,7 @@ VALUES (
     NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('EmulatedTreatmentJson') AS TEXT), ''),
     sqlc.narg('SyncIdentifier'),
     sqlc.narg('ClientCreatedAt'),
     sqlc.arg('OccurredAt'),
@@ -318,6 +320,7 @@ UPDATE event_groups SET
     sensor_code = NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''),
     transmitter_id = NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     bolus_calculator_result_json = NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
+    emulated_treatment_json = NULLIF(CAST(sqlc.narg('EmulatedTreatmentJson') AS TEXT), ''),
     sync_identifier = sqlc.narg('SyncIdentifier'),
     client_created_at = sqlc.narg('ClientCreatedAt'),
     occurred_at = sqlc.arg('OccurredAt'),

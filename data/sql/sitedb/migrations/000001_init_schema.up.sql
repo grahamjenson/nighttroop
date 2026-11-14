@@ -356,6 +356,10 @@ CREATE TABLE event_groups (
     bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
     sync_identifier TEXT CHECK(length(sync_identifier) <= 256),
     client_created_at INTEGER CHECK(client_created_at BETWEEN 0 AND 253402300799999),
+    -- The treatment asked for that this one carries out another way, the JSON an app sends in it and reads back, e.g.
+    -- the Combo Bolus of an extended bolus AAPS gives by a Temp Basal for a pump with none, as extendedEmulated
+    -- (emulated_treatment_json). What it gives is this treatment's, so it is never counted again
+    emulated_treatment_json TEXT CHECK(length(emulated_treatment_json) <= 4096 AND json_valid(emulated_treatment_json)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
