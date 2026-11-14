@@ -3,6 +3,9 @@ package nightscoutmodels
 import (
 	"encoding/json"
 	"log/slog"
+	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -87,6 +90,9 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 			slog.Warn("failed to unmarshal loop data", "error", err)
 		}
 	}
+	if t.Date == nil {
+		t.Date = loopTime(t.OpenAPS, t.Loop)
+	}
 	if t.ConfigurationRaw != nil {
 		t.Configuration = &map[string]any{}
 		err := json.Unmarshal(*t.ConfigurationRaw, t.Configuration)
@@ -97,6 +103,23 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// loopTime is when the loop in a device status sent with no date ran, its openaps.suggested or loop timestamp, as Trio
+// uploads its queued loops newest first with no created_at, and the oldest, kept as now, was read as the current one.
+// One well ahead of now is not used, so a phone's bad clock cannot keep its status the newest.
+func loopTime(openAPS *OpenAPSStatus, loop *LoopStatus) *types.DateInt {
+	var sent *types.DateString
+	if openAPS != nil && openAPS.Suggested != nil {
+		sent = openAPS.Suggested.Timestamp
+	}
+	if sent == nil && loop != nil {
+		sent = loop.Timestamp
+	}
+	if sent == nil || sent.Time().IsZero() || sent.Time().After(time.Now().Add(consts.MaxFutureReading)) {
+		return nil
+	}
+	return new(types.DateInt(sent.UnixMilli()))
 }
 
 // deviceStatusTimes are when a device status was
