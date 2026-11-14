@@ -119,11 +119,7 @@ func (s *SettingsCollection) identity(ctx context.Context, collectionTx *siteapi
 	if err != nil {
 		return nil, apiutils.ErrNotFound
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
+	return siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).GetSiteIdentityByID, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 }
 
 // ////

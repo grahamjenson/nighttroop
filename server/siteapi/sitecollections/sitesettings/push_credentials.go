@@ -105,11 +105,7 @@ func (s *PushCredentialsCollection) GetRow(ctx context.Context, collectionTx *si
 	if err != nil {
 		return nil, apiutils.ErrNotFound
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	credential, err := q.GetPushCredential(ctx, controldb.GetPushCredentialParams{ID: credentialID, SiteID: &siteContext.SiteID})
+	credential, err := siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).GetPushCredential, controldb.GetPushCredentialParams{ID: credentialID, SiteID: &siteContext.SiteID})
 	if err != nil {
 		return nil, err
 	}
@@ -126,11 +122,7 @@ func (s *PushCredentialsCollection) GetHTMXResponse(model *sitemodels.PushCreden
 
 // SearchRows is the site's credentials, newest first
 func (s *PushCredentialsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.PushCredential, error) {
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	credentials, err := q.SearchPushCredentials(ctx, controldb.SearchPushCredentialsParams{SiteID: &siteContext.SiteID,
+	credentials, err := siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).SearchPushCredentials, controldb.SearchPushCredentialsParams{SiteID: &siteContext.SiteID,
 		Skip: query.Skip, Limit: query.Limit})
 	if err != nil {
 		return nil, err
@@ -156,11 +148,7 @@ func (s *PushCredentialsCollection) DeleteRow(ctx context.Context, collectionTx 
 	if err != nil {
 		return apiutils.ErrNotFound
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return err
-	}
-	_, err = q.DeletePushCredential(ctx, controldb.DeletePushCredentialParams{ID: credentialID, SiteID: &siteContext.SiteID})
+	_, err = siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).DeletePushCredential, controldb.DeletePushCredentialParams{ID: credentialID, SiteID: &siteContext.SiteID})
 	return err
 }
 
