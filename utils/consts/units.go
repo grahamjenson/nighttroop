@@ -19,6 +19,9 @@ const MMOL_L_TO_MG_DL = 18.018
 // MaxGlucoseMgdl is far above any real reading, so a typo or a made up value is refused
 const MaxGlucoseMgdl = 1000
 
+// MaxCGMErrorCode is the highest of a CGM's error codes sent as a sgv, Dexcom's special values 1 to 12, not glucose
+const MaxCGMErrorCode = 12
+
 // MaxFutureReading is how far ahead of now a reading can be dated, for a phone clock's error
 const MaxFutureReading = 15 * time.Minute
 

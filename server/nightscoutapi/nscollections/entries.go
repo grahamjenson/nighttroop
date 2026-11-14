@@ -4,7 +4,9 @@ import (
 	"cmp"
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -31,7 +33,21 @@ func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sit
 	if err := validateEntryDate(nsModel); err != nil {
 		return err
 	}
+	if err := validateEntryNotErrorCode(nsModel); err != nil {
+		return err
+	}
 	return validateEntryType(nsModel, dbModel)
+}
+
+// validateEntryNotErrorCode refuses a CGM's error code, a sgv of 1 to 12 (Dexcom's special values), as glucose out of
+// range, so a batch leaves it out: Nightscout shows one as ?, but a follower reading it as glucose, as Trio's
+// Nightscout CGM does, takes it for a severe low
+func validateEntryNotErrorCode(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
+	if nightscoutmodels.SetReadingType(nsModel) != "sgv" || nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxCGMErrorCode {
+		return nil
+	}
+	return &nsutils.HTTPError{Status: http.StatusBadRequest, Column: "mgdl",
+		Message: nsutils.BadDataBodyErrorWithHint(fmt.Sprintf("sgv %v is a CGM error code, not glucose", *nsModel.Mgdl)).Message}
 }
 
 // validateEntryDate refuses a reading dated well ahead of now, beyond a phone clock's error, as followers, Loop's and
