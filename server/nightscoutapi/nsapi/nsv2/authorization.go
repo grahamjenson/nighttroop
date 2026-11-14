@@ -125,7 +125,7 @@ func createSubject(w http.ResponseWriter, r *http.Request, siteContext *httputil
 	tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 	defer tx.Rollback()
 	created, err := (&sitesettings.IdentitiesCollection{}).CreateRow(r.Context(), tx, nil, siteContext,
-		&sitemodels.UserIdentity{Name: sent.Name, Role: string(consts.IdentityRoleDeviceReadWrite), Client: sitemodels.AAPSClient})
+		&sitemodels.UserIdentity{Name: sent.Name, Role: string(consts.IdentityRoleDeviceRead), Client: sitemodels.AAPSClient})
 	if err == nil {
 		err = finish(tx)
 	}
@@ -158,7 +158,7 @@ func deleteSubject(w http.ResponseWriter, r *http.Request, siteContext *httputil
 
 func toSubject(siteContext *httputils.SiteContext, identity *sitemodels.UserIdentity) subject {
 	s := subject{ID: strconv.FormatInt(identity.ID, 10), Name: identity.Name, Roles: []string{"readable"}}
-	ns, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role))
+	ns, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role), &identity.Client)
 	switch {
 	case identity.Client == sitemodels.AAPSClient:
 		s.Roles = []string{aapsClient}

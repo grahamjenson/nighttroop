@@ -84,7 +84,7 @@ func NightscoutAuthRoute(controlDB *db.ControlDB, config *config.ServerConfig) h
 		}
 
 		// An identity with no Nightscout role, such as an admin, cannot use the Nightscout API
-		if _, err := nsutils.NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role); err != nil {
+		if _, err := nsutils.NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role, siteContext.IdentityModel.Client); err != nil {
 			http.Error(w, "Forbidden: this identity cannot use the Nightscout API", http.StatusForbidden)
 			return
 		}

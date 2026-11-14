@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -42,7 +43,7 @@ func AuthenticateExplicit(r *http.Request) (*Identity, *HTTPError) {
 		return nil, ErrMissingCredentials
 	}
 
-	ntIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	ntIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role, siteContext.IdentityModel.Client)
 	if err != nil {
 		return nil, ErrMissingCredentials
 	}
@@ -69,7 +70,7 @@ func permissionMatch(granted, wanted string) bool {
 	return true
 }
 
-func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) (*Identity, error) {
+func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole, client *string) (*Identity, error) {
 	// Collections
 	// 'entries'
 	// 'treatments'
@@ -111,6 +112,11 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	default:
 		return nil, fmt.Errorf("unknown identity role: %s", ntid)
 	}
+	// A device AAPS pairs as a client, by its QR code, reads everything and writes only the settings that client
+	// control is made of, as its role does in Nightscout; whoever sees the code can read the site
+	if client != nil && *client == sitemodels.AAPSClient {
+		permissions = []string{"api:*:read", "api:settings:create", "api:settings:update"}
+	}
 	return &Identity{
 		Name:        identityName,
 		Permissions: permissions,
@@ -121,7 +127,7 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 // as status.json's authorized. LoopFollow takes an identity as one that can write only from an exact
 // api:treatments:create, not a wildcard, so that is listed when it has it
 func Authorization(siteContext *httputils.SiteContext) (map[string]any, error) {
-	identity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	identity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role, siteContext.IdentityModel.Client)
 	if err != nil {
 		return nil, err
 	}
