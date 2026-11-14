@@ -125,7 +125,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
 	// goverter:map DurationMinutes Duration | MinutesToDuration
-	// goverter:map CreationDate CreationDate | MillisToISODateString
+	// goverter:map ClientCreatedAt CreationDate | MillisToISODateString
 	EventGroupToTreatment(source sitedb.EventGroup) *Treatment
 
 	// goverter:context siteContext
@@ -284,7 +284,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Duration DurationMs | DurationToMs
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map SentJSON SentHash | SentHash
-	// goverter:map CreationDate CreationDate | DateStringToMillis
+	// goverter:map CreationDate ClientCreatedAt | DateStringToMillis
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
 

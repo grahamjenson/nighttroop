@@ -115,7 +115,7 @@ func ParseDeleteQuery(values url.Values, collection Collection) (nsquery.Query, 
 		}
 	}
 	query, err := ParseQuery(values)
-	dated := query.DateGTE != nil || query.DateLTE != nil || query.DateIn != nil || query.DateEQ != nil || query.IDEq != nil || query.CreationDateEQ != nil
+	dated := query.DateGTE != nil || query.DateLTE != nil || query.DateIn != nil || query.DateEQ != nil || query.IDEq != nil || query.ClientCreatedAtEQ != nil
 	switch {
 	case err != nil:
 	case query.CountGiven && (query.CountAsked < 1 || query.CountAsked > maxDeleteCount):

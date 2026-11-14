@@ -178,7 +178,7 @@ CREATE TABLE event_groups (
     -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
     -- (sensor_code, transmitter_id), and AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json),
     -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier), and when iAPS's carbs were
-    -- entered, which it deletes them by (creation_date), and its id for its fat and protein carbs (fpu_id)
+    -- entered, sent as creation_date, which it deletes them by (client_created_at), and its id for its fat and protein carbs (fpu_id)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -192,7 +192,7 @@ CREATE TABLE event_groups (
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
     bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
     sync_identifier TEXT CHECK(length(sync_identifier) <= 256),
-    creation_date INTEGER CHECK(creation_date BETWEEN 0 AND 253402300799999),
+    client_created_at INTEGER CHECK(client_created_at BETWEEN 0 AND 253402300799999),
     fpu_id TEXT CHECK(length(fpu_id) <= 64),
 
     -- Default Stuff

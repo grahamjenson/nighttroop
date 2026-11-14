@@ -166,9 +166,9 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring22 := *source.SyncIdentifier
 		sitedbCreateEventGroupParams.SyncIdentifier = &xstring22
 	}
-	if source.CreationDate != nil {
-		xint644 := *source.CreationDate
-		sitedbCreateEventGroupParams.CreationDate = &xint644
+	if source.ClientCreatedAt != nil {
+		xint644 := *source.ClientCreatedAt
+		sitedbCreateEventGroupParams.ClientCreatedAt = &xint644
 	}
 	if source.FpuID != nil {
 		xstring23 := *source.FpuID
@@ -255,7 +255,7 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		xstring := *source.SyncIdentifier
 		nightscoutmodelsTreatment.SyncIdentifier = &xstring
 	}
-	nightscoutmodelsTreatment.CreationDate = MillisToISODateString(source.CreationDate)
+	nightscoutmodelsTreatment.CreationDate = MillisToISODateString(source.ClientCreatedAt)
 	if source.FpuID != nil {
 		typesShortString7 := types.ShortString(*source.FpuID)
 		nightscoutmodelsTreatment.FpuID = &typesShortString7
@@ -1137,7 +1137,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xstring11 := *source.SyncIdentifier
 		sitedbEventGroup.SyncIdentifier = &xstring11
 	}
-	sitedbEventGroup.CreationDate = DateStringToMillis(source.CreationDate)
+	sitedbEventGroup.ClientCreatedAt = DateStringToMillis(source.CreationDate)
 	if source.FpuID != nil {
 		xstring12 := ShortStringToString(*source.FpuID)
 		sitedbEventGroup.FpuID = &xstring12

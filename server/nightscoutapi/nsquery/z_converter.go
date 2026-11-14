@@ -492,9 +492,9 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 		xbool4 := *source.GlucoseExists
 		sitedbSearchEventGroupsParams.GlucoseExists = &xbool4
 	}
-	if source.CreationDateEQ != nil {
-		xint6434 := *source.CreationDateEQ
-		sitedbSearchEventGroupsParams.CreationDateEQ = &xint6434
+	if source.ClientCreatedAtEQ != nil {
+		xint6434 := *source.ClientCreatedAtEQ
+		sitedbSearchEventGroupsParams.ClientCreatedAtEQ = &xint6434
 	}
 	if source.EnteredByNin != nil {
 		xstring11 := *source.EnteredByNin
@@ -1218,9 +1218,9 @@ func QueryValueToQuery(source QueryValues) Query {
 		xbool4 := typesFlexibleBoolToBool(*source.GlucoseExists)
 		nsqueryQuery.GlucoseExists = &xbool4
 	}
-	if source.CreationDateEQ != nil {
-		xint6434 := typesDateIntToInt64(*source.CreationDateEQ)
-		nsqueryQuery.CreationDateEQ = &xint6434
+	if source.ClientCreatedAtEQ != nil {
+		xint6434 := typesDateIntToInt64(*source.ClientCreatedAtEQ)
+		nsqueryQuery.ClientCreatedAtEQ = &xint6434
 	}
 	if source.EnteredByEq != nil {
 		xstring7 := typesShortStringToString(*source.EnteredByEq)

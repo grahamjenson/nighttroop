@@ -280,7 +280,7 @@ type SiteConverter interface {
 	// The site does not set AAPS's running mode, nor the pump, nor its insulin, nor a Bolus Wizard's calculation
 	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs SentHash PumpID PumpSerial PumpType BolusCalculatorResultJson
 	// nor Loop's ids, nor iAPS's carb entry time and id
-	// goverter:ignore SyncIdentifier CreationDate FpuID
+	// goverter:ignore SyncIdentifier ClientCreatedAt FpuID
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
 
 	// goverter:context siteContext

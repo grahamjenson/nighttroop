@@ -410,9 +410,9 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring22 := *source.SyncIdentifier
 		sitedbCreateEventGroupParams.SyncIdentifier = &xstring22
 	}
-	if source.CreationDate != nil {
-		xint644 := *source.CreationDate
-		sitedbCreateEventGroupParams.CreationDate = &xint644
+	if source.ClientCreatedAt != nil {
+		xint644 := *source.ClientCreatedAt
+		sitedbCreateEventGroupParams.ClientCreatedAt = &xint644
 	}
 	if source.FpuID != nil {
 		xstring23 := *source.FpuID
@@ -2319,9 +2319,9 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xstring20 := *source.SyncIdentifier
 		sitedbEventGroup.SyncIdentifier = &xstring20
 	}
-	if source.CreationDate != nil {
-		xint642 := *source.CreationDate
-		sitedbEventGroup.CreationDate = &xint642
+	if source.ClientCreatedAt != nil {
+		xint642 := *source.ClientCreatedAt
+		sitedbEventGroup.ClientCreatedAt = &xint642
 	}
 	if source.FpuID != nil {
 		xstring21 := *source.FpuID

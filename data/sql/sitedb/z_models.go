@@ -116,7 +116,7 @@ type EventGroup struct {
 	TransmitterID             *string
 	BolusCalculatorResultJson *string
 	SyncIdentifier            *string
-	CreationDate              *int64
+	ClientCreatedAt           *int64
 	FpuID                     *string
 	Notes                     *string
 	Reason                    *string

@@ -32,7 +32,7 @@ INSERT INTO event_groups (
     transmitter_id,
     bolus_calculator_result_json,
     sync_identifier,
-    creation_date,
+    client_created_at,
     fpu_id,
 
     occurred_at,
@@ -71,7 +71,7 @@ VALUES (
     NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sqlc.narg('SyncIdentifier'),
-    sqlc.narg('CreationDate'),
+    sqlc.narg('ClientCreatedAt'),
     NULLIF(CAST(sqlc.narg('FpuID') AS TEXT), ''),
     sqlc.arg('OccurredAt'),
     sqlc.arg('UtcOffsetMinutes'),
@@ -274,7 +274,7 @@ WHERE
     -- iAPS deletes insulin and manual glucose by whether they have them, and carbs by when they were entered
     AND (CAST(sqlc.narg('InsulinExists') AS BOOL) IS NULL OR (idose.dose IS NOT NULL) = sqlc.narg('InsulinExists'))
     AND (CAST(sqlc.narg('GlucoseExists') AS BOOL) IS NULL OR (gr.mgdl IS NOT NULL) = sqlc.narg('GlucoseExists'))
-    AND (CAST(sqlc.narg('CreationDateEQ') AS INTEGER) IS NULL OR eg.creation_date = sqlc.narg('CreationDateEQ'))
+    AND (CAST(sqlc.narg('ClientCreatedAtEQ') AS INTEGER) IS NULL OR eg.client_created_at = sqlc.narg('ClientCreatedAtEQ'))
     AND (CAST(sqlc.narg('EnteredByNin') AS TEXT) IS NULL OR COALESCE(eg.entered_by, eg.created_by_identity_name) NOT IN (SELECT value FROM json_each(sqlc.narg('EnteredByNin'))))
 
 
@@ -318,7 +318,7 @@ UPDATE event_groups SET
     transmitter_id = NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     bolus_calculator_result_json = NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sync_identifier = sqlc.narg('SyncIdentifier'),
-    creation_date = sqlc.narg('CreationDate'),
+    client_created_at = sqlc.narg('ClientCreatedAt'),
     fpu_id = NULLIF(CAST(sqlc.narg('FpuID') AS TEXT), ''),
     occurred_at = sqlc.arg('OccurredAt'),
     utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),

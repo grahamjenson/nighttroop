@@ -85,11 +85,11 @@ type QueryValues struct {
 	CarbsExists    *types.FlexibleBool `mapstructure:"carbsexists,omitempty" json:"carbsexists,omitempty"`
 	DurationExists *types.FlexibleBool `mapstructure:"durationexists,omitempty" json:"durationexists,omitempty"`
 	// iAPS deletes insulin by find[bolus][$exists], manual glucose by find[glucose][$exists], and carbs by creation_date
-	InsulinExists  *types.FlexibleBool `mapstructure:"insulinexists,omitempty" json:"insulinexists,omitempty"`
-	GlucoseExists  *types.FlexibleBool `mapstructure:"glucoseexists,omitempty" json:"glucoseexists,omitempty"`
-	CreationDateEQ *types.DateInt      `mapstructure:"creationdateeq,omitempty" json:"creationdateeq,omitempty"`
-	EnteredByEq    *types.ShortString  `mapstructure:"enteredbyeq,omitempty" json:"enteredbyeq,omitempty"`
-	EnteredByNin   *QueryStringArray   `mapstructure:"enteredbynin,omitempty" json:"enteredbynin,omitempty"`
+	InsulinExists     *types.FlexibleBool `mapstructure:"insulinexists,omitempty" json:"insulinexists,omitempty"`
+	GlucoseExists     *types.FlexibleBool `mapstructure:"glucoseexists,omitempty" json:"glucoseexists,omitempty"`
+	ClientCreatedAtEQ *types.DateInt      `mapstructure:"creationdateeq,omitempty" json:"creationdateeq,omitempty"`
+	EnteredByEq       *types.ShortString  `mapstructure:"enteredbyeq,omitempty" json:"enteredbyeq,omitempty"`
+	EnteredByNin      *QueryStringArray   `mapstructure:"enteredbynin,omitempty" json:"enteredbynin,omitempty"`
 
 	// Altering Return values or structure
 	// Limits

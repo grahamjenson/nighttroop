@@ -82,13 +82,13 @@ type Query struct {
 
 	NameEq *string `json:"name_eq,omitempty"`
 
-	CarbsExists    *bool   `json:"carbs_exists,omitempty"`
-	DurationExists *bool   `json:"duration_exists,omitempty"`
-	InsulinExists  *bool   `json:"insulin_exists,omitempty"`
-	GlucoseExists  *bool   `json:"glucose_exists,omitempty"`
-	CreationDateEQ *int64  `json:"creation_date_eq,omitempty"`
-	EnteredByEq    *string `json:"entered_by_eq,omitempty"`
-	EnteredByNin   *string `json:"entered_by_nin,omitempty"`
+	CarbsExists       *bool   `json:"carbs_exists,omitempty"`
+	DurationExists    *bool   `json:"duration_exists,omitempty"`
+	InsulinExists     *bool   `json:"insulin_exists,omitempty"`
+	GlucoseExists     *bool   `json:"glucose_exists,omitempty"`
+	ClientCreatedAtEQ *int64  `json:"client_created_at_eq,omitempty"`
+	EnteredByEq       *string `json:"entered_by_eq,omitempty"`
+	EnteredByNin      *string `json:"entered_by_nin,omitempty"`
 
 	// Util Options
 	HasFilters bool       `json:"has_filters,omitempty"`
