@@ -57,6 +57,8 @@ When the user deletes a record in iAPS, iAPS deletes it by query. Each request s
     Older overrides, and overrides entered in Nightscout, stay.
   - Refuses `deleteAllNSoverrrides` with a 400. A delete by type alone could delete all the site's overrides.
   - Refuses a delete with a `count` that is not 1 to 10, or with `$gte` and `$lte` more than 2 days apart.
+  - Ends a `$gte` with no `$lte`, as `deleteAnnouncements` sends, 1 day from now. If the `$gte` is more than 1 day
+    ago, it refuses the delete with a 400. It refuses a `$lte` with no `$gte`.
   - Refuses the treatment filters (`carbs`, `bolus`, `glucose`, `creation_date`, `enteredBy`) on
     `/api/v1/entries.json`. A reading search does not use them.
   - Soft deletes what the search finds, at most 1000 a request.

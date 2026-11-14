@@ -1204,6 +1204,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - A delete's `count` (1 to 10) deletes at most that many, newest first. `find[eventType]` with a `count` needs no
   date. Another count: 400.
 - A delete's `$gte` and `$lte` more than 2 days apart: 400.
+- A delete's `$gte` with no `$lte` (iAPS `deleteAnnouncements`) ends 1 day from now. A `$gte` more than 1 day ago
+  (e.g. `find[date][$gte]=0`): 400, nothing deleted.
+- A delete's `$lte` with no `$gte`: 400, nothing deleted.
 - A delete by `find[eventType]` alone (iAPS `deleteAllNSoverrrides`): 400.
 
 ### Nightscout API: v3 changes and history
