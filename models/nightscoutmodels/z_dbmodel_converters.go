@@ -97,10 +97,11 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		nightscoutmodelsEntry.Type = &pNightscoutmodelsEntryType
 		nightscoutmodelsEntry.SGV = SGVGlucoseReadingTypeToValue(source, context)
 		nightscoutmodelsEntry.MBG = MBGGlucoseReadingTypeToValue(source, context)
-		nightscoutmodelsEntry.Direction = EntryDirection((*source).Direction)
+		nightscoutmodelsEntry.Direction = TrendDirection((*source).Trend)
+		nightscoutmodelsEntry.Trend = EntryTrend((*source).Trend)
 		if (*source).Delta != nil {
 			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Delta)
-			nightscoutmodelsEntry.Trend = &typesFlexibleFloat64
+			nightscoutmodelsEntry.Delta = &typesFlexibleFloat64
 		}
 		nightscoutmodelsEntry.Units = UnitsToValue((*source).Mgdl, context)
 		if (*source).Filtered != nil {

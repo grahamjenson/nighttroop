@@ -307,8 +307,10 @@ CREATE TABLE glucose_readings (
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
-    delta REAL CHECK(delta BETWEEN -1000 AND 1000),
-    direction TEXT CHECK(length(direction) <= 32),
+    delta REAL CHECK(delta BETWEEN -1000 AND 1000), -- mg/dL since the reading before, as sent
+    -- Nightscout's trend number for the direction, and 10 TripleUp and 11 TripleDown, which Nightscout has none for;
+    -- the direction is made from it (nightscoutmodels.TrendDirection)
+    trend INTEGER CHECK(trend BETWEEN 0 AND 11),
 
     -- What only some apps send, NULL for most readings: a CGM's raw signal, from xDrip+ and its followers (noise,
     -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), a noise or rssi of 0 meaning none

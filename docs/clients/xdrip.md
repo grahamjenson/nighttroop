@@ -68,6 +68,7 @@ How [xDrip+](https://github.com/NightscoutFoundation/xDrip) talks to Nightscout,
 - `dateString`, `sysTime`: `yyyy-MM-dd'T'HH:mm:ss.SSSZ` in the phone's zone (for example
   `2026-11-02T23:00:00.000+1300`).
 - `direction`: `DoubleUp` ... `DoubleDown`, `NONE`, `NOT COMPUTABLE` or `NotComputable`.
+- `delta`: kept and given back as sent. A `delta` out of -1000 to 1000 is left out, and the reading kept.
 - A calibration is also sent as an `mbg`, unless a blood test is within a minute of it.
 - **Response:** only the status code is read. On a non-2xx, nothing is marked done. The whole batch, growing, is sent
   again with the next reading, until its queue entries are a week old. Until then, the device status and treatments
