@@ -90,3 +90,9 @@
     1. P4: Check the site API's values against the add modals' limits (`addmodal.Field` with its column), not
        `apiutils.CheckRange` limits written again. Some differ: a food's energy and portions and a temp basal's percent
        are at least 0 and 1% on the page, but the API takes less
+
+1. Database:
+    1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
+       column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
+    1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
+       settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out
