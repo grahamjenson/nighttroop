@@ -1,7 +1,6 @@
 package sitedata
 
 import (
-	"cmp"
 	"context"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -14,10 +13,6 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// maxInsulinDoseUnits is far above any single dose a pump or pen gives; as much again below 0 takes back a dose
-// entered by mistake, from insulin on board
-const maxInsulinDoseUnits = 100
 
 type InsulinDosesCollection struct{}
 
@@ -37,8 +32,9 @@ func (s *InsulinDosesCollection) GetRoute() string {
 // CREATE
 // ////
 func (s *InsulinDosesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
-	if herr := checkInsulinDose(model); herr != nil {
-		return nil, herr
+	// A dose of 0 is none; an update of 0 is one not sent, which keeps its dose
+	if model.Dose == 0 {
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.dose"))
 	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateInsulinDose, sitemodels.InsulinDoseToCreate(model, siteContext))
 }
@@ -58,14 +54,6 @@ func (s *InsulinDosesCollection) CreateHTMXResponse(model *sitemodels.SiteInsuli
 
 // UpdateRow changes a dose's units, type, notes or reason; anything not sent stays as it is
 func (s *InsulinDosesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteInsulinDose, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
-	// Check the dose as it will be once the fields sent are changed
-	merged := *model
-	if merged.Dose == 0 {
-		merged.Dose = oldModel.Dose
-	}
-	if herr := checkInsulinDose(&merged); herr != nil {
-		return nil, herr
-	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateInsulinDose, sitemodels.InsulinDoseToUpdate(model, siteContext))
 }
@@ -119,15 +107,4 @@ func (s *InsulinDosesCollection) DeleteRow(ctx context.Context, collectionTx *si
 
 func (s *InsulinDosesCollection) DeleteHTMXResponse(model *sitemodels.SiteInsulinDose) templ.Component {
 	return site_data_templ.InsulinDoseDeleted()
-}
-
-///////
-// UTIL METHODS
-////////
-
-func checkInsulinDose(model *sitemodels.SiteInsulinDose) *apiutils.HTTPError {
-	if model.Dose == 0 || model.Dose < -maxInsulinDoseUnits || model.Dose > maxInsulinDoseUnits {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.dose", i18n.Data{"Max": maxInsulinDoseUnits}))
-	}
-	return cmp.Or(apiutils.CheckRange("errors.data.split_now", model.SplitNow, 0, 1), apiutils.CheckRange("errors.data.split_ext", model.SplitExt, 0, 1))
 }

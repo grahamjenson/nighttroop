@@ -4,14 +4,12 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -33,11 +31,7 @@ func (s *GlucoseReadingsCollection) GetRoute() string {
 // CREATE
 // ////
 func (s *GlucoseReadingsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
-	params := sitemodels.GlucoseReadingToCreate(model, siteContext)
-	if herr := checkGlucoseMgdl(params.Mgdl, siteContext); herr != nil {
-		return nil, herr
-	}
-	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateGlucoseReading, params)
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateGlucoseReading, sitemodels.GlucoseReadingToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a glucose reading in
@@ -56,13 +50,7 @@ func (s *GlucoseReadingsCollection) CreateHTMXResponse(model *sitemodels.SiteGlu
 // UpdateRow changes a reading's value, CGM fields (delta, direction, noise, filtered, unfiltered, rssi), notes or reason; anything not sent stays as it is
 func (s *GlucoseReadingsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
 	model.ID = oldModel.ID
-	params := sitemodels.GlucoseReadingToUpdate(model, siteContext)
-	if params.Mgdl != nil {
-		if herr := checkGlucoseMgdl(*params.Mgdl, siteContext); herr != nil {
-			return nil, herr
-		}
-	}
-	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateGlucoseReading, params)
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateGlucoseReading, sitemodels.GlucoseReadingToUpdate(model, siteContext))
 }
 
 func (s *GlucoseReadingsCollection) UpdateHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {
@@ -114,16 +102,4 @@ func (s *GlucoseReadingsCollection) DeleteRow(ctx context.Context, collectionTx 
 
 func (s *GlucoseReadingsCollection) DeleteHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {
 	return site_data_templ.GlucoseReadingDeleted()
-}
-
-///////
-// UTIL METHODS
-////////
-
-func checkGlucoseMgdl(mgdl float64, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	if mgdl <= 0 || mgdl > consts.MaxGlucoseMgdl {
-		units := sitemodels.ContextUnits(siteContext)
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.reading", i18n.Data{"Max": consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), "Units": *units}))
-	}
-	return nil
 }

@@ -1,9 +1,7 @@
 package sitedata
 
 import (
-	"cmp"
 	"context"
-	"unicode/utf8"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -37,9 +35,6 @@ func (s *ProfileSwitchesCollection) CreateRow(ctx context.Context, collectionTx 
 	if model.Name == "" {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.name_required"))
 	}
-	if herr := checkProfileSwitch(model); herr != nil {
-		return nil, herr
-	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateProfileSwitch, sitemodels.ProfileSwitchToCreate(model, siteContext))
 }
 
@@ -58,9 +53,6 @@ func (s *ProfileSwitchesCollection) CreateHTMXResponse(model *sitemodels.SitePro
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
 func (s *ProfileSwitchesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteProfileSwitch, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
-	if herr := checkProfileSwitch(model); herr != nil {
-		return nil, herr
-	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateProfileSwitch, sitemodels.ProfileSwitchToUpdate(model, siteContext))
 }
@@ -114,25 +106,4 @@ func (s *ProfileSwitchesCollection) DeleteRow(ctx context.Context, collectionTx 
 
 func (s *ProfileSwitchesCollection) DeleteHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
 	return site_data_templ.ProfileSwitchDeleted()
-}
-
-///////
-// UTIL METHODS
-////////
-
-// checkProfileSwitch keeps each value sent within what a pump allows, and the duration to a week
-func checkProfileSwitch(model *sitemodels.SiteProfileSwitch) *apiutils.HTTPError {
-	if utf8.RuneCountInString(model.Name) > 64 {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.name_too_long"))
-	}
-	if herr := cmp.Or(
-		apiutils.CheckRange("errors.data.multiplier", model.Multiplier, 0.1, 5),
-		apiutils.CheckRange("errors.data.timeshift", model.Timeshift, -24*60, 24*60),
-	); herr != nil {
-		return herr
-	}
-	if d := model.DurationMinutes; d != nil && (*d < 0 || *d > 7*24*60) {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.profile_switch_duration"))
-	}
-	return nil
 }

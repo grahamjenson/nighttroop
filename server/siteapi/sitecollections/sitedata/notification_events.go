@@ -41,9 +41,6 @@ func (s *NotificationEventsCollection) CreateRow(ctx context.Context, collection
 	if model.Title == "" {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.title_required"))
 	}
-	if herr := checkNotificationEvent(model); herr != nil {
-		return nil, herr
-	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateNotificationEvent, sitemodels.NotificationEventToCreate(model, siteContext))
 }
 
@@ -62,9 +59,6 @@ func (s *NotificationEventsCollection) CreateHTMXResponse(model *sitemodels.Site
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
 func (s *NotificationEventsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteNotificationEvent, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
-	if herr := checkNotificationEvent(model); herr != nil {
-		return nil, herr
-	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateNotificationEvent, sitemodels.NotificationEventToUpdate(model, siteContext))
 }
@@ -118,16 +112,4 @@ func (s *NotificationEventsCollection) DeleteRow(ctx context.Context, collection
 
 func (s *NotificationEventsCollection) DeleteHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
 	return site_data_templ.NotificationEventDeleted()
-}
-
-///////
-// UTIL METHODS
-////////
-
-// checkNotificationEvent keeps the title short enough to show and the severity within its scale
-func checkNotificationEvent(model *sitemodels.SiteNotificationEvent) *apiutils.HTTPError {
-	if len(model.Title) > 128 {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.title_too_long"))
-	}
-	return apiutils.CheckRange("errors.data.severity", &model.Severity, 0, 5)
 }

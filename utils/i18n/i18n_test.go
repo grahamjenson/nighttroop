@@ -26,7 +26,7 @@ var (
 	// A message id, as written in the code: words joined by dots, e.g. site.reports.title
 	idLiteral = regexp.MustCompile(`"([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)"`)
 	// The id each i18n.T and i18n.N call shows, and each error people read is written with, where it is in the call
-	shownID = regexp.MustCompile(`(?:i18n\.[TN]\([\w.]+(?:\(\))?,\s*|i18n\.NewError\(|CheckRange\(|FieldWithHint\()"([^"]+)"`)
+	shownID = regexp.MustCompile(`(?:i18n\.[TN]\([\w.]+(?:\(\))?,\s*|i18n\.NewError\(|FieldWithHint\()"([^"]+)"`)
 	// A group of stored values' names, under stored.<group>, as each i18n.Stored call or filter's Stored names it
 	storedGroup = regexp.MustCompile(`(?:i18n\.Stored\([\w.]+(?:\(\))?,\s*|Stored:\s*)"(\w+)"`)
 	placeholder = regexp.MustCompile(`{{\s*\.(\w+)\s*}}`)

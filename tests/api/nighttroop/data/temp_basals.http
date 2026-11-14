@@ -76,7 +76,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"duration_minutes": 30}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "rate must be from 0" "@message"
+ASSERT_CONTAINS "rate is required" "@message"
 
 NAME create_temp_basal_too_high
 POST http://{{ site }}/data/temp-basals
@@ -91,7 +91,16 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"rate": 1, "duration_minutes": 2000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "duration must be more than 0" "@message"
+ASSERT_CONTAINS "duration_minutes must be from 1 to 1440" "@message"
+
+// A temp basal is at least 1% of the scheduled basal, as on the page
+NAME create_temp_basal_too_low_percent
+POST http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"rate": 0, "multiplier": 0.001, "duration_minutes": 30}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "multiplier must be from 0.01 to 11" "@message"
 
 // Only the fields sent change
 NAME update_temp_basal_notes

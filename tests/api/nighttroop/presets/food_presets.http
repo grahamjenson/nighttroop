@@ -98,7 +98,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "Feast", "carbs": 5000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "must be from 0 to 1000 g" "@message"
+ASSERT_CONTAINS "carbs must be from 0 to 1000" "@message"
 
 NAME create_food_preset_absorbs_too_long
 POST http://{{ site }}/presets/food
@@ -106,7 +106,16 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "Slow", "absorption_time_minutes": 100000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "absorption time must be from 0 to 1440 minutes" "@message"
+ASSERT_CONTAINS "absorption_time_minutes must be from 0 to 1440" "@message"
+
+// A portion of food has no energy taken back, as on the page
+NAME create_food_preset_negative_energy
+POST http://{{ site }}/presets/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "Negative", "energy": -1}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "energy must be from 0 to 20000" "@message"
 
 // Only the fields sent change
 NAME update_food_preset_carbs

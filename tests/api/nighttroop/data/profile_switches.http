@@ -107,7 +107,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "Jet Lag", "timeshift": 2000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "timeshift must be from -1440 to 1440 minutes" "@message"
+ASSERT_CONTAINS "timeshift must be from -1440 to 1440" "@message"
 
 NAME create_profile_switch_too_long
 POST http://{{ site }}/data/profile-switches
@@ -115,7 +115,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "Forever", "duration_minutes": 20000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "duration must be from 0 to 10080 minutes" "@message"
+ASSERT_CONTAINS "duration_minutes must be from 0 to 10080" "@message"
 
 // Only the fields sent change, and a duration can go back to 0, until the next switch
 NAME update_profile_switch

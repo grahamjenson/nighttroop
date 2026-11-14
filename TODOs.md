@@ -81,10 +81,3 @@
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
-
-
-
-1. Site API:
-    1. P4: Check the site API's values against the add modals' limits (`addmodal.Field` with its column), not
-       `apiutils.CheckRange` limits written again. Some differ: a food's energy and portions and a temp basal's percent
-       are at least 0 and 1% on the page, but the API takes less

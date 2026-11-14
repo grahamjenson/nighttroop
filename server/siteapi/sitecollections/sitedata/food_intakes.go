@@ -1,7 +1,6 @@
 package sitedata
 
 import (
-	"cmp"
 	"context"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -13,9 +12,6 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// maxFoodGrams is far more of any one nutrient than a meal has; as much again below 0 takes back food entered twice
-const maxFoodGrams = 1000
 
 type FoodIntakesCollection struct{}
 
@@ -38,9 +34,6 @@ func (s *FoodIntakesCollection) CreateRow(ctx context.Context, collectionTx *sit
 	if model.Carbs == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.carbs")
 	}
-	if herr := checkFoodIntake(model); herr != nil {
-		return nil, herr
-	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateFoodIntake, sitemodels.FoodIntakeToCreate(model, siteContext))
 }
 
@@ -59,9 +52,6 @@ func (s *FoodIntakesCollection) CreateHTMXResponse(model *sitemodels.SiteFoodInt
 
 // UpdateRow changes a food intake's name, nutrients, notes or reason; anything not sent stays as it is
 func (s *FoodIntakesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteFoodIntake, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
-	if herr := checkFoodIntake(model); herr != nil {
-		return nil, herr
-	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateFoodIntake, sitemodels.FoodIntakeToUpdate(model, siteContext))
 }
@@ -115,18 +105,4 @@ func (s *FoodIntakesCollection) DeleteRow(ctx context.Context, collectionTx *sit
 
 func (s *FoodIntakesCollection) DeleteHTMXResponse(model *sitemodels.SiteFoodIntake) templ.Component {
 	return site_data_templ.FoodIntakeDeleted()
-}
-
-///////
-// UTIL METHODS
-////////
-
-// checkFoodIntake keeps any carbs, fat, protein or fibre sent within what a meal could have, or take back
-func checkFoodIntake(model *sitemodels.SiteFoodIntake) *apiutils.HTTPError {
-	return cmp.Or(
-		apiutils.CheckRange("errors.data.food", model.Carbs, -maxFoodGrams, maxFoodGrams),
-		apiutils.CheckRange("errors.data.food", model.Fat, -maxFoodGrams, maxFoodGrams),
-		apiutils.CheckRange("errors.data.food", model.Protein, -maxFoodGrams, maxFoodGrams),
-		apiutils.CheckRange("errors.data.food", model.Fibre, -maxFoodGrams, maxFoodGrams),
-	)
 }
