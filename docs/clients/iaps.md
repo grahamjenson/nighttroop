@@ -31,9 +31,9 @@ Each treatment is a `NigtscoutTreatment`, with `enteredBy: "iAPS"`.
 
 Nighttroop:
 
-- Keeps `creation_date` and `fpuID`, and gives them back. It writes `creation_date` as `toISOString` does:
+- Keeps `creation_date` and gives it back. It writes `creation_date` as `toISOString` does:
   `2026-11-01T12:01:00.000Z`.
-- Does not keep `bolus`, `raw_rate` and `raw_duration`. iAPS does not read them back.
+- Does not keep `fpuID`, which iAPS now sends empty, or `bolus`, `raw_rate` and `raw_duration`, which iAPS does not read back.
 
 ## Deletes
 
@@ -73,8 +73,8 @@ When the user deletes a record in iAPS, iAPS deletes it by query. Each request s
 | Interaction | Nighttroop |
 | --- | --- |
 | Uploads, fetches and announcements | As for [Trio](trio.md#status-on-nighttroop) |
-| `creation_date` and `fpuID` | Fixed: kept and given back |
-| `bolus`, `raw_rate`, `raw_duration` | Not kept |
+| `creation_date` | Fixed: kept and given back |
+| `fpuID`, `bolus`, `raw_rate`, `raw_duration` | Not kept. iAPS sends `fpuID` empty, and does not read the others back |
 | Manual glucose upload (`glucoseType: "Manual"`) | Not stored |
 | Deletes of carbs, insulin, manual glucose, overrides and announcements | Fixed (were a 400) |
 | `deleteAllNSoverrrides` | Refused (400) |

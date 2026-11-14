@@ -21,9 +21,9 @@ B [
 ]
 ASSERT_STATUS 200
 ASSERT_LENGTH 8 "@"
-// creation_date and fpuID are kept and given back
+// creation_date is kept and given back; fpuID, which iAPS now sends empty, is not kept
 ASSERT_CONTAINS "T12:01:00.000Z" "@0.creation_date"
-ASSERT_EQUALS "F1B2C3D4-0000-0000-0000-000000000005" "@0.fpuID"
+ASSERT_EQUALS null "@0.fpuID"
 
 NAME iaps_read_kept_fields
 GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&count=1

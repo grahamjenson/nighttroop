@@ -170,22 +170,18 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xint644 := *source.ClientCreatedAt
 		sitedbCreateEventGroupParams.ClientCreatedAt = &xint644
 	}
-	if source.FpuID != nil {
-		xstring23 := *source.FpuID
-		sitedbCreateEventGroupParams.FpuID = &xstring23
-	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint645 := *source.UtcOffsetMinutes
 		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
-		xstring24 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring24
+		xstring23 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring23
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring25 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring25
+		xstring24 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring24
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateEventGroupParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -256,17 +252,13 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		nightscoutmodelsTreatment.SyncIdentifier = &xstring
 	}
 	nightscoutmodelsTreatment.CreationDate = MillisToISODateString(source.ClientCreatedAt)
-	if source.FpuID != nil {
-		typesShortString7 := types.ShortString(*source.FpuID)
-		nightscoutmodelsTreatment.FpuID = &typesShortString7
-	}
 	if source.CreatedByDeviceName != nil {
-		typesShortString8 := types.ShortString(*source.CreatedByDeviceName)
-		nightscoutmodelsTreatment.Device = &typesShortString8
+		typesShortString7 := types.ShortString(*source.CreatedByDeviceName)
+		nightscoutmodelsTreatment.Device = &typesShortString7
 	}
 	if source.CreatedByAppName != nil {
-		typesShortString9 := types.ShortString(*source.CreatedByAppName)
-		nightscoutmodelsTreatment.App = &typesShortString9
+		typesShortString8 := types.ShortString(*source.CreatedByAppName)
+		nightscoutmodelsTreatment.App = &typesShortString8
 	}
 	pTypesShortString := types.ShortString(source.CreatedByIdentityName)
 	nightscoutmodelsTreatment.Subject = &pTypesShortString
@@ -1138,17 +1130,13 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		sitedbEventGroup.SyncIdentifier = &xstring11
 	}
 	sitedbEventGroup.ClientCreatedAt = DateStringToMillis(source.CreationDate)
-	if source.FpuID != nil {
-		xstring12 := ShortStringToString(*source.FpuID)
-		sitedbEventGroup.FpuID = &xstring12
-	}
 	if source.Notes != nil {
-		xstring13 := SanitizedStringToString(*source.Notes)
-		sitedbEventGroup.Notes = &xstring13
+		xstring12 := SanitizedStringToString(*source.Notes)
+		sitedbEventGroup.Notes = &xstring12
 	}
 	if source.Reason != nil {
-		xstring14 := ShortStringToString(*source.Reason)
-		sitedbEventGroup.Reason = &xstring14
+		xstring13 := ShortStringToString(*source.Reason)
+		sitedbEventGroup.Reason = &xstring13
 	}
 	sitedbEventGroup.DurationMinutes = DurationToMinutesP(source.Duration)
 	sitedbEventGroup.DurationMs = DurationToMs(source.Duration)
@@ -1158,12 +1146,12 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 	}
 	sitedbEventGroup.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring15 := ShortStringToString(*source.App)
-		sitedbEventGroup.CreatedByAppName = &xstring15
+		xstring14 := ShortStringToString(*source.App)
+		sitedbEventGroup.CreatedByAppName = &xstring14
 	}
 	if source.Device != nil {
-		xstring16 := ShortStringToString(*source.Device)
-		sitedbEventGroup.CreatedByDeviceName = &xstring16
+		xstring15 := ShortStringToString(*source.Device)
+		sitedbEventGroup.CreatedByDeviceName = &xstring15
 	}
 	return sitedbEventGroup
 }

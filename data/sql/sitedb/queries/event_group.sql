@@ -33,7 +33,6 @@ INSERT INTO event_groups (
     bolus_calculator_result_json,
     sync_identifier,
     client_created_at,
-    fpu_id,
 
     occurred_at,
     utc_offset_minutes,
@@ -72,7 +71,6 @@ VALUES (
     NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sqlc.narg('SyncIdentifier'),
     sqlc.narg('ClientCreatedAt'),
-    NULLIF(CAST(sqlc.narg('FpuID') AS TEXT), ''),
     sqlc.arg('OccurredAt'),
     sqlc.arg('UtcOffsetMinutes'),
     sqlc.arg('CreatedByAppName'),
@@ -319,7 +317,6 @@ UPDATE event_groups SET
     bolus_calculator_result_json = NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sync_identifier = sqlc.narg('SyncIdentifier'),
     client_created_at = sqlc.narg('ClientCreatedAt'),
-    fpu_id = NULLIF(CAST(sqlc.narg('FpuID') AS TEXT), ''),
     occurred_at = sqlc.arg('OccurredAt'),
     utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
     created_by_app_name = sqlc.arg('CreatedByAppName'),

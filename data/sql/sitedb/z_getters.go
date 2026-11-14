@@ -996,16 +996,6 @@ func (m *EventGroup) SetClientCreatedAt(v *int64) {
 	m.ClientCreatedAt = v
 }
 
-// GetFpuID returns the FpuID value.
-func (m EventGroup) GetFpuID() *string {
-	return m.FpuID
-}
-
-// SetFpuID sets the FpuID value and returns the updated EventGroup.
-func (m *EventGroup) SetFpuID(v *string) {
-	m.FpuID = v
-}
-
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -10056,16 +10046,6 @@ func (m *CreateEventGroupParams) SetClientCreatedAt(v *int64) {
 	m.ClientCreatedAt = v
 }
 
-// GetFpuID returns the FpuID value.
-func (m CreateEventGroupParams) GetFpuID() *string {
-	return m.FpuID
-}
-
-// SetFpuID sets the FpuID value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetFpuID(v *string) {
-	m.FpuID = v
-}
-
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -10804,16 +10784,6 @@ func (m RewriteEventGroupParams) GetClientCreatedAt() *int64 {
 // SetClientCreatedAt sets the ClientCreatedAt value and returns the updated RewriteEventGroupParams.
 func (m *RewriteEventGroupParams) SetClientCreatedAt(v *int64) {
 	m.ClientCreatedAt = v
-}
-
-// GetFpuID returns the FpuID value.
-func (m RewriteEventGroupParams) GetFpuID() *string {
-	return m.FpuID
-}
-
-// SetFpuID sets the FpuID value and returns the updated RewriteEventGroupParams.
-func (m *RewriteEventGroupParams) SetFpuID(v *string) {
-	m.FpuID = v
 }
 
 // GetOccurredAt returns the OccurredAt value.

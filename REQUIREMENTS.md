@@ -1369,7 +1369,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | Bolus, temp basal                        | `automatic` (true or false)                                                                | Loop       |
 | Treatment                                | `syncIdentifier` (up to 256 characters), `insulinType`                                     | Loop       |
 | Carb entry                               | `userEnteredAt` (UTC)                                                                      | Loop       |
-| Treatment                                | `creation_date` (UTC, `.SSS`), `fpuID`                                                     | iAPS       |
+| Treatment                                | `creation_date` (UTC, `.SSS`)                                                              | iAPS       |
 | Bolus                                    | `unabsorbed`                                                                               | Loop       |
 | Treatment                                | `uuid`, `sensorCode`, `transmitterId`                                                      | xDrip+     |
 | Profile                                  | `profile` (the name of the settings profile, up to 64 characters)                          | iAPS       |
