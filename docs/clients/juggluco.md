@@ -13,15 +13,16 @@ How the Juggluco Nightscout uploader talks to Nightscout, and how it works with 
 - Source: commit `d8233ce` (2026-10-29). Native C++ in `Common/src/main/cpp/net/watchserver/` (`uploader.cpp`,
   `uploadtreatment.cpp`, `common.cpp`, `datestring.hpp`), which calls Java in
   `Common/src/main/java/tk/glucodata/NightPost.java` for HTTP.
-- Tests: `tests/api/nightscout/juggluco/upload_v3.http` and `upload_v1.http`. The v1 tests send the token's SHA1 in
-  `api-secret`, as Juggluco does.
+- Tests: `tests/api/nightscout/juggluco/upload_v3.http`, `upload_v1.http`, `long_acting.http` and
+  `trailing_slash.http`. The v1 tests
+  send the token's SHA1 in `api-secret`, as Juggluco does.
 
 ## Set up
 
 1. In Juggluco, open Settings, Nightscout upload.
 2. Set **Nightscout URL** to the site's Nightscout host, for example `https://<site>.ns.<host>`.
-   - Do not add a trailing `/`. Juggluco adds paths such as `/api/v1/entries` to the URL exactly as typed, so it
-     gives `//api/...` (`makeuploadurls`, `uploader.cpp:66`).
+   - A trailing `/` is accepted. Juggluco adds paths such as `/api/v1/entries` to the URL exactly as typed, so it
+     gives `//api/...` (`makeuploadurls`, `uploader.cpp:66`). Nighttroop reads `//` as `/`.
 3. Set **Secret** to a device's Nightscout token. Juggluco keeps it as typed (`setNightUploader`,
    `settings/javasettings.cpp:1482`).
 4. Tick **test V3**. This checkbox is only on phones (`NightPost.config`). Wear OS always uses v1.
@@ -153,8 +154,8 @@ Every amount has `eventType` `<none>` (Nightscout careportal's "no event type").
   `glucose.cpp:556`, compares with `DOUBLETHRESHOLD`, not its negative).
 - **Half-hour zones west of UTC:** two minus signs in `dateString`, for example `-03:-30` for Newfoundland
   (`Tdatestring` takes the remainder of negative minutes).
-- **Units:** `sgv` has no `units`. Nighttroop takes an unlabelled value of 30 or less as mmol/L. Libre and Dexcom
-  readings start at 39 or 40 mg/dL, but a reading calibrated in Juggluco can be lower.
+- **Units:** `sgv` has no `units`. Nighttroop takes it as mg/dL, as Nightscout does, whatever the value. Thus a
+  reading calibrated in Juggluco below 39 mg/dL stays low.
 - **Large v1 batches:** up to 5000 readings in one array, sent again until accepted.
 - **JWT:** sent until its `exp`, even if it stops working before (for example after a password reset).
 
@@ -170,6 +171,8 @@ Every amount has `eventType` `<none>` (Nightscout careportal's "no event type").
   - v1 `DELETE /api/v1/treatments/<_id>`: 200.
   - v1 `PUT /api/v1/treatments` of one amount, and of a changed one after its delete: 200. Fixed in #508 for a
     changed time.
+  - A Nightscout URL with a trailing `/`: `//api/v1/entries` and `//api/v3/...` are read as `/api/...` (was 404, and
+    Juggluco did not show an error).
 - **Fixed in #508:**
   - v3 entries keep Juggluco's `identifier`: a create that names its `identifier` keeps it.
   - v3 `POST /api/v3/treatments` with `eventType` `<none>`: a Note, with insulin and carbs (was 400).
@@ -180,3 +183,9 @@ Every amount has `eventType` `<none>` (Nightscout careportal's "no event type").
   - v3 amount changed in Juggluco (a delete, then a post with the same identifier): a deleted document is replaced,
     whatever changed.
   - v1 `dateString` with `-03:-30`: read as `-03:30` (was 400).
+- **Long-acting insulin:**
+  - v1 and v3: an amount with `"notes":"Long-Acting"` is a Correction Bolus with `isBasalInsulin` true, as AAPS
+    marks a bolus of basal insulin. It was a bolus with no `isBasalInsulin`, so followers counted it as a bolus.
+  - Only the notes are used. `insulinType` is the label the user typed, not always the insulin's name.
+  - Nighttroop summaries still count it as a bolus (TODO P3).
+  - Test: `long_acting.http`.

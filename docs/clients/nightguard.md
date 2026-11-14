@@ -86,11 +86,14 @@ carbs and boluses, and the report. Writes: care actions.
 
 | Field | Value |
 | --- | --- |
-| `upbat.display` | a string, such as `"88%"` |
+| `upbat.display` | a string, such as `"88%"`, from the newest device status with a battery in the last 30 minutes |
 | `iob.display` | anything, shown with a `U` after it |
 | `cob.display` | a number or a string of one, shown as whole grams |
 | `delta.mgdl` | a number or a string of one |
 | `delta.display` | a string, such as `"+6"` |
+
+The properties also have `pump`, `openaps` and `loop`, in Nightscout's shapes, for watch faces. Nightguard does not
+read them.
 
 ### Pump
 

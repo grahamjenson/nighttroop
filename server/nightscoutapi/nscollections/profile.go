@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"slices"
+	"strings"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/types"
@@ -31,11 +33,26 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 	if len(nsModel.Store) > consts.MaxProfilesPerStore {
 		return nsutils.ErrTooManyProfiles
 	}
+	// A store with no profile would be kept as nothing, and given back empty as if stored
+	if len(nsModel.Store) == 0 {
+		return nsutils.BadDataBodyErrorWithHint("store must have at least one profile")
+	}
 	if dbModel == nil {
 		return nil
 	}
 
 	return nil
+}
+
+// Rows are a preset for each of its profiles, by their names, as the store keeps them in no order
+func (c ProfileCollection) Rows(nsModel nightscoutmodels.ProfileStore) []sitedb.TableRow {
+	presets := NightscoutToDBCreateProfilePreset(nsModel, nightscoutmodels.ConverterContext{})
+	slices.SortFunc(presets, func(a, b sitedb.CreateProfilePresetParams) int { return strings.Compare(a.Name, b.Name) })
+	rows := make([]sitedb.TableRow, len(presets))
+	for i, preset := range presets {
+		rows[i] = sitedb.TableRow{Table: "profile_presets", Row: preset}
+	}
+	return rows
 }
 
 func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {

@@ -1,7 +1,9 @@
 package nsv2
 
 import (
+	"cmp"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
@@ -10,10 +12,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // PropertiesList lists the properties, or with {names} only the comma separated ones asked for, so an unknown name
@@ -39,7 +43,7 @@ func Properties(ctx context.Context, q *sitedb.Queries, now time.Time) map[strin
 	dr := LastDeviceStatusFromPWD(q, ctx)
 	last := func(groupType string) *sitedb.EventGroup { return LastOfType(q, ctx, groupType) }
 	properties := map[string]any{
-		"upbat": GetUptimeBattery(dr),
+		"upbat": GetUptimeBattery(LastBatteryStatus(q, ctx)),
 		"iob":   GetIOB(dr),
 		"cob":   GetCOB(dr),
 		"cage":  GetAge(last("Site Change"), now),
@@ -48,6 +52,8 @@ func Properties(ctx context.Context, q *sitedb.Queries, now time.Time) map[strin
 		"sage":  GetSensorAge(last("Sensor Start"), last("Sensor Change"), now),
 		"bgnow": struct{}{},
 	}
+	// Watch faces show the pump and the loop, from the loop's newest device status
+	properties["pump"], properties["openaps"], properties["loop"] = GetPump(ctx, dr, now), GetOpenAPS(dr, now), GetLoop(dr, now)
 
 	// Like Nightscout, bgnow is empty, and delta and direction left out, without a reading in the last 15 minutes
 	readings, err := q.AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: 15, Limit: 2})
@@ -265,4 +271,145 @@ func GetDelta(recent, previous *sitedb.GlucoseReading) Delta {
 		Interpolated: elapsed > 9, Mean5MinsAgo: recent.Mgdl - mgdl, Previous: GetBucket(previous),
 		Times: map[string]int64{"recent": recent.OccurredAt, "previous": previous.OccurredAt},
 	}
+}
+
+// Nightscout's levels of a pump value, and how recent a loop shows as looping, half Nightscout's 30 minute warning
+const levelNone, levelWarn, levelUrgent, loopRecent = -3, 1, 2, 15 * time.Minute
+
+// Pump is Nightscout's pump property: the device status's pump, and its values with labels, displays and levels
+type Pump struct {
+	Pump *nightscoutmodels.PumpStatus `json:"pump,omitempty"`
+	Data PumpData                     `json:"data"`
+}
+
+type PumpData struct {
+	Level     int        `json:"level"`
+	Clock     *PumpValue `json:"clock"`
+	Reservoir *PumpValue `json:"reservoir"`
+	Battery   *PumpValue `json:"battery,omitempty"`
+	Status    *PumpValue `json:"status,omitempty"`
+	Device    PumpValue  `json:"device"`
+}
+
+type PumpValue struct {
+	Value   any     `json:"value,omitempty"`
+	Label   string  `json:"label"`
+	Display *string `json:"display,omitempty"`
+	Level   *int    `json:"level,omitempty"`
+}
+
+// LoopState is how the loop is, as Nightscout's openaps status and loop display have it
+type LoopState struct {
+	Symbol string `json:"symbol"`
+	Code   string `json:"code"`
+	Label  string `json:"label"`
+}
+
+// level sets a value's level, urgent under urgent and a warning under warn, and the pump's, the highest of its values
+func (data *PumpData) level(value PumpValue, of, warn, urgent float64) *PumpValue {
+	value.Level = new(map[bool]int{true: levelWarn, false: levelNone}[of < warn])
+	if of < urgent {
+		value.Level = new(levelUrgent)
+	}
+	data.Level = max(data.Level, *value.Level)
+	return &value
+}
+
+// GetPump has Nightscout's levels: the clock over 30 and 60 minutes old (its minutes as negatives against them), the
+// reservoir under 10 and 5 U, and the battery under 30 and 20 percent. An Omnipod knows its reservoir only under 50 U.
+func GetPump(ctx context.Context, dr *sitedb.DeviceReport, now time.Time) Pump {
+	data := PumpData{Level: levelNone, Device: PumpValue{Label: "Device"}}
+	pump := nightscoutmodels.PumpStatus{}
+	if dr == nil || dr.PumpJson == nil || json.Unmarshal([]byte(*dr.PumpJson), &pump) != nil {
+		return Pump{Data: data}
+	}
+	data.Device.Display = dr.CreatedByDeviceName
+	if clock := pump.Clock; clock != nil {
+		value := PumpValue{Value: types.ISOString(clock.Time()), Label: "Last Clock", Display: new(display.TimeAgo(ctx, clock.UnixMilli(), now))}
+		data.Clock = data.level(value, -now.Sub(clock.Time()).Minutes(), -30, -60)
+	}
+	if reservoir := pump.Reservoir.Float64p(); reservoir != nil {
+		// As JavaScript's toPrecision(3)
+		decimals := max(0, 2-int(math.Floor(math.Log10(math.Max(*reservoir, 1)))))
+		value := PumpValue{Value: *reservoir, Label: "Reservoir", Display: new(fmt.Sprintf("%.*fU", decimals, *reservoir))}
+		data.Reservoir = data.level(value, *reservoir, 10, 5)
+	} else if pump.Manufacturer.Stringp() != nil && *pump.Manufacturer == "Insulet" {
+		data.Reservoir = &PumpValue{Label: "Reservoir", Display: new("50+ U")}
+	}
+	if battery := pump.Battery; battery != nil && battery.Percent.Float64p() != nil && *battery.Percent != 0 {
+		value := PumpValue{Value: *battery.Percent, Label: "Battery", Display: new(fmt.Sprintf("%v%%", *battery.Percent))}
+		data.Battery = data.level(value, float64(*battery.Percent), 30, 20)
+	}
+	if status := pump.Status; status != nil {
+		state := *cmp.Or(status.Status.Stringp(), new("normal"))
+		if status.Suspended.Bool() || status.Bolusing.Bool() {
+			state = map[bool]string{true: "bolusing", false: "suspended"}[status.Bolusing.Bool()]
+		}
+		data.Status = &PumpValue{Value: state, Label: "Status", Display: &state}
+	}
+	return Pump{Pump: &pump, Data: data}
+}
+
+// loopRun is the device status's openaps or loop as sent, or an object in it, with its moment, or nil without a time
+func loopRun(dr *sitedb.DeviceReport, loopName string, keys ...string) (map[string]any, *time.Time) {
+	run := map[string]any{}
+	if dr == nil || dr.LoopName == nil || *dr.LoopName != loopName || json.Unmarshal([]byte(*cmp.Or(dr.LoopStatusJson, new(""))), &run) != nil {
+		return nil, nil
+	}
+	for _, key := range keys {
+		run, _ = run[key].(map[string]any)
+	}
+	at, err := types.StringToTime(fmt.Sprint(cmp.Or(run["timestamp"], run["time"])))
+	if err != nil {
+		return nil, nil
+	}
+	run["moment"] = types.ISOString(at)
+	return run, &at
+}
+
+// GetOpenAPS has the last run, the newer of the enacted and suggested, with its eventual glucose and predictions.
+// Its status is not enacted, enacted or looping in the last 15 minutes, or else a warning.
+func GetOpenAPS(dr *sitedb.DeviceReport, now time.Time) map[string]any {
+	enacted, enactedAt := loopRun(dr, "openaps", "enacted")
+	suggested, suggestedAt := loopRun(dr, "openaps", "suggested")
+	iob, _ := loopRun(dr, "openaps", "iob")
+	result, recent, last := map[string]any{"lastEnacted": nil, "lastNotEnacted": nil, "lastSuggested": suggested,
+		"lastIOB": iob, "lastPredBGs": nil, "status": LoopState{"⚠", "warning", "Warning"}}, now.Add(-loopRecent), suggested
+	if suggestedAt != nil && suggestedAt.After(recent) {
+		result["status"] = LoopState{"↻", "looping", "Looping"}
+	}
+	if received := enacted["received"] == true || enacted["recieved"] == true; enacted != nil {
+		result[map[bool]string{true: "lastEnacted", false: "lastNotEnacted"}[received]] = enacted
+		if enactedAt.After(recent) {
+			result["status"] = map[bool]LoopState{true: {"⌁", "enacted", "Enacted"}, false: {"x", "notenacted", "Not Enacted"}}[received]
+		}
+		if received && (suggestedAt == nil || enactedAt.After(*suggestedAt)) {
+			last = enacted
+		}
+	}
+	if last != nil {
+		result["lastLoopMoment"], result["lastEventualBG"] = last["moment"], last["eventualBG"]
+		if predBGs, ok := last["predBGs"].(map[string]any); ok {
+			predBGs["moment"], result["lastPredBGs"] = last["moment"], predBGs
+		}
+	}
+	return result
+}
+
+// GetLoop has Loop's last status, with its enacted and predicted. Its display is an error, else enacted or looping
+// in the last 15 minutes, else a warning.
+func GetLoop(dr *sitedb.DeviceReport, now time.Time) map[string]any {
+	status, at := loopRun(dr, "loop")
+	enacted, _ := loopRun(dr, "loop", "enacted")
+	result := map[string]any{"lastLoop": status, "lastEnacted": enacted, "lastPredicted": status["predicted"],
+		"lastOkMoment": status["moment"], "display": LoopState{"⚠", "warning", "Warning"}}
+	switch {
+	case status["failureReason"] != nil:
+		result["lastOkMoment"], result["display"] = nil, LoopState{"x", "error", "Error"}
+	case enacted != nil && enacted["received"] != true:
+		result["display"] = LoopState{"x", "error", "Error"}
+	case at != nil && at.After(now.Add(-loopRecent)):
+		result["display"] = map[bool]LoopState{true: {"⌁", "enacted", "Enacted"}, false: {"↻", "looping", "Looping"}}[enacted != nil]
+	}
+	return result
 }

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"math"
 	"reflect"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -14,7 +13,6 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
 )
@@ -39,10 +37,6 @@ func (c TreatmentCollection) Validate(nsModel nightscoutmodels.Treatment, dbMode
 		slog.Error("treatment EventType is empty or unknown", "error", eventTypeError)
 		return nsutils.BadDataBodyErrorWithHint("EventType is nil or unknown: " + eventTypeError)
 	}
-	if err := validAmounts(nsModel); err != nil {
-		return err
-	}
-
 	// Validate the change
 	if dbModel == nil {
 		return nil
@@ -56,23 +50,20 @@ func (c TreatmentCollection) Validate(nsModel nightscoutmodels.Treatment, dbMode
 	return nil
 }
 
-// validAmounts refuses insulin or carbs far outside real use, before the database would, saying which, its range and
-// what was sent: xDrip+ drops a treatment it is refused, and every one queued after it, so it must say why
-func validAmounts(nsModel nightscoutmodels.Treatment) *nsutils.HTTPError {
-	amounts := []struct {
-		name, unit string
-		value      *types.FlexibleFloat64
-		max        float64
-	}{
-		{"insulin", "U", nsModel.Insulin, consts.MaxInsulinUnits},
-		{"carbs", "g", nsModel.Carbs, consts.MaxCarbsGrams},
+// Rows are its event group and its events, so insulin far outside real use refuses it, saying why, as xDrip+ drops a
+// treatment it is refused, and every one queued after it
+func (c TreatmentCollection) Rows(nsModel nightscoutmodels.Treatment) []sitedb.TableRow {
+	if nsModel.EventType == nil {
+		return nil
 	}
-	for _, a := range amounts {
-		if a.value != nil && !(math.Abs(a.value.Float64()) <= a.max) {
-			return nsutils.BadDataBodyErrorWithHint(fmt.Sprintf("%s must be between %v and %v %s (was %v)", a.name, -a.max, a.max, a.unit, a.value.Float64()))
+	bundle := TreatmentEventGroupBundle(context.Background(), nsModel)
+	rows := []sitedb.TableRow{{Table: "event_groups", Row: bundle.EventGroup}}
+	for _, event := range treatmentEvents {
+		if row, ok := event.row(&bundle); ok {
+			rows = append(rows, row)
 		}
 	}
-	return nil
+	return rows
 }
 
 func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
