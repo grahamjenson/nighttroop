@@ -1515,6 +1515,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - v1 search, newest start first: no `count` gives the newest 10 profile sets (as Nightscout), a `count` that number
   (maximum 1000).
 - v3 and the socket, with no filters and no limit: the newest.
+- A field of the profile set out of its limit (e.g. an `enteredBy` of 70 characters): left out, and each profile in
+  its `store` kept (see Value limits).
+- A profile set with no profile in its `store`: refused (400).
 - Loop's `loopSettings.scheduleOverride` (override running when sent): kept as an override preset (its `duration` in
   seconds). Loop reads it back.
 - Trio's remote control settings (bundle, device token, APNS environment, team, expiry) and override presets: kept, for

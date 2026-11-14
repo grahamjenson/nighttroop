@@ -270,10 +270,11 @@ type fieldScore struct {
 }
 
 // better is whether leaving out a field tells it better than another: it leaves out or puts right the value rather than
-// only change it; it is deeper, so a field rather than the object it is in; it changes fewer values, so a treatment's
-// insulin rather than its eventType, and an entry's sgv rather than its units; and it leaves the value out
+// only change it; it changes fewer values, so a treatment's insulin rather than its eventType, an entry's sgv rather
+// than its units, and a profile store's enteredBy rather than a profile in its store, which is the whole row; it is
+// deeper, so a field rather than the object it is in; and it leaves the value out
 func (s fieldScore) better(other fieldScore) bool {
-	return cmp.Or(cmp.Compare(s.class, other.class), cmp.Compare(s.depth, other.depth), cmp.Compare(other.changes, s.changes),
+	return cmp.Or(cmp.Compare(s.class, other.class), cmp.Compare(other.changes, s.changes), cmp.Compare(s.depth, other.depth),
 		cmp.Compare(btoi(s.gone), btoi(other.gone))) > 0
 }
 
