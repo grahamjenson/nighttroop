@@ -112,6 +112,7 @@ type EventGroup struct {
 	PumpID                    *string
 	PumpSerial                *string
 	PumpType                  *string
+	EndingPumpID              *string
 	SensorCode                *string
 	TransmitterID             *string
 	BolusCalculatorResultJson *string
