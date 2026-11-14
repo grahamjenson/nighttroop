@@ -156,6 +156,7 @@ Nighttroop keeps the `mbg` finger pricks. It accepts the `cal` records, but does
    body.
 3. **Download** (`getLatestTreatmentsNSResponses`): `GET /api/v1/treatments?find[created_at][$gte]=<24 hours ago>`,
    no `count`.
+   - Nighttroop, as Nightscout, gives the newest 1000 (`xdrip/default_counts.http`).
    - Needs `_id` (string) and `created_at` (ISO, with or without fractional seconds).
    - Adds unknown treatments. Takes any change to a known one's value, time, `enteredBy` or `notes`.
 4. **Check for deletions** (`reconcileRemoteTreatmentDeletions`): for each uploaded treatment of the last 24 hours
@@ -195,6 +196,7 @@ Nighttroop keeps the `mbg` finger pricks. It accepts the `cal` records, but does
 `updateDeviceStatus`: `GET /api/v1/devicestatus`, no `count`. Decoded as `[NightscoutDeviceStatusResponse]`
 (`NightscoutDeviceStatusModels.swift`).
 
+- Nighttroop, as Nightscout, gives the newest 10, newest first. It gave 1000 (`xdrip/default_counts.http`).
 - Every field is optional. A value of the wrong type fails the whole decode.
 - Integers: `mills`, `uploaderBattery`, `utcOffset`, `uploader.battery`, `pump.battery.percent` and each `duration`.
 - Reads: `created_at`, `device`, `isCharging`, `uploader`, `uploaderBattery`, `pump` (reservoir, battery, status,
