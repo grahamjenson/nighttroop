@@ -5,7 +5,7 @@ package sql
 // 2. then it will generate all migrations
 // 3. then it will extract all statments and reference in a single file for each folder
 
-//go:generate go run ./gen/gensql.go  -folder controldb
+//go:generate go run ./gen/gensql.go  -folder controldb -limits
 //go:generate go run ./gen/gensql.go  -folder sitedb -limits
 //go:generate go run ./gen/gensql.go  -folder jobsdb
 //go:generate go run ./gen/gensql.go  -folder logsdb

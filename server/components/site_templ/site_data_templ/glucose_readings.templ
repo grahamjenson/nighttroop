@@ -62,11 +62,6 @@ func formatGlucose(ctx context.Context, value float64, units *consts.Units) stri
 	return display.Glucose(ctx, value, units)
 }
 
-// glucoseInputAttributes keeps a typed in glucose value within what the store accepts, in the settings' units
-func glucoseInputAttributes(ctx context.Context) templ.Attributes {
-	return templ.Attributes{"step": "any", "min": "0.1", "max": fmt.Sprint(consts.Round(glucoseUnits(ctx).FromMGDL(1000), 1))}
-}
-
 // GlucoseColour is a range of glucose's theme colour as text, filled and stroked on a graph, and as a background
 type GlucoseColour struct{ Text, Fill, Stroke, Background string }
 
@@ -179,16 +174,16 @@ templ GlucoseReadingNew() {
 
 // glucoseFields are what a glucose reading has that a person can type in
 func glucoseFields(ctx context.Context) []addmodal.Field {
-	attributes, units := glucoseInputAttributes(ctx), string(*glucoseUnits(ctx))
+	units := glucoseUnits(ctx)
 	return []addmodal.Field{
-		{Name: "reading", Label: i18n.T(ctx, "site.data.glucose_readings.reading", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.glucose_readings.reading_help"), Required: true, Min: fmt.Sprint(attributes["min"]), Max: fmt.Sprint(attributes["max"]), Step: "any"},
+		{Name: "reading", Column: "glucose_readings.Mgdl", Units: units, Label: i18n.T(ctx, "site.data.glucose_readings.reading", i18n.Data{"Units": string(*units)}), Help: i18n.T(ctx, "site.data.glucose_readings.reading_help"), Required: true, Step: "any"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.glucose_readings.when_help"), Kind: addmodal.When},
 		{Name: "reading_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.glucose_readings.type_help"), Required: true, Kind: addmodal.Select, Options: []string{"mbg", "sgv"}, OptionLabel: func(t string) string { return display.ReadingType(ctx, t) }},
-		{Name: "measurement_method", Label: i18n.T(ctx, "site.data.glucose_readings.method"), Help: i18n.T(ctx, "site.data.glucose_readings.method_help"), Kind: addmodal.Text, Max: "32", Options: []string{"meter", "cgm", "manual"}},
+		{Name: "measurement_method", Column: "glucose_readings.MeasurementMethod", Label: i18n.T(ctx, "site.data.glucose_readings.method"), Help: i18n.T(ctx, "site.data.glucose_readings.method_help"), Kind: addmodal.Text, Options: []string{"meter", "cgm", "manual"}},
 		{Name: "direction", Label: i18n.T(ctx, "site.data.glucose_readings.trend"), Help: i18n.T(ctx, "site.data.glucose_readings.trend_help"), Kind: addmodal.Select, Options: []string{"DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown", "DoubleDown"},
 			OptionLabel: func(direction string) string { return directionDetail(&direction) }},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.glucose_readings.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "reason", Column: "glucose_readings.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.glucose_readings.reason_help"), Kind: addmodal.Text},
+		{Name: "notes", Column: "glucose_readings.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 

@@ -822,6 +822,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Add modal
 
 - All typeable fields, each with what it is, units, if required, and limits. Types: a dropdown or suggestions.
+- Limits: the limits of the field's column (site DB or control DB), as `min`, `max` and `maxlength`.
+  - A field can have stricter limits than its column (e.g. a dose: -100 to 100, not -500 to 500), never wider ones.
+  - A percent: its column's fraction as a percent (e.g. a profile switch: 10 to 500 %).
+  - Glucose: in the settings' units, to one decimal place (e.g. a reading: 0.1 to 55.5 mmol/L, or 0.1 to 1000 mg/dL).
+  - If the column refuses its limit (e.g. glucose more than 0), the input limit moves in by one step.
 - Time: in the settings' timezone; blank is now. Other blank fields: not set.
 
 #### Record details form

@@ -84,3 +84,7 @@
 
 
 
+1. Site API:
+    1. P4: Check the site API's values against the add modals' limits (`addmodal.Field` with its column), not
+       `apiutils.CheckRange` limits written again. Some differ: a food's energy and portions and a temp basal's percent
+       are at least 0 and 1% on the page, but the API takes less

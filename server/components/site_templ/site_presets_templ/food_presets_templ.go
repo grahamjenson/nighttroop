@@ -114,20 +114,19 @@ func FoodPresetNew() templ.Component {
 // foodPresetFields are what a food preset has that a person can type in, as a food intake has, less its time and notes
 func foodPresetFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "name", Label: i18n.T(ctx, "site.presets.food.name"), Help: i18n.T(ctx, "site.presets.food.name_help"), Required: true, Kind: addmodal.Text, Max: "64"},
-		{Name: "carbs", Label: i18n.T(ctx, "site.presets.food.carbs"), Help: i18n.T(ctx, "site.presets.food.carbs_help"), Min: "0", Max: "1000", Step: "any"},
-		{Name: "absorption_time_minutes", Label: i18n.T(ctx, "site.presets.food.absorption_time"), Help: i18n.T(ctx, "site.presets.food.absorption_time_help"),
-			Min: "0", Max: "1440", Step: "1"},
-		{Name: "fat", Label: i18n.T(ctx, "site.presets.food.fat"), Help: i18n.T(ctx, "site.presets.food.fat_help"), Min: "0", Max: "1000", Step: "any"},
-		{Name: "protein", Label: i18n.T(ctx, "site.presets.food.protein"), Help: i18n.T(ctx, "site.presets.food.protein_help"), Min: "0", Max: "1000", Step: "any"},
-		{Name: "fibre", Label: i18n.T(ctx, "site.presets.food.fibre"), Help: i18n.T(ctx, "site.presets.food.fibre_help"), Min: "0", Max: "1000", Step: "any"},
-		{Name: "energy", Label: i18n.T(ctx, "site.presets.food.energy"), Help: i18n.T(ctx, "site.presets.food.energy_help"), Min: "0", Max: "20000", Step: "any"},
-		{Name: "portions", Label: i18n.T(ctx, "site.presets.food.portions"), Help: i18n.T(ctx, "site.presets.food.portions_help"), Min: "0", Max: "1000", Step: "any"},
-		{Name: "pre_bolus", Label: i18n.T(ctx, "site.presets.food.pre_bolus"), Help: i18n.T(ctx, "site.presets.food.pre_bolus_help"), Min: "-1440", Max: "1440", Step: "1"},
-		{Name: "food_type", Label: i18n.T(ctx, "site.presets.food.type"), Help: i18n.T(ctx, "site.presets.food.type_help"), Kind: addmodal.Text, Max: "32",
+		{Name: "name", Column: "food_presets.Name", Label: i18n.T(ctx, "site.presets.food.name"), Help: i18n.T(ctx, "site.presets.food.name_help"), Required: true, Kind: addmodal.Text},
+		{Name: "carbs", Column: "food_presets.Carbs", Label: i18n.T(ctx, "site.presets.food.carbs"), Help: i18n.T(ctx, "site.presets.food.carbs_help"), Min: "0", Step: "any"},
+		{Name: "absorption_time_minutes", Column: "food_presets.AbsorptionTimeMinutes", Label: i18n.T(ctx, "site.presets.food.absorption_time"), Help: i18n.T(ctx, "site.presets.food.absorption_time_help"), Step: "1"},
+		{Name: "fat", Column: "food_presets.Fat", Label: i18n.T(ctx, "site.presets.food.fat"), Help: i18n.T(ctx, "site.presets.food.fat_help"), Min: "0", Step: "any"},
+		{Name: "protein", Column: "food_presets.Protein", Label: i18n.T(ctx, "site.presets.food.protein"), Help: i18n.T(ctx, "site.presets.food.protein_help"), Min: "0", Step: "any"},
+		{Name: "fibre", Column: "food_presets.Fibre", Label: i18n.T(ctx, "site.presets.food.fibre"), Help: i18n.T(ctx, "site.presets.food.fibre_help"), Min: "0", Step: "any"},
+		{Name: "energy", Column: "food_presets.Energy", Label: i18n.T(ctx, "site.presets.food.energy"), Help: i18n.T(ctx, "site.presets.food.energy_help"), Min: "0", Step: "any"},
+		{Name: "portions", Column: "food_presets.Portions", Label: i18n.T(ctx, "site.presets.food.portions"), Help: i18n.T(ctx, "site.presets.food.portions_help"), Min: "0", Step: "any"},
+		{Name: "pre_bolus", Column: "food_presets.PreBolus", Label: i18n.T(ctx, "site.presets.food.pre_bolus"), Help: i18n.T(ctx, "site.presets.food.pre_bolus_help"), Step: "1"},
+		{Name: "food_type", Column: "food_presets.FoodType", Label: i18n.T(ctx, "site.presets.food.type"), Help: i18n.T(ctx, "site.presets.food.type_help"), Kind: addmodal.Text,
 			Options: []string{"meal", "snack", "hypo treatment"}},
-		{Name: "category", Label: i18n.T(ctx, "site.presets.food.category"), Help: i18n.T(ctx, "site.presets.food.category_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "subcategory", Label: i18n.T(ctx, "site.presets.food.subcategory"), Help: i18n.T(ctx, "site.presets.food.subcategory_help"), Kind: addmodal.Text, Max: "64"},
+		{Name: "category", Column: "food_presets.Category", Label: i18n.T(ctx, "site.presets.food.category"), Help: i18n.T(ctx, "site.presets.food.category_help"), Kind: addmodal.Text},
+		{Name: "subcategory", Column: "food_presets.Subcategory", Label: i18n.T(ctx, "site.presets.food.subcategory"), Help: i18n.T(ctx, "site.presets.food.subcategory_help"), Kind: addmodal.Text},
 	}
 }
 
@@ -176,7 +175,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.Name))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 73, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 72, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -203,7 +202,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.Carbs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 76, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 75, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -230,7 +229,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.AbsorptionTimeMinutes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 79, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 78, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -257,7 +256,7 @@ func foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodPreset.Category))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 82, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/food_presets.templ`, Line: 81, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {

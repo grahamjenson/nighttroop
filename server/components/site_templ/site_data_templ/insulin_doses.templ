@@ -49,13 +49,13 @@ templ InsulinDoseNew() {
 // insulinDoseFields are what an insulin dose has that a person can type in
 func insulinDoseFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "dose", Label: i18n.T(ctx, "site.data.insulin_doses.dose"), Help: i18n.T(ctx, "site.data.insulin_doses.dose_help"), Required: true, Min: "-100", Max: "100", Step: "any"},
+		{Name: "dose", Column: "insulin_doses.Dose", Label: i18n.T(ctx, "site.data.insulin_doses.dose"), Help: i18n.T(ctx, "site.data.insulin_doses.dose_help"), Required: true, Min: "-100", Max: "100", Step: "any"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.insulin_doses.when_help"), Kind: addmodal.When},
-		{Name: "dose_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.insulin_doses.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"normal", "SMB"}},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.insulin_doses.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "split_now", Label: i18n.T(ctx, "site.data.insulin_doses.split_now"), Help: i18n.T(ctx, "site.data.insulin_doses.split_now_help"), Kind: addmodal.Percent, Min: "0", Max: "100"},
-		{Name: "split_ext", Label: i18n.T(ctx, "site.data.insulin_doses.split_ext"), Help: i18n.T(ctx, "site.data.insulin_doses.split_ext_help"), Kind: addmodal.Percent, Min: "0", Max: "100"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "dose_type", Column: "insulin_doses.DoseType", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.insulin_doses.type_help"), Kind: addmodal.Text, Options: []string{"normal", "SMB"}},
+		{Name: "reason", Column: "insulin_doses.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.insulin_doses.reason_help"), Kind: addmodal.Text},
+		{Name: "split_now", Column: "insulin_doses.SplitNow", Label: i18n.T(ctx, "site.data.insulin_doses.split_now"), Help: i18n.T(ctx, "site.data.insulin_doses.split_now_help"), Kind: addmodal.Percent},
+		{Name: "split_ext", Column: "insulin_doses.SplitExt", Label: i18n.T(ctx, "site.data.insulin_doses.split_ext"), Help: i18n.T(ctx, "site.data.insulin_doses.split_ext_help"), Kind: addmodal.Percent},
+		{Name: "notes", Column: "insulin_doses.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 
