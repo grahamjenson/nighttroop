@@ -1006,6 +1006,16 @@ func (m *EventGroup) SetClientCreatedAt(v *int64) {
 	m.ClientCreatedAt = v
 }
 
+// GetEmulatedTreatmentJson returns the EmulatedTreatmentJson value.
+func (m EventGroup) GetEmulatedTreatmentJson() *string {
+	return m.EmulatedTreatmentJson
+}
+
+// SetEmulatedTreatmentJson sets the EmulatedTreatmentJson value and returns the updated EventGroup.
+func (m *EventGroup) SetEmulatedTreatmentJson(v *string) {
+	m.EmulatedTreatmentJson = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -10096,6 +10106,16 @@ func (m *CreateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
 }
 
+// GetEmulatedTreatmentJson returns the EmulatedTreatmentJson value.
+func (m CreateEventGroupParams) GetEmulatedTreatmentJson() *string {
+	return m.EmulatedTreatmentJson
+}
+
+// SetEmulatedTreatmentJson sets the EmulatedTreatmentJson value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetEmulatedTreatmentJson(v *string) {
+	m.EmulatedTreatmentJson = v
+}
+
 // GetSyncIdentifier returns the SyncIdentifier value.
 func (m CreateEventGroupParams) GetSyncIdentifier() *string {
 	return m.SyncIdentifier
@@ -10844,6 +10864,16 @@ func (m RewriteEventGroupParams) GetBolusCalculatorResultJson() *string {
 // SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated RewriteEventGroupParams.
 func (m *RewriteEventGroupParams) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
+}
+
+// GetEmulatedTreatmentJson returns the EmulatedTreatmentJson value.
+func (m RewriteEventGroupParams) GetEmulatedTreatmentJson() *string {
+	return m.EmulatedTreatmentJson
+}
+
+// SetEmulatedTreatmentJson sets the EmulatedTreatmentJson value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetEmulatedTreatmentJson(v *string) {
+	m.EmulatedTreatmentJson = v
 }
 
 // GetSyncIdentifier returns the SyncIdentifier value.

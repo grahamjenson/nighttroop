@@ -166,9 +166,13 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring22 := *source.BolusCalculatorResultJson
 		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring22
 	}
+	if source.EmulatedTreatmentJson != nil {
+		xstring23 := *source.EmulatedTreatmentJson
+		sitedbCreateEventGroupParams.EmulatedTreatmentJson = &xstring23
+	}
 	if source.SyncIdentifier != nil {
-		xstring23 := *source.SyncIdentifier
-		sitedbCreateEventGroupParams.SyncIdentifier = &xstring23
+		xstring24 := *source.SyncIdentifier
+		sitedbCreateEventGroupParams.SyncIdentifier = &xstring24
 	}
 	if source.ClientCreatedAt != nil {
 		xint644 := *source.ClientCreatedAt
@@ -180,12 +184,12 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
-		xstring24 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring24
+		xstring25 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring25
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring25 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring25
+		xstring26 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring26
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateEventGroupParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -201,6 +205,7 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		typesJSONTextString := types.JSONTextString(*source.BolusCalculatorResultJson)
 		nightscoutmodelsTreatment.BolusCalculatorResult = &typesJSONTextString
 	}
+	nightscoutmodelsTreatment.EmulatedTreatment = StringToRawJSON(source.EmulatedTreatmentJson)
 	nightscoutmodelsTreatment.Duration = MinutesToDuration(source.DurationMinutes)
 	if source.OriginalDurationMs != nil {
 		typesFlexibleInt64 := types.FlexibleInt64(*source.OriginalDurationMs)
@@ -1148,6 +1153,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		sitedbEventGroup.SyncIdentifier = &xstring12
 	}
 	sitedbEventGroup.ClientCreatedAt = DateStringToMillis(source.CreationDate)
+	sitedbEventGroup.EmulatedTreatmentJson = RawJSONToString(source.EmulatedTreatment)
 	if source.Notes != nil {
 		xstring13 := SanitizedStringToString(*source.Notes)
 		sitedbEventGroup.Notes = &xstring13
