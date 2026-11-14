@@ -126,11 +126,13 @@ func TestNotVisibleWaitsForEveryMatchToGo(t *testing.T) {
 	require.True(t, swapped)
 }
 
-// The page shows its heading and a select a second and a half after it loads: longer than the 1s default timeout the
-// BDD tests set, as a busy CI runner can take to answer even for an element already on the page
+// The page shows its heading, a select and an input showing a value other than its attribute a second and a half after
+// it loads: longer than the 1s default timeout the BDD tests set, as a busy CI runner can take to answer even for an
+// element already on the page
 const slowPage = `<html><body><script>
 setTimeout(() => { document.body.innerHTML = '<h1 id="slow">Nighttroop</h1>' +
-	'<select id="pick"><option value="a">A</option><option value="b">B</option></select>' }, 1500)
+	'<select id="pick"><option value="a">A</option><option value="b">B</option></select>' +
+	'<input id="typed" value="attribute">'; document.getElementById("typed").value = "shown" }, 1500)
 </script></body></html>`
 
 // An assert or action reading an element waits as long as one finding it, not the browser's 1s default, so a slow
@@ -149,6 +151,10 @@ func TestReadsWaitPastTheDefaultTimeout(t *testing.T) {
 	}{
 		{"ASSERT_TEXT_EQUALS", func(t *testing.T, page playwright.Page) error {
 			return (&AssertTextEquals{Locator: "#slow", Text: "Nighttroop"}).Execute(t, map[string]any{}, page, nil)
+		}},
+		// An input's text is the value it shows, not its attribute
+		{"ASSERT_TEXT_EQUALS an input", func(t *testing.T, page playwright.Page) error {
+			return (&AssertTextEquals{Locator: "#typed", Text: "shown"}).Execute(t, map[string]any{}, page, nil)
 		}},
 		{"SAVE_TEXT", func(t *testing.T, page playwright.Page) error {
 			ctx := map[string]any{}

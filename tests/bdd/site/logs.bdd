@@ -75,9 +75,11 @@ INPUT #site--events--filter--search CREATED
 CLICK #site--events--filter--submit
 ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
 SCREENSHOT events_searched
+// A search sent with Enter keeps its text in the box
 INPUT #site--events--filter--search nothing like this
-CLICK #site--events--filter--submit
+PRESS Enter
 ASSERT_TEXT_VISIBLE No events here.
+ASSERT_TEXT_EQUALS #site--events--filter--search nothing like this
 SCREENSHOT events_no_match
 
 // Clearing the type and search shows every event again

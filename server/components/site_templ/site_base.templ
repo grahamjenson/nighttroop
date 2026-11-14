@@ -28,6 +28,9 @@ templ Base() {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			// No settle delay: htmx's CSS transitions give a swapped input its old attributes until it settles, which empties
+			// the focused one, such as a date picked or a search sent with Enter
+			<meta name="htmx-config" content="defaultSettleDelay:0"/>
 			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 			<link rel="apple-touch-icon" href="/logo.png"/>
 			<!-- Tailwind CSS -->
