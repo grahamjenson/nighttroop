@@ -69,24 +69,34 @@ func ParseQuery(values url.Values) (nsquery.Query, *HTTPError) {
 	return q, nil
 }
 
-// deleteFilters are the query's keys a delete takes, those xDrip4iOS sends to delete readings, and Trio and iAPS to
-// delete readings, carbs, insulin and overrides
-var deleteFilters = map[string]bool{"token": true, "find[type]": true, "find[date][$gte]": true, "find[date][$lte]": true, "find[date][$in][]": true,
-	"find[id][$eq]": true, "find[created_at][$eq]": true, "find[dateString][$eq]": true, "find[eventType][$eq]": true, "find[carbs][$exists]": true}
+// deleteFilters are the query's keys a delete takes, and whether only a treatments delete takes it, as a reading's
+// search does not filter on it: those xDrip4iOS sends to delete readings, Trio to delete readings, carbs, insulin and
+// overrides, and iAPS to delete carbs, insulin, manual glucose, overrides and announcements
+var deleteFilters = map[string]bool{"token": false, "count": false, "find[type]": false, "find[date][$gte]": false,
+	"find[date][$lte]": false, "find[date][$in][]": false, "find[id][$eq]": false, "find[dateString][$eq]": false,
+	"find[created_at][$eq]": false, "find[created_at][$gte]": false, "find[created_at][$lte]": false,
+	"find[eventType][$eq]": false, "find[eventType]": false, "find[enteredBy]": true, "find[carbs][$exists]": true,
+	"find[bolus][$exists]": true, "find[glucose][$exists]": true, "find[creation_date][$eq]": true}
 
-// maxDeleteAlternatives is the most find[$or] alternatives a delete has, as each is a search
-const maxDeleteAlternatives = 10
+const (
+	// maxDeleteAlternatives is the most find[$or] alternatives a delete has, as each is a search
+	maxDeleteAlternatives = 10
+	// maxDeleteCount is the most a delete's count deletes, the newest first, as iAPS deletes its newest override
+	maxDeleteCount = 10
+	// maxDeleteRangeMs is the longest a delete's date range from $gte to $lte is, 2 days
+	maxDeleteRangeMs = 2 * 24 * 60 * 60 * 1000
+)
 
 // ParseDeleteQueries is a delete's query for each of its find[$or] alternatives, or the one query without them, each
 // as ParseDeleteQuery takes it
-func ParseDeleteQueries(values url.Values) ([]nsquery.Query, *HTTPError) {
+func ParseDeleteQueries(values url.Values, collection Collection) ([]nsquery.Query, *HTTPError) {
 	alternatives := nsquery.OrBranches(values)
 	if len(alternatives) > maxDeleteAlternatives {
 		return nil, ErrBadQueryError("a delete has at most 10 find[$or] alternatives")
 	}
 	queries := make([]nsquery.Query, 0, len(alternatives))
 	for _, alternative := range alternatives {
-		query, err := ParseDeleteQuery(alternative)
+		query, err := ParseDeleteQuery(alternative, collection)
 		if err != nil {
 			return nil, err
 		}
@@ -95,17 +105,25 @@ func ParseDeleteQueries(values url.Values) ([]nsquery.Query, *HTTPError) {
 	return queries, nil
 }
 
-// ParseDeleteQuery is the query of a delete, which deletes what a search with it finds. Any other key is refused, as is
-// a query without a date, so a filter not understood is never ignored to delete more than was asked.
-func ParseDeleteQuery(values url.Values) (nsquery.Query, *HTTPError) {
+// ParseDeleteQuery is the query of a delete of the collection, which deletes what a search with it finds. Any other
+// key is refused, so a filter not understood is never ignored to delete more than was asked. So is a query without a
+// date or an id, unless it has a type and a count, a count of more than 10, and a date range of more than 2 days.
+func ParseDeleteQuery(values url.Values, collection Collection) (nsquery.Query, *HTTPError) {
 	for key := range values {
-		if !deleteFilters[key] {
+		if treatmentsOnly, ok := deleteFilters[key]; !ok || treatmentsOnly && collection != Treatments {
 			return nsquery.Query{}, ErrBadQueryError(key + " cannot be used to delete")
 		}
 	}
 	query, err := ParseQuery(values)
-	if err == nil && query.DateGTE == nil && query.DateLTE == nil && query.DateIn == nil && query.DateEQ == nil && query.IDEq == nil {
-		err = ErrBadQueryError("a delete needs find[date][$gte], find[date][$lte], find[date][$in][], a date's $eq or find[id][$eq]")
+	dated := query.DateGTE != nil || query.DateLTE != nil || query.DateIn != nil || query.DateEQ != nil || query.IDEq != nil || query.ClientCreatedAtEQ != nil
+	switch {
+	case err != nil:
+	case query.CountGiven && (query.CountAsked < 1 || query.CountAsked > maxDeleteCount):
+		err = ErrBadQueryError("a delete's count is 1 to 10")
+	case query.DateGTE != nil && query.DateLTE != nil && *query.DateLTE-*query.DateGTE > maxDeleteRangeMs:
+		err = ErrBadQueryError("a delete's find[...][$gte] and find[...][$lte] are at most 2 days apart")
+	case !dated && (!query.CountGiven || query.TypeEq == nil):
+		err = ErrBadQueryError("a delete needs find[date][$gte], find[date][$lte], find[date][$in][], a date's $eq, find[id][$eq], or find[eventType] and a count")
 	}
 	return query, err
 }

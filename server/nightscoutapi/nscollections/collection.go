@@ -688,7 +688,11 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 	}
 	defer tx.Rollback()
 
-	query.IncludeDeleted, query.Skip, query.Limit = false, 0, apiquery.MaxQueryLimit
+	// A count deletes that many, the newest first, as iAPS deletes its newest override
+	query.IncludeDeleted, query.Skip = false, 0
+	if !query.CountGiven {
+		query.Limit = apiquery.MaxQueryLimit
+	}
 	found, err := c.db.SearchModels(q, ctx, query)
 	for i := 0; err == nil && i < len(found); i++ {
 		_, err = c.db.Delete(q, ctx, (*found[i]).GetID(), false)

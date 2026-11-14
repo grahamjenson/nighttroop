@@ -83,3 +83,9 @@
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
+
+1. Database:
+    1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
+       column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
+    1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
+       settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out

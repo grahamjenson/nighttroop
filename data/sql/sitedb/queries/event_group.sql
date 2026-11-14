@@ -32,6 +32,7 @@ INSERT INTO event_groups (
     transmitter_id,
     bolus_calculator_result_json,
     sync_identifier,
+    client_created_at,
 
     occurred_at,
     utc_offset_minutes,
@@ -69,6 +70,7 @@ VALUES (
     NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sqlc.narg('SyncIdentifier'),
+    sqlc.narg('ClientCreatedAt'),
     sqlc.arg('OccurredAt'),
     sqlc.arg('UtcOffsetMinutes'),
     sqlc.arg('CreatedByAppName'),
@@ -267,6 +269,10 @@ WHERE
     AND (CAST(sqlc.narg('CarbsExists') AS BOOL) IS NULL OR (fi.carbs IS NOT NULL) = sqlc.narg('CarbsExists'))
     AND (CAST(sqlc.narg('DurationExists') AS BOOL) IS NULL OR (COALESCE(eg.duration_minutes, a.duration_minutes, tb.duration_minutes, tt.duration_minutes, ps.duration_minutes) IS NOT NULL) = sqlc.narg('DurationExists'))
     AND (CAST(sqlc.narg('EnteredByEq') AS TEXT) IS NULL OR COALESCE(eg.entered_by, eg.created_by_identity_name) = sqlc.narg('EnteredByEq'))
+    -- iAPS deletes insulin and manual glucose by whether they have them, and carbs by when they were entered
+    AND (CAST(sqlc.narg('InsulinExists') AS BOOL) IS NULL OR (idose.dose IS NOT NULL) = sqlc.narg('InsulinExists'))
+    AND (CAST(sqlc.narg('GlucoseExists') AS BOOL) IS NULL OR (gr.mgdl IS NOT NULL) = sqlc.narg('GlucoseExists'))
+    AND (CAST(sqlc.narg('ClientCreatedAtEQ') AS INTEGER) IS NULL OR eg.client_created_at = sqlc.narg('ClientCreatedAtEQ'))
     AND (CAST(sqlc.narg('EnteredByNin') AS TEXT) IS NULL OR COALESCE(eg.entered_by, eg.created_by_identity_name) NOT IN (SELECT value FROM json_each(sqlc.narg('EnteredByNin'))))
 
 
@@ -310,6 +316,7 @@ UPDATE event_groups SET
     transmitter_id = NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
     bolus_calculator_result_json = NULLIF(CAST(sqlc.narg('BolusCalculatorResultJson') AS TEXT), ''),
     sync_identifier = sqlc.narg('SyncIdentifier'),
+    client_created_at = sqlc.narg('ClientCreatedAt'),
     occurred_at = sqlc.arg('OccurredAt'),
     utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
     created_by_app_name = sqlc.arg('CreatedByAppName'),

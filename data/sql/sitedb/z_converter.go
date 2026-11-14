@@ -410,10 +410,14 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring22 := *source.SyncIdentifier
 		sitedbCreateEventGroupParams.SyncIdentifier = &xstring22
 	}
+	if source.ClientCreatedAt != nil {
+		xint644 := *source.ClientCreatedAt
+		sitedbCreateEventGroupParams.ClientCreatedAt = &xint644
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint644 := *source.UtcOffsetMinutes
-		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint644
+		xint645 := *source.UtcOffsetMinutes
+		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
 		xstring23 := *source.CreatedByAppName
@@ -425,8 +429,8 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint645 := *source.CreatedByIdentityID
-		sitedbCreateEventGroupParams.CreatedByIdentityID = &xint645
+		xint646 := *source.CreatedByIdentityID
+		sitedbCreateEventGroupParams.CreatedByIdentityID = &xint646
 	}
 	return sitedbCreateEventGroupParams
 }
@@ -2311,6 +2315,10 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xstring20 := *source.SyncIdentifier
 		sitedbEventGroup.SyncIdentifier = &xstring20
 	}
+	if source.ClientCreatedAt != nil {
+		xint642 := *source.ClientCreatedAt
+		sitedbEventGroup.ClientCreatedAt = &xint642
+	}
 	if source.Notes != nil {
 		xstring21 := *source.Notes
 		sitedbEventGroup.Notes = &xstring21
@@ -2320,20 +2328,20 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		sitedbEventGroup.Reason = &xstring22
 	}
 	if source.DurationMinutes != nil {
-		xint642 := *source.DurationMinutes
-		sitedbEventGroup.DurationMinutes = &xint642
+		xint643 := *source.DurationMinutes
+		sitedbEventGroup.DurationMinutes = &xint643
 	}
 	if source.DurationMs != nil {
-		xint643 := *source.DurationMs
-		sitedbEventGroup.DurationMs = &xint643
+		xint644 := *source.DurationMs
+		sitedbEventGroup.DurationMs = &xint644
 	}
 	if source.DeletedAt != nil {
-		xint644 := *source.DeletedAt
-		sitedbEventGroup.DeletedAt = &xint644
+		xint645 := *source.DeletedAt
+		sitedbEventGroup.DeletedAt = &xint645
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint645 := *source.UtcOffsetMinutes
-		sitedbEventGroup.UtcOffsetMinutes = &xint645
+		xint646 := *source.UtcOffsetMinutes
+		sitedbEventGroup.UtcOffsetMinutes = &xint646
 	}
 	sitedbEventGroup.OccurredAt = source.OccurredAt
 	sitedbEventGroup.CreatedAt = source.CreatedAt
@@ -2347,16 +2355,16 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		sitedbEventGroup.CreatedByDeviceName = &xstring24
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint646 := *source.UpdatedByIdentityID
-		sitedbEventGroup.UpdatedByIdentityID = &xint646
+		xint647 := *source.UpdatedByIdentityID
+		sitedbEventGroup.UpdatedByIdentityID = &xint647
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring25 := *source.UpdatedByIdentityName
 		sitedbEventGroup.UpdatedByIdentityName = &xstring25
 	}
 	if source.CreatedByIdentityID != nil {
-		xint647 := *source.CreatedByIdentityID
-		sitedbEventGroup.CreatedByIdentityID = &xint647
+		xint648 := *source.CreatedByIdentityID
+		sitedbEventGroup.CreatedByIdentityID = &xint648
 	}
 	sitedbEventGroup.CreatedByIdentityName = source.CreatedByIdentityName
 	return sitedbEventGroup

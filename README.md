@@ -55,7 +55,7 @@ See [docs/config.md](docs/config.md) for all the env vars.
 | ----- | -------- |
 | All features | [REQUIREMENTS.md](REQUIREMENTS.md) |
 | Configuration | [docs/config.md](docs/config.md) |
-| Apps that use Nighttroop | [docs/clients](docs/clients): [AAPS](docs/clients/aaps.md), [Loop](docs/clients/loop.md), [Trio](docs/clients/trio.md), [LoopFollow](docs/clients/loopfollow.md), [xDrip+](docs/clients/xdrip.md), [xDrip4iOS](docs/clients/xdrip4ios.md), [Juggluco](docs/clients/juggluco.md), [Nightguard](docs/clients/nightguard.md) |
+| Apps that use Nighttroop | [docs/clients](docs/clients): [AAPS](docs/clients/aaps.md), [Loop](docs/clients/loop.md), [Trio](docs/clients/trio.md), [iAPS](docs/clients/iaps.md), [LoopFollow](docs/clients/loopfollow.md), [xDrip+](docs/clients/xdrip.md), [xDrip4iOS](docs/clients/xdrip4ios.md), [Juggluco](docs/clients/juggluco.md), [Nightguard](docs/clients/nightguard.md) |
 | Development | [DEVELOPMENT.md](DEVELOPMENT.md), [AGENTS.md](AGENTS.md), [AI_POLICY.md](AI_POLICY.md) |
 | Database migrations | [docs/migrations.md](docs/migrations.md) |
 | Data limits and truncation | [docs/truncation.md](docs/truncation.md) |
