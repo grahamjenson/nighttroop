@@ -85,6 +85,10 @@
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
+    1. P3: A connector sync publishes each record it adds alone, so Socket.IO followers get one `dataUpdate` for each
+       record of a backfill. Batch each sync's records, as a Nightscout API request's are (`httputils.BatchModelChanges`)
+    1. P3: A v1 delete by event type (`DELETE /api/v1/treatments/<eventType>`) publishes no model change, so
+       Socket.IO followers and `/storage` sockets are not told the treatments are gone
 
 1. Database:
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a

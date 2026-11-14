@@ -2,11 +2,14 @@ package httputils
 
 import (
 	"bytes"
+	"context"
 	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -61,4 +64,42 @@ func TestCheckIssuedAfterCredentialsChanged(t *testing.T) {
 			require.Equal(t, tt.refused, err != nil)
 		})
 	}
+}
+
+// A write's model changes are each published alone as they are made, marked as batched, then all together once it is
+// done; a change made after that is published alone, as is one made with no batch
+func TestBatchModelChanges(t *testing.T) {
+	bus := events.NewSiteBus()
+	var published []events.Event
+	bus.Subscribe("abcdefgh", func(event events.Event) { published = append(published, event) })
+	ctx := CreateSiteContext(context.Background(), &config.ServerConfig{Events: bus}, nil, nil, nil, "abcdefgh", "", HTTPActionWrite, AcceptTypeJSON, ContentTypeJSON)
+
+	batched, publish := BatchModelChanges(ctx)
+	GetSiteContext(batched).PublishModelChange(events.Created, &controldb.Site{ID: "one"})
+	GetSiteContext(batched).PublishModelChange(events.Deleted, &controldb.Site{ID: "two"})
+	require.Len(t, published, 2)
+	require.True(t, published[0].Batched)
+	require.True(t, published[1].Batched)
+
+	publish()
+	require.Len(t, published, 3)
+	require.Equal(t, events.ModelsChanged, published[2].Name)
+	require.Equal(t, "abcdefgh", published[2].SiteID)
+	require.Equal(t, []events.Event{published[0], published[1]}, published[2].Attributes)
+
+	// Published once: a change after it, or with the site context not batched, is sent alone
+	GetSiteContext(batched).PublishModelChange(events.Updated, &controldb.Site{ID: "one"})
+	publish()
+	GetSiteContext(ctx).PublishModelChange(events.Updated, &controldb.Site{ID: "two"})
+	require.Len(t, published, 5)
+	require.False(t, published[3].Batched)
+	require.False(t, published[4].Batched)
+
+	// A write with no changes publishes nothing, and one with no site context is left as it is
+	_, publish = BatchModelChanges(ctx)
+	publish()
+	require.Len(t, published, 5)
+	none, publish := BatchModelChanges(context.Background())
+	publish()
+	require.Nil(t, GetSiteContext(none))
 }

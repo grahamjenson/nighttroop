@@ -57,6 +57,8 @@ const (
 	// back under it, their Attributes a config.ResourceLevel
 	ResourceHigh      Name = "resource_high"
 	ResourceRecovered Name = "resource_recovered"
+	// ModelsChanged is the model changes one write made, its Attributes their []Event, each also published alone
+	ModelsChanged Name = "models_changed"
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
@@ -96,6 +98,8 @@ type Event struct {
 	// *sitedb.GlucoseReading or *sitedb.EventGroupsBundle; a deleted model is the row as it was before.
 	Action Action
 	Model  any
+	// Batched is a model change that is also in its write's ModelsChanged, so its live update is sent with the others
+	Batched bool
 }
 
 // IsPersisted is whether the event is kept in the logs DB

@@ -114,7 +114,7 @@ func (ws *Websocket) siteServer(siteID string, create bool) *siteSockets {
 	alarm.OnConnection(ws.onAlarmConnect)
 	unsubscribe := ws.config.Events.Subscribe(siteID, func(event events.Event) {
 		// Model changes are sent to the site's sockets, its announcements and an identity's alarms to its /alarm sockets
-		if event.Model != nil {
+		if event.Model != nil || event.Name == events.ModelsChanged {
 			ws.broadcastChange(main, alarm, event)
 			sendAnnouncement(alarm, event)
 		}

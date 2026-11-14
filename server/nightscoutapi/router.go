@@ -46,6 +46,8 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 		r.Use(httputils.CountRoutes(config.Usage, "nightscout"))
+		// A request's records reach the socket's followers in one dataUpdate, as Nightscout sends one for each write
+		r.Use(httputils.BatchModelChangesMiddleware)
 
 		r.Get("/api/v2/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
 		r.Get("/api/v2/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))

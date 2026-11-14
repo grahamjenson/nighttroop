@@ -1652,6 +1652,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 #### Live updates and notifications
 
 - Live updates use the site's own settings (e.g. time zone), glucose in mg/dL.
+- One write gives one `dataUpdate` delta with all its records, as in Nightscout. A write is one Nightscout API
+  request, or one socket `dbAdd`, `dbUpdate`, `dbUpdateUnset` or `dbRemove`. Example: 9 entries in one POST give one
+  `dataUpdate` with 9 `sgvs`.
+- `/storage` sockets get each record of a write as its own `create`, `update` or `delete`, as in Nightscout.
 - To each `/alarm` socket that can read:
   - A new Announcement, its notes as the message (AAPS shows it as a notification). An Announcement added on the
     site has its notification's notes as the message.

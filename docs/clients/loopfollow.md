@@ -160,6 +160,8 @@ Nighttroop keeps each status's `loop` or `openaps` as sent for 1 day, also when 
 4. `dataUpdate` (`NightscoutSocketDataHandler.swift`): with no `delta` (the first), it fetches all. With
    `delta: true`, only its collections: `sgvs` or `mbgs`, `devicestatus`, `treatments`, `profiles`. Nothing
    else is read.
+5. One upload gives one `dataUpdate`, however many records it has. Thus LoopFollow fetches once for a backlog that
+   Loop uploads after it was offline.
 
 ## Quirks
 

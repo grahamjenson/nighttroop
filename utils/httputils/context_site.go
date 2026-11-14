@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
@@ -42,6 +43,8 @@ type SiteContext struct {
 	// settings in effect with them
 	mgdl         bool
 	mgdlSettings *settings.CombinedSettingsMap
+	// batch keeps the model changes of one write, for its ModelsChanged; with none, each change is published alone
+	batch *modelChanges
 }
 
 // SetMgdlUnits makes glucose read and written in the context always mg/dL, whatever the identity's or site's units,
@@ -93,8 +96,63 @@ func CreateSiteContext(ctx context.Context, config *config.ServerConfig, control
 // server's events
 func (s *SiteContext) PublishModelChange(action events.Action, model any) {
 	if s.Config != nil && s.Config.Events != nil {
-		s.Config.Events.Publish(s.SiteID, events.ModelChange(s.SiteID, action, model))
+		event := events.ModelChange(s.SiteID, action, model)
+		event.Batched = s.batch.add(event)
+		s.Config.Events.Publish(s.SiteID, event)
 	}
+}
+
+// modelChanges are the model changes of one write, kept until it is done
+type modelChanges struct {
+	mu      sync.Mutex
+	changes []events.Event
+	done    bool
+}
+
+// add keeps a change for its write's ModelsChanged, and is false when there is no write still going to publish it
+func (b *modelChanges) add(event events.Event) bool {
+	if b == nil {
+		return false
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.done {
+		return false
+	}
+	event.Batched = true
+	b.changes = append(b.changes, event)
+	return true
+}
+
+// BatchModelChanges is ctx with a copy of its site context that keeps each model change made with it, and publish,
+// which publishes them as one ModelsChanged event once the write is done. Each change is still published alone as it
+// is made, but a live update sends a write's records together, as Nightscout sends one dataUpdate for each write.
+func BatchModelChanges(ctx context.Context) (_ context.Context, publish func()) {
+	s := GetSiteContext(ctx)
+	if s == nil || s.Config == nil || s.Config.Events == nil {
+		return ctx, func() {}
+	}
+	batched := *s
+	batch := &modelChanges{}
+	batched.batch = batch
+	return context.WithValue(ctx, siteContextKey, &batched), func() {
+		batch.mu.Lock()
+		changes := batch.changes
+		batch.changes, batch.done = nil, true
+		batch.mu.Unlock()
+		if len(changes) > 0 {
+			s.Config.Events.Publish(s.SiteID, events.Event{Name: events.ModelsChanged, SiteID: s.SiteID, StartedAt: changes[0].StartedAt, Attributes: changes})
+		}
+	}
+}
+
+// BatchModelChangesMiddleware sends the model changes of each request as one ModelsChanged, as BatchModelChanges does
+func BatchModelChangesMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, publish := BatchModelChanges(r.Context())
+		defer publish()
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 // //

@@ -378,7 +378,9 @@ func TestSocketServerIsFreedOnceItHasNoSessions(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			controlDB, identity := siteIdentity(t)
 			siteCtx := httputils.CreateSiteContext(context.Background(), testConfig, controlDB, nil, nil, identity.SiteID, "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
-			found := func(*config.ServerConfig, context.Context, string) (*controldb.SiteIdentity, error) { return identity, nil }
+			found := func(*config.ServerConfig, context.Context, string) (*controldb.SiteIdentity, error) {
+				return identity, nil
+			}
 			ws := NewWebsocket(controlDB, testConfig, nil, found, found)
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ws.ServeHTTP(w, r.WithContext(siteCtx)) }))
 			t.Cleanup(ts.Close)
@@ -432,4 +434,41 @@ func TestSocketServerIsFreedOnceItHasNoSessions(t *testing.T) {
 			announce(announced)
 		})
 	}
+}
+
+// fakeDocument is a record with only its fields
+type fakeDocument map[string]any
+
+func (d fakeDocument) Identifier() string                  { return fmt.Sprint(d["_id"]) }
+func (d fakeDocument) Modified() int64                     { return 0 }
+func (d fakeDocument) OccurredAt() int64                   { return 1000 }
+func (d fakeDocument) Fields(bool) map[string]any          { return map[string]any(d) }
+func (d fakeDocument) JSON(bool, []string) json.RawMessage { return nil }
+
+// One write's changes are one delta, each record in its collection's list, as Nightscout's delta has them: a removed
+// or updated treatment says so, and a removed entry is not sent
+func TestDeltaOfAWritesChanges(t *testing.T) {
+	delta := deltaOf([]change{
+		{collection: nsutils.Entries, record: fakeDocument{"_id": "e1", "type": "sgv", "sgv": 100.0}, action: events.Created},
+		{collection: nsutils.Entries, record: fakeDocument{"_id": "e2", "type": "sgv", "sgv": 110.0}, action: events.Created},
+		{collection: nsutils.Entries, record: fakeDocument{"_id": "e3", "type": "sgv", "sgv": 120.0}, action: events.Deleted},
+		{collection: nsutils.Treatments, record: fakeDocument{"_id": "t1", "eventType": "Note"}, action: events.Created},
+		{collection: nsutils.Treatments, record: fakeDocument{"_id": "t2", "eventType": "Note"}, action: events.Updated},
+		{collection: nsutils.Treatments, record: fakeDocument{"_id": "t3", "eventType": "Note"}, action: events.Deleted},
+		{collection: nsutils.Devicestatus, record: fakeDocument{"_id": "d1", "device": "loop://iPhone"}, action: events.Created},
+	})
+	require.Equal(t, true, delta["delta"])
+	require.NotZero(t, delta["lastUpdated"])
+	require.Equal(t, []map[string]any{{"_id": "e1", "mgdl": 100.0, "mills": int64(1000), "type": "sgv"},
+		{"_id": "e2", "mgdl": 110.0, "mills": int64(1000), "type": "sgv"}}, delta["sgvs"])
+	treatments := delta["treatments"].([]map[string]any)
+	require.Len(t, treatments, 3)
+	require.Nil(t, treatments[0]["action"])
+	require.Equal(t, "update", treatments[1]["action"])
+	require.Equal(t, map[string]any{"_id": "t3", "mills": int64(1000), "action": "remove"}, treatments[2])
+	require.Len(t, delta["devicestatus"], 1)
+
+	// A write whose changes send nothing, as a removed entry, is no dataUpdate
+	require.Nil(t, deltaOf([]change{{collection: nsutils.Entries, record: fakeDocument{"_id": "e3", "type": "sgv"}, action: events.Deleted}}))
+	require.Nil(t, deltaOf(nil))
 }

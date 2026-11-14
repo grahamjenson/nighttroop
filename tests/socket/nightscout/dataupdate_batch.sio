@@ -1,0 +1,118 @@
+# As in Nightscout, one write sends one dataUpdate with all its records, however many it has, so a client that
+# fetches on each dataUpdate, as LoopFollow does, fetches once for an uploader's backlog, not once for each record
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.read_only_nstoken }}
+SET write_token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4&token={{ token }}
+
+NAME authorize
+EMIT authorize
+B {"client":"LoopFollow","history":1,"secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@read"
+
+NAME first_data
+WAIT dataUpdate
+ASSERT_EQUALS null "@delta"
+
+# A backlog of 9 entries in one request is one dataUpdate with all 9
+NAME post_backlog
+POST http://{{ site }}/api/v1/entries?token={{ .write_token }}
+B [
+  {"type":"sgv","sgv":101,"date":{{ itime 40 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":102,"date":{{ itime 35 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":103,"date":{{ itime 30 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":104,"date":{{ itime 25 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":105,"date":{{ itime 20 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":106,"date":{{ itime 15 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":107,"date":{{ itime 10 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":108,"date":{{ itime 5 }},"direction":"Flat","device":"loop://iPhone"},
+  {"type":"sgv","sgv":109,"date":{{ itime 0 }},"direction":"Flat","device":"loop://iPhone"}
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 9 "@"
+
+NAME backlog_delta
+COLLECT dataUpdate
+T 1s
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS true "@0.delta"
+ASSERT_EXISTS "@0.lastUpdated"
+ASSERT_LENGTH 9 "@0.sgvs"
+ASSERT_EQUALS 101 "@0.sgvs.0.mgdl"
+ASSERT_EQUALS 109 "@0.sgvs.8.mgdl"
+
+# One entry is still one dataUpdate, sent when the request is done
+NAME post_one_entry
+POST http://{{ site }}/api/v1/entries?token={{ .write_token }}
+B [{"type":"sgv","sgv":120,"date":{{ itime -1 }},"direction":"Flat","device":"loop://iPhone"}]
+ASSERT_STATUS 200
+
+NAME one_entry_delta
+WAIT dataUpdate
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@sgvs"
+ASSERT_EQUALS 120 "@sgvs.0.mgdl"
+
+NAME one_entry_only_once
+COLLECT dataUpdate
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+# A treatment and an entry in two requests are two dataUpdates, each with its own record
+NAME post_treatment
+POST http://{{ site }}/api/v1/treatments?token={{ .write_token }}
+B [{"eventType":"Carb Correction","created_at":"{{ time 0 }}","carbs":20}]
+ASSERT_STATUS 200
+
+NAME post_entry
+POST http://{{ site }}/api/v1/entries?token={{ .write_token }}
+B [{"type":"sgv","sgv":130,"date":{{ itime -2 }},"direction":"Flat","device":"loop://iPhone"}]
+ASSERT_STATUS 200
+
+NAME two_requests_two_deltas
+COLLECT dataUpdate
+T 1s
+ASSERT_LENGTH 2 "@"
+ASSERT_LENGTH 1 "@0.treatments"
+ASSERT_EQUALS null "@0.sgvs"
+ASSERT_LENGTH 1 "@1.sgvs"
+ASSERT_EQUALS null "@1.treatments"
+
+# Treatments removed by one request are one dataUpdate, each marked as removed
+NAME post_site_changes
+POST http://{{ site }}/api/v1/treatments?token={{ .write_token }}
+B [
+  {"eventType":"Site Change","created_at":"{{ time 60 }}"},
+  {"eventType":"Site Change","created_at":"{{ time 30 }}"}
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME site_changes_delta
+COLLECT dataUpdate
+T 1s
+ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 2 "@0.treatments"
+
+NAME delete_site_changes
+DELETE http://{{ site }}/api/v1/treatments?find[eventType]=Site%20Change&find[created_at][$gte]={{ time 120 }}&token={{ .write_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@deletedCount"
+
+NAME site_changes_removed_delta
+COLLECT dataUpdate
+T 1s
+ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 2 "@0.treatments"
+ASSERT_EQUALS "remove" "@0.treatments.0.action"
+ASSERT_EQUALS "remove" "@0.treatments.1.action"
+
+NAME bye
+DISCONNECT

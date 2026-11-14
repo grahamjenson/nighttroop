@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv1"
 	"nighttroop.t1d.nz/socketio"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // dataReceivers is the room of sockets that can read, which get every dataUpdate
@@ -42,7 +43,11 @@ func (ws *Websocket) onConnect(main *socketio.Namespace, socket *socketio.Socket
 	})
 	for event, write := range map[string]dbWriter{"dbAdd": ws.dbAdd, "dbUpdate": ws.dbUpdate, "dbUpdateUnset": ws.dbUpdateUnset, "dbRemove": ws.dbRemove} {
 		socket.On(event, func(args []json.RawMessage, ack func(...any)) {
-			acknowledge(ack, ws.handleDBWrite(event, args, s.auth, s.ctx, write))
+			// A write's records are sent in one dataUpdate, before its answer
+			ctx, publish := httputils.BatchModelChanges(s.ctx)
+			reply := ws.handleDBWrite(event, args, s.auth, ctx, write)
+			publish()
+			acknowledge(ack, reply)
 		})
 	}
 	socket.On("loadRetro", func(_ []json.RawMessage, ack func(...any)) { ws.handleLoadRetro(s, ack) })

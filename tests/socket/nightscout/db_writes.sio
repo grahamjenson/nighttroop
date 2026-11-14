@@ -94,7 +94,7 @@ GET http://{{ site }}/api/v1/treatments?token={{ token }}&find[_id]={{ .treatmen
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@"
 
-# dbAdd takes a list too, and each record is sent on
+# dbAdd takes a list too, and its records are sent on in one dataUpdate
 NAME add_entries
 EMIT dbAdd
 B {"collection":"entries","data":[
@@ -107,9 +107,9 @@ ASSERT_LENGTH 2 "@"
 NAME entries_added
 COLLECT dataUpdate
 T 1s
-ASSERT_LENGTH 2 "@"
+ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS 120 "@0.sgvs.0.mgdl"
-ASSERT_EQUALS 125 "@1.sgvs.0.mgdl"
+ASSERT_EQUALS 125 "@0.sgvs.1.mgdl"
 
 NAME add_devicestatus
 EMIT dbAdd

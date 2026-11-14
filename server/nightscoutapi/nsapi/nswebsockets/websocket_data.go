@@ -74,8 +74,16 @@ type recorder interface {
 	Record(model any, siteContext *httputils.SiteContext) (nsutils.Document, bool)
 }
 
+// change is a changed record and how it changed
+type change struct {
+	collection nsutils.Collection
+	record     nsutils.Document
+	action     events.Action
+}
+
 // broadcastChange sends a changed model of the site to its DataReceivers as a delta dataUpdate, and to its /storage
-// subscribers, when it is a Nightscout record, and a new treatment to its /alarm sockets as a notification
+// subscribers, when it is a Nightscout record, and a new treatment to its /alarm sockets as a notification. A batched
+// change's dataUpdate is sent with the rest of its write's, as one, by their ModelsChanged.
 func (ws *Websocket) broadcastChange(main, alarm *socketio.Namespace, event events.Event) {
 	// An event is sent after the request that made it, so it has a context of its own
 	ctx := context.Background()
@@ -84,42 +92,73 @@ func (ws *Websocket) broadcastChange(main, alarm *socketio.Namespace, event even
 		return
 	}
 	siteContext := httputils.GetSiteContext(httputils.SetMgdlUnits(httputils.CreateSiteContext(ctx, ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)))
-	for collection, store := range ws.collections {
-		r, ok := store.(recorder)
-		if !ok {
-			continue
-		}
-		if record, ok := r.Record(event.Model, siteContext); ok {
-			ws.sendDataUpdate(main, collection, record, event.Action)
-			ws.sendToStorage(siteDB, siteModel, event, collection, r)
-			if collection == nsutils.Treatments && event.Action == events.Created {
-				sendTreatmentNotification(alarm, record)
+	if batch, ok := event.Attributes.([]events.Event); ok && event.Name == events.ModelsChanged {
+		changes := []change{}
+		for _, changed := range batch {
+			if collection, _, record, ok := ws.record(changed.Model, siteContext); ok {
+				changes = append(changes, change{collection, record, changed.Action})
 			}
-			return
 		}
+		sendDataUpdate(main, changes)
+		return
+	}
+	collection, r, record, ok := ws.record(event.Model, siteContext)
+	if !ok {
+		return
+	}
+	if !event.Batched {
+		sendDataUpdate(main, []change{{collection, record, event.Action}})
+	}
+	ws.sendToStorage(siteDB, siteModel, event, collection, r)
+	if collection == nsutils.Treatments && event.Action == events.Created {
+		sendTreatmentNotification(alarm, record)
 	}
 }
 
-// sendDataUpdate sends a changed record to the DataReceivers as a delta dataUpdate. As in Nightscout, a treatment
-// says whether it was updated or removed, and other removals are not sent.
-func (ws *Websocket) sendDataUpdate(main *socketio.Namespace, collection nsutils.Collection, record nsutils.Document, action events.Action) {
-	key, value, ok := clientData(collection, record)
-	if !ok || (action == events.Deleted && collection != nsutils.Treatments) {
-		return
-	}
-	if collection == nsutils.Treatments && action != events.Created {
-		if action == events.Deleted {
-			value = pick(value, "_id", "mills")
-			value["action"] = "remove"
-		} else {
-			value["action"] = "update"
+// record is a model as the record of the collection that has it, when it is a Nightscout record
+func (ws *Websocket) record(model any, siteContext *httputils.SiteContext) (nsutils.Collection, recorder, nsutils.Document, bool) {
+	for collection, store := range ws.collections {
+		if r, ok := store.(recorder); ok {
+			if record, ok := r.Record(model, siteContext); ok {
+				return collection, r, record, true
+			}
 		}
 	}
-	main.EmitTo(dataReceivers, "dataUpdate", map[string]any{
-		"delta":       true,
-		"lastUpdated": time.Now().UnixMilli(),
-		key:           []map[string]any{value},
-	})
+	return "", nil, nil, false
+}
+
+// sendDataUpdate sends changed records to the DataReceivers as one delta dataUpdate, when it has any
+func sendDataUpdate(main *socketio.Namespace, changes []change) {
+	if delta := deltaOf(changes); delta != nil {
+		main.EmitTo(dataReceivers, "dataUpdate", delta)
+	}
+}
+
+// deltaOf is changed records as a delta dataUpdate, each in its collection's list, or nil when none is sent. As in
+// Nightscout, a treatment says whether it was updated or removed, and other removals are not sent.
+func deltaOf(changes []change) map[string]any {
+	delta := map[string]any{}
+	for _, c := range changes {
+		key, value, ok := clientData(c.collection, c.record)
+		if !ok || (c.action == events.Deleted && c.collection != nsutils.Treatments) {
+			continue
+		}
+		if c.collection == nsutils.Treatments && c.action != events.Created {
+			if c.action == events.Deleted {
+				value = pick(value, "_id", "mills")
+				value["action"] = "remove"
+			} else {
+				value["action"] = "update"
+			}
+		}
+		values, _ := delta[key].([]map[string]any)
+		delta[key] = append(values, value)
+	}
+	if len(delta) == 0 {
+		return nil
+	}
+	delta["delta"], delta["lastUpdated"] = true, time.Now().UnixMilli()
+	return delta
 }
 
 // clientData is a record as Nightscout's client data holds it, and its key in a dataUpdate
