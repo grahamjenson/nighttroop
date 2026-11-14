@@ -8,60 +8,26 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/limits"
 )
 
-// columnLimit is the limit of a column, by its table and its field in the table's rows, in the site's DB or the
-// control's
-func columnLimit(column string) (sitedb.ColumnLimit, bool) {
-	table, field, _ := strings.Cut(column, ".")
-	if limit, ok := sitedb.ColumnLimitOf(table, field); ok {
-		return limit, true
-	}
-	return controldb.ColumnLimitOf(table, field)
-}
-
-// limit is what the field takes: its column's limit, with its own Min and Max in place of the column's
+// limit is what the field takes: its column's limit, narrowed by the column's override
 func (f Field) limit() sitedb.ColumnLimit {
-	limit, _ := columnLimit(f.Column)
-	if n, err := strconv.Atoi(f.Max); err == nil && f.Kind == Text {
-		limit.MaxLength = n
-	}
-	if v, err := strconv.ParseFloat(f.Min, 64); err == nil && f.Kind != Text {
-		limit.Min, limit.MinExclusive = &v, false
-	}
-	if v, err := strconv.ParseFloat(f.Max, 64); err == nil && f.Kind != Text {
-		limit.Max, limit.MaxExclusive = &v, false
-	}
+	limit, _ := limits.Of(f.Column)
 	return limit
 }
 
-// Check is an error for each number or text field that names no column, or whose Min or Max takes what its column
-// does not, as a field's own limits only narrow its column's
+// Check is an error for each number or text field that names no column
 func Check(fields []Field) error {
 	var errs []error
 	for _, f := range fields {
-		column, ok := columnLimit(f.Column)
-		n, err := strconv.Atoi(f.Max)
-		switch {
-		case f.Kind == Select || f.Kind == When:
-		case !ok:
+		if _, ok := limits.Column(f.Column); !ok && f.Kind != Select && f.Kind != When {
 			errs = append(errs, fmt.Errorf("%s names no column: %q", f.Name, f.Column))
-		case f.Kind == Text && f.Max != "" && (err != nil || n < 1 || column.MaxLength > 0 && n > column.MaxLength):
-			errs = append(errs, fmt.Errorf("%s's length %q is more than its column %s takes", f.Name, f.Max, f.Column))
-		case f.Kind != Text && (!takes(column, f.Min) || !takes(column, f.Max)):
-			errs = append(errs, fmt.Errorf("%s's min %q or max %q is outside its column %s", f.Name, f.Min, f.Max, f.Column))
 		}
 	}
 	return errors.Join(errs...)
-}
-
-// takes is whether a field's own limit, a number, is one its column takes, or it has none
-func takes(column sitedb.ColumnLimit, limit string) bool {
-	v, err := strconv.ParseFloat(limit, 64)
-	return limit == "" || err == nil && column.Takes(v)
 }
 
 // numberAttributes are a number's step, and its limit as it is typed in: a Percent's fraction as a percent, and

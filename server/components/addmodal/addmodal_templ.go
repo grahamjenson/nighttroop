@@ -49,11 +49,11 @@ type Field struct {
 	Help     string
 	Required bool
 	Kind     Kind
-	// Column is the table and field it is kept in, e.g. insulin_doses.Dose, whose limits its input takes
+	// Column is the table and field it is kept in, e.g. insulin_doses.Dose, whose limits, narrowed by limits.Overrides,
+	// its input takes
 	Column string
-	// Min and Max narrow its column's limits, in the column's units, e.g. a Percent's fraction, and Max a text's length.
-	// Step is a number's.
-	Min, Max, Step string
+	// Step is a number's
+	Step string
 	// Units are what a column of glucose in mg/dL is typed in
 	Units *consts.Units
 	// Options are a select's choices, or a text's suggestions

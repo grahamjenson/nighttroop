@@ -82,7 +82,16 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"carbs": 5000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "must be from -1000 to 1000 g" "@message"
+ASSERT_CONTAINS "carbs must be from -1000 to 1000" "@message"
+
+// Energy is not taken back, as on the page
+NAME create_food_intake_negative_energy
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": 10, "energy": -1}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "energy must be from 0 to 20000" "@message"
 
 // A negative amount takes back food entered too many times, as far below 0 as above
 NAME create_food_intake_negative

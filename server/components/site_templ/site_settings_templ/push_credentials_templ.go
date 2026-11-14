@@ -339,7 +339,7 @@ func PushCredentialFormIn(ctx context.Context) addmodal.Props {
 				Options: []string{string(consts.PushProviderAPNs), string(consts.PushProviderFCM)}, Value: string(consts.PushProviderAPNs),
 				OptionLabel: func(p string) string { return PushProviders[p] }},
 			{Name: "team_or_project_id", Column: "push_credentials.TeamOrProjectID", Label: i18n.T(ctx, "site.settings.push_credentials.team_or_project_id"), Help: i18n.T(ctx, "site.settings.push_credentials.team_or_project_id_help"), Required: true, Kind: addmodal.Text},
-			{Name: "key_id", Column: "push_credentials.KeyID", Label: i18n.T(ctx, "site.settings.push_credentials.key_id"), Help: i18n.T(ctx, "site.settings.push_credentials.key_id_help"), Kind: addmodal.Text, Max: "10"},
+			{Name: "key_id", Column: "push_credentials.KeyID", Label: i18n.T(ctx, "site.settings.push_credentials.key_id"), Help: i18n.T(ctx, "site.settings.push_credentials.key_id_help"), Kind: addmodal.Text},
 			{Name: "bundle_ids", Column: "push_credentials.BundleIdsJson", Label: i18n.T(ctx, "site.settings.push_credentials.bundle_ids"), Help: i18n.T(ctx, "site.settings.push_credentials.bundle_ids_help"), Kind: addmodal.Text, Wide: true},
 		},
 		Extra: PushCredentialExtra("site--push-credential--create"),

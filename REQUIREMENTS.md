@@ -806,7 +806,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - All writes (pages, Nightscout API, syncs) have broad limits far outside real use: bolus 500 units, carbs 1000 g,
   dates 1970 to 9999.
 - Insulin and food can be negative, to correct too much entered.
-- Pages are stricter (a dose: at most 100 units either way).
+- Pages and the site JSON API are stricter (a dose: at most 100 units either way). Both use one table of these
+  stricter limits, which can only narrow a column's limit.
+- Site JSON API: before a create or update is stored, each value sent is checked against its column's limit (with the
+  stricter one, if there is one). A value not sent is not checked.
+  - Out of its limit: 400 with the JSON field and what it takes, in the request's language (e.g.
+    `dose must be from -100 to 100`, `title must be at most 128 characters`).
+  - Glucose: in the settings' units, to one decimal place, moved in to a value that is taken (e.g.
+    `reading must be more than 0 and at most 55.5 mmol/L`).
+  - Food energy and portions, and a food preset's nutrients, are at least 0. A temp basal is at least 1 %.
+  - Other rules stay: a dose is not 0, a temp target's low is at most its high, a temp basal has a rate.
 - Nightscout API: each value is checked against the limit of its column in the site DB (its range, its length, its
   type, and if it can be empty) before it is stored. A patch is checked as the stored document with the fields sent.
   - If a value is out of its limit and the document can be kept without it: the value is left out, and the rest kept.
@@ -824,6 +833,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - All typeable fields, each with what it is, units, if required, and limits. Types: a dropdown or suggestions.
 - Limits: the limits of the field's column (site DB or control DB), as `min`, `max` and `maxlength`.
   - A field can have stricter limits than its column (e.g. a dose: -100 to 100, not -500 to 500), never wider ones.
+    The site JSON API uses the same stricter limits.
   - A percent: its column's fraction as a percent (e.g. a profile switch: 10 to 500 %).
   - Glucose: in the settings' units, to one decimal place (e.g. a reading: 0.1 to 55.5 mmol/L, or 0.1 to 1000 mg/dL).
   - If the column refuses its limit (e.g. glucose more than 0), the input limit moves in by one step.

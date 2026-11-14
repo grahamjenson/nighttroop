@@ -11,12 +11,8 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// maxTempTargetMinutes is a week, far longer than any temp target is set for
-const maxTempTargetMinutes = 7 * 24 * 60
 
 type TempTargetsCollection struct{}
 
@@ -36,7 +32,7 @@ func (s *TempTargetsCollection) GetRoute() string {
 // CREATE
 // ////
 func (s *TempTargetsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
-	if herr := checkTempTarget(model, siteContext); herr != nil {
+	if herr := checkTempTarget(model); herr != nil {
 		return nil, herr
 	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateTempTarget, sitemodels.TempTargetToCreate(model, siteContext))
@@ -59,16 +55,13 @@ func (s *TempTargetsCollection) CreateHTMXResponse(model *sitemodels.SiteTempTar
 func (s *TempTargetsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	// Check the temp target as it will be once the fields sent are changed
 	merged := *oldModel
-	if model.DurationMinutes != 0 {
-		merged.DurationMinutes = model.DurationMinutes
-	}
 	if model.LowTarget != 0 {
 		merged.LowTarget = model.LowTarget
 	}
 	if model.HighTarget != 0 {
 		merged.HighTarget = model.HighTarget
 	}
-	if herr := checkTempTarget(&merged, siteContext); herr != nil {
+	if herr := checkTempTarget(&merged); herr != nil {
 		return nil, herr
 	}
 	model.ID = oldModel.ID
@@ -130,15 +123,10 @@ func (s *TempTargetsCollection) DeleteHTMXResponse(model *sitemodels.SiteTempTar
 // UTIL METHODS
 ////////
 
-// checkTempTarget keeps targets within real glucose values, low at most high, and the duration to a week.
-// The targets are in the settings' units.
-func checkTempTarget(model *sitemodels.SiteTempTarget, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	units := sitemodels.ContextUnits(siteContext)
-	if model.LowTarget <= 0 || units.ToMGDL(model.HighTarget) > consts.MaxGlucoseMgdl || model.LowTarget > model.HighTarget {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.targets", i18n.Data{"Max": consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), "Units": *units}))
-	}
-	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempTargetMinutes {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.duration", i18n.Data{"Max": maxTempTargetMinutes}))
+// checkTempTarget keeps the low target at most the high
+func checkTempTarget(model *sitemodels.SiteTempTarget) *apiutils.HTTPError {
+	if model.LowTarget > model.HighTarget {
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.targets"))
 	}
 	return nil
 }

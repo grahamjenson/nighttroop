@@ -84,13 +84,6 @@
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
 
-
-
-1. Site API:
-    1. P4: Check the site API's values against the add modals' limits (`addmodal.Field` with its column), not
-       `apiutils.CheckRange` limits written again. Some differ: a food's energy and portions and a temp basal's percent
-       are at least 0 and 1% on the page, but the API takes less
-
 1. Database:
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field

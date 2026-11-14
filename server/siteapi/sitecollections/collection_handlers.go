@@ -394,7 +394,9 @@ func search[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 }
 
 func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionCreate[R, M], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
-
+	if herr := checkLimits(collection.GetName(), model, siteContext, false); herr != nil {
+		return herr
+	}
 	row, err := collection.CreateRow(ctx, tx, id, siteContext, model)
 	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return herr
@@ -405,7 +407,9 @@ func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 }
 
 func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionUpdate[R, M], siteContext *httputils.SiteContext, oldModel *M, oldRow *R, model *M) *apiutils.HTTPError {
-
+	if herr := checkLimits(collection.GetName(), model, siteContext, true); herr != nil {
+		return herr
+	}
 	row, err := collection.UpdateRow(ctx, tx, siteContext, oldModel, model)
 	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return herr

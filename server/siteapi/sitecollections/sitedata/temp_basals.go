@@ -14,12 +14,6 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// maxTempBasalMinutes is a day, the longest pumps set a temp basal for
-const maxTempBasalMinutes = 24 * 60
-
-// maxTempBasalUnitsPerHour is far above any pump's maximum basal rate
-const maxTempBasalUnitsPerHour = 50
-
 type TempBasalsCollection struct{}
 
 // ////
@@ -38,8 +32,9 @@ func (s *TempBasalsCollection) GetRoute() string {
 // CREATE
 // ////
 func (s *TempBasalsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
-	if herr := checkTempBasal(model); herr != nil {
-		return nil, herr
+	// A rate of 0 is sent, a suspended basal
+	if model.Rate == nil {
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.required", i18n.Data{"Field": "rate"}))
 	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateTempBasal, sitemodels.TempBasalToCreate(model, siteContext))
 }
@@ -59,17 +54,6 @@ func (s *TempBasalsCollection) CreateHTMXResponse(model *sitemodels.SiteTempBasa
 
 // UpdateRow changes a temp basal's rate, duration, notes or reason; anything not sent stays as it is
 func (s *TempBasalsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
-	// Check the temp basal as it will be once the fields sent are changed
-	merged := *oldModel
-	if model.DurationMinutes != 0 {
-		merged.DurationMinutes = model.DurationMinutes
-	}
-	if model.Rate != nil {
-		merged.Rate = model.Rate
-	}
-	if herr := checkTempBasal(&merged); herr != nil {
-		return nil, herr
-	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateTempBasal, sitemodels.TempBasalToUpdate(model, siteContext))
 }
@@ -123,19 +107,4 @@ func (s *TempBasalsCollection) DeleteRow(ctx context.Context, collectionTx *site
 
 func (s *TempBasalsCollection) DeleteHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
 	return site_data_templ.TempBasalDeleted()
-}
-
-///////
-// UTIL METHODS
-////////
-
-// checkTempBasal keeps the rate to what a pump can deliver, and the duration to a day
-func checkTempBasal(model *sitemodels.SiteTempBasal) *apiutils.HTTPError {
-	if model.Rate == nil || *model.Rate < 0 || *model.Rate > maxTempBasalUnitsPerHour {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.rate", i18n.Data{"Max": maxTempBasalUnitsPerHour}))
-	}
-	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempBasalMinutes {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.duration", i18n.Data{"Max": maxTempBasalMinutes}))
-	}
-	return nil
 }
