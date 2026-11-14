@@ -354,6 +354,7 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xint642 := *source.DurationMs
 		sitedbCreateEventGroupParams.DurationMs = &xint642
 	}
+	sitedbCreateEventGroupParams.DurationFraction = source.DurationFraction
 	if source.EnteredBy != nil {
 		xstring11 := *source.EnteredBy
 		sitedbCreateEventGroupParams.EnteredBy = &xstring11
@@ -2391,6 +2392,7 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xint644 := *source.DurationMs
 		sitedbEventGroup.DurationMs = &xint644
 	}
+	sitedbEventGroup.DurationFraction = source.DurationFraction
 	if source.DeletedAt != nil {
 		xint645 := *source.DeletedAt
 		sitedbEventGroup.DeletedAt = &xint645

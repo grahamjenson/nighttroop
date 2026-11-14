@@ -56,6 +56,9 @@ overrides:
       - column: "insulin_doses_vw.is_basal_insulin"
         go_type:
           type: "*bool"
+      - column: "event_groups.duration_fraction"
+        go_type:
+          type: "bool"
       - column: "event_groups.auto_forced"
         go_type:
           type: "*bool"

@@ -94,6 +94,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"Reason":                    {Column: "reason", MaxLength: 64},
 		"DurationMinutes":           {Column: "duration_minutes", Min: new(0.0), Max: new(525600.0)},
 		"DurationMs":                {Column: "duration_ms", Min: new(0.0), Max: new(31536000000.0)},
+		"DurationFraction":          {Column: "duration_fraction", Required: true},
 		"DeletedAt":                 {Column: "deleted_at"},
 		"UtcOffsetMinutes":          {Column: "utc_offset_minutes", Min: new(-1440.0), Max: new(1440.0)},
 		"OccurredAt":                {Column: "occurred_at", Required: true, Min: new(0.0), Max: new(253402300799999.0)},

@@ -279,6 +279,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map UUID Uuid
 	// goverter:map Duration DurationMinutes | DurationToMinutesP
 	// goverter:map Duration DurationMs | DurationToMs
+	// goverter:map Duration DurationFraction | DurationToFraction
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map EmulatedTreatment EmulatedTreatmentJson | RawJSONToString
 	// goverter:map SentJSON SentHash | SentHash
@@ -310,6 +311,11 @@ func DurationToMinutesP(source *types.Duration) *int64 {
 // DurationToMs are the milliseconds a duration keeps, nil when they are its minutes
 func DurationToMs(source *types.Duration) *int64 {
 	return source.MsP()
+}
+
+// DurationToFraction is whether a duration's minutes were sent with a fraction
+func DurationToFraction(source *types.Duration) bool {
+	return source != nil && source.Fraction
 }
 
 // goverter:context siteContext

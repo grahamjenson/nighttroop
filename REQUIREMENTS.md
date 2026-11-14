@@ -1501,9 +1501,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Sent with no `duration`: the `duration` is the nearest minute.
 - A treatment with a duration always has both `duration` and `durationInMilliseconds`, the missing one calculated.
 - A `duration` with a fraction (e.g. a Loop bolus `1.6666666666666667`, or a suspend) is kept to the ms.
-- API v1 `duration`: not floored. When `durationInMilliseconds` is not whole minutes, it is that value in minutes
-  (e.g. an AAPS temp target ended at 359587 ms reads 5.9931). A quick bolus is not 0 minutes. LoopFollow draws a temp
-  basal with its full length.
+- API v1 `duration`: as sent, as Nightscout gives it.
+  - Sent with a fraction: the fraction is given back (e.g. a Loop bolus `1.6666666666666667`, or `2.5`). A quick
+    bolus is not 0 minutes. LoopFollow draws a temp basal with its full length.
+  - Sent in whole minutes with `durationInMilliseconds` (AAPS): whole minutes. An AAPS temp target ended at 120750 ms
+    with `duration` 2 reads 2, not 2.0125 (Loop, LoopFollow, Trio and xDrip4iOS can drop a page with a fraction).
 - API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
   treatment, or a page, with a fractional `duration`).
 

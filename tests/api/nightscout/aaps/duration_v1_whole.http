@@ -1,0 +1,99 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS cancels a running temp target with an update of its whole minutes, and its milliseconds. Nightscout keeps the
+// duration as sent, so API v1 gives it in whole minutes too, as Loop, LoopFollow, Trio and xDrip4iOS can read
+// duration as a whole number and drop the page
+
+NAME add_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 30 }}, "utcOffset": 0, "eventType": "Temporary Target", "duration": 60, "durationInMilliseconds": 3600000, "targetTop": 140, "targetBottom": 140, "units": "mg/dl", "reason": "Activity", "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME cancel_temp_target
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 2, "durationInMilliseconds": 120750}
+ASSERT_STATUS 200
+
+NAME cancelled_v3
+GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.duration"
+ASSERT_EQUALS 120750 "@result.durationInMilliseconds"
+
+NAME cancelled_v1
+GET http://{{ site }}/api/v1/treatments.json?find[_id]={{ .add_temp_target.identifier }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 2 "@0.duration"
+ASSERT_EQUALS 120750 "@0.durationInMilliseconds"
+
+// Another field updated keeps the whole minutes
+NAME update_reason
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"reason": "Eating Soon"}
+ASSERT_STATUS 200
+
+NAME updated_v1
+GET http://{{ site }}/api/v1/treatments.json?find[_id]={{ .add_temp_target.identifier }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@0.duration"
+ASSERT_EQUALS 120750 "@0.durationInMilliseconds"
+
+// A temp basal ended early the same way
+NAME add_temp_basal
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 25 }}, "utcOffset": 0, "eventType": "Temp Basal", "rate": 0.5, "absolute": 0.5, "duration": 30, "durationInMilliseconds": 1800000, "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME end_temp_basal
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_temp_basal.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 7, "durationInMilliseconds": 461250}
+ASSERT_STATUS 200
+
+NAME ended_temp_basal_v1
+GET http://{{ site }}/api/v1/treatments.json?find[_id]={{ .add_temp_basal.identifier }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 7 "@0.duration"
+ASSERT_EQUALS 461250 "@0.durationInMilliseconds"
+
+// A duration a client sends with a fraction is given back with it, as Nightscout does
+NAME add_fraction_v1
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"created_at": "{{ time 20 }}", "eventType": "Temporary Target", "duration": 2.5, "targetTop": 120, "targetBottom": 120, "units": "mg/dl", "enteredBy": "xdrip"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@0.duration"
+SET fraction_id {{ dig "add_fraction_v1.0._id" }}
+
+NAME fraction_v1
+GET http://{{ site }}/api/v1/treatments.json?find[_id]={{ .fraction_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@0.duration"
+ASSERT_EQUALS 150000 "@0.durationInMilliseconds"
+
+// Sent with its milliseconds too, it keeps its fraction
+NAME add_fraction_and_ms_v1
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"created_at": "{{ time 15 }}", "eventType": "Temporary Target", "duration": 2.5, "durationInMilliseconds": 150000, "targetTop": 110, "targetBottom": 110, "units": "mg/dl", "enteredBy": "xdrip"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@0.duration"
+SET fraction_and_ms_id {{ dig "add_fraction_and_ms_v1.0._id" }}
+
+NAME fraction_and_ms_v1
+GET http://{{ site }}/api/v1/treatments.json?find[_id]={{ .fraction_and_ms_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@0.duration"
+ASSERT_EQUALS 150000 "@0.durationInMilliseconds"
