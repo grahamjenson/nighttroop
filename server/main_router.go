@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -44,7 +46,8 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 	shed := httputils.ShedLoadReserving(config.RequestsInFlightPerCPU*cpus, config.RequestsBacklogPerCPU*cpus, 5*time.Second, httputils.LongLived, upload)
 
 	secure := httputils.SecurityHeaders(config.IsHTTPS())
-	return secure(shed(httputils.ClientIP(config.TrustedProxies)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	oneSlash := nightscoutOneSlash(validHostnames)
+	return secure(oneSlash(shed(httputils.ClientIP(config.TrustedProxies)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Text is in the browser's language, until a site's identity signs in with one of its own
 		ctx := i18n.WithLanguages(r.Context(), r.Header.Get("Accept-Language"))
 
@@ -98,7 +101,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			slog.InfoContext(r.Context(), "Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
 		}
-	}))))
+	})))))
 
 }
 
@@ -107,12 +110,42 @@ func nightscoutWrite(r *http.Request, validHostnames []string) bool {
 	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
 		return false
 	}
+	return nightscoutHost(r, validHostnames)
+}
+
+// nightscoutHost is whether a request is for a site's Nightscout API
+func nightscoutHost(r *http.Request, validHostnames []string) bool {
 	host, _, err := net.SplitHostPort(r.Host)
 	if err != nil {
 		host = r.Host
 	}
 	target, _, err := GetRouteTargetFromSubdomain(host, validHostnames)
 	return err == nil && target == RouteTargetNightscout
+}
+
+var repeatedSlashes = regexp.MustCompile(`//+`)
+
+// nightscoutOneSlash serves a request for a site's Nightscout API with one slash for each run of slashes in its path, as
+// clients add their paths to the Nightscout URL as it was typed, so one typed with a "/" at its end asks for
+// //api/v1/entries. The "/" at the end of a path is kept, as Socket.IO's /socket.io/ needs it. It comes before the load
+// shedding, so it, the routes and the auth all see the one path, and //socket.io/ cannot hold a request open as one
+// that is not long lived.
+func nightscoutOneSlash(validHostnames []string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !strings.Contains(r.URL.Path, "//") && !strings.Contains(r.URL.RawPath, "//") || !nightscoutHost(r, validHostnames) {
+				next.ServeHTTP(w, r)
+				return
+			}
+			// As http.StripPrefix does, a copy, so the request is not changed for those before it
+			cleaned := *r
+			cleaned.URL = new(url.URL)
+			*cleaned.URL = *r.URL
+			cleaned.URL.Path = repeatedSlashes.ReplaceAllString(r.URL.Path, "/")
+			cleaned.URL.RawPath = repeatedSlashes.ReplaceAllString(r.URL.RawPath, "/")
+			next.ServeHTTP(w, &cleaned)
+		})
+	}
 }
 
 // globalWithinRateLimit limits every request to the server together, but the control site's: a control admin signed in

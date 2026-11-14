@@ -120,6 +120,8 @@ Nighttroop gives back (followers read it, Trio does not):
 - Body: `{ defaultProfile: "default", startDate, mills, units, enteredBy, store: { default: { dia, carbs_hr, delay,
   timezone, target_low, target_high, sens, basal, carbratio, units } }, bundleIdentifier, deviceToken,
   isAPNSProduction, overridePresets, teamID, expirationDate }`.
+- iAPS: no push fields. It adds `profile`, the name of the settings profile the user chose. `defaultProfile` and the
+  `store` key are always `default`. Nighttroop keeps `profile` and gives it back as sent.
 - Each schedule entry: `{ time: "HH:mm", value, timeAsSeconds }`. `units` is `mg/dl` or `mmol`.
 - The push fields let LoopFollow and Trio's remote control send Apple push notifications to Trio.
 - Nighttroop registers `deviceToken`, `bundleIdentifier` and `isAPNSProduction` as a `trio` push registration for
@@ -247,7 +249,9 @@ When the user deletes a record in Trio, Trio deletes it by query (`deleteCarbs`,
 | Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Fixed |
 | Temp target fetch | Works in mg/dL. Own ones left out since this PR |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
+| Glucose upload of a reading already stored (Nightscout as CGM), or another app's copy of Trio's reading | Fixed: one reading, with the first upload's values and device. The copy adds only the fields it does not have |
 | iAPS announcements (`find[enteredBy]=remote`) | Fixed |
+| iAPS profile name (`profile`) | Fixed: kept and given back as sent. Was left out |
 | iAPS BG check (`glucoseType` `Manual`, `glucose` a string in mmol) | Fixed: kept as a finger stick (`mbg`) in mg/dL, `Manual` returned. Was a 400, sent again every 5 minutes |
 | Deletes by query | Fixed (were a 405) |
 | mmol/L site or identity | Not supported by Trio's fetches. A device added for Trio is in mg/dL |

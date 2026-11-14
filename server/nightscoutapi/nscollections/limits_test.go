@@ -18,6 +18,8 @@ var (
 		named[nightscoutmodels.Entry, sitedb.GlucoseReading]{nsutils.Entries, nightscoutmodels.DBModelToEntry}})
 	treatments = NewCollection[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](TreatmentCollection{
 		named[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]{nsutils.Treatments, DBModelToTreatment}})
+	profiles = NewCollection[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](ProfileCollection{
+		named[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle]{nsutils.Profile, DBToNightscoutProfileStore}})
 )
 
 // checked is a document of a collection checked against its columns' limits, as a create checks it: the refusal, or
@@ -84,6 +86,12 @@ func TestWithinLimits(t *testing.T) {
 		{"optional too long", func() (string, leftOut, map[string]any) {
 			return checked(entries, `{"type": "sgv", "sgv": 100, "device": "`+long+`", "date": 1}`)
 		}, "", []string{"device must be at most 64 characters (was 70 characters)"}, []string{"sgv"}},
+		{"optional too long in a profile store", func() (string, leftOut, map[string]any) {
+			return checked(profiles, `{"enteredBy": "`+long+`", "store": {"Default": {"dia": 5}, "Other": {"dia": 4}}, "date": 1}`)
+		}, "", []string{"enteredBy must be at most 64 characters (was 70 characters)"}, []string{"store.Default", "store.Other"}},
+		{"optional too long in a profile", func() (string, leftOut, map[string]any) {
+			return checked(profiles, `{"store": {"Default": {"dia": 5, "timezone": "`+long+`"}}, "date": 1}`)
+		}, "", []string{"store.Default.timezone must be at most 32 characters (was 70 characters)"}, []string{"store.Default.dia"}},
 		{"optional wrong type", func() (string, leftOut, map[string]any) {
 			return checked(deviceStatuses, `{"uploader": {"battery": "50 days", "isCharging": true}, "date": 1}`)
 		}, "", []string{`uploader.battery must be a number (was "50 days")`}, []string{"uploader.isCharging"}},

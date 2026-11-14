@@ -21,6 +21,19 @@ type Document interface {
 	JSON(v3 bool, fields []string) json.RawMessage
 }
 
+// V3Parts are the documents as API v3 gives them, some as more than one (see nscollections' stored.V3Parts)
+func V3Parts(records []Document) []Document {
+	parts := make([]Document, 0, len(records))
+	for _, record := range records {
+		if parted, ok := record.(interface{ V3Parts() []Document }); ok {
+			parts = append(parts, parted.V3Parts()...)
+		} else {
+			parts = append(parts, record)
+		}
+	}
+	return parts
+}
+
 // DateString is when the document happened, as Nightscout's dateString
 func DateString(doc Document) string {
 	return types.ISOString(time.UnixMilli(doc.OccurredAt()))

@@ -111,7 +111,9 @@ func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site,
 			continue
 		}
 		if slices.Contains(subscriber.collections, collection) {
-			emitStorage(subscriber.socket, event.Action, collection, record)
+			for _, part := range nsutils.V3Parts([]nsutils.Document{record}) {
+				emitStorage(subscriber.socket, event.Action, collection, part)
+			}
 		}
 		// A meter reading in no treatment goes to the treatments as a BG Check, as API v3 gives it
 		if bgCheck, ok := nscollections.BGCheck(record, siteContext); ok && fingerStick && slices.Contains(subscriber.collections, nsutils.Treatments) {

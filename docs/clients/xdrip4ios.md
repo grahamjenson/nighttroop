@@ -228,7 +228,6 @@ Nighttroop keeps the `mbg` finger pricks. It accepts the `cal` records, but does
 
 - `enteredBy` comes back as sent, `xDrip4iOS`, as in Nightscout.
 - Carbs come back as a `Carb Correction`. The app reads carbs from `carbs`, whatever the event type.
-- Nighttroop reads an `sgv` under 30 with no `units` as mmol/L. A CGM's readings do not go that low.
 - The history import asks for 2000 entries, more than Nighttroop's 1000. Thus it does not split a day with more.
 
 ## Status in Nighttroop

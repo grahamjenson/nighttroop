@@ -92,6 +92,9 @@ carbs and boluses, and the report. Writes: care actions.
 | `delta.mgdl` | a number or a string of one |
 | `delta.display` | a string, such as `"+6"` |
 
+The properties also have `pump`, `openaps` and `loop`, in Nightscout's shapes, for watch faces. Nightguard does not
+read them.
+
 ### Pump
 
 `GET /api/v1/devicestatus.json?count=5&token=…` (`readDeviceStatus`, 2084; `deviceStatusData`, 2110), always v1. From

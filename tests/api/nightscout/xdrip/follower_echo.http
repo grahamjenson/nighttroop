@@ -1,0 +1,70 @@
+# An xDrip+ "Nightscout Follower" with "Upload to Nightscout" on downloads a looper's reading and uploads it again as
+# its own: whole mg/dL, its own device, and no trend. Nightscout upserts an entry on its date and type, so the copy
+# found the looper's reading and overwrote it. The first uploader's reading is kept.
+
+INCLUDE steps/new_site_admin.steps
+
+NAME create_xdrip_follower
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "follower", "role": "device_read_write"}
+ASSERT_STATUS 201
+SET follower_token {{ .create_xdrip_follower.result.ns_token }}
+SET reading_ms {{ itime 5 }}
+
+// AAPS uploads its reading, with its trend
+NAME looper_uploads
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "Random", "type": "sgv", "sgv": 135.573, "date": {{ .reading_ms }}, "direction": "DoubleDown",
+    "units": "mg/dl"}]
+ASSERT_STATUS 200
+
+// The follower echoes it with another token, a whole number, its own device and no trend, and noise AAPS did not send
+NAME follower_echoes
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 .follower_token }}
+B [{"device": "xDrip-NSFollower Nightscout Follow", "type": "sgv", "sgv": 135, "date": {{ .reading_ms }},
+    "direction": "Flat", "noise": 1}]
+ASSERT_STATUS 200
+
+NAME looper_reading_kept
+GET http://{{ .ns_site }}/api/v1/entries/sgv.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 135.573 "@0.sgv"
+ASSERT_EQUALS "DoubleDown" "@0.direction"
+ASSERT_EQUALS "Random" "@0.device"
+ASSERT_EQUALS 1 "@0.noise"
+
+// The same device sending a correction with the same token refreshes it
+NAME looper_corrects
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "Random", "type": "sgv", "sgv": 136, "date": {{ .reading_ms }}, "direction": "SingleDown"}]
+ASSERT_STATUS 200
+
+NAME looper_correction_kept
+GET http://{{ .ns_site }}/api/v1/entries/sgv.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 136 "@0.sgv"
+ASSERT_EQUALS "SingleDown" "@0.direction"
+
+// Another identity sending the looper's device cannot overwrite the reading either
+NAME follower_sends_as_looper
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 .follower_token }}
+B [{"device": "Random", "type": "sgv", "sgv": 40, "date": {{ .reading_ms }}, "direction": "DoubleUp"}]
+ASSERT_STATUS 200
+
+NAME looper_reading_still_kept
+GET http://{{ .ns_site }}/api/v1/entries/sgv.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 136 "@0.sgv"
+ASSERT_EQUALS "SingleDown" "@0.direction"

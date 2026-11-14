@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"maps"
 	"slices"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -135,6 +137,12 @@ type CollectionRefresher[NS, DM any] interface {
 	Refreshes(nsModel NS, duplicate *DM) bool
 }
 
+// CollectionUploaded is a CollectionRefresher whose duplicate, sent again by another uploader than the one that
+// stored it, only has the fields it is missing filled, so a follower echoing a looper's reading does not overwrite it
+type CollectionUploaded[NS, DM any] interface {
+	SameUploader(nsModel NS, stored *DM, cc nightscoutmodels.ConverterContext) bool
+}
+
 // CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented.
 // RewriteModel writes the model, converted as a create converts it, over the stored one, every column, keeping its
 // identifier, when and by whom it was created, and what of it only the database has, which may depend on the fields
@@ -205,7 +213,12 @@ func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext
 
 // document is a database model as this collection's document
 func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteContext) nsutils.Document {
-	return stored[NS]{meta: row(*dbModel), model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
+	m := row(*dbModel)
+	// One kept with no offset, a food or a profile sent without one, is in the site's timezone, as Nightscout's
+	if (*dbModel).GetUtcOffsetMinutes() == nil {
+		m.utcOffset = siteUtcOffset(siteContext)(m.occurredAt)
+	}
+	return stored[NS]{meta: m, model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
 func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
@@ -326,6 +339,9 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
+	if uploaded, ok := any(c.db).(CollectionUploaded[NS, DM]); ok && !uploaded.SameUploader(nsModel, duplicate, converterContext(siteContext)) {
+		data = c.missing(duplicate, data, siteContext)
+	}
 	refreshed, merged, httpErr := c.rewrite(ctx, siteContext, q, duplicate, data, &leftOut{})
 	if httpErr != nil {
 		return nil, false, httpErr
@@ -340,6 +356,18 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 	siteContext.PublishModelChange(events.Updated, refreshed)
 	c.afterStored(ctx, siteContext, merged)
 	return c.document(refreshed, siteContext), true, nil
+}
+
+// missing are the fields sent that the stored model's document does not have. The units, device and app are left out,
+// as they say what the stored glucose is in and who sent it.
+func (c Collection[NS, DM]) missing(stored *DM, data map[string]any, siteContext *httputils.SiteContext) map[string]any {
+	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
+	missing := maps.Clone(data)
+	maps.DeleteFunc(missing, func(name string, _ any) bool {
+		_, has := document[name]
+		return has || slices.Contains([]string{"units", "device", "app"}, name)
+	})
+	return missing
 }
 
 // rewrite writes the stored model's document with the fields sent merged into it, see merged, converted and checked as
@@ -377,14 +405,18 @@ func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext 
 	var model NS
 	var aliases map[string][]string
 	var glucose []string
+	var defaultUnits *consts.Units
 	if fields, ok := any(model).(interface{ MergeAliases() map[string][]string }); ok {
 		aliases = fields.MergeAliases()
 	}
 	if fields, ok := any(model).(interface{ GlucoseFields() []string }); ok {
 		glucose = fields.GlucoseFields()
 	}
+	if fields, ok := any(model).(interface{ DefaultGlucoseUnits() *consts.Units }); ok {
+		defaultUnits = fields.DefaultGlucoseUnits()
+	}
 	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
-	document = mergeFields(document, data, aliases, glucose)
+	document = mergeFields(document, data, aliases, glucose, defaultUnits)
 	err := utils.ConvertViaJSON(document, &model)
 	return document, model, err
 }
@@ -450,9 +482,10 @@ func (c Collection[NS, DM]) keyDuplicate(q *sitedb.Queries, ctx context.Context,
 	return nil, err
 }
 
+// Get is the model with the identifier. As in Nightscout, a deleted one is gone, unless deleted ones are asked for.
 func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
-	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, query.IncludeDeleted)
+	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, true)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -462,6 +495,9 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 	}
 	if dbModel == nil {
 		return nil, nsutils.ErrNotFound
+	}
+	if (*dbModel).GetDeletedAt() != nil && !query.IncludeDeleted {
+		return nil, nsutils.ErrGone
 	}
 	return c.document(dbModel, siteContext), nil
 }

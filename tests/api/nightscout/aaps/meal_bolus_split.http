@@ -1,0 +1,122 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS makes one record of a treatment document, its insulin first (RemoteTreatment.toTreatment), so it dropped the
+// carbs of one with both, as xDrip+ and the careportal send a Meal Bolus (TP1). API v3 gives one as two documents:
+// its insulin with its identifier, and its carbs as a Carb Correction with its identifier and "carbs". API v1 is as sent.
+SET meal_at {{ itime 20 }}
+
+NAME xdrip_meal_bolus
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "_id": "6a1b2c3d4e5f60718293a4b5", "insulin": 1.5, "carbs": 15,
+   "date": {{ .meal_at }}}
+ASSERT_STATUS 200
+
+NAME v3_gives_two
+GET http://{{ site }}/api/v3/treatments?limit=10
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+
+ASSERT_EQUALS "6a1b2c3d4e5f60718293a4b5" "@result.0.identifier"
+ASSERT_EQUALS "Meal Bolus" "@result.0.eventType"
+ASSERT_EQUALS 1.5 "@result.0.insulin"
+ASSERT_EQUALS null "@result.0.carbs"
+ASSERT_EQUALS "6a1b2c3d4e5f60718293a4b5carbs" "@result.1.identifier"
+ASSERT_EQUALS "Carb Correction" "@result.1.eventType"
+ASSERT_EQUALS 15 "@result.1.carbs"
+ASSERT_EQUALS ".v3_gives_two.result.0.date" "@result.1.date"
+
+// Read by its identifier, it is whole, as a write of it answers with it
+NAME v3_reads_whole
+GET http://{{ site }}/api/v3/treatments/6a1b2c3d4e5f60718293a4b5
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.5 "@result.insulin"
+ASSERT_EQUALS 15 "@result.carbs"
+
+NAME v3_carbs_part
+GET http://{{ site }}/api/v3/treatments/6a1b2c3d4e5f60718293a4b5carbs
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "6a1b2c3d4e5f60718293a4b5carbs" "@result.identifier"
+ASSERT_EQUALS "Carb Correction" "@result.eventType"
+ASSERT_EQUALS 15 "@result.carbs"
+ASSERT_EQUALS null "@result.insulin"
+ASSERT_EQUALS ".v3_gives_two.result.0.date" "@result.date"
+
+// API v1 gives it as sent, one treatment, as xDrip+, Loop and Trio read it
+NAME v1_gives_one
+GET http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 1.5 "@0.insulin"
+ASSERT_EQUALS 15 "@0.carbs"
+
+// AAPS deletes the carbs on their own: the insulin is kept
+NAME aaps_deletes_carbs
+DELETE http://{{ site }}/api/v3/treatments/6a1b2c3d4e5f60718293a4b5carbs
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME insulin_kept
+GET http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 1.5 "@0.insulin"
+ASSERT_EQUALS null "@0.carbs"
+
+// History tells AAPS's followers the carbs were deleted
+NAME carbs_deleted_in_history
+GET http://{{ site }}/api/v3/treatments/history/0?limit=10
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "6a1b2c3d4e5f60718293a4b5" "@result.0.identifier"
+ASSERT_EQUALS true "@result.0.isValid"
+ASSERT_EQUALS "6a1b2c3d4e5f60718293a4b5carbs" "@result.1.identifier"
+ASSERT_EQUALS false "@result.1.isValid"
+
+// AAPS changes the insulin of another on its own: the carbs are kept
+NAME careportal_meal_bolus
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Meal Bolus", "enteredBy": "careportal", "_id": "7b2c3d4e5f60718293a4b5c6", "insulin": 2, "carbs": 30,
+   "date": {{ itime 10 }}}
+ASSERT_STATUS 200
+
+NAME aaps_changes_insulin
+PATCH http://{{ site }}/api/v3/treatments/7b2c3d4e5f60718293a4b5c6
+H Authorization: Bearer {{ jwt }}
+B {"insulin": 2.5}
+ASSERT_STATUS 200
+
+NAME carbs_kept
+GET http://{{ site }}/api/v3/treatments/7b2c3d4e5f60718293a4b5c6carbs
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 30 "@result.carbs"
+
+NAME insulin_changed
+GET http://{{ site }}/api/v3/treatments/7b2c3d4e5f60718293a4b5c6
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2.5 "@result.insulin"
+ASSERT_EQUALS null "@result.carbs"
+
+// AAPS deletes the insulin on its own: the carbs are kept
+NAME aaps_deletes_insulin
+DELETE http://{{ site }}/api/v3/treatments/7b2c3d4e5f60718293a4b5c6
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME only_carbs_left
+GET http://{{ site }}/api/v3/treatments?limit=10&eventType=Carb%20Correction
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "7b2c3d4e5f60718293a4b5c6carbs" "@result.0.identifier"
+ASSERT_EQUALS 30 "@result.0.carbs"

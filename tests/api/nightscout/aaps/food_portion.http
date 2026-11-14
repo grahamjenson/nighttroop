@@ -1,0 +1,35 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS reads a food's portion, the amount its carbs are for, and works out a food's carbs from it, so a food without
+// it has carbs for no amount. Nightscout calls it portion.
+NAME add_food
+POST http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B {"type": "food", "name": "Banana", "category": "Fruit", "portion": 120, "unit": "g", "carbs": 27, "fat": 0, "protein": 1, "energy": 440}
+ASSERT_STATUS 201
+
+NAME food_portion_v3
+GET http://{{ site }}/api/v3/food/{{ .add_food.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@result.portion"
+ASSERT_EQUALS 27 "@result.carbs"
+
+NAME food_portion_v1
+GET http://{{ site }}/api/v1/food.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@0.portion"
+
+// One sent with portions, as Nighttroop gave it before, keeps it as its portion
+NAME add_food_portions
+POST http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B {"type": "food", "name": "Apple", "portions": 2, "carbs": 15}
+ASSERT_STATUS 201
+
+NAME food_portions_v3
+GET http://{{ site }}/api/v3/food/{{ .add_food_portions.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.portion"
