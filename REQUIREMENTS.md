@@ -1715,6 +1715,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - With `S3_URL`:
   - The server does not start if no test upload works for about 30 seconds.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
+  - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
+    tries again.
 
 #### Backups
 
