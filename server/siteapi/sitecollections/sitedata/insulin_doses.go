@@ -32,8 +32,8 @@ func (s *InsulinDosesCollection) GetRoute() string {
 // CREATE
 // ////
 func (s *InsulinDosesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
-	// A dose of 0 is none; an update of 0 is one not sent, which keeps its dose
-	if model.Dose == 0 {
+	// A dose of 0 is none, unless all of it is extended; an update of 0 is one not sent, which keeps its dose
+	if model.Dose == 0 && (model.ExtendedDose == nil || *model.ExtendedDose == 0) {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.dose"))
 	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateInsulinDose, sitemodels.InsulinDoseToCreate(model, siteContext))

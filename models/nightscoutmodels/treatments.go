@@ -42,13 +42,13 @@ type Treatment struct {
 	Insulin  *types.FlexibleFloat64 `json:"insulin,omitempty"`
 	SplitNow *types.FlexibleFloat64 `json:"splitNow,omitempty"`
 	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
-	// EnteredInsulin is a Combo Bolus's insulin in all, its dose, and Relative the units an hour of the part extended,
-	// as Nightscout's careportal and AAPS send them; its insulin is the part given at once
+	// EnteredInsulin is a Combo Bolus's insulin in all, and Relative the units an hour of the part extended, as
+	// Nightscout's careportal and AAPS send them; its insulin is the part given at once
 	EnteredInsulin *types.FlexibleFloat64 `json:"enteredinsulin,omitempty"`
 	Relative       *types.FlexibleFloat64 `json:"relative,omitempty"`
-	// GivenAtOnce is a Combo Bolus's insulin sent beside its enteredinsulin, the part given at once, given back as its
-	// insulin as sent
-	GivenAtOnce *types.FlexibleFloat64 `json:"-"`
+	// ExtendedDose is a Combo Bolus's units given over ExtendedDurationMs after its insulin, kept on its dose
+	ExtendedDose       *types.FlexibleFloat64 `json:"-"`
+	ExtendedDurationMs *int64                 `json:"-"`
 	// additional: a bolus's type, e.g. SMB, or AAPS's temp basal's, e.g. PUMP_SUSPEND
 	Type *types.ShortString `json:"type,omitempty"`
 	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
@@ -219,14 +219,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	t.Duration = aux.SentDuration.Duration()
 
-	// A Combo Bolus's enteredinsulin is its dose in all, and its insulin no more than that, the part given at once, as
-	// Nightscout's careportal sends both; AAPS's extended bolus sends no insulin and no split, as it is all given over
-	// time. More insulin than enteredinsulin is a new dose, as a patch merged into the stored treatment sends
-	if t.EnteredInsulin != nil && (t.EventType == nil || *t.EventType == ComboBolus) && (t.Insulin == nil || *t.Insulin <= *t.EnteredInsulin) {
-		if t.Insulin == nil && t.SplitNow == nil && t.SplitExt == nil && t.EventType != nil {
-			t.SplitNow, t.SplitExt = new(types.FlexibleFloat64(0)), new(types.FlexibleFloat64(100))
-		}
-		t.GivenAtOnce, t.Insulin = t.Insulin, t.EnteredInsulin
+	if t.EventType != nil && (*t.EventType == ComboBolus || t.SplitNow != nil) {
+		t.splitCombo()
 	}
 
 	t.Date, t.UtcOffsetMinutes = date, offset
@@ -243,6 +237,40 @@ var treatmentTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "eve
 
 func (t Treatment) TimeAliases() types.TimeAliases {
 	return treatmentTimes
+}
+
+// splitCombo is a Combo Bolus's, or a split treatment's, dose given at once, its insulin, and the part given over its
+// duration after it, as
+// Nightscout's careportal sends all of it as enteredinsulin, the part at once as insulin, and their percents as
+// splitNow and splitExt; AAPS sends an extended bolus as enteredinsulin with a splitNow of 0. A split outside 0 to 100
+// is not read. Insulin more than enteredinsulin, as a patch merged into the stored treatment sends, is a new dose.
+func (t *Treatment) splitCombo() {
+	now, ext := t.SplitNow, t.SplitExt
+	if now == nil || *now < 0 || *now > 100 || ext != nil && (*ext < 0 || *ext > 100) {
+		now, ext = nil, nil
+	}
+	if ext == nil && now != nil {
+		ext = new(100 - *now)
+	}
+	var extended float64
+	switch {
+	case t.EnteredInsulin != nil && (t.Insulin == nil || *t.Insulin <= *t.EnteredInsulin):
+		if t.Insulin == nil {
+			t.Insulin = new(types.FlexibleFloat64(0))
+			if now != nil {
+				t.Insulin = new(types.FlexibleFloat64(consts.Round(t.EnteredInsulin.Float64()*now.Float64()/100, 5)))
+			}
+		}
+		extended = t.EnteredInsulin.Float64() - t.Insulin.Float64()
+	case t.Insulin != nil && now != nil && *now > 0:
+		extended = t.Insulin.Float64() * ext.Float64() / now.Float64()
+	}
+	if extended = consts.Round(extended, 5); extended > 0 {
+		t.ExtendedDose = new(types.FlexibleFloat64(extended))
+		if t.Duration != nil {
+			t.ExtendedDurationMs = new(t.Duration.Milliseconds())
+		}
+	}
 }
 
 // noEventType is the event type of a treatment sent with none, "<none>", as xDrip+ sends every bolus, carbs and note

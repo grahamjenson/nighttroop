@@ -330,6 +330,9 @@ func BuildLastSummaryPeriods(ctx context.Context, q *sitedb.Queries, siteContext
 	return nil
 }
 
+// extendedLookback is the longest a dose's extended part runs, as its column takes
+const extendedLookback = 7 * 24 * time.Hour
+
 // buildSummaryDaily is the site's day named date, from midnight in its timezone, built from its clean readings,
 // insulin, basal, food and loop reports up to until, so a day not yet over is its part so far. Its time in range is from the site's
 // range low to its range high.
@@ -345,7 +348,8 @@ func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *http
 	if err != nil {
 		return nil, err
 	}
-	doses, err := q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: &start, DateLT: &upTo, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+	// From a week before, the longest a dose's extended part runs, so one started then gives the day its share
+	doses, err := q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: new(start - extendedLookback.Milliseconds()), DateLT: &upTo, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if err != nil {
 		return nil, err
 	}

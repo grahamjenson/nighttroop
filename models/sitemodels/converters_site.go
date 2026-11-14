@@ -297,6 +297,7 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// goverter:map ExtendedDurationMs ExtendedDurationMinutes | MsToMinutes
 	InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose
 
 	// goverter:context siteContext
@@ -306,7 +307,8 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// Only a loop's upload says whether a dose was automatic or basal insulin, its insulin, how much is not absorbed and
 	// the insulin it was given with
-	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson GivenAtOnce
+	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson
+	// goverter:map ExtendedDurationMinutes ExtendedDurationMs | MinutesToMs
 	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
 
 	// goverter:context siteContext
@@ -315,7 +317,8 @@ type SiteConverter interface {
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// Only a loop's upload says whether a dose was automatic or basal insulin, its insulin, how much is not absorbed and
 	// the insulin it was given with
-	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson GivenAtOnce
+	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson
+	// goverter:map ExtendedDurationMinutes ExtendedDurationMs | MinutesToMs
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
 	///////

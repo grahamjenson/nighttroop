@@ -1109,13 +1109,13 @@ func InsulinDoseFromView(source InsulinDosesVw) InsulinDose {
 		xstring := *source.DoseType
 		sitedbInsulinDose.DoseType = &xstring
 	}
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbInsulinDose.SplitNow = &xfloat64
+	if source.ExtendedDose != nil {
+		xfloat64 := *source.ExtendedDose
+		sitedbInsulinDose.ExtendedDose = &xfloat64
 	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbInsulinDose.SplitExt = &xfloat642
+	if source.ExtendedDurationMs != nil {
+		xint64 := *source.ExtendedDurationMs
+		sitedbInsulinDose.ExtendedDurationMs = &xint64
 	}
 	if source.Automatic != nil {
 		xbool := *source.Automatic
@@ -1130,16 +1130,12 @@ func InsulinDoseFromView(source InsulinDosesVw) InsulinDose {
 		sitedbInsulinDose.InsulinType = &xstring2
 	}
 	if source.Unabsorbed != nil {
-		xfloat643 := *source.Unabsorbed
-		sitedbInsulinDose.Unabsorbed = &xfloat643
+		xfloat642 := *source.Unabsorbed
+		sitedbInsulinDose.Unabsorbed = &xfloat642
 	}
 	if source.IcfgJson != nil {
 		xstring3 := *source.IcfgJson
 		sitedbInsulinDose.IcfgJson = &xstring3
-	}
-	if source.GivenAtOnce != nil {
-		xfloat644 := *source.GivenAtOnce
-		sitedbInsulinDose.GivenAtOnce = &xfloat644
 	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
@@ -1150,12 +1146,12 @@ func InsulinDoseFromView(source InsulinDosesVw) InsulinDose {
 		sitedbInsulinDose.Reason = &xstring5
 	}
 	if source.DeletedAt != nil {
-		xint64 := *source.DeletedAt
-		sitedbInsulinDose.DeletedAt = &xint64
+		xint642 := *source.DeletedAt
+		sitedbInsulinDose.DeletedAt = &xint642
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		sitedbInsulinDose.UtcOffsetMinutes = &xint642
+		xint643 := *source.UtcOffsetMinutes
+		sitedbInsulinDose.UtcOffsetMinutes = &xint643
 	}
 	if source.OccurredAt != nil {
 		sitedbInsulinDose.OccurredAt = *source.OccurredAt
@@ -1175,16 +1171,16 @@ func InsulinDoseFromView(source InsulinDosesVw) InsulinDose {
 		sitedbInsulinDose.CreatedByDeviceName = &xstring7
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint643 := *source.UpdatedByIdentityID
-		sitedbInsulinDose.UpdatedByIdentityID = &xint643
+		xint644 := *source.UpdatedByIdentityID
+		sitedbInsulinDose.UpdatedByIdentityID = &xint644
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring8 := *source.UpdatedByIdentityName
 		sitedbInsulinDose.UpdatedByIdentityName = &xstring8
 	}
 	if source.CreatedByIdentityID != nil {
-		xint644 := *source.CreatedByIdentityID
-		sitedbInsulinDose.CreatedByIdentityID = &xint644
+		xint645 := *source.CreatedByIdentityID
+		sitedbInsulinDose.CreatedByIdentityID = &xint645
 	}
 	if source.CreatedByIdentityName != nil {
 		sitedbInsulinDose.CreatedByIdentityName = *source.CreatedByIdentityName
@@ -1199,13 +1195,13 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 		xstring := *source.DoseType
 		sitedbCreateInsulinDoseParams.DoseType = &xstring
 	}
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbCreateInsulinDoseParams.SplitNow = &xfloat64
+	if source.ExtendedDose != nil {
+		xfloat64 := *source.ExtendedDose
+		sitedbCreateInsulinDoseParams.ExtendedDose = &xfloat64
 	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
+	if source.ExtendedDurationMs != nil {
+		xint64 := *source.ExtendedDurationMs
+		sitedbCreateInsulinDoseParams.ExtendedDurationMs = &xint64
 	}
 	if source.Automatic != nil {
 		xbool := *source.Automatic
@@ -1220,16 +1216,12 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 		sitedbCreateInsulinDoseParams.InsulinType = &xstring2
 	}
 	if source.Unabsorbed != nil {
-		xfloat643 := *source.Unabsorbed
-		sitedbCreateInsulinDoseParams.Unabsorbed = &xfloat643
+		xfloat642 := *source.Unabsorbed
+		sitedbCreateInsulinDoseParams.Unabsorbed = &xfloat642
 	}
 	if source.IcfgJson != nil {
 		xstring3 := *source.IcfgJson
 		sitedbCreateInsulinDoseParams.IcfgJson = &xstring3
-	}
-	if source.GivenAtOnce != nil {
-		xfloat644 := *source.GivenAtOnce
-		sitedbCreateInsulinDoseParams.GivenAtOnce = &xfloat644
 	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
@@ -1240,8 +1232,8 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 		sitedbCreateInsulinDoseParams.Reason = &xstring5
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		sitedbCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		sitedbCreateInsulinDoseParams.UtcOffsetMinutes = &xint642
 	}
 	sitedbCreateInsulinDoseParams.OccurredAt = source.OccurredAt
 	if source.CreatedByAppName != nil {
@@ -1254,8 +1246,8 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 	}
 	sitedbCreateInsulinDoseParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint642 := *source.CreatedByIdentityID
-		sitedbCreateInsulinDoseParams.CreatedByIdentityID = &xint642
+		xint643 := *source.CreatedByIdentityID
+		sitedbCreateInsulinDoseParams.CreatedByIdentityID = &xint643
 	}
 	return sitedbCreateInsulinDoseParams
 }
@@ -1267,13 +1259,13 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	}
 	pFloat64 := source.Dose
 	sitedbUpdateInsulinDoseParams.Dose = &pFloat64
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbUpdateInsulinDoseParams.SplitNow = &xfloat64
+	if source.ExtendedDose != nil {
+		xfloat64 := *source.ExtendedDose
+		sitedbUpdateInsulinDoseParams.ExtendedDose = &xfloat64
 	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbUpdateInsulinDoseParams.SplitExt = &xfloat642
+	if source.ExtendedDurationMs != nil {
+		xint64 := *source.ExtendedDurationMs
+		sitedbUpdateInsulinDoseParams.ExtendedDurationMs = &xint64
 	}
 	if source.Automatic != nil {
 		xbool := *source.Automatic
@@ -1288,16 +1280,12 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 		sitedbUpdateInsulinDoseParams.InsulinType = &xstring2
 	}
 	if source.Unabsorbed != nil {
-		xfloat643 := *source.Unabsorbed
-		sitedbUpdateInsulinDoseParams.Unabsorbed = &xfloat643
+		xfloat642 := *source.Unabsorbed
+		sitedbUpdateInsulinDoseParams.Unabsorbed = &xfloat642
 	}
 	if source.IcfgJson != nil {
 		xstring3 := *source.IcfgJson
 		sitedbUpdateInsulinDoseParams.IcfgJson = &xstring3
-	}
-	if source.GivenAtOnce != nil {
-		xfloat644 := *source.GivenAtOnce
-		sitedbUpdateInsulinDoseParams.GivenAtOnce = &xfloat644
 	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes
@@ -1308,8 +1296,8 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 		sitedbUpdateInsulinDoseParams.Reason = &xstring5
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint64 := *source.UpdatedByIdentityID
-		sitedbUpdateInsulinDoseParams.UpdatedByIdentityID = &xint64
+		xint642 := *source.UpdatedByIdentityID
+		sitedbUpdateInsulinDoseParams.UpdatedByIdentityID = &xint642
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring6 := *source.UpdatedByIdentityName
@@ -2663,13 +2651,13 @@ func sitedbInsulinDosesVwToSitedbInsulinDosesVw(source InsulinDosesVw) InsulinDo
 		xstring2 := *source.DoseType
 		sitedbInsulinDosesVw.DoseType = &xstring2
 	}
-	if source.SplitNow != nil {
-		xfloat642 := *source.SplitNow
-		sitedbInsulinDosesVw.SplitNow = &xfloat642
+	if source.ExtendedDose != nil {
+		xfloat642 := *source.ExtendedDose
+		sitedbInsulinDosesVw.ExtendedDose = &xfloat642
 	}
-	if source.SplitExt != nil {
-		xfloat643 := *source.SplitExt
-		sitedbInsulinDosesVw.SplitExt = &xfloat643
+	if source.ExtendedDurationMs != nil {
+		xint64 := *source.ExtendedDurationMs
+		sitedbInsulinDosesVw.ExtendedDurationMs = &xint64
 	}
 	if source.Automatic != nil {
 		xbool := *source.Automatic
@@ -2684,16 +2672,12 @@ func sitedbInsulinDosesVwToSitedbInsulinDosesVw(source InsulinDosesVw) InsulinDo
 		sitedbInsulinDosesVw.InsulinType = &xstring3
 	}
 	if source.Unabsorbed != nil {
-		xfloat644 := *source.Unabsorbed
-		sitedbInsulinDosesVw.Unabsorbed = &xfloat644
+		xfloat643 := *source.Unabsorbed
+		sitedbInsulinDosesVw.Unabsorbed = &xfloat643
 	}
 	if source.IcfgJson != nil {
 		xstring4 := *source.IcfgJson
 		sitedbInsulinDosesVw.IcfgJson = &xstring4
-	}
-	if source.GivenAtOnce != nil {
-		xfloat645 := *source.GivenAtOnce
-		sitedbInsulinDosesVw.GivenAtOnce = &xfloat645
 	}
 	if source.Notes != nil {
 		xstring5 := *source.Notes
@@ -2704,24 +2688,24 @@ func sitedbInsulinDosesVwToSitedbInsulinDosesVw(source InsulinDosesVw) InsulinDo
 		sitedbInsulinDosesVw.Reason = &xstring6
 	}
 	if source.DeletedAt != nil {
-		xint64 := *source.DeletedAt
-		sitedbInsulinDosesVw.DeletedAt = &xint64
+		xint642 := *source.DeletedAt
+		sitedbInsulinDosesVw.DeletedAt = &xint642
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		sitedbInsulinDosesVw.UtcOffsetMinutes = &xint642
+		xint643 := *source.UtcOffsetMinutes
+		sitedbInsulinDosesVw.UtcOffsetMinutes = &xint643
 	}
 	if source.OccurredAt != nil {
-		xint643 := *source.OccurredAt
-		sitedbInsulinDosesVw.OccurredAt = &xint643
+		xint644 := *source.OccurredAt
+		sitedbInsulinDosesVw.OccurredAt = &xint644
 	}
 	if source.CreatedAt != nil {
-		xint644 := *source.CreatedAt
-		sitedbInsulinDosesVw.CreatedAt = &xint644
+		xint645 := *source.CreatedAt
+		sitedbInsulinDosesVw.CreatedAt = &xint645
 	}
 	if source.UpdatedAt != nil {
-		xint645 := *source.UpdatedAt
-		sitedbInsulinDosesVw.UpdatedAt = &xint645
+		xint646 := *source.UpdatedAt
+		sitedbInsulinDosesVw.UpdatedAt = &xint646
 	}
 	if source.CreatedByAppName != nil {
 		xstring7 := *source.CreatedByAppName
@@ -2732,16 +2716,16 @@ func sitedbInsulinDosesVwToSitedbInsulinDosesVw(source InsulinDosesVw) InsulinDo
 		sitedbInsulinDosesVw.CreatedByDeviceName = &xstring8
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint646 := *source.UpdatedByIdentityID
-		sitedbInsulinDosesVw.UpdatedByIdentityID = &xint646
+		xint647 := *source.UpdatedByIdentityID
+		sitedbInsulinDosesVw.UpdatedByIdentityID = &xint647
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring9 := *source.UpdatedByIdentityName
 		sitedbInsulinDosesVw.UpdatedByIdentityName = &xstring9
 	}
 	if source.CreatedByIdentityID != nil {
-		xint647 := *source.CreatedByIdentityID
-		sitedbInsulinDosesVw.CreatedByIdentityID = &xint647
+		xint648 := *source.CreatedByIdentityID
+		sitedbInsulinDosesVw.CreatedByIdentityID = &xint648
 	}
 	if source.CreatedByIdentityName != nil {
 		xstring10 := *source.CreatedByIdentityName

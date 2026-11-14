@@ -668,6 +668,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - ‹ and ›: the 30 days before and after. › disabled for the latest month, ‹ past one year ago. A last day after today,
   or over one year before yesterday, is refused. Back and forward work.
 - Chart: a bar of each day's total daily dose, oldest first, on an axis of every day, a few pixels apart.
+  - A dose's extended part counts in each day by the share of its minutes in that day. Today has the share due today.
   - Basal (gold) under boluses, with a legend.
   - No insulin: no bar, not counted.
   - Hover: date and basal or boluses in U.
@@ -761,7 +762,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Above page one: small graphs of the last 10 days, same scale, oldest first, each with the range shaded and time in
     range. The last is today so far, from clean readings. Title: "Last N days", or "Today" on a new site's first day.
 - **Insulin doses**
-  - Combo bolus split: the fractions given at once and over time.
+  - Dose: the units given at once. A combo or extended bolus also has an extended dose (U) and the minutes it is given
+    over. A dose of 0 is refused, except when it has an extended dose.
   - `automatic`: if a loop gave it. `true`/`false` as Loop uploaded, `null` if the app does not tell. Site API
     returns it, ignores it on create or update.
 - **Food intakes**
@@ -782,7 +784,6 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
   | Field | Label | API example | Site range |
   | --- | --- | --- | --- |
-  | Combo bolus split | Given at once (%), Extended (%) | 0.7 = 70% | 0% to 100% |
   | Temp basal multiplier | Basal (%) | 0.5 = 50% | 1% to 1100% |
   | Profile switch multiplier | Insulin (%) | 1.2 = 120% | 10% to 500% |
 
@@ -1437,13 +1438,17 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - A bolus's insulin also as `programmed`.
   - A temp basal's `temp` `absolute`.
 - A Combo Bolus (extended bolus):
-  - `enteredinsulin` is all its insulin, the dose. Sent with no `insulin` and no split, it is all extended: `splitNow` 0,
-    `splitExt` 100 (AAPS).
-  - An `insulin` up to `enteredinsulin` is the part given at once (Nightscout's careportal), and the dose is still
-    `enteredinsulin`. A larger `insulin` (for example a patch) is the new dose.
-  - An `insulin` sent with `enteredinsulin` is returned as sent (the part given at once).
-  - Returned with `enteredinsulin`, and with no `insulin` when `splitNow` is 0. AAPS reads a treatment with `insulin` as
-    a bolus, and drops a Combo Bolus with no `enteredinsulin`.
+  - Kept on its insulin dose as the dose given at once, the extended dose, and the extended duration (its `duration`).
+  - `insulin` up to `enteredinsulin`: `insulin` is the dose at once, and the rest is extended (Nightscout's careportal).
+  - `enteredinsulin` with no `insulin`: `splitNow` of it is at once, and the rest extended. With no split, all of it is
+    extended (AAPS sends `splitNow` 0).
+  - `insulin` with `splitNow` and `splitExt` and no `enteredinsulin`: `insulin` is at once, and the extended dose is
+    `insulin` × `splitExt` / `splitNow`. Any other treatment sent with a split is kept the same way.
+  - A larger `insulin` than `enteredinsulin` (for example a patch) is the new dose at once.
+  - A split outside 0 to 100 is not read.
+  - Returned: `insulin` (none when all of it is extended), `enteredinsulin` (all of it), `splitNow` and `splitExt` (whole
+    percents), and `relative` (the extended dose's U/hr). AAPS reads a treatment with `insulin` as a bolus, and drops a
+    Combo Bolus with no `enteredinsulin`.
   - Returned with `relative`: the units an hour of the extended part, from the dose, `splitExt` and `duration`.
 - `timestamp`: only API v1 and its sockets. API v3 and its storage socket leave it out (AAPS drops a treatment, or a
   page, whose `timestamp` is a date).
@@ -1472,7 +1477,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - The site (pages and API) gets each note, reason and notification without HTML tags and script contents.
 - Values that mean none are not stored, and are left out as if not sent: an empty string, a CGM `noise` or `rssi` of
   0, a heart rate of 0. An update with one keeps the stored value.
-- `false`, and other zeros (e.g. a combo bolus split), are kept.
+- `false`, and other zeros (e.g. a combo bolus's `splitNow` of 0), are kept.
 
 #### Limits and errors
 

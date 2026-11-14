@@ -295,14 +295,13 @@ type InsulinDose struct {
 	ID                    string
 	Dose                  float64
 	DoseType              *string
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string
 	Unabsorbed            *float64
 	IcfgJson              *string
-	GivenAtOnce           *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -322,14 +321,13 @@ type InsulinDosesVw struct {
 	ID                    *string
 	Dose                  *float64
 	DoseType              *string
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string
 	Unabsorbed            *float64
 	IcfgJson              *string
-	GivenAtOnce           *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64

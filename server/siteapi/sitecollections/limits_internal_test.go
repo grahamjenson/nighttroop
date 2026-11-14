@@ -24,9 +24,9 @@ func TestCheckLimits(t *testing.T) {
 		update      bool
 		want        string
 	}{
-		{"in range", "insulin_doses", &sitemodels.SiteInsulinDose{Dose: 5, SplitNow: new(0.5)}, mgdl, false, ""},
-		{"out of its column's range", "insulin_doses", &sitemodels.SiteInsulinDose{Dose: 5, SplitNow: new(1.5)}, mgdl, false,
-			"split_now must be from 0 to 1"},
+		{"in range", "insulin_doses", &sitemodels.SiteInsulinDose{Dose: 5, ExtendedDose: new(2.0)}, mgdl, false, ""},
+		{"out of its column's range", "insulin_doses", &sitemodels.SiteInsulinDose{Dose: 5, ExtendedDose: new(501.0)}, mgdl, false,
+			"extended_dose must be from 0 to 500"},
 		{"out of its override, narrower than its column", "insulin_doses", &sitemodels.SiteInsulinDose{Dose: 200}, mgdl, false,
 			"dose must be from -100 to 100"},
 		{"a drift fixed: food's energy at least 0", "food", &sitemodels.SiteFoodIntake{Energy: new(-1.0)}, mgdl, false,

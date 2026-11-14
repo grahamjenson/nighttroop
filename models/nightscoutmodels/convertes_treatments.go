@@ -142,8 +142,6 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Dose Insulin
 	// goverter:map DoseType Type
-	// goverter:map SplitNow SplitNow | MultiplierToPercentage
-	// goverter:map SplitExt SplitExt | MultiplierToPercentage
 	// goverter:map IcfgJson ICfg | JSONToInsulinConfig
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
@@ -223,8 +221,6 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Insulin Dose
 	// goverter:map Type DoseType
-	// goverter:map SplitNow SplitNow | PercentageToMultiplier
-	// goverter:map SplitExt SplitExt | PercentageToMultiplier
 	// goverter:map ICfg IcfgJson | InsulinConfigToJSON
 	PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose
 

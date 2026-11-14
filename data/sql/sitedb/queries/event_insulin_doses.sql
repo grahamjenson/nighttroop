@@ -6,14 +6,13 @@ INSERT INTO insulin_doses (
     id,
     dose,
     dose_type,
-    split_now,
-    split_ext,
+    extended_dose,
+    extended_duration_ms,
     automatic,
     is_basal_insulin,
     insulin_type,
     unabsorbed,
     icfg_json,
-    given_at_once,
 
     notes,
     reason,
@@ -25,7 +24,7 @@ INSERT INTO insulin_doses (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -100,14 +99,13 @@ UPDATE insulin_doses SET
     id = sqlc.arg('ID'),
     dose = sqlc.arg('Dose'),
     dose_type = sqlc.arg('DoseType'),
-    split_now = sqlc.arg('SplitNow'),
-    split_ext = sqlc.arg('SplitExt'),
+    extended_dose = sqlc.arg('ExtendedDose'),
+    extended_duration_ms = sqlc.arg('ExtendedDurationMs'),
     automatic = sqlc.arg('Automatic'),
     is_basal_insulin = sqlc.arg('IsBasalInsulin'),
     insulin_type = sqlc.arg('InsulinType'),
     unabsorbed = sqlc.arg('Unabsorbed'),
     icfg_json = sqlc.arg('IcfgJson'),
-    given_at_once = sqlc.arg('GivenAtOnce'),
     notes = sqlc.arg('Notes'),
     reason = sqlc.arg('Reason'),
     utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
@@ -124,14 +122,13 @@ RETURNING *;
 UPDATE insulin_doses SET
     dose_type = COALESCE(sqlc.narg('DoseType'), dose_type),
     dose = COALESCE(sqlc.narg('Dose'), dose),
-    split_now = COALESCE(sqlc.narg('SplitNow'), split_now),
-    split_ext = COALESCE(sqlc.narg('SplitExt'), split_ext),
+    extended_dose = COALESCE(sqlc.narg('ExtendedDose'), extended_dose),
+    extended_duration_ms = COALESCE(sqlc.narg('ExtendedDurationMs'), extended_duration_ms),
     automatic = COALESCE(sqlc.narg('Automatic'), automatic),
     is_basal_insulin = COALESCE(sqlc.narg('IsBasalInsulin'), is_basal_insulin),
     insulin_type = COALESCE(NULLIF(CAST(sqlc.narg('InsulinType') AS TEXT), ''), insulin_type),
     unabsorbed = COALESCE(sqlc.narg('Unabsorbed'), unabsorbed),
     icfg_json = COALESCE(sqlc.narg('IcfgJson'), icfg_json),
-    given_at_once = COALESCE(sqlc.narg('GivenAtOnce'), given_at_once),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 
