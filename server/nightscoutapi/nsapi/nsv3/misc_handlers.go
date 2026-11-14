@@ -17,8 +17,8 @@ func Version(store nsutils.Store) http.HandlerFunc {
 		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
-				"version":    "3.0.4",
-				"apiVersion": "3.0.4",
+				"version":    nsutils.Version,
+				"apiVersion": nsutils.APIv3Version,
 				"srvDate":    time.Now().UnixMilli(),
 			},
 		})
@@ -64,8 +64,8 @@ func Status(_ nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.I
 			"status": http.StatusOK,
 			"result": map[string]any{
 				"srvDate":    time.Now().UnixMilli(),
-				"apiVersion": "0.0.1",
-				"version":    "0.0.1",
+				"apiVersion": nsutils.APIv3Version,
+				"version":    nsutils.Version,
 				"storage": map[string]string{
 					"storage": "sqlite",
 					"version": "0.0.1",

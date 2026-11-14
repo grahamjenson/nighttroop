@@ -16,7 +16,7 @@ func Versions() http.HandlerFunc {
 		apiutils.WriteJSON(w, http.StatusOK, []map[string]string{
 			{"url": "/api/v1", "version": "1.0.0"},
 			{"url": "/api/v2", "version": "2.0.0"},
-			{"url": "/api/v3", "version": "3.0.4"},
+			{"url": "/api/v3", "version": nsutils.APIv3Version},
 		})
 	}
 }
@@ -76,6 +76,8 @@ func Status(ctx context.Context) map[string]any {
 	}
 	status := map[string]any{
 		"status":            "ok",
+		"version":           nsutils.Version,
+		"versionNum":        nsutils.VersionNum,
 		"apiEnabled":        true,
 		"careportalEnabled": true,
 		"settings": map[string]any{
