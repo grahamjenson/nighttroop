@@ -114,15 +114,15 @@ func ActivityNew() templ.Component {
 // activityFields are what an activity has that a person can type in
 func activityFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "name", Label: i18n.T(ctx, "site.data.common.name"), Help: i18n.T(ctx, "site.data.activities.name_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+		{Name: "name", Column: "activities.Name", Label: i18n.T(ctx, "site.data.common.name"), Help: i18n.T(ctx, "site.data.activities.name_help"), Required: true, Kind: addmodal.Text},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.activities.when_help"), Kind: addmodal.When},
-		{Name: "activity_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.activities.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
-		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.activities.duration_help"), Min: "1", Max: "1440", Step: "1"},
-		{Name: "calories", Label: i18n.T(ctx, "site.data.activities.calories"), Help: i18n.T(ctx, "site.data.activities.calories_help"), Min: "0", Max: "20000", Step: "1"},
-		{Name: "steps", Label: i18n.T(ctx, "site.data.activities.steps"), Help: i18n.T(ctx, "site.data.activities.steps_help"), Min: "0", Max: "200000", Step: "1"},
-		{Name: "heart_rate", Label: i18n.T(ctx, "site.data.activities.heart_rate"), Help: i18n.T(ctx, "site.data.activities.heart_rate_help"), Min: "20", Max: "250", Step: "1"},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.activities.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "activity_type", Column: "activities.ActivityType", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.activities.type_help"), Kind: addmodal.Text, Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
+		{Name: "duration_minutes", Column: "activities.DurationMinutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.activities.duration_help"), Min: "1", Max: "1440", Step: "1"},
+		{Name: "calories", Column: "activities.Calories", Label: i18n.T(ctx, "site.data.activities.calories"), Help: i18n.T(ctx, "site.data.activities.calories_help"), Max: "20000", Step: "1"},
+		{Name: "steps", Column: "activities.Steps", Label: i18n.T(ctx, "site.data.activities.steps"), Help: i18n.T(ctx, "site.data.activities.steps_help"), Max: "200000", Step: "1"},
+		{Name: "heart_rate", Column: "activities.HeartRate", Label: i18n.T(ctx, "site.data.activities.heart_rate"), Help: i18n.T(ctx, "site.data.activities.heart_rate_help"), Min: "20", Max: "250", Step: "1"},
+		{Name: "reason", Column: "activities.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.activities.reason_help"), Kind: addmodal.Text},
+		{Name: "notes", Column: "activities.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 

@@ -1,0 +1,61 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// An insulin dose's inputs take what its columns take, narrowed where a dose is less: its dose to 100 units either way,
+// its split as the percent of its column's fraction, and its texts to their columns' lengths
+GOTO /data/insulin
+ASSERT_STATUS 200
+CLICK #site--insulin--add
+ASSERT_VISIBLE #site--insulin--create--modal
+ASSERT_VISIBLE #site--insulin--create--dose[min="-100"][max="100"][step="any"]
+ASSERT_VISIBLE #site--insulin--create--split-now[min="0"][max="100"][data-percent]
+ASSERT_VISIBLE #site--insulin--create--dose-type[maxlength="32"]
+ASSERT_VISIBLE #site--insulin--create--notes[maxlength="1024"]
+SCREENSHOT insulin_dose_limits
+CLICK #site--insulin--create--modal--close
+ASSERT_NOT_VISIBLE #site--insulin--create--modal
+
+// A food intake's carbs take its column's limits, and its energy is at least 0
+GOTO /data/food
+ASSERT_STATUS 200
+CLICK #site--food--add
+ASSERT_VISIBLE #site--food--create--carbs[min="-1000"][max="1000"]
+ASSERT_VISIBLE #site--food--create--energy[min="0"][max="20000"]
+ASSERT_VISIBLE #site--food--create--absorption-time-minutes[min="0"][max="1440"][step="1"]
+ASSERT_VISIBLE #site--food--create--name[maxlength="64"]
+CLICK #site--food--create--modal--close
+
+// A profile switch's percent is its multiplier's limits, 0.1 to 5, as a percent
+GOTO /data/profile-switches
+ASSERT_STATUS 200
+CLICK #site--profile-switch--add
+ASSERT_VISIBLE #site--profile-switch--create--multiplier[min="10"][max="500"]
+ASSERT_VISIBLE #site--profile-switch--create--duration-minutes[min="0"][max="10080"]
+CLICK #site--profile-switch--create--modal--close
+
+// A temp target's targets are in the site's mmol/L, more than 0 and at most 1000 mg/dL
+GOTO /data/temp-targets
+ASSERT_STATUS 200
+CLICK #site--temp-target--add
+ASSERT_VISIBLE #site--temp-target--create--low-target[min="0.1"][max="55.5"]
+ASSERT_VISIBLE #site--temp-target--create--high-target[min="0.1"][max="55.5"]
+ASSERT_VISIBLE #site--temp-target--create--duration-minutes[min="1"][max="10080"]
+SCREENSHOT temp_target_limits_mmol
+CLICK #site--temp-target--create--modal--close
+
+// In mg/dL, the targets and a glucose reading take the columns' mg/dL as they are
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--units mg/dL
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /data/temp-targets
+ASSERT_STATUS 200
+CLICK #site--temp-target--add
+ASSERT_VISIBLE #site--temp-target--create--low-target[min="0.1"][max="1000"]
+CLICK #site--temp-target--create--modal--close
+GOTO /data/glucose
+ASSERT_STATUS 200
+CLICK #site--glucose--add
+ASSERT_VISIBLE #site--glucose--create--reading[min="0.1"][max="1000"]
