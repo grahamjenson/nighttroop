@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -55,4 +56,33 @@ func TestUsageAndTruncate(t *testing.T) {
 	// Its data is kept: truncating only clears and thins device reports
 	_, err = site.SiteDB.Queries().GetGlucoseReading(t.Context(), sitedb.GetGlucoseReadingParams{ID: "kept"})
 	require.NoError(t, err)
+}
+
+// A site's admin can ask for its summaries to be built again only a few times a minute, as each build reads a year of
+// its data, sharing the site's downloads; a user cannot ask at all, and spends none of them
+func TestRegenerateSummariesIsRateLimited(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	siteID := site.SiteDB.Subdomain
+	regenerateAs := func(role consts.IdentityRole) int {
+		ctx := httputils.CreateSiteContext(context.Background(), cfg, controlDB, site.SiteDB, nil, siteID, "", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "someone", Role: role})
+		w := httptest.NewRecorder()
+		RegenerateSummariesHandler(w, httptest.NewRequest(http.MethodPost, "/reports/summaries/regenerate", nil).WithContext(ctx))
+		return w.Code
+	}
+
+	require.Equal(t, http.StatusForbidden, regenerateAs(consts.IdentityRoleUser))
+	for range cfg.SiteDownloadPerMinuteBurst {
+		require.Equal(t, http.StatusAccepted, regenerateAs(consts.IdentityRoleAdmin))
+	}
+	require.Equal(t, http.StatusTooManyRequests, regenerateAs(consts.IdentityRoleAdmin))
+	logged, err := controlDB.Logs.Queries.SearchEvents(t.Context(), logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	requested := 0
+	for _, event := range logged {
+		if event.Name == string(events.SummariesRegenerationRequested) {
+			requested++
+		}
+	}
+	require.Equal(t, cfg.SiteDownloadPerMinuteBurst, requested)
 }

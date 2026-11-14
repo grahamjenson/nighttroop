@@ -265,6 +265,7 @@
       "post": {
         "operationId": "RegenerateSummaries", "tags": ["Data"],
         "summary": "Asks for the site's last year of summaries to be built again from its data, by a background job; admins only",
+        "description": "Shares the site's few downloads a minute with POST /usage/truncate and GET /usage/download; over it, the reply is 429.",
         "responses": {
           "202": { "description": "The regeneration is queued", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "object", "properties": { "regenerating": { "type": "boolean" } } } } } } } },
           "default": { "$ref": "#/components/responses/Error" }
@@ -282,7 +283,7 @@
       "post": {
         "operationId": "TruncateSite", "tags": ["Site"],
         "summary": "Truncates the site's device statuses and old loop settings, and shrinks its DB; admins only",
-        "description": "Shares the site's few downloads a minute with GET /usage/download; over it, the reply is 429. The result's size_kb is the size after, and before_size_kb the size before.",
+        "description": "Shares the site's few downloads a minute with GET /usage/download and POST /reports/summaries/regenerate; over it, the reply is 429. The result's size_kb is the size after, and before_size_kb the size before.",
         "responses": { "200": { "$ref": "#/components/responses/SiteUsageResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
@@ -290,7 +291,7 @@
       "get": {
         "operationId": "DownloadSiteData", "tags": ["Site"],
         "summary": "A snapshot of the site's DB, as <site>-<date>.zip holding <site>-<date>.sqlite; admins only",
-        "description": "Shares the site's few downloads a minute with POST /usage/truncate; over it, the reply is 429. The zip is sent as it is made, so an error after it starts cuts it short.",
+        "description": "Shares the site's few downloads a minute with POST /usage/truncate and POST /reports/summaries/regenerate; over it, the reply is 429. The zip is sent as it is made, so an error after it starts cuts it short.",
         "responses": {
           "200": { "description": "The zip, as an attachment", "content": { "application/zip": { "schema": { "type": "string", "format": "binary" } } } },
           "default": { "$ref": "#/components/responses/Error" }
