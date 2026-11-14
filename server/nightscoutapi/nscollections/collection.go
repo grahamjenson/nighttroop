@@ -221,28 +221,13 @@ func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteCon
 	return stored[NS]{meta: m, model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
+// Create stores the model sent, see createdModel, unless it has a duplicate, see duplicate. It returns the duplicate,
+// and true, in its place, refreshed when the model is the duplicate sent again, see resent.
 func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
-	m := c.db
 	var left leftOut
 	defer func() { left.record(ctx, httpErr) }()
-	nsModel, httpErr := c.decode(data, &left)
+	nsModel, httpErr := c.createdModel(ctx, siteContext, data, &left)
 	if httpErr != nil {
-		slog.ErrorContext(ctx, "failed to map data", "error", httpErr, "collection", m.Name())
-		return nil, false, httpErr
-	}
-
-	if err := ValidateInputData(data); err != nil {
-		return nil, false, err
-	}
-	var err error
-	if nsModel, err = withUtcOffset(data, nsModel, siteUtcOffset(siteContext)); err != nil {
-		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
-	}
-
-	if err := m.Validate(nsModel, nil); err != nil {
-		return nil, false, err
-	}
-	if nsModel, httpErr = c.withinLimits(data, nsModel, &left); httpErr != nil {
 		return nil, false, httpErr
 	}
 
@@ -252,47 +237,23 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 	defer tx.Rollback()
 
-	var duplicateDBModel *DM
-	identifier := nsModel.GetIdentifier()
-	if identifier != nil && *identifier == "" {
-		identifier = nil
+	identifier := sentIdentifier(nsModel)
+	duplicate, httpErr := c.duplicate(ctx, q, nsModel, identifier)
+	if httpErr != nil {
+		return nil, false, httpErr
 	}
-	if identifier != nil {
-		if duplicateDBModel, httpErr = c.identifiedDuplicate(q, ctx, *identifier); httpErr != nil {
-			return nil, false, httpErr
-		}
+	if duplicate != nil && resent(nsModel, identifier, duplicate) {
+		return c.repeated(ctx, siteContext, tx, q, nsModel, data, duplicate)
 	}
-	if duplicateDBModel == nil {
-		duplicateDBModel, err = c.keyDuplicate(q, ctx, nsModel, identifier != nil)
-	}
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
-	}
-	// One naming its identifier repeats its duplicate only with the same date, as Loop sends a dose again when it ends
-	if duplicateDBModel != nil && (identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicateDBModel).GetOccurredAt())) {
-		return c.repeated(ctx, siteContext, tx, q, nsModel, data, duplicateDBModel)
-	}
-	if duplicateDBModel != nil {
-		return c.document(duplicateDBModel, siteContext), true, nil
+	if duplicate != nil {
+		return c.document(duplicate, siteContext), true, nil
 	}
 
-	dbModel, err := m.CreateModel(
-		q,
-		ctx,
-		nsModel,
-		converterContext(siteContext),
-		identifier,
-	)
-
+	dbModel, err := c.db.CreateModel(q, ctx, nsModel, converterContext(siteContext), identifier)
 	if httpErr := c.stored(dbModel, err, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
-	// A treatment or reading sent already deleted, isValid false, is kept soft deleted, as Nightscout keeps isValid as
-	// sent: AAPS uploads what it deleted while offline so, and a follower would otherwise take it as current. Presets
-	// are not soft deleted, so a food or profile keeps being stored as before.
-	valid, sent := data["isValid"].(bool)
-	deleted := sent && !valid && (m.Name() == string(nsutils.Treatments) || m.Name() == string(nsutils.Entries))
+	deleted := c.sentDeleted(data)
 	if deleted {
 		if dbModel, httpErr = c.softDeleted(q, ctx, dbModel); httpErr != nil {
 			return nil, false, httpErr
@@ -310,6 +271,67 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	siteContext.PublishModelChange(events.Created, dbModel)
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbModel, siteContext), false, nil
+}
+
+// createdModel is the model a create stores: the fields sent decoded, given the site's UTC offset when sent without
+// one, and checked, its values out of their columns' limits left out and said in left
+func (c Collection[NS, DM]) createdModel(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, left *leftOut) (NS, *nsutils.HTTPError) {
+	nsModel, httpErr := c.decode(data, left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data", "error", httpErr, "collection", c.db.Name())
+		return nsModel, httpErr
+	}
+	if httpErr := ValidateInputData(data); httpErr != nil {
+		return nsModel, httpErr
+	}
+	nsModel, err := withUtcOffset(data, nsModel, siteUtcOffset(siteContext))
+	if err != nil {
+		return nsModel, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	if httpErr := c.db.Validate(nsModel, nil); httpErr != nil {
+		return nsModel, httpErr
+	}
+	return c.withinLimits(data, nsModel, left)
+}
+
+// sentIdentifier is the identifier the model was sent with, nil when it was sent with none or an empty one
+func sentIdentifier[NS SharedNSFields](nsModel NS) *string {
+	identifier := nsModel.GetIdentifier()
+	if identifier != nil && *identifier == "" {
+		return nil
+	}
+	return identifier
+}
+
+// duplicate is the model stored that a create repeats: the one with the identifier sent, see identifiedDuplicate,
+// or else the one the fallback key finds, see keyDuplicate. It is nil when there is none.
+func (c Collection[NS, DM]) duplicate(ctx context.Context, q *sitedb.Queries, nsModel NS, identifier *string) (*DM, *nsutils.HTTPError) {
+	if identifier != nil {
+		identified, httpErr := c.identifiedDuplicate(q, ctx, *identifier)
+		if httpErr != nil || identified != nil {
+			return identified, httpErr
+		}
+	}
+	keyed, err := c.keyDuplicate(q, ctx, nsModel, identifier != nil)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	return keyed, nil
+}
+
+// resent is whether the model sent is its duplicate sent again, which can refresh it. One naming its identifier is
+// sent again only with the same date, as Loop sends a dose again when it ends.
+func resent[NS SharedNSFields, DM SharedDBFields](nsModel NS, identifier *string, duplicate *DM) bool {
+	return identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicate).GetOccurredAt())
+}
+
+// sentDeleted is whether a treatment or reading was sent already deleted, isValid false. It is kept soft deleted, as
+// Nightscout keeps isValid as sent: AAPS uploads what it deleted while offline so, and a follower would otherwise take
+// it as current. Presets are not soft deleted, so a food or profile keeps being stored as before.
+func (c Collection[NS, DM]) sentDeleted(data map[string]any) bool {
+	valid, sent := data["isValid"].(bool)
+	return sent && !valid && (c.db.Name() == string(nsutils.Treatments) || c.db.Name() == string(nsutils.Entries))
 }
 
 // softDeleted deletes the model just stored, as a soft delete does, and is it deleted
