@@ -11,7 +11,6 @@ import (
 	"context"
 	"fmt"
 
-	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
@@ -31,9 +30,6 @@ import (
 // Roles are the control roles, as an admin chooses them, the first picked to start with so an admin added without
 // choosing one is read only
 var Roles = []consts.ControlRole{consts.ControlRoleRead, consts.ControlRoleAdmin}
-
-// nameLimit is what an admin's name takes, as its table checks
-var nameLimit, _ = controldb.ColumnLimitOf("control_identities", "Name")
 
 // roleLabels are the ids of each role's label
 var roleLabels = map[consts.ControlRole]string{consts.ControlRoleAdmin: "control.admins.role_admin", consts.ControlRoleRead: "control.admins.role_read"}
@@ -80,7 +76,7 @@ func Admins(admins []*controlmodels.ControlAdmin) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.intro"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 43, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 39, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -143,7 +139,7 @@ func Admins(admins []*controlmodels.ControlAdmin) templ.Component {
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.name"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 49, Col: 42}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 45, Col: 42}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -170,7 +166,7 @@ func Admins(admins []*controlmodels.ControlAdmin) templ.Component {
 						var templ_7745c5c3_Var10 string
 						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.role"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 52, Col: 42}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 48, Col: 42}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 						if templ_7745c5c3_Err != nil {
@@ -197,7 +193,7 @@ func Admins(admins []*controlmodels.ControlAdmin) templ.Component {
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.created"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 55, Col: 45}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 51, Col: 45}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 						if templ_7745c5c3_Err != nil {
@@ -228,7 +224,7 @@ func Admins(admins []*controlmodels.ControlAdmin) templ.Component {
 						var templ_7745c5c3_Var14 string
 						templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.actions"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 58, Col: 67}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 54, Col: 67}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 						if templ_7745c5c3_Err != nil {
@@ -349,7 +345,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(admin.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 83, Col: 15}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 79, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -367,7 +363,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.you"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 85, Col: 117}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 81, Col: 117}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -404,7 +400,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id + "--role").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 92, Col: 23}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 88, Col: 23}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 					if templ_7745c5c3_Err != nil {
@@ -417,7 +413,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var23 string
 					templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "control.admins.role_of", i18n.Data{"AdminName": admin.Name})).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 94, Col: 91}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 90, Col: 91}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 					if templ_7745c5c3_Err != nil {
@@ -430,7 +426,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var24 string
 					templ_7745c5c3_Var24, templ_7745c5c3_Err = templruntime.NewAttributeExpression(string(admin.Role)).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 95, Col: 35}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 91, Col: 35}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 					if templ_7745c5c3_Err != nil {
@@ -443,7 +439,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var25 string
 					templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(path + "/role").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 97, Col: 29}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 93, Col: 29}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 					if templ_7745c5c3_Err != nil {
@@ -461,7 +457,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 						var templ_7745c5c3_Var26 string
 						templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(string(role)).Resolve(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 106, Col: 34}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 102, Col: 34}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 						if templ_7745c5c3_Err != nil {
@@ -484,7 +480,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 						var templ_7745c5c3_Var27 string
 						templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(RoleLabel(ctx, role))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 106, Col: 92}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 102, Col: 92}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 						if templ_7745c5c3_Err != nil {
@@ -507,7 +503,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var28 string
 					templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id + "--role").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 110, Col: 28}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 106, Col: 28}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 					if templ_7745c5c3_Err != nil {
@@ -520,7 +516,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var29 string
 					templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(RoleLabel(ctx, admin.Role))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 110, Col: 59}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 106, Col: 59}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 					if templ_7745c5c3_Err != nil {
@@ -552,7 +548,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(display.DateTime(&admin.CreatedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 114, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 110, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -566,7 +562,7 @@ func AdminRow(admin *controlmodels.ControlAdmin) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.created_by", i18n.Data{"AdminName": admin.CreatedByIdentityName}))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 116, Col: 99}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 112, Col: 99}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
@@ -670,7 +666,7 @@ func manageMenu(id string, path string, name string) templ.Component {
 					var templ_7745c5c3_Var38 string
 					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.manage"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 132, Col: 42}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 128, Col: 42}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 					if templ_7745c5c3_Err != nil {
@@ -831,7 +827,7 @@ func menuLabel(ic func(...icon.Props) templ.Component, label string) templ.Compo
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 163, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 159, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -890,7 +886,7 @@ func addForm() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": fmt.Sprint(nameLimit.MaxLength), "autocomplete": "off"}}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = input.Input(input.Props{ID: "control--admins--add--name", Name: "name", Required: true, Attributes: templ.Attributes{"maxlength": fmt.Sprint(controlmodels.AdminNameLimit.MaxLength), "autocomplete": "off"}}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -924,7 +920,7 @@ func addForm() templ.Component {
 				var templ_7745c5c3_Var48 string
 				templ_7745c5c3_Var48, templ_7745c5c3_Err = templruntime.NewAttributeExpression(string(role)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 196, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 192, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 				if templ_7745c5c3_Err != nil {
@@ -937,7 +933,7 @@ func addForm() templ.Component {
 				var templ_7745c5c3_Var49 string
 				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(RoleLabel(ctx, role))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 196, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 192, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 				if templ_7745c5c3_Err != nil {
@@ -973,7 +969,7 @@ func addForm() templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.admins.add"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 201, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_admins_templ/admins.templ`, Line: 197, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
