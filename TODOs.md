@@ -17,6 +17,8 @@
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
+    1. P3: Show a site's abuse flag (`FlaggedForAbuse`) on the control sites list and site details, and record an event
+       when a site is first flagged, so a control admin can see which sites the server throttles
 
 ## Before Prod Deployment
 

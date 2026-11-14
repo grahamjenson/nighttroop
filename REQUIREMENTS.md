@@ -312,7 +312,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 ### Rate limits
 
 - Refreshes every 10 seconds. Lists each limiter kind: every request, the control site's signed out, an IP's, sign ins,
-  sites created, a site's and an identity's reads and writes, connector changes, identities created, downloads.
+  sites created, a site's and an identity's reads and writes, a flagged site's writes, connector changes, identities
+  created, downloads.
 - Each kind:
   - what one is for (server, IP, site, identity, username or IP on a site);
   - rate a minute, burst, and how many are kept;
@@ -328,6 +329,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A site's reads and writes have 4 times an identity's limit. Test: one identity spends all its own (for example, a
   day's backlog upload). A carer's carbs and AAPSClient's commands still go through.
 - Over a site's or identity's limit: 429, with `Retry-After` the seconds until one is accepted, at least 1.
+- A site flagged for abuse also spends its flagged writes limit (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT`). See
+  [Abuse flag](#abuse-flag).
 
 ### Resource alerts
 
@@ -1756,6 +1759,19 @@ Every 10 minutes, the server truncates every site:
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`). One with a valid token does not.
   - An IP with no budget left is refused before its token is checked.
 - IP limits (requests, sign ins, recoveries and site creation) cover the whole IPv6 /64.
+
+#### Abuse flag
+
+- The server flags a site for abuse if its DB is over 3 times its DB size limit (60 MB for a 20 MB limit).
+  - The server uses the DB size on disk at each write, not the size it recorded last.
+  - If the size or the limit is not known, the site is not flagged.
+- Each write of a flagged site also spends the site's flagged writes limit: 12 a minute, burst 36
+  (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT` / `_BURST`).
+  - All identities, the site pages and API, the Nightscout API and live updates share this limit.
+  - A v1 upload or a live update upload costs one flagged write for each record.
+  - Over it: 429, with `Retry-After` and the message `Too many writes: this site's data is far over its storage limit`.
+  - Live updates: the write is refused with that message.
+- Reads of a flagged site, and sites that are not flagged, do not change.
 - A request's IP is its TCP peer.
   - Behind a trusted proxy (`TRUSTED_PROXIES`): the hop before it in `X-Forwarded-For`, or on Fly.io `Fly-Client-IP`.
   - Any other peer that sets these headers keeps its own IP's limits.
