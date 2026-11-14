@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"nighttroop.t1d.nz/data/db"
 
@@ -19,7 +18,6 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -89,8 +87,8 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		formPassword := r.FormValue("password")
 
 		// Reject names no identity can have before they reach the rate limiter, which keys on them
-		if utf8.RuneCountInString(formName) > consts.MAX_IDENTITY_NAME_LENGTH {
-			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.invalid_name_or_password"), fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
+		if !nameLimit.Takes(formName) {
+			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.invalid_name_or_password"), fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
 			return
 		}
 
@@ -316,8 +314,8 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 	}
 
 	// Reject names no identity can have before they reach the rate limiter, which keys on them
-	if utf8.RuneCountInString(creds.Name) > consts.MAX_IDENTITY_NAME_LENGTH {
-		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
+	if !nameLimit.Takes(creds.Name) {
+		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
 		return
 	}
 
@@ -433,13 +431,13 @@ func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, usrMsg string
 	http.Error(w, usrMsg, http.StatusUnauthorized)
 }
 
-// maxLoginName is the longest an identity's name is, as its table checks
-const maxLoginName = 32
+// nameLimit is what a site identity's name takes, as its table checks
+var nameLimit, _ = controldb.ColumnLimitOf("site_identities", "Name")
 
 // loginName is the name a login link fills in, such as the new site's admin from its welcome page, at most an
 // identity's name long
 func loginName(r *http.Request) string {
-	if name := r.URL.Query().Get("name"); len(name) <= maxLoginName {
+	if name := r.URL.Query().Get("name"); len(name) <= nameLimit.MaxLength {
 		return name
 	}
 	return ""

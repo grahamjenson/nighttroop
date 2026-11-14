@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
-	"unicode/utf8"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -15,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -90,8 +88,8 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		}
 
 		// Reject names no identity can have before they reach the rate limiter, which keys on them
-		if utf8.RuneCountInString(username) > consts.MAX_IDENTITY_NAME_LENGTH {
-			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
+		if !nameLimit.Takes(username) {
+			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
 			return
 		}
 

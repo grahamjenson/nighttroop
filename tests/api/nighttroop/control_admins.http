@@ -37,6 +37,14 @@ H Content-Type: application/json
 B {"name": "  ", "role": "read"}
 ASSERT_STATUS 400
 
+NAME add_admin_name_too_long
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "{{ repeat "a" 33 }}", "role": "read"}
+ASSERT_STATUS 400
+
 // The admins are listed newest first, with who made them, never their secrets
 NAME list_admins
 GET http://control.localhost/admins

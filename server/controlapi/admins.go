@@ -8,7 +8,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -24,6 +23,9 @@ import (
 
 // maxControlAdmins is the most admins control can have, far more than a server needs, as each is made with bcrypt
 const maxControlAdmins = 20
+
+// nameLimit is what a control identity's name takes, as its table checks
+var nameLimit, _ = controldb.ColumnLimitOf("control_identities", "Name")
 
 var (
 	errYourself  = &apiutils.HTTPError{Status: http.StatusForbidden, Message: "You cannot change or delete yourself here"}
@@ -58,7 +60,7 @@ func CreateControlAdminHandler(w http.ResponseWriter, r *http.Request) {
 		form.Name = strings.TrimSpace(form.Name)
 		admins, err = controlContext.ControlDB.Queries.AllControlIdentities(r.Context())
 	}
-	if err == nil && (form.Name == "" || utf8.RuneCountInString(form.Name) > consts.MAX_IDENTITY_NAME_LENGTH) {
+	if err == nil && (form.Name == "" || !nameLimit.Takes(form.Name)) {
 		err = apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.admin_name"))
 	}
 	if err == nil && len(admins) >= maxControlAdmins {
