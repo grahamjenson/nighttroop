@@ -1,8 +1,9 @@
 INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
-// AAPS sends an extended bolus as a Combo Bolus with its insulin in enteredinsulin and no insulin. It is kept as the
-// dose, and given back as enteredinsulin with no insulin, as AAPS reads a treatment with insulin as a bolus
+// AAPS sends an extended bolus as a Combo Bolus with its insulin in enteredinsulin and no insulin. It is kept as a dose
+// of 0 at once and its extended dose, and given back as enteredinsulin with no insulin, as AAPS reads a treatment with
+// insulin as a bolus
 SET eb_at {{ itime 10 }}
 
 NAME add_extended_bolus
@@ -80,9 +81,12 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 0.5 "@result.enteredinsulin"
 ASSERT_EQUALS 1 "@result.relative"
 ASSERT_EQUALS null "@result.insulin"
+ASSERT_EQUALS 0 "@result.splitNow"
+ASSERT_EQUALS 100 "@result.splitExt"
 
-// Nightscout's careportal sends the insulin given at once as insulin, all of it as enteredinsulin, the dose, and the
-// part extended as relative. All of it is the dose, so the 2 U extended are not lost
+// Nightscout's careportal sends the insulin given at once as insulin, all of it as enteredinsulin, and the part
+// extended as relative. Its dose is the 1 U at once, as AAPS takes it as a bolus, and its extended dose the 2 U over
+// 120 minutes, so they are not lost, with their split and rate
 NAME add_careportal_combo
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -94,12 +98,29 @@ GET http://{{ site }}/api/v1/treatments.json?count=1
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 3 "@0.enteredinsulin"
-ASSERT_EQUALS 3 "@0.insulin"
-ASSERT_EQUALS 1.005 "@0.relative"
+ASSERT_EQUALS 1 "@0.insulin"
+ASSERT_EQUALS 1 "@0.relative"
 ASSERT_EQUALS 33 "@0.splitNow"
+ASSERT_EQUALS 67 "@0.splitExt"
 
 NAME careportal_combo_v3
 GET http://{{ site }}/api/v3/treatments?limit=1&sort$desc=date&eventType=Combo+Bolus&date$lte={{ itime 4 }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 3 "@result.0.enteredinsulin"
+ASSERT_EQUALS 1 "@result.0.insulin"
+SET careportal_id {{ dig "careportal_combo_v3.result.0.identifier" }}
+
+// A patch that leaves insulin out keeps the part given at once
+NAME patch_careportal_combo
+PATCH http://{{ site }}/api/v3/treatments/{{ .careportal_id }}
+H Authorization: Bearer {{ jwt }}
+B {"notes": "lunch"}
+ASSERT_STATUS 200
+
+NAME patched_careportal_combo
+GET http://{{ site }}/api/v3/treatments/{{ .careportal_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@result.insulin"
+ASSERT_EQUALS 3 "@result.enteredinsulin"

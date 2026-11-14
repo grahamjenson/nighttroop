@@ -2576,24 +2576,24 @@ func (m *InsulinDose) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDose) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m InsulinDose) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated InsulinDose.
+func (m *InsulinDose) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDose) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m InsulinDose) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated InsulinDose.
+func (m *InsulinDose) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -2806,24 +2806,24 @@ func (m *InsulinDosesVw) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDosesVw) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m InsulinDosesVw) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDosesVw) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m InsulinDosesVw) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -11596,24 +11596,24 @@ func (m *CreateInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m CreateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m CreateInsulinDoseParams) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m CreateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m CreateInsulinDoseParams) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -11806,24 +11806,24 @@ func (m *RewriteInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m RewriteInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m RewriteInsulinDoseParams) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated RewriteInsulinDoseParams.
-func (m *RewriteInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m RewriteInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m RewriteInsulinDoseParams) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated RewriteInsulinDoseParams.
-func (m *RewriteInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -12286,24 +12286,24 @@ func (m *UpdateInsulinDoseParams) SetDose(v *float64) {
 	m.Dose = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m UpdateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m UpdateInsulinDoseParams) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m UpdateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m UpdateInsulinDoseParams) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.

@@ -65,11 +65,11 @@ H Authorization: Bearer {{ .ns_jwt }}
 B {"eventType": "Combo Bolus", "date": {{ itime 3 }}, "insulin": 3, "splitNow": 70, "splitExt": 30, "duration": 60, "app": "AAPS"}
 ASSERT_STATUS 201
 
-NAME patch_split_out_of_range
+NAME patch_extended_out_of_range
 PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .create_combo_bolus.identifier }}
 H Authorization: Bearer {{ .ns_jwt }}
 H User-Agent: AAPS
-B {"splitNow": 150, "notes": "patched"}
+B {"enteredinsulin": 1000, "notes": "patched"}
 ASSERT_STATUS 200
 
 NAME get_patched_combo_bolus
@@ -92,5 +92,5 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 5 "@result.items"
-ASSERT_CONTAINS "Left out splitNow must be between 0 and 1 (was 150, stored as 1.5)" "@result.items.1.message"
+ASSERT_CONTAINS "Left out enteredinsulin must be between 0 and 500 (was 1000, stored as 997)" "@result.items.1.message"
 ASSERT_EQUALS 200 "@result.items.1.attributes.status"

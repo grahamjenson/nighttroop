@@ -375,17 +375,18 @@ CREATE TABLE glucose_readings (
 CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
-    dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units, negative takes insulin back off IOB
+    dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units given at once, negative takes insulin back off IOB
     dose_type TEXT CHECK(length(dose_type) <= 32),
-    
+    -- A combo or extended bolus's units given evenly after the dose, over its extended duration, so its insulin curve is
+    -- the dose at once and the extended dose spread over the duration; the rate is the extended dose over the duration.
+    -- Once a pump ends one early, AAPS sends what was given and the duration it ran
+    extended_dose REAL CHECK(extended_dose BETWEEN 0 AND 500),
+    extended_duration_ms INTEGER CHECK(extended_duration_ms BETWEEN 0 AND 604800000), -- at most a week
 
-    -- What only some apps send, NULL for most doses: a combo bolus's split, the fraction given at once (split_now,
-    -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), whether a loop gave it
-    -- (automatic, Loop's, as LoopFollow shows it as an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), the
-    -- insulin it is of (insulin_type, Loop's, e.g. Novolog), a bolus's units not absorbed (unabsorbed, Loop's), and the
-    -- insulin AAPS says it was given with, its label, peak and end times and concentration (icfg_json)
-    split_now REAL CHECK(split_now BETWEEN 0 AND 1),
-    split_ext REAL CHECK(split_ext BETWEEN 0 AND 1),
+    -- What only some apps send, NULL for most doses: whether a loop gave it (automatic, Loop's, as LoopFollow shows it as
+    -- an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), the insulin it is of (insulin_type, Loop's, e.g.
+    -- Novolog), a bolus's units not absorbed (unabsorbed, Loop's), and the insulin AAPS says it was given with, its
+    -- label, peak and end times and concentration (icfg_json)
     automatic INTEGER CHECK(automatic IN (0, 1)),
     is_basal_insulin INTEGER CHECK(is_basal_insulin IN (0, 1)),
     insulin_type TEXT CHECK(length(insulin_type) <= 64),

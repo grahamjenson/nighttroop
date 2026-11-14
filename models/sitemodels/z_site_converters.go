@@ -1203,14 +1203,6 @@ func InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose {
 			xstring := *(*source).DoseType
 			sitemodelsSiteInsulinDose.DoseType = &xstring
 		}
-		if (*source).SplitNow != nil {
-			xfloat64 := *(*source).SplitNow
-			sitemodelsSiteInsulinDose.SplitNow = &xfloat64
-		}
-		if (*source).SplitExt != nil {
-			xfloat642 := *(*source).SplitExt
-			sitemodelsSiteInsulinDose.SplitExt = &xfloat642
-		}
 		if (*source).Automatic != nil {
 			xbool := *(*source).Automatic
 			sitemodelsSiteInsulinDose.Automatic = &xbool
@@ -1237,6 +1229,11 @@ func InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose {
 			xstring4 := *(*source).UpdatedByIdentityName
 			sitemodelsSiteInsulinDose.UpdatedByIdentityName = &xstring4
 		}
+		if (*source).ExtendedDose != nil {
+			xfloat64 := *(*source).ExtendedDose
+			sitemodelsSiteInsulinDose.ExtendedDose = &xfloat64
+		}
+		sitemodelsSiteInsulinDose.ExtendedDurationMinutes = MsToMinutes((*source).ExtendedDurationMs)
 		pSitemodelsSiteInsulinDose = &sitemodelsSiteInsulinDose
 	}
 	return pSitemodelsSiteInsulinDose
@@ -1250,14 +1247,11 @@ func InsulinDoseToCreate(source *SiteInsulinDose, context *httputils.SiteContext
 			xstring := *(*source).DoseType
 			sitedbCreateInsulinDoseParams.DoseType = &xstring
 		}
-		if (*source).SplitNow != nil {
-			xfloat64 := *(*source).SplitNow
-			sitedbCreateInsulinDoseParams.SplitNow = &xfloat64
+		if (*source).ExtendedDose != nil {
+			xfloat64 := *(*source).ExtendedDose
+			sitedbCreateInsulinDoseParams.ExtendedDose = &xfloat64
 		}
-		if (*source).SplitExt != nil {
-			xfloat642 := *(*source).SplitExt
-			sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
-		}
+		sitedbCreateInsulinDoseParams.ExtendedDurationMs = MinutesToMs((*source).ExtendedDurationMinutes)
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitedbCreateInsulinDoseParams.Notes = &xstring2
@@ -1292,14 +1286,11 @@ func InsulinDoseToUpdate(source *SiteInsulinDose, context *httputils.SiteContext
 			sitedbUpdateInsulinDoseParams.DoseType = &xstring
 		}
 		sitedbUpdateInsulinDoseParams.Dose = Float64OrNil((*source).Dose)
-		if (*source).SplitNow != nil {
-			xfloat64 := *(*source).SplitNow
-			sitedbUpdateInsulinDoseParams.SplitNow = &xfloat64
+		if (*source).ExtendedDose != nil {
+			xfloat64 := *(*source).ExtendedDose
+			sitedbUpdateInsulinDoseParams.ExtendedDose = &xfloat64
 		}
-		if (*source).SplitExt != nil {
-			xfloat642 := *(*source).SplitExt
-			sitedbUpdateInsulinDoseParams.SplitExt = &xfloat642
-		}
+		sitedbUpdateInsulinDoseParams.ExtendedDurationMs = MinutesToMs((*source).ExtendedDurationMinutes)
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitedbUpdateInsulinDoseParams.Notes = &xstring2

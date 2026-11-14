@@ -350,18 +350,11 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	}
 	// The duration sent in milliseconds is kept with the minutes its event keeps, as AAPS reads it before the minutes
 	treatment.Duration = treatment.Duration.WithMs(source.EventGroup.DurationMs)
-	// A Combo Bolus gives back its dose as enteredinsulin, with no insulin when none was given at once, and the part
-	// extended as relative units an hour, as Nightscout's careportal sends them: AAPS reads a treatment with insulin as
-	// a bolus, and drops a Combo Bolus without enteredinsulin
-	if treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus && treatment.Insulin != nil {
-		dose := treatment.Insulin.Float64()
-		treatment.EnteredInsulin = treatment.Insulin
-		if now := treatment.SplitNow; now != nil && now.Float64() == 0 {
-			treatment.Insulin = nil
-		}
-		if ext, minutes := treatment.SplitExt, treatment.Duration.MinutesOrZero(); ext != nil && ext.Float64() > 0 && minutes > 0 {
-			treatment.Relative = new(types.FlexibleFloat64(consts.Round(dose*ext.Float64()/100*60/float64(minutes), 3)))
-		}
+	// A Combo Bolus gives back its dose given at once as insulin, none when all of it is extended, as AAPS reads a
+	// treatment with insulin as a bolus; all of it as enteredinsulin, which AAPS drops one without; the percents of each
+	// part as splitNow and splitExt; and the extended part's units an hour as relative, as Nightscout's careportal sends
+	if isCombo := treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus; treatment.Insulin != nil && (isCombo || amount(treatment.ExtendedDose) > 0) {
+		comboParts(treatment)
 	}
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
 	treatment.Programmed = treatment.Insulin
@@ -369,4 +362,21 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 		treatment.Temp = new(types.ShortString("absolute"))
 	}
 	return *treatment
+}
+
+// comboParts gives a Combo Bolus's insulin in all, its split and its extended rate from its dose and extended dose
+func comboParts(treatment *nightscoutmodels.Treatment) {
+	dose, extended := treatment.Insulin.Float64(), amount(treatment.ExtendedDose)
+	treatment.EnteredInsulin = new(types.FlexibleFloat64(consts.Round(dose+extended, 5)))
+	if extended <= 0 {
+		return
+	}
+	now := consts.Round(100*dose/(dose+extended), 0)
+	treatment.SplitNow, treatment.SplitExt = new(types.FlexibleFloat64(now)), new(types.FlexibleFloat64(100-now))
+	if dose == 0 {
+		treatment.Insulin = nil
+	}
+	if ms := treatment.ExtendedDurationMs; ms != nil && *ms > 0 {
+		treatment.Relative = new(types.FlexibleFloat64(consts.Round(extended*3_600_000/float64(*ms), 3)))
+	}
 }

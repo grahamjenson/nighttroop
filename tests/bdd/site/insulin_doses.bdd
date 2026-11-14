@@ -17,14 +17,16 @@ CLICK #site--insulin--add
 ASSERT_VISIBLE #site--insulin--create--modal
 ASSERT_VISIBLE #site--insulin--create label[for="site--insulin--create--dose"]
 ASSERT_TEXT_VISIBLE Dose (U)
-ASSERT_TEXT_VISIBLE Units of insulin given.
+ASSERT_TEXT_VISIBLE Units of insulin given at once.
 ASSERT_TEXT_VISIBLE Required
 ASSERT_VISIBLE #site--insulin--create--occurred-at
-ASSERT_VISIBLE #site--insulin--create--split-now
-// A combo bolus's split is typed in as the percent of it given at once and over time
-ASSERT_TEXT_VISIBLE Given at once (%)
-ASSERT_TEXT_VISIBLE the percent of it given straight away, e.g. 70
-ASSERT_VISIBLE #site--insulin--create--split-now[min="0"][max="100"]
+ASSERT_VISIBLE #site--insulin--create--extended-dose
+// A combo or extended bolus's extended part is typed in as the units given after the dose and the minutes over which
+ASSERT_TEXT_VISIBLE Extended dose (U)
+ASSERT_TEXT_VISIBLE the units given over time after the dose
+ASSERT_VISIBLE #site--insulin--create--extended-dose[min="0"][max="500"]
+ASSERT_TEXT_VISIBLE Extended over (minutes)
+ASSERT_VISIBLE #site--insulin--create--extended-duration-minutes[step="1"][min="0"][max="10080"]
 SCREENSHOT insulin_dose_add
 
 // A dose added goes to the top of the table, at the time it was given, with its type and reason, and the modal closes
@@ -40,12 +42,14 @@ ASSERT_TEXT_VISIBLE Correction
 ASSERT_TEXT_VISIBLE 2026-01-02 12:30
 ASSERT_NOT_VISIBLE #site--insulin--empty
 
-// Left blank, it is given now, and fields left blank are not set; its split is typed in as percents
+// Left blank, it is given now, and fields left blank are not set; a combo bolus has 4 units at once and 2 over 2 hours
 CLICK #site--insulin--add
 INPUT #site--insulin--create--dose 4
-INPUT #site--insulin--create--split-now 70
-INPUT #site--insulin--create--split-ext 30
+INPUT #site--insulin--create--extended-dose 2
+INPUT #site--insulin--create--extended-duration-minutes 120
 INPUT #site--insulin--create--notes Lunch
+CLICK #site--insulin--create--reason
+SCREENSHOT insulin_dose_combo_add
 CLICK #site--insulin--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Lunch
@@ -57,23 +61,23 @@ ASSERT_VISIBLE #site--insulin--details
 ASSERT_TEXT_VISIBLE 4 units
 ASSERT_TEXT_VISIBLE admin
 ASSERT_VISIBLE #site--insulin--edit label[for="site--insulin--edit--dose"]
-// It edits its split as the percents it was typed in as, as it does its type
-ASSERT_VISIBLE #site--insulin--edit--split-now[value="70"]
-ASSERT_VISIBLE #site--insulin--edit--split-ext[value="30"]
+// It edits its extended dose and minutes as they were typed in, as it does its type
+ASSERT_VISIBLE #site--insulin--edit--extended-dose[value="2"]
+ASSERT_VISIBLE #site--insulin--edit--extended-duration-minutes[value="120"]
 ASSERT_VISIBLE #site--insulin--edit--dose-type
 // Each field its edit form has is shown once, in the form, not again in the details listed below it
-ASSERT_COUNT #site--insulin--details :is(dt, label):has-text("Given at once (%)") 1
+ASSERT_COUNT #site--insulin--details :is(dt, label):has-text("Extended dose (U)") 1
 ASSERT_COUNT #site--insulin--details :is(dt, label):has-text("Notes") 1
 ASSERT_NOT_VISIBLE #site--insulin--details dt:text-is("Type")
-ASSERT_NOT_VISIBLE #site--insulin--details dd:text-is("70")
+ASSERT_NOT_VISIBLE #site--insulin--details dd:text-is("120")
 SCREENSHOT insulin_dose_edit
 // Scrolled to its foot, below the form are only the record's own details, which cannot be edited
 SCROLL 2000
 ASSERT_VISIBLE #site--insulin--details dt:text-is("Created By")
 SCREENSHOT insulin_dose_details_record
 INPUT #site--insulin--edit--dose 4.5
-INPUT #site--insulin--edit--split-now 60
-INPUT #site--insulin--edit--split-ext 40
+INPUT #site--insulin--edit--extended-dose 1.5
+INPUT #site--insulin--edit--extended-duration-minutes 90
 INPUT #site--insulin--edit--notes Big lunch
 CLICK #site--insulin--edit--submit
 ASSERT_STATUS 200
@@ -84,8 +88,8 @@ ASSERT_TEXT_VISIBLE Big lunch
 // The edit is saved
 CLICK #insulinDosesTable tbody tr >> nth=0
 ASSERT_TEXT_VISIBLE 4.5 units
-ASSERT_VISIBLE #site--insulin--edit--split-now[value="60"]
-ASSERT_VISIBLE #site--insulin--edit--split-ext[value="40"]
+ASSERT_VISIBLE #site--insulin--edit--extended-dose[value="1.5"]
+ASSERT_VISIBLE #site--insulin--edit--extended-duration-minutes[value="90"]
 ASSERT_VISIBLE #site--insulin--edit--notes[value="Big lunch"]
 CLICK #site--insulin--details--close
 ASSERT_NOT_VISIBLE #site--insulin--details

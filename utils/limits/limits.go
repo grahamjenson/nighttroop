@@ -43,9 +43,18 @@ var Overrides = map[string]sitedb.ColumnLimit{
 	"push_credentials.KeyID": {MaxLength: 10},
 }
 
+// Derived are the limits of fields people enter in other units than their column keeps, by table and field: a dose's
+// extended duration is typed in minutes and kept in milliseconds, at most a week
+var Derived = map[string]sitedb.ColumnLimit{
+	"insulin_doses.ExtendedDurationMinutes": {Min: new(0.0), Max: new(10080.0)},
+}
+
 // Column is the limit of a column, by its table and its field in the table's rows, e.g. insulin_doses.Dose, in the
-// site's DB or the control's, false when there is none
+// site's DB or the control's, or of a Derived field, false when there is none
 func Column(column string) (sitedb.ColumnLimit, bool) {
+	if limit, ok := Derived[column]; ok {
+		return limit, true
+	}
 	table, field, _ := strings.Cut(column, ".")
 	if limit, ok := sitedb.ColumnLimitOf(table, field); ok {
 		return limit, true
