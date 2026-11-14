@@ -1940,8 +1940,10 @@ harder:
   them with another role.
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
-- Any client but Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout API also writes
-  mg/dL as `mg/dl`.
+- Any client but Nightguard and Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout
+  API also writes mg/dL as `mg/dl`.
+- Nightguard and Other follow the site's units. Nightguard reads `sgv` as mg/dL and shows the status's
+  `settings.units`.
 - A device keeps its client (e.g. `loop`, `other`), returned as `client`. Users and a site's first devices have none.
 
 #### Identity list
