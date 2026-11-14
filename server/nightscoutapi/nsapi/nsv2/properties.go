@@ -61,10 +61,9 @@ func Properties(ctx context.Context, q *sitedb.Queries, now time.Time) map[strin
 		return properties
 	}
 	properties["bgnow"] = GetBucket(readings[0])
-	// An empty direction has no arrow, so is left out like a missing one
-	if readings[0].Direction != nil && *readings[0].Direction != "" {
-		label := display.Direction(readings[0].Direction)
-		properties["direction"] = Direction{Value: *readings[0].Direction, Label: label, Entity: fmt.Sprintf("&#%d;", []rune(label)[0])}
+	if direction := nightscoutmodels.TrendDirection(readings[0].Trend); direction != nil {
+		label := display.Direction(direction)
+		properties["direction"] = Direction{Value: *direction, Label: label, Entity: fmt.Sprintf("&#%d;", []rune(label)[0])}
 	}
 	if len(readings) > 1 {
 		properties["delta"] = GetDelta(readings[0], readings[1])
@@ -254,7 +253,7 @@ func GetUptimeBattery(dr *sitedb.DeviceReport) UptimeBattery {
 func GetBucket(reading *sitedb.GlucoseReading) Bucket {
 	return Bucket{Last: reading.Mgdl, Mean: reading.Mgdl, Mills: reading.OccurredAt, SGVs: []SGV{{
 		ID: reading.ID, Mgdl: reading.Mgdl, Scaled: reading.Mgdl, Mills: reading.OccurredAt, Type: reading.ReadingType,
-		Device: reading.CreatedByDeviceName, Direction: reading.Direction, Noise: reading.Noise,
+		Device: reading.CreatedByDeviceName, Direction: nightscoutmodels.TrendDirection(reading.Trend), Noise: reading.Noise,
 	}}}
 }
 

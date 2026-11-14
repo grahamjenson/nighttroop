@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/models/libremodels"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -26,7 +27,7 @@ func TestReadingToCreate(t *testing.T) {
 	require.Equal(t, "sgv", params.ReadingType)
 	require.Equal(t, "libre_connector", params.CreatedByIdentityName)
 	require.Equal(t, int64(13*60+45), *params.UtcOffsetMinutes)
-	require.Equal(t, "Flat", *params.Direction)
+	require.Equal(t, "Flat", *nightscoutmodels.TrendDirection(params.Trend))
 }
 
 func TestReadingDirections(t *testing.T) {
@@ -46,7 +47,7 @@ func TestReadingDirections(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.trend, func(t *testing.T) {
 			r := reading(t, `{"FactoryTimestamp":"1/2/2026 3:04:05 PM","Timestamp":"1/2/2026 3:04:05 PM","ValueInMgPerDl":100`+tt.trend+`}`)
-			direction := libremodels.ReadingToCreate(r, "libre_connector").Direction
+			direction := nightscoutmodels.TrendDirection(libremodels.ReadingToCreate(r, "libre_connector").Trend)
 			if tt.want == "" {
 				require.Nil(t, direction)
 				return
