@@ -83,6 +83,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"PumpID":                    {Column: "pump_id", MaxLength: 32},
 		"PumpSerial":                {Column: "pump_serial", MaxLength: 32},
 		"PumpType":                  {Column: "pump_type", MaxLength: 64},
+		"EndingPumpID":              {Column: "ending_pump_id", MaxLength: 32},
 		"SensorCode":                {Column: "sensor_code", MaxLength: 64},
 		"TransmitterID":             {Column: "transmitter_id", MaxLength: 64},
 		"BolusCalculatorResultJson": {Column: "bolus_calculator_result_json", MaxLength: 4096},
