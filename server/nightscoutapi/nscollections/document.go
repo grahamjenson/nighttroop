@@ -114,6 +114,11 @@ func CarbsPartOf(identifier string) (string, bool) {
 	return strings.CutSuffix(identifier, carbsSuffix)
 }
 
+// CarbsPart is the identifier of a treatment's carbs part
+func CarbsPart(identifier string) string {
+	return identifier + carbsSuffix
+}
+
 // V3Parts are the documents API v3 lists and its storage socket sends for it: a treatment with both insulin and carbs
 // as its insulin and its carbs, as AAPS reads only one of them from a document, the carbs with the treatment's
 // identifier and carbsSuffix. One whose identifier is too long to add carbsSuffix to stays one.

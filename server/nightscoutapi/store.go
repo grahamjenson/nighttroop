@@ -4,13 +4,18 @@ import (
 	"cmp"
 	"context"
 	"log/slog"
+	"maps"
+	"reflect"
+	"slices"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -144,6 +149,9 @@ func foundParts(doc nsutils.Document, err *nsutils.HTTPError) []nsutils.Document
 	return []nsutils.Document{doc}
 }
 
+// v3ServerFields are the fields API v3 gives that the server keeps, which a create cannot be sent
+var v3ServerFields = []string{"srvCreated", "srvModified", "subject", "isValid", "isReadOnly"}
+
 // SplitV3 makes a treatment API v3 gives as its insulin and its carbs two treatments, before a change or delete of
 // either through API v3, so it changes only that one, as AAPS changes and deletes them on their own: its carbs become a
 // treatment with the carbs part's identifier, and are taken out of it
@@ -160,7 +168,7 @@ func (nts *NightTroopAPIStore) SplitV3(ctx context.Context, collection nsutils.C
 		return nil
 	}
 	carbs := parts[1].Fields(true)
-	for _, server := range []string{"srvCreated", "srvModified", "subject", "isValid", "isReadOnly"} {
+	for _, server := range v3ServerFields {
 		delete(carbs, server)
 	}
 	if _, _, err := nts.Create(ctx, collection, carbs); err != nil {
@@ -182,7 +190,8 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 		return collectionsStore.Search(ctx, siteContext, query)
 	}
 	return nts.withFingerSticks(ctx, siteContext, query, func(query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-		return collectionsStore.Search(ctx, siteContext, query)
+		docs, err := collectionsStore.Search(ctx, siteContext, query)
+		return withoutCarbsParts(ctx, collectionsStore, siteContext, query, docs, err)
 	})
 }
 
@@ -198,7 +207,26 @@ func (nts *NightTroopAPIStore) History(ctx context.Context, collection nsutils.C
 	if httpErr != nil || collection != nsutils.Treatments {
 		return docs, httpErr
 	}
+	docs, _ = withoutCarbsParts(ctx, collectionsStore, siteContext, query, docs, nil)
 	return nts.historyWithFingerSticks(ctx, siteContext, since, query, docs)
+}
+
+// withoutCarbsParts are the treatments found, each one whose carbs part is stored as its own treatment, see SplitV3,
+// as its insulin part only on API v3, so a treatment that got its carbs again does not give two with that identifier
+func withoutCarbsParts(ctx context.Context, store nscollections.CollectionStore, siteContext *httputils.SiteContext, query nsquery.Query, docs []nsutils.Document, err *nsutils.HTTPError) ([]nsutils.Document, *nsutils.HTTPError) {
+	if err != nil || !query.V3 {
+		return docs, err
+	}
+	for i, doc := range docs {
+		parts := nsutils.V3Parts([]nsutils.Document{doc})
+		if len(parts) < 2 {
+			continue
+		}
+		if _, err := store.Get(ctx, siteContext, parts[1].Identifier(), nsquery.Query{IncludeDeleted: true}); err == nil {
+			docs[i] = parts[0]
+		}
+	}
+	return docs, nil
 }
 
 func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
@@ -206,7 +234,49 @@ func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.C
 	if err != nil {
 		return nil, false, err
 	}
+	if collection == nsutils.Treatments {
+		if patch, err = nts.withoutCarbsPart(ctx, collectionsStore, siteContext, identifier, patch); err != nil {
+			return nil, false, err
+		}
+	}
 	return foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate))
+}
+
+// carbsFields are the fields of a treatment its carbs part has, see SplitV3
+var carbsFields = []string{"carbs", "protein", "fat", "foodType", "absorptionTime"}
+
+// withoutCarbsPart is a treatment sent with carbs without them, once its carbs part is stored as its own treatment, see
+// SplitV3, as xDrip+ sends a treatment again when it is edited or its upload queue sends it again. Its carbs go to the
+// carbs part, so they are not counted twice. If the carbs part is deleted, it stays deleted, as AAPS deleted it, unless
+// the carbs sent are not the ones deleted. The treatment keeps the event type it has with its carbs.
+func (nts *NightTroopAPIStore) withoutCarbsPart(ctx context.Context, store nscollections.CollectionStore, siteContext *httputils.SiteContext, identifier string, data map[string]any) (map[string]any, *nsutils.HTTPError) {
+	partID := nscollections.CarbsPart(identifier)
+	var whole nightscoutmodels.Treatment
+	if data["carbs"] == nil || utils.ConvertViaJSON(data, &whole) != nil || whole.EventType == nil || whole.Carbs == nil {
+		return data, nil
+	}
+	part, err := store.Get(ctx, siteContext, partID, nsquery.Query{IncludeDeleted: true})
+	if err == nsutils.ErrNotFound {
+		return data, nil
+	} else if err != nil {
+		return nil, err
+	}
+	carbs, rest, stored := map[string]any{}, maps.Clone(data), part.Fields(true)
+	for _, name := range carbsFields {
+		carbs[name] = data[name]
+		delete(rest, name)
+	}
+	rest["eventType"] = whole.EventType.String()
+	if stored["isValid"] == true && slices.ContainsFunc(carbsFields, func(name string) bool { return !reflect.DeepEqual(stored[name], carbs[name]) }) {
+		_, err = nts.Patch(ctx, nsutils.Treatments, partID, carbs)
+	} else if stored["isValid"] == false && stored["carbs"] != any(whole.Carbs.Float64()) {
+		maps.Copy(stored, carbs)
+		for _, server := range v3ServerFields {
+			delete(stored, server)
+		}
+		_, _, err = nts.Create(ctx, nsutils.Treatments, stored)
+	}
+	return rest, err
 }
 
 func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any) (nsutils.Document, *nsutils.HTTPError) {
