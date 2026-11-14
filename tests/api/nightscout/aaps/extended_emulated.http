@@ -1,7 +1,8 @@
 INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
-// AAPS's extended bolus says whether it is given by temp basals, which AAPS reads back on its own extended bolus
+// AAPS sends its own extended bolus with isEmulatingTempBasal false, and reads none as false: it is true only in the
+// extended bolus a Temp Basal gives, below, which keeps it
 NAME add_extended_bolus
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
@@ -12,7 +13,8 @@ NAME extended_bolus_v3
 GET http://{{ site }}/api/v3/treatments/{{ .add_extended_bolus.identifier }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS false "@result.isEmulatingTempBasal"
+ASSERT_EQUALS null "@result.isEmulatingTempBasal"
+ASSERT_EQUALS 0.5 "@result.enteredinsulin"
 
 // A pump with no extended bolus of its own has AAPS give one by temp basals: AAPS sends a Temp Basal with the Combo Bolus
 // it gives in extendedEmulated, and reads a Temp Basal with it as that extended bolus. It is given back as sent

@@ -410,13 +410,9 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring22 := *source.BolusCalculatorResultJson
 		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring22
 	}
-	if source.IsEmulatingTempBasal != nil {
-		xbool2 := *source.IsEmulatingTempBasal
-		sitedbCreateEventGroupParams.IsEmulatingTempBasal = &xbool2
-	}
-	if source.ExtendedEmulatedJson != nil {
-		xstring23 := *source.ExtendedEmulatedJson
-		sitedbCreateEventGroupParams.ExtendedEmulatedJson = &xstring23
+	if source.EmulatedTreatmentJson != nil {
+		xstring23 := *source.EmulatedTreatmentJson
+		sitedbCreateEventGroupParams.EmulatedTreatmentJson = &xstring23
 	}
 	if source.SyncIdentifier != nil {
 		xstring24 := *source.SyncIdentifier
@@ -2375,13 +2371,9 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xint642 := *source.ClientCreatedAt
 		sitedbEventGroup.ClientCreatedAt = &xint642
 	}
-	if source.IsEmulatingTempBasal != nil {
-		xbool2 := *source.IsEmulatingTempBasal
-		sitedbEventGroup.IsEmulatingTempBasal = &xbool2
-	}
-	if source.ExtendedEmulatedJson != nil {
-		xstring22 := *source.ExtendedEmulatedJson
-		sitedbEventGroup.ExtendedEmulatedJson = &xstring22
+	if source.EmulatedTreatmentJson != nil {
+		xstring22 := *source.EmulatedTreatmentJson
+		sitedbEventGroup.EmulatedTreatmentJson = &xstring22
 	}
 	if source.Notes != nil {
 		xstring23 := *source.Notes

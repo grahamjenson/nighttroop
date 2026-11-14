@@ -118,8 +118,7 @@ type EventGroup struct {
 	BolusCalculatorResultJson *string
 	SyncIdentifier            *string
 	ClientCreatedAt           *int64
-	IsEmulatingTempBasal      *bool
-	ExtendedEmulatedJson      *string
+	EmulatedTreatmentJson     *string
 	Notes                     *string
 	Reason                    *string
 	DurationMinutes           *int64

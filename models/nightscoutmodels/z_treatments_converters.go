@@ -166,13 +166,9 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring22 := *source.BolusCalculatorResultJson
 		sitedbCreateEventGroupParams.BolusCalculatorResultJson = &xstring22
 	}
-	if source.IsEmulatingTempBasal != nil {
-		xbool2 := *source.IsEmulatingTempBasal
-		sitedbCreateEventGroupParams.IsEmulatingTempBasal = &xbool2
-	}
-	if source.ExtendedEmulatedJson != nil {
-		xstring23 := *source.ExtendedEmulatedJson
-		sitedbCreateEventGroupParams.ExtendedEmulatedJson = &xstring23
+	if source.EmulatedTreatmentJson != nil {
+		xstring23 := *source.EmulatedTreatmentJson
+		sitedbCreateEventGroupParams.EmulatedTreatmentJson = &xstring23
 	}
 	if source.SyncIdentifier != nil {
 		xstring24 := *source.SyncIdentifier
@@ -209,11 +205,7 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		typesJSONTextString := types.JSONTextString(*source.BolusCalculatorResultJson)
 		nightscoutmodelsTreatment.BolusCalculatorResult = &typesJSONTextString
 	}
-	if source.IsEmulatingTempBasal != nil {
-		xbool := *source.IsEmulatingTempBasal
-		nightscoutmodelsTreatment.IsEmulatingTempBasal = &xbool
-	}
-	nightscoutmodelsTreatment.ExtendedEmulated = StringToRawJSON(source.ExtendedEmulatedJson)
+	nightscoutmodelsTreatment.EmulatedTreatment = StringToRawJSON(source.EmulatedTreatmentJson)
 	nightscoutmodelsTreatment.Duration = MinutesToDuration(source.DurationMinutes)
 	if source.OriginalDurationMs != nil {
 		typesFlexibleInt64 := types.FlexibleInt64(*source.OriginalDurationMs)
@@ -224,8 +216,8 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		nightscoutmodelsTreatment.Mode = &typesShortString
 	}
 	if source.AutoForced != nil {
-		xbool2 := *source.AutoForced
-		nightscoutmodelsTreatment.AutoForced = &xbool2
+		xbool := *source.AutoForced
+		nightscoutmodelsTreatment.AutoForced = &xbool
 	}
 	if source.Reasons != nil {
 		typesSanitizedString := types.SanitizedString(*source.Reasons)
@@ -1155,11 +1147,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		sitedbEventGroup.SyncIdentifier = &xstring12
 	}
 	sitedbEventGroup.ClientCreatedAt = DateStringToMillis(source.CreationDate)
-	if source.IsEmulatingTempBasal != nil {
-		xbool2 := *source.IsEmulatingTempBasal
-		sitedbEventGroup.IsEmulatingTempBasal = &xbool2
-	}
-	sitedbEventGroup.ExtendedEmulatedJson = RawJSONToString(source.ExtendedEmulated)
+	sitedbEventGroup.EmulatedTreatmentJson = RawJSONToString(source.EmulatedTreatment)
 	if source.Notes != nil {
 		xstring13 := SanitizedStringToString(*source.Notes)
 		sitedbEventGroup.Notes = &xstring13

@@ -57,10 +57,9 @@ type Treatment struct {
 	// BolusCalculatorResult is AAPS's Bolus Wizard calculation, JSON text given back as sent, as AAPS restores the
 	// record from it
 	BolusCalculatorResult *types.JSONTextString `json:"bolusCalculatorResult,omitempty"`
-	// IsEmulatingTempBasal is whether AAPS gives a Combo Bolus by temp basals, and ExtendedEmulated the Combo Bolus a
-	// Temp Basal gives, given back as sent, as AAPS reads a Temp Basal with it as the extended bolus
-	IsEmulatingTempBasal *bool            `json:"isEmulatingTempBasal,omitempty"`
-	ExtendedEmulated     *json.RawMessage `json:"extendedEmulated,omitempty"`
+	// EmulatedTreatment is the treatment asked for that this one carries out another way, given back as sent: AAPS's
+	// extendedEmulated, the Combo Bolus of an extended bolus it gives by a Temp Basal, which it reads back as that bolus
+	EmulatedTreatment *json.RawMessage `json:"extendedEmulated,omitempty"`
 
 	// Exercise
 	ActivityType *types.ShortString   `json:"activityType,omitempty"` // Type of activity

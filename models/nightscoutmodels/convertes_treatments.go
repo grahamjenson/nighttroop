@@ -121,7 +121,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map . EnteredBy | EventGroupEnteredBy
 	// goverter:map Uuid UUID
 	// goverter:map BolusCalculatorResultJson BolusCalculatorResult
-	// goverter:map ExtendedEmulatedJson ExtendedEmulated | StringToRawJSON
+	// goverter:map EmulatedTreatmentJson EmulatedTreatment | StringToRawJSON
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -284,7 +284,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Duration DurationMinutes | DurationToMinutesP
 	// goverter:map Duration DurationMs | DurationToMs
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
-	// goverter:map ExtendedEmulated ExtendedEmulatedJson | RawJSONToString
+	// goverter:map EmulatedTreatment EmulatedTreatmentJson | RawJSONToString
 	// goverter:map SentJSON SentHash | SentHash
 	// goverter:map CreationDate ClientCreatedAt | DateStringToMillis
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup

@@ -1404,9 +1404,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Loop finds its own treatments by `syncIdentifier`, though an Omnipod dose's `_id` is a hash.
 - LoopFollow shows an `automatic` bolus as an SMB, and leaves it out of its bolus stats.
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
-- `extendedEmulated` (the Combo Bolus an AAPS Temp Basal gives, a JSON object) and a Combo Bolus's
-  `isEmulatingTempBasal`: kept and returned as sent. AAPS reads a Temp Basal with `extendedEmulated` as its extended
-  bolus. Over 4096 characters: left out, and the rest of the treatment kept.
+- `extendedEmulated` (the Combo Bolus an AAPS Temp Basal gives, a JSON object): kept and returned as sent. AAPS reads
+  a Temp Basal with `extendedEmulated` as its extended bolus. Its insulin is the temp basal's, so it is not counted
+  again. Over 4096 characters: left out, and the rest of the treatment kept.
 - `bolusCalculatorResult` (AAPS Bolus Wizard calculation, JSON text): kept exactly as sent. Not JSON, or over 4096
   characters: left out, and the rest of the treatment kept.
 - A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
