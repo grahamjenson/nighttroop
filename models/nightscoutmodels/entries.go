@@ -1,6 +1,7 @@
 package nightscoutmodels
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -50,7 +51,7 @@ type Entry struct {
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Mgdl        *types.FlexibleFloat64 `json:"-"`
+	Mgdl *types.FlexibleFloat64 `json:"-"`
 }
 
 func (t *Entry) UnmarshalJSON(data []byte) error {
@@ -72,7 +73,6 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-
 	// Identitfiers
 	if t.Identifier == nil {
 		t.Identifier = aux.ID
@@ -89,7 +89,7 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		}
 
 		if value != nil {
-			res := types.FlexibleFloat64(t.Units.ToMGDL(value.Float64()))
+			res := types.FlexibleFloat64(cmp.Or(t.Units, t.DefaultGlucoseUnits()).ToMGDL(value.Float64()))
 			t.Mgdl = &res
 		}
 	}
@@ -210,4 +210,9 @@ func (t Entry) GetIdentifier() *string {
 // GlucoseFields are the fields whose glucose is in the entry's units
 func (t Entry) GlucoseFields() []string {
 	return []string{"sgv", "mbg"}
+}
+
+// DefaultGlucoseUnits are the units of glucose sent without units, mg/dL as Nightscout's entries are, never guessed
+func (t Entry) DefaultGlucoseUnits() *consts.Units {
+	return new(consts.UnitsMGDL)
 }

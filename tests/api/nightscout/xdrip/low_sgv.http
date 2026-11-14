@@ -1,0 +1,47 @@
+# xDrip+ sends sgv and mbg in mg/dL, with no units, as Nightscout's entries are. A low reading, at or below 30, is kept
+# in mg/dL and is never read as mmol/L, so a follower alarms on a low and not on a high. Dexcom's special values (1 to
+# 12, and 39 for LOW) are kept as sent. The bodies are as NightscoutUploader builds them, see docs/clients/xdrip.md.
+# The site's units are mmol/L, which do not change the units of what is sent.
+
+INCLUDE steps/new_ns_site.steps
+
+NAME xdrip_upload_low_entries
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [
+  {"type": "sgv", "dateString": "{{ javatime 4 }}", "date": {{ itime 4 }}, "sgv": 28, "direction": "Flat",
+   "filtered": 28000, "unfiltered": 28000, "device": "xDrip-DexcomG6"},
+  {"type": "sgv", "dateString": "{{ javatime 3 }}", "date": {{ itime 3 }}, "sgv": 39, "direction": "NOT COMPUTABLE",
+   "filtered": 0, "unfiltered": 0, "device": "xDrip-DexcomG6"},
+  {"type": "sgv", "dateString": "{{ javatime 2 }}", "date": {{ itime 2 }}, "sgv": 5, "direction": "NOT COMPUTABLE",
+   "filtered": 0, "unfiltered": 0, "device": "xDrip-DexcomG6"},
+  {"type": "mbg", "dateString": "{{ javatime 1 }}", "date": {{ itime 1 }}, "mbg": 25, "device": "xDrip-DexcomG6"}
+ ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@"
+ASSERT_EQUALS 28 "@0.sgv"
+ASSERT_EQUALS 39 "@1.sgv"
+ASSERT_EQUALS 5 "@2.sgv"
+ASSERT_EQUALS 25 "@3.mbg"
+
+// A reading sent with its units is in those units
+NAME xdrip_upload_mmol_entry
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"type": "sgv", "dateString": "{{ javatime 0 }}", "date": {{ itime 0 }}, "sgv": 5.5, "units": "mmol",
+    "direction": "Flat", "device": "xDrip-DexcomG6"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 99.099 "@0.sgv"
+
+// Followers read the readings in mg/dL, as they were sent
+NAME xdrip_low_entries_stored
+GET http://{{ site }}/api/v1/entries.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 5 "@"
+ASSERT_EQUALS 99.099 "@0.sgv"
+ASSERT_EQUALS 25 "@1.mbg"
+ASSERT_EQUALS 5 "@2.sgv"
+ASSERT_EQUALS 39 "@3.sgv"
+ASSERT_EQUALS 28 "@4.sgv"
+ASSERT_EQUALS "mg/dl" "@4.units"

@@ -1,6 +1,7 @@
 package nscollections
 
 import (
+	"cmp"
 	"encoding/json"
 	"maps"
 	"strconv"
@@ -13,15 +14,15 @@ import (
 // keeps its model, a field sent as null is taken out, and any other value sent, a list too, takes the place of the
 // stored one. A field sent also takes the place of the stored ones that say the same (aliases), as a treatment's
 // duration does its durationInMilliseconds. When glucose or its units are sent, the stored glucose not sent (the
-// model's glucose fields) is given in the units sent, or guessed from the glucose sent.
-func mergeFields(stored, sent map[string]any, aliases map[string][]string, glucose []string) map[string]any {
+// model's glucose fields) is given in the units sent, or the model's default units, or guessed from the glucose sent.
+func mergeFields(stored, sent map[string]any, aliases map[string][]string, glucose []string, defaultUnits *consts.Units) map[string]any {
 	merged := maps.Clone(stored)
 	for name := range sent {
 		for _, alias := range aliases[name] {
 			delete(merged, alias)
 		}
 	}
-	if units, ok := sentUnits(sent, glucose); ok {
+	if units, ok := sentUnits(sent, glucose, defaultUnits); ok {
 		from := documentUnits(stored)
 		for _, name := range glucose {
 			if value, ok := merged[name]; ok {
@@ -54,16 +55,16 @@ func mergePatch(object, patch map[string]any) map[string]any {
 	return merged
 }
 
-// sentUnits are the units of the glucose sent: its units, or those its first glucose is guessed to be in, as a create
-// reads glucose sent without units
-func sentUnits(sent map[string]any, glucose []string) (consts.Units, bool) {
+// sentUnits are the units of the glucose sent: its units, or the default units, or those its first glucose is guessed
+// to be in, as a create reads glucose sent without units
+func sentUnits(sent map[string]any, glucose []string, defaultUnits *consts.Units) (consts.Units, bool) {
 	if units, ok := sent["units"].(string); ok {
 		parsed, err := consts.ParseUnits(units)
 		return parsed, err == nil
 	}
 	for _, name := range glucose {
 		if value, ok := firstNumber(sent[name]); ok {
-			return consts.GuessUnits(value), true
+			return *cmp.Or(defaultUnits, new(consts.GuessUnits(value))), true
 		}
 	}
 	return "", false

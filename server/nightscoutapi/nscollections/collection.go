@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -377,14 +378,18 @@ func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext 
 	var model NS
 	var aliases map[string][]string
 	var glucose []string
+	var defaultUnits *consts.Units
 	if fields, ok := any(model).(interface{ MergeAliases() map[string][]string }); ok {
 		aliases = fields.MergeAliases()
 	}
 	if fields, ok := any(model).(interface{ GlucoseFields() []string }); ok {
 		glucose = fields.GlucoseFields()
 	}
+	if fields, ok := any(model).(interface{ DefaultGlucoseUnits() *consts.Units }); ok {
+		defaultUnits = fields.DefaultGlucoseUnits()
+	}
 	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
-	document = mergeFields(document, data, aliases, glucose)
+	document = mergeFields(document, data, aliases, glucose, defaultUnits)
 	err := utils.ConvertViaJSON(document, &model)
 	return document, model, err
 }

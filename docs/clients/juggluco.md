@@ -153,8 +153,8 @@ Every amount has `eventType` `<none>` (Nightscout careportal's "no event type").
   `glucose.cpp:556`, compares with `DOUBLETHRESHOLD`, not its negative).
 - **Half-hour zones west of UTC:** two minus signs in `dateString`, for example `-03:-30` for Newfoundland
   (`Tdatestring` takes the remainder of negative minutes).
-- **Units:** `sgv` has no `units`. Nighttroop takes an unlabelled value of 30 or less as mmol/L. Libre and Dexcom
-  readings start at 39 or 40 mg/dL, but a reading calibrated in Juggluco can be lower.
+- **Units:** `sgv` has no `units`. Nighttroop takes it as mg/dL, as Nightscout does, whatever the value. Thus a
+  reading calibrated in Juggluco below 39 mg/dL stays low.
 - **Large v1 batches:** up to 5000 readings in one array, sent again until accepted.
 - **JWT:** sent until its `exp`, even if it stops working before (for example after a password reset).
 
