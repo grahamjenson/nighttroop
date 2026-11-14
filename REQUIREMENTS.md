@@ -1137,6 +1137,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v3 status: what the token can do to each collection (e.g. `crud` for an uploader, `r` for read only). AAPS uploads
   only with a token that can write.
 - v3 version: needs no token.
+- Versions: the same Nightscout `version` (`15.0.9`) in v1 status, v3 status and v3 version. v1 status also has
+  `versionNum` (`150009`), which AAPS 3.4 needs to be at least 150000.
+- API v3 version: the same `apiVersion` (`3.0.4`) in v3 status, v3 version and v1 versions.
 - v2 roles and subjects (AAPS pairs a client by QR code with them):
   - Roles: a fixed list, `admin`, `readable` and `aaps-client`. A role sent is given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
