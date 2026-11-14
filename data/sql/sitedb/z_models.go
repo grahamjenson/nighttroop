@@ -208,6 +208,11 @@ type FoodPreset struct {
 	Energy                *float64
 	Portions              *float64
 	PreBolus              *float64
+	Unit                  *string
+	Gi                    *float64
+	Hidden                *bool
+	HideAfterUse          *bool
+	Position              *int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByAppName      *string

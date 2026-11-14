@@ -73,7 +73,7 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	//
-	// goverter:ignore Unit GI HideAfterUse Hidden Position
+	// goverter:map Gi GI
 	// goverter:map CreatedAt Date
 	// goverter:map . Type | FoodDocumentType
 	DBModelToFood(source *sitedb.FoodPreset, siteContext *httputils.SiteContext) Food

@@ -352,11 +352,13 @@ type SiteConverter interface {
 	// goverter:map ID | NewSiteDataID
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:ignore Unit Gi Hidden HideAfterUse Position
 	FoodPresetToCreate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.CreateFoodPresetParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore Unit Gi Hidden HideAfterUse Position
 	FoodPresetToUpdate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.UpdateFoodPresetParams
 
 	///////
