@@ -49,6 +49,9 @@ a `?token=` in the URL (`NightscoutAPI`, each function's `URLComponents`). Thus 
   - Nighttroop writes `created_at`, `timestamp`, `dateString` and `startDate` as Nightscout does (JavaScript
     `toISOString`), with three fractional digits: `2026-11-01T12:00:00.000Z`. Thus `deleteGlucose` finds a reading
     by the `.SSS` `dateString` it sent.
+  - Trio does not read `utcOffset`.
+  - If a time has an offset (e.g. `+13:00`), the document's `utcOffset` is that offset, on API v1 and v3. A sent
+    `utcOffset` is kept. Test: `trio/utc_offset.http`.
 - Types: numbers are Swift `Decimal` or `Int`. One field of the wrong type, or one missing required field, fails the
   whole list.
 

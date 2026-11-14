@@ -1,0 +1,110 @@
+// Trio's times: it writes every date as ISO 8601 with milliseconds (Formatters.swift), and does not read utcOffset.
+// A time sent with an offset gives the document that utcOffset, on API v1 and v3, as Nightscout's moment.parseZone
+// does, and a utcOffset sent is kept. Tokyo's offset (540) is not the one sent (780), so the offset is not the site's.
+INCLUDE steps/new_site_admin.steps
+
+NAME set_site_timezone
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"timezone": "Asia/Tokyo"}
+ASSERT_STATUS 200
+
+NAME ns_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .ns_jwt.token }}
+SET utc_time {{ date -1 }}T10:00:00.000Z
+SET start_date {{ date -1 }}T12:20:00.000Z
+
+NAME trio_treatments_with_offsets
+POST http://{{ .ns_site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [
+  { "eventType" : "Note", "created_at" : "{{ date -1 }}T23:00:00.000+13:00", "enteredBy" : "Trio", "notes" : "plus13" },
+  { "eventType" : "Note", "created_at" : "{{ date -1 }}T10:10:00.000Z", "utcOffset" : 600, "enteredBy" : "Trio", "notes" : "sent" }
+]
+ASSERT_STATUS 200
+ASSERT_EQUALS ".utc_time" "@0.created_at"
+ASSERT_EQUALS 780 "@0.utcOffset"
+ASSERT_EQUALS 600 "@1.utcOffset"
+
+NAME trio_treatments_v1
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[eventType]=Note&count=2
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "sent" "@0.notes"
+ASSERT_EQUALS 600 "@0.utcOffset"
+ASSERT_EQUALS "plus13" "@1.notes"
+ASSERT_EQUALS 780 "@1.utcOffset"
+
+NAME trio_treatment_offset_v3
+GET http://{{ .ns_site }}/api/v3/treatments/{{ dig "trio_treatments_with_offsets.0._id" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@result.utcOffset"
+
+NAME trio_treatment_sent_offset_v3
+GET http://{{ .ns_site }}/api/v3/treatments/{{ dig "trio_treatments_with_offsets.1._id" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 600 "@result.utcOffset"
+
+NAME entry_with_offset
+POST http://{{ .ns_site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [ { "sgv" : 120, "direction" : "Flat", "dateString" : "{{ date -1 }}T23:00:00.000+13:00", "type" : "sgv" } ]
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@0.utcOffset"
+
+NAME entry_offset_v3
+GET http://{{ .ns_site }}/api/v3/entries?fields=utcOffset,dateString&limit=1
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@result.0.utcOffset"
+ASSERT_EQUALS ".utc_time" "@result.0.dateString"
+
+NAME device_status_with_offset
+POST http://{{ .ns_site }}/api/v1/devicestatus.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B { "device" : "Trio", "created_at" : "{{ date -1 }}T23:00:00.000+13:00", "uploader" : { "battery" : 80 } }
+ASSERT_STATUS 200
+
+NAME device_status_offset_v3
+GET http://{{ .ns_site }}/api/v3/devicestatus?fields=utcOffset,created_at&limit=1
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 780 "@result.0.utcOffset"
+ASSERT_EQUALS ".utc_time" "@result.0.created_at"
+
+// Trio decodes a profile's startDate as a string; Nighttroop gives it as toISOString does, with milliseconds
+NAME trio_profile
+POST http://{{ .ns_site }}/api/v1/profile.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {
+  "defaultProfile" : "default", "startDate" : "{{ date -1 }}T12:20:00.000Z", "mills" : {{ dayms -1 740 }}, "units" : "mg/dl", "enteredBy" : "Trio",
+  "store" : { "default" : { "dia" : 6, "carbs_hr" : 21, "delay" : 0, "timezone" : "Pacific/Auckland",
+    "target_low" : [ { "time" : "00:00", "value" : 100, "timeAsSeconds" : 0 } ],
+    "target_high" : [ { "time" : "00:00", "value" : 110, "timeAsSeconds" : 0 } ],
+    "sens" : [ { "time" : "00:00", "value" : 50, "timeAsSeconds" : 0 } ],
+    "basal" : [ { "time" : "00:00", "value" : 0.8, "timeAsSeconds" : 0 } ],
+    "carbratio" : [ { "time" : "00:00", "value" : 10, "timeAsSeconds" : 0 } ], "units" : "mg/dl" } }
+}
+ASSERT_STATUS 200
+
+NAME trio_profile_v1
+GET http://{{ .ns_site }}/api/v1/profile.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".start_date" "@0.startDate"
+ASSERT_EQUALS ".start_date" "@0.created_at"
+
+NAME trio_profile_v3
+GET http://{{ .ns_site }}/api/v3/profile/{{ dig "trio_profile_v1.0._id" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".start_date" "@result.startDate"
