@@ -1,5 +1,6 @@
 # xDrip+ sends each reading's delta, the change in mg/dL since the reading before it (populateV1APIBGEntry). As in
-# Nightscout, it is kept as sent and given back, and apart from Loop's trend number, see docs/clients/xdrip.md.
+# Nightscout, it is kept as sent and given back, see docs/clients/xdrip.md. The direction is stored as Nightscout's
+# trend number, and given back made from it, with the trend.
 
 INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
@@ -11,7 +12,8 @@ B [{"device": "xDrip-DexcomG6", "date": {{ itime 10 }}, "dateString": "{{ javati
     "delta": -1.234, "direction": "Flat", "type": "sgv", "sysTime": "{{ javatime 10 }}"}]
 ASSERT_STATUS 200
 ASSERT_EQUALS -1.234 "@0.delta"
-ASSERT_EQUALS null "@0.trend"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS 4 "@0.trend"
 
 NAME xdrip_download_delta
 GET http://{{ site }}/api/v1/entries.json?find[device]=xDrip-DexcomG6
@@ -19,7 +21,8 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS -1.234 "@0.delta"
-ASSERT_EQUALS null "@0.trend"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS 4 "@0.trend"
 
 // A reading with a delta and a trend keeps both
 NAME xdrip_upload_delta_and_trend
@@ -30,6 +33,7 @@ B [{"device": "xDrip-LibreReceiver", "date": {{ itime 5 }}, "dateString": "{{ ja
 ASSERT_STATUS 200
 ASSERT_EQUALS 10.5 "@0.delta"
 ASSERT_EQUALS 2 "@0.trend"
+ASSERT_EQUALS "SingleUp" "@0.direction"
 
 // A delta far outside any reading's change is left out, and the reading kept
 NAME xdrip_upload_delta_too_large
@@ -40,3 +44,100 @@ B [{"device": "xDrip-DexcomG6", "date": {{ itime 1 }}, "dateString": "{{ javatim
 ASSERT_STATUS 200
 ASSERT_EQUALS 125 "@0.sgv"
 ASSERT_EQUALS null "@0.delta"
+
+//////
+// TREND AND DIRECTION
+//////
+
+// A trend sent without a direction gives the direction
+NAME trend_only
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "trend-test", "date": {{ itime 20 }}, "sgv": 110, "trend": 3, "type": "sgv"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "FortyFiveUp" "@0.direction"
+ASSERT_EQUALS 3 "@0.trend"
+
+// With both, the direction wins
+NAME direction_wins_over_trend
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "trend-test", "date": {{ itime 21 }}, "sgv": 111, "trend": 7, "direction": "SingleDown", "type": "sgv"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "SingleDown" "@0.direction"
+ASSERT_EQUALS 6 "@0.trend"
+
+// TripleUp has no Nightscout trend number, so none is given back
+NAME triple_up
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "trend-test", "date": {{ itime 22 }}, "sgv": 300, "direction": "TripleUp", "type": "sgv"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "TripleUp" "@0.direction"
+ASSERT_EQUALS null "@0.trend"
+
+// An unknown direction is NOT COMPUTABLE, trend 8
+NAME unknown_direction
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "trend-test", "date": {{ itime 23 }}, "sgv": 112, "direction": "Sideways", "type": "sgv"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "NOT COMPUTABLE" "@0.direction"
+ASSERT_EQUALS 8 "@0.trend"
+
+// A trend outside Nightscout's 0 to 9 gives no direction, and the reading is kept
+NAME trend_out_of_range
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "trend-test", "date": {{ itime 24 }}, "sgv": 113, "trend": 10, "type": "sgv"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 113 "@0.sgv"
+ASSERT_EQUALS null "@0.direction"
+ASSERT_EQUALS null "@0.trend"
+
+NAME trend_fetched_back
+GET http://{{ site }}/api/v1/entries.json?find[device]=trend-test&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 5 "@"
+ASSERT_EQUALS "FortyFiveUp" "@0.direction"
+ASSERT_EQUALS 3 "@0.trend"
+ASSERT_EQUALS "TripleUp" "@2.direction"
+ASSERT_EQUALS null "@2.trend"
+ASSERT_EQUALS "NOT COMPUTABLE" "@3.direction"
+ASSERT_EQUALS null "@4.direction"
+
+// API v3: a patch of the trend alone changes the direction, and a patch of the direction alone changes the trend
+NAME trend_v3_create
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {"device": "trend-v3", "date": {{ itime 30 }}, "sgv": 140, "direction": "↗", "type": "sgv"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "FortyFiveUp" "@result.direction"
+ASSERT_EQUALS 3 "@result.trend"
+
+NAME trend_v3_patch_trend
+PATCH http://{{ site }}/api/v3/entries/{{ dig "trend_v3_create.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B {"trend": 7}
+ASSERT_STATUS 200
+
+NAME trend_v3_patched_trend
+GET http://{{ site }}/api/v3/entries/{{ dig "trend_v3_create.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "DoubleDown" "@result.direction"
+ASSERT_EQUALS 7 "@result.trend"
+
+NAME trend_v3_patch_direction
+PATCH http://{{ site }}/api/v3/entries/{{ dig "trend_v3_create.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B {"direction": "TripleDown"}
+ASSERT_STATUS 200
+
+NAME trend_v3_patched_direction
+GET http://{{ site }}/api/v3/entries/{{ dig "trend_v3_create.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "TripleDown" "@result.direction"
+ASSERT_EQUALS null "@result.trend"

@@ -88,37 +88,30 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Delta)
 		sitedbCreateGlucoseReadingParams.Delta = &xfloat64
 	}
-	if source.Direction != nil {
-		xstring := *source.Direction
-		sitedbCreateGlucoseReadingParams.Direction = &xstring
-	}
-	if source.Trend != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Trend)
-		sitedbCreateGlucoseReadingParams.Trend = &xfloat642
-	}
+	sitedbCreateGlucoseReadingParams.Trend = DirectionTrend(source.Direction)
 	if source.Noise != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Noise)
-		sitedbCreateGlucoseReadingParams.Noise = &xfloat643
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Noise)
+		sitedbCreateGlucoseReadingParams.Noise = &xfloat642
 	}
 	if source.Filtered != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Filtered)
-		sitedbCreateGlucoseReadingParams.Filtered = &xfloat644
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Filtered)
+		sitedbCreateGlucoseReadingParams.Filtered = &xfloat643
 	}
 	if source.Unfiltered != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Unfiltered)
-		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat645
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Unfiltered)
+		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat644
 	}
 	if source.RSSI != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.RSSI)
-		sitedbCreateGlucoseReadingParams.Rssi = &xfloat646
+		xfloat645 := FlexibleFloat64ToFloat64(*source.RSSI)
+		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
 	}
 	if source.IsCalibration != nil {
 		xbool := *source.IsCalibration
 		sitedbCreateGlucoseReadingParams.IsCalibration = &xbool
 	}
 	if source.SensorMgdlAtPairing != nil {
-		xfloat647 := FlexibleFloat64ToFloat64(*source.SensorMgdlAtPairing)
-		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat647
+		xfloat646 := FlexibleFloat64ToFloat64(*source.SensorMgdlAtPairing)
+		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat646
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
@@ -126,12 +119,12 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 	}
 	sitedbCreateGlucoseReadingParams.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring2 := ShortStringToString(*source.App)
-		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring2
+		xstring := ShortStringToString(*source.App)
+		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring
 	}
 	if source.Device != nil {
-		xstring3 := ShortStringToString(*source.Device)
-		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring3
+		xstring2 := ShortStringToString(*source.Device)
+		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring2
 	}
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)

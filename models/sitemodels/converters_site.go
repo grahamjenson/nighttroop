@@ -96,6 +96,7 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// goverter:map Trend Direction | nighttroop.t1d.nz/models/nightscoutmodels:TrendDirection
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *SiteGlucoseReading
 
 	// goverter:context siteContext
@@ -106,8 +107,9 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// The site does not set an AAPS calibration, or Nightscout's trend number
-	// goverter:ignore IsCalibration SensorMgdlAtPairing Trend
+	// goverter:map Direction Trend | nighttroop.t1d.nz/models/nightscoutmodels:DirectionTrend
+	// The site does not set an AAPS calibration
+	// goverter:ignore IsCalibration SensorMgdlAtPairing
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext
@@ -116,6 +118,7 @@ type SiteConverter interface {
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// The site does not set an AAPS calibration
 	// goverter:ignore IsCalibration SensorMgdlAtPairing
+	// goverter:map Direction Trend | nighttroop.t1d.nz/models/nightscoutmodels:DirectionTrend
 	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
 
 	///////

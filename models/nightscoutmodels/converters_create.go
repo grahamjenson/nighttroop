@@ -54,6 +54,7 @@ type CreateMapConverter interface {
 	// goverter:ignore Notes Reason MeasurementMethod
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map RSSI Rssi
+	// goverter:map Direction Trend | DirectionTrend
 	EntryToCreate(source Entry, ctx ConverterContext) sitedb.CreateGlucoseReadingParams
 
 	///////

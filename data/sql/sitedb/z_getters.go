@@ -2006,23 +2006,13 @@ func (m *GlucoseReading) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m GlucoseReading) GetDirection() *string {
-	return m.Direction
-}
-
-// SetDirection sets the Direction value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetDirection(v *string) {
-	m.Direction = v
-}
-
 // GetTrend returns the Trend value.
-func (m GlucoseReading) GetTrend() *float64 {
+func (m GlucoseReading) GetTrend() *int64 {
 	return m.Trend
 }
 
 // SetTrend sets the Trend value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetTrend(v *float64) {
+func (m *GlucoseReading) SetTrend(v *int64) {
 	m.Trend = v
 }
 
@@ -2276,23 +2266,13 @@ func (m *GlucoseReadingsVw) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m GlucoseReadingsVw) GetDirection() *string {
-	return m.Direction
-}
-
-// SetDirection sets the Direction value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetDirection(v *string) {
-	m.Direction = v
-}
-
 // GetTrend returns the Trend value.
-func (m GlucoseReadingsVw) GetTrend() *float64 {
+func (m GlucoseReadingsVw) GetTrend() *int64 {
 	return m.Trend
 }
 
 // SetTrend sets the Trend value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetTrend(v *float64) {
+func (m *GlucoseReadingsVw) SetTrend(v *int64) {
 	m.Trend = v
 }
 
@@ -8626,23 +8606,13 @@ func (m *CreateGlucoseReadingParams) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m CreateGlucoseReadingParams) GetDirection() *string {
-	return m.Direction
-}
-
-// SetDirection sets the Direction value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetDirection(v *string) {
-	m.Direction = v
-}
-
 // GetTrend returns the Trend value.
-func (m CreateGlucoseReadingParams) GetTrend() *float64 {
+func (m CreateGlucoseReadingParams) GetTrend() *int64 {
 	return m.Trend
 }
 
 // SetTrend sets the Trend value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetTrend(v *float64) {
+func (m *CreateGlucoseReadingParams) SetTrend(v *int64) {
 	m.Trend = v
 }
 
@@ -9086,23 +9056,13 @@ func (m *RewriteGlucoseReadingParams) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m RewriteGlucoseReadingParams) GetDirection() *string {
-	return m.Direction
-}
-
-// SetDirection sets the Direction value and returns the updated RewriteGlucoseReadingParams.
-func (m *RewriteGlucoseReadingParams) SetDirection(v *string) {
-	m.Direction = v
-}
-
 // GetTrend returns the Trend value.
-func (m RewriteGlucoseReadingParams) GetTrend() *float64 {
+func (m RewriteGlucoseReadingParams) GetTrend() *int64 {
 	return m.Trend
 }
 
 // SetTrend sets the Trend value and returns the updated RewriteGlucoseReadingParams.
-func (m *RewriteGlucoseReadingParams) SetTrend(v *float64) {
+func (m *RewriteGlucoseReadingParams) SetTrend(v *int64) {
 	m.Trend = v
 }
 
@@ -9616,14 +9576,14 @@ func (m *UpdateGlucoseReadingParams) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m UpdateGlucoseReadingParams) GetDirection() *string {
-	return m.Direction
+// GetTrend returns the Trend value.
+func (m UpdateGlucoseReadingParams) GetTrend() *int64 {
+	return m.Trend
 }
 
-// SetDirection sets the Direction value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetDirection(v *string) {
-	m.Direction = v
+// SetTrend sets the Trend value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetTrend(v *int64) {
+	m.Trend = v
 }
 
 // GetNoise returns the Noise value.

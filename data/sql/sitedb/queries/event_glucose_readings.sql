@@ -12,7 +12,6 @@ INSERT INTO glucose_readings (
     measurement_method,
 
     delta,
-    direction,
     trend,
     noise,
     filtered,
@@ -38,7 +37,6 @@ VALUES (
     sqlc.arg('MeasurementMethod'),
 
     sqlc.arg('Delta'),
-    sqlc.arg('Direction'),
     sqlc.narg('Trend'),
     NULLIF(CAST(sqlc.narg('Noise') AS REAL), 0),
     sqlc.narg('Filtered'),
@@ -201,7 +199,6 @@ UPDATE glucose_readings SET
     units = sqlc.arg('Units'),
     measurement_method = sqlc.arg('MeasurementMethod'),
     delta = sqlc.arg('Delta'),
-    direction = sqlc.arg('Direction'),
     trend = sqlc.narg('Trend'),
     noise = NULLIF(CAST(sqlc.narg('Noise') AS REAL), 0),
     filtered = sqlc.narg('Filtered'),
@@ -226,7 +223,7 @@ UPDATE glucose_readings SET
     mgdl = COALESCE(sqlc.narg('Mgdl'), mgdl),
 
     delta = COALESCE(sqlc.narg('Delta'), delta),
-    direction = COALESCE(sqlc.narg('Direction'), direction),
+    trend = COALESCE(sqlc.narg('Trend'), trend),
     noise = COALESCE(NULLIF(CAST(sqlc.narg('Noise') AS REAL), 0), noise),
     filtered = COALESCE(sqlc.narg('Filtered'), filtered),
     unfiltered = COALESCE(sqlc.narg('Unfiltered'), unfiltered),

@@ -79,15 +79,19 @@ ASSERT_VISIBLE #site--glucose--edit--notes[value="Finger prick"]
 SCREENSHOT glucose_reading_edit
 INPUT #site--glucose--edit--reading 8.6
 INPUT #site--glucose--edit--notes Rechecked
+// Its trend, stored as Nightscout's trend number, is shown in its row as its arrow
+INPUT #site--glucose--edit--direction SingleUp
 CLICK #site--glucose--edit--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Glucose Reading Updated
 ASSERT_NOT_VISIBLE #site--glucose--details
 ASSERT_TEXT_VISIBLE 8.6
+ASSERT_TEXT_EQUALS #glucoseReadingsTable>*>tr>td>span[title=SingleUp] ↑
 
 // The edit is saved
 CLICK "Meter"
 ASSERT_TEXT_VISIBLE 8.6 mmol/L
+ASSERT_VISIBLE #site--glucose--edit--direction:has(option[value=SingleUp]:checked)
 // Its notes are shown once, in its edit form, not again in the details listed below it, which keep what an update
 // does not change, like its type
 ASSERT_COUNT #site--glucose--details :is(dt, label):has-text("Notes") 1

@@ -97,27 +97,24 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		nightscoutmodelsEntry.Type = &pNightscoutmodelsEntryType
 		nightscoutmodelsEntry.SGV = SGVGlucoseReadingTypeToValue(source, context)
 		nightscoutmodelsEntry.MBG = MBGGlucoseReadingTypeToValue(source, context)
-		nightscoutmodelsEntry.Direction = EntryDirection((*source).Direction)
-		if (*source).Trend != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Trend)
-			nightscoutmodelsEntry.Trend = &typesFlexibleFloat64
-		}
+		nightscoutmodelsEntry.Direction = TrendDirection((*source).Trend)
+		nightscoutmodelsEntry.Trend = EntryTrend((*source).Trend)
 		if (*source).Delta != nil {
-			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Delta)
-			nightscoutmodelsEntry.Delta = &typesFlexibleFloat642
+			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Delta)
+			nightscoutmodelsEntry.Delta = &typesFlexibleFloat64
 		}
 		nightscoutmodelsEntry.Units = UnitsToValue((*source).Mgdl, context)
 		if (*source).Filtered != nil {
-			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Filtered)
-			nightscoutmodelsEntry.Filtered = &typesFlexibleFloat643
+			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Filtered)
+			nightscoutmodelsEntry.Filtered = &typesFlexibleFloat642
 		}
 		if (*source).Unfiltered != nil {
-			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Unfiltered)
-			nightscoutmodelsEntry.Unfiltered = &typesFlexibleFloat644
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Unfiltered)
+			nightscoutmodelsEntry.Unfiltered = &typesFlexibleFloat643
 		}
 		if (*source).Rssi != nil {
-			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Rssi)
-			nightscoutmodelsEntry.RSSI = &typesFlexibleFloat645
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Rssi)
+			nightscoutmodelsEntry.RSSI = &typesFlexibleFloat644
 		}
 		nightscoutmodelsEntry.Noise = WholeNoise((*source).Noise)
 		if (*source).IsCalibration != nil {
@@ -125,8 +122,8 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 			nightscoutmodelsEntry.IsCalibration = &xbool
 		}
 		if (*source).SensorMgdlAtPairing != nil {
-			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).SensorMgdlAtPairing)
-			nightscoutmodelsEntry.SensorMgdlAtPairing = &typesFlexibleFloat646
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).SensorMgdlAtPairing)
+			nightscoutmodelsEntry.SensorMgdlAtPairing = &typesFlexibleFloat645
 		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
 		nightscoutmodelsEntry.Date = &pTypesDateInt

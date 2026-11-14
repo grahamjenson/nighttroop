@@ -1347,7 +1347,6 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | `mbg` entry                              | `isCalibration`\*, `sensorMgdlAtPairing`\* (mg/dL)                                          | AAPS       |
 | Entry                                    | `filtered`, `unfiltered`, 0 too                                                            | AAPS       |
 | Entry                                    | `delta` (mg/dL, -1000 to 1000)                                                             | xDrip+     |
-| Entry                                    | `trend` (0 to 9)                                                                           | Loop       |
 | Treatment                                | `pumpId`, `pumpSerial`, `pumpType`                                                         | AAPS       |
 | Bolus                                    | `isBasalInsulin`                                                                           | AAPS       |
 | Bolus, profile switch                    | `icfg`: `insulinLabel`, `insulinEndTime` and `insulinPeakTime` (ms), `concentration`       | AAPS       |
@@ -1381,6 +1380,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - `sgv` for a CGM reading, `mbg` for a meter reading, never both.
 - `direction`: a Nightscout name (e.g. `Flat`, `RATE OUT OF RANGE`), from any letter case or an arrow (`↗`, `↓↓`).
   Unknown: `NOT COMPUTABLE`. Empty: left out.
+- `trend`: Nightscout's number for the direction (`NONE` 0, `DoubleUp` 1 ... `DoubleDown` 7, `NOT COMPUTABLE` 8,
+  `RATE OUT OF RANGE` 9).
+  - Only the trend is stored. The `direction` given back is made from it.
+  - With a `direction`, the trend is the direction's number, whatever `trend` is sent.
+  - A `trend` (0 to 9) without a `direction` gives the direction. Other trends: left out.
+  - `TripleUp` and `TripleDown` have no Nightscout number: they are given back with no `trend`.
 - `noise`: a whole number.
 - If a reading is dated more than 15 minutes after now, the API refuses it (400 "date is in the future"). A v1 batch
   leaves it out and stores the rest. Up to 15 minutes allows for a phone clock that is fast.
