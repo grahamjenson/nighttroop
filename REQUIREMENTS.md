@@ -1139,11 +1139,13 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v3 status: what the token can do to each collection (e.g. `crud` for an uploader, `r` for read only). AAPS uploads
   only with a token that can write.
 - v3 version: needs no token.
+- A v1 `PUT` changes a record, so it needs the update permission, as a v3 `PUT` does.
 - Versions: the same Nightscout `version` (`15.0.9`) in v1 status, v3 status and v3 version. v1 status also has
   `versionNum` (`150009`), which AAPS 3.4 needs to be at least 150000.
 - API v3 version: the same `apiVersion` (`3.0.4`) in v3 status, v3 version and v1 versions.
 - v2 roles and subjects (AAPS pairs a client by QR code with them):
-  - Roles: a fixed list, `admin`, `readable` and `aaps-client`. A role sent is given back, and not kept.
+  - Roles: a fixed list, `admin`, `readable`, `aaps-client` and `careportal` (a Caregiver device). A role sent is
+    given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
   - Add a subject: a device for AAPSClient, with mg/dL units written `mg/dl`. It reads everything and writes only
     `settings` (client control). It cannot add treatments, entries, device statuses, profiles or food: 403.
@@ -1864,9 +1866,16 @@ harder:
 | Read only user | Nightscout token | Yes | No | No |
 | Clinician | Password | No | No | No |
 | PWD phone (the loop's phone) | Nightscout token | Yes | Yes | No |
-| Read and write device | Nightscout token | Yes | Yes | No |
+| Caregiver device (`device_read_write`) | Nightscout token | Yes | Treatments only, on the Nightscout API | No |
 | Read only device | Nightscout token | Yes | No | No |
 
+- A Caregiver device is for a carer's or follower's app, such as LoopFollow, Nightguard or T1D Carer. On the
+  Nightscout API:
+  - It reads everything.
+  - It adds, changes and deletes treatments, adds a device status, and reads and writes settings.
+  - It cannot add readings or profiles, or change or delete readings, profiles or device statuses: 403.
+  - On the socket, `authorize` gives it `write` false and `write_treatment` true. It writes only treatments there.
+- The Users & Devices page names it "Caregiver". The Device card says what it can and cannot change.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
