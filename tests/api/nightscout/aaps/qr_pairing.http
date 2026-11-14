@@ -65,6 +65,36 @@ H Authorization: Bearer {{ .client_jwt }}
 B {"app": "AAPSClient", "date": 946684800001, "envelope": "abc"}
 ASSERT_STATUS 201
 
+// The client's code reads the site and writes only client control's settings, as its role says: whoever sees the
+// code cannot add treatments, readings, device statuses, profiles or food
+NAME client_cannot_add_treatments_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .client_jwt }}
+B {"eventType": "Note", "notes": "x", "date": {{ itime 5 }}}
+ASSERT_STATUS 403
+
+NAME client_cannot_add_treatments_v1
+POST http://{{ site }}/api/v1/treatments?token={{ .client_token }}
+B {"eventType": "Note", "notes": "x", "created_at": "{{ time 5 }}"}
+ASSERT_STATUS 403
+
+NAME client_cannot_add_entries
+POST http://{{ site }}/api/v1/entries?token={{ .client_token }}
+B [{"type": "sgv", "sgv": 120, "date": {{ itime 5 }}}]
+ASSERT_STATUS 403
+
+NAME client_cannot_add_device_status
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ .client_jwt }}
+B {"app": "AAPSClient", "date": {{ itime 5 }}, "device": "openaps://x"}
+ASSERT_STATUS 403
+
+NAME client_cannot_add_food
+POST http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ .client_jwt }}
+B {"type": "food", "name": "Banana", "carbs": 27}
+ASSERT_STATUS 403
+
 // Only the PWD phone adds or lists subjects, not the client nor a follower
 NAME client_cannot_add_subjects
 POST http://{{ site }}/api/v2/authorization/subjects

@@ -231,6 +231,6 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | `/alarm` `announcement` | Fixed in #511 (was never sent) | `aaps_alarm.sio` |
 | `/alarm` `announcement` added on the site | Fixed: its notification's notes are the message (was empty) | `aaps_alarm.sio` |
 | Client control: `settings` documents | Kept as sent, shared by the site's identities. Keys up to 128 characters for `aaps_clientcontrol_<kind>_<client UUID>` (over 36 was refused, so no client could pair) | `running_config.http` |
-| Client control: v2 roles and subjects (QR pairing) | Fixed: a subject is a device that reads and writes. Its `accessToken` is in the subjects for 10 minutes after it is added (was 404, so QR pairing failed) | `qr_pairing.http` |
+| Client control: v2 roles and subjects (QR pairing) | Fixed: a subject is a device that reads everything and writes only `settings`, as the `aaps-client` role says (could write treatments). Its `accessToken` is in the subjects for 10 minutes after it is added (was 404, so QR pairing failed) | `qr_pairing.http` |
 | v1 `authorize` with the SHA1 of the secret | Works (#512) | `aaps_v1.sio` |
 | v1 `authorize` payload, `dataUpdate`, `dbAdd`, `dbUpdate` | Works | `aaps_v1.sio`, `db_writes.sio` |

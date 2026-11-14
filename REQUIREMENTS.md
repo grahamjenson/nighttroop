@@ -1136,7 +1136,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v2 roles and subjects (AAPS pairs a client by QR code with them):
   - Roles: a fixed list, `admin`, `readable` and `aaps-client`. A role sent is given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
-  - Add a subject: a device that can read and write, for AAPSClient, with mg/dL units written `mg/dl`.
+  - Add a subject: a device for AAPSClient, with mg/dL units written `mg/dl`. It reads everything and writes only
+    `settings` (client control). It cannot add treatments, entries, device statuses, profiles or food: 403.
   - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
   - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
   - Delete a subject: its identity is deleted, so its token gets 401. A device cannot delete itself.
