@@ -1453,18 +1453,22 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 		xstring9 := *source.EnteredBy
 		sitedbCreateProfilePresetParams.EnteredBy = &xstring9
 	}
+	if source.ProfileName != nil {
+		xstring10 := *source.ProfileName
+		sitedbCreateProfilePresetParams.ProfileName = &xstring10
+	}
 	sitedbCreateProfilePresetParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.CreatedByAppName != nil {
-		xstring10 := *source.CreatedByAppName
-		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring10
+		xstring11 := *source.CreatedByAppName
+		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring11
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring11 := *source.CreatedByDeviceName
-		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring11
+		xstring12 := *source.CreatedByDeviceName
+		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring12
 	}
 	sitedbCreateProfilePresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {

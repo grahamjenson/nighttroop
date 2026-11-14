@@ -1328,6 +1328,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | Carb entry                               | `userEnteredAt` (UTC)                                                                      | Loop       |
 | Bolus                                    | `unabsorbed`                                                                               | Loop       |
 | Treatment                                | `uuid`, `sensorCode`, `transmitterId`                                                      | xDrip+     |
+| Profile                                  | `profile` (the name of the settings profile, up to 64 characters)                          | iAPS       |
 | Treatment, profile                       | `enteredBy` (e.g. `loop://iPhone`, `Loop`, `Trio`), else its `app` (e.g. `AAPS`), else the uploading identity | All        |
 
 - An effective profile switch is AAPS's Note with a `profileJson`.
