@@ -15,6 +15,16 @@ func LastDeviceStatusFromPWD(q *sitedb.Queries, ctx context.Context) *sitedb.Dev
 	return ret
 }
 
+// LastBatteryStatus is the newest device status with the uploader's battery in the last 30 minutes, from any
+// device, nil when there is none
+func LastBatteryStatus(q *sitedb.Queries, ctx context.Context) *sitedb.DeviceReport {
+	ret, err := q.GetLatestDeviceReportWithBattery(ctx)
+	if err != nil {
+		return nil
+	}
+	return ret
+}
+
 // LastOfType is the newest treatment of a type not deleted, like a Sensor Change, nil when there is none
 func LastOfType(q *sitedb.Queries, ctx context.Context, groupType string) *sitedb.EventGroup {
 	groups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: groupType, Limit: 1})

@@ -122,12 +122,52 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 		return nil, err
 	}
 	doc, httpErr := found(collectionsStore.Get(ctx, siteContext, identifier, query))
+	// A treatment's carbs part, which API v3 gives as its own document, is found by its identifier
+	if treatment, isPart := nscollections.CarbsPartOf(identifier); httpErr == nsutils.ErrNotFound && isPart && collection == nsutils.Treatments {
+		if parts := nsutils.V3Parts(foundParts(nts.Get(ctx, collection, treatment, query))); len(parts) == 2 {
+			return parts[1], nil
+		}
+	}
 	if reading, ok := nts.fingerStick(ctx, siteContext, collection, identifier); httpErr == nsutils.ErrNotFound && ok {
 		if bgCheck, ok := nts.bgCheck(reading, siteContext); ok {
 			return bgCheck, nil
 		}
 	}
 	return doc, httpErr
+}
+
+// foundParts is a document found as a list, empty when none was
+func foundParts(doc nsutils.Document, err *nsutils.HTTPError) []nsutils.Document {
+	if err != nil {
+		return nil
+	}
+	return []nsutils.Document{doc}
+}
+
+// SplitV3 makes a treatment API v3 gives as its insulin and its carbs two treatments, before a change or delete of
+// either through API v3, so it changes only that one, as AAPS changes and deletes them on their own: its carbs become a
+// treatment with the carbs part's identifier, and are taken out of it
+func (nts *NightTroopAPIStore) SplitV3(ctx context.Context, collection nsutils.Collection, identifier string) *nsutils.HTTPError {
+	treatment, isPart := nscollections.CarbsPartOf(identifier)
+	if !isPart {
+		treatment = identifier
+	}
+	if collection != nsutils.Treatments {
+		return nil
+	}
+	parts := nsutils.V3Parts(foundParts(nts.Get(ctx, collection, treatment, nsquery.Query{})))
+	if len(parts) < 2 {
+		return nil
+	}
+	carbs := parts[1].Fields(true)
+	for _, server := range []string{"srvCreated", "srvModified", "subject", "isValid", "isReadOnly"} {
+		delete(carbs, server)
+	}
+	if _, _, err := nts.Create(ctx, collection, carbs); err != nil {
+		return err
+	}
+	_, err := nts.Patch(ctx, collection, treatment, map[string]any{"carbs": nil, "protein": nil, "fat": nil, "foodType": nil, "absorptionTime": nil})
+	return err
 }
 
 func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {

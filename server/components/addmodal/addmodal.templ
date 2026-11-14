@@ -2,11 +2,13 @@ package addmodal
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -40,8 +42,13 @@ type Field struct {
 	Help     string
 	Required bool
 	Kind     Kind
-	// Min, Max and Step limit a number, and Max a text's length
+	// Column is the table and field it is kept in, e.g. insulin_doses.Dose, whose limits its input takes
+	Column string
+	// Min and Max narrow its column's limits, in the column's units, e.g. a Percent's fraction, and Max a text's length.
+	// Step is a number's.
 	Min, Max, Step string
+	// Units are what a column of glucose in mg/dL is typed in
+	Units *consts.Units
 	// Options are a select's choices, or a text's suggestions
 	Options []string
 	// OptionLabel shows a select's option as people read it, e.g. Meter for mbg, when set
@@ -169,10 +176,8 @@ templ field(p Props, f Field) {
 				</select>
 			case When:
 				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime, Value: f.Value})
-			case Number:
-				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Value: f.Value, Required: f.Required, Attributes: templ.Attributes{"step": f.Step, "min": f.Min, "max": f.Max}})
-			case Percent:
-				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Value: f.Value, Required: f.Required, Attributes: templ.Attributes{"step": "any", "min": f.Min, "max": f.Max, "data-percent": true}})
+			case Number, Percent:
+				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Value: f.Value, Required: f.Required, Attributes: numberAttributes(f)})
 			default:
 				@input.Input(input.Props{ID: id, Name: f.Name, Value: f.Value, Required: f.Required, Attributes: textAttributes(f, id)})
 				if len(f.Options) > 0 {
@@ -197,7 +202,13 @@ func optionLabel(f Field, option string) string {
 
 // textAttributes limit a text's length, and point it at its suggestions when it has some
 func textAttributes(f Field, id string) templ.Attributes {
-	attributes := templ.Attributes{"maxlength": f.Max}
+	attributes, limit := templ.Attributes{}, f.limit()
+	if limit.MaxLength > 0 {
+		attributes["maxlength"] = strconv.Itoa(limit.MaxLength)
+	}
+	if limit.MinLength > 0 {
+		attributes["minlength"] = strconv.Itoa(limit.MinLength)
+	}
 	if len(f.Options) > 0 {
 		attributes["list"] = id + "--options"
 	}

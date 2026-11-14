@@ -68,6 +68,7 @@ How [xDrip+](https://github.com/NightscoutFoundation/xDrip) talks to Nightscout,
 - `dateString`, `sysTime`: `yyyy-MM-dd'T'HH:mm:ss.SSSZ` in the phone's zone (for example
   `2026-11-02T23:00:00.000+1300`).
 - `direction`: `DoubleUp` ... `DoubleDown`, `NONE`, `NOT COMPUTABLE` or `NotComputable`.
+- `delta`: kept and given back as sent. A `delta` out of -1000 to 1000 is left out, and the reading kept.
 - A calibration is also sent as an `mbg`, unless a blood test is within a minute of it.
 - **Response:** only the status code is read. On a non-2xx, nothing is marked done. The whole batch, growing, is sent
   again with the next reading, until its queue entries are a week old. Until then, the device status and treatments
@@ -87,6 +88,9 @@ uploader, the Dexcom transmitter (`send_ob1dex_tx_battery_to_nightscout`).
 ```
 
 The transmitter's `battery` is text. A failure is logged and ignored.
+
+Watch faces and followers read the newest numeric `battery` of the last 30 minutes, from any device:
+`/api/v2/properties` (`upbat`) and `/pebble` (`battery`).
 
 ### Treatments
 
@@ -155,14 +159,15 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
 
 ## Known problems and limits
 
-- **Units:** xDrip+ sends mg/dL without `units`. Nighttroop takes a value over 30 as mg/dL, so 30 or less is
-  mmol/L (xDrip+ sends 39 for a sensor's LOW). The follower reads `sgv` as mg/dL; the Nightscout API always gives
-  mg/dL, whatever the identity's or site's units.
+- **Units:** xDrip+ sends mg/dL without `units`. Nighttroop takes an entry without `units` as mg/dL, as Nightscout
+  does, whatever the value: 39 (a sensor's LOW) and lower stay low (`low_sgv.http`). The follower reads `sgv` as
+  mg/dL; the Nightscout API always gives mg/dL, whatever the identity's or site's units.
 - **Times:** `dateString` has an offset without a colon (`+1300`). It wins over `date` when there is no `utcOffset`.
   Both are the same time.
 - **AAPS:** gets an xDrip+ blood test (`mbg`) as a BG Check from API v3.
 - **Returned treatments:** no `insulinInjections`. For `<none>`, the eventType of its amounts: `Meal Bolus` (insulin
   and carbs), `Carb Correction`, `Correction Bolus`, or `Note` (no amounts). xDrip+ finds its own by `uuid`.
+- **AAPS:** reads a Meal Bolus with insulin and carbs from API v3 as two treatments, so it gets both.
 - **Gaps:** a reading search gives at most 2880, newest first, so the follower gets all of them after a gap. It was
   1000: a follower offline for over 1000 readings never read the older ones.
 - **`rr`:** an unknown query parameter, logged and ignored. Not a filter, unlike an unknown `find[...]`, which gives
@@ -183,8 +188,11 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
     reading (`cgm/nsfollow/EntryProcessor.java`), so a finger stick is a reading of 0.
 - **Fixed, authentication:** `api-secret` as the SHA1 of a device token (#512).
 - **Fixed, entries:**
-  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once. It was kept twice,
-    as a reading with another device.
+  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once, with the
+    careportal's values. It was kept twice, as a reading with another device.
+  - Follower with Nightscout upload on: it uploads each reading it downloads (whole `sgv`, `Flat`, device
+    `xDrip-NSFollower Nightscout Follow`). The looper's reading is kept, and gets only the fields it does not have.
+    It was overwritten. Test: `xdrip/follower_echo.http`.
   - A `cal` (#512): left out, so the batch is not refused.
   - A reading dated more than 15 minutes after now (X10): left out, the rest stored. It was kept, so followers showed it
     as the current reading.
@@ -198,9 +206,12 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
     batches, so one with a problem is still refused.
 - **Fixed, device status (#512):**
   - Phone and bridge battery: `uploader.battery` was only kept for Loop.
-  - Dexcom transmitter (text `battery`): the battery is left out, not the status refused. Its other uploader fields
+  - Dexcom transmitter (text `battery`): the battery is left out, not the status refused. The site's client errors
+    show it. Its other uploader fields
     (`days`, `daysEstimate`, `status`, `voltagea`, `voltageb`, `resistance`, `resistance_status`,
     `temperature`, `lastQueried`, `type`) come back as sent.
+  - `upbat` in `/api/v2/properties` and the `/pebble` battery: only a loop's status was read, so they were missing.
+    Test: `xdrip/battery.http`.
 - **Fixed, treatments:**
   - eventType `<none>` (bolus, carbs, note) (#512): kept as a Note.
   - `<none>` with insulin or carbs: returned as `Meal Bolus`, `Carb Correction` or `Correction Bolus`. As a Note,

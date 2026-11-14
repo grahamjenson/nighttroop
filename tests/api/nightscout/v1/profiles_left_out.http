@@ -1,0 +1,61 @@
+INCLUDE steps/new_site_admin.steps
+
+NAME ns_jwt_auth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET ns_jwt {{ .ns_jwt_auth.token }}
+
+// A profile with a field of its store too long for its column keeps the profile, with that field left out, as an
+// entry or treatment does: the uploader is given what was stored, its enteredBy who uploaded it
+NAME create_profile_long_entered_by
+POST http://{{ .ns_site }}/api/v1/profile.json?token={{ token }}
+H User-Agent: iAPS
+B {"defaultProfile":"Default","startDate":"{{ time 0 }}","units":"mg/dL","enteredBy":"{{ repeat "e" 70 }}",
+   "store":{"Default":{"dia":5,"units":"mg/dL","timezone":"UTC","basal":[{"value":0.5,"time":"00:00","timeAsSeconds":0}]}}}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS "pwd_phone" "@0.enteredBy"
+ASSERT_EQUALS 0.5 "@0.store.Default.basal.0.value"
+SET profile_id {{ dig "create_profile_long_entered_by.0._id" }}
+
+// It is stored, by the _id it was given back with
+NAME get_profile_long_entered_by
+GET http://{{ .ns_site }}/api/v3/profile/{{ .profile_id }}
+H Authorization: Bearer {{ .ns_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.enteredBy"
+ASSERT_EQUALS 0.5 "@result.store.Default.basal.0.value"
+
+// The site's client errors say the field left out
+NAME client_errors
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_CONTAINS "enteredBy must be at most 64 characters (was 70 characters)" "@result.items.0.message"
+
+// API v3 keeps the profile so too, with a profile in its store as many profiles as were sent
+NAME create_profile_long_entered_by_v3
+POST http://{{ .ns_site }}/api/v3/profile
+H Authorization: Bearer {{ .ns_jwt }}
+B {"defaultProfile":"Default","date":{{ itime 1 }},"units":"mg/dL","enteredBy":"{{ repeat "e" 70 }}",
+   "store":{"Default":{"dia":5,"basal":[{"value":0.5,"time":"00:00","timeAsSeconds":0}]},
+   "Work":{"dia":4,"basal":[{"value":0.7,"time":"00:00","timeAsSeconds":0}]}}}
+ASSERT_STATUS 201
+SET profile_v3_id {{ dig "create_profile_long_entered_by_v3.identifier" }}
+
+NAME get_profile_long_entered_by_v3
+GET http://{{ .ns_site }}/api/v3/profile/{{ .profile_v3_id }}
+H Authorization: Bearer {{ .ns_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.enteredBy"
+ASSERT_EQUALS 0.5 "@result.store.Default.basal.0.value"
+ASSERT_EQUALS 0.7 "@result.store.Work.basal.0.value"
+
+// A store with no profile left is not stored and not given back as stored
+NAME create_profile_empty_store
+POST http://{{ .ns_site }}/api/v1/profile.json?token={{ token }}
+B {"defaultProfile":"Default","startDate":"{{ time 2 }}","units":"mg/dL","store":{}}
+ASSERT_STATUS 400

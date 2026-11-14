@@ -186,18 +186,20 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | **Entries and paging** | | |
 | Create, duplicate, search by date, history with `ETag`, patch, delete, deletion in history | Works | `sync_v3.http` |
 | `filtered` and `unfiltered` of 0, sent with every reading | Not kept (0 is no raw signal) and left out. AAPS does not read them | `flow_v3.http` |
+| AAPS's reading uploaded again by another app or identity (an xDrip+ follower) | Fixed: AAPS's reading is kept. The copy adds only the fields it does not have (was overwritten: whole `sgv`, `Flat`, the follower's device) | `xdrip/follower_echo.http` |
 | Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | Works: kept with the mbg. A follower reads a calibration as one | `sync_v3.http` |
 | Entries and treatments of an identity in mmol/L | Works: always mg/dL | `units/*.http` |
 | First loads over 500 documents | Works: sorted by date, the oldest first | `first_load_paging.http` |
 | History over 500 documents, and profile history's newest | Works: the oldest `srvModified` first | `history_paging.http` |
 | **Treatments** | | |
 | Bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | Works | `sync_v3.http`, `flow_v3.http` |
+| A treatment with both insulin and carbs, such as a Meal Bolus from xDrip+ or the careportal (`RemoteTreatment.toTreatment` makes one record, insulin first) | Fixed: API v3 lists and the storage socket give it as two, its insulin and its carbs (identifier plus `carbs`). AAPS dropped the carbs, so COB was wrong. A change or delete of one part keeps the other | `meal_bolus_split.http`, `aaps_storage_meal_bolus.sio` |
 | Finger sticks from xDrip+ (an `mbg` entry only; AAPS reads only `sgv` entries and takes finger sticks from BG Check treatments) | Fixed: API v3 searches by date, history and the storage socket give each meter reading in no treatment, not sent by AAPS, as a read-only BG Check (identifier plus `finger`). A delete of it deletes the reading | `finger_sticks.http`, `aaps_storage_finger_stick.sio` |
 | Bolus Wizard bolus and carbs: two Meal Boluses at the same `date` | Fixed: two treatments, each with its own identifier. The bolus keeps its insulin (Nightscout replaces it with the carbs). A delete of the carbs deletes only them (was merged, so it deleted the bolus) | `wizard_dedup_v3.http` |
 | Bolus `icfg` and `isBasalInsulin` (without them, AAPS uses its settings' insulin and a bolus is not basal: `BolusExtension.kt` `NSBolus.toBolus`) | Works. Nighttroop summaries still count a basal insulin bolus as a bolus (TODO P3) | `sync_v3.http` |
 | Profile switch and effective profile switch `profileJson` `iCfg` (AAPSClient reads the insulin from it: `pureProfileFromJson`) | Fixed: returned from the switch's `icfg`, or kept from the `profileJson` when there is no `icfg` (was left out) | `profile_switch_icfg.http` |
 | Bolus Wizard `bolusCalculatorResult` (AAPS restores the record from it, or drops the record: `TreatmentMapper.kt:270`) | Works: returned exactly as sent. Left out if not JSON or over 4096 characters | `bolus_wizard.http` |
-| Bolus Wizard with no BG (`glucose` 0) | Fixed: kept without a glucose reading (was 400, and AAPS does not send it again) | `bolus_wizard.http` |
+| Bolus Wizard with no BG (`glucose` 0) | Fixed: kept without a glucose reading (was 400, and AAPS does not send it again). The site's client errors show the glucose left out | `bolus_wizard.http` |
 | BG check with `glucoseType` `Manual` (a finger stick typed in, `TE.MeterType.MANUAL`) | Fixed: kept as a finger stick (`mbg`), and `Manual` returned (was 400, and AAPS sent it again on each sync) | `bg_check_manual.http` |
 | Profile Switch from the site or the careportal (`timeshift` in minutes) | Fixed: API v3 and the storage socket give it in ms, as AAPS reads it (a 60 minute shift was read as 60 ms) | `profile_switch_timeshift.http` |
 | `units` as AAPS writes them | Works: a device added for AAPS writes `mg/dl`. Another device writes units as it first sent them, `mg/dl` once AAPS uploads | `bolus_wizard.http` |
@@ -211,6 +213,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Treatment download (`RemoteTreatment.timestamp` is a Long) | Fixed: API v3 and the storage socket give no `timestamp` (the ISO date API v1 gives Loop made AAPS drop every treatment and its page) | `careportal_download.http`, `aaps_storage.sio` |
 | Treatment deleted offline, uploaded as a create with `isValid` false (`DataSyncSelectorV3`) | Fixed: kept deleted, sent as a delete (was valid, so AAPSClient showed deleted carbs as COB) | `created_deleted.http`, `aaps_storage.sio` |
 | Delete of a treatment that a follower already deleted | Fixed: 200, as Nightscout returns (was 404) | `delete_again.http`, `sync_v3.http` |
+| Read of a deleted entry, treatment or device status (`GET /api/v3/<collection>/<id>`) | Fixed: 410, as Nightscout returns (was 404). 404 only when it was never kept or is deleted permanently | `v3/read_deleted.http`, `created_deleted.http` |
 | Treatment or profile store without `enteredBy` (Meal Bolus, Carb Correction, Profile Switch, profile) | Fixed: `enteredBy` is its `app`, `AAPS` (was the device name, for example `pwd_phone`) | `entered_by.http`, `loop/profile.http` |
 | `glucose` and `glucoseType` on a Question, therapy event, Exercise or Carb Correction | Fixed: kept (were dropped) | `glucose_event_types.http` |
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
@@ -219,7 +222,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Device status `openaps` over 1 day old, in the client's 48 hours | Changed: as sent, without `predBGs` in `suggested` and `enacted`, and with the same `srvModified` | `loopfollow/devicestatus_day.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | Works: the pump object comes back as sent | `sync_v3.http` |
 | Food: create | Works | `sync_v3.http` |
-| Food: read | Works: `type` `food`. `portion`, `unit` and `gi` not kept yet (TODO P4) | `sync_v3.http` |
+| Food: read | Works: `type` `food`. `portion` fixed (was returned as `portions`, so AAPS took 0). `utcOffset` fixed (was 0). `unit`, `gi`, `hidden`, `hideafteruse` and `position` not kept yet (TODO P4) | `sync_v3.http`, `food_portion.http`, `utc_offset.http` |
 | Profile store: create, newest, history | Works | `sync_v3.http`, `flow_v3.http`, `history_paging.http` |
 | **Socket.IO and client control** | | |
 | `/storage` subscribe, `create`, `update`, `delete` | Works | `aaps_storage.sio`, `storage.sio` |

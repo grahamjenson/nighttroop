@@ -50,7 +50,7 @@ func WriteRecordsV3(w http.ResponseWriter, records []Document, fields []string) 
 	}
 
 	result := make([]json.RawMessage, 0, len(records))
-	for _, record := range records {
+	for _, record := range V3Parts(records) {
 		result = append(result, record.JSON(true, fields))
 	}
 

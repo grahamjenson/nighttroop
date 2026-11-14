@@ -181,6 +181,11 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		var sent string
 		if json.Unmarshal(aux.EventType, &sent) == nil && strings.EqualFold(strings.TrimSpace(sent), "<none>") {
 			eventType = t.noEventType()
+			// Juggluco's long-acting insulin has the notes "Long-Acting" (writetreatment in common.cpp), and is basal
+			// insulin, as AAPS marks a bolus of it, so followers do not count it as a bolus
+			if eventType == CorrectionBolus && t.IsBasalInsulin == nil && t.Notes != nil && *t.Notes == "Long-Acting" {
+				t.IsBasalInsulin = new(true)
+			}
 		}
 		t.EventType = &eventType
 	}
@@ -235,6 +240,21 @@ func (t *Treatment) noEventType() TreatmentEventType {
 		return CorrectionBolus
 	}
 	return Note
+}
+
+// SplitCarbs is a treatment with both insulin and carbs as two, as AAPS reads only the insulin of one with both
+// (RemoteTreatment.toTreatment makes one record of a document, insulin first): the treatment without its carbs, and its
+// carbs as a Carb Correction then. ok is false for one without both.
+func (t Treatment) SplitCarbs() (insulin, carbs Treatment, ok bool) {
+	if t.Insulin == nil || *t.Insulin <= 0 || t.Carbs == nil || *t.Carbs <= 0 {
+		return t, Treatment{}, false
+	}
+	carbs = Treatment{EventType: new(CarbCorrection), Carbs: t.Carbs, Protein: t.Protein, Fat: t.Fat, FoodType: t.FoodType,
+		AbsorptionTimeMinutes: t.AbsorptionTimeMinutes, EnteredBy: t.EnteredBy, App: t.App, Date: t.Date,
+		UtcOffsetMinutes: t.UtcOffsetMinutes}
+	insulin = t
+	insulin.Carbs, insulin.Protein, insulin.Fat, insulin.FoodType, insulin.AbsorptionTimeMinutes = nil, nil, nil, nil, nil
+	return insulin, carbs, true
 }
 
 //"eventType": "Correction Bolus",

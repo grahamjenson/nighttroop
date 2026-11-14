@@ -1,6 +1,7 @@
 package nscollections
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"log/slog"
@@ -27,9 +28,6 @@ func NewEntriesCollection() CollectionStore {
 // Cannot change properties
 
 func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	if err := validateEntryMgdl(nsModel); err != nil {
-		return err
-	}
 	if err := validateEntryDate(nsModel); err != nil {
 		return err
 	}
@@ -45,12 +43,9 @@ func validateEntryDate(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
 	return nil
 }
 
-// Refuse glucose far outside real use, checked in mg/dL as it is stored
-func validateEntryMgdl(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
-	if nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxGlucoseMgdl {
-		return nsutils.BadGlucoseError
-	}
-	return nil
+// Rows are its reading, whose glucose is out of range when far outside real use, checked in mg/dL as it is stored
+func (c EntriesCollection) Rows(nsModel nightscoutmodels.Entry) []sitedb.TableRow {
+	return []sitedb.TableRow{{Table: "glucose_readings", Row: nightscoutmodels.EntryToCreate(nsModel, nightscoutmodels.ConverterContext{})}}
 }
 
 func validateEntryType(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
@@ -98,6 +93,13 @@ func (c EntriesCollection) FallbackKey() FallbackKey[nightscoutmodels.Entry, sit
 // and rebuilds readings by sending them again without their _id
 func (c EntriesCollection) Refreshes(nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading) bool {
 	return nightscoutmodels.SetReadingType(nsModel) == stored.ReadingType
+}
+
+// SameUploader is whether the identity and device that stored the reading sent it again, so a looper's own correction
+// refreshes it. A copy from another identity or device, like an xDrip+ follower's echo of AAPS's reading, only fills
+// what it is missing. The device is only what the app says; the identity is the token's, which no other app can send.
+func (c EntriesCollection) SameUploader(nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) bool {
+	return *cmp.Or(stored.CreatedByIdentityID, new(int64(0))) == cc.IdentityID && kept(nsModel.Device.Stringp(), stored.CreatedByDeviceName)
 }
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {

@@ -55,6 +55,11 @@
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
        the temp basal in NSStatus (`nsv2/assistants.go`)
+    1. P3: Add the v2 `basal` property watch faces read: the profile's basal now (`sitemodels.BasalAt`) and the temp
+       basal running, as `display` and `current` (`basal`, `tempbasal`, `totalbasal`, `treatment`)
+    1. P4: The v2 `pump`, `openaps` and `loop` properties read only the newest loop device status of the last 20
+       minutes. Nightscout reads 6 hours (2 for the pump), so it also has a pump with no loop, and an earlier
+       enacted when the newest status has none
     1. P5: Temp targets, temp basals, profile switches and activities keep their duration in whole minutes, so the
        site's summaries end a temp target AAPS ended at 5.99 minutes at 5; only its event group keeps the
        milliseconds, for the Nightscout API's `durationInMilliseconds`
@@ -63,11 +68,12 @@
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
-    1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
+    1. P4: Return a food's Nightscout `unit`, `gi`, `hidden`, `hideafteruse` and `position` as sent; AAPS takes g and
+       none without them. Needs columns
     1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another
        server; AAPS pairing a client again after that gets no token. Keep it in the DB if this is a problem
-    1. P3: Count an AAPS bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal in the
-       summaries, reports and IOB, as it is kept and given back but still counted as a bolus
+    1. P3: Count an AAPS or Juggluco bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal
+       in the summaries, reports and IOB, as it is kept and given back but still counted as a bolus
     1. P4: Food, insulin and temp targets added on the site are not Nightscout treatments until grouped, so AAPS and
        other clients do not see them. Decide whether adding one on its page also adds its group
     1. P4: Only write a treatment's events that changed, rather than every one on each update
@@ -78,3 +84,7 @@
 
 
 
+1. Site API:
+    1. P4: Check the site API's values against the add modals' limits (`addmodal.Field` with its column), not
+       `apiutils.CheckRange` limits written again. Some differ: a food's energy and portions and a temp basal's percent
+       are at least 0 and 1% on the page, but the API takes less

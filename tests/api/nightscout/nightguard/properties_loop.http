@@ -1,0 +1,127 @@
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+// GET /api/v2/properties for a looping site. Nightguard reads upbat, iob, cob and delta from it (see
+// devicestatus.http). Watch faces also read the pump, openaps, loop and basal properties, in the shapes of
+// Nightscout's pump, openaps, loop and basal plugins.
+
+//////
+// SEED: a Trio phone's device status, with the loop's enacted and suggested and an Omnipod with no reservoir
+//////
+
+NAME seed_trio_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "Trio",
+    "created_at": "{{ time 2 }}",
+    "openaps": {
+        "version": "0.5.1",
+        "iob": { "iob": 1.5, "basaliob": 0.3, "bolusiob": 1.2, "activity": 0.01, "time": "{{ time 2 }}" },
+        "suggested": {
+            "bg": 126, "COB": 20, "IOB": 1.5, "eventualBG": 110, "rate": 0.5, "duration": 30,
+            "predBGs": { "IOB": [126, 124, 122], "ZT": [126, 120, 115] },
+            "reason": "COB: 20, Dev: 5", "timestamp": "{{ time 2 }}"
+        },
+        "enacted": {
+            "bg": 126, "COB": 20, "IOB": 1.5, "eventualBG": 110, "rate": 0.5, "duration": 30, "received": true,
+            "predBGs": { "IOB": [126, 124, 122], "ZT": [126, 120, 115] },
+            "reason": "COB: 20, Dev: 5", "timestamp": "{{ time 2 }}"
+        }
+    },
+    "pump": {
+        "clock": "{{ time 2 }}",
+        "manufacturer": "Insulet",
+        "model": "Dash",
+        "battery": { "percent": 75 },
+        "status": { "status": "normal", "bolusing": false, "suspended": false, "timestamp": "{{ time 2 }}" }
+    },
+    "uploader": { "battery": 88, "isCharging": false }
+ }
+ASSERT_STATUS 200
+
+//////
+// The pump as sent, and in data each value with a label, a display and a level (-3 is none, 1 a warning)
+//////
+
+NAME properties_pump
+GET http://{{ site }}/api/v2/properties/pump,openaps,loop,upbat,iob,cob?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Insulet" "@pump.pump.manufacturer"
+ASSERT_EQUALS 75 "@pump.data.battery.value"
+ASSERT_EQUALS "75%" "@pump.data.battery.display"
+ASSERT_EQUALS -3 "@pump.data.battery.level"
+ASSERT_EQUALS "50+ U" "@pump.data.reservoir.display"
+ASSERT_EQUALS "Last Clock" "@pump.data.clock.label"
+ASSERT_EQUALS "2m ago" "@pump.data.clock.display"
+ASSERT_EQUALS "normal" "@pump.data.status.display"
+ASSERT_EQUALS "Trio" "@pump.data.device.display"
+ASSERT_EQUALS -3 "@pump.data.level"
+// Nightguard's own fields are as before
+ASSERT_EQUALS "88%" "@upbat.display"
+ASSERT_EQUALS "1.50" "@iob.display"
+ASSERT_EQUALS 20 "@cob.display"
+
+//////
+// openaps: the last enacted and suggested, the last loop's time and eventual glucose, its predictions and its status
+//////
+
+ASSERT_EQUALS 0.5 "@openaps.lastEnacted.rate"
+ASSERT_EQUALS true "@openaps.lastEnacted.received"
+ASSERT_EXISTS "@openaps.lastEnacted.moment"
+ASSERT_EQUALS null "@openaps.lastNotEnacted"
+ASSERT_EQUALS "COB: 20, Dev: 5" "@openaps.lastSuggested.reason"
+ASSERT_EQUALS 1.5 "@openaps.lastIOB.iob"
+ASSERT_EQUALS 120 "@openaps.lastPredBGs.ZT.1"
+ASSERT_EXISTS "@openaps.lastLoopMoment"
+ASSERT_EQUALS 110 "@openaps.lastEventualBG"
+ASSERT_EQUALS "enacted" "@openaps.status.code"
+ASSERT_EQUALS "Enacted" "@openaps.status.label"
+// A Trio site has no Loop status
+ASSERT_EQUALS null "@loop.lastLoop"
+ASSERT_EQUALS "warning" "@loop.display.code"
+
+//////
+// A newer Loop device status, with a pump that has a low reservoir
+//////
+
+NAME seed_loop_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "loop://iPhone",
+    "created_at": "{{ time 1 }}",
+    "loop": {
+        "name": "Loop",
+        "version": "3.4.0",
+        "timestamp": "{{ time 1 }}",
+        "iob": { "iob": 0.8, "timestamp": "{{ time 1 }}" },
+        "cob": { "cob": 5, "timestamp": "{{ time 1 }}" },
+        "predicted": { "startDate": "{{ time 1 }}", "values": [126, 125, 123] },
+        "enacted": { "rate": 0.4, "duration": 30, "received": true, "timestamp": "{{ time 1 }}" }
+    },
+    "pump": {
+        "clock": "{{ time 1 }}",
+        "manufacturer": "Medtronic",
+        "model": "723",
+        "reservoir": 8,
+        "suspended": false,
+        "bolusing": false
+    },
+    "uploader": { "battery": 64 }
+ }
+ASSERT_STATUS 200
+
+NAME properties_loop
+GET http://{{ site }}/api/v2/properties/pump,openaps,loop?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 8 "@pump.data.reservoir.value"
+ASSERT_EQUALS "8.00U" "@pump.data.reservoir.display"
+ASSERT_EQUALS 1 "@pump.data.reservoir.level"
+ASSERT_EQUALS 1 "@pump.data.level"
+ASSERT_EQUALS "Loop" "@loop.lastLoop.name"
+ASSERT_EXISTS "@loop.lastLoop.moment"
+ASSERT_EQUALS 0.4 "@loop.lastEnacted.rate"
+ASSERT_EQUALS 123 "@loop.lastPredicted.values.2"
+ASSERT_EXISTS "@loop.lastOkMoment"
+ASSERT_EQUALS "enacted" "@loop.display.code"
+ASSERT_EQUALS "⌁" "@loop.display.symbol"

@@ -1,0 +1,96 @@
+INCLUDE steps/new_site_admin.steps
+
+// A field the database does not take and the document can be kept without is left out, and the rest kept: Trio sends
+// uploader.battery -100 when iOS does not know the phone's battery, and the device name is longer than its column
+NAME create_devicestatus_battery_unknown
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+H User-Agent: Trio
+B {"device": "{{ repeat "d" 70 }}", "created_at": "{{ time 0 }}", "uploader": {"battery": -100, "isCharging": true},
+   "pump": {"reservoir": "lots", "clock": "{{ time 0 }}"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@0.uploader.battery"
+ASSERT_EQUALS true "@0.uploader.isCharging"
+ASSERT_EQUALS null "@0.pump.reservoir"
+ASSERT_EQUALS null "@0.device"
+
+// The site's client errors show the request once, with each field left out, what it takes and what was sent
+NAME client_errors
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_CONTAINS "pump.reservoir must be a number (was \"lots\")" "@result.items.0.message"
+ASSERT_CONTAINS "device must be at most 64 characters (was 70 characters)" "@result.items.0.message"
+ASSERT_CONTAINS "uploader.battery must be between 0 and 100 (was -100)" "@result.items.0.message"
+ASSERT_EQUALS 200 "@result.items.0.attributes.status"
+ASSERT_EQUALS "Trio" "@result.items.0.attributes.client"
+
+// A field the document cannot be kept without refuses it, saying the field, what it takes and what was sent
+NAME create_entry_glucose_too_high
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"type": "sgv", "sgv": "high", "date": {{ itime 0 }}}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing body: sgv must be a number (was \"high\")" "@message"
+
+// In a batch, the fields left out and the documents left out show in one client error for the request
+NAME create_devicestatus_batch_left_out
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+H User-Agent: Loop
+B [{"device": "loop://iPhone", "created_at": "{{ time 6 }}", "uploaderBattery": 101},
+   {"device": "loop://iPhone", "created_at": "{{ time 5 }}", "srvModified": 1}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS null "@0.uploaderBattery"
+
+NAME client_errors_batch
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_CONTAINS "Left out uploaderBattery must be between 0 and 100 (was 101)" "@result.items.0.message"
+ASSERT_CONTAINS "Stored 1 devicestatus and left out 1: 1 Field srvModified cannot be modified by the client" "@result.items.0.message"
+ASSERT_EQUALS "Loop" "@result.items.0.attributes.client"
+
+// A patch is checked as a create is: the stored document with the fields sent merged into it
+NAME ns_jwt_auth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET ns_jwt {{ .ns_jwt_auth.token }}
+
+NAME create_combo_bolus
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ .ns_jwt }}
+B {"eventType": "Combo Bolus", "date": {{ itime 3 }}, "insulin": 3, "splitNow": 70, "splitExt": 30, "duration": 60, "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME patch_split_out_of_range
+PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .create_combo_bolus.identifier }}
+H Authorization: Bearer {{ .ns_jwt }}
+H User-Agent: AAPS
+B {"splitNow": 150, "notes": "patched"}
+ASSERT_STATUS 200
+
+NAME get_patched_combo_bolus
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .create_combo_bolus.identifier }}
+H Authorization: Bearer {{ .ns_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "patched" "@result.notes"
+ASSERT_EQUALS 3 "@result.insulin"
+
+NAME patch_insulin_out_of_range
+PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .create_combo_bolus.identifier }}
+H Authorization: Bearer {{ .ns_jwt }}
+B {"insulin": 1000}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing body: insulin must be between -500 and 500 (was 1000)" "@message"
+
+NAME client_errors_patch
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 5 "@result.items"
+ASSERT_CONTAINS "Left out splitNow must be between 0 and 1 (was 150, stored as 1.5)" "@result.items.1.message"
+ASSERT_EQUALS 200 "@result.items.1.attributes.status"

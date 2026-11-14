@@ -807,10 +807,26 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   dates 1970 to 9999.
 - Insulin and food can be negative, to correct too much entered.
 - Pages are stricter (a dose: at most 100 units either way).
+- Nightscout API: each value is checked against the limit of its column in the site DB (its range, its length, its
+  type, and if it can be empty) before it is stored. A patch is checked as the stored document with the fields sent.
+  - If a value is out of its limit and the document can be kept without it: the value is left out, and the rest kept.
+    The site's client errors show one `client` error for the request, with each value left out, its limit and the
+    value sent (e.g. `Left out uploader.battery must be between 0 and 100 (was -100)`).
+  - If the document cannot be kept without the value (its column cannot be empty, e.g. an entry's `sgv`, a
+    treatment's `insulin`): 400 with the field, its limit and the value sent (e.g.
+    `insulin must be between -500 and 500 (was 8882.5)`, `sgv must be a number (was "high")`).
+  - Not as their column: a treatment's `glucose` is left out. A treatment's `carbs`, a temp basal's `percent`, a
+    profile switch's `timeshift` and an activity's heart rate are refused.
+  - Text is kept whole, not cut to 64 characters. Only notes are cut, at 1024 characters.
 
 #### Add modal
 
 - All typeable fields, each with what it is, units, if required, and limits. Types: a dropdown or suggestions.
+- Limits: the limits of the field's column (site DB or control DB), as `min`, `max` and `maxlength`.
+  - A field can have stricter limits than its column (e.g. a dose: -100 to 100, not -500 to 500), never wider ones.
+  - A percent: its column's fraction as a percent (e.g. a profile switch: 10 to 500 %).
+  - Glucose: in the settings' units, to one decimal place (e.g. a reading: 0.1 to 55.5 mmol/L, or 0.1 to 1000 mg/dL).
+  - If the column refuses its limit (e.g. glucose more than 0), the input limit moves in by one step.
 - Time: in the settings' timezone; blank is now. Other blank fields: not set.
 
 #### Record details form
@@ -1022,10 +1038,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - Each site has a Nightscout compatible API at `<site>.ns.<host>`, for AAPS, Loop, Trio, xDrip+ and followers.
 - The Nightscout host root opens the site's own pages (LoopFollow's Nightscout tab).
+- A path with repeated slashes is the same as the path with one slash, with the same auth. For example,
+  `//api/v1/entries` (a Nightscout URL typed with a trailing `/`) is `/api/v1/entries`, and `//socket.io/` is
+  `/socket.io/`.
 - **v1**:
   - entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters.
   - status, versions, verifyauth, slice, count, times, echo, experiments/test, notifications/ack, adminnotifies.
 - **v2**: authorization (a JWT for a token, a check of one JWT permission, roles and subjects), properties, summary.
+  - Properties `upbat`: the newest uploader battery of the last 30 minutes, from any device status (a loop or xDrip+).
 - **v3**: create, read, update, patch, delete, search and history of each collection; version, status, lastModified,
   settings.
 - **Socket.IO**: live updates and alarms, over long polling or websockets.
@@ -1051,8 +1071,26 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - `/pebble` (Pebble and other watch faces):
   - The newest `count` readings of the last two days. Default 1, maximum 1000.
   - Each glucose is a string in the `units` asked for (`mmol` or `mg/dl`), else the settings' units, with its trend
-    number.
-  - The newest also has the delta, uploader battery and IOB, as in Nightscout.
+    number. No direction, or a direction with no number (e.g. `TripleUp`), is 8 (`NOT COMPUTABLE`), as in Nightscout.
+  - The newest also has the delta, uploader battery, IOB (a string) and COB (a number), as in Nightscout.
+  - The battery is from any device status, as `upbat`. The IOB and COB are from a loop's device status.
+
+#### v2 properties
+
+- `pump`, `openaps` and `loop` (watch faces) are from the newest loop device status of the last 20 minutes.
+- `pump`: the pump as sent, and in `data` its `clock`, `reservoir`, `battery`, `status` and `device`, each with a
+  `label` and a `display`.
+  - Levels: -3 (none), 1 (warning) or 2 (urgent). `data.level` is the highest of them.
+  - A warning: a clock over 30 minutes old, a reservoir under 10 U, a battery under 30%.
+  - Urgent: a clock over 60 minutes old, a reservoir under 5 U, a battery under 20%.
+  - An Omnipod (`Insulet`) with no reservoir shows `50+ U`.
+- `openaps` (Trio, iAPS and AAPS): `lastEnacted` (`lastNotEnacted` if not received), `lastSuggested` and `lastIOB` as
+  sent, each with its `moment`.
+  - `lastLoopMoment`, `lastEventualBG` and `lastPredBGs` are from the newer of the enacted and the suggested.
+  - `status`: `notenacted`, `enacted` or `looping` in the last 15 minutes, else `warning`.
+- `loop` (Loop): `lastLoop`, `lastEnacted` and `lastPredicted` as sent, and `lastOkMoment`.
+  - `display`: `error` for a failure or an enacted not received, else `enacted` or `looping` in the last 15
+    minutes, else `warning`.
 
 #### v1 batches
 
@@ -1171,8 +1209,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   deletes.
 - A v3 delete of a document that is already deleted returns 200 and changes nothing. AAPS deletes a treatment again
   after a follower deletes it. A v1 delete of it counts 0. A delete of an unknown document returns 404.
+- A v3 read of a deleted entry, treatment or device status returns 410 with only `status` and `message`, as in
+  Nightscout. A v1 read of it returns 404. A read of a document deleted permanently, or of an unknown document,
+  returns 404.
 - A treatment or reading created with `isValid` false (AAPS uploads one it deleted while offline) stays deleted:
-  - Read and search do not find it.
+  - A v3 read returns 410. A search does not find it.
   - History has it with `isValid` false.
   - Storage sockets get it as a delete. Followers (e.g. AAPSClient) do not restore it.
 - A food or profile created with `isValid` false is stored as usual.
@@ -1205,15 +1246,18 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Document over 256 KiB: refused.
   - New document when the site has 100: refused.
   - Client control messages with no change for a week: deleted to make space.
-  - Settings key: up to 128 characters (AAPS client control keys include the client UUID). Other collections'
-    identifiers: up to 36.
+  - Settings key: up to 128 characters, as its column (AAPS client control keys include the client UUID). Other
+    collections' identifiers: up to 36, as their columns.
 
 ### Nightscout API: glucose units
 
 - Glucose is stored and always returned in mg/dL, whatever the identity or site units, over HTTP and Socket.IO:
   - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`, profile targets.
   - Entries, treatments, profiles and their `units`.
-- Input: in the units sent with it, else guessed from the value.
+- Input: in the units sent with it.
+  - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value. A low of 30 or less
+    stays low (e.g. 28), and Dexcom's special values (1 to 12, 39) are kept as sent.
+  - Other glucose with no `units`: guessed from the value.
 - A profile, or a profile switch's `profileJson`, in mmol/L comes back in mg/dL in each glucose field:
   - `sens`, `target_low`, `target_high`.
   - Loop's `loopSettings`: `minimumBGGuard`, `preMealTargetRange`, each override preset's `targetRange`, the running
@@ -1298,11 +1342,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - A careportal note in the same second as an xDrip+ bolus: two treatments.
   - AAPS Bolus Wizard's bolus and carbs (two Meal Boluses at one date, deleted one by one): two treatments.
 - Entry with the date and type of a stored one, from any device, with no `_id` or an unknown `_id`:
-  - The stored entry takes the new value, direction and raw values (xDrip4iOS smooths readings).
+  - From the identity and device that stored it: the stored entry takes the new value, direction and raw values
+    (xDrip4iOS smooths readings).
+  - From another identity or device: the stored entry is kept. It gets only the fields it does not have, not a
+    `device`, `app` or `units` (an xDrip+ follower uploads the looper's reading again as its own).
   - Followers get it as changed. Same values: no change, last modified too.
   - A reading Trio downloads (Nightscout as its CGM) and uploads with its own id, or xDrip+ sends again: one reading.
 - Meter reading (`mbg`) with the date of a stored one, from any device: the same finger prick. A careportal BG Check
-  that xDrip+ downloads and uploads again is stored once.
+  that xDrip+ downloads and uploads again is stored once, with the careportal's values.
 
 ### Nightscout API: fields kept as sent
 
@@ -1312,6 +1359,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ---------- |
 | `mbg` entry                              | `isCalibration`\*, `sensorMgdlAtPairing`\* (mg/dL)                                          | AAPS       |
 | Entry                                    | `filtered`, `unfiltered`, 0 too                                                            | AAPS       |
+| Entry                                    | `delta` (mg/dL, -1000 to 1000)                                                             | xDrip+     |
 | Treatment                                | `pumpId`, `pumpSerial`, `pumpType`                                                         | AAPS       |
 | Bolus                                    | `isBasalInsulin`                                                                           | AAPS       |
 | Bolus, profile switch                    | `icfg`: `insulinLabel`, `insulinEndTime` and `insulinPeakTime` (ms), `concentration`       | AAPS       |
@@ -1324,6 +1372,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | Treatment                                | `creation_date` (UTC, `.SSS`), `fpuID`                                                     | iAPS       |
 | Bolus                                    | `unabsorbed`                                                                               | Loop       |
 | Treatment                                | `uuid`, `sensorCode`, `transmitterId`                                                      | xDrip+     |
+| Profile                                  | `profile` (the name of the settings profile, up to 64 characters)                          | iAPS       |
 | Treatment, profile                       | `enteredBy` (e.g. `loop://iPhone`, `Loop`, `Trio`), else its `app` (e.g. `AAPS`), else the uploading identity | All        |
 
 - An effective profile switch is AAPS's Note with a `profileJson`.
@@ -1337,14 +1386,20 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   characters: left out, and the rest of the treatment kept.
 - A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
   for example a Question from AAPS or a Sensor Start from xDrip+.
-- A treatment `glucose` of 0 or less is no glucose reading. The treatment is kept without a reading. AAPS sends 0 with
-  a Bolus Wizard that used no BG.
+- A treatment `glucose` of 0 or less, or over 1000 mg/dL, is left out. The treatment is kept without a reading, and the
+  site's client errors show it. AAPS sends 0 with a Bolus Wizard that used no BG.
 
 ### Nightscout API: entries
 
 - `sgv` for a CGM reading, `mbg` for a meter reading, never both.
 - `direction`: a Nightscout name (e.g. `Flat`, `RATE OUT OF RANGE`), from any letter case or an arrow (`↗`, `↓↓`).
   Unknown: `NOT COMPUTABLE`. Empty: left out.
+- `trend`: Nightscout's number for the direction (`NONE` 0, `DoubleUp` 1 ... `DoubleDown` 7, `NOT COMPUTABLE` 8,
+  `RATE OUT OF RANGE` 9).
+  - Only the trend is stored. The `direction` given back is made from it.
+  - With a `direction`, the trend is the direction's number, whatever `trend` is sent.
+  - A `trend` (0 to 9) without a `direction` gives the direction. Other trends: left out.
+  - `TripleUp` and `TripleDown` have no Nightscout number: they are given back with no `trend`.
 - `noise`: a whole number.
 - If a reading is dated more than 15 minutes after now, the API refuses it (400 "date is in the future"). A v1 batch
   leaves it out and stores the rest. Up to 15 minutes allows for a phone clock that is fast.
@@ -1361,6 +1416,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - A temp basal's `temp` `absolute`.
 - `timestamp`: only API v1 and its sockets. API v3 and its storage socket leave it out (AAPS drops a treatment, or a
   page, whose `timestamp` is a date).
+- A treatment with both insulin and carbs (a Meal Bolus from xDrip+ or the careportal), on API v3 searches, history
+  and the storage socket, is two documents, as AAPS reads one record from each:
+  - its insulin, with its identifier;
+  - its carbs, as a `Carb Correction` at the same time, with its identifier and `carbs` after it.
+  - Read by its identifier, it is whole. Read by the carbs part's identifier, it is its carbs.
+  - API v1 gives it as one, as sent.
+  - If its identifier is longer than 31 characters, it stays one document.
+- If API v3 changes or deletes either part, the carbs first become their own treatment with the carbs part's
+  identifier. Only the part asked for changes.
 - A meter reading (`mbg`) that no treatment has, and that AAPS did not send, is also a treatment on API v3. This
   applies to searches by date only, history, and the storage socket. AAPS takes finger sticks only from BG Checks.
   - It is a read-only `BG Check`: its `mbg` as `glucose`, `glucoseType` `Finger`, its device as `enteredBy`.
@@ -1381,9 +1445,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Limits and errors
 
-- Values far outside real use: refused.
+- Values far outside real use: left out, or refused when the treatment cannot be kept without them (see Value limits).
 - Insulin or carbs past 500 U or 1000 g, positive or negative: 400 with the field, range and value (e.g.
-  `insulin must be between -500 and 500 U (was 8882.5)`). A negative value in range (to take back too much) is kept.
+  `insulin must be between -500 and 500 (was 8882.5)`). A negative value in range (to take back too much) is kept.
 - A value the database refuses: 400 with the column and reason (e.g. `dose is out of range`, `notes is too long`),
   never the database's words. The server logs those.
 
@@ -1433,6 +1497,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | `eventType` `<none>` (careportal, no type) with insulin and carbs        | Meal bolus                              |
 | `eventType` `<none>` with carbs only                                     | Carb correction                         |
 | `eventType` `<none>` with insulin only                                   | Correction bolus                        |
+| `eventType` `<none>` with insulin and `notes` `Long-Acting` (Juggluco)   | Correction bolus, `isBasalInsulin` true |
 | `eventType` `<none>` with no insulin and no carbs                        | Note                                    |
 | AAPS `eventType` `SettingsExport` (settings exported)                    | Note                                    |
 | `eventType` `Carbs`                                                      | Carb correction                         |
@@ -1460,7 +1525,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Only readings out of range: 200, `[]`, nothing stored. One such reading sent alone: refused.
   - Readings out of range are not counted in the 10 of the v1 batch rule, and alone do not show in the client errors.
   - Other entries with a problem (e.g. unknown `type`): as the v1 batch rule.
-- Device status: an uploader battery that is not a number is left out. `uploader.battery` is the uploader battery.
+- Device status: an uploader battery that is not a number is left out, and the site's client errors show it.
+  `uploader.battery` is the uploader battery.
 
 ### Nightscout API: device statuses
 
@@ -1478,14 +1544,17 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   `status.bolusing`, `status.suspended`, and battery `string` and `display`.
 - After the status as sent is cleared: Loop's pump `pumpID`, `suspended` and `bolusing`, as sent. A follower still
   sees an older status's delivery suspended.
-- Out of range, not stored (the rest kept): uploader or pump battery below 0 or over 100% (e.g. Trio's
-  `uploader.battery` -100 for an unknown phone battery), reservoir below 0 or over 10000 U.
+- Out of range, not stored (the rest kept, and the site's client errors show it): uploader or pump battery below 0 or
+  over 100% (e.g. Trio's `uploader.battery` -100 for an unknown phone battery), reservoir below 0 or over 10000 U.
 
 ### Nightscout API: profiles
 
 - v1 search, newest start first: no `count` gives the newest 10 profile sets (as Nightscout), a `count` that number
   (maximum 1000).
 - v3 and the socket, with no filters and no limit: the newest.
+- A field of the profile set out of its limit (e.g. an `enteredBy` of 70 characters): left out, and each profile in
+  its `store` kept (see Value limits).
+- A profile set with no profile in its `store`: refused (400).
 - Loop's `loopSettings.scheduleOverride` (override running when sent): kept as an override preset (its `duration` in
   seconds). Loop reads it back.
 - Trio's remote control settings (bundle, device token, APNS environment, team, expiry) and override presets: kept, for
@@ -1502,14 +1571,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   token for pushes to the uploading identity.
   - Production, unless `isAPNSProduction` is false.
   - Not a token: not registered. The profile is still kept.
-- `deviceToken`: kept and registered whole up to 256 characters (Trio's are 160 hex). Longer: kept empty, not
-  registered.
+- `deviceToken`: kept whole. Registered up to 256 characters (Trio's are 160 hex). Longer: not registered.
 - Device tokens come back (v1, v3, socket storage) only to an identity that can change the site's data (e.g.
   LoopFollow remote commands). Read only users and devices, and the socket's `dataUpdate` to all readers, get none.
 
 ### Nightscout API: food and activities
 
 - Food: `type` `food` (AAPS loads only that type).
+- Food `portion`: the amount its carbs are for, as AAPS reads it. A food sent with `portions` keeps it as its `portion`.
+- Food `utcOffset`: the site timezone's offset at its date, as a food keeps no offset.
 - Activity (xDrip+): `type` is the activity type, a heart rate's `bpm` its heart rate, a motion's `class` its name.
 
 ### Nightscout API: Socket.IO

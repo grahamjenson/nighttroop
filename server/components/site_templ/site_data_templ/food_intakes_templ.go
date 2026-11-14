@@ -113,21 +113,21 @@ func FoodIntakeNew() templ.Component {
 // foodIntakeFields are what a food intake has that a person can type in
 func foodIntakeFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "carbs", Label: i18n.T(ctx, "site.data.food_intakes.carbs"), Help: i18n.T(ctx, "site.data.food_intakes.carbs_help"), Required: true, Min: "-1000", Max: "1000", Step: "any"},
+		{Name: "carbs", Column: "food_intakes.Carbs", Label: i18n.T(ctx, "site.data.food_intakes.carbs"), Help: i18n.T(ctx, "site.data.food_intakes.carbs_help"), Required: true, Step: "any"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.food_intakes.when_help"), Kind: addmodal.When},
-		{Name: "name", Label: i18n.T(ctx, "site.data.common.name"), Help: i18n.T(ctx, "site.data.food_intakes.name_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "absorption_time_minutes", Label: i18n.T(ctx, "site.data.food_intakes.absorption"), Help: i18n.T(ctx, "site.data.food_intakes.absorption_help"), Min: "0", Max: "1440", Step: "1"},
-		{Name: "fat", Label: i18n.T(ctx, "site.data.food_intakes.fat"), Help: i18n.T(ctx, "site.data.food_intakes.fat_help"), Min: "-1000", Max: "1000", Step: "any"},
-		{Name: "protein", Label: i18n.T(ctx, "site.data.food_intakes.protein"), Help: i18n.T(ctx, "site.data.food_intakes.protein_help"), Min: "-1000", Max: "1000", Step: "any"},
-		{Name: "fibre", Label: i18n.T(ctx, "site.data.food_intakes.fibre"), Help: i18n.T(ctx, "site.data.food_intakes.fibre_help"), Min: "-1000", Max: "1000", Step: "any"},
-		{Name: "energy", Label: i18n.T(ctx, "site.data.food_intakes.energy"), Help: i18n.T(ctx, "site.data.food_intakes.energy_help"), Min: "0", Max: "20000", Step: "any"},
-		{Name: "portions", Label: i18n.T(ctx, "site.data.food_intakes.portions"), Help: i18n.T(ctx, "site.data.food_intakes.portions_help"), Min: "0", Max: "1000", Step: "any"},
-		{Name: "pre_bolus", Label: i18n.T(ctx, "site.data.food_intakes.pre_bolus"), Help: i18n.T(ctx, "site.data.food_intakes.pre_bolus_help"), Min: "-1440", Max: "1440", Step: "1"},
-		{Name: "food_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.food_intakes.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"meal", "snack", "hypo treatment"}},
-		{Name: "category", Label: i18n.T(ctx, "site.data.food_intakes.category"), Help: i18n.T(ctx, "site.data.food_intakes.category_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "subcategory", Label: i18n.T(ctx, "site.data.food_intakes.subcategory"), Help: i18n.T(ctx, "site.data.food_intakes.subcategory_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.food_intakes.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "name", Column: "food_intakes.Name", Label: i18n.T(ctx, "site.data.common.name"), Help: i18n.T(ctx, "site.data.food_intakes.name_help"), Kind: addmodal.Text},
+		{Name: "absorption_time_minutes", Column: "food_intakes.AbsorptionTimeMinutes", Label: i18n.T(ctx, "site.data.food_intakes.absorption"), Help: i18n.T(ctx, "site.data.food_intakes.absorption_help"), Step: "1"},
+		{Name: "fat", Column: "food_intakes.Fat", Label: i18n.T(ctx, "site.data.food_intakes.fat"), Help: i18n.T(ctx, "site.data.food_intakes.fat_help"), Step: "any"},
+		{Name: "protein", Column: "food_intakes.Protein", Label: i18n.T(ctx, "site.data.food_intakes.protein"), Help: i18n.T(ctx, "site.data.food_intakes.protein_help"), Step: "any"},
+		{Name: "fibre", Column: "food_intakes.Fibre", Label: i18n.T(ctx, "site.data.food_intakes.fibre"), Help: i18n.T(ctx, "site.data.food_intakes.fibre_help"), Step: "any"},
+		{Name: "energy", Column: "food_intakes.Energy", Label: i18n.T(ctx, "site.data.food_intakes.energy"), Help: i18n.T(ctx, "site.data.food_intakes.energy_help"), Min: "0", Step: "any"},
+		{Name: "portions", Column: "food_intakes.Portions", Label: i18n.T(ctx, "site.data.food_intakes.portions"), Help: i18n.T(ctx, "site.data.food_intakes.portions_help"), Min: "0", Step: "any"},
+		{Name: "pre_bolus", Column: "food_intakes.PreBolus", Label: i18n.T(ctx, "site.data.food_intakes.pre_bolus"), Help: i18n.T(ctx, "site.data.food_intakes.pre_bolus_help"), Step: "1"},
+		{Name: "food_type", Column: "food_intakes.FoodType", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.food_intakes.type_help"), Kind: addmodal.Text, Options: []string{"meal", "snack", "hypo treatment"}},
+		{Name: "category", Column: "food_intakes.Category", Label: i18n.T(ctx, "site.data.food_intakes.category"), Help: i18n.T(ctx, "site.data.food_intakes.category_help"), Kind: addmodal.Text},
+		{Name: "subcategory", Column: "food_intakes.Subcategory", Label: i18n.T(ctx, "site.data.food_intakes.subcategory"), Help: i18n.T(ctx, "site.data.food_intakes.subcategory_help"), Kind: addmodal.Text},
+		{Name: "reason", Column: "food_intakes.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.food_intakes.reason_help"), Kind: addmodal.Text},
+		{Name: "notes", Column: "food_intakes.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 

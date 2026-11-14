@@ -372,9 +372,9 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 		xfloat64 := *source.Delta
 		sitedbCreateGlucoseReadingParams.Delta = &xfloat64
 	}
-	if source.Direction != nil {
-		xstring2 := *source.Direction
-		sitedbCreateGlucoseReadingParams.Direction = &xstring2
+	if source.Trend != nil {
+		xint64 := *source.Trend
+		sitedbCreateGlucoseReadingParams.Trend = &xint64
 	}
 	if source.Noise != nil {
 		xfloat642 := *source.Noise
@@ -401,25 +401,25 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat646
 	}
 	if source.Notes != nil {
-		xstring3 := *source.Notes
-		sitedbCreateGlucoseReadingParams.Notes = &xstring3
+		xstring2 := *source.Notes
+		sitedbCreateGlucoseReadingParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring4 := *source.Reason
-		sitedbCreateGlucoseReadingParams.Reason = &xstring4
+		xstring3 := *source.Reason
+		sitedbCreateGlucoseReadingParams.Reason = &xstring3
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint642
 	}
 	sitedbCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
 	if source.CreatedByAppName != nil {
-		xstring5 := *source.CreatedByAppName
-		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring5
+		xstring4 := *source.CreatedByAppName
+		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring4
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring6 := *source.CreatedByDeviceName
-		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring6
+		xstring5 := *source.CreatedByDeviceName
+		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring5
 	}
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)

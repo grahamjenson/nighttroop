@@ -114,13 +114,13 @@ func ProfileSwitchNew() templ.Component {
 // profileSwitchFields are what a profile switch has that a person can type in
 func profileSwitchFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "name", Label: i18n.T(ctx, "site.data.profile_switches.profile"), Help: i18n.T(ctx, "site.data.profile_switches.profile_help"), Required: true, Kind: addmodal.Text, Max: "64"},
+		{Name: "name", Column: "profile_switches.Name", Label: i18n.T(ctx, "site.data.profile_switches.profile"), Help: i18n.T(ctx, "site.data.profile_switches.profile_help"), Required: true, Kind: addmodal.Text},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.profile_switches.when_help"), Kind: addmodal.When},
-		{Name: "multiplier", Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Kind: addmodal.Percent, Min: "10", Max: "500", Value: "100"},
-		{Name: "timeshift", Label: i18n.T(ctx, "site.data.profile_switches.shift_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.shift_help"), Min: "-1440", Max: "1440", Step: "1", Value: "0"},
-		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.duration_help"), Min: "0", Max: "10080", Step: "1"},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.profile_switches.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "multiplier", Column: "profile_switches.Multiplier", Label: i18n.T(ctx, "site.data.profile_switches.insulin_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Kind: addmodal.Percent, Min: "0.1", Max: "5", Value: "100"},
+		{Name: "timeshift", Column: "profile_switches.Timeshift", Label: i18n.T(ctx, "site.data.profile_switches.shift_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.shift_help"), Step: "1", Value: "0"},
+		{Name: "duration_minutes", Column: "profile_switches.DurationMinutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.profile_switches.duration_help"), Max: "10080", Step: "1"},
+		{Name: "reason", Column: "profile_switches.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.profile_switches.reason_help"), Kind: addmodal.Text},
+		{Name: "notes", Column: "profile_switches.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 

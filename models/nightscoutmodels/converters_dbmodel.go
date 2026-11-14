@@ -42,9 +42,9 @@ type DBModelConverter interface {
 	// goverter:map Mgdl Units | UnitsToValue
 	// goverter:map OccurredAt Date
 	// goverter:map ReadingType Type
-	// goverter:map Delta Trend
 	// goverter:map Rssi RSSI
-	// goverter:map Direction | EntryDirection
+	// goverter:map Trend Direction | TrendDirection
+	// goverter:map Trend | EntryTrend
 	// goverter:map Noise | WholeNoise
 	DBModelToEntry(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) Entry
 

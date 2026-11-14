@@ -24,6 +24,8 @@ type ProfileStore struct {
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 	// EnteredBy is who uploaded it, as for treatments; Trio, iAPS and Loop need it to import or read a profile
 	EnteredBy *types.ShortString `json:"enteredBy,omitempty"`
+	// ProfileName is the name of the settings profile the app has on, as iAPS sends it
+	ProfileName *types.ShortString `json:"profile,omitempty"`
 
 	// Date is when it started, read from and written as its TimeAliases
 	Date             *types.DateInt       `json:"-"`
@@ -293,7 +295,7 @@ type LoopSettings struct {
 	DosingStrategy          *types.ShortString       `json:"dosingStrategy,omitempty"`
 	DosingEnabled           *types.FlexibleBool      `json:"dosingEnabled,omitempty"`
 	MinimumBGGuard          *types.FlexibleFloat64   `json:"minimumBGGuard,omitempty"`
-	DeviceToken             *types.DeviceTokenString `json:"deviceToken,omitempty"`
+	DeviceToken             *types.ShortString       `json:"deviceToken,omitempty"`
 	BundleIdentifier        *types.ShortString       `json:"bundleIdentifier,omitempty"`
 	PreMealTargetRange      []*types.FlexibleFloat64 `json:"preMealTargetRange,omitempty"`
 	OverridePresets         []*OverridePreset        `json:"overridePresets,omitempty"`
@@ -303,12 +305,12 @@ type LoopSettings struct {
 
 // RemoteSettings are where and how LoopFollow sends Trio its remote commands, and Trio's override presets
 type RemoteSettings struct {
-	BundleIdentifier *types.ShortString       `json:"bundleIdentifier,omitempty"`
-	DeviceToken      *types.DeviceTokenString `json:"deviceToken,omitempty"`
-	IsAPNSProduction *types.FlexibleBool      `json:"isAPNSProduction,omitempty"`
-	TeamID           *types.ShortString       `json:"teamID,omitempty"`
-	ExpirationDate   *types.DateString        `json:"expirationDate,omitempty"`
-	OverridePresets  []*TrioOverridePreset    `json:"overridePresets,omitempty"`
+	BundleIdentifier *types.ShortString    `json:"bundleIdentifier,omitempty"`
+	DeviceToken      *types.ShortString    `json:"deviceToken,omitempty"`
+	IsAPNSProduction *types.FlexibleBool   `json:"isAPNSProduction,omitempty"`
+	TeamID           *types.ShortString    `json:"teamID,omitempty"`
+	ExpirationDate   *types.DateString     `json:"expirationDate,omitempty"`
+	OverridePresets  []*TrioOverridePreset `json:"overridePresets,omitempty"`
 }
 
 // TrioOverridePreset is one of Trio's override presets, with its target in mg/dL

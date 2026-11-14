@@ -97,10 +97,11 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		nightscoutmodelsEntry.Type = &pNightscoutmodelsEntryType
 		nightscoutmodelsEntry.SGV = SGVGlucoseReadingTypeToValue(source, context)
 		nightscoutmodelsEntry.MBG = MBGGlucoseReadingTypeToValue(source, context)
-		nightscoutmodelsEntry.Direction = EntryDirection((*source).Direction)
+		nightscoutmodelsEntry.Direction = TrendDirection((*source).Trend)
+		nightscoutmodelsEntry.Trend = EntryTrend((*source).Trend)
 		if (*source).Delta != nil {
 			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Delta)
-			nightscoutmodelsEntry.Trend = &typesFlexibleFloat64
+			nightscoutmodelsEntry.Delta = &typesFlexibleFloat64
 		}
 		nightscoutmodelsEntry.Units = UnitsToValue((*source).Mgdl, context)
 		if (*source).Filtered != nil {
@@ -265,6 +266,10 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 		pTypesShortString2 := types.ShortString((*source).CreatedByIdentityName)
 		nightscoutmodelsProfileStore.Subject = &pTypesShortString2
 		nightscoutmodelsProfileStore.EnteredBy = ProfilePresetEnteredBy(source)
+		if (*source).ProfileName != nil {
+			typesShortString3 := types.ShortString(*(*source).ProfileName)
+			nightscoutmodelsProfileStore.ProfileName = &typesShortString3
+		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
 		nightscoutmodelsProfileStore.Date = &pTypesDateInt
 		if (*source).UtcOffsetMinutes != nil {

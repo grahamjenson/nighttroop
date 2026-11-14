@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -52,7 +53,26 @@ func TestMergeFields(t *testing.T) {
 			var stored, sent map[string]any
 			require.NoError(t, json.Unmarshal([]byte(test.stored), &stored))
 			require.NoError(t, json.Unmarshal([]byte(test.sent), &sent))
-			merged, err := json.Marshal(mergeFields(stored, sent, test.aliases, glucose))
+			merged, err := json.Marshal(mergeFields(stored, sent, test.aliases, glucose, nil))
+			require.NoError(t, err)
+			require.JSONEq(t, test.expected, string(merged))
+		})
+	}
+}
+
+// An entry's glucose sent without units is in mg/dL, its default units, and never guessed, as a low is not mmol/L
+func TestMergeFieldsDefaultUnits(t *testing.T) {
+	tests := []struct {
+		name, stored, sent, expected string
+	}{
+		{"a low sgv sent without units is mg/dL", `{"sgv":108,"units":"mg/dL"}`, `{"sgv":28}`, `{"sgv":28,"units":"mg/dL"}`},
+		{"a low mbg sent without units is mg/dL", `{"mbg":108,"units":"mg/dL"}`, `{"mbg":5}`, `{"mbg":5,"units":"mg/dL"}`},
+		{"units sent are kept", `{"sgv":108,"units":"mg/dL"}`, `{"sgv":5.5,"units":"mmol"}`, `{"sgv":5.5,"units":"mmol"}`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			merged, err := json.Marshal(mergeFields(decode(t, test.stored), decode(t, test.sent), nil,
+				[]string{"sgv", "mbg"}, new(consts.UnitsMGDL)))
 			require.NoError(t, err)
 			require.JSONEq(t, test.expected, string(merged))
 		})
@@ -221,7 +241,7 @@ func TestEntryMergeKeepsWhatOnlyTheDatabaseHas(t *testing.T) {
 	reading, err := q.GetGlucoseReading(t.Context(), sitedb.GetGlucoseReadingParams{ID: created.Identifier()})
 	require.NoError(t, err)
 	params := sitedb.RewriteGlucoseReadingParams{ID: reading.ID, Mgdl: reading.Mgdl, ReadingType: reading.ReadingType,
-		Direction: reading.Direction, Notes: new("site note"), OccurredAt: reading.OccurredAt, UtcOffsetMinutes: reading.UtcOffsetMinutes,
+		Trend: reading.Trend, Notes: new("site note"), OccurredAt: reading.OccurredAt, UtcOffsetMinutes: reading.UtcOffsetMinutes,
 		CreatedByDeviceName: reading.CreatedByDeviceName, CreatedByIdentityName: "admin"}
 	_, err = q.RewriteGlucoseReading(t.Context(), params)
 	require.NoError(t, err)
@@ -232,7 +252,7 @@ func TestEntryMergeKeepsWhatOnlyTheDatabaseHas(t *testing.T) {
 	reading, err = q.GetGlucoseReading(t.Context(), sitedb.GetGlucoseReadingParams{ID: created.Identifier()})
 	require.NoError(t, err)
 	require.Equal(t, "site note", *reading.Notes)
-	require.Equal(t, "Flat", *reading.Direction)
+	require.Equal(t, "Flat", *nightscoutmodels.TrendDirection(reading.Trend))
 }
 
 // A time sent as any of a document's time aliases, as created_at in whole seconds beside a timestamp in ms too, is read

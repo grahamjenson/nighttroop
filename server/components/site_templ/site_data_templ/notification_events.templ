@@ -49,13 +49,13 @@ templ NotificationEventNew() {
 // notificationEventFields are what a notification has that a person can type in
 func notificationEventFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "title", Label: i18n.T(ctx, "site.data.notification_events.title_label"), Help: i18n.T(ctx, "site.data.notification_events.title_help"), Required: true, Kind: addmodal.Text, Max: "128"},
+		{Name: "title", Column: "notification_events.Title", Label: i18n.T(ctx, "site.data.notification_events.title_label"), Help: i18n.T(ctx, "site.data.notification_events.title_help"), Required: true, Kind: addmodal.Text},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.notification_events.when_help"), Kind: addmodal.When},
-		{Name: "severity", Label: i18n.T(ctx, "site.data.notification_events.severity"), Help: i18n.T(ctx, "site.data.notification_events.severity_help"), Min: "0", Max: "5", Step: "1"},
-		{Name: "notification_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.notification_events.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"announcement", "question"}},
-		{Name: "content", Label: i18n.T(ctx, "site.data.notification_events.content"), Help: i18n.T(ctx, "site.data.notification_events.content_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.notification_events.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "severity", Column: "notification_events.Severity", Label: i18n.T(ctx, "site.data.notification_events.severity"), Help: i18n.T(ctx, "site.data.notification_events.severity_help"), Step: "1"},
+		{Name: "notification_type", Column: "notification_events.NotificationType", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.notification_events.type_help"), Kind: addmodal.Text, Options: []string{"announcement", "question"}},
+		{Name: "content", Column: "notification_events.Content", Label: i18n.T(ctx, "site.data.notification_events.content"), Help: i18n.T(ctx, "site.data.notification_events.content_help"), Kind: addmodal.Text, Wide: true},
+		{Name: "reason", Column: "notification_events.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.notification_events.reason_help"), Kind: addmodal.Text},
+		{Name: "notes", Column: "notification_events.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 
