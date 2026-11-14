@@ -394,9 +394,9 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring18 := *source.PumpType
 		sitedbCreateEventGroupParams.PumpType = &xstring18
 	}
-	if source.EndID != nil {
-		xstring19 := *source.EndID
-		sitedbCreateEventGroupParams.EndID = &xstring19
+	if source.EndingPumpID != nil {
+		xstring19 := *source.EndingPumpID
+		sitedbCreateEventGroupParams.EndingPumpID = &xstring19
 	}
 	if source.SensorCode != nil {
 		xstring20 := *source.SensorCode
@@ -2343,9 +2343,9 @@ func sitedbEventGroupToSitedbEventGroup(source EventGroup) EventGroup {
 		xstring16 := *source.PumpType
 		sitedbEventGroup.PumpType = &xstring16
 	}
-	if source.EndID != nil {
-		xstring17 := *source.EndID
-		sitedbEventGroup.EndID = &xstring17
+	if source.EndingPumpID != nil {
+		xstring17 := *source.EndingPumpID
+		sitedbEventGroup.EndingPumpID = &xstring17
 	}
 	if source.SensorCode != nil {
 		xstring18 := *source.SensorCode

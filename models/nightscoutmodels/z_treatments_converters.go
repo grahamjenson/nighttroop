@@ -150,9 +150,9 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring18 := *source.PumpType
 		sitedbCreateEventGroupParams.PumpType = &xstring18
 	}
-	if source.EndID != nil {
-		xstring19 := *source.EndID
-		sitedbCreateEventGroupParams.EndID = &xstring19
+	if source.EndingPumpID != nil {
+		xstring19 := *source.EndingPumpID
+		sitedbCreateEventGroupParams.EndingPumpID = &xstring19
 	}
 	if source.SensorCode != nil {
 		xstring20 := *source.SensorCode
@@ -238,9 +238,9 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		typesShortString5 := types.ShortString(*source.PumpType)
 		nightscoutmodelsTreatment.PumpType = &typesShortString5
 	}
-	if source.EndID != nil {
-		typesClientID2 := types.ClientID(*source.EndID)
-		nightscoutmodelsTreatment.EndID = &typesClientID2
+	if source.EndingPumpID != nil {
+		typesClientID2 := types.ClientID(*source.EndingPumpID)
+		nightscoutmodelsTreatment.EndingPumpID = &typesClientID2
 	}
 	if source.Notes != nil {
 		typesSanitizedString2 := types.SanitizedString(*source.Notes)
@@ -1121,9 +1121,9 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xstring7 := ShortStringToString(*source.PumpType)
 		sitedbEventGroup.PumpType = &xstring7
 	}
-	if source.EndID != nil {
-		xstring8 := ClientIDToString(*source.EndID)
-		sitedbEventGroup.EndID = &xstring8
+	if source.EndingPumpID != nil {
+		xstring8 := ClientIDToString(*source.EndingPumpID)
+		sitedbEventGroup.EndingPumpID = &xstring8
 	}
 	if source.SensorCode != nil {
 		xstring9 := ShortStringToString(*source.SensorCode)

@@ -946,14 +946,14 @@ func (m *EventGroup) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
-// GetEndID returns the EndID value.
-func (m EventGroup) GetEndID() *string {
-	return m.EndID
+// GetEndingPumpID returns the EndingPumpID value.
+func (m EventGroup) GetEndingPumpID() *string {
+	return m.EndingPumpID
 }
 
-// SetEndID sets the EndID value and returns the updated EventGroup.
-func (m *EventGroup) SetEndID(v *string) {
-	m.EndID = v
+// SetEndingPumpID sets the EndingPumpID value and returns the updated EventGroup.
+func (m *EventGroup) SetEndingPumpID(v *string) {
+	m.EndingPumpID = v
 }
 
 // GetSensorCode returns the SensorCode value.
@@ -10056,14 +10056,14 @@ func (m *CreateEventGroupParams) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
-// GetEndID returns the EndID value.
-func (m CreateEventGroupParams) GetEndID() *string {
-	return m.EndID
+// GetEndingPumpID returns the EndingPumpID value.
+func (m CreateEventGroupParams) GetEndingPumpID() *string {
+	return m.EndingPumpID
 }
 
-// SetEndID sets the EndID value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetEndID(v *string) {
-	m.EndID = v
+// SetEndingPumpID sets the EndingPumpID value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetEndingPumpID(v *string) {
+	m.EndingPumpID = v
 }
 
 // GetSensorCode returns the SensorCode value.
@@ -10806,14 +10806,14 @@ func (m *RewriteEventGroupParams) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
-// GetEndID returns the EndID value.
-func (m RewriteEventGroupParams) GetEndID() *string {
-	return m.EndID
+// GetEndingPumpID returns the EndingPumpID value.
+func (m RewriteEventGroupParams) GetEndingPumpID() *string {
+	return m.EndingPumpID
 }
 
-// SetEndID sets the EndID value and returns the updated RewriteEventGroupParams.
-func (m *RewriteEventGroupParams) SetEndID(v *string) {
-	m.EndID = v
+// SetEndingPumpID sets the EndingPumpID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetEndingPumpID(v *string) {
+	m.EndingPumpID = v
 }
 
 // GetSensorCode returns the SensorCode value.

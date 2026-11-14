@@ -337,7 +337,7 @@ CREATE TABLE event_groups (
     -- and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
     -- pump_serial, pump_type), as AAPS sends with every treatment, the pump's ID of the record that ended it, as AAPS
-    -- sends when it ends a temp basal or extended bolus (end_id), and a sensor change's sensor code and transmitter
+    -- sends when it ends a temp basal or extended bolus (ending_pump_id), and a sensor change's sensor code and transmitter
     -- (sensor_code, transmitter_id), and AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json),
     -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier), and when iAPS's carbs were
     -- entered, sent as creation_date, which it deletes them by (client_created_at)
@@ -350,7 +350,7 @@ CREATE TABLE event_groups (
     pump_id TEXT CHECK(length(pump_id) <= 32),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
     pump_type TEXT CHECK(length(pump_type) <= 64),
-    end_id TEXT CHECK(length(end_id) <= 32),
+    ending_pump_id TEXT CHECK(length(ending_pump_id) <= 32),
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
     bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
