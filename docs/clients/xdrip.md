@@ -186,8 +186,11 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
     reading (`cgm/nsfollow/EntryProcessor.java`), so a finger stick is a reading of 0.
 - **Fixed, authentication:** `api-secret` as the SHA1 of a device token (#512).
 - **Fixed, entries:**
-  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once. It was kept twice,
-    as a reading with another device.
+  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once, with the
+    careportal's values. It was kept twice, as a reading with another device.
+  - Follower with Nightscout upload on: it uploads each reading it downloads (whole `sgv`, `Flat`, device
+    `xDrip-NSFollower Nightscout Follow`). The looper's reading is kept, and gets only the fields it does not have.
+    It was overwritten. Test: `xdrip/follower_echo.http`.
   - A `cal` (#512): left out, so the batch is not refused.
   - A reading dated more than 15 minutes after now (X10): left out, the rest stored. It was kept, so followers showed it
     as the current reading.

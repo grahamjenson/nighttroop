@@ -1329,11 +1329,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - A careportal note in the same second as an xDrip+ bolus: two treatments.
   - AAPS Bolus Wizard's bolus and carbs (two Meal Boluses at one date, deleted one by one): two treatments.
 - Entry with the date and type of a stored one, from any device, with no `_id` or an unknown `_id`:
-  - The stored entry takes the new value, direction and raw values (xDrip4iOS smooths readings).
+  - From the identity and device that stored it: the stored entry takes the new value, direction and raw values
+    (xDrip4iOS smooths readings).
+  - From another identity or device: the stored entry is kept. It gets only the fields it does not have, not a
+    `device`, `app` or `units` (an xDrip+ follower uploads the looper's reading again as its own).
   - Followers get it as changed. Same values: no change, last modified too.
   - A reading Trio downloads (Nightscout as its CGM) and uploads with its own id, or xDrip+ sends again: one reading.
 - Meter reading (`mbg`) with the date of a stored one, from any device: the same finger prick. A careportal BG Check
-  that xDrip+ downloads and uploads again is stored once.
+  that xDrip+ downloads and uploads again is stored once, with the careportal's values.
 
 ### Nightscout API: fields kept as sent
 

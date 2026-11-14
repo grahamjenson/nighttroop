@@ -247,6 +247,7 @@ When the user deletes a record in Trio, Trio deletes it by query (`deleteCarbs`,
 | Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Fixed |
 | Temp target fetch | Works in mg/dL. Own ones left out since this PR |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
+| Glucose upload of a reading already stored (Nightscout as CGM), or another app's copy of Trio's reading | Fixed: one reading, with the first upload's values and device. The copy adds only the fields it does not have |
 | iAPS announcements (`find[enteredBy]=remote`) | Fixed |
 | iAPS BG check (`glucoseType` `Manual`, `glucose` a string in mmol) | Fixed: kept as a finger stick (`mbg`) in mg/dL, `Manual` returned. Was a 400, sent again every 5 minutes |
 | Deletes by query | Fixed (were a 405) |

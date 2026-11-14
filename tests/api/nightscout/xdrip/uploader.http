@@ -407,3 +407,6 @@ GET http://{{ site }}/api/v1/entries.json?find[type]=mbg&find[mbg]=118
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
+// The careportal's reading is kept: another device's copy fills only what it is missing, and not its device
+ASSERT_EQUALS 118 "@0.mbg"
+ASSERT_EQUALS null "@0.device"

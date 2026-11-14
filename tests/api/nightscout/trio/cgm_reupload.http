@@ -29,3 +29,5 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS 150 "@0.sgv"
+// The reading keeps the device that uploaded it first, as Trio's copy is of a reading already stored
+ASSERT_EQUALS "xDrip-DexcomG6" "@0.device"
