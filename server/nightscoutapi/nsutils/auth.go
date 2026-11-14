@@ -70,6 +70,12 @@ func permissionMatch(granted, wanted string) bool {
 	return true
 }
 
+// CaregiverPermissions are a read and write device's, the token of a carer's or follower's app such as LoopFollow or
+// Nightguard: it reads everything and writes treatments, as Nightscout's careportal does, a device status and settings.
+// It cannot add, change or delete the readings, profiles or device statuses that the PWD phone uploads
+var CaregiverPermissions = []string{"api:*:read", "api:treatments:create", "api:treatments:update", "api:treatments:delete",
+	"api:devicestatus:create", "api:settings:*"}
+
 func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole, client *string) (*Identity, error) {
 	// Collections
 	// 'entries'
@@ -107,8 +113,10 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	switch ntid {
 	case consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead:
 		permissions = append(permissions, "api:*:read")
-	case consts.IdentityRoleUser, consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceReadWrite:
+	case consts.IdentityRoleUser, consts.IdentityRoleDevicePWDPhone:
 		permissions = append(permissions, "api:*:*")
+	case consts.IdentityRoleDeviceReadWrite:
+		permissions = slices.Clone(CaregiverPermissions)
 	default:
 		return nil, fmt.Errorf("unknown identity role: %s", ntid)
 	}
@@ -136,7 +144,7 @@ func Authorization(siteContext *httputils.SiteContext) (map[string]any, error) {
 		return nil, err
 	}
 	permissions := identity.Permissions
-	if HasPermission(*identity, "api:treatments:create") {
+	if HasPermission(*identity, "api:treatments:create") && !slices.Contains(permissions, "api:treatments:create") {
 		permissions = append(slices.Clone(permissions), "api:treatments:create")
 	}
 	return map[string]any{"token": token, "sub": siteContext.IdentityModel.Name, "permissionGroups": [][]string{permissions},

@@ -2,7 +2,6 @@ package nsutils
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -44,28 +43,28 @@ func WriteRecordV3(w http.ResponseWriter, record Document, fields []string, crea
 }
 
 func WriteRecordsV3(w http.ResponseWriter, records []Document, fields []string) {
-	if len(records) == 0 {
-		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": []map[string]any{}})
-		return
-	}
-
-	result := make([]json.RawMessage, 0, len(records))
-	for _, record := range V3Parts(records) {
-		result = append(result, record.JSON(true, fields))
-	}
-
 	writeHeadersForRecords(w, records)
-
-	apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": result})
+	writeRecords(w, `{"result":`, V3Parts(records), true, fields, `,"status":200}`)
 }
 
 func WriteRecordsV1(w http.ResponseWriter, records []Document, fields []string) {
-	response := make([]json.RawMessage, 0, len(records))
-	for _, record := range records {
-		response = append(response, record.JSON(false, fields))
-	}
 	writeHeadersForRecords(w, records)
-	apiutils.WriteJSON(w, http.StatusOK, response)
+	writeRecords(w, "", records, false, fields, "")
+}
+
+// writeRecords writes the records as a JSON array between before and after, as WriteJSON would. Each record's JSON is
+// already as the API writes it, so it is copied in rather than read and written again by an encoder.
+func writeRecords(w http.ResponseWriter, before string, records []Document, v3 bool, fields []string, after string) {
+	body := append([]byte(before), '[')
+	for i, record := range records {
+		if i > 0 {
+			body = append(body, ',')
+		}
+		body = append(body, record.JSON(v3, fields)...)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(append(append(body, ']'), after+"\n"...))
 }
 
 func WriteRecordV1(w http.ResponseWriter, record Document, fields []string) {

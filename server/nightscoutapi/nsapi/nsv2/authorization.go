@@ -48,7 +48,11 @@ var roles = []role{
 	{ID: "admin", Name: "admin", Permissions: []string{"*"}},
 	{ID: "readable", Name: "readable", Permissions: []string{"*:*:read"}},
 	{ID: aapsClient, Name: aapsClient, Permissions: []string{"*:*:read", "api:settings:admin", "api:settings:create", "api:settings:update", "notifications:*:ack"}},
+	{ID: careportal, Name: careportal, Permissions: nsutils.CaregiverPermissions},
 }
+
+// careportal is the role of a read and write device, a caregiver's, which writes treatments but not readings
+const careportal = "careportal"
 
 // newTokens are the Nightscout tokens of the subjects made here in the last minutes, by site and identity, as AAPS
 // reads a new subject's accessToken from the subjects after it makes it; a token is kept only as a digest after that
@@ -162,8 +166,10 @@ func toSubject(siteContext *httputils.SiteContext, identity *sitemodels.UserIden
 	switch {
 	case identity.Client == sitemodels.AAPSClient:
 		s.Roles = []string{aapsClient}
-	case consts.IdentityRole(identity.Role) == consts.IdentityRoleAdmin, err == nil && nsutils.HasPermission(*ns, "api:treatments:create"):
+	case consts.IdentityRole(identity.Role) == consts.IdentityRoleAdmin, err == nil && nsutils.HasPermission(*ns, "api:*:delete"):
 		s.Roles = []string{"admin"}
+	case err == nil && nsutils.HasPermission(*ns, "api:treatments:create"):
+		s.Roles = []string{careportal}
 	}
 	if token, ok := newTokens.Get(tokenKey(siteContext, identity.ID)); ok {
 		s.AccessToken = &token

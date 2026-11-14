@@ -14,8 +14,10 @@
 
 ## Set up
 
-1. Add a device as Other (it works on an mmol/L site too). For remote commands, use a Read & Write token
+1. Add a device as Other (it works on an mmol/L site too). For remote commands, use a Caregiver token
    (`device_read_write`). Else, read-only is sufficient.
+   - A Caregiver token reads everything and writes treatments. It cannot change readings, profiles or device
+     statuses. LoopFollow sends no uploads, so it needs no more.
 2. Give LoopFollow the token. Nighttroop has no API secret.
 3. Connect. LoopFollow shows "OK (Read & Write)" or "OK (Read)".
 4. Optional: turn on "Enable WebSocket" to poll sooner.
@@ -203,7 +205,7 @@ Nighttroop keeps each status's `loop` or `openaps` as sent for 1 day, also when 
 | Profile, schedules, Loop's `loopSettings` | Works |
 | Loop's `loopSettings` after AAPS or the careportal sends a newer profile | Fixed: the newer profile has Loop's last `loopSettings` (was none, so no remote commands) |
 | Trio remote control settings and override presets | Works since #516 (were dropped) |
-| `deviceToken`s for a read-only token | Left out, as they push to the phone. Remote commands need a Read & Write token |
+| `deviceToken`s for a read-only token | Left out, as they push to the phone. Remote commands need a Caregiver or PWD phone token |
 | Profile history for the remote diagnostics | Fixed: `count` gives that many stores, newest first (was only the latest) |
 | **Other** | |
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |

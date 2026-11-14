@@ -135,6 +135,16 @@ func SiteQuery[P, R any](ctx context.Context, collectionTx *CollectionTx, query 
 	return query(q, ctx, params)
 }
 
+// ControlQuery runs query, e.g. (*controldb.Queries).GetPushCredential, with params in the transaction on the control DB
+func ControlQuery[P, R any](ctx context.Context, collectionTx *CollectionTx, query func(*controldb.Queries, context.Context, P) (R, error), params P) (R, error) {
+	q, err := collectionTx.Control()
+	if err != nil {
+		var none R
+		return none, err
+	}
+	return query(q, ctx, params)
+}
+
 // SoftDelete soft deletes the site row with id, recording who deleted it.
 // softDelete is the row's query, e.g. (*sitedb.Queries).SoftDeleteInsulinDose.
 func SoftDelete[P ~struct {

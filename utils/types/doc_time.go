@@ -108,13 +108,15 @@ func (aliases TimeAliases) Read(data []byte) (*DateInt, *FlexibleInt64, error) {
 // Written are the aliases written on the API version, with when it happened as each writes it
 func (aliases TimeAliases) Written(ms int64, v3 bool) [][2]string {
 	written := make([][2]string, 0, len(aliases))
+	// Each alias writes the same time, so it is formatted once for all of them
+	date, millis := strconv.Quote(ISOString(time.UnixMilli(ms))), strconv.FormatInt(ms, 10)
 	for _, alias := range aliases {
 		if alias.Write == WriteNever || (v3 && alias.Write == WriteV1) {
 			continue
 		}
-		value := strconv.Quote(ISOString(time.UnixMilli(ms)))
+		value := date
 		if alias.Millis {
-			value = strconv.FormatInt(ms, 10)
+			value = millis
 		}
 		written = append(written, [2]string{alias.Name, value})
 	}

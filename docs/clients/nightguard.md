@@ -15,6 +15,8 @@ How Nightguard talks to Nightscout, and how it works with Nighttroop.
 ## Set up
 
 1. Add a device for Nightguard. Its units follow the site's, as for Other.
+   - For care actions, use the Caregiver role (`device_read_write`). It writes treatments only. Else, Read is
+     sufficient.
 2. In Nightguard, set the Nightscout URL to `https://<site>.ns.<host>`.
 3. Set the token to the device's Nightscout token.
 

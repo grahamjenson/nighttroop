@@ -11,6 +11,8 @@
 1. e2e restore/archiving/hydration testing
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
+    1. P4: A Nightscout search spends about a third of writing each document in `Canonicalize`, which reads the
+       document again to sort its fields and format its values: write them in that form the first time
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
@@ -23,6 +25,13 @@
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
     1. P3: Show a site's abuse flag (`FlaggedForAbuse`) on the control sites list and site details, and record an event
        when a site is first flagged, so a control admin can see which sites the server throttles
+    1. P1: A Caregiver device (`device_read_write`) writes only treatments on the Nightscout API, but its JWT from
+       `/api/v2/authorization/request` still adds, changes and deletes any data on the site API (`/data/*`,
+       `siteapiutils.readWriteRoles`): limit it there the same way
+    1. P3: A Caregiver device can add a device status on REST but not on the socket, which gives `write` for all
+       collections at once: check each collection's create, update and delete on the socket as REST does
+    1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
+       begun at once push out others' before they finish
 
 ## Before Prod Deployment
 
