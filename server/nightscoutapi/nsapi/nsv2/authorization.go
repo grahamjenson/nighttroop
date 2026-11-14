@@ -143,12 +143,20 @@ func createSubject(w http.ResponseWriter, r *http.Request, siteContext *httputil
 	apiutils.WriteJSON(w, http.StatusCreated, toSubject(siteContext, created))
 }
 
-// deleteSubject deletes the site's identity, as the site does, so its token stops working
+// deleteSubject deletes an AAPS client's identity, as the site does, so its token stops working. The PWD phone is not
+// an admin, so the site's other identities are not found
 func deleteSubject(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext) {
 	id := chi.URLParam(r, "id")
 	tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 	defer tx.Rollback()
-	err := (&sitesettings.IdentitiesCollection{}).DeleteRow(r.Context(), tx, id, siteContext)
+	identities := &sitesettings.IdentitiesCollection{}
+	identity, err := identities.GetRow(r.Context(), tx, id, siteContext)
+	if err == nil && identity.Client != sitemodels.AAPSClient {
+		err = sql.ErrNoRows
+	}
+	if err == nil {
+		err = identities.DeleteRow(r.Context(), tx, id, siteContext)
+	}
 	if err == nil {
 		err = finish(tx)
 	}

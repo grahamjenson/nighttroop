@@ -29,6 +29,17 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EXISTS "@0.name"
 ASSERT_EQUALS null "@0.accessToken"
+SET other_identity_id {{ dig "no_token_for_other_identities.0._id" }}
+
+// The PWD phone is not an admin, so it cannot delete the site's own identities, only the subjects AAPS added
+NAME cannot_delete_site_identity
+DELETE http://{{ site }}/api/v2/authorization/subjects/{{ .other_identity_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME read_only_token_still_works
+GET http://{{ site }}/api/v1/entries?token={{ .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 200
 
 NAME create_subject
 POST http://{{ site }}/api/v2/authorization/subjects
