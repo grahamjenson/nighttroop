@@ -11,6 +11,8 @@
 1. e2e restore/archiving/hydration testing
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
+    1. P4: A Nightscout search spends about a third of writing each document in `Canonicalize`, which reads the
+       document again to sort its fields and format its values: write them in that form the first time
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
