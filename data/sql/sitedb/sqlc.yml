@@ -50,6 +50,9 @@ overrides:
       - column: "insulin_doses_vw.is_basal_insulin"
         go_type:
           type: "*bool"
+      - column: "event_groups.is_emulating_temp_basal"
+        go_type:
+          type: "*bool"
       - column: "event_groups.auto_forced"
         go_type:
           type: "*bool"

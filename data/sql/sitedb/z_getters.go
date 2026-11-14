@@ -996,6 +996,26 @@ func (m *EventGroup) SetClientCreatedAt(v *int64) {
 	m.ClientCreatedAt = v
 }
 
+// GetIsEmulatingTempBasal returns the IsEmulatingTempBasal value.
+func (m EventGroup) GetIsEmulatingTempBasal() *bool {
+	return m.IsEmulatingTempBasal
+}
+
+// SetIsEmulatingTempBasal sets the IsEmulatingTempBasal value and returns the updated EventGroup.
+func (m *EventGroup) SetIsEmulatingTempBasal(v *bool) {
+	m.IsEmulatingTempBasal = v
+}
+
+// GetExtendedEmulatedJson returns the ExtendedEmulatedJson value.
+func (m EventGroup) GetExtendedEmulatedJson() *string {
+	return m.ExtendedEmulatedJson
+}
+
+// SetExtendedEmulatedJson sets the ExtendedEmulatedJson value and returns the updated EventGroup.
+func (m *EventGroup) SetExtendedEmulatedJson(v *string) {
+	m.ExtendedEmulatedJson = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -10026,6 +10046,26 @@ func (m *CreateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
 }
 
+// GetIsEmulatingTempBasal returns the IsEmulatingTempBasal value.
+func (m CreateEventGroupParams) GetIsEmulatingTempBasal() *bool {
+	return m.IsEmulatingTempBasal
+}
+
+// SetIsEmulatingTempBasal sets the IsEmulatingTempBasal value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetIsEmulatingTempBasal(v *bool) {
+	m.IsEmulatingTempBasal = v
+}
+
+// GetExtendedEmulatedJson returns the ExtendedEmulatedJson value.
+func (m CreateEventGroupParams) GetExtendedEmulatedJson() *string {
+	return m.ExtendedEmulatedJson
+}
+
+// SetExtendedEmulatedJson sets the ExtendedEmulatedJson value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetExtendedEmulatedJson(v *string) {
+	m.ExtendedEmulatedJson = v
+}
+
 // GetSyncIdentifier returns the SyncIdentifier value.
 func (m CreateEventGroupParams) GetSyncIdentifier() *string {
 	return m.SyncIdentifier
@@ -10764,6 +10804,26 @@ func (m RewriteEventGroupParams) GetBolusCalculatorResultJson() *string {
 // SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated RewriteEventGroupParams.
 func (m *RewriteEventGroupParams) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
+}
+
+// GetIsEmulatingTempBasal returns the IsEmulatingTempBasal value.
+func (m RewriteEventGroupParams) GetIsEmulatingTempBasal() *bool {
+	return m.IsEmulatingTempBasal
+}
+
+// SetIsEmulatingTempBasal sets the IsEmulatingTempBasal value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetIsEmulatingTempBasal(v *bool) {
+	m.IsEmulatingTempBasal = v
+}
+
+// GetExtendedEmulatedJson returns the ExtendedEmulatedJson value.
+func (m RewriteEventGroupParams) GetExtendedEmulatedJson() *string {
+	return m.ExtendedEmulatedJson
+}
+
+// SetExtendedEmulatedJson sets the ExtendedEmulatedJson value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetExtendedEmulatedJson(v *string) {
+	m.ExtendedEmulatedJson = v
 }
 
 // GetSyncIdentifier returns the SyncIdentifier value.

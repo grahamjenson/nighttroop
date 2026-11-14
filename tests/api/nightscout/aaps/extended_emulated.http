@@ -1,0 +1,54 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS's extended bolus says whether it is given by temp basals, which AAPS reads back on its own extended bolus
+NAME add_extended_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Combo Bolus", "date": {{ itime 30 }}, "enteredinsulin": 0.5, "relative": 1.0, "isEmulatingTempBasal": false, "duration": 30, "durationInMilliseconds": 1800000, "splitNow": 0, "splitExt": 100, "pumpId": 1794605395247, "pumpType": "GENERIC_AAPS", "pumpSerial": "V5RV6Q656R", "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME extended_bolus_v3
+GET http://{{ site }}/api/v3/treatments/{{ .add_extended_bolus.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.isEmulatingTempBasal"
+
+// A pump with no extended bolus of its own has AAPS give one by temp basals: AAPS sends a Temp Basal with the Combo Bolus
+// it gives in extendedEmulated, and reads a Temp Basal with it as that extended bolus. It is given back as sent
+NAME add_emulated_extended_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": {{ itime 20 }}, "type": "FAKE_EXTENDED", "rate": 3, "absolute": 3, "duration": 60, "durationInMilliseconds": 3600000, "pumpId": 1794605395300, "pumpSerial": "S1", "pumpType": "VIRTUAL", "app": "AAPS", "extendedEmulated": {"eventType": "Combo Bolus", "enteredinsulin": 2.0, "duration": 60, "isEmulatingTempBasal": true, "pumpId": 1794605395300, "pumpSerial": "S1", "pumpType": "VIRTUAL", "isValid": true}}
+ASSERT_STATUS 201
+SET tb_id {{ .add_emulated_extended_bolus.identifier }}
+
+NAME emulated_extended_bolus_v3
+GET http://{{ site }}/api/v3/treatments/{{ .tb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "FAKE_EXTENDED" "@result.type"
+ASSERT_EQUALS "Combo Bolus" "@result.extendedEmulated.eventType"
+ASSERT_EQUALS 2 "@result.extendedEmulated.enteredinsulin"
+ASSERT_EQUALS 60 "@result.extendedEmulated.duration"
+ASSERT_EQUALS true "@result.extendedEmulated.isEmulatingTempBasal"
+ASSERT_EQUALS 1794605395300 "@result.extendedEmulated.pumpId"
+
+NAME emulated_extended_bolus_v1
+GET http://{{ site }}/api/v1/treatments.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@0.extendedEmulated.enteredinsulin"
+
+// A patch that leaves it out keeps it
+NAME patch_emulated_duration
+PATCH http://{{ site }}/api/v3/treatments/{{ .tb_id }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 20}
+ASSERT_STATUS 200
+
+NAME patched_keeps_extended_emulated
+GET http://{{ site }}/api/v3/treatments/{{ .tb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.extendedEmulated.enteredinsulin"

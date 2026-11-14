@@ -88,6 +88,8 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"BolusCalculatorResultJson": {Column: "bolus_calculator_result_json", MaxLength: 4096},
 		"SyncIdentifier":            {Column: "sync_identifier", MaxLength: 256},
 		"ClientCreatedAt":           {Column: "client_created_at", Min: new(0.0), Max: new(253402300799999.0)},
+		"IsEmulatingTempBasal":      {Column: "is_emulating_temp_basal"},
+		"ExtendedEmulatedJson":      {Column: "extended_emulated_json", MaxLength: 4096},
 		"Notes":                     {Column: "notes", MaxLength: 1024},
 		"Reason":                    {Column: "reason", MaxLength: 64},
 		"DurationMinutes":           {Column: "duration_minutes", Min: new(0.0), Max: new(525600.0)},
