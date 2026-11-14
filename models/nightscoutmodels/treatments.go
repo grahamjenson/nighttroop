@@ -118,6 +118,8 @@ type Treatment struct {
 	InsulinType   *types.ShortString     `json:"insulinType,omitempty"`
 	Unabsorbed    *types.FlexibleFloat64 `json:"unabsorbed,omitempty"`
 	UserEnteredAt *types.DateString      `json:"userEnteredAt,omitempty"`
+	// When iAPS's carbs were entered, which it deletes them by, given back as sent
+	CreationDate *types.DateString `json:"creation_date,omitempty"`
 
 	// Default String Fields
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity

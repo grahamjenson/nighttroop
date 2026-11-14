@@ -986,6 +986,16 @@ func (m *EventGroup) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
+// GetClientCreatedAt returns the ClientCreatedAt value.
+func (m EventGroup) GetClientCreatedAt() *int64 {
+	return m.ClientCreatedAt
+}
+
+// SetClientCreatedAt sets the ClientCreatedAt value and returns the updated EventGroup.
+func (m *EventGroup) SetClientCreatedAt(v *int64) {
+	m.ClientCreatedAt = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -10026,6 +10036,16 @@ func (m *CreateEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
+// GetClientCreatedAt returns the ClientCreatedAt value.
+func (m CreateEventGroupParams) GetClientCreatedAt() *int64 {
+	return m.ClientCreatedAt
+}
+
+// SetClientCreatedAt sets the ClientCreatedAt value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetClientCreatedAt(v *int64) {
+	m.ClientCreatedAt = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -10756,6 +10776,16 @@ func (m *RewriteEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
 }
 
+// GetClientCreatedAt returns the ClientCreatedAt value.
+func (m RewriteEventGroupParams) GetClientCreatedAt() *int64 {
+	return m.ClientCreatedAt
+}
+
+// SetClientCreatedAt sets the ClientCreatedAt value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetClientCreatedAt(v *int64) {
+	m.ClientCreatedAt = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m RewriteEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -11264,6 +11294,36 @@ func (m SearchEventGroupsParams) GetEnteredByEq() *string {
 // SetEnteredByEq sets the EnteredByEq value and returns the updated SearchEventGroupsParams.
 func (m *SearchEventGroupsParams) SetEnteredByEq(v *string) {
 	m.EnteredByEq = v
+}
+
+// GetInsulinExists returns the InsulinExists value.
+func (m SearchEventGroupsParams) GetInsulinExists() *bool {
+	return m.InsulinExists
+}
+
+// SetInsulinExists sets the InsulinExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetInsulinExists(v *bool) {
+	m.InsulinExists = v
+}
+
+// GetGlucoseExists returns the GlucoseExists value.
+func (m SearchEventGroupsParams) GetGlucoseExists() *bool {
+	return m.GlucoseExists
+}
+
+// SetGlucoseExists sets the GlucoseExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetGlucoseExists(v *bool) {
+	m.GlucoseExists = v
+}
+
+// GetClientCreatedAtEQ returns the ClientCreatedAtEQ value.
+func (m SearchEventGroupsParams) GetClientCreatedAtEQ() *int64 {
+	return m.ClientCreatedAtEQ
+}
+
+// SetClientCreatedAtEQ sets the ClientCreatedAtEQ value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetClientCreatedAtEQ(v *int64) {
+	m.ClientCreatedAtEQ = v
 }
 
 // GetEnteredByNin returns the EnteredByNin value.

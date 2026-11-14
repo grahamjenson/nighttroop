@@ -1169,10 +1169,18 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Needs a token that can delete.
 - v1 `DELETE /api/v1/treatments.json` or `entries.json` also accepts the Trio and iAPS filters:
   - `find[id][$eq]`.
-  - `find[created_at][$eq]` with `find[eventType][$eq]`.
+  - `find[created_at][$eq]`, `find[created_at][$gte]` and `find[created_at][$lte]`.
+  - `find[eventType][$eq]` or `find[eventType]`.
   - `find[dateString][$eq]`.
-  - `find[carbs][$exists]`.
   - Up to 10 `find[$or]` alternatives, each with a date or an id.
+- v1 `DELETE /api/v1/treatments.json` also accepts the iAPS filters (on `entries.json`: 400):
+  - `find[carbs][$exists]`, `find[bolus][$exists]` (has insulin) and `find[glucose][$exists]`.
+  - `find[creation_date][$eq]`.
+  - `find[enteredBy]`.
+- A delete's `count` (1 to 10) deletes at most that many, newest first. `find[eventType]` with a `count` needs no
+  date. Another count: 400.
+- A delete's `$gte` and `$lte` more than 2 days apart: 400.
+- A delete by `find[eventType]` alone (iAPS `deleteAllNSoverrrides`): 400.
 
 ### Nightscout API: v3 changes and history
 
@@ -1361,6 +1369,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 | Bolus, temp basal                        | `automatic` (true or false)                                                                | Loop       |
 | Treatment                                | `syncIdentifier` (up to 256 characters), `insulinType`                                     | Loop       |
 | Carb entry                               | `userEnteredAt` (UTC)                                                                      | Loop       |
+| Treatment                                | `creation_date` (UTC, `.SSS`)                                                              | iAPS       |
 | Bolus                                    | `unabsorbed`                                                                               | Loop       |
 | Treatment                                | `uuid`, `sensorCode`, `transmitterId`                                                      | xDrip+     |
 | Profile                                  | `profile` (the name of the settings profile, up to 64 characters)                          | iAPS       |

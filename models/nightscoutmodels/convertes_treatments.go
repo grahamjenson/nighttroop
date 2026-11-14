@@ -2,6 +2,7 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -124,6 +125,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
 	// goverter:map DurationMinutes Duration | MinutesToDuration
+	// goverter:map ClientCreatedAt CreationDate | MillisToISODateString
 	EventGroupToTreatment(source sitedb.EventGroup) *Treatment
 
 	// goverter:context siteContext
@@ -282,6 +284,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Duration DurationMs | DurationToMs
 	// goverter:map BolusCalculatorResult BolusCalculatorResultJson
 	// goverter:map SentJSON SentHash | SentHash
+	// goverter:map CreationDate ClientCreatedAt | DateStringToMillis
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
 
@@ -419,6 +422,14 @@ func DateStringToMillis(source *types.DateString) *int64 {
 		return nil
 	}
 	return source.UnixMillip()
+}
+
+// MillisToISODateString is a date in milliseconds as toISOString writes it, as iAPS sent it, nil when there is none
+func MillisToISODateString(source *int64) *types.DateString {
+	if source == nil {
+		return nil
+	}
+	return new(types.DateString(types.ISOString(time.UnixMilli(*source))))
 }
 
 // MillisToDateString is a date in milliseconds as a UTC date string, nil when there is none

@@ -166,10 +166,14 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring22 := *source.SyncIdentifier
 		sitedbCreateEventGroupParams.SyncIdentifier = &xstring22
 	}
+	if source.ClientCreatedAt != nil {
+		xint644 := *source.ClientCreatedAt
+		sitedbCreateEventGroupParams.ClientCreatedAt = &xint644
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint644 := *source.UtcOffsetMinutes
-		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint644
+		xint645 := *source.UtcOffsetMinutes
+		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint645
 	}
 	if source.CreatedByAppName != nil {
 		xstring23 := *source.CreatedByAppName
@@ -247,6 +251,7 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		xstring := *source.SyncIdentifier
 		nightscoutmodelsTreatment.SyncIdentifier = &xstring
 	}
+	nightscoutmodelsTreatment.CreationDate = MillisToISODateString(source.ClientCreatedAt)
 	if source.CreatedByDeviceName != nil {
 		typesShortString7 := types.ShortString(*source.CreatedByDeviceName)
 		nightscoutmodelsTreatment.Device = &typesShortString7
@@ -1124,6 +1129,7 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xstring11 := *source.SyncIdentifier
 		sitedbEventGroup.SyncIdentifier = &xstring11
 	}
+	sitedbEventGroup.ClientCreatedAt = DateStringToMillis(source.CreationDate)
 	if source.Notes != nil {
 		xstring12 := SanitizedStringToString(*source.Notes)
 		sitedbEventGroup.Notes = &xstring12
