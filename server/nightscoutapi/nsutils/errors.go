@@ -108,7 +108,7 @@ var (
 	ErrTooManyProfiles = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many profiles: at most %d in a store", consts.MaxProfilesPerStore)}
 )
 
-// ErrSiteOverStorage is a batch that would take a site flagged for abuse past its flagged write limit
+// ErrSiteOverStorage is a batch that would take a site at abuse level OverUse or above past its flagged write limit
 var ErrSiteOverStorage = &HTTPError{Status: http.StatusTooManyRequests, Message: httputils.SiteOverStorageMessage}
 
 // Bad Updates

@@ -80,7 +80,7 @@ func (ws *Websocket) dbAdd(ctx context.Context, collection nsutils.Collection, _
 	if len(documents) > consts.MaxBatchRecords {
 		return ackResult("Too many records")
 	}
-	// A site flagged for abuse spends a flagged write for each record, as a batch POST does
+	// A site at abuse level OverUse or above spends flagged writes for each record, as a batch POST does
 	if allowed, _ := httputils.FlaggedSiteWritesWithinRateLimit(httputils.GetSiteContext(ctx), len(documents)-1); !allowed {
 		return ackResult(httputils.SiteOverStorageMessage)
 	}

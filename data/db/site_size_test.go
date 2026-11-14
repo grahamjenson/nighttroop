@@ -175,3 +175,46 @@ func TestRecordSiteSize(t *testing.T) {
 
 	require.NoError(t, controlDB.RecordSiteSize(ctx, "notopen"))
 }
+
+// The resource check scores each site for abuse from its DB's size now and its connectors' highest failure rate, which
+// moves a fifth of the way to 1 on each failed sync and to 0 on each sync that works
+func TestRecordAbuseScores(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, q := t.Context(), controlDB.Queries
+	newSite := func(sizeKB int64) *db.SiteDB {
+		site, err := controlDB.CreateSite(ctx)
+		require.NoError(t, err)
+		site.SiteDB.SetSizeKB(func() *int64 { return &sizeKB })
+		return site.SiteDB
+	}
+	score := func(site *db.SiteDB) float64 {
+		model, err := q.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
+		require.NoError(t, err)
+		return model.AbuseScore
+	}
+	large, failing, notScored := newSite(45056), newSite(100), newSite(1<<20)
+	for _, typ := range []consts.ConnectorType{consts.ConnectorTypeNightscout, consts.ConnectorTypeDexcom} {
+		require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: failing.Subdomain, Type: typ, Enabled: true}))
+	}
+	fail := controldb.UpdateConnectorReportsFailureParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout, ErrorMessages: errors.ErrorList{"failed"}}
+	for range 2 {
+		require.NoError(t, q.UpdateConnectorReportsFailure(ctx, fail))
+	}
+	require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, controldb.UpdateConnectorReportsSuccessParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout}))
+	connector, err := q.GetConnector(ctx, controldb.GetConnectorParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout})
+	require.NoError(t, err)
+	require.InDelta(t, 0.8*0.36, connector.FailureRateEma, 0.0001)
+
+	require.NoError(t, controlDB.RecordAbuseScores(ctx, []*db.SiteDB{large, failing}))
+	require.InDelta(t, 0.48, score(large), 0.001) // 2.2 times its 20 MB limit
+	require.Equal(t, controldb.AbuseOverUse, controldb.AbuseLevelOf(score(large)))
+	require.InDelta(t, 0.288, score(failing), 0.001) // its highest connector's failure rate
+	require.Zero(t, score(notScored), "a site not given is not scored")
+
+	// Its connectors syncing again lower its score at the next check
+	for range 20 {
+		require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, controldb.UpdateConnectorReportsSuccessParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout}))
+	}
+	require.NoError(t, controlDB.RecordAbuseScores(ctx, []*db.SiteDB{failing}))
+	require.Less(t, score(failing), 0.01)
+}

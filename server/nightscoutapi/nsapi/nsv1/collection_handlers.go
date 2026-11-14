@@ -110,7 +110,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			nsutils.WriteError(w, nsutils.ErrTooManyBatchWrites)
 			return
 		}
-		// A site flagged for abuse spends a flagged write for each record, so a batch cannot get around its limit
+		// A site at abuse level OverUse or above spends flagged writes for each record, so a batch cannot avoid its limit
 		if allowed, seconds := httputils.FlaggedSiteWritesWithinRateLimit(httputils.GetSiteContext(r.Context()), len(arrayOfModels)-1); !allowed {
 			httputils.SetRetryAfter(w, seconds)
 			nsutils.WriteError(w, nsutils.ErrSiteOverStorage)

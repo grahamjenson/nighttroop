@@ -30,6 +30,8 @@ CREATE TABLE sites (
 
     max_db_size_kb_limit INTEGER DEFAULT 20480, -- default 20 MB, can be changed in control plane
     estimated_db_size_kb INTEGER, -- the site DB's size on disk, measured by the resource check and with its last write
+    -- how much the site may abuse the server, from 0 (not at all) to 1, as the resource check last scored it
+    abuse_score REAL NOT NULL DEFAULT 0 CHECK(abuse_score BETWEEN 0 AND 1),
     -- each table of the site's DB by name, with the bytes it and its indexes take and its records, as last measured from
     -- SQLite's dbstat, so a page shows them without reading the whole DB
     table_sizes_json TEXT CHECK(length(table_sizes_json) <= 16384 AND json_valid(table_sizes_json)),
@@ -317,6 +319,8 @@ CREATE TABLE site_connectors (
     total_ema REAL,
     success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
     failure_ema REAL,
+    -- the share of its recent syncs that failed, from 0 to 1: each sync moves it a fifth of the way to 1 or 0
+    failure_rate_ema REAL NOT NULL DEFAULT 0 CHECK(failure_rate_ema BETWEEN 0 AND 1),
     
     -- Duration of last sync in ms
     last_sync_duration INTEGER,

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -107,29 +108,39 @@ func ExtraWritesWithinRateLimit(r *http.Request, n int) bool {
 	return false
 }
 
-// SiteOverStorageMessage says why a site flagged for abuse, as its DB is far over its size limit, is refused a write
+// SiteOverStorageMessage says why a site at abuse level OverUse or above, as its DB is far over its size limit, is
+// refused a write
 const SiteOverStorageMessage = "Too many writes: this site's data is far over its storage limit"
 
-// SiteFlaggedForAbuse is whether the request's site is flagged for abuse. It uses the DB's size now, not the size last
-// recorded, which can be minutes old, while a site can write many MB a minute.
-func SiteFlaggedForAbuse(siteContext *SiteContext) bool {
+// abusiveWriteCost is how many flagged writes each write of a site at abuse level Abusive or above costs
+const abusiveWriteCost = 4
+
+// SiteAbuseLevel is the request's site's abuse level: the higher of the level last stored and the level of its DB's
+// size now, as the score is stored only every 5 minutes, while a site can write many MB a minute.
+func SiteAbuseLevel(siteContext *SiteContext) controldb.AbuseLevel {
 	if siteContext == nil || siteContext.SiteModel == nil {
-		return false
+		return controldb.AbuseGood
 	}
-	site := *siteContext.SiteModel
+	site := siteContext.SiteModel
+	live := controldb.AbuseSignals{SizeKB: site.EstimatedDbSizeKb, LimitKB: site.MaxDbSizeKbLimit}
 	if siteContext.SiteDB != nil {
 		if size := siteContext.SiteDB.EstimatedSizeKB(); size != nil {
-			site.EstimatedDbSizeKb = size
+			live.SizeKB = size
 		}
 	}
-	return site.FlaggedForAbuse()
+	return max(site.AbuseLevel(), live.Level())
 }
 
-// FlaggedSiteWritesWithinRateLimit spends n writes from the flagged write limit of a site flagged for abuse, none unless
-// it has them all now, and none of a site that is not flagged. It is when to try again if refused, in seconds.
+// FlaggedSiteWritesWithinRateLimit spends n writes from the flagged write limit of a site at abuse level OverUse, and
+// 4 times n at Abusive or above, none unless it has them all now, and none of a site under OverUse. It is when to try
+// again if refused, in seconds.
 func FlaggedSiteWritesWithinRateLimit(siteContext *SiteContext, n int) (bool, int) {
-	if n <= 0 || !SiteFlaggedForAbuse(siteContext) {
+	level := SiteAbuseLevel(siteContext)
+	if n <= 0 || level < controldb.AbuseOverUse {
 		return true, 0
+	}
+	if level >= controldb.AbuseAbusive {
+		n *= abusiveWriteCost
 	}
 	now := time.Now()
 	writes := siteContext.Config.RateLimiters.SiteFlaggedPOSTLimiter(siteContext.SiteID).ReserveN(now, n)

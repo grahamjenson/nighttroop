@@ -23,7 +23,8 @@ func TestControlDataLimits(t *testing.T) {
 		PasswordHash: "hash", TotpSecretEnc: "secret", Role: consts.IdentityRoleUser, CreatedByIdentityName: by}))
 	identity, err := q.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteID, Name: "limits"})
 	require.NoError(t, err)
-	// A site's and an identity's settings, and a connector's sync, are written by their updates, not checked here
+	// A site's and an identity's settings, a site's abuse score and a connector's sync are written by their updates, not
+	// checked here
 	settings := []string{"Timezone", "Language", "DateFormat", "TimeFormat", "WeekStartDay", "NumberFormat",
 		"AlarmDeviceBatteryLowDevicesJson"}
 	testutils.CheckColumnLimits(t, controldb.ColumnLimits, map[string]testutils.LimitRecipe{
@@ -51,13 +52,13 @@ func TestControlDataLimits(t *testing.T) {
 			_, err := q.CreateSite(ctx, controldb.CreateSiteParams{ID: "connector" + id(i), BackupKeyHash: "hash"})
 			require.NoError(t, err)
 			return controldb.CreateConnectorParams{SiteID: "connector" + id(i), Type: consts.ConnectorTypeVirtual}
-		}, q.CreateConnector, "LastBackfillError", "SyncIntervalSecondsReason", "PreviousSyncErrors"),
+		}, q.CreateConnector, "LastBackfillError", "SyncIntervalSecondsReason", "PreviousSyncErrors", "FailureRateEma"),
 		"site_identities": testutils.Recipe(func(i int) controldb.CreateSiteIdentityParams {
 			return controldb.CreateSiteIdentityParams{SiteID: siteID, Name: id(i), PasswordHash: "hash",
 				TotpSecretEnc: "secret", Role: consts.IdentityRoleUser, CreatedByIdentityName: by}
 		}, q.CreateSiteIdentity, append(settings, "UpdatedByIdentityName")...),
 		"sites": testutils.Recipe(func(i int) controldb.CreateSiteParams {
 			return controldb.CreateSiteParams{ID: id(i), BackupKeyHash: "hash"}
-		}, testutils.NoResult(q.CreateSite), append(settings, "TableSizesJson")...),
+		}, testutils.NoResult(q.CreateSite), append(settings, "TableSizesJson", "AbuseScore")...),
 	})
 }
