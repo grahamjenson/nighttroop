@@ -51,15 +51,25 @@ const (
 // User Roles
 type IdentityRole string
 
-// Identity Roles are a little TYPE and a little PERMISSIONS.
-// We are staying away from a formal permissions model, to be a bit simplier
+// The identity roles of a site. What each may do is decided only in utils/can, whose permission matrix test
+// (utils/can/permissions_test.go) lists every role against every check.
 const (
-	IdentityRoleAdmin           IdentityRole = "admin"            // Login with password + totp
-	IdentityRoleUser            IdentityRole = "user"             // Login with password with TOTP
-	IdentityRoleUserReadOnly    IdentityRole = "user_readonly"    // Login with password with TOTP
-	IdentityRoleClinician       IdentityRole = "clinician"        // Login with password, sees only the printable report
-	IdentityRoleDevicePWDPhone  IdentityRole = "device_pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
-	IdentityRoleDeviceRead      IdentityRole = "device_read"
+	// IdentityRoleAdmin signs in to the website with a password and TOTP, and administers the site
+	IdentityRoleAdmin IdentityRole = "admin"
+	// IdentityRoleUser signs in to the website with a password, and a TOTP code if it has one set, and reads and changes
+	// the site's data
+	IdentityRoleUser IdentityRole = "user"
+	// IdentityRoleUserReadOnly does not sign in to the website: it reads the site's data with its Nightscout token
+	IdentityRoleUserReadOnly IdentityRole = "user_readonly"
+	// IdentityRoleClinician signs in to the website with a password, and sees only the printable report
+	IdentityRoleClinician IdentityRole = "clinician"
+	// IdentityRoleDevicePWDPhone is the PWD's (person with diabetes) phone, which runs the loop and uploads the site's
+	// data with its Nightscout token
+	IdentityRoleDevicePWDPhone IdentityRole = "device_pwd_phone"
+	// IdentityRoleDeviceRead is a follower's app, or an AAPS client, which reads the site's data with its Nightscout token
+	IdentityRoleDeviceRead IdentityRole = "device_read"
+	// IdentityRoleDeviceReadWrite is a carer's app (Caregiver), which reads the site's data and changes its treatments
+	// with its Nightscout token
 	IdentityRoleDeviceReadWrite IdentityRole = "device_read_write"
 )
 
