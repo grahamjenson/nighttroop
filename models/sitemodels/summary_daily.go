@@ -215,23 +215,21 @@ func loopColumns(row *sitedb.SummaryPeriod) [4]*string {
 func NewSummaryPeriod(period, date, timezone string, start, end, until int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
 	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	times, weighed, sum, squares := [5]float64{}, 0.0, 0.0, 0.0
-	// dose, carbs and over are the whole days' daily doses, carbs and count, and the same of every day with data
-	dose, basal, carbs, over := [2]float64{}, [2]float64{}, [2]float64{}, [2]int{}
-	sums, counts := make([]int64, 24*60*60_000/SummaryDailySlotMs), make([]int64, 24*60*60_000/SummaryDailySlotMs)
-	bins := make([][]int64, 24*60*60_000/AGPSlotMs)
-	loopSums, loopCounts := [4][]float64{}, [4][]int64{}
-	for i := range loopSums {
-		loopSums[i], loopCounts[i] = make([]float64, len(sums)), make([]int64, len(sums))
+	// over is the totals of the days over by until, and all of every day with data
+	over, all := dailyTotals{}, dailyTotals{}
+	glucoseMeans, bins := newSlotMeans[int64](), make(agpBins, 24*60*60_000/AGPSlotMs)
+	loopMeans := [4]slotMeans[float64]{}
+	for i := range loopMeans {
+		loopMeans[i] = newSlotMeans[float64]()
 	}
 	for _, day := range days {
 		if day.Days == 0 {
 			continue
 		}
 		row.Days++
-		for i, counts := range []bool{day.EndAt <= until, true} {
-			if counts {
-				dose[i], basal[i], carbs[i], over[i] = dose[i]+day.TotalDailyDose, basal[i]+day.TotalDailyBasal, carbs[i]+day.TotalDailyCarbs, over[i]+1
-			}
+		all.add(day)
+		if day.EndAt <= until {
+			over.add(day)
 		}
 		if day.TimeInRange != nil {
 			weight := float64(max(day.GlucoseReadings, 1))
@@ -247,28 +245,9 @@ func NewSummaryPeriod(period, date, timezone string, start, end, until int64, da
 			n, mean, sd := float64(day.GlucoseReadings), *day.GlucoseMeanMgdl, *day.GlucoseSdMgdl
 			sum, squares = sum+n*mean, squares+n*(sd*sd+mean*mean)
 		}
-		var mgdl []*int64
-		_ = json.Unmarshal([]byte(day.GlucoseMgdlJson), &mgdl)
-		for slot, value := range mgdl[:min(len(mgdl), len(sums))] {
-			if value != nil {
-				sums[slot] += *value
-				counts[slot]++
-				for bin := slot - agpWindow/2; bin <= slot+agpWindow/2; bin++ {
-					if bin >= 0 && bin < len(bins) {
-						bins[bin] = append(bins[bin], *value)
-					}
-				}
-			}
-		}
+		bins.add(glucoseMeans.add(day.GlucoseMgdlJson))
 		for i, column := range loopColumns(day) {
-			var values []*float64
-			_ = json.Unmarshal([]byte(*column), &values)
-			for slot, value := range values[:min(len(values), len(sums))] {
-				if value != nil {
-					loopSums[i][slot] += *value
-					loopCounts[i][slot]++
-				}
-			}
+			loopMeans[i].add(*column)
 		}
 	}
 	if weighed > 0 {
@@ -280,31 +259,93 @@ func NewSummaryPeriod(period, date, timezone string, start, end, until int64, da
 		mean := sum / count
 		row.GlucoseMeanMgdl, row.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
 	}
-	if i := map[bool]int{true: 0, false: 1}[over[0] > 0]; over[i] > 0 {
-		row.TotalDailyDose = consts.Round(dose[i]/float64(over[i]), 2)
-		row.TotalDailyBasal = consts.Round(basal[i]/float64(over[i]), 2)
-		row.TotalDailyCarbs = consts.Round(carbs[i]/float64(over[i]), 1)
+	if over.days == 0 {
+		over = all
 	}
-	slots := make([]*int64, len(sums))
-	for slot, count := range counts {
-		if count > 0 {
-			slots[slot] = new(int64(math.Round(float64(sums[slot]) / float64(count))))
-		}
-	}
-	glucoseJSON, _ := json.Marshal(slots)
-	row.GlucoseMgdlJson = string(glucoseJSON)
+	over.fill(row)
+	row.GlucoseMgdlJson = glucoseMeans.json(func(mean float64) int64 { return int64(math.Round(mean)) })
 	for i, column := range loopColumns(row) {
-		means := make([]*float64, len(sums))
-		for slot, count := range loopCounts[i] {
-			if count > 0 {
-				means[slot] = new(consts.Round(loopSums[i][slot]/float64(count), 2))
-			}
-		}
-		loopJSON, _ := json.Marshal(means)
-		*column = string(loopJSON)
+		*column = loopMeans[i].json(func(mean float64) float64 { return consts.Round(mean, 2) })
 	}
-	agp := make([][]int64, len(bins))
-	for bin, values := range bins {
+	row.AgpMgdlJson = new(bins.json())
+	return row
+}
+
+// dailyTotals sums the daily dose, basal and carbs of some of a period's days, to give their means
+type dailyTotals struct {
+	dose, basal, carbs float64
+	days               int
+}
+
+func (t *dailyTotals) add(day *sitedb.SummaryPeriod) {
+	t.dose, t.basal, t.carbs, t.days = t.dose+day.TotalDailyDose, t.basal+day.TotalDailyBasal, t.carbs+day.TotalDailyCarbs, t.days+1
+}
+
+// fill sets the row's daily dose, basal and carbs to the means of the days, if there are any
+func (t dailyTotals) fill(row *sitedb.SummaryPeriod) {
+	if t.days == 0 {
+		return
+	}
+	row.TotalDailyDose = consts.Round(t.dose/float64(t.days), 2)
+	row.TotalDailyBasal = consts.Round(t.basal/float64(t.days), 2)
+	row.TotalDailyCarbs = consts.Round(t.carbs/float64(t.days), 1)
+}
+
+// slotMeans sums the values days have at each 5 minutes from midnight, to give the mean of the days with a value then
+type slotMeans[T int64 | float64] struct {
+	sums   []T
+	counts []int64
+}
+
+func newSlotMeans[T int64 | float64]() slotMeans[T] {
+	slots := 24 * 60 * 60_000 / SummaryDailySlotMs
+	return slotMeans[T]{sums: make([]T, slots), counts: make([]int64, slots)}
+}
+
+// add adds a day's JSON column of values, null where it has none, and returns the values in the day
+func (m slotMeans[T]) add(column string) []*T {
+	var values []*T
+	_ = json.Unmarshal([]byte(column), &values)
+	values = values[:min(len(values), len(m.sums))]
+	for slot, value := range values {
+		if value != nil {
+			m.sums[slot] += *value
+			m.counts[slot]++
+		}
+	}
+	return values
+}
+
+// json is the JSON of the mean at each slot, rounded by round, null where no day has a value
+func (m slotMeans[T]) json(round func(mean float64) T) string {
+	means := make([]*T, len(m.sums))
+	for slot, count := range m.counts {
+		if count > 0 {
+			means[slot] = new(round(float64(m.sums[slot]) / float64(count)))
+		}
+	}
+	meansJSON, _ := json.Marshal(means)
+	return string(meansJSON)
+}
+
+// agpBins gathers, for each 5 minutes from midnight, the glucose of the days in the agpWindow slots around it
+type agpBins [][]int64
+
+func (b agpBins) add(mgdl []*int64) {
+	for slot, value := range mgdl {
+		if value == nil {
+			continue
+		}
+		for bin := max(slot-agpWindow/2, 0); bin <= min(slot+agpWindow/2, len(b)-1); bin++ {
+			b[bin] = append(b[bin], *value)
+		}
+	}
+}
+
+// json is the JSON of each bin's AGPPercentiles of its glucose, null where it has none
+func (b agpBins) json() string {
+	agp := make([][]int64, len(b))
+	for bin, values := range b {
 		slices.Sort(values)
 		for _, p := range AGPPercentiles {
 			if len(values) > 0 {
@@ -313,8 +354,7 @@ func NewSummaryPeriod(period, date, timezone string, start, end, until int64, da
 		}
 	}
 	agpJSON, _ := json.Marshal(agp)
-	row.AgpMgdlJson = new(string(agpJSON))
-	return row
+	return string(agpJSON)
 }
 
 // insulinWithin is a dose's units given from start until end: its dose given at once, when it is then, and the share
