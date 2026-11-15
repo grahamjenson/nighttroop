@@ -1,9 +1,9 @@
 INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
-// AAPS takes finger sticks only from BG Check treatments, and xDrip+ sends a blood test only as a meter reading (mbg)
-// (TP3). API v3 gives AAPS each meter reading in no treatment as a read-only BG Check with the treatments, with the
-// reading's identifier and "finger". A careportal BG Check has its own reading, so it is not given twice.
+// xDrip+ sends a blood test only as a meter reading (mbg). As on Nightscout, it is only an entry: API v3 gives it with
+// the entries, never with the treatments, so AAPS (which takes finger sticks from BG Check treatments) does not get it.
+// A careportal BG Check is a treatment, with its own reading.
 
 NAME xdrip_finger_stick
 POST http://{{ site }}/api/v1/entries
@@ -11,39 +11,36 @@ H api-secret: {{ sha1 token }}
 B [{"type": "mbg", "mbg": 118, "device": "Manual Entry", "date": {{ itime 20 }}}]
 ASSERT_STATUS 200
 SET reading_id {{ dig "xdrip_finger_stick.0._id" }}
-SET finger_id {{ dig "xdrip_finger_stick.0._id" }}finger
 
 // AAPS's first load
 NAME aaps_first_load
 GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt={{ time 60 }}&limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "BG Check" "@result.0.eventType"
-ASSERT_EQUALS 118 "@result.0.glucose"
-ASSERT_EQUALS "Finger" "@result.0.glucoseType"
-ASSERT_EQUALS "Manual Entry" "@result.0.enteredBy"
-ASSERT_EQUALS true "@result.0.isReadOnly"
-ASSERT_EQUALS true "@result.0.isValid"
-ASSERT_EQUALS ".finger_id" "@result.0.identifier"
-ASSERT_EXISTS "@result.0.date"
-ASSERT_EXISTS "@result.0.srvModified"
+ASSERT_LENGTH 0 "@result"
 
 // AAPS's later loads
 NAME aaps_history
 GET http://{{ site }}/api/v3/treatments/history/0?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS ".finger_id" "@result.0.identifier"
+ASSERT_LENGTH 0 "@result"
 
+// The reading's identifier with "finger" after it is a treatment of none, as any unknown identifier
 NAME read_by_identifier
 GET http://{{ site }}/api/v3/treatments/{{ .reading_id }}finger
 H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 200
-ASSERT_EQUALS 118 "@result.glucose"
+ASSERT_STATUS 404
 
-// A careportal BG Check has its reading, so it is given once, as itself
+// The meter reading is an entry
+NAME v3_entry
+GET http://{{ site }}/api/v3/entries/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mbg" "@result.type"
+ASSERT_EQUALS 118 "@result.mbg"
+
+// A careportal BG Check is a treatment, with its own reading
 NAME careportal_bg_check
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
@@ -57,16 +54,15 @@ H api-secret: {{ sha1 token }}
 B [{"type": "mbg", "mbg": 110, "device": "careportal via Nightscout", "date": {{ dig "careportal_bg_check.0.date" }}}]
 ASSERT_STATUS 200
 
-NAME one_each
+NAME only_the_treatment
 GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt={{ time 60 }}&limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS 118 "@result.0.glucose"
-ASSERT_EQUALS 110 "@result.1.glucose"
-ASSERT_EQUALS "careportal" "@result.1.enteredBy"
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 110 "@result.0.glucose"
+ASSERT_EQUALS "careportal" "@result.0.enteredBy"
 
-// API v1 is as stored: the meter reading is an entry, not a treatment
+// API v1 is the same: the meter reading is an entry, not a treatment
 NAME v1_only_treatments
 GET http://{{ site }}/api/v1/treatments.json
 H api-secret: {{ sha1 token }}
@@ -74,24 +70,24 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS 110 "@0.glucose"
 
-// AAPS deletes the finger stick: its reading is deleted
+// A delete of the reading's identifier with "finger" after it finds no treatment, and the reading stays
 NAME aaps_deletes_finger_stick
 DELETE http://{{ site }}/api/v3/treatments/{{ .reading_id }}finger
 H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 200
+ASSERT_STATUS 404
 
-NAME reading_deleted
+NAME reading_kept
 GET http://{{ site }}/api/v1/entries.json?find[type]=mbg
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS 110 "@0.mbg"
+ASSERT_EQUALS 118 "@1.mbg"
 
-// History tells AAPS's followers
-NAME deleted_in_history
+NAME history_only_the_treatment
 GET http://{{ site }}/api/v3/treatments/history/0?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS ".finger_id" "@result.1.identifier"
-ASSERT_EQUALS false "@result.1.isValid"
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 110 "@result.0.glucose"
+ASSERT_EQUALS true "@result.0.isValid"

@@ -25,7 +25,6 @@ type ToSearchParams interface {
 	// goverter:map . Limit | GetLimitInt64
 	// goverter:map . CountGiven | GetCountGiven
 	// goverter:map . CountAsked | GetCountAskedInt64
-	// goverter:ignore V3
 	QueryValueToQuery(source QueryValues) Query
 
 	//////
