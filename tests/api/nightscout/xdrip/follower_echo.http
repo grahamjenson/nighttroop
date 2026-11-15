@@ -1,7 +1,7 @@
 # An xDrip+ "Nightscout Follower" with "Upload to Nightscout" on downloads a looper's reading and uploads it again as
-# its own: whole mg/dL, its own device, and no trend. Nightscout upserts an entry on its date and type, so the copy
-# found the looper's reading and overwrote it. The first uploader's reading is kept. A Caregiver device cannot upload
-# readings, so here the follower has a token that can: a second PWD phone.
+# its own: whole mg/dL, its own device, and no trend. Nightscout upserts an entry on its date and type, and sets the
+# fields sent over the stored entry, whoever sends it, so the copy overwrites the looper's reading. A Caregiver device
+# cannot upload readings, so here the follower has a token that can: a second PWD phone.
 
 INCLUDE steps/new_site_admin.steps
 
@@ -13,6 +13,11 @@ B {"name": "follower", "role": "device_pwd_phone"}
 ASSERT_STATUS 201
 SET follower_token {{ .create_xdrip_follower.result.ns_token }}
 SET reading_ms {{ itime 5 }}
+
+NAME follower_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .follower_token }}
+ASSERT_STATUS 200
+SET follower_jwt {{ .follower_jwt.token }}
 
 NAME create_xdrip_caregiver
 POST http://{{ site }}/settings/identities
@@ -29,6 +34,13 @@ H api-secret: {{ sha1 token }}
 B [{"device": "Random", "type": "sgv", "sgv": 135.573, "date": {{ .reading_ms }}, "direction": "DoubleDown",
     "units": "mg/dl"}]
 ASSERT_STATUS 200
+SET reading_id {{ dig "looper_uploads.0._id" }}
+
+NAME looper_synced
+GET http://{{ .ns_site }}/api/v3/lastModified
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+SET echo_since {{ addms (dig "looper_synced.result.collections.entries") 1 }}
 
 // The follower echoes it with another token, a whole number, its own device and no trend, and noise AAPS did not send
 NAME follower_echoes
@@ -37,6 +49,7 @@ H api-secret: {{ sha1 .follower_token }}
 B [{"device": "xDrip-NSFollower Nightscout Follow", "type": "sgv", "sgv": 135, "date": {{ .reading_ms }},
     "direction": "Flat", "noise": 1}]
 ASSERT_STATUS 200
+ASSERT_EQUALS ".reading_id" "@0._id"
 
 // A follower with a Caregiver token cannot upload the reading at all
 NAME caregiver_echo_refused
@@ -46,17 +59,62 @@ B [{"device": "xDrip-NSFollower Nightscout Follow", "type": "sgv", "sgv": 135, "
     "direction": "Flat", "noise": 1}]
 ASSERT_STATUS 403
 
-NAME looper_reading_kept
+// The follower's copy is the reading: its value, trend, device and noise. The units it did not send are kept.
+NAME follower_copy_kept
 GET http://{{ .ns_site }}/api/v1/entries/sgv.json?count=10
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_EQUALS 135.573 "@0.sgv"
-ASSERT_EQUALS "DoubleDown" "@0.direction"
-ASSERT_EQUALS "Random" "@0.device"
+ASSERT_EQUALS ".reading_id" "@0._id"
+ASSERT_EQUALS 135 "@0.sgv"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS "xDrip-NSFollower Nightscout Follow" "@0.device"
 ASSERT_EQUALS 1 "@0.noise"
+ASSERT_EQUALS "mg/dl" "@0.units"
 
-// The same device sending a correction with the same token refreshes it
+// Followers get it as changed
+NAME echo_in_history
+GET http://{{ .ns_site }}/api/v3/entries/history/{{ .echo_since }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".reading_id" "@result.0.identifier"
+ASSERT_EQUALS 135 "@result.0.sgv"
+SET echoed_since {{ addms (dig "echo_in_history.result.0.srvModified") 1 }}
+
+// The same copy sent again changes nothing, so a follower has nothing new
+NAME follower_echoes_again
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 .follower_token }}
+B [{"device": "xDrip-NSFollower Nightscout Follow", "type": "sgv", "sgv": 135, "date": {{ .reading_ms }},
+    "direction": "Flat", "noise": 1}]
+ASSERT_STATUS 200
+
+NAME echo_again_unchanged
+GET http://{{ .ns_site }}/api/v3/entries/history/{{ .echoed_since }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// On API v3, a copy with the stored device from an identity that did not store the reading overwrites it too
+NAME v3_copy
+POST http://{{ .ns_site }}/api/v3/entries
+H Authorization: Bearer {{ .follower_jwt }}
+B {"device": "xDrip-NSFollower Nightscout Follow", "app": "xDrip+", "type": "sgv", "sgv": 40, "date": {{ .reading_ms }},
+   "direction": "DoubleUp"}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".reading_id" "@identifier"
+ASSERT_EQUALS true "@isDeduplication"
+
+NAME v3_copy_kept
+GET http://{{ .ns_site }}/api/v1/entries/sgv.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 40 "@0.sgv"
+ASSERT_EQUALS "DoubleUp" "@0.direction"
+
+// The looper sending its correction again overwrites the follower's copy, its device too
 NAME looper_corrects
 POST http://{{ .ns_site }}/api/v1/entries
 H api-secret: {{ sha1 token }}
@@ -68,20 +126,7 @@ GET http://{{ .ns_site }}/api/v1/entries/sgv.json?count=10
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".reading_id" "@0._id"
 ASSERT_EQUALS 136 "@0.sgv"
 ASSERT_EQUALS "SingleDown" "@0.direction"
-
-// Another identity sending the looper's device cannot overwrite the reading either
-NAME follower_sends_as_looper
-POST http://{{ .ns_site }}/api/v1/entries
-H api-secret: {{ sha1 .follower_token }}
-B [{"device": "Random", "type": "sgv", "sgv": 40, "date": {{ .reading_ms }}, "direction": "DoubleUp"}]
-ASSERT_STATUS 200
-
-NAME looper_reading_still_kept
-GET http://{{ .ns_site }}/api/v1/entries/sgv.json?count=10
-H api-secret: {{ sha1 token }}
-ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@"
-ASSERT_EQUALS 136 "@0.sgv"
-ASSERT_EQUALS "SingleDown" "@0.direction"
+ASSERT_EQUALS "Random" "@0.device"

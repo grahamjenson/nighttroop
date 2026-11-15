@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
-	"maps"
 	"slices"
 	"time"
 
@@ -148,12 +147,6 @@ type CollectionRefresher[NS, DM any] interface {
 // nsutils.Writer: API v3 replaces it with the model sent, the socket's dbAdd keeps it as it is, and API v1 refreshes it
 type CollectionWriters interface {
 	ChangedByWriter() bool
-}
-
-// CollectionUploaded is a CollectionRefresher whose duplicate, sent again by another uploader than the one that
-// stored it, only has the fields it is missing filled, so a follower echoing a looper's reading does not overwrite it
-type CollectionUploaded[NS, DM any] interface {
-	SameUploader(nsModel NS, stored *DM, cc nightscoutmodels.ConverterContext) bool
 }
 
 // CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented.
@@ -376,9 +369,6 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
-	if uploaded, ok := any(c.db).(CollectionUploaded[NS, DM]); ok && !uploaded.SameUploader(nsModel, duplicate, converterContext(siteContext)) {
-		data = c.missing(duplicate, data, siteContext)
-	}
 	var refreshed *DM
 	var merged NS
 	var httpErr *nsutils.HTTPError
@@ -426,18 +416,6 @@ func (c Collection[NS, DM]) replaceDuplicate(ctx context.Context, siteContext *h
 		return nil, nsModel, httpErr
 	}
 	return replaced, nsModel, nil
-}
-
-// missing are the fields sent that the stored model's document does not have. The units, device and app are left out,
-// as they say what the stored glucose is in and who sent it.
-func (c Collection[NS, DM]) missing(stored *DM, data map[string]any, siteContext *httputils.SiteContext) map[string]any {
-	document := c.document(stored, withoutSiteDB(siteContext)).Fields(false)
-	missing := maps.Clone(data)
-	maps.DeleteFunc(missing, func(name string, _ any) bool {
-		_, has := document[name]
-		return has || slices.Contains([]string{"units", "device", "app"}, name)
-	})
-	return missing
 }
 
 // rewrite writes the stored model's document with the fields sent merged into it, see merged, converted and checked as
