@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -84,10 +84,18 @@ func run() error {
 
 	fmt.Printf("Starting HTTP server on port %d\n", serverConfig.HostPort)
 	httpServer := setupHTTP(controlDB, serverConfig)
+	serveErr := serve(httpServer)
 
-	<-ctx.Done()
-	shutdown(httpServer, backgroundManager, controlDB)
-	return nil
+	// A server that cannot serve, as when its port is in use, stops as a signal stops it, with a last backup, rather
+	// than exiting at once while the background jobs run and before Sentry has its error
+	select {
+	case <-ctx.Done():
+		shutdown(httpServer, backgroundManager, controlDB)
+		return nil
+	case err := <-serveErr:
+		shutdown(httpServer, backgroundManager, controlDB)
+		return fmt.Errorf("cannot serve HTTP: %w", err)
+	}
 }
 
 // restoreFromS3 downloads the control DB and every site's files from their backups in S3, where there are any
@@ -211,14 +219,19 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http
 	closing, closeSessions := context.WithCancel(context.Background())
 	httpServer.RegisterOnShutdown(closeSessions)
 	httpServer.BaseContext = func(net.Listener) context.Context { return engineio.WithClosing(context.Background(), closing) }
+	return httpServer
+}
 
+// serve serves httpServer in the background, and the channel gets the error that stops it other than its Shutdown,
+// such as its port being in use
+func serve(httpServer *http.Server) <-chan error {
+	failed := make(chan error, 1)
 	go func() {
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("HTTP server ListenAndServe: %v", err)
+		if err := httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			failed <- err
 		}
 	}()
-
-	return httpServer
+	return failed
 }
 
 func ValidateServer() error {
