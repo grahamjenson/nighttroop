@@ -14,12 +14,12 @@ CLICK "Add Device"
 ASSERT_STATUS 201
 
 // Its credentials say how to set that client up: the client's menus and fields in bold, and its URL with the token
-// filled in, with a button to copy it, and that it gets mg/dL
+// filled in, with a button to copy it. Nightguard shows the site's units, so it is not told it gets mg/dL
 ASSERT_TEXT_VISIBLE Setting up Nightguard
 ASSERT_VISIBLE #site--identities--created--guide .font-semibold >> text=Configuration
 ASSERT_VISIBLE #site--identities--created--guide code >> text=/\?token=/
 ASSERT_VISIBLE #site--identities--created--guide code + [data-copy-button]
-ASSERT_VISIBLE #site--identities--created--units
+ASSERT_NOT_VISIBLE #site--identities--created--units
 SCREENSHOT device_client_guide
 SAVE_TEXT #site--identities--created--site site_url
 SAVE_TEXT #site--identities--created--ns-token watch_token
@@ -74,10 +74,10 @@ SCREENSHOT device_client_guide_t1dcarer
 CLICK "I Have Saved These"
 CLICK #site--identities--close
 
-// So the Nightscout API gives the device mg/dL, though the site is in mmol/L
+// The Nightscout API gives the Nightguard device the site's mmol/L, and the xDrip4iOS device mg/dL
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .watch_token }}
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE mg/dl
+ASSERT_TEXT_VISIBLE mmol
 
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .iphone_token }}
 ASSERT_STATUS 200

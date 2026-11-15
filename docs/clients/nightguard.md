@@ -14,7 +14,7 @@ How Nightguard talks to Nightscout, and how it works with Nighttroop.
 
 ## Set up
 
-1. Add a device for Nightguard. Nighttroop sets its units to mg/dL (#524).
+1. Add a device for Nightguard. Its units follow the site's, as for Other.
    - For care actions, use the Caregiver role (`device_read_write`). It writes treatments only. Else, Read is
      sufficient.
 2. In Nightguard, set the Nightscout URL to `https://<site>.ns.<host>`.
@@ -23,6 +23,7 @@ How Nightguard talks to Nightscout, and how it works with Nighttroop.
 - **Glucose is mg/dL.** Nightguard reads each `sgv` and `mbg` as mg/dL, and never reads an entry's `units`. The
   Nightscout API always gives mg/dL. The app shows it in the status's `settings.units` (the identity's own), so a
   device on an mmol/L site shows mmol/L.
+- To show other units on one device, change that identity's units in its settings.
 - The "force v1" setting sends everything to v1.
 
 ## Authentication
@@ -198,6 +199,7 @@ It filters by `eventType` and `created_at` again, and reads `carbs` and `insulin
   - `eventType$eq` on v3 treatments. Nighttroop ignored it, so the newest treatment of any type came back.
   - `created_at` filters and sort on treatments. They used the upload time, not the time of the treatment.
   - Device status `pump.extended` (profile, temp basal). It was dropped.
-- **Not supported:** glucose in mmol/L. Nightguard reads mg/dL only, so Nighttroop sets a device added for Nightguard
-  to mg/dL (#524).
+- **Fixed (matrix round 2 finding R2-12):** a device added for Nightguard had its units set to mg/dL. So on an
+  mmol/L site, Nightguard showed mg/dL. Now the device follows the site's units. A device added before keeps mg/dL
+  until its units are changed.
 - **Not used:** Socket.IO.

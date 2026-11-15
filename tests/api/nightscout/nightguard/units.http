@@ -1,0 +1,49 @@
+INCLUDE steps/new_site_admin.steps
+
+// Nightguard reads each sgv as mg/dL and shows it in the units of status.json's settings.units, so a device added for
+// Nightguard follows the site's units (mmol/L for a new site) and is not set to mg/dL
+NAME create_nightguard
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "watch", "role": "device_read", "client": "nightguard"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "nightguard" "@result.client"
+SET watch_token {{ .create_nightguard.result.ns_token }}
+
+// units(from:) reads settings.units: with "mg" in it mg/dL, else mmol/L
+NAME nightguard_status_mmol
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .watch_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@settings.units"
+
+NAME post_entries
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 110, "direction": "Flat", "date": {{ itime 5 }}}, {"type": "sgv", "sgv": 120, "direction": "SingleUp", "date": {{ itime 0 }}}]
+ASSERT_STATUS 200
+
+// The sgv it reads stays mg/dL, so it shows 6.7 mmol/L
+NAME nightguard_entries_mgdl
+GET http://{{ .ns_site }}/api/v1/entries.json?count=2&token={{ .watch_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@0.sgv"
+
+// So does the delta in v2 properties, which it reads as mg/dL
+NAME nightguard_properties_delta_mgdl
+GET http://{{ .ns_site }}/api/v2/properties?token={{ .watch_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 10 "@delta.mgdl"
+ASSERT_EQUALS "+10" "@delta.display"
+
+// /pebble (which Nightguard no longer reads) gives the device's units, mmol/L, unless asked for others
+NAME nightguard_pebble_mmol
+GET http://{{ .ns_site }}/pebble?token={{ .watch_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "6.7" "@bgs.0.sgv"
+
+NAME nightguard_pebble_mgdl
+GET http://{{ .ns_site }}/pebble?token={{ .watch_token }}&units=mg/dl
+ASSERT_STATUS 200
+ASSERT_EQUALS "120" "@bgs.0.sgv"

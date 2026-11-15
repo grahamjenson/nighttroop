@@ -68,7 +68,7 @@ var deviceClients = []deviceClient{
 	{"loop", "Loop", []string{"site.settings.identities.clients.loop.step_1", "site.settings.identities.clients.loop.step_2", "site.settings.identities.clients.loop.step_3"}, true},
 	{"xdrip", "xDrip+", []string{"site.settings.identities.clients.xdrip.step_1", "site.settings.identities.clients.xdrip.step_2"}, true},
 	{"xdrip4ios", "xDrip4iOS", []string{"site.settings.identities.clients.xdrip4ios.step_1", "site.settings.identities.clients.xdrip4ios.step_2", "site.settings.identities.clients.xdrip4ios.step_3"}, true},
-	{"nightguard", "Nightguard", []string{"site.settings.identities.clients.nightguard.step_1"}, true},
+	{"nightguard", "Nightguard", []string{"site.settings.identities.clients.nightguard.step_1"}, false},
 	{"sugarpixel", "SugarPixel", []string{"site.settings.identities.clients.sugarpixel.step_1", "site.settings.identities.clients.sugarpixel.step_2", "site.settings.identities.clients.sugarpixel.step_3"}, true},
 	{"t1dcarer", "T1D Carer", []string{"site.settings.identities.clients.t1dcarer.step_1", "site.settings.identities.clients.t1dcarer.step_2", "site.settings.identities.clients.t1dcarer.step_3"}, true},
 }
