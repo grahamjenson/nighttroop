@@ -44,7 +44,7 @@ func WriteRecordV3(w http.ResponseWriter, record Document, fields []string, crea
 
 func WriteRecordsV3(w http.ResponseWriter, records []Document, fields []string) {
 	writeHeadersForRecords(w, records)
-	writeRecords(w, `{"result":`, V3Parts(records), true, fields, `,"status":200}`)
+	writeRecords(w, `{"result":`, records, true, fields, `,"status":200}`)
 }
 
 func WriteRecordsV1(w http.ResponseWriter, records []Document, fields []string) {
