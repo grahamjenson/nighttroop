@@ -3,7 +3,9 @@ package nscollections
 import (
 	"bytes"
 	"encoding/json"
+	"maps"
 	"net/http/httptest"
+	"slices"
 	"testing"
 	"time"
 
@@ -17,6 +19,26 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
 )
+
+// fieldsDocument is a document made of its fields
+type fieldsDocument struct {
+	id                   string
+	modified, occurredAt int64
+	fields               map[string]any
+}
+
+func (d fieldsDocument) Identifier() string         { return d.id }
+func (d fieldsDocument) Modified() int64            { return d.modified }
+func (d fieldsDocument) OccurredAt() int64          { return d.occurredAt }
+func (d fieldsDocument) Fields(bool) map[string]any { return maps.Clone(d.fields) }
+func (d fieldsDocument) JSON(_ bool, only []string) json.RawMessage {
+	fields := d.Fields(true)
+	if len(only) > 0 {
+		maps.DeleteFunc(fields, func(name string, _ any) bool { return !slices.Contains(only, name) })
+	}
+	raw, _ := json.Marshal(fields)
+	return raw
+}
 
 // mmolSite is a site whose settings write glucose in mmol/L
 func mmolSite() *httputils.SiteContext {

@@ -168,7 +168,7 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   mg/dL; the Nightscout API always gives mg/dL, whatever the identity's or site's units.
 - **Times:** `dateString` has an offset without a colon (`+1300`). It wins over `date` when there is no `utcOffset`.
   Both are the same time.
-- **AAPS:** gets an xDrip+ blood test (`mbg`) as a BG Check from API v3.
+- **AAPS:** does not get an xDrip+ blood test (`mbg`), as on Nightscout. It is an entry, not a BG Check treatment.
 - **Returned treatments:** no `insulinInjections`. For `<none>`, the eventType of its amounts: `Meal Bolus` (insulin
   and carbs), `Carb Correction`, `Correction Bolus`, or `Note` (no amounts). xDrip+ finds its own by `uuid`.
 - **AAPS:** reads only the insulin of a Meal Bolus with insulin and carbs, as it does on Nightscout.
