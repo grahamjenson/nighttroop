@@ -241,6 +241,128 @@ B {"app": "AAPSClient", "date": 946684800001, "envelope": "abc"}
 ASSERT_STATUS 201
 
 ######
+# On the site API, with the same JWT, the caregiver reads everything and changes only treatments
+######
+
+NAME carer_site_glucose
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+SET site_glucose_id {{ dig "carer_site_glucose.result.items.0.id" }}
+
+NAME carer_site_device_statuses
+GET http://{{ site }}/data/device-status
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+SET site_devicestatus_id {{ dig "carer_site_device_statuses.result.items.0.id" }}
+
+NAME carer_site_profiles
+GET http://{{ site }}/presets/profiles
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+SET site_profile_id {{ dig "carer_site_profiles.result.items.0.id" }}
+
+NAME carer_site_cannot_add_glucose
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"reading": 2.2, "reading_type": "sgv"}
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_change_glucose
+POST http://{{ site }}/data/glucose/{{ .site_glucose_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"reading": 2.2}
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_delete_glucose
+DELETE http://{{ site }}/data/glucose/{{ .site_glucose_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_delete_devicestatus
+DELETE http://{{ site }}/data/device-status/{{ .site_devicestatus_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_change_profile
+POST http://{{ site }}/presets/profiles/{{ .site_profile_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"name": "Other"}
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_delete_profile
+DELETE http://{{ site }}/presets/profiles/{{ .site_profile_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_add_food_preset
+POST http://{{ site }}/presets/food
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"name": "Toast", "carbs": 15}
+ASSERT_STATUS 403
+
+// Nothing was changed or deleted
+NAME site_glucose_kept
+GET http://{{ site }}/data/glucose/{{ .site_glucose_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME site_devicestatus_kept
+GET http://{{ site }}/data/device-status/{{ .site_devicestatus_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME site_profile_kept
+GET http://{{ site }}/presets/profiles/{{ .site_profile_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME carer_site_adds_temp_target
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"low_target": 8, "high_target": 9, "duration_minutes": 30, "notes": "Walk"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "carer" "@result.created_by_identity_name"
+SET site_temp_target_id {{ .carer_site_adds_temp_target.result.id }}
+
+NAME carer_site_changes_temp_target
+POST http://{{ site }}/data/temp-targets/{{ .site_temp_target_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"notes": "Long walk"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Long walk" "@result.notes"
+
+NAME carer_site_deletes_temp_target
+DELETE http://{{ site }}/data/temp-targets/{{ .site_temp_target_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME carer_site_adds_insulin
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"dose": 1.5, "notes": "Snack"}
+ASSERT_STATUS 201
+
+######
 # The PWD phone can still change and delete them all
 ######
 

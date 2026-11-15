@@ -104,12 +104,13 @@ H Accept: application/json
 B {"reading": 5.5, "notes": "Finger prick"}
 ASSERT_STATUS 403
 
-NAME device_create_glucose
+// A Caregiver device changes only treatments, see identities_caregiver.http
+NAME device_create_glucose_forbidden
 POST http://{{ site }}/data/glucose
 H Authorization: Bearer {{ .device_jwt }}
 H Accept: application/json
 B {"reading": 5.5, "notes": "Finger prick"}
-ASSERT_STATUS 201
+ASSERT_STATUS 403
 
 NAME carer_create_glucose
 POST http://{{ site }}/data/glucose
