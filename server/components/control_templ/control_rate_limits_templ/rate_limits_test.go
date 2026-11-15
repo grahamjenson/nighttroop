@@ -23,8 +23,8 @@ func TestRateLimitersStandOutNearlyFullOrRefusing(t *testing.T) {
 		status   string
 	}{
 		{name: "in use", stats: config.RateLimiterStats{FullestPercent: 49}, bar: "bg-primary"},
-		{name: "nearly full", stats: config.RateLimiterStats{FullestPercent: 50}, level: 1, row: "bg-amber-50", bar: "bg-amber-500", status: "Nearly full"},
-		{name: "refusing", stats: config.RateLimiterStats{FullestPercent: 100, Limited: 1}, level: 2, row: "bg-red-50", bar: "bg-red-600", status: "Refusing"},
+		{name: "nearly full", stats: config.RateLimiterStats{FullestPercent: 50}, level: 1, row: "bg-amber-100", bar: "bg-amber-500", status: "Nearly full"},
+		{name: "refusing", stats: config.RateLimiterStats{FullestPercent: 100, Limited: 1}, level: 2, row: "bg-red-100", bar: "bg-red-600", status: "Refusing"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

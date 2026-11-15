@@ -240,7 +240,6 @@ control:
     setting_site_push: "A site's pushes"
     set_here: "set here"
     save: "Save"
-    limiter: "Limiter"
     per: "Per"
     kept: "Kept"
     fullest: "Fullest"

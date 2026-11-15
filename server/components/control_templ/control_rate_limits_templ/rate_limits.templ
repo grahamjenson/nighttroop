@@ -70,16 +70,17 @@ var pers = map[string]string{
 	"site_ip":  "control.rate_limits.per_site_ip",
 }
 
-// groups are the rate limit settings in groups of what they protect, each named by the ids of its title and note
+// groups are the rate limit settings in groups of what they protect, each with the ids of its title and note
 var groups = []struct {
-	name     string
-	settings []string
+	name, title, note string
+	settings          []string
 }{
-	{"server", []string{"global", "global_ip"}},
-	{"sign_in", []string{"login", "login_name", "site_unauth"}},
-	{"site_create", []string{"site_create", "site_create_ip"}},
-	{"site_data", []string{"site_get", "site_post", "site_post_flagged"}},
-	{"site_actions", []string{"site_update_connectors", "site_identity_create", "site_download", "site_report_print", "site_push"}},
+	{"server", "control.rate_limits.group_server", "control.rate_limits.group_server_note", []string{"global", "global_ip"}},
+	{"sign_in", "control.rate_limits.group_sign_in", "control.rate_limits.group_sign_in_note", []string{"login", "login_name", "site_unauth"}},
+	{"site_create", "control.rate_limits.group_site_create", "control.rate_limits.group_site_create_note", []string{"site_create", "site_create_ip"}},
+	{"site_data", "control.rate_limits.group_site_data", "control.rate_limits.group_site_data_note", []string{"site_get", "site_post", "site_post_flagged"}},
+	{"site_actions", "control.rate_limits.group_site_actions", "control.rate_limits.group_site_actions_note",
+		[]string{"site_update_connectors", "site_identity_create", "site_download", "site_report_print", "site_push"}},
 }
 
 // level is how close a kind of rate limiter is to refusing: 2 while any would refuse, 1 once the most used has spent
@@ -177,7 +178,7 @@ templ settingRow(s config.RateSetting, admin bool) {
 // refuse. It is read again every 10 seconds.
 templ limiterRow(s config.RateLimiterStats) {
 	{{ colours := levelClasses[level(s)] }}
-	<tr id={ "control--rate-limits--" + s.Name } data-rate-limits-live class={ "border-b text-gray-600", templ.KV("bg-amber-50", level(s) == 1), templ.KV("bg-red-50", level(s) == 2) }>
+	<tr id={ "control--rate-limits--" + s.Name } data-rate-limits-live class={ "border-b text-gray-600", templ.KV("bg-amber-100", level(s) == 1), templ.KV("bg-red-100", level(s) == 2) }>
 		@table.Cell(table.CellProps{Class: "whitespace-normal pl-6"}) {
 			{ "↳ " + i18n.T(ctx, labels[s.Name]) }
 		}
@@ -217,8 +218,8 @@ templ RateSettings(settings []config.RateSetting, stats []config.RateLimiterStat
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
 		for _, group := range groups {
-			@card.Card(card.Props{ID: "control--rate-limits--group--" + group.name, Title: i18n.T(ctx, "control.rate_limits.group_"+group.name),
-				Note: i18n.T(ctx, "control.rate_limits.group_"+group.name+"_note"), Action: groupStatus(group.name, stats, group.settings)}) {
+			@card.Card(card.Props{ID: "control--rate-limits--group--" + group.name, Title: i18n.T(ctx, group.title),
+				Note: i18n.T(ctx, group.note), Action: groupStatus(group.name, stats, group.settings)}) {
 				@table.Table(table.Props{ID: "control--rate-limits--group--" + group.name + "--table", Class: "min-w-[60rem] table-fixed rounded-lg border border-gray-200"}) {
 					@table.Header() {
 						@table.Row() {
