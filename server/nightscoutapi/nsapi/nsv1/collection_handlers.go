@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -21,10 +22,7 @@ func Search(store nsutils.Store) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		// With no count, a profile search is Nightscout's default count of the newest stores, as if it were sent
-		if collection == nsutils.Profile && !query.CountGiven {
-			query.Limit, query.CountGiven = consts.ProfilesDefaultCount, true
-		}
+		defaultCount(collection, &query)
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
 		if identifierOrType != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
@@ -168,6 +166,22 @@ func Create(store nsutils.Store) http.HandlerFunc {
 	}
 }
 
+// defaultCount gives a search with no count Nightscout's default count of the newest, as if it were sent
+// (lib/api/*/index.js). Treatments with a find (1000), foods and activities (all) get the most a search returns.
+func defaultCount(collection nsutils.Collection, query *nsquery.Query) {
+	counts := map[nsutils.Collection]int64{
+		nsutils.Entries:      consts.EntriesDefaultCount,
+		nsutils.Devicestatus: consts.DeviceStatusDefaultCount,
+		nsutils.Profile:      consts.ProfilesDefaultCount,
+	}
+	if !query.HasFilters {
+		counts[nsutils.Treatments] = consts.TreatmentsDefaultCount
+	}
+	if count, ok := counts[collection]; ok && !query.CountGiven {
+		query.Limit, query.CountGiven = count, true
+	}
+}
+
 // leftOut counts the documents a batch left out by why, in the order each why was first seen
 type leftOut struct {
 	reasons         []string
@@ -292,10 +306,11 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-// Replace If not found will return 404
+// Replace If not found will return 404. It changes a record, so needs update, as v3's does: a caregiver can add a
+// device status but not change one
 func Replace(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionUpdate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return

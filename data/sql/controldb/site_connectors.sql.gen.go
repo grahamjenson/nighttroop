@@ -316,6 +316,41 @@ func (q *Queries) GetConnectorsToRun(ctx context.Context) ([]*SiteConnector, err
 	return items, nil
 }
 
+const getSiteConnectorFailures = `-- name: GetSiteConnectorFailures :many
+SELECT site_id, CAST(MAX(consecutive_failed_syncs) AS INTEGER) AS consecutive_failed_syncs
+FROM site_connectors WHERE enabled = 1 GROUP BY site_id
+`
+
+type GetSiteConnectorFailuresRow struct {
+	SiteID                 string
+	ConsecutiveFailedSyncs int64
+}
+
+// Each site's longest run of failed syncs now, of its connectors that are on, for its abuse score. One turned off keeps
+// its count, so it is left out.
+func (q *Queries) GetSiteConnectorFailures(ctx context.Context) ([]*GetSiteConnectorFailuresRow, error) {
+	rows, err := q.query(ctx, q.getSiteConnectorFailuresStmt, getSiteConnectorFailures)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetSiteConnectorFailuresRow
+	for rows.Next() {
+		var i GetSiteConnectorFailuresRow
+		if err := rows.Scan(&i.SiteID, &i.ConsecutiveFailedSyncs); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchConnectors = `-- name: SearchConnectors :many
 SELECT site_id, type, url_or_username_enc, password_enc, url_host_mac, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_connectors
 ORDER BY last_failed_sync IS NULL, last_failed_sync DESC, last_attempted_sync DESC, site_id, type

@@ -11,6 +11,8 @@
 1. e2e restore/archiving/hydration testing
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
+    1. P4: A Nightscout search spends about a third of writing each document in `Canonicalize`, which reads the
+       document again to sort its fields and format its values: write them in that form the first time
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
@@ -21,8 +23,28 @@
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
-    1. P3: Show a site's abuse flag (`FlaggedForAbuse`) on the control sites list and site details, and record an event
-       when a site is first flagged, so a control admin can see which sites the server throttles
+    1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
+       are right on real sites first, then act on them, each item its own PR:
+        1. P2: Score a site's rate-limit refusals too: a count for each site that halves every hour, of refusals by the
+           normal site and identity limits only (not the abuse throttle, nor a Blocked refusal, so they cannot feed
+           themselves). Signal c ÷ (c + 50), at most 0.79 alone, and at most 0.79 with the connectors together
+        1. P2: Over use: each write also spends 1 from `site_post_flagged` (each record of a batch); truncate the site
+           harder (step 1, then step 2 if it is still over use). Replace `FlaggedForAbuse`'s 3 times and
+           `hardTruncateSizeFactor`'s 1.5 times with the levels
+        1. P2: Abusive: each write costs 4 from `site_post_flagged`; truncate step 2 at once
+        1. P2: Blocked: refuse every write with 403 and say why, except glucose readings (the site's glucose create, every
+           Nightscout `entries` write on v1, v3 and live updates), sign in and out, alarm snooze, Alexa and Google Home,
+           and Truncate; its connectors sync glucose only. Reads are never refused
+        1. P2: Delete a site's old records (truncate step 2) only while it is also over its size limit, as deleting does
+           not help a site whose level comes from refusals or connectors
+        1. P3: Record an event when a site's level changes, and sort the control sites list by abuse score
+    1. P1: A Caregiver device (`device_read_write`) writes only treatments on the Nightscout API, but its JWT from
+       `/api/v2/authorization/request` still adds, changes and deletes any data on the site API (`/data/*`,
+       `siteapiutils.readWriteRoles`): limit it there the same way
+    1. P3: A Caregiver device can add a device status on REST but not on the socket, which gives `write` for all
+       collections at once: check each collection's create, update and delete on the socket as REST does
+    1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
+       begun at once push out others' before they finish
 
 ## Before Prod Deployment
 

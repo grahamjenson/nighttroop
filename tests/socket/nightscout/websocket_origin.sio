@@ -1,0 +1,48 @@
+# A browser's websocket is refused from another origin. An Origin and a Host that differ only by writing the
+# scheme's default port are the same origin. The handshakes send no Sec-WebSocket-Key: a refused origin is
+# answered 403, and an allowed one gets past the origin check to 400.
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME same_origin
+GET http://{{ site }}/socket.io/?EIO=4&transport=websocket
+H Connection: Upgrade
+H Upgrade: websocket
+H Sec-WebSocket-Version: 13
+H Origin: http://{{ site }}
+ASSERT_STATUS 400
+
+NAME origin_with_default_port
+GET http://{{ site }}/socket.io/?EIO=4&transport=websocket
+H Connection: Upgrade
+H Upgrade: websocket
+H Sec-WebSocket-Version: 13
+H Origin: http://{{ site }}:80
+ASSERT_STATUS 400
+
+NAME host_with_default_port
+GET http://{{ site }}:80/socket.io/?EIO=4&transport=websocket
+H Connection: Upgrade
+H Upgrade: websocket
+H Sec-WebSocket-Version: 13
+H Origin: http://{{ site }}
+ASSERT_STATUS 400
+
+NAME origin_with_other_port
+GET http://{{ site }}/socket.io/?EIO=4&transport=websocket
+H Connection: Upgrade
+H Upgrade: websocket
+H Sec-WebSocket-Version: 13
+H Origin: http://{{ site }}:8080
+ASSERT_STATUS 403
+
+NAME origin_from_other_host
+GET http://{{ site }}/socket.io/?EIO=4&transport=websocket
+H Connection: Upgrade
+H Upgrade: websocket
+H Sec-WebSocket-Version: 13
+H Origin: http://other.example:80
+ASSERT_STATUS 403

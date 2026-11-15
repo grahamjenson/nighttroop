@@ -115,6 +115,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Site details also show the DB size limit: 20 MB for a new site.
 - Sort by time since last write (first to archive) or DB size.
 - Not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS`: inactive.
+- The sites list has an Abuse column: each site's abuse level and score (for example `Good · 0.00`). See
+  [Abuse levels](#abuse-levels).
 - On a phone: no wider than the window. Sort buttons and both cards wrap. The table scrolls sideways.
 
 #### Site creation
@@ -131,7 +133,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - `/sites/{id}` opens on a click, laid out like a site's summary. Back returns to the sites. An API client gets the
   site.
-- Top: ID, state badge, Inactive and Over limit badges; created, batch, and disabled, archived or deleted times; Open
+- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, batch, and disabled, archived or deleted times; Open
   Site link (new tab) while live.
 - DB size:
   - measured on disk when the page opens, kept on the site's record;
@@ -499,6 +501,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   scroll sideways; Data and Settings tabs wrap above the page. No page gets wider. The user menu is unchanged.
 - Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns. Quick clicks show the
   last one clicked.
+- A box that has focus keeps its value when the page changes, for example a date picked or a search sent with Enter.
 
 ### Summary
 
@@ -649,6 +652,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - A background job rebuilds from site data the last year's days with data, yesterday, and their weeks, fortnights
     and months.
   - Recorded as an event. A repeat before it runs gives one job.
+  - Shares the site's few downloads a minute with Truncate and Download Data. Over it, the site refuses it (429).
 
 #### Summary builds
 
@@ -1137,14 +1141,20 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - v3 status: what the token can do to each collection (e.g. `crud` for an uploader, `r` for read only). AAPS uploads
   only with a token that can write.
 - v3 version: needs no token.
+- A v1 `PUT` changes a record, so it needs the update permission, as a v3 `PUT` does.
+- Versions: the same Nightscout `version` (`15.0.9`) in v1 status, v3 status and v3 version. v1 status also has
+  `versionNum` (`150009`), which AAPS 3.4 needs to be at least 150000.
+- API v3 version: the same `apiVersion` (`3.0.4`) in v3 status, v3 version and v1 versions.
 - v2 roles and subjects (AAPS pairs a client by QR code with them):
-  - Roles: a fixed list, `admin`, `readable` and `aaps-client`. A role sent is given back, and not kept.
+  - Roles: a fixed list, `admin`, `readable`, `aaps-client` and `careportal` (a Caregiver device). A role sent is
+    given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
   - Add a subject: a device for AAPSClient, with mg/dL units written `mg/dl`. It reads everything and writes only
     `settings` (client control). It cannot add treatments, entries, device statuses, profiles or food: 403.
   - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
   - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
   - Delete a subject: its identity is deleted, so its token gets 401. A device cannot delete itself.
+  - Delete a subject that AAPS did not add (an admin, a user or another device): 404, and the identity stays.
 - If a request has no token or a token that is not valid, the API returns 401 in JSON, `{"status": 401, "message"}`.
   Other errors and Nightscout's 401 use the same JSON.
 
@@ -1183,6 +1193,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - A filter on a field other than the date: a page has the matches of the page the dates alone give, still in order,
   and can have fewer than `limit`.
 - `skip`: maximum 32000 (Nightguard reads 32 pages of 1000). Negative is 0.
+- A v1 search with no `count` gives the same number as Nightscout, newest first:
+  - Entries and device statuses: 10, with or without a `find`.
+  - Treatments: 100 (xDrip+ follower). With a `find`: 1000 (xDrip4iOS).
+  - Food and activities: all, at most 1000.
 
 #### Deletes
 
@@ -1204,6 +1218,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - A delete's `count` (1 to 10) deletes at most that many, newest first. `find[eventType]` with a `count` needs no
   date. Another count: 400.
 - A delete's `$gte` and `$lte` more than 2 days apart: 400.
+- A delete's `$gte` with no `$lte` (iAPS `deleteAnnouncements`) ends 1 day from now. A `$gte` more than 1 day ago
+  (e.g. `find[date][$gte]=0`): 400, nothing deleted.
+- A delete's `$lte` with no `$gte`: 400, nothing deleted.
 - A delete by `find[eventType]` alone (iAPS `deleteAllNSoverrrides`): 400.
 
 ### Nightscout API: v3 changes and history
@@ -1505,9 +1522,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Sent with no `duration`: the `duration` is the nearest minute.
 - A treatment with a duration always has both `duration` and `durationInMilliseconds`, the missing one calculated.
 - A `duration` with a fraction (e.g. a Loop bolus `1.6666666666666667`, or a suspend) is kept to the ms.
-- API v1 `duration`: not floored. When `durationInMilliseconds` is not whole minutes, it is that value in minutes
-  (e.g. an AAPS temp target ended at 359587 ms reads 5.9931). A quick bolus is not 0 minutes. LoopFollow draws a temp
-  basal with its full length.
+- API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds` (e.g. a Loop bolus of 1.6667 minutes
+  reads 2, an AAPS temp target ended at 120750 ms reads 2). A quick bolus is not 0 minutes. Trio and xDrip4iOS read
+  `duration` as a whole number and drop the page with a fraction.
 - API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
   treatment, or a page, with a fractional `duration`).
 
@@ -1638,6 +1655,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - A polling client upgrades to a websocket at once: the probe ends its waiting poll. The JavaScript client (AAPS,
   Nightscout pages) does not reconnect each minute.
+- A websocket from a browser opens only from the site's own host and port: from another origin, 403. The scheme's
+  default port (`:443` for https, `:80` for http) in the `Origin` or the `Host` but not both is the same origin. A
+  client that sends no `Origin` opens it.
 - No namespace joined in 45 seconds: closed.
 - No access in 30 seconds: the socket and its connection close. Access comes from an `authorize` that can read or
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
@@ -1707,6 +1727,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - With `S3_URL`:
   - The server does not start if no test upload works for about 30 seconds.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
+  - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
+    tries again.
 
 #### Backups
 
@@ -1814,6 +1836,33 @@ harder:
   - Behind a trusted proxy (`TRUSTED_PROXIES`): the hop before it in `X-Forwarded-For`, or on Fly.io `Fly-Client-IP`.
   - Any other peer that sets these headers keeps its own IP's limits.
 
+#### Abuse levels
+
+- Every 5 minutes, the resource check gives each open site an abuse score from 0 to 1, and keeps it on the site.
+- The score has these signals, each from 0 to 1:
+  - Size: 0 at or under its DB size limit, 0.4 at 2 times it, 0.8 at 3 times it, 1 at 3.5 times it or more.
+    - If the size or the limit is not known, this signal is 0.
+  - Connectors: from the most failed syncs in a row (c) of the site's connectors that are on, c ÷ (c + 5), at most 0.39.
+    - One failed sync: 0.17. Two in a row: 0.29. Four or more: 0.39.
+    - One sync that works sets the connector's count back to 0.
+    - A connector that is off is left out.
+- Each signal raises the score, and they add up: score = 1 − (1 − size) × (1 − connectors). Only the size can make
+  the score 0.4 or more alone.
+- The score gives the level:
+
+| Level    | Score        |
+|----------|--------------|
+| Good     | under 0.2    |
+| Fair     | 0.2 to < 0.4 |
+| Over use | 0.4 to < 0.6 |
+| Abusive  | 0.6 to < 0.8 |
+| Blocked  | 0.8 or more  |
+
+- Control admins see each site's level and score on the sites list and the site page. Grey: Good and Fair. Amber:
+  Over use. Red: Abusive and Blocked.
+- The server does not treat a site differently by its level yet. The [abuse flag](#abuse-flag) and the
+  [truncation of a site far over its size limit](#truncation-of-a-site-far-over-its-size-limit) still use the DB size.
+
 #### Server load
 
 - Past `REQUESTS_IN_FLIGHT_PER_CPU` requests at once and a `REQUESTS_BACKLOG_PER_CPU` queue (up to 5 seconds):
@@ -1859,9 +1908,16 @@ harder:
 | Read only user | Nightscout token | Yes | No | No |
 | Clinician | Password | No | No | No |
 | PWD phone (the loop's phone) | Nightscout token | Yes | Yes | No |
-| Read and write device | Nightscout token | Yes | Yes | No |
+| Caregiver device (`device_read_write`) | Nightscout token | Yes | Treatments only, on the Nightscout API | No |
 | Read only device | Nightscout token | Yes | No | No |
 
+- A Caregiver device is for a carer's or follower's app, such as LoopFollow, Nightguard or T1D Carer. On the
+  Nightscout API:
+  - It reads everything.
+  - It adds, changes and deletes treatments, adds a device status, and reads and writes settings.
+  - It cannot add readings or profiles, or change or delete readings, profiles or device statuses: 403.
+  - On the socket, `authorize` gives it `write` false and `write_treatment` true. It writes only treatments there.
+- The Users & Devices page names it "Caregiver". The Device card says what it can and cannot change.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
@@ -1944,8 +2000,10 @@ harder:
   them with another role.
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
-- Any client but Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout API also writes
-  mg/dL as `mg/dl`.
+- Any client but Nightguard and Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout
+  API also writes mg/dL as `mg/dl`.
+- Nightguard and Other follow the site's units. Nightguard reads `sgv` as mg/dL and shows the status's
+  `settings.units`.
 - A device keeps its client (e.g. `loop`, `other`), returned as `client`. Users and a site's first devices have none.
 
 #### Identity list
@@ -1990,7 +2048,7 @@ harder:
   - Shrinks the DB, and keeps all else, as the card says.
   - Shows the storage again, a toast of the new DB size, and a "Site truncated" event with the admin.
 - "Download Data" downloads `<site>-<date>.zip`, with a DB snapshot `<site>-<date>.sqlite`.
-- Truncate and Download Data share the site's few downloads a minute.
+- Truncate, Download Data and Regenerate summaries share the site's few downloads a minute.
 - The JSON API (in `openapi.json`) gives the same storage, in `result`:
   - `GET /usage`: `size_kb`, `limit_kb`, `before_size_kb` (null) and `tables`.
   - Each table has `name`, `bytes` and `records`, the largest first, as last measured.

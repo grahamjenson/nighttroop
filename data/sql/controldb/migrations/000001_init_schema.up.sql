@@ -30,6 +30,8 @@ CREATE TABLE sites (
 
     max_db_size_kb_limit INTEGER DEFAULT 20480, -- default 20 MB, can be changed in control plane
     estimated_db_size_kb INTEGER, -- the site DB's size on disk, measured by the resource check and with its last write
+    -- how much the site may abuse the server, from 0 (not at all) to 1, as the resource check last scored it
+    abuse_score REAL NOT NULL DEFAULT 0 CHECK(abuse_score BETWEEN 0 AND 1),
     -- each table of the site's DB by name, with the bytes it and its indexes take and its records, as last measured from
     -- SQLite's dbstat, so a page shows them without reading the whole DB
     table_sizes_json TEXT CHECK(length(table_sizes_json) <= 16384 AND json_valid(table_sizes_json)),

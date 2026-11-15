@@ -313,7 +313,8 @@ func TestMergeTimeSentAsAnyAlias(t *testing.T) {
 }
 
 // A duration patched in minutes or in milliseconds takes the place of the stored one, to the millisecond, and is given
-// back in both: fractional minutes on API v1, whole ones on API v3, and the nearest minutes of milliseconds sent alone
+// back in both: the nearest whole minutes on API v1, the whole minutes kept on API v3, and the nearest minutes of
+// milliseconds sent alone
 func TestPatchDuration(t *testing.T) {
 	siteContext, _ := mergeSite(t, consts.UnitsMGDL)
 	treatments := NewTreatmentCollection()
@@ -326,7 +327,7 @@ func TestPatchDuration(t *testing.T) {
 	}{
 		{`{"duration":30}`, 30, 30, 1_800_000},
 		{`{"durationInMilliseconds":930000}`, 16, 16, 930_000},
-		{`{"duration":20.5}`, 20.5, 20, 1_230_000},
+		{`{"duration":20.5}`, 21, 20, 1_230_000},
 	}
 	for _, test := range tests {
 		patched, httpErr := treatments.Patch(t.Context(), siteContext, created.Identifier(), decode(t, test.sent))

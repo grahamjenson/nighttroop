@@ -41,8 +41,8 @@ func TestSentDuration(t *testing.T) {
 }
 
 // A duration is written in both minutes and milliseconds. Its milliseconds are those kept while they are within a
-// minute of its minutes, which the site may change. Its minutes have their fraction on API v1, as Loop reads them, and
-// are whole on API v3, as AAPS reads them.
+// minute of its minutes, which the site may change. Its minutes are the nearest whole minutes on API v1, so under a
+// minute is not 0, and its minutes on API v3, as AAPS reads them.
 func TestDurationFields(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -50,12 +50,13 @@ func TestDurationFields(t *testing.T) {
 		v1, v3 string
 	}{
 		{"none", nil, `{}`, `{}`},
+		{"AAPS's whole minutes and exact milliseconds", &types.Duration{Minutes: 2, Ms: new(int64(120750))}, `{"duration":2,"durationInMilliseconds":120750}`, `{"duration":2,"durationInMilliseconds":120750}`},
 		{"whole minutes", types.DurationOfMinutes(new(int64(30))), `{"duration":30,"durationInMilliseconds":1800000}`, `{"duration":30,"durationInMilliseconds":1800000}`},
-		{"a fraction of a minute", &types.Duration{Minutes: 5, Ms: new(int64(359587))}, `{"duration":5.993116666666666,"durationInMilliseconds":359587}`, `{"duration":5,"durationInMilliseconds":359587}`},
-		{"Loop's bolus", &types.Duration{Minutes: 1, Ms: new(int64(100000))}, `{"duration":1.6666666666666667,"durationInMilliseconds":100000}`, `{"duration":1,"durationInMilliseconds":100000}`},
+		{"a fraction of a minute", &types.Duration{Minutes: 5, Ms: new(int64(359587))}, `{"duration":6,"durationInMilliseconds":359587}`, `{"duration":5,"durationInMilliseconds":359587}`},
+		{"Loop's bolus", &types.Duration{Minutes: 1, Ms: new(int64(100000))}, `{"duration":2,"durationInMilliseconds":100000}`, `{"duration":1,"durationInMilliseconds":100000}`},
 		{"rounded up to its minutes", types.DurationOfMs(new(int64(1799000))), `{"duration":30,"durationInMilliseconds":1799000}`, `{"duration":30,"durationInMilliseconds":1799000}`},
 		{"minutes changed on the site", (&types.Duration{Minutes: 90}).WithMs(new(int64(359587))), `{"duration":90,"durationInMilliseconds":5400000}`, `{"duration":90,"durationInMilliseconds":5400000}`},
-		{"under a minute", &types.Duration{Minutes: 0, Ms: new(int64(43491))}, `{"duration":0.72485,"durationInMilliseconds":43491}`, `{"duration":0,"durationInMilliseconds":43491}`},
+		{"under a minute", &types.Duration{Minutes: 0, Ms: new(int64(43491))}, `{"duration":1,"durationInMilliseconds":43491}`, `{"duration":0,"durationInMilliseconds":43491}`},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

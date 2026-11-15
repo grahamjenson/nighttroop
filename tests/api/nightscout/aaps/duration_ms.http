@@ -61,12 +61,12 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 5 "@result.0.duration"
 ASSERT_EQUALS 359587 "@result.0.durationInMilliseconds"
 
-// API v1 gives the minutes with their fraction, as Loop reads them
+// API v1 gives the nearest whole minutes, as Trio and xDrip4iOS read a whole number
 NAME ended_temp_target_v1
 GET http://{{ site }}/api/v1/treatments/{{ .add_temp_target.identifier }}
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 5.993116666666666 "@0.duration"
+ASSERT_EQUALS 6 "@0.duration"
 
 // A pump reconnected 43 s into a suspend ends its temp basal with a duration of 0 and 43491 ms
 NAME add_suspend

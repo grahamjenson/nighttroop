@@ -112,17 +112,18 @@ type DurationFields struct {
 	DurationInMilliseconds *int64 `json:"durationInMilliseconds,omitempty"`
 }
 
-// Fields are it as it is written: in both minutes and milliseconds, as a client may read either. Its minutes have the
-// fraction of its milliseconds, as Loop's NightscoutKit and LoopFollow read them, unless it is written in whole
-// minutes, as AAPS reads them as a whole number and drops a treatment with a fraction.
+// Fields are it as it is written: in both minutes and milliseconds, as a client may read either. Its minutes are
+// whole, as Trio, xDrip4iOS and AAPS read them as a whole number and drop a page with a fraction: on API v1 its
+// milliseconds to the nearest minute, so a Loop bolus or temp basal of under a minute is not 0, and in its minutes
+// when written in whole minutes, as API v3 does. The milliseconds have the rest.
 func (d *Duration) Fields() DurationFields {
 	if d == nil {
 		return DurationFields{}
 	}
 	ms := d.Milliseconds()
 	fields := DurationFields{DurationMinutes: d.Minutes, DurationInMilliseconds: &ms}
-	if !d.wholeMinutes && ms%60_000 != 0 && ms/60_000 == d.Minutes {
-		fields.DurationMinutes = float64(ms) / 60_000
+	if !d.wholeMinutes && ms/60_000 == d.Minutes {
+		fields.DurationMinutes = (ms + 30_000) / 60_000
 	}
 	return fields
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
@@ -85,6 +86,8 @@ const (
 	maxDeleteCount = 10
 	// maxDeleteRangeMs is the longest a delete's date range from $gte to $lte is, 2 days
 	maxDeleteRangeMs = 2 * 24 * 60 * 60 * 1000
+	// openDeleteAhead is how far past now a delete with a $gte and no $lte goes, so its $gte is at most a day ago
+	openDeleteAhead = 24 * time.Hour
 )
 
 // ParseDeleteQueries is a delete's query for each of its find[$or] alternatives, or the one query without them, each
@@ -107,7 +110,9 @@ func ParseDeleteQueries(values url.Values, collection Collection) ([]nsquery.Que
 
 // ParseDeleteQuery is the query of a delete of the collection, which deletes what a search with it finds. Any other
 // key is refused, so a filter not understood is never ignored to delete more than was asked. So is a query without a
-// date or an id, unless it has a type and a count, a count of more than 10, and a date range of more than 2 days.
+// date or an id, unless it has a type and a count, a count of more than 10, and a date range of more than 2 days. A
+// $gte with no $lte, as iAPS deletes announcements from now on, ends a day from now, so its $gte is at most a day ago.
+// A $lte with no $gte, which no client sends, is refused, as it has no start.
 func ParseDeleteQuery(values url.Values, collection Collection) (nsquery.Query, *HTTPError) {
 	for key := range values {
 		if treatmentsOnly, ok := deleteFilters[key]; !ok || treatmentsOnly && collection != Treatments {
@@ -115,11 +120,19 @@ func ParseDeleteQuery(values url.Values, collection Collection) (nsquery.Query, 
 		}
 	}
 	query, err := ParseQuery(values)
+	openGTE := query.DateGTE != nil && query.DateLTE == nil
+	if openGTE {
+		query.DateLTE = new(time.Now().Add(openDeleteAhead).UnixMilli())
+	}
 	dated := query.DateGTE != nil || query.DateLTE != nil || query.DateIn != nil || query.DateEQ != nil || query.IDEq != nil || query.ClientCreatedAtEQ != nil
 	switch {
 	case err != nil:
 	case query.CountGiven && (query.CountAsked < 1 || query.CountAsked > maxDeleteCount):
 		err = ErrBadQueryError("a delete's count is 1 to 10")
+	case query.DateLTE != nil && query.DateGTE == nil:
+		err = ErrBadQueryError("a delete's find[...][$lte] needs a find[...][$gte] at most 2 days before it")
+	case openGTE && *query.DateLTE-*query.DateGTE > maxDeleteRangeMs:
+		err = ErrBadQueryError("a delete's find[...][$gte] without a find[...][$lte] is at most 1 day ago")
 	case query.DateGTE != nil && query.DateLTE != nil && *query.DateLTE-*query.DateGTE > maxDeleteRangeMs:
 		err = ErrBadQueryError("a delete's find[...][$gte] and find[...][$lte] are at most 2 days apart")
 	case !dated && (!query.CountGiven || query.TypeEq == nil):

@@ -32,7 +32,8 @@ type Config struct {
 	MaxBuffered      int           // how many packets can wait for a session's next poll before it is closed, 1,000 by default
 	MaxBufferedBytes int           // how many bytes of them can wait before it is closed, 2MB by default
 	MaxPacketRate    float64       // how many packets a second a client may send, averaged, 20 by default; it may burst 5 seconds' worth
-	// CheckOrigin decides which browser origins may open a websocket; nil allows only the server's own origin, and clients that send none
+	// CheckOrigin decides which browser origins may open a websocket; nil allows only the server's own origin (see
+	// sameOrigin), and clients that send none
 	CheckOrigin func(*http.Request) bool
 	// ClientKey is who a handshake is from, such as its IP. A client may have at most MaxUnauthorized sessions open that
 	// are not yet authorized (see Session.Authorize), MaxSessions by default, so it cannot take every session.

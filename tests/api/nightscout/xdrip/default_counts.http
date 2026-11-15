@@ -1,0 +1,90 @@
+# With no count, an API v1 search gives as many as Nightscout gives (lib/api/*/index.js): 10 readings, 10 device
+# statuses, and 100 treatments, or 1000 with a find. The xDrip+ follower asks for treatments with no query, and
+# xDrip4iOS for device statuses with no count and treatments with only a find, see docs/clients/xdrip.md.
+
+INCLUDE steps/new_ns_site.steps
+
+######
+# TEST SETUP: more of each than the default with no find
+######
+
+NAME setup_entries
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{{ range $i := 12 }}{{ if $i }},{{ end }}{"type":"sgv","sgv":100,"date":{{ itime $i }}}{{ end }}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 12 "@"
+
+NAME setup_treatments
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{{ range $i := 110 }}{{ if $i }},{{ end }}{"eventType":"Correction Bolus","insulin":0.1,"enteredBy":"xdrip","created_at":"{{ utctime $i }}Z"}{{ end }}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 110 "@"
+
+NAME setup_devicestatus
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B [{{ range $i := 12 }}{{ if $i }},{{ end }}{"device":"Test Phone","created_at":"{{ utctime $i }}Z","uploader":{"battery":64}}{{ end }}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 12 "@"
+
+######
+# READINGS: 10, the newest first, with or without a find
+######
+
+NAME entries_no_count
+GET http://{{ site }}/api/v1/entries.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 10 "@"
+
+NAME entries_find_no_count
+GET http://{{ site }}/api/v1/entries/sgv.json?find[date][$gte]={{ itime 120 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 10 "@"
+
+NAME entries_count
+GET http://{{ site }}/api/v1/entries.json?count=12
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 12 "@"
+
+######
+# TREATMENTS: 100 with no find, as the xDrip+ follower asks, and all of them with a find, as xDrip4iOS asks
+######
+
+NAME treatments_no_count
+GET http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 100 "@"
+
+NAME treatments_find_no_count
+GET http://{{ site }}/api/v1/treatments?find[created_at][$gte]={{ utctime 1440 }}Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 110 "@"
+
+NAME treatments_count
+GET http://{{ site }}/api/v1/treatments.json?count=105
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 105 "@"
+
+######
+# DEVICE STATUS: 10 with or without a find, as xDrip4iOS asks
+######
+
+NAME devicestatus_no_count
+GET http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 10 "@"
+
+NAME devicestatus_find_no_count
+GET http://{{ site }}/api/v1/devicestatus.json?find[created_at][$gte]={{ utctime 1440 }}Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 10 "@"

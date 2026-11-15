@@ -175,3 +175,53 @@ func TestRecordSiteSize(t *testing.T) {
 
 	require.NoError(t, controlDB.RecordSiteSize(ctx, "notopen"))
 }
+
+// The resource check scores each site for abuse from its DB's size now and its connectors' highest failure rate, which
+// moves a fifth of the way to 1 on each failed sync and to 0 on each sync that works
+func TestRecordAbuseScores(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, q := t.Context(), controlDB.Queries
+	newSite := func(sizeKB int64) *db.SiteDB {
+		site, err := controlDB.CreateSite(ctx)
+		require.NoError(t, err)
+		site.SiteDB.SetSizeKB(func() *int64 { return &sizeKB })
+		return site.SiteDB
+	}
+	score := func(site *db.SiteDB) float64 {
+		model, err := q.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
+		require.NoError(t, err)
+		return model.AbuseScore
+	}
+	large, failing, notScored := newSite(45056), newSite(100), newSite(1<<20)
+	for _, typ := range []consts.ConnectorType{consts.ConnectorTypeNightscout, consts.ConnectorTypeDexcom} {
+		require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: failing.Subdomain, Type: typ, Enabled: true}))
+	}
+	ns := consts.ConnectorTypeNightscout
+	works := controldb.UpdateConnectorReportsSuccessParams{SiteID: failing.Subdomain, Type: ns}
+	fail := func(typ consts.ConnectorType) {
+		require.NoError(t, q.UpdateConnectorReportsFailure(ctx, controldb.UpdateConnectorReportsFailureParams{
+			SiteID: failing.Subdomain, Type: typ, ErrorMessages: errors.ErrorList{"failed"}}))
+	}
+	// Its Nightscout connector worked, then failed twice in a row
+	require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, works))
+	fail(ns)
+	fail(ns)
+	// Its Dexcom connector never worked, so its first failed sync turned it off, and its failures are left out
+	for range 10 {
+		fail(consts.ConnectorTypeDexcom)
+	}
+	dexcom, err := q.GetConnector(ctx, controldb.GetConnectorParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeDexcom})
+	require.NoError(t, err)
+	require.Zero(t, dexcom.Enabled)
+
+	require.NoError(t, controlDB.RecordAbuseScores(ctx, []*db.SiteDB{large, failing}))
+	require.InDelta(t, 0.48, score(large), 0.001) // 2.2 times its 20 MB limit
+	require.Equal(t, controldb.AbuseOverUse, controldb.AbuseLevelOf(score(large)))
+	require.InDelta(t, 0.29, score(failing), 0.001) // 2 failed syncs in a row: 2 ÷ (2 + 5), to 2 places
+	require.Zero(t, score(notScored), "a site not given is not scored")
+
+	// One sync that works ends its run of failures, which lowers its score at the next check
+	require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, works))
+	require.NoError(t, controlDB.RecordAbuseScores(ctx, []*db.SiteDB{failing}))
+	require.Zero(t, score(failing))
+}

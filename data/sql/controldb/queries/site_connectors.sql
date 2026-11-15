@@ -204,3 +204,9 @@ SET
     END
 
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
+
+-- name: GetSiteConnectorFailures :many
+-- Each site's longest run of failed syncs now, of its connectors that are on, for its abuse score. One turned off keeps
+-- its count, so it is left out.
+SELECT site_id, CAST(MAX(consecutive_failed_syncs) AS INTEGER) AS consecutive_failed_syncs
+FROM site_connectors WHERE enabled = 1 GROUP BY site_id;

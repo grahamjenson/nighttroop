@@ -1,6 +1,10 @@
 package controlmodels
 
-import "time"
+import (
+	"time"
+
+	"nighttroop.t1d.nz/data/sql/controldb"
+)
 
 // Site is what the control API shows of a site: its state and activity, not its settings or data
 type Site struct {
@@ -9,6 +13,8 @@ type Site struct {
 	State             string `json:"state"`
 	MaxDbSizeKbLimit  *int64 `json:"max_db_size_kb_limit"`
 	EstimatedDbSizeKb *int64 `json:"estimated_db_size_kb"`
+	// AbuseScore is how much the site may abuse the server, from 0 to 1, as the resource check last scored it
+	AbuseScore float64 `json:"abuse_score"`
 	CreatedAt         int64  `json:"created_at"`
 	LastSeenAt        *int64 `json:"last_seen_at"`
 	LastWriteAt       *int64 `json:"last_write_at"`
@@ -36,3 +42,6 @@ func (s *Site) Oversized() bool {
 	kept := s.State == "live" || s.State == "disabled"
 	return kept && s.EstimatedDbSizeKb != nil && s.MaxDbSizeKbLimit != nil && *s.EstimatedDbSizeKb > *s.MaxDbSizeKbLimit
 }
+
+// AbuseLevel is the level of the site's abuse score
+func (s *Site) AbuseLevel() controldb.AbuseLevel { return controldb.AbuseLevelOf(s.AbuseScore) }

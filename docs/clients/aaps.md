@@ -166,6 +166,8 @@ Socket.IO only, no REST: socket.io-client-java 2.1.2 on the default namespace, o
 3. AAPS listens (lines 286–290, 466–580) for `announcement`, `alarm`, `urgent_alarm`, `clear_alarm`, and `dataUpdate`:
    `status`, `profiles` (the last is the newest), `treatments` (`action` `update` or `remove`), `devicestatus`,
    `food`, `mbgs`, `cals`, `sgvs`, `delta`.
+   - If the status `versionNum` is less than 150000 (15.0.0), AAPS shows "Unsupported Nightscout version"
+     (`nsclient/data/NSSettingsStatusImpl.kt:152`).
 4. AAPS writes with `dbAdd` `{collection, data}`, reading `_id` from the ack array's first item
    (`nsclient/acks/NSAddAck.kt`), and `dbUpdate` `{collection, _id, data}`, reading `result: "success"`
    (`nsclient/acks/NSUpdateAck.kt`).
@@ -180,6 +182,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | **Authentication** | | |
 | JWT from `/api/v2/authorization/request/<token>`; 401 without one or for a bad token | Works | `auth_v3.http` |
 | `/api/v3/status` fields | Works | `auth_v3.http` |
+| Nightscout `version` (AAPS shows it), in v3 `status` and `version`, and v1 status `version` and `versionNum` | Fixed: `15.0.9` and `150009` in all (were `0.0.1`, `3.0.4` and none). `apiVersion` is `3.0.4` in all | `server_version.http` |
 | `/api/v3/status` permissions of a read only token | Fixed in #511 (were always `crud`, so AAPS tried to upload) | `auth_v3.http` `read_status` |
 | `/api/v2/authorization/debug/check/<permission>` | Fixed in #511 (was a 404, which fails the status once it shows real permissions) | `auth_v3.http` |
 | `/api/v3/lastModified` | Works | `auth_v3.http`, `sync_v3.http` |
@@ -219,6 +222,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | `glucose` and `glucoseType` on a Question, therapy event, Exercise or Carb Correction | Fixed: kept (were dropped) | `glucose_event_types.http` |
 | Temp basal or extended bolus ended by a patch with `endId` (the pump's id of the record that ended it) | Fixed: `endId` kept and returned, as `pumpId` is (was dropped) | `temp_basal_end_id.http` |
 | Treatment ended early (`duration` 0, `durationInMilliseconds` 43491); `RemoteTreatment.duration` is a Long | Fixed: API v3 and the storage socket give whole minutes (a fraction, kept for Loop, made AAPS drop it and its page) | `duration_ms.http`, `aaps_storage.sio` |
+| Temp target or temp basal ended early (`PATCH` of `duration` 2 and `durationInMilliseconds` 120750) | Fixed: API v1 gives the nearest whole minutes, 2 (was 2.0125, so a client that reads a whole number dropped the page) | `duration_v1_whole.http` |
 | **Device status, food and profiles** | | |
 | Device status: create, history with `srvModified` | Works | `sync_v3.http`, `flow_v3.http` |
 | Device status `openaps` over 1 day old, in the client's 48 hours | Changed: as sent, without `predBGs` in `suggested` and `enacted`, and with the same `srvModified` | `loopfollow/devicestatus_day.http` |
