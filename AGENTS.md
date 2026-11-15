@@ -26,6 +26,7 @@ DO NOT UPDATE THIS FILE UNLESS SPECIFICALLY ASKED TO DO SO.
 - `socketio`: Socket.IO and Engine.IO (long-polling and websocket) server and client, for Nightscout live updates
 - `tests`: integration tests across the site
 - `utils`: all the useful stateless functions
+- `utils/can`: all identity to permissions code.
 
 ## Generated Code
 
@@ -129,7 +130,7 @@ The words the pages, toasts, errors and docs use for one thing (UI text is in `u
 Keep every change as small as possible.
 
 - A single change must modify no more than 150 lines of code (not including generated code, not including test code). If a change requires more changed lines, stop and ask for approval before proceeding.
-- Do not edit more than 50 files in a single change.
+- Do not edit more than 50 files in a single change.gitpu
 - Do not reformat surrounding code or bundle unrelated fixes; those are their own PR.
 - Before writing a function, look for an equivalent in `utils` or an imported library.
 - Any UI change must be accompanied with a BDD test to render and check the UI renders and works.
