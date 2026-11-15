@@ -905,7 +905,7 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 
 	var totpSecretPtr *string
 	encTOTPSecret := ""
-	if can.MustLoginWithTotp(role, false) {
+	if can.IdentityMustLoginWithTotp(role, false) {
 
 		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(siteID, fmt.Sprintf("%s@%s.%s", name, siteID, hostname))
 		if err != nil {
@@ -968,7 +968,7 @@ func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *co
 // nightscoutToken is the Nightscout token of an identity that can have one, made from its password, and the
 // digest kept to find it by the token's SHA1, see security.NightscoutTokenDigest
 func (db *ControlDB) nightscoutToken(siteID, name string, role consts.IdentityRole, password string) (*string, *string, error) {
-	if !can.HaveNightscoutToken(role) {
+	if !can.IdentityHaveNightscoutToken(role) {
 		return nil, nil, nil
 	}
 	token, err := db.ServerConfig.Security.CreateNightscoutTokenForIdentity(siteID, name, string(role), password)

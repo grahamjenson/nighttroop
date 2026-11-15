@@ -14,7 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ/control_push_templ"
 	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/push"
 )
@@ -42,7 +42,7 @@ func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
 		registration.IdentityName = row.IdentityName
 		devices = append(devices, &controlmodels.PushRegistration{PushRegistration: registration, SiteID: row.PushRegistration.SiteID})
 	}
-	admin := controlContext.IdentityModel.Role == consts.ControlRoleAdmin
+	admin := can.ControlChangeServer(controlContext.IdentityModel.Role)
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, devices, control_push_templ.PushDevices(devices, admin))
 }
 

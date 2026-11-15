@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -48,7 +49,7 @@ var roles = []role{
 	{ID: "admin", Name: "admin", Permissions: []string{"*"}},
 	{ID: "readable", Name: "readable", Permissions: []string{"*:*:read"}},
 	{ID: aapsClient, Name: aapsClient, Permissions: []string{"*:*:read", "api:settings:admin", "api:settings:create", "api:settings:update", "notifications:*:ack"}},
-	{ID: careportal, Name: careportal, Permissions: nsutils.CaregiverPermissions},
+	{ID: careportal, Name: careportal, Permissions: can.CaregiverNightscoutPermissions},
 }
 
 // careportal is the role of a read and write device, a caregiver's, which writes treatments but not readings
@@ -62,7 +63,7 @@ var newTokens = expirable.NewLRU[string, string](1000, nil, 10*time.Minute)
 func pwdPhoneOnly(next func(http.ResponseWriter, *http.Request, *httputils.SiteContext)) http.HandlerFunc {
 	return nsutils.Require("api:*:read", false, func(w http.ResponseWriter, r *http.Request, _ *nsutils.Identity) {
 		siteContext := httputils.GetSiteContext(r.Context())
-		if siteContext.IdentityModel.Role != consts.IdentityRoleDevicePWDPhone {
+		if !can.IdentityAuthorizeDevices(siteContext.IdentityModel.Role) {
 			nsutils.WriteError(w, nsutils.ErrMissingPermission("api:subjects:admin"))
 			return
 		}
@@ -129,7 +130,7 @@ func createSubject(w http.ResponseWriter, r *http.Request, siteContext *httputil
 	tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 	defer tx.Rollback()
 	created, err := (&sitesettings.IdentitiesCollection{}).CreateRow(r.Context(), tx, nil, siteContext,
-		&sitemodels.UserIdentity{Name: sent.Name, Role: string(consts.IdentityRoleDeviceRead), Client: sitemodels.AAPSClient})
+		&sitemodels.UserIdentity{Name: sent.Name, Role: string(consts.IdentityRoleDeviceRead), Client: consts.AAPSClient})
 	if err == nil {
 		err = finish(tx)
 	}
@@ -151,7 +152,7 @@ func deleteSubject(w http.ResponseWriter, r *http.Request, siteContext *httputil
 	defer tx.Rollback()
 	identities := &sitesettings.IdentitiesCollection{}
 	identity, err := identities.GetRow(r.Context(), tx, id, siteContext)
-	if err == nil && identity.Client != sitemodels.AAPSClient {
+	if err == nil && identity.Client != consts.AAPSClient {
 		err = sql.ErrNoRows
 	}
 	if err == nil {
@@ -172,9 +173,9 @@ func toSubject(siteContext *httputils.SiteContext, identity *sitemodels.UserIden
 	s := subject{ID: strconv.FormatInt(identity.ID, 10), Name: identity.Name, Roles: []string{"readable"}}
 	ns, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role), &identity.Client)
 	switch {
-	case identity.Client == sitemodels.AAPSClient:
+	case identity.Client == consts.AAPSClient:
 		s.Roles = []string{aapsClient}
-	case consts.IdentityRole(identity.Role) == consts.IdentityRoleAdmin, err == nil && nsutils.HasPermission(*ns, "api:*:delete"):
+	case can.IdentityAdministerSite(consts.IdentityRole(identity.Role)), err == nil && nsutils.HasPermission(*ns, "api:*:delete"):
 		s.Roles = []string{"admin"}
 	case err == nil && nsutils.HasPermission(*ns, "api:treatments:create"):
 		s.Roles = []string{careportal}

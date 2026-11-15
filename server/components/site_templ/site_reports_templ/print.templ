@@ -8,7 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -102,5 +102,5 @@ func sheetDates(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 // clinician is whether the signed in identity is a clinician, whose only page is the printable report
 func clinician(ctx context.Context) bool {
 	siteContext := httputils.GetSiteContext(ctx)
-	return siteContext != nil && siteContext.IdentityModel != nil && siteContext.IdentityModel.Role == consts.IdentityRoleClinician
+	return siteContext != nil && siteContext.IdentityModel != nil && can.IdentityOnlySeeReport(siteContext.IdentityModel.Role)
 }

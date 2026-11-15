@@ -77,7 +77,7 @@ var (
 // more than the most it may have
 func accountUser(r *http.Request, controlDB *db.ControlDB, adding bool) (passkeyUser, error) {
 	identity := httputils.GetSiteContext(r.Context()).IdentityModel
-	if identity == nil || !can.LoginToWebsite(identity.Role) {
+	if identity == nil || !can.IdentityLoginToWebsite(identity.Role) {
 		return passkeyUser{}, errNotOnWebsite
 	}
 	user, err := passkeyUserFor(r, controlDB, identity)
@@ -345,7 +345,7 @@ func savePasskey(r *http.Request, controlDB *db.ControlDB, credential *webauthn.
 // passkeySignIn signs the identity in as a password and TOTP do; a passkey is already two factors, the device and the
 // person's fingerprint, face or PIN, so it is enough on its own
 func passkeySignIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, identity *controldb.SiteIdentity) {
-	if !can.LoginToWebsite(identity.Role) {
+	if !can.IdentityLoginToWebsite(identity.Role) {
 		PasskeyError(w, r, http.StatusForbidden, i18n.T(r.Context(), "common.passkey.not_on_website"), nil)
 		return
 	}

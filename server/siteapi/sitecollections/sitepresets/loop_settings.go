@@ -63,7 +63,7 @@ func (s *LoopSettingsCollection) fromDB(row *sitedb.LoopSetting, siteContext *ht
 // ToModel is the settings as the identity may see them. A row read for another identity, as a deleted one streamed to
 // every identity watching is, can have the deviceToken this one may not see, in its settings and its changes.
 func (s *LoopSettingsCollection) ToModel(row *sitemodels.SiteLoopSettings, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
-	if row == nil || can.SeeDeviceTokens(siteContext.IdentityModel) {
+	if row == nil || can.IdentitySeeDeviceTokens(siteContext.IdentityModel) {
 		return row
 	}
 	model := *row

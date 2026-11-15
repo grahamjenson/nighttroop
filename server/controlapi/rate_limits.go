@@ -9,8 +9,8 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ/control_rate_limits_templ"
 	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -21,7 +21,7 @@ func RateLimitsHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	limiters := controlContext.ControlDB.ServerConfig.RateLimiters
 	stats := limiters.Stats(time.Now())
-	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, stats, control_rate_limits_templ.RateLimits(stats, limiters.Settings(), controlContext.IdentityModel.Role == consts.ControlRoleAdmin))
+	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, stats, control_rate_limits_templ.RateLimits(stats, limiters.Settings(), can.ControlChangeServer(controlContext.IdentityModel.Role)))
 }
 
 // SetRateLimitsHandler sets every rate limit, from JSON, {name: {per_minute, burst}}, or the page's form, with

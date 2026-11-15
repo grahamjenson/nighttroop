@@ -38,6 +38,9 @@ const FIRST_READ_ONLY_NAME = "read_only"
 
 const CONTROL_IDENTITY_SUBDOMAIN = "control"
 
+// AAPSClient is the client of a device AAPS pairs as a client, reading and writing, through Nightscout's subjects
+const AAPSClient = "aapsclient"
+
 type ControlRole string
 
 const (
@@ -82,7 +85,7 @@ func (i IdentityRole) GetType() IdentityType {
 	}
 }
 
-// What each role can do is checked where it is done, not in one table of permissions
+// What each role can do is in utils/can
 
 /// Some reusable ENVARS
 

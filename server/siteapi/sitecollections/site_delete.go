@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -20,7 +20,7 @@ func DeleteSiteHandler(w http.ResponseWriter, r *http.Request) {
 
 // deleteSite archives the site with upload, or to S3 when upload is nil
 func deleteSite(w http.ResponseWriter, r *http.Request, upload s3utils.UploadFunc) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), siteapiutils.ActionUpdate)
+	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), can.ActionUpdate)
 	if siteContext == nil {
 		return
 	}

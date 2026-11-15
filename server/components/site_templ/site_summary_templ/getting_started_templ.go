@@ -14,7 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -33,7 +33,7 @@ func isNew(summary *sitemodels.Summary) bool {
 // isAdmin is whether the identity signed in may set up where the site's data comes from and who can use it
 func isAdmin(ctx context.Context) bool {
 	siteContext := httputils.GetSiteContext(ctx)
-	return siteContext != nil && siteContext.IdentityModel != nil && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+	return siteContext != nil && siteContext.IdentityModel != nil && can.IdentityAdministerSite(siteContext.IdentityModel.Role)
 }
 
 // nsURL is the site's Nightscout URL, which phone apps upload to

@@ -9,9 +9,9 @@ import (
 	"nighttroop.t1d.nz/background/connectors"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -19,7 +19,7 @@ import (
 // BackfillHandler starts a backfill of the site's connector in the URL, answering with what it will fetch. A source
 // with one queued or running is not started again.
 func BackfillHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.ConnectorSettingsCollection{}).GetName(), siteapiutils.ActionUpdate)
+	siteContext := SiteContextFor(w, r, (&sitesettings.ConnectorSettingsCollection{}).GetName(), can.ActionUpdate)
 	if siteContext == nil {
 		return
 	}

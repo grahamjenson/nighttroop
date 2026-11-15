@@ -13,8 +13,8 @@ import (
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/livedb"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -63,7 +63,7 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionSearch)
+		siteContext := SiteContextFor(w, r, collection.GetName(), can.ActionSearch)
 		if siteContext == nil {
 			return
 		}
