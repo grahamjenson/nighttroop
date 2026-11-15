@@ -132,10 +132,13 @@ func TestRateLimiterStats(t *testing.T) {
 		byName[s.Name] = s
 	}
 	require.Len(t, byName, 18)
-	require.Equal(t, RateLimiterStats{Name: "site_get", Per: "site", PerMinute: 240, Burst: 16, Tracked: 2, Limited: 1, FullestPercent: 100},
+	require.Equal(t, RateLimiterStats{Name: "site_get", Per: "site", Setting: "site_get", Scale: SiteIdentitiesShare, PerMinute: 240, Burst: 16, Tracked: 2, Limited: 1, FullestPercent: 100},
 		byName["site_get"], "busy has spent its burst, quiet a sixteenth")
-	require.Equal(t, RateLimiterStats{Name: "global", Per: "server", PerMinute: 60, Burst: 10, Tracked: 1}, byName["global"])
-	require.Equal(t, RateLimiterStats{Name: "site_post", Per: "site"}, byName["site_post"], "none kept yet")
+	require.Equal(t, RateLimiterStats{Name: "global", Per: "server", Setting: "global", Scale: 1, PerMinute: 60, Burst: 10, Tracked: 1}, byName["global"])
+	// An identity's reads take the same setting as its site's, at 1 times
+	require.Equal(t, "site_get", byName["identity_get"].Setting)
+	require.Equal(t, 1, byName["identity_get"].Scale)
+	require.Equal(t, RateLimiterStats{Name: "site_post", Per: "site", Setting: "site_post", Scale: SiteIdentitiesShare}, byName["site_post"], "none kept yet")
 
 	// Reading them spent nothing, so a second later busy has 4 of its 16 back and would not refuse
 	for _, s := range limiters.Stats(now.Add(time.Second)) {
