@@ -98,6 +98,15 @@
        search yet; filtering in the oldest first query would need each search's filters there too
     1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another
        server; AAPS pairing a client again after that gets no token. Keep it in the DB if this is a problem
+    1. P4: Treatment duplicates still differ from Nightscout in some cases. Decide each one:
+        1. A v1 duplicate is merged into the stored one as a patch. Nightscout replaces it, so the fields not sent
+           are lost.
+        1. The treatment fallback key has the device on all APIs. Nightscout's v1 and socket keys have no device,
+           and its v3 key finds a v1 document of any device.
+        1. Socket `dbAdd` does not find a treatment within 2 seconds with the same `eventType` and amounts, and
+           does not move it to the new `created_at`, as Nightscout does.
+        1. API v3 does not find a stored treatment with an app id (xDrip+'s `uuid`, Loop's `syncIdentifier`) by
+           the fallback key. Nightscout finds one that has no `identifier`.
     1. P3: Count an AAPS or Juggluco bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal
        in the summaries, reports and IOB, as it is kept and given back but still counted as a bolus
     1. P4: Food, insulin and temp targets added on the site are not Nightscout treatments until grouped, so AAPS and

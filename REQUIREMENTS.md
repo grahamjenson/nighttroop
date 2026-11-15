@@ -1375,15 +1375,23 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### Duplicates
 
 - Duplicate uploads are ignored.
-- A treatment with the date and type of a stored one, or its identifier and date (Loop sends a temp basal or bolus again
-  when it ends, Trio a temp target or override run):
-  - Merged into it as a patch is. Its `_id` and the fields not sent are kept.
+- A treatment with the date, type and device of a stored one (sent with no device: any device), or its identifier and
+  date. As in Nightscout, the API it is sent to sets what changes:
+  - API v1 (Loop sends a temp basal or bolus again when it ends, Trio a temp target or override run): merged into the
+    stored one as a patch is. Its `_id` and the fields not sent are kept.
+  - API v3: it replaces the stored one, as a v3 replace does. The identifier is kept. The fields not sent are removed.
+    The response has `isDeduplication` true.
+  - Socket `dbAdd`: the stored one is kept as it is, and the ack gives it. The treatment sent is not kept.
   - Followers get it as changed. Sent again unchanged, or with changes that do not change the document: no change.
 - Treatment with no app id (`_id`, `identifier`, xDrip+'s `uuid`, Loop's `syncIdentifier`, Trio's `id`): a duplicate
-  only if the stored one has no app id and the same carbs and insulin (zero is none), as in Nightscout. Else a new
-  treatment:
-  - A careportal note in the same second as an xDrip+ bolus: two treatments.
-  - AAPS Bolus Wizard's bolus and carbs (two Meal Boluses at one date, deleted one by one): two treatments.
+  only of a stored one with no app id.
+  - API v1: the carbs and insulin must also be the same (zero is none). Else a new treatment:
+    - A careportal note in the same second as an xDrip+ bolus: two treatments.
+    - A bolus and its carbs (two Meal Boluses at one `created_at`): two treatments.
+  - API v3 and socket `dbAdd`: the carbs and insulin are not compared. AAPS Bolus Wizard's bolus and carbs (two Meal
+    Boluses at one date, no device) are one treatment:
+    - API v3: the carbs replace the bolus. Its insulin and pump fields are lost. A delete of the carbs deletes it.
+    - Socket `dbAdd`: the bolus is kept. The carbs are not kept.
 - Entry with the date and type of a stored one, from any device, with no `_id` or an unknown `_id`:
   - From the identity and device that stored it: the stored entry takes the new value, direction and raw values
     (xDrip4iOS smooths readings).

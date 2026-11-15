@@ -72,6 +72,9 @@ type FallbackKey[NS, DM any] struct {
 	search func(q *sitedb.Queries, ctx context.Context, nsModel NS, limit int64) ([]*DM, error)
 	// fields must each be the same, each compared in its own way
 	fields []KeyField[NS, DM]
+	// v1Fields must each be the same too for a model sent to API v1, as Nightscout's v1 key has a treatment's carbs and
+	// insulin (treatment-fallback-key.js withAmounts), and API v3's and the socket's do not
+	v1Fields []KeyField[NS, DM]
 	// clientIDs are the apps' ids a stored model can have: one stored with an app's id is found only by its identifier
 	clientIDs []func(stored *DM) *string
 	// whateverItsIdentifier finds a duplicate of a model sent with an identifier no model has too, as Nightscout
@@ -89,14 +92,18 @@ type KeyField[NS, DM any] struct {
 // stays cheap however many are stored at one date
 const maxSameTimeDuplicates = 10
 
-// matches is whether the model sent repeats the one stored, by the key
-func (k FallbackKey[NS, DM]) matches(sent NS, stored *DM) bool {
+// matches is whether the model sent repeats the one stored, by the key, with its v1Fields when sent to API v1
+func (k FallbackKey[NS, DM]) matches(sent NS, stored *DM, v1 bool) bool {
 	for _, clientID := range k.clientIDs {
 		if clientID(stored) != nil {
 			return false
 		}
 	}
-	for _, field := range k.fields {
+	fields := k.fields
+	if v1 {
+		fields = slices.Concat(k.fields, k.v1Fields)
+	}
+	for _, field := range fields {
 		if !field.same(sent, stored) {
 			return false
 		}
@@ -135,6 +142,12 @@ type CollectionStored[NS any] interface {
 // the merge leaves as it is is not changed, so a client sending a batch again changes nothing.
 type CollectionRefresher[NS, DM any] interface {
 	Refreshes(nsModel NS, duplicate *DM) bool
+}
+
+// CollectionWriters is a CollectionDB whose duplicate a create changes as the Nightscout API it is sent to does, see
+// nsutils.Writer: API v3 replaces it with the model sent, the socket's dbAdd keeps it as it is, and API v1 refreshes it
+type CollectionWriters interface {
+	ChangedByWriter() bool
 }
 
 // CollectionUploaded is a CollectionRefresher whose duplicate, sent again by another uploader than the one that
@@ -353,18 +366,27 @@ func (c Collection[NS, DM]) softDeleted(q *sitedb.Queries, ctx context.Context, 
 }
 
 // repeated is the duplicate a create repeats, with the fields sent merged into it when the collection is a
-// CollectionRefresher and it refreshes the duplicate. It is changed only when its document is, so the write is rolled
-// back otherwise, before the duplicate's document is read, as that may read the site's database.
+// CollectionRefresher and it refreshes the duplicate, or replaced with the model sent to API v3 and kept as it is for
+// the socket's dbAdd, see writer. It is changed only when its document is, so the write is rolled back otherwise,
+// before the duplicate's document is read, as that may read the site's database.
 func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, data map[string]any, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
+	writer := c.writer(ctx)
 	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
-	if !ok || !refresher.Refreshes(nsModel, duplicate) {
+	if writer == nsutils.SocketWriter || writer == nsutils.V1Writer && (!ok || !refresher.Refreshes(nsModel, duplicate)) {
 		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
 	if uploaded, ok := any(c.db).(CollectionUploaded[NS, DM]); ok && !uploaded.SameUploader(nsModel, duplicate, converterContext(siteContext)) {
 		data = c.missing(duplicate, data, siteContext)
 	}
-	refreshed, merged, httpErr := c.rewrite(ctx, siteContext, q, duplicate, data, &leftOut{})
+	var refreshed *DM
+	var merged NS
+	var httpErr *nsutils.HTTPError
+	if writer == nsutils.V3Writer {
+		refreshed, merged, httpErr = c.replaceDuplicate(ctx, siteContext, q, nsModel, data, duplicate)
+	} else {
+		refreshed, merged, httpErr = c.rewrite(ctx, siteContext, q, duplicate, data, &leftOut{})
+	}
 	if httpErr != nil {
 		return nil, false, httpErr
 	}
@@ -378,6 +400,32 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 	siteContext.PublishModelChange(events.Updated, refreshed)
 	c.afterStored(ctx, siteContext, merged)
 	return c.document(refreshed, siteContext), true, nil
+}
+
+// writer is the Nightscout API the create is sent to, for a collection whose duplicate it changes, else API v1
+func (c Collection[NS, DM]) writer(ctx context.Context) nsutils.Writer {
+	if byWriter, ok := any(c.db).(CollectionWriters); ok && byWriter.ChangedByWriter() {
+		return nsutils.WriterOf(ctx)
+	}
+	return nsutils.V1Writer
+}
+
+// replaceDuplicate writes the model sent over its duplicate, as Nightscout's API v3 replaces the document a create
+// repeats: what the model does not have, the duplicate no longer has. As a replace, it cannot change the fields a
+// document keeps.
+func (c Collection[NS, DM]) replaceDuplicate(ctx context.Context, siteContext *httputils.SiteContext, q *sitedb.Queries, nsModel NS, data map[string]any, duplicate *DM) (*DM, NS, *nsutils.HTTPError) {
+	rewriter, ok := any(c.db).(CollectionPatcher[NS, DM])
+	if !ok {
+		return nil, nsModel, nsutils.ErrNotImplemented
+	}
+	if err := c.validateReplace(ctx, nsModel, duplicate, data, (*duplicate).GetID()); err != nil {
+		return nil, nsModel, err
+	}
+	replaced, err := rewriter.RewriteModel(q, ctx, nsModel, data, duplicate, converterContext(siteContext))
+	if httpErr := c.stored(replaced, err, "replace"); httpErr != nil {
+		return nil, nsModel, httpErr
+	}
+	return replaced, nsModel, nil
 }
 
 // missing are the fields sent that the stored model's document does not have. The units, device and app are left out,
@@ -502,7 +550,7 @@ func (c Collection[NS, DM]) keyDuplicate(q *sitedb.Queries, ctx context.Context,
 	}
 	found, err := key.search(q, ctx, nsModel, maxSameTimeDuplicates)
 	for _, stored := range found {
-		if key.matches(nsModel, stored) {
+		if key.matches(nsModel, stored, nsutils.WriterOf(ctx) == nsutils.V1Writer) {
 			return stored, nil
 		}
 	}

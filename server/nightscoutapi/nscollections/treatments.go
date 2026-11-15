@@ -99,11 +99,12 @@ func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context,
 	return &tebg, nil
 }
 
-// FallbackKey is a treatment's date, device, eventType, insulin and carbs, a zero being none, as Nightscout matches one
-// sent without an identifier (treatment-fallback-key.js), of one stored without an app's id, xDrip+'s uuid or Loop's
-// syncIdentifier. So a careportal note in the same second as xDrip+'s bolus is kept beside it rather than taking it
-// over, and AAPS's Bolus Wizard's bolus and its carbs, sent as two Meal Boluses at the same date and deleted on their
-// own by their identifiers, are two treatments.
+// FallbackKey is a treatment's date, device and eventType, of one stored without an app's id, xDrip+'s uuid or Loop's
+// syncIdentifier, as Nightscout matches one sent without an identifier: API v3 by the identifier it makes of them
+// (calculateIdentifier), the socket's dbAdd by its created_at and eventType. For API v1, its insulin and carbs, a zero
+// being none, are the same too (treatment-fallback-key.js withAmounts). So a careportal note in the same second as
+// xDrip+'s bolus is kept beside it, and AAPS's Bolus Wizard's carbs, sent to API v3 as a Meal Bolus at the date of its
+// bolus, replace the bolus.
 func (c TreatmentCollection) FallbackKey() FallbackKey[nightscoutmodels.Treatment, sitedb.EventGroupsBundle] {
 	type key = KeyField[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]
 	return FallbackKey[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]{
@@ -114,6 +115,8 @@ func (c TreatmentCollection) FallbackKey() FallbackKey[nightscoutmodels.Treatmen
 			{"eventType", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
 				return sent.EventType == nil || sent.EventType.String() == stored.EventGroup.GroupType
 			}},
+		},
+		v1Fields: []key{
 			{"insulin", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
 				var dose float64
 				if stored.InsulinDose != nil {
@@ -134,6 +137,11 @@ func (c TreatmentCollection) FallbackKey() FallbackKey[nightscoutmodels.Treatmen
 			func(stored *sitedb.EventGroupsBundle) *string { return stored.EventGroup.SyncIdentifier },
 		},
 	}
+}
+
+// ChangedByWriter is true: a treatment's duplicate is changed as the Nightscout API the create is sent to changes it
+func (c TreatmentCollection) ChangedByWriter() bool {
+	return true
 }
 
 // searchSameTimeTreatments finds the treatments of a type and device at the date of the one sent

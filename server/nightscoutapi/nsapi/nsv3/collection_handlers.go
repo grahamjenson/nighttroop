@@ -64,7 +64,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		record, duplicate, err := store.Create(r.Context(), collection, doc)
+		record, duplicate, err := store.Create(nsutils.WithWriter(r.Context(), nsutils.V3Writer), collection, doc)
 		if err != nil {
 			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return

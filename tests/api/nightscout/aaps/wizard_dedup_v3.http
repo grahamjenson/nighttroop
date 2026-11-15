@@ -2,9 +2,9 @@ INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
 // The Bolus Wizard's bolus and its carbs are two treatments AAPS sends with the same date and eventType Meal Bolus
-// (BS.toNSBolus, CA.toNSCarbs). The carbs are not a duplicate of the bolus, as one has only insulin and the other only
-// carbs, so each is kept with its own identifier, which AAPS deletes it by: Nightscout replaces the bolus, losing its
-// insulin.
+// (BS.toNSBolus, CA.toNSCarbs), with no identifier and no device. As Nightscout makes a v3 identifier of the device,
+// date and eventType (calculateIdentifier), the carbs have the bolus's identifier, and replace it: the bolus's insulin
+// and pump fields are lost.
 SET wizard_at {{ itime 30 }}
 
 NAME add_wizard_bolus
@@ -40,34 +40,31 @@ B {
     "notes": "",
     "app": "AAPS"
  }
-ASSERT_STATUS 201
-SET carbs_id {{ .add_wizard_carbs.identifier }}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@isDeduplication"
+ASSERT_EQUALS ".bolus_id" "@identifier"
+ASSERT_EQUALS 20 "@result.carbs"
+ASSERT_EQUALS null "@result.insulin"
 
 NAME get_wizard_meal_bolus
 GET http://{{ site }}/api/v3/treatments/{{ .bolus_id }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Meal Bolus" "@result.eventType"
-ASSERT_EQUALS 0.4 "@result.insulin"
-ASSERT_EQUALS null "@result.carbs"
-ASSERT_EQUALS "NORMAL" "@result.type"
-ASSERT_EXISTS "@result.pumpId"
-ASSERT_EQUALS "DANA_I" "@result.pumpType"
-ASSERT_EQUALS "AAPS1234" "@result.pumpSerial"
-
-NAME get_wizard_carbs
-GET http://{{ site }}/api/v3/treatments/{{ .carbs_id }}
-H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 200
 ASSERT_EQUALS 20 "@result.carbs"
 ASSERT_EQUALS null "@result.insulin"
-SET merged_since {{ addms (dig "get_wizard_carbs.result.srvModified") 1 }}
+ASSERT_EQUALS null "@result.type"
+ASSERT_EQUALS null "@result.pumpId"
+ASSERT_EQUALS null "@result.pumpType"
+ASSERT_EQUALS null "@result.pumpSerial"
+SET replaced_since {{ addms (dig "get_wizard_meal_bolus.result.srvModified") 1 }}
 
-NAME two_meal_boluses
+NAME one_meal_bolus
 GET http://{{ site }}/api/v3/treatments?eventType$eq=Meal%20Bolus&limit=10
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".bolus_id" "@result.0.identifier"
 
 // The carbs sent again, as they were, change nothing
 NAME add_wizard_carbs_again
@@ -85,27 +82,36 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS true "@isDeduplication"
-ASSERT_EQUALS ".carbs_id" "@deduplicatedIdentifier"
+ASSERT_EQUALS ".bolus_id" "@deduplicatedIdentifier"
 
 NAME wizard_carbs_again_unchanged
-GET http://{{ site }}/api/v3/treatments/history/{{ .merged_since }}
+GET http://{{ site }}/api/v3/treatments/history/{{ .replaced_since }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result"
 
-// Deleting the carbs in AAPS deletes them by their identifier, and the bolus is kept
+// Another app's bolus at the same date is another treatment, as its device is not the same
+NAME add_other_device_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "date": {{ .wizard_at }}, "utcOffset": 780, "eventType": "Meal Bolus", "insulin": 1, "device": "xDrip", "app": "xDrip" }
+ASSERT_STATUS 201
+
+// Deleting the carbs in AAPS deletes them by their identifier, which is the bolus's
 NAME delete_wizard_carbs
-DELETE http://{{ site }}/api/v3/treatments/{{ .carbs_id }}
+DELETE http://{{ site }}/api/v3/treatments/{{ .bolus_id }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 
-NAME wizard_bolus_kept
-GET http://{{ site }}/api/v3/treatments/{{ .bolus_id }}
+NAME wizard_bolus_deleted
+GET http://{{ site }}/api/v3/treatments?eventType$eq=Meal%20Bolus&limit=10
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 0.4 "@result.insulin"
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "xDrip" "@result.0.device"
 
-// API v1 creates the same way, so a bolus and its carbs sent there at the same created_at are two treatments too
+// API v1 finds a treatment sent with no id by its created_at, eventType, carbs and insulin (treatment-fallback-key.js), so
+// a bolus and its carbs sent there at the same created_at are two treatments, as in Nightscout
 SET v1_wizard_at {{ time 40 }}
 
 NAME add_wizard_bolus_v1
@@ -122,3 +128,9 @@ B { "created_at": "{{ .v1_wizard_at }}", "eventType": "Meal Bolus", "carbs": 30 
 ASSERT_STATUS 200
 ASSERT_EQUALS 30 "@0.carbs"
 ASSERT_EQUALS null "@0.insulin"
+
+NAME two_v1_meal_boluses
+GET http://{{ site }}/api/v1/treatments.json?find[created_at]={{ .v1_wizard_at }}&find[eventType]=Meal%20Bolus
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"

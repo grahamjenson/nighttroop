@@ -1,0 +1,58 @@
+# The socket's dbAdd finds a treatment sent with no id by its created_at and eventType only, not its amounts, and keeps
+# the one stored as it is, as Nightscout's dbAdd does (websocket.js: "Exact match"). So a Bolus Wizard's carbs sent as a
+# Meal Bolus at the created_at of its bolus are taken as the bolus sent again, and are not kept.
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+SET wizard_at {{ time 5 }}
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=3
+
+NAME authorize
+EMIT authorize
+B {"client":"pump","secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@write_treatment"
+
+NAME add_wizard_bolus
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Meal Bolus","insulin":0.4,"created_at":"{{ .wizard_at }}","enteredBy":"AAPS"}}
+ACK
+ASSERT_LENGTH 1 "@"
+SET bolus_id {{ dig "add_wizard_bolus.0._id" }}
+
+NAME add_wizard_carbs
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Meal Bolus","carbs":20,"created_at":"{{ .wizard_at }}","enteredBy":"AAPS"}}
+ACK
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".bolus_id" "@0._id"
+ASSERT_EQUALS 0.4 "@0.insulin"
+ASSERT_EQUALS null "@0.carbs"
+
+NAME only_the_bolus
+GET http://{{ site }}/api/v1/treatments?token={{ token }}&find[eventType]=Meal%20Bolus
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 0.4 "@0.insulin"
+ASSERT_EQUALS null "@0.carbs"
+
+# Another eventType at the same created_at is another treatment
+NAME add_carb_correction
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Carb Correction","carbs":20,"created_at":"{{ .wizard_at }}","enteredBy":"AAPS"}}
+ACK
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 20 "@0.carbs"
+
+NAME two_treatments
+GET http://{{ site }}/api/v1/treatments?token={{ token }}&count=10
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME bye
+DISCONNECT

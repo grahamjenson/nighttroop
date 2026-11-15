@@ -18,18 +18,24 @@ type keyCase[DM any] struct {
 	duplicate bool
 }
 
-// checkKey checks the key's fields are those named, and whether each model sent repeats the one stored
-func checkKey[NS, DM any](t *testing.T, key FallbackKey[NS, DM], fields []string, cases []keyCase[DM]) {
+// checkKey checks the key's fields, with its v1Fields when v1, are those named, and whether each model sent, to API v1
+// when v1, repeats the one stored
+func checkKey[NS, DM any](t *testing.T, key FallbackKey[NS, DM], v1 bool, fields []string, cases []keyCase[DM]) {
 	t.Helper()
-	names := make([]string, len(key.fields))
-	for i, field := range key.fields {
-		names[i] = field.name
+	names := []string{}
+	for _, field := range key.fields {
+		names = append(names, field.name)
+	}
+	for _, field := range key.v1Fields {
+		if v1 {
+			names = append(names, field.name)
+		}
 	}
 	require.Equal(t, fields, names)
 	for _, test := range cases {
 		var sent NS
 		require.NoError(t, json.Unmarshal([]byte(test.sent), &sent), test.name)
-		require.Equal(t, test.duplicate, key.matches(sent, test.stored), test.name)
+		require.Equal(t, test.duplicate, key.matches(sent, test.stored, v1), test.name)
 	}
 }
 
@@ -40,7 +46,7 @@ func TestEntriesFallbackKey(t *testing.T) {
 	require.True(t, key.whateverItsIdentifier, "a reading is found by its date and type whatever its _id")
 	sgv := &sitedb.GlucoseReading{OccurredAt: keyDate, ReadingType: "sgv", CreatedByDeviceName: new("xDrip-DexcomG6")}
 	mbg := &sitedb.GlucoseReading{OccurredAt: keyDate, ReadingType: "mbg", CreatedByDeviceName: new("careportal")}
-	checkKey(t, key, []string{"date", "type"}, []keyCase[sitedb.GlucoseReading]{
+	checkKey(t, key, true, []string{"date", "type"}, []keyCase[sitedb.GlucoseReading]{
 		{"same date and type", `{"date":1762000000123,"sgv":120,"device":"xDrip-DexcomG6"}`, sgv, true},
 		{"another device, as Trio uploads what it downloads", `{"date":1762000000123,"sgv":120,"device":"Trio"}`, sgv, true},
 		{"another value, which a refresh takes", `{"date":1762000000123,"sgv":130}`, sgv, true},
@@ -66,7 +72,7 @@ func TestTreatmentsFallbackKey(t *testing.T) {
 		return stored
 	}
 	meal := bolus(func(b *sitedb.EventGroupsBundle) { b.FoodIntake = &sitedb.FoodIntake{Carbs: new(30.0)} })
-	checkKey(t, key, []string{"date", "device", "eventType", "insulin", "carbs"}, []keyCase[sitedb.EventGroupsBundle]{
+	checkKey(t, key, true, []string{"date", "device", "eventType", "insulin", "carbs"}, []keyCase[sitedb.EventGroupsBundle]{
 		{"same date, device, eventType and insulin", `{"date":1762000000123,"eventType":"Meal Bolus","insulin":2,"device":"AAPS"}`, bolus(nil), true},
 		{"no device, which finds any", `{"date":1762000000123,"eventType":"Meal Bolus","insulin":2}`, bolus(nil), true},
 		{"0 carbs is none", `{"date":1762000000123,"eventType":"Meal Bolus","insulin":2,"carbs":0}`, bolus(nil), true},
@@ -86,13 +92,26 @@ func TestTreatmentsFallbackKey(t *testing.T) {
 		{"stored with Loop's syncIdentifier", `{"date":1762000000123,"eventType":"Meal Bolus","insulin":2}`,
 			bolus(func(b *sitedb.EventGroupsBundle) { b.EventGroup.SyncIdentifier = new("loop-dose-1") }), false},
 	})
+	// Sent to API v3 or the socket, the amounts are not in the key, as Nightscout's v3 identifier is of the device, date
+	// and eventType, and the socket's key is the created_at and eventType
+	checkKey(t, key, false, []string{"date", "device", "eventType"}, []keyCase[sitedb.EventGroupsBundle]{
+		{"the Bolus Wizard's carbs beside its bolus", `{"date":1762000000123,"eventType":"Meal Bolus","carbs":30,"device":"AAPS"}`, bolus(nil), true},
+		{"other insulin", `{"date":1762000000123,"eventType":"Correction Bolus","insulin":2.5}`,
+			bolus(func(b *sitedb.EventGroupsBundle) { b.EventGroup.GroupType = "Correction Bolus" }), true},
+		{"no device, which finds any", `{"date":1762000000123,"eventType":"Meal Bolus","carbs":30}`, bolus(nil), true},
+		{"another device", `{"date":1762000000123,"eventType":"Meal Bolus","carbs":30,"device":"xDrip"}`, bolus(nil), false},
+		{"another eventType", `{"date":1762000000123,"eventType":"Carb Correction","carbs":30}`, bolus(nil), false},
+		{"a millisecond later", `{"date":1762000000124,"eventType":"Meal Bolus","carbs":30}`, bolus(nil), false},
+		{"stored with xDrip+'s uuid", `{"date":1762000000123,"eventType":"Meal Bolus","carbs":30}`,
+			bolus(func(b *sitedb.EventGroupsBundle) { b.EventGroup.Uuid = new("6f1c2c4e8a3b4f0e9d7a5b3c") }), false},
+	})
 }
 
 func TestDeviceStatusFallbackKey(t *testing.T) {
 	key := DeviceStatusCollection{}.FallbackKey()
 	require.False(t, key.whateverItsIdentifier)
 	stored := &sitedb.DeviceReport{OccurredAt: keyDate, CreatedByDeviceName: new("openaps://samsung")}
-	checkKey(t, key, []string{"date", "device"}, []keyCase[sitedb.DeviceReport]{
+	checkKey(t, key, true, []string{"date", "device"}, []keyCase[sitedb.DeviceReport]{
 		{"same date and device", `{"date":1762000000123,"device":"openaps://samsung"}`, stored, true},
 		{"no device, which finds any", `{"date":1762000000123}`, stored, true},
 		{"another device", `{"date":1762000000123,"device":"loop://iPhone"}`, stored, false},
@@ -104,7 +123,7 @@ func TestProfileFallbackKey(t *testing.T) {
 	key := ProfileCollection{}.FallbackKey()
 	require.False(t, key.whateverItsIdentifier)
 	stored := &sitedb.ProfilePresetBundle{{OccurredAt: keyDate, CreatedByDeviceName: new("Loop")}}
-	checkKey(t, key, []string{"date", "device"}, []keyCase[sitedb.ProfilePresetBundle]{
+	checkKey(t, key, true, []string{"date", "device"}, []keyCase[sitedb.ProfilePresetBundle]{
 		{"same date and device", `{"date":1762000000123,"device":"Loop"}`, stored, true},
 		{"the date as its startDate", `{"startDate":"2025-11-01T12:26:40.123Z","device":"Loop"}`, stored, true},
 		{"no device, which finds any", `{"date":1762000000123}`, stored, true},

@@ -92,7 +92,7 @@ func (ws *Websocket) dbAdd(ctx context.Context, collection nsutils.Collection, _
 		if _, ok := document["created_at"]; !ok {
 			document["created_at"] = time.Now().UTC().Format(time.RFC3339Nano)
 		}
-		record, _, err := ws.collections[collection].Create(ctx, httputils.GetSiteContext(ctx), document)
+		record, _, err := ws.collections[collection].Create(nsutils.WithWriter(ctx, nsutils.SocketWriter), httputils.GetSiteContext(ctx), document)
 		if err != nil || record == nil {
 			slog.InfoContext(ctx, "Websocket dbAdd refused", "collection", collection, "error", err)
 			continue

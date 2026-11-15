@@ -135,3 +135,28 @@ func DateMovable(ctx context.Context) bool {
 	movable, _ := ctx.Value(movableDateKey{}).(bool)
 	return movable
 }
+
+// Writer is the Nightscout API a create is sent to. As in Nightscout, each finds and changes a treatment's duplicate
+// in its own way.
+type Writer int
+
+const (
+	// V1Writer is API v1, and the site's connectors
+	V1Writer Writer = iota
+	V3Writer
+	// SocketWriter is the socket's dbAdd
+	SocketWriter
+)
+
+type writerKey struct{}
+
+// WithWriter is the context of a create sent to the writer
+func WithWriter(ctx context.Context, writer Writer) context.Context {
+	return context.WithValue(ctx, writerKey{}, writer)
+}
+
+// WriterOf is the writer the context's create is sent to, API v1 when it does not say
+func WriterOf(ctx context.Context) Writer {
+	writer, _ := ctx.Value(writerKey{}).(Writer)
+	return writer
+}
