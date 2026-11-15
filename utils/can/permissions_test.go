@@ -190,6 +190,25 @@ func TestStoresMatrix(t *testing.T) {
 	}
 }
 
+// A role it does not know is given nothing: no sign in, no Nightscout token or permissions, and no store. The control
+// DB refuses to store such a role, so this is only a second guard.
+func TestUnknownRole(t *testing.T) {
+	unknown := consts.IdentityRole("owner")
+	require.False(t, IdentityLoginToWebsite(unknown))
+	require.False(t, IdentityHaveNightscoutToken(unknown))
+	_, err := NightscoutPermissions(unknown, nil)
+	require.Error(t, err)
+	for column, check := range siteChecks {
+		require.False(t, check(unknown), column)
+	}
+	for _, stores := range storeGroups {
+		for store := range stores {
+			require.False(t, IdentityAccessStore(identity(unknown), store, ActionSearch), store)
+		}
+	}
+	require.False(t, ControlChangeServer(consts.ControlRole("owner")))
+}
+
 // A signed out request (no identity) may use no store and is not given device tokens
 func TestSignedOut(t *testing.T) {
 	for _, stores := range storeGroups {

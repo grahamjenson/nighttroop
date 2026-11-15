@@ -15,7 +15,7 @@ CREATE TABLE control_identities (
 
     password_hash TEXT NOT NULL CHECK(length(password_hash) <= 128),
     totp_secret_enc TEXT NOT NULL CHECK(length(totp_secret_enc) <= 128),
-    role TEXT NOT NULL CHECK(length(role) <= 32),
+    role TEXT NOT NULL CHECK(role IN ('admin', 'read')), -- consts.ControlRole: an unknown role cannot be stored
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
     last_seen_at INTEGER,
@@ -168,7 +168,9 @@ CREATE TABLE site_identities (
 
     password_hash TEXT NOT NULL CHECK(length(password_hash) <= 128),
     totp_secret_enc TEXT NOT NULL CHECK(length(totp_secret_enc) <= 128),
-    role TEXT NOT NULL CHECK(length(role) <= 32),
+    -- consts.IdentityRole: an unknown role cannot be stored, as utils/can decides only for the roles it knows
+    role TEXT NOT NULL CHECK(role IN ('admin', 'user', 'user_readonly', 'clinician', 'device_pwd_phone', 'device_read',
+        'device_read_write')),
     -- client is the app a device was added for, e.g. aaps or loop, or other, so its settings can be changed by app;
     -- null for a user or a site's first devices
     client TEXT CHECK(length(client) <= 32),
