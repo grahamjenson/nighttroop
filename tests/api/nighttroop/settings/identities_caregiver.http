@@ -40,10 +40,15 @@ B {"device": "loop://iPhone", "date": {{ itime 10 }}}
 ASSERT_STATUS 201
 SET devicestatus_id {{ dig "pwd_devicestatus.result.identifier" }}
 
+# The profile and the treatment are each sent twice, created then replaced, which cannot change their dates: each
+# date is worked out once, as the time worked out again a second later is another date
+SET profile_at {{ time 10 }}
+SET treatment_at {{ time 5 }}
+
 NAME pwd_profile
 POST http://{{ .ns_site }}/api/v3/profile
 H Authorization: Bearer {{ .pwd_jwt }}
-B {"units": "mg/dL", "startDate": "{{ time 10 }}", "defaultProfile": "Default", "store": {"Default": {"dia": 5,
+B {"units": "mg/dL", "startDate": "{{ .profile_at }}", "defaultProfile": "Default", "store": {"Default": {"dia": 5,
     "units": "mg/dL", "timezone": "UTC", "sens": [{"value": 40, "time": "00:00", "timeAsSeconds": 0}],
     "carbratio": [{"value": 10, "time": "00:00", "timeAsSeconds": 0}],
     "basal": [{"value": 0.8, "time": "00:00", "timeAsSeconds": 0}],
@@ -197,13 +202,13 @@ ASSERT_EQUALS "Default" "@result.defaultProfile"
 
 NAME carer_adds_treatment_v1
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ .carer_token }}
-B [{"eventType": "Carb Correction", "carbs": 15, "created_at": "{{ time 5 }}", "enteredBy": "carer"}]
+B [{"eventType": "Carb Correction", "carbs": 15, "created_at": "{{ .treatment_at }}", "enteredBy": "carer"}]
 ASSERT_STATUS 200
 SET treatment_v1_id {{ dig "carer_adds_treatment_v1.0._id" }}
 
 NAME carer_replaces_treatment_v1
 PUT http://{{ .ns_site }}/api/v1/treatments?token={{ .carer_token }}
-B {"_id": "{{ .treatment_v1_id }}", "eventType": "Carb Correction", "carbs": 20, "created_at": "{{ time 5 }}", "enteredBy": "carer"}
+B {"_id": "{{ .treatment_v1_id }}", "eventType": "Carb Correction", "carbs": 20, "created_at": "{{ .treatment_at }}", "enteredBy": "carer"}
 ASSERT_STATUS 200
 
 NAME carer_deletes_treatment_v1
@@ -380,7 +385,7 @@ ASSERT_STATUS 200
 
 NAME pwd_replaces_profile_v1
 PUT http://{{ .ns_site }}/api/v1/profile?token={{ token }}
-B {"_id": "{{ .profile_id }}", "units": "mg/dL", "startDate": "{{ time 10 }}", "defaultProfile": "Default",
+B {"_id": "{{ .profile_id }}", "units": "mg/dL", "startDate": "{{ .profile_at }}", "defaultProfile": "Default",
     "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC",
     "sens": [{"value": 40, "time": "00:00", "timeAsSeconds": 0}],
     "carbratio": [{"value": 10, "time": "00:00", "timeAsSeconds": 0}],
