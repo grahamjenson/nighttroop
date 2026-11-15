@@ -3,7 +3,6 @@ package sitecollections
 import (
 	"cmp"
 	"context"
-	"database/sql"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -368,29 +367,19 @@ func writeError(w http.ResponseWriter, r *http.Request, acceptType httputils.Acc
 	site_templ.SiteError(herr.UserMessage(r.Context())).Render(r.Context(), w)
 }
 
-// get is the model, or nil when there is none
+// get is the model and its row, or nil when there is none
 func get[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionBase[R, M], id string, siteContext *httputils.SiteContext) (*M, *R, *apiutils.HTTPError) {
-
 	row, err := collection.GetRow(ctx, tx, id, siteContext)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
-		return nil, nil, nil
-	}
-	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
+	model, herr := apiutils.Found(row, err, collection.GetName(), apiutils.WithContext(collection.ToModel, siteContext))
+	if model == nil {
 		return nil, nil, herr
 	}
-	return collection.ToModel(row, siteContext), row, nil
+	return model, row, nil
 }
 
 func search[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionSearch[R, M], query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
 	rows, err := collection.SearchRows(ctx, tx, query, siteContext)
-	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
-		return nil, herr
-	}
-	models := make([]*M, 0, len(rows))
-	for _, row := range rows {
-		models = append(models, collection.ToModel(row, siteContext))
-	}
-	return models, nil
+	return apiutils.Searched(rows, err, collection.GetName(), apiutils.WithContext(collection.ToModel, siteContext))
 }
 
 func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionCreate[R, M], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
