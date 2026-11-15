@@ -196,25 +196,32 @@ func TestRecordAbuseScores(t *testing.T) {
 	for _, typ := range []consts.ConnectorType{consts.ConnectorTypeNightscout, consts.ConnectorTypeDexcom} {
 		require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: failing.Subdomain, Type: typ, Enabled: true}))
 	}
-	fail := controldb.UpdateConnectorReportsFailureParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout, ErrorMessages: errors.ErrorList{"failed"}}
-	for range 2 {
-		require.NoError(t, q.UpdateConnectorReportsFailure(ctx, fail))
+	ns := consts.ConnectorTypeNightscout
+	works := controldb.UpdateConnectorReportsSuccessParams{SiteID: failing.Subdomain, Type: ns}
+	fail := func(typ consts.ConnectorType) {
+		require.NoError(t, q.UpdateConnectorReportsFailure(ctx, controldb.UpdateConnectorReportsFailureParams{
+			SiteID: failing.Subdomain, Type: typ, ErrorMessages: errors.ErrorList{"failed"}}))
 	}
-	require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, controldb.UpdateConnectorReportsSuccessParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout}))
-	connector, err := q.GetConnector(ctx, controldb.GetConnectorParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout})
+	// Its Nightscout connector worked, then failed twice in a row
+	require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, works))
+	fail(ns)
+	fail(ns)
+	// Its Dexcom connector never worked, so its first failed sync turned it off, and its failures are left out
+	for range 10 {
+		fail(consts.ConnectorTypeDexcom)
+	}
+	dexcom, err := q.GetConnector(ctx, controldb.GetConnectorParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeDexcom})
 	require.NoError(t, err)
-	require.InDelta(t, 0.8*0.36, connector.FailureRateEma, 0.0001)
+	require.Zero(t, dexcom.Enabled)
 
 	require.NoError(t, controlDB.RecordAbuseScores(ctx, []*db.SiteDB{large, failing}))
 	require.InDelta(t, 0.48, score(large), 0.001) // 2.2 times its 20 MB limit
 	require.Equal(t, controldb.AbuseOverUse, controldb.AbuseLevelOf(score(large)))
-	require.InDelta(t, 0.29, score(failing), 0.001) // its highest connector's failure rate, 0.288, to 2 places
+	require.InDelta(t, 0.29, score(failing), 0.001) // 2 failed syncs in a row: 2 ÷ (2 + 5), to 2 places
 	require.Zero(t, score(notScored), "a site not given is not scored")
 
-	// Its connectors syncing again lower its score at the next check
-	for range 20 {
-		require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, controldb.UpdateConnectorReportsSuccessParams{SiteID: failing.Subdomain, Type: consts.ConnectorTypeNightscout}))
-	}
+	// One sync that works ends its run of failures, which lowers its score at the next check
+	require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, works))
 	require.NoError(t, controlDB.RecordAbuseScores(ctx, []*db.SiteDB{failing}))
-	require.Less(t, score(failing), 0.01)
+	require.Zero(t, score(failing))
 }

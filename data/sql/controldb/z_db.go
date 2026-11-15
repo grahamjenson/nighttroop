@@ -177,8 +177,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteStmt, err = db.PrepareContext(ctx, getSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSite: %w", err)
 	}
-	if q.getSiteConnectorFailureRatesStmt, err = db.PrepareContext(ctx, getSiteConnectorFailureRates); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSiteConnectorFailureRates: %w", err)
+	if q.getSiteConnectorFailuresStmt, err = db.PrepareContext(ctx, getSiteConnectorFailures); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteConnectorFailures: %w", err)
 	}
 	if q.getSiteDBSizeLimitsStmt, err = db.PrepareContext(ctx, getSiteDBSizeLimits); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteDBSizeLimits: %w", err)
@@ -605,9 +605,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSiteStmt: %w", cerr)
 		}
 	}
-	if q.getSiteConnectorFailureRatesStmt != nil {
-		if cerr := q.getSiteConnectorFailureRatesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSiteConnectorFailureRatesStmt: %w", cerr)
+	if q.getSiteConnectorFailuresStmt != nil {
+		if cerr := q.getSiteConnectorFailuresStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteConnectorFailuresStmt: %w", cerr)
 		}
 	}
 	if q.getSiteDBSizeLimitsStmt != nil {
@@ -975,7 +975,7 @@ type Queries struct {
 	getPushRegistrationStmt                 *sql.Stmt
 	getServerSettingsStmt                   *sql.Stmt
 	getSiteStmt                             *sql.Stmt
-	getSiteConnectorFailureRatesStmt        *sql.Stmt
+	getSiteConnectorFailuresStmt            *sql.Stmt
 	getSiteDBSizeLimitsStmt                 *sql.Stmt
 	getSiteIDsWithAlarmsStmt                *sql.Stmt
 	getSiteIdentityStmt                     *sql.Stmt
@@ -1088,7 +1088,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getPushRegistrationStmt:                 q.getPushRegistrationStmt,
 		getServerSettingsStmt:                   q.getServerSettingsStmt,
 		getSiteStmt:                             q.getSiteStmt,
-		getSiteConnectorFailureRatesStmt:        q.getSiteConnectorFailureRatesStmt,
+		getSiteConnectorFailuresStmt:            q.getSiteConnectorFailuresStmt,
 		getSiteDBSizeLimitsStmt:                 q.getSiteDBSizeLimitsStmt,
 		getSiteIDsWithAlarmsStmt:                q.getSiteIDsWithAlarmsStmt,
 		getSiteIdentityStmt:                     q.getSiteIdentityStmt,

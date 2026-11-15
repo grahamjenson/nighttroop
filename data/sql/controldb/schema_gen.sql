@@ -152,8 +152,6 @@ CREATE TABLE site_connectors (
     total_ema REAL,
     success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
     failure_ema REAL,
-    -- the share of its recent syncs that failed, from 0 to 1: each sync moves it a fifth of the way to 1 or 0
-    failure_rate_ema REAL NOT NULL DEFAULT 0 CHECK(failure_rate_ema BETWEEN 0 AND 1),
     
     -- Duration of last sync in ms
     last_sync_duration INTEGER,

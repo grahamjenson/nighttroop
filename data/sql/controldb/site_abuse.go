@@ -42,6 +42,8 @@ const (
 
 	// abuseSizeOver is how far over its limit, in limits, a site's DB is when its size signal reaches 1 (at 3.5 times)
 	abuseSizeOver = 2.5
+	// abuseConnectorFailuresHalf is the failed syncs in a row at which the connectors signal is a half (before its cap)
+	abuseConnectorFailuresHalf = 5
 	// abuseConnectorsCap keeps connector failures alone under OverUse, as an honest site's connector fails often (a
 	// changed password, a server down)
 	abuseConnectorsCap = 0.39
@@ -51,8 +53,8 @@ const (
 type AbuseSignals struct {
 	// SizeKB is its DB's size and LimitKB its size limit, nil if not known
 	SizeKB, LimitKB *int64
-	// ConnectorFailures is the highest failure rate of its connectors, from 0 to 1
-	ConnectorFailures float64
+	// ConnectorFailures is the most failed syncs in a row now of its connectors that are on
+	ConnectorFailures int64
 }
 
 // Score is the site's abuse score from 0 to 1: any one signal can raise it, and each adds to the others. Only its size
@@ -73,7 +75,11 @@ func (s AbuseSignals) size() float64 {
 	return clamp((float64(*s.SizeKB)/float64(*s.LimitKB)-1)/abuseSizeOver, 1)
 }
 
-func (s AbuseSignals) connectors() float64 { return clamp(s.ConnectorFailures, abuseConnectorsCap) }
+// connectors is 0 with no failed syncs in a row, a half at abuseConnectorFailuresHalf of them, and at most its cap
+func (s AbuseSignals) connectors() float64 {
+	failures := float64(max(0, s.ConnectorFailures))
+	return clamp(failures/(failures+abuseConnectorFailuresHalf), abuseConnectorsCap)
+}
 
 func clamp(v float64, most float64) float64 { return max(0, min(most, v)) }
 

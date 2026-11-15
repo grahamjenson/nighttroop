@@ -677,7 +677,7 @@ func (db *ControlDB) RecordSiteSizes(ctx context.Context, sites []*SiteDB) error
 // scores in one transaction, so the control pages show each site's level without measuring them
 func (db *ControlDB) RecordAbuseScores(ctx context.Context, sites []*SiteDB) error {
 	limits, err := db.Queries.GetSiteDBSizeLimits(ctx)
-	failures, failuresErr := db.Queries.GetSiteConnectorFailureRates(ctx)
+	failures, failuresErr := db.Queries.GetSiteConnectorFailures(ctx)
 	if err := errors.Join(err, failuresErr); err != nil {
 		return fmt.Errorf("cannot score sites for abuse: %w", err)
 	}
@@ -692,7 +692,7 @@ func (db *ControlDB) RecordAbuseScores(ctx context.Context, sites []*SiteDB) err
 	}
 	for _, failure := range failures {
 		if site := signals[failure.SiteID]; site != nil {
-			site.ConnectorFailures = failure.FailureRate
+			site.ConnectorFailures = failure.ConsecutiveFailedSyncs
 		}
 	}
 	tx, err := db.SQLiteDB.BeginTx(ctx, nil)

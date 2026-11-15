@@ -147,8 +147,6 @@ SET
     -- Timing
     last_sync_duration = sqlc.arg(elapsed_ms),
 
-    failure_rate_ema = 0.8 * failure_rate_ema,
-
     success_ema = CASE
         WHEN success_ema IS NULL THEN CAST(sqlc.arg(elapsed_ms) AS REAL)
         ELSE (0.2 * CAST(sqlc.arg(elapsed_ms) AS REAL))
@@ -193,8 +191,6 @@ SET
     -- Timing
     last_sync_duration = sqlc.arg(elapsed_ms),
 
-    failure_rate_ema = 0.2 + (0.8 * failure_rate_ema),
-
     failure_ema = CASE
         WHEN failure_ema IS NULL THEN CAST(sqlc.arg(elapsed_ms) AS REAL)
         ELSE (0.2 * CAST(sqlc.arg(elapsed_ms) AS REAL))
@@ -209,6 +205,8 @@ SET
 
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
--- name: GetSiteConnectorFailureRates :many
--- Each site's highest failure rate of its connectors, for its abuse score
-SELECT site_id, CAST(MAX(failure_rate_ema) AS REAL) AS failure_rate FROM site_connectors GROUP BY site_id;
+-- name: GetSiteConnectorFailures :many
+-- Each site's longest run of failed syncs now, of its connectors that are on, for its abuse score. One turned off keeps
+-- its count, so it is left out.
+SELECT site_id, CAST(MAX(consecutive_failed_syncs) AS INTEGER) AS consecutive_failed_syncs
+FROM site_connectors WHERE enabled = 1 GROUP BY site_id;

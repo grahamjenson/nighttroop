@@ -1835,9 +1835,10 @@ harder:
 - The score has these signals, each from 0 to 1:
   - Size: 0 at or under its DB size limit, 0.4 at 2 times it, 0.8 at 3 times it, 1 at 3.5 times it or more.
     - If the size or the limit is not known, this signal is 0.
-  - Connectors: the highest failure rate of the site's connectors, at most 0.39.
-    - Each failed sync moves a connector's failure rate 1/5 of the way to 1. Each sync that works moves it 1/5 of the
-      way to 0.
+  - Connectors: from the most failed syncs in a row (c) of the site's connectors that are on, c ÷ (c + 5), at most 0.39.
+    - One failed sync: 0.17. Two in a row: 0.29. Four or more: 0.39.
+    - One sync that works sets the connector's count back to 0.
+    - A connector that is off is left out.
 - Each signal raises the score, and they add up: score = 1 − (1 − size) × (1 − connectors). Only the size can make
   the score 0.4 or more alone.
 - The score gives the level:

@@ -52,7 +52,7 @@ func TestControlDataLimits(t *testing.T) {
 			_, err := q.CreateSite(ctx, controldb.CreateSiteParams{ID: "connector" + id(i), BackupKeyHash: "hash"})
 			require.NoError(t, err)
 			return controldb.CreateConnectorParams{SiteID: "connector" + id(i), Type: consts.ConnectorTypeVirtual}
-		}, q.CreateConnector, "LastBackfillError", "SyncIntervalSecondsReason", "PreviousSyncErrors", "FailureRateEma"),
+		}, q.CreateConnector, "LastBackfillError", "SyncIntervalSecondsReason", "PreviousSyncErrors"),
 		"site_identities": testutils.Recipe(func(i int) controldb.CreateSiteIdentityParams {
 			return controldb.CreateSiteIdentityParams{SiteID: siteID, Name: id(i), PasswordHash: "hash",
 				TotpSecretEnc: "secret", Role: consts.IdentityRoleUser, CreatedByIdentityName: by}

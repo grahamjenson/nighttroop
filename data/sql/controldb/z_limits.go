@@ -109,7 +109,6 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"TotalEma":                   {Column: "total_ema"},
 		"SuccessEma":                 {Column: "success_ema"},
 		"FailureEma":                 {Column: "failure_ema"},
-		"FailureRateEma":             {Column: "failure_rate_ema", Required: true, Min: new(0.0), Max: new(1.0)},
 		"LastSyncDuration":           {Column: "last_sync_duration"},
 		"UNIQUE(siteId,":             {Column: "UNIQUE(site_id,"},
 	},

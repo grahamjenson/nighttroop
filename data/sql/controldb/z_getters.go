@@ -1488,16 +1488,6 @@ func (m *SiteConnector) SetFailureEma(v *float64) {
 	m.FailureEma = v
 }
 
-// GetFailureRateEma returns the FailureRateEma value.
-func (m SiteConnector) GetFailureRateEma() float64 {
-	return m.FailureRateEma
-}
-
-// SetFailureRateEma sets the FailureRateEma value and returns the updated SiteConnector.
-func (m *SiteConnector) SetFailureRateEma(v float64) {
-	m.FailureRateEma = v
-}
-
 // GetLastSyncDuration returns the LastSyncDuration value.
 func (m SiteConnector) GetLastSyncDuration() *int64 {
 	return m.LastSyncDuration

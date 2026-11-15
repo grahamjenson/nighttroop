@@ -177,7 +177,6 @@ type SiteConnector struct {
 	TotalEma                   *float64
 	SuccessEma                 *float64
 	FailureEma                 *float64
-	FailureRateEma             float64
 	LastSyncDuration           *int64
 }
 

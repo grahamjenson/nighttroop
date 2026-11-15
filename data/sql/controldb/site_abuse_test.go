@@ -30,12 +30,15 @@ func TestAbuseSignalsScore(t *testing.T) {
 		{"2.7 times its limit", controldb.AbuseSignals{SizeKB: times(2.7), LimitKB: limit}, 0.68, controldb.AbuseAbusive},
 		{"3.2 times its limit", controldb.AbuseSignals{SizeKB: times(3.2), LimitKB: limit}, 0.88, controldb.AbuseBlocked},
 		{"size alone reaches 1", controldb.AbuseSignals{SizeKB: times(10), LimitKB: limit}, 1, controldb.AbuseBlocked},
-		{"connectors alone never above Fair", controldb.AbuseSignals{ConnectorFailures: 1}, 0.39, controldb.AbuseFair},
-		{"connectors under their cap", controldb.AbuseSignals{ConnectorFailures: 0.1}, 0.1, controldb.AbuseGood},
-		// One failed sync moves a connector's failure rate to 0.2, which is Fair, though 1 − 0.8 is 0.19999… in floating point
-		{"one failed connector sync", controldb.AbuseSignals{ConnectorFailures: 0.2}, 0.2, controldb.AbuseFair},
-		{"size and connectors together", controldb.AbuseSignals{SizeKB: times(1.6), LimitKB: limit, ConnectorFailures: 1}, 0.54, controldb.AbuseOverUse},
-		{"size and connectors reach Blocked", controldb.AbuseSignals{SizeKB: times(2.7), LimitKB: limit, ConnectorFailures: 1}, 0.8, controldb.AbuseBlocked},
+		// 1.5 times its limit is a size signal of 0.2, the start of Fair, though 1 − 0.8 is 0.19999… in floating point
+		{"1.5 times its limit", controldb.AbuseSignals{SizeKB: times(1.5), LimitKB: limit}, 0.2, controldb.AbuseFair},
+		{"no failed syncs", controldb.AbuseSignals{ConnectorFailures: 0}, 0, controldb.AbuseGood},
+		{"one failed sync", controldb.AbuseSignals{ConnectorFailures: 1}, 0.17, controldb.AbuseGood},
+		{"two failed syncs in a row", controldb.AbuseSignals{ConnectorFailures: 2}, 0.29, controldb.AbuseFair},
+		{"connectors alone never above Fair", controldb.AbuseSignals{ConnectorFailures: 1000}, 0.39, controldb.AbuseFair},
+		{"no failed syncs below 0", controldb.AbuseSignals{ConnectorFailures: -3}, 0, controldb.AbuseGood},
+		{"size and connectors together", controldb.AbuseSignals{SizeKB: times(1.6), LimitKB: limit, ConnectorFailures: 1000}, 0.54, controldb.AbuseOverUse},
+		{"size and connectors reach Blocked", controldb.AbuseSignals{SizeKB: times(2.7), LimitKB: limit, ConnectorFailures: 1000}, 0.8, controldb.AbuseBlocked},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
