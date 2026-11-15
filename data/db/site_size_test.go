@@ -208,7 +208,7 @@ func TestRecordAbuseScores(t *testing.T) {
 	require.NoError(t, controlDB.RecordAbuseScores(ctx, []*db.SiteDB{large, failing}))
 	require.InDelta(t, 0.48, score(large), 0.001) // 2.2 times its 20 MB limit
 	require.Equal(t, controldb.AbuseOverUse, controldb.AbuseLevelOf(score(large)))
-	require.InDelta(t, 0.288, score(failing), 0.001) // its highest connector's failure rate
+	require.InDelta(t, 0.29, score(failing), 0.001) // its highest connector's failure rate, 0.288, to 2 places
 	require.Zero(t, score(notScored), "a site not given is not scored")
 
 	// Its connectors syncing again lower its score at the next check

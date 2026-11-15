@@ -1,5 +1,7 @@
 package controldb
 
+import "math"
+
 // AbuseSizeFactor is how many times its size limit a site's DB can be before the site is flagged for abuse. The server
 // truncates a site near its limit, so a DB far over it is likely bloated on purpose, to hurt the server and its backups.
 const AbuseSizeFactor = 3
@@ -54,9 +56,10 @@ type AbuseSignals struct {
 }
 
 // Score is the site's abuse score from 0 to 1: any one signal can raise it, and each adds to the others. Only its size
-// can make it Blocked, as its connectors stay under OverUse.
+// can make it Blocked, as its connectors stay under OverUse. It is rounded to 2 places, as it is shown, so its level is
+// the level of the score shown (1 − 0.8 is 0.19999… in floating point, shown as 0.20 but Good, not Fair).
 func (s AbuseSignals) Score() float64 {
-	return 1 - (1-s.size())*(1-s.connectors())
+	return math.Round((1-(1-s.size())*(1-s.connectors()))*100) / 100
 }
 
 // Level is the level of the site's abuse score
