@@ -50,14 +50,15 @@ ASSERT_TEXT_VISIBLE Showing 1 to
 CLICK #control--sites--order-created
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to
+// Each site shows its abuse level and score, from its DB size against its limit and its connectors' failures, which
+// the resource check scores every 5 minutes: a new site's, the newest, is Good. The server does not treat a site
+// differently by it yet.
+ASSERT_TEXT_EQUALS #controlSitesTable>tbody>tr:first-child>td:last-child Good · 0.00
 
 // Clicking a site opens its own page, laid out like a site's summary: its state, its DB size against its limit, tiles
 // of when it was last used, its identities and its last error, then its identities, and its latest events and errors.
 // The newest site is the one made above, which no one has used.
 SAVE_TEXT #controlSitesTable>tbody>tr:first-child>td:first-child new_site
-// Each site shows its abuse level and score, from its DB size against its limit and its connectors' failures, which
-// the resource check scores every 5 minutes: a new site's is Good. The server does not treat a site differently by it yet.
-ASSERT_TEXT_EQUALS #control--site--{{ .new_site }}--abuse Good · 0.00
 CLICK #controlSitesTable tbody tr >> nth=0
 ASSERT_PATH /sites/{{ .new_site }}
 ASSERT_VISIBLE #control--site--page
