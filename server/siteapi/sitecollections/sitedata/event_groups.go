@@ -103,11 +103,7 @@ func (s *EventGroupsCollection) UpdateHTMXResponse(model *sitemodels.SiteEventGr
 // Get Model
 // /////
 func (s *EventGroupsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.EventGroupsBundle, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	row, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id})
+	row, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetEventGroup, sitedb.GetEventGroupParams{ID: id})
 	if err != nil {
 		return nil, err
 	}
@@ -125,11 +121,7 @@ func (s *EventGroupsCollection) GetHTMXResponse(model *sitemodels.SiteEventGroup
 // ///
 
 func (s *EventGroupsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.EventGroupsBundle, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := q.AllEventGroups(ctx, siteapiutils.QueryToAllEventGroups(query))
+	rows, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllEventGroups, siteapiutils.QueryToAllEventGroups(query))
 	if err != nil {
 		return nil, err
 	}

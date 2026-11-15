@@ -1,0 +1,35 @@
+INCLUDE steps/new_ns_site.steps
+
+// Every endpoint gives the same Nightscout version, as Nightscout does from its package.json. AAPS 4 shows the v3
+// status `version` (NSClientV3Plugin.detectedNsVersion). AAPS 3.4 (NSClient v1) reads `version` and `versionNum`
+// from the socket's status, the v1 status, and shows "Unsupported Nightscout version" under 150000
+// (nsclient/data/NSSettingsStatusImpl.kt:152, ConfigImpl.SUPPORTED_NS_VERSION). xDrip+ reads the v1 status `version`.
+// See docs/clients/aaps.md
+
+NAME v1_status
+GET http://{{ site }}/api/v1/status.json
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "15.0.9" "@version"
+ASSERT_EQUALS 150009 "@versionNum"
+
+// v3 version needs no token
+NAME v3_version
+GET http://{{ site }}/api/v3/version
+ASSERT_STATUS 200
+ASSERT_EQUALS ".v1_status.version" "@result.version"
+
+// apiVersion is the v3 API's own version, not the server's, and the same in v3 version and v1 versions
+NAME v3_status
+GET http://{{ site }}/api/v3/status
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".v1_status.version" "@result.version"
+ASSERT_EQUALS ".v3_version.result.apiVersion" "@result.apiVersion"
+
+NAME v1_versions
+GET http://{{ site }}/api/v1/versions
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "/api/v3" "@2.url"
+ASSERT_EQUALS ".v3_version.result.apiVersion" "@2.version"

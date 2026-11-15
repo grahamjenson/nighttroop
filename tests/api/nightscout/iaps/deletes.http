@@ -17,7 +17,7 @@ B [
   { "duration" : 60, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:13:00.000Z", "enteredBy" : "iAPS", "notes" : "Sport" },
   { "duration" : 30, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:30:00.000Z", "enteredBy" : "iAPS", "notes" : "Walk" },
   { "duration" : 30, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:40:00.000Z", "enteredBy" : "careportal", "notes" : "From Nightscout" },
-  { "eventType" : "Announcement", "created_at" : "{{ date -1 }}T12:50:00.000Z", "enteredBy" : "remote", "notes" : "looping: false" }
+  { "eventType" : "Announcement", "created_at" : "{{ time 1 }}", "enteredBy" : "remote", "notes" : "looping: false" }
 ]
 ASSERT_STATUS 200
 ASSERT_LENGTH 8 "@"
@@ -33,7 +33,8 @@ ASSERT_LENGTH 1 "@"
 ASSERT_CONTAINS "T12:15:00.000Z" "@0.creation_date"
 
 // A delete that could delete more than was asked is refused: deleteAllNSoverrrides (all overrides, a developer's
-// tool), a time range longer than 2 days, a count of 0, and a treatment's filter on readings
+// tool), a time range longer than 2 days, a $gte with no $lte more than a day ago, a count of 0, and a treatment's
+// filter on readings
 NAME iaps_delete_all_overrides_refused
 DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise
 H api-secret: {{ sha1 token }}
@@ -44,6 +45,12 @@ DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise&find[en
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "2 days" "@message"
+
+NAME iaps_delete_announcements_from_1970_refused
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[created_at][$gte]=1970-01-01T00:00:00.000Z
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "1 day" "@message"
 
 NAME iaps_delete_count_zero_refused
 DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Exercise&count=0&find[enteredBy]=iAPS
@@ -102,9 +109,9 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 1 "@deletedCount"
 
-// deleteAnnouncements: those from a time on
+// deleteAnnouncements: those from now on, a few minutes ago here
 NAME iaps_delete_announcements
-DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[created_at][$gte]={{ date -1 }}T12:45:00.000Z
+DELETE http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[created_at][$gte]={{ utctime 5 }}
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 1 "@deletedCount"

@@ -23,7 +23,8 @@ How the Juggluco Nightscout uploader talks to Nightscout, and how it works with 
 2. Set **Nightscout URL** to the site's Nightscout host, for example `https://<site>.ns.<host>`.
    - A trailing `/` is accepted. Juggluco adds paths such as `/api/v1/entries` to the URL exactly as typed, so it
      gives `//api/...` (`makeuploadurls`, `uploader.cpp:66`). Nighttroop reads `//` as `/`.
-3. Set **Secret** to a device's Nightscout token. Juggluco keeps it as typed (`setNightUploader`,
+3. Set **Secret** to the PWD phone's Nightscout token. A Caregiver device (`device_read_write`) cannot upload
+   readings (403). Juggluco keeps it as typed (`setNightUploader`,
    `settings/javasettings.cpp:1482`).
 4. Tick **test V3**. This checkbox is only on phones (`NightPost.config`). Wear OS always uses v1.
 5. To upload amounts as treatments, turn on **Send amounts**.

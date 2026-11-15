@@ -162,7 +162,7 @@ settings keep that value, which replaces the env value until set back.
 | `SITE_POST_FLAGGED_PER_MINUTE_LIMIT` / `_BURST` | `12` / `36` | Writes of a site at abuse level OverUse or above (see `REQUIREMENTS.md`, "Abuse levels"), spent as well as its other write limits. A write costs 1 at OverUse and 4 at Abusive or above. A v1 or live update upload costs that for each record. |
 | `SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's saves of connector settings, to add or change one. |
 | `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities and credential resets. Each hashes a password with bcrypt or makes a TOTP secret. |
-| `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads. Each copies its whole DB. |
+| `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, truncates and summary regenerations. Each reads its whole DB, or a year of it. |
 | `SITE_REPORT_PRINT_PER_MINUTE_LIMIT` / `_BURST` | `5` / `10` | A site's printable reports. Each builds four months of reports. |
 | `SITE_PUSH_PER_MINUTE_LIMIT` / `_BURST` | `10` / `30` | A site's pushes to its devices' apps. Each is a request to Apple or Firebase. |
 

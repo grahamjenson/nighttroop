@@ -23,58 +23,51 @@ import (
 	"nighttroop.t1d.nz/utils/usage"
 )
 
-func TestRequestLogsRedactCredentials(t *testing.T) {
-	var logs bytes.Buffer
-	router := chi.NewRouter()
-	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
-	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
-	router.Get("/api/v2/authorization/request/{token}", func(w http.ResponseWriter, r *http.Request) {})
-
-	r := httptest.NewRequest(http.MethodGet, "/api/v2/authorization/request/pathtoken123?token=querytoken456&secret=querysecret789&count=10", nil)
-	router.ServeHTTP(httptest.NewRecorder(), r)
-
-	assert.Contains(t, logs.String(), "count=10")
-	for _, credential := range []string{"pathtoken123", "querytoken456", "querysecret789"} {
-		assert.NotContains(t, logs.String(), credential)
+// No credential reaches a request's log or its Sentry event. The Nightscout API takes a token in the path, the query
+// and the api-secret header. A Socket.IO session is authorized once, then each long poll and POST to it carries only
+// its sid, which would let whoever reads it read and write the site as the session's identity.
+func TestRequestLogsAndSentryRedactCredentials(t *testing.T) {
+	tests := []struct {
+		name, method, route, target string
+		// kept are in both the log and the Sentry event, and hidden, the credentials, are in neither
+		kept, hidden []string
+	}{
+		{"a Nightscout token", http.MethodGet, "/api/v2/authorization/request/{token}",
+			"https://abcdefgh.ns.example.com/api/v2/authorization/request/pathtoken123?token=querytoken456&secret=querysecret789&count=10",
+			[]string{"count=10"}, []string{"pathtoken123", "querytoken456", "querysecret789"}},
+		{"a Socket.IO session ID", http.MethodPost, "/socket.io/",
+			"https://abcdefgh.ns.example.com/socket.io/?EIO=4&transport=polling&sid=sessionid789",
+			[]string{"transport=polling"}, []string{"sessionid789"}},
 	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Each request also sends a token in the headers the Nightscout API takes one in
+			request := func() *http.Request {
+				r := httptest.NewRequest(tt.method, tt.target, nil)
+				r.Header.Set("Api-Secret", "headersecret000")
+				r.Header.Set("Authorization", "Bearer bearertoken111")
+				r.Header.Set("Accept", "application/json")
+				return r
+			}
+			var logs bytes.Buffer
+			testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
+			router := chi.NewRouter()
+			AddStandardMiddleware(router, &config.ServerConfig{}, nil)
+			router.MethodFunc(tt.method, tt.route, func(w http.ResponseWriter, r *http.Request) {})
+			router.ServeHTTP(httptest.NewRecorder(), request())
 
-// A Socket.IO session is authorized once, then each long poll and POST to it carries only its sid, so whoever reads
-// the logs or Sentry must not get the sid, which would let them read and write the site as the session's identity
-func TestRequestLogsAndSentryRedactSocketIOSessionID(t *testing.T) {
-	var logs bytes.Buffer
-	router := chi.NewRouter()
-	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
-	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
-	router.Post("/socket.io/", func(w http.ResponseWriter, r *http.Request) {})
-
-	target := "https://abcdefgh.ns.example.com/socket.io/?EIO=4&transport=polling&sid=sessionid789"
-	router.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, target, nil))
-	assert.Contains(t, logs.String(), "transport=polling")
-	assert.NotContains(t, logs.String(), "sessionid789")
-
-	event := RedactSentryEvent(&sentry.Event{Request: sentry.NewRequest(httptest.NewRequest(http.MethodPost, target, nil))}, nil)
-	sent, err := json.Marshal(event.Request)
-	require.NoError(t, err)
-	assert.Contains(t, string(sent), "transport=polling")
-	assert.NotContains(t, string(sent), "sessionid789")
-}
-
-// The Nightscout API takes a token in the query, the api-secret header and the path, none of which may reach Sentry
-func TestSentryEventsRedactCredentials(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, "https://abcdefgh.ns.example.com/api/v2/authorization/request/pathtoken123?token=querytoken456&secret=querysecret789&count=10", nil)
-	r.Header.Set("Api-Secret", "headersecret000")
-	r.Header.Set("Authorization", "Bearer bearertoken111")
-	r.Header.Set("Accept", "application/json")
-
-	event := RedactSentryEvent(&sentry.Event{Request: sentry.NewRequest(r)}, nil)
-	sent, err := json.Marshal(event.Request)
-	require.NoError(t, err)
-
-	assert.Contains(t, string(sent), "count=10")
-	assert.Contains(t, string(sent), "application/json")
-	for _, credential := range []string{"pathtoken123", "querytoken456", "querysecret789", "headersecret000", "bearertoken111"} {
-		assert.NotContains(t, string(sent), credential)
+			sent, err := json.Marshal(RedactSentryEvent(&sentry.Event{Request: sentry.NewRequest(request())}, nil).Request)
+			require.NoError(t, err)
+			assert.Contains(t, string(sent), "application/json", "a header that is not a credential is sent")
+			for name, got := range map[string]string{"log": logs.String(), "Sentry event": string(sent)} {
+				for _, kept := range tt.kept {
+					assert.Contains(t, got, kept, name)
+				}
+				for _, credential := range append(tt.hidden, "headersecret000", "bearertoken111") {
+					assert.NotContains(t, got, credential, name)
+				}
+			}
+		})
 	}
 
 	// An event without a request is sent as it is
