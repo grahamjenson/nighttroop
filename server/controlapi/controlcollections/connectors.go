@@ -52,13 +52,10 @@ func (s *ConnectorsCollection) GetRow(ctx context.Context, id string, controlCon
 func (s *ConnectorsCollection) SharedHostsHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	rows, err := controlContext.ControlDB.Queries.SharedNightscoutHosts(r.Context())
-	if herr := apiutils.ErrorFor(err, s.GetName()); herr != nil {
+	hosts, herr := apiutils.Searched(rows, err, s.GetName(), controlmodels.SharedHostFromDB)
+	if herr != nil {
 		herr.Write(acceptType, w)
 		return
-	}
-	hosts := make([]*controlmodels.SharedHost, 0, len(rows))
-	for _, row := range rows {
-		hosts = append(hosts, controlmodels.SharedHostFromDB(row))
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, hosts, control_connectors_templ.SharedHosts(hosts))
 }

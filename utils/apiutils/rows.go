@@ -2,26 +2,24 @@ package apiutils
 
 import (
 	"database/sql"
-	"log/slog"
+	"errors"
 )
 
-// Found is the model for the row a Get query returned, or nil when there is no such row
+// Found is the model for the row a Get query returned, nil when there is no such row, or the error as ErrorFor says
 func Found[R, M any](row *R, err error, what string, toModel func(*R) *M) (*M, *HTTPError) {
-	if err == sql.ErrNoRows || (err == nil && row == nil) {
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
 		return nil, nil
 	}
-	if err != nil {
-		slog.Error("Error fetching "+what, "error", err)
-		return nil, ErrInternalServerError
+	if herr := ErrorFor(err, what); herr != nil {
+		return nil, herr
 	}
 	return toModel(row), nil
 }
 
-// Searched is the models for the rows a search query returned
+// Searched is the models for the rows a search query returned, or the error as ErrorFor says
 func Searched[R, M any](rows []*R, err error, what string, toModel func(*R) *M) ([]*M, *HTTPError) {
-	if err != nil {
-		slog.Error("Error searching "+what, "error", err)
-		return nil, ErrInternalServerError
+	if herr := ErrorFor(err, what); herr != nil {
+		return nil, herr
 	}
 	models := make([]*M, 0, len(rows))
 	for _, row := range rows {
