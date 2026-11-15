@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -124,7 +124,7 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 // AdminOnly refuses a read only control identity, for a route only an admin can use
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if httputils.GetControlContext(r.Context()).IdentityModel.Role != consts.ControlRoleAdmin {
+		if !can.ControlChangeServer(httputils.GetControlContext(r.Context()).IdentityModel.Role) {
 			apiutils.ErrForbidden.Write(httputils.GetAcceptType(r), w)
 			return
 		}

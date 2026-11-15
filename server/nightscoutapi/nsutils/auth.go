@@ -1,13 +1,12 @@
 package nsutils
 
 import (
-	"fmt"
 	"net/http"
 	"slices"
 	"strings"
 	"time"
 
-	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -70,65 +69,13 @@ func permissionMatch(granted, wanted string) bool {
 	return true
 }
 
-// CaregiverPermissions are a read and write device's, the token of a carer's or follower's app such as LoopFollow or
-// Nightguard: it reads everything and writes treatments, as Nightscout's careportal does, a device status and settings.
-// It cannot add, change or delete the readings, profiles or device statuses that the PWD phone uploads
-var CaregiverPermissions = []string{"api:*:read", "api:treatments:create", "api:treatments:update", "api:treatments:delete",
-	"api:devicestatus:create", "api:settings:*"}
-
-func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole, client *string) (*Identity, error) {
-	// Collections
-	// 'entries'
-	// 'treatments'
-	// 'devicestatus'
-	// 'profile'
-	// 'settings'
-	// 'food'
-	// 'properties'
-
-	// Possible Permissions
-	// 'api:*:read',
-	// 'api:*:update',
-	// 'api:*:create',
-	// 'api:*:delete',
-	// "api:entries:read",
-	// "api:treatments:read",
-	// "api:treatments:create",
-	// "api:treatments:delete",
-	// "api:devicestatus:read",
-	// "api:devicestatus:create",
-	// "api:devicestatus:delete",
-	// "api:profile:read",
-	// "api:profile:create",
-	// "api:profile:delete",
-	// "api:settings:read",
-	// "api:settings:create",
-	// "api:settings:delete",
-	// "api:food:read",
-	// "api:food:create",
-	// "api:food:delete",
-	// "api:settings:admin"
-
-	permissions := []string{}
-	switch ntid {
-	case consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead:
-		permissions = append(permissions, "api:*:read")
-	case consts.IdentityRoleUser, consts.IdentityRoleDevicePWDPhone:
-		permissions = append(permissions, "api:*:*")
-	case consts.IdentityRoleDeviceReadWrite:
-		permissions = slices.Clone(CaregiverPermissions)
-	default:
-		return nil, fmt.Errorf("unknown identity role: %s", ntid)
+// NighttroopIdentityToNightscoutIdentity is the identity with its Nightscout permissions, see can.NightscoutPermissions
+func NighttroopIdentityToNightscoutIdentity(identityName string, role consts.IdentityRole, client *string) (*Identity, error) {
+	permissions, err := can.NightscoutPermissions(role, client)
+	if err != nil {
+		return nil, err
 	}
-	// A device AAPS pairs as a client, by its QR code, reads everything and writes only the settings that client
-	// control is made of, as its role does in Nightscout; whoever sees the code can read the site
-	if client != nil && *client == sitemodels.AAPSClient {
-		permissions = []string{"api:*:read", "api:settings:create", "api:settings:update"}
-	}
-	return &Identity{
-		Name:        identityName,
-		Permissions: permissions,
-	}, nil
+	return &Identity{Name: identityName, Permissions: permissions}, nil
 }
 
 // Authorization is the identity's JWT and permissions, as Nightscout gives them from /api/v2/authorization/request and

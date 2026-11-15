@@ -50,9 +50,9 @@ func LoopSettingsFromDB(row *sitedb.LoopSetting) *SiteLoopSettings {
 }
 
 // LoopSettingsFor are the settings as the identity may see them: without their deviceToken, at the top of Loop's and
-// Trio's, unless can.SeeDeviceTokens, and none when they cannot be read without it
+// Trio's, unless can.IdentitySeeDeviceTokens, and none when they cannot be read without it
 func LoopSettingsFor(identity *controldb.SiteIdentity, settings json.RawMessage) json.RawMessage {
-	if can.SeeDeviceTokens(identity) {
+	if can.IdentitySeeDeviceTokens(identity) {
 		return settings
 	}
 	var fields map[string]json.RawMessage

@@ -12,8 +12,8 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/sitecollections"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -126,7 +126,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 func clinicianReportOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siteContext := httputils.GetSiteContext(r.Context())
-		if siteContext == nil || siteContext.IdentityModel == nil || siteContext.IdentityModel.Role != consts.IdentityRoleClinician {
+		if siteContext == nil || siteContext.IdentityModel == nil || !can.IdentityOnlySeeReport(siteContext.IdentityModel.Role) {
 			next.ServeHTTP(w, r)
 			return
 		}

@@ -1,4 +1,8 @@
-package siteapiutils
+package can
+
+// site_stores.go: who may search, get, create, update and delete each store of the site API. The stores are in groups:
+// the admin's, each identity's own, the treatments a Caregiver changes, and the summaries a clinician reads. All other
+// stores are the site's data.
 
 import (
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -37,7 +41,7 @@ var readWriteRoles = map[consts.IdentityRole]bool{
 }
 
 // caregiverStores are the treatments' stores, the only data a Caregiver device (device_read_write) changes, as on the
-// Nightscout API (nsutils.CaregiverPermissions): it cannot add, change or delete the readings, device statuses,
+// Nightscout API (CaregiverNightscoutPermissions): it cannot add, change or delete the readings, device statuses,
 // profiles, food or loop settings the PWD phone uploads
 var caregiverStores = map[string]bool{"event_groups": true, "insulin_doses": true, "food": true, "temp_basals": true,
 	"temp_targets": true, "profile_switches": true, "activities": true, "notification_events": true}
@@ -45,18 +49,19 @@ var caregiverStores = map[string]bool{"event_groups": true, "insulin_doses": tru
 // clinicianStores are what a clinician reads, the site's summaries, to see its printable report, all a clinician sees
 var clinicianStores = map[string]bool{"summary_periods": true}
 
-// HasPermission is whether the identity may do the action on the store; every other store is the site's data
-func HasPermission(collectionName string, action Action, identity *controldb.SiteIdentity) bool {
+// IdentityAccessStore is whether the identity may do the action on the store; every other store is the site's data.
+// If there is no identity (signed out), the answer is no.
+func IdentityAccessStore(identity *controldb.SiteIdentity, store string, action Action) bool {
 	if identity == nil {
 		return false
 	}
 	if identity.Role == consts.IdentityRoleClinician {
-		return clinicianStores[collectionName] && (action == ActionSearch || action == ActionGet)
+		return clinicianStores[store] && (action == ActionSearch || action == ActionGet)
 	}
-	if adminStores[collectionName] {
+	if adminStores[store] {
 		return identity.Role == consts.IdentityRoleAdmin
 	}
-	if ownStores[collectionName] {
+	if ownStores[store] {
 		return readOnlyRoles[identity.Role] || readWriteRoles[identity.Role]
 	}
 	read := action == ActionSearch || action == ActionGet
@@ -64,7 +69,7 @@ func HasPermission(collectionName string, action Action, identity *controldb.Sit
 		return read
 	}
 	if identity.Role == consts.IdentityRoleDeviceReadWrite {
-		return read || caregiverStores[collectionName]
+		return read || caregiverStores[store]
 	}
 	return readWriteRoles[identity.Role]
 }

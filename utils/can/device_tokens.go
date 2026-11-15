@@ -1,5 +1,8 @@
 package can
 
+// device_tokens.go: who gets the device tokens that Loop and Trio send in their settings. With the push credentials of
+// the app, a device token sends remote commands to the PWD phone.
+
 import (
 	"slices"
 
@@ -11,9 +14,9 @@ import (
 var DeviceTokenRoles = []consts.IdentityRole{consts.IdentityRoleAdmin, consts.IdentityRoleUser,
 	consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceReadWrite}
 
-// SeeDeviceTokens is whether the identity is given the device tokens Loop and Trio send in their settings, which,
+// IdentitySeeDeviceTokens is whether the identity is given the device tokens Loop and Trio send in their settings, which,
 // with the app's push credentials, push to the phone: only one that can change the site's data, as LoopFollow sending
 // remote commands must, not a read only follower, a clinician, or no identity, as a broadcast to every socket has
-func SeeDeviceTokens(identity *controldb.SiteIdentity) bool {
+func IdentitySeeDeviceTokens(identity *controldb.SiteIdentity) bool {
 	return identity != nil && slices.Contains(DeviceTokenRoles, identity.Role)
 }

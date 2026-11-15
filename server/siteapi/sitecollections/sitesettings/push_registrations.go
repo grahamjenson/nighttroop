@@ -25,7 +25,7 @@ type PushRegistrationsCollection struct{}
 // PushIdentity is whose push registrations the signed in identity may get, test and delete: an admin's site's, and
 // anyone else's own
 func PushIdentity(siteContext *httputils.SiteContext) *int64 {
-	if siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
+	if can.IdentitySeeAllPushRegistrations(siteContext.IdentityModel.Role) {
 		return nil
 	}
 	return &siteContext.IdentityModel.ID
@@ -68,7 +68,7 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 		return nil, apiutils.ErrBadBodyWithHint(err)
 	}
 	// Loop and Trio take remote commands from their registration, so one that cannot change the site's data registers neither
-	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) && !can.SeeDeviceTokens(siteContext.IdentityModel) {
+	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) && !can.IdentitySeeDeviceTokens(siteContext.IdentityModel) {
 		return nil, apiutils.ErrForbidden
 	}
 	q, err := collectionTx.Control()

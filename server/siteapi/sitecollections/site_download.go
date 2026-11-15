@@ -4,17 +4,17 @@ import (
 	"log/slog"
 	"net/http"
 
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/backup"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // DownloadDataHandler sends a site's admin the site's download (backup.SiteDownload), a zip of a snapshot of its DB, as
 // the control site's Download DB does. Each copies the whole DB, so a site has only a few a minute.
 func DownloadDataHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), siteapiutils.ActionGet)
+	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), can.ActionGet)
 	if siteContext == nil {
 		return
 	}

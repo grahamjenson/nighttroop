@@ -10,7 +10,7 @@ import (
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/ui/icon"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -189,7 +189,7 @@ func (p Page) SearchID() string {
 func Visible(identity *controldb.SiteIdentity, hubs ...Hub) []Page {
 	var pages []Page
 	for _, page := range Pages {
-		if (len(hubs) == 0 || slices.Contains(hubs, page.Hub)) && siteapiutils.HasPermission(page.Store, siteapiutils.ActionSearch, identity) {
+		if (len(hubs) == 0 || slices.Contains(hubs, page.Hub)) && can.IdentityAccessStore(identity, page.Store, can.ActionSearch) {
 			pages = append(pages, page)
 		}
 	}

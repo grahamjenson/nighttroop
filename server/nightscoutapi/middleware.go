@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -119,7 +120,7 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 	if len(tokenParam) == 40 {
 		identity, err := siteContext.ControlDB.Queries.GetSiteIdentityByTokenDigest(ctx, controldb.GetSiteIdentityByTokenDigestParams{
 			SiteID: siteContext.SiteID, Digest: new(security.NightscoutTokenDigest(tokenParam))})
-		if err != nil || !identity.Enabled || identity.TotpSecretEnc != "" || identity.Role == consts.IdentityRoleAdmin {
+		if err != nil || !identity.Enabled || !can.IdentityUseNightscoutToken(identity.Role, identity.TotpSecretEnc != "") {
 			return nil, fmt.Errorf("no identity that can use a token has one with this SHA1: %v", err)
 		}
 		return identity, nil
@@ -142,15 +143,9 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
-	if identity.TotpSecretEnc != "" {
+	if !can.IdentityUseNightscoutToken(identity.Role, identity.TotpSecretEnc != "") {
 		config.Security.VerifyNoOnesPassword(tokenParamPassword)
-		return nil, fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
-	}
-
-	// Constraint: Not allowed to be admin and use legacy token
-	if identity.Role == consts.IdentityRoleAdmin {
-		config.Security.VerifyNoOnesPassword(tokenParamPassword)
-		return nil, fmt.Errorf("legacy token cannot be used for admin identities")
+		return nil, fmt.Errorf("legacy token cannot be used for admin identities or identities with TOTP enabled")
 	}
 
 	if !config.Security.VerifyPasswordWithCache(tokenParamPassword, identity.PasswordHash) {

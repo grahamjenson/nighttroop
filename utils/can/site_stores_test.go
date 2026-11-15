@@ -1,4 +1,4 @@
-package siteapiutils_test
+package can_test
 
 import (
 	"slices"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -16,21 +16,21 @@ func TestClinicianPermissions(t *testing.T) {
 	clinician := &controldb.SiteIdentity{Role: consts.IdentityRoleClinician}
 	tests := []struct {
 		collection string
-		action     siteapiutils.Action
+		action     can.Action
 		allowed    bool
 	}{
-		{"summary_periods", siteapiutils.ActionGet, true},
-		{"summary_periods", siteapiutils.ActionSearch, true},
-		{"summary_periods", siteapiutils.ActionCreate, false},
-		{"summary_daily", siteapiutils.ActionSearch, false},
-		{"glucose_readings", siteapiutils.ActionSearch, false},
-		{"identity_settings", siteapiutils.ActionGet, false},
-		{"alarms", siteapiutils.ActionSearch, false},
-		{"identities", siteapiutils.ActionSearch, false},
-		{"site_logs", siteapiutils.ActionSearch, false},
+		{"summary_periods", can.ActionGet, true},
+		{"summary_periods", can.ActionSearch, true},
+		{"summary_periods", can.ActionCreate, false},
+		{"summary_daily", can.ActionSearch, false},
+		{"glucose_readings", can.ActionSearch, false},
+		{"identity_settings", can.ActionGet, false},
+		{"alarms", can.ActionSearch, false},
+		{"identities", can.ActionSearch, false},
+		{"site_logs", can.ActionSearch, false},
 	}
 	for _, test := range tests {
-		require.Equal(t, test.allowed, siteapiutils.HasPermission(test.collection, test.action, clinician), "%s %s", test.collection, test.action)
+		require.Equal(t, test.allowed, can.IdentityAccessStore(clinician, test.collection, test.action), "%s %s", test.collection, test.action)
 	}
 }
 
@@ -39,21 +39,21 @@ func TestClinicianPermissions(t *testing.T) {
 func TestCaregiverPermissions(t *testing.T) {
 	caregiver := &controldb.SiteIdentity{Role: consts.IdentityRoleDeviceReadWrite}
 	pwdPhone := &controldb.SiteIdentity{Role: consts.IdentityRoleDevicePWDPhone}
-	reads := []siteapiutils.Action{siteapiutils.ActionSearch, siteapiutils.ActionGet}
-	changes := []siteapiutils.Action{siteapiutils.ActionCreate, siteapiutils.ActionUpdate, siteapiutils.ActionDelete}
+	reads := []can.Action{can.ActionSearch, can.ActionGet}
+	changes := []can.Action{can.ActionCreate, can.ActionUpdate, can.ActionDelete}
 	treatments := []string{"event_groups", "insulin_doses", "food", "temp_basals", "temp_targets", "profile_switches",
 		"activities", "notification_events"}
 	uploaded := []string{"glucose", "device_statuses", "profile_presets", "food_presets", "loop_settings"}
 	own := []string{"identity_settings", "alarms", "push_registrations"}
 	for _, collection := range append(append(treatments, uploaded...), own...) {
 		for _, action := range reads {
-			require.True(t, siteapiutils.HasPermission(collection, action, caregiver), "%s %s", collection, action)
+			require.True(t, can.IdentityAccessStore(caregiver, collection, action), "%s %s", collection, action)
 		}
 		for _, action := range changes {
-			require.True(t, siteapiutils.HasPermission(collection, action, pwdPhone), "%s %s", collection, action)
+			require.True(t, can.IdentityAccessStore(pwdPhone, collection, action), "%s %s", collection, action)
 			allowed := !slices.Contains(uploaded, collection)
-			require.Equal(t, allowed, siteapiutils.HasPermission(collection, action, caregiver), "%s %s", collection, action)
+			require.Equal(t, allowed, can.IdentityAccessStore(caregiver, collection, action), "%s %s", collection, action)
 		}
 	}
-	require.False(t, siteapiutils.HasPermission("identities", siteapiutils.ActionSearch, caregiver))
+	require.False(t, can.IdentityAccessStore(caregiver, "identities", can.ActionSearch))
 }

@@ -9,16 +9,16 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // UsageHandler is the site's Usage page, for its admins: its storage (withTables) and Download Data, or as JSON the
 // same storage
 func UsageHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), siteapiutils.ActionGet)
+	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), can.ActionGet)
 	if siteContext == nil {
 		return
 	}
@@ -65,7 +65,7 @@ func siteSize(r *http.Request) (*int64, *int64) {
 // the same event, then shows its storage again with a toast of its new size, or as JSON its storage with its size
 // before. It rewrites the whole DB, so it shares the site's few downloads a minute.
 func TruncateHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), siteapiutils.ActionUpdate)
+	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), can.ActionUpdate)
 	if siteContext == nil {
 		return
 	}

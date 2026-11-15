@@ -21,7 +21,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -91,7 +91,7 @@ type CollectionDelete[R, M any] interface {
 func CreateHandler[R, M any](collection CollectionCreate[R, M]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionCreate)
+		siteContext := SiteContextFor(w, r, collection.GetName(), can.ActionCreate)
 		if siteContext == nil {
 			return
 		}
@@ -117,7 +117,7 @@ func CreateHandler[R, M any](collection CollectionCreate[R, M]) http.HandlerFunc
 // NewHandler is the modal to add a record in, for whoever can add one
 func NewHandler[R, M any](collection CollectionNew[R, M]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionCreate)
+		siteContext := SiteContextFor(w, r, collection.GetName(), can.ActionCreate)
 		if siteContext == nil {
 			return
 		}
@@ -131,16 +131,16 @@ func NewHandler[R, M any](collection CollectionNew[R, M]) http.HandlerFunc {
 
 // UpdateHandler updates the model with the URL's id
 func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc {
-	return updateHandler(collection, nil, siteapiutils.ActionUpdate)
+	return updateHandler(collection, nil, can.ActionUpdate)
 }
 
 // UpsertHandler creates the model with the URL's id, or updates it when there is one
 func UpsertHandler[R, M any](collection CollectionUpsert[R, M]) http.HandlerFunc {
-	return updateHandler(collection, collection, siteapiutils.ActionCreate, siteapiutils.ActionUpdate)
+	return updateHandler(collection, collection, can.ActionCreate, can.ActionUpdate)
 }
 
 // updateHandler updates the model with the URL's id; when there is none, creator creates it, or without one it is not found
-func updateHandler[R, M any](collection CollectionUpdate[R, M], creator CollectionCreate[R, M], actions ...siteapiutils.Action) http.HandlerFunc {
+func updateHandler[R, M any](collection CollectionUpdate[R, M], creator CollectionCreate[R, M], actions ...can.Action) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -185,7 +185,7 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionSearch)
+		siteContext := SiteContextFor(w, r, collection.GetName(), can.ActionSearch)
 		if siteContext == nil {
 			return
 		}
@@ -225,7 +225,7 @@ func GetHandler[R, M any](collection CollectionGet[R, M]) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionGet)
+		siteContext := SiteContextFor(w, r, collection.GetName(), can.ActionGet)
 		if siteContext == nil {
 			return
 		}
@@ -254,7 +254,7 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionDelete)
+		siteContext := SiteContextFor(w, r, collection.GetName(), can.ActionDelete)
 		if siteContext == nil {
 			return
 		}
@@ -305,7 +305,7 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 // ////
 
 // SiteContextFor is the request's site context when its identity can do every action on the store; otherwise it writes the error and is nil
-func SiteContextFor(w http.ResponseWriter, r *http.Request, collectionName string, actions ...siteapiutils.Action) *httputils.SiteContext {
+func SiteContextFor(w http.ResponseWriter, r *http.Request, collectionName string, actions ...can.Action) *httputils.SiteContext {
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext == nil {
 		slog.ErrorContext(r.Context(), "site context is nil")
@@ -313,7 +313,7 @@ func SiteContextFor(w http.ResponseWriter, r *http.Request, collectionName strin
 		return nil
 	}
 	for _, action := range actions {
-		if !siteapiutils.HasPermission(collectionName, siteapiutils.Action(action), siteContext.IdentityModel) {
+		if !can.IdentityAccessStore(siteContext.IdentityModel, collectionName, can.Action(action)) {
 			writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
 			return nil
 		}
@@ -360,7 +360,7 @@ func writeError(w http.ResponseWriter, r *http.Request, acceptType httputils.Acc
 	apiutils.WriteStatus(w, acceptType, herr.Status)
 	if herr.Status >= http.StatusInternalServerError || herr.Internal {
 		siteContext := httputils.GetSiteContext(r.Context())
-		admin := siteContext != nil && siteContext.IdentityModel != nil && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+		admin := siteContext != nil && siteContext.IdentityModel != nil && can.IdentityAdministerSite(siteContext.IdentityModel.Role)
 		site_templ.SiteErrorRecorded(admin).Render(r.Context(), w)
 		return
 	}
@@ -429,7 +429,7 @@ func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, ro
 // when it is out of range; a page for people, so it has no JSON
 func PeriodReportHandler(page func(p *sitemodels.SiteSummaryPeriod, days []*sitemodels.SiteSummaryDaily, previous *sitemodels.SiteSummaryPeriod) templ.Component) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionGet)
+		siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), can.ActionGet)
 		if siteContext == nil {
 			return
 		}
@@ -480,7 +480,7 @@ func periodReport(r *http.Request, siteContext *httputils.SiteContext, id string
 // AGP on pages of their own; a page for people, so it has no JSON. Each builds four months, so a site has only a few a
 // minute.
 func PrintReportHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionGet)
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), can.ActionGet)
 	if siteContext == nil {
 		return
 	}
@@ -510,7 +510,7 @@ func PrintReportHandler(w http.ResponseWriter, r *http.Request) {
 // TDDReportHandler is the TDD report of the month ending on the day its end query names, today so far without one; a
 // page for people, so it has no JSON
 func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitedata.SummaryDailyCollection{}).GetName(), siteapiutils.ActionSearch)
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryDailyCollection{}).GetName(), can.ActionSearch)
 	if siteContext == nil {
 		return
 	}
@@ -537,7 +537,7 @@ func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 // SummariesReportHandler is the report of the site's kept summaries as tables of their numbers, a page for people, so
 // it has no JSON
 func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionSearch)
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), can.ActionSearch)
 	if siteContext == nil {
 		return
 	}
@@ -561,7 +561,7 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		summaries[period] = models
 	}
-	admin := siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+	admin := can.IdentityRegenerateSummaries(siteContext.IdentityModel.Role)
 	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.SummariesReport(first, summaries, admin), true)
 }
 
@@ -570,11 +570,11 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 // reads a year of the site's data, it shares the site's few downloads a minute, so asking again once it ran cannot keep
 // the server building.
 func RegenerateSummariesHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionSearch)
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), can.ActionSearch)
 	if siteContext == nil {
 		return
 	}
-	if siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
+	if !can.IdentityRegenerateSummaries(siteContext.IdentityModel.Role) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
 		return
 	}

@@ -11,7 +11,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -37,7 +37,7 @@ func resetIdentity(w http.ResponseWriter, r *http.Request, credential string) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
 		return
 	}
-	if identityID != you.ID && you.Role != consts.IdentityRoleAdmin {
+	if identityID != you.ID && !can.IdentityResetOthersCredentials(you.Role) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
 		return
 	}

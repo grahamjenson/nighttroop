@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
@@ -127,7 +128,7 @@ func (s *SettingsCollection) identity(ctx context.Context, collectionTx *siteapi
 // /////
 // GetRow is the level's settings, with those it inherits; settings are not rows, so the model is its own row
 func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.Settings, error) {
-	if s.Site && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
+	if s.Site && !can.IdentityReadSiteSettings(siteContext.IdentityModel.Role) {
 		return nil, apiutils.ErrForbidden
 	}
 	identity, err := s.identity(ctx, collectionTx, id, siteContext)
@@ -156,7 +157,7 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	}
 
 	// An admin's settings page shows the site's settings beside their own
-	if !s.Site && !s.Other && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
+	if !s.Site && !s.Other && can.IdentityReadSiteSettings(siteContext.IdentityModel.Role) {
 		site, err := (&SettingsCollection{Site: true}).GetRow(ctx, collectionTx, id, siteContext)
 		if err != nil {
 			return nil, err
@@ -189,7 +190,7 @@ func (s *SettingsCollection) Watches(event events.Event, siteContext *httputils.
 // inherited settings have changed
 func (s *SettingsCollection) Hides(event events.Event, siteContext *httputils.SiteContext) bool {
 	changed, ok := event.Model.(*sitemodels.Settings)
-	return ok && changed.OwnerID == nil && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin
+	return ok && changed.OwnerID == nil && !can.IdentityReadSiteSettings(siteContext.IdentityModel.Role)
 }
 
 func (s *SettingsCollection) ToModel(row *sitemodels.Settings, _ *httputils.SiteContext) *sitemodels.Settings {

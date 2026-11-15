@@ -1,41 +1,25 @@
 package can
 
+// login.go: who may sign in to the website, and who must give a TOTP code to sign in.
+
 import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-func LoginToWebsite(role consts.IdentityRole) bool {
+// IdentityLoginToWebsite is whether the role signs in to the website: the people, admins, users and clinicians. A
+// device and a read only user use only their token.
+func IdentityLoginToWebsite(role consts.IdentityRole) bool {
 	switch role {
-	case consts.IdentityRoleAdmin:
-		return true
-	case consts.IdentityRoleUser, consts.IdentityRoleClinician:
+	case consts.IdentityRoleAdmin, consts.IdentityRoleUser, consts.IdentityRoleClinician:
 		return true
 	default:
 		return false
 	}
 }
 
-func MustLoginWithTotp(role consts.IdentityRole, hasTotpSecret bool) bool {
-	if hasTotpSecret {
-		return true
-	}
-	switch role {
-	case consts.IdentityRoleAdmin:
-		return true
-	case consts.IdentityRoleUser:
-		return false
-	default:
-		return false
-	}
-}
-
-// HaveNightscoutToken is whether the role is given a Nightscout token: not an admin, nor a clinician, who sees only the
-// printable report
-func HaveNightscoutToken(role consts.IdentityRole) bool {
-	switch role {
-	case consts.IdentityRoleAdmin, consts.IdentityRoleClinician:
-		return false
-	default:
-		return true
-	}
+// IdentityMustLoginWithTotp is whether the identity must give a TOTP code to sign in: an admin always, as it
+// administers the site, and any identity with a TOTP secret. The server makes a TOTP secret for a new identity if this
+// is true without one.
+func IdentityMustLoginWithTotp(role consts.IdentityRole, hasTotpSecret bool) bool {
+	return hasTotpSecret || role == consts.IdentityRoleAdmin
 }

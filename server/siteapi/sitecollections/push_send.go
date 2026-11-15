@@ -11,10 +11,9 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/push"
@@ -26,7 +25,7 @@ const maxPushDevices = 500
 // PushDevicesHandler lists the apps on devices that pushes are sent to, with whose they are, and a button to test each:
 // an admin sees every identity's on the site, and anyone else their own
 func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.PushRegistrationsCollection{}).GetName(), siteapiutils.ActionSearch)
+	siteContext := SiteContextFor(w, r, (&sitesettings.PushRegistrationsCollection{}).GetName(), can.ActionSearch)
 	if siteContext == nil {
 		return
 	}
@@ -42,14 +41,14 @@ func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
 		registration.IdentityName = row.IdentityName
 		registrations = append(registrations, registration)
 	}
-	admin := siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+	admin := can.IdentitySeeAllPushRegistrations(siteContext.IdentityModel.Role)
 	WriteResponse(w, r, siteContext, http.StatusOK, registrations, site_settings_templ.PushDevices(registrations, admin), true)
 }
 
 // PushTestHandler sends a test notification to a push registration the signed in identity may see, see sitesettings.PushIdentity,
 // so they can see pushes reach it, answering with the registration as it is after
 func PushTestHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.PushRegistrationsCollection{}).GetName(), siteapiutils.ActionUpdate)
+	siteContext := SiteContextFor(w, r, (&sitesettings.PushRegistrationsCollection{}).GetName(), can.ActionUpdate)
 	if siteContext == nil {
 		return
 	}

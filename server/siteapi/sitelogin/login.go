@@ -106,12 +106,12 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			return
 		}
 
-		if !can.LoginToWebsite(identity.Role) {
+		if !can.IdentityLoginToWebsite(identity.Role) {
 			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.no_permission"), fmt.Errorf("identity with role %s cannot login to website", identity.Role))
 			return
 		}
 
-		if can.MustLoginWithTotp(identity.Role, identity.TotpSecretEnc != "") {
+		if can.IdentityMustLoginWithTotp(identity.Role, identity.TotpSecretEnc != "") {
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
 			err = config.Security.SetUserPreAuthCookie(w, siteContext.SiteID, identity.Name)
 			if err != nil {
@@ -368,12 +368,12 @@ func loginTheUserAPI(ctx context.Context, controlDB *db.ControlDB, subdomain str
 	}
 
 	// The API gives the same site token as the website, so only the roles that may sign in to the website get one
-	if !can.LoginToWebsite(device.Role) {
+	if !can.IdentityLoginToWebsite(device.Role) {
 		return nil, fmt.Errorf("identity with role %s cannot login to website", device.Role)
 	}
 
 	// An Identity only requires a TOTP secret if the role is admin
-	if can.MustLoginWithTotp(device.Role, device.TotpSecretEnc != "") {
+	if can.IdentityMustLoginWithTotp(device.Role, device.TotpSecretEnc != "") {
 		if err := validateIdentityTOTP(cfg, device, totpToken); err != nil {
 			return nil, err
 		}

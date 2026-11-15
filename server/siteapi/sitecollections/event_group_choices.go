@@ -9,10 +9,10 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 )
 
 // eventChoicesWindow is how far either side of a group's time the events to pick from are
@@ -29,7 +29,7 @@ type eventChoicesParams struct {
 // EventGroupChoicesHandler is the events that can be grouped, within an hour of occurred_at (or now), as a select of
 // each kind for the create and edit forms. With group_id it is the edit form's, with the group's own events picked.
 func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitedata.EventGroupsCollection{}).GetName(), siteapiutils.ActionCreate, siteapiutils.ActionUpdate)
+	siteContext := SiteContextFor(w, r, (&sitedata.EventGroupsCollection{}).GetName(), can.ActionCreate, can.ActionUpdate)
 	if siteContext == nil {
 		return
 	}
@@ -90,7 +90,7 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 
 // EventGroupNewHandler is the modal to add a group of group_type in, offering only the kinds of event it can have
 func EventGroupNewHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitedata.EventGroupsCollection{}).GetName(), siteapiutils.ActionCreate)
+	siteContext := SiteContextFor(w, r, (&sitedata.EventGroupsCollection{}).GetName(), can.ActionCreate)
 	if siteContext == nil {
 		return
 	}
