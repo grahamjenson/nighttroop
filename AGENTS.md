@@ -94,8 +94,14 @@ The words the pages, toasts, errors and docs use for one thing (UI text is in `u
 - **device status**: what a loop's phone reports, not device report.
 - **restore** an archived site: not hydrate.
 
+## Nightscout Compatibility
+
+- The nightscout APIs should remain compatible with clients like AAPS, Trio, Loop, Xdrip...
+- Do not fix bugs that already exist in Nightscout by changing Nighttroop. If a bug exists in Nighttroop, but works in Nightscout, then it is a bug.
+
 ## SQL
 
+- Never add a database column if you can help it. If a fix can be done without changing the schema do it without changing the schema.
 - Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.
 - Never run raw SQL strings (e.g. `ExecContext`, `QueryContext`), including in tests.
 - A column holding JSON is named with `json` (or is a list of `errors` or `attributes`) and CHECKs `json_valid` on its line; `go generate` fails otherwise.
