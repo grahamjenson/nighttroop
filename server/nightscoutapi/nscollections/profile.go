@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"slices"
+	"strings"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/types"
@@ -31,11 +33,26 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 	if len(nsModel.Store) > consts.MaxProfilesPerStore {
 		return nsutils.ErrTooManyProfiles
 	}
+	// A store with no profile would be kept as nothing, and given back empty as if stored
+	if len(nsModel.Store) == 0 {
+		return nsutils.BadDataBodyErrorWithHint("store must have at least one profile")
+	}
 	if dbModel == nil {
 		return nil
 	}
 
 	return nil
+}
+
+// Rows are a preset for each of its profiles, by their names, as the store keeps them in no order
+func (c ProfileCollection) Rows(nsModel nightscoutmodels.ProfileStore) []sitedb.TableRow {
+	presets := NightscoutToDBCreateProfilePreset(nsModel, nightscoutmodels.ConverterContext{})
+	slices.SortFunc(presets, func(a, b sitedb.CreateProfilePresetParams) int { return strings.Compare(a.Name, b.Name) })
+	rows := make([]sitedb.TableRow, len(presets))
+	for i, preset := range presets {
+		rows[i] = sitedb.TableRow{Table: "profile_presets", Row: preset}
+	}
+	return rows
 }
 
 func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
@@ -68,20 +85,33 @@ func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 	return &ret, nil
 }
 
-func (c ProfileCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
-	profilePresets, rerr := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
+// FallbackKey is a profile store's date and device
+func (c ProfileCollection) FallbackKey() FallbackKey[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle] {
+	return FallbackKey[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle]{
+		search: c.searchSameTimeStore,
+		fields: []KeyField[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle]{
+			sameDate[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](),
+			sameDevice[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](),
+		},
+	}
+}
+
+// searchSameTimeStore finds the newest profile store from the device at the date of the one sent. It reads only that
+// one, as each store is read with all of its presets.
+func (c ProfileCollection) searchSameTimeStore(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, _ int64) ([]*sitedb.ProfilePresetBundle, error) {
+	profilePresets, err := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		Limit:    1,
 	})
-	if rerr != nil {
-		return nil, rerr
+	if err != nil || len(profilePresets) == 0 {
+		return nil, err
 	}
-	if len(profilePresets) > 0 {
-		identifier := profilePresets[0].ProfileStoreID
-		return c.GetModel(q, ctx, identifier, true)
+	store, err := c.GetModel(q, ctx, profilePresets[0].ProfileStoreID, true)
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+	return []*sitedb.ProfilePresetBundle{store}, nil
 }
 
 func (c ProfileCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.ProfilePresetBundle, error) {
@@ -147,8 +177,13 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
 	profileStore.Units = settingsUnits
 	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted. Loop's glucose
-	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent.
-	if loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID); loop != nil {
+	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent. A
+	// profile sent with neither, as AAPS's and the careportal's are, has Loop's newest, for LoopFollow to control Loop.
+	loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID)
+	if defaultProfile.LoopSettingsID == nil && defaultProfile.RemoteSettingsID == nil {
+		loop = newestLoopSettingsJSON(context.Background(), siteContext, defaultProfile.OccurredAt)
+	}
+	if loop != nil {
 		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop))).WithGlucose(func(glucose float64) float64 {
 			return settingsUnits.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
 		})

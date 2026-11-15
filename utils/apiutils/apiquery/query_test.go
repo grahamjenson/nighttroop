@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
@@ -89,3 +90,32 @@ func TestGetSearch(t *testing.T) {
 		})
 	}
 }
+
+// A day is the rows on or before it, in the site's timezone: those before the next day starts there, from any cursor
+func TestQueryBeforeDay(t *testing.T) {
+	auckland, err := time.LoadLocation("Pacific/Auckland")
+	require.NoError(t, err)
+	tests := []struct {
+		day      string
+		location *time.Location
+		before   *int64
+	}{
+		{"2026-11-01", time.UTC, ptr(time.Date(2026, 11, 2, 0, 0, 0, 0, time.UTC).UnixMilli())},
+		{"2026-11-01", auckland, ptr(time.Date(2026, 11, 2, 0, 0, 0, 0, auckland).UnixMilli())},
+		{"1 November", time.UTC, ptr(int64(5))},
+		{"", time.UTC, ptr(int64(5))},
+	}
+	for _, test := range tests {
+		t.Run(test.day+" "+test.location.String(), func(t *testing.T) {
+			id := "row"
+			query := apiquery.Query{Before: ptr(int64(5)), BeforeID: &id, BeforeDate: &test.day}
+			query.BeforeDay(test.location)
+			require.Equal(t, test.before, query.Before)
+			if *test.before != 5 {
+				require.Nil(t, query.BeforeID)
+			}
+		})
+	}
+}
+
+func ptr[T any](value T) *T { return &value }

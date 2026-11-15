@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -21,12 +22,8 @@ const (
 	pebbleMinutes = 48 * 60
 )
 
-// pebbleTrends are Nightscout's trend numbers for each direction, which watch faces show arrows for
-var pebbleTrends = map[string]int{"NONE": 0, "DoubleUp": 1, "SingleUp": 2, "FortyFiveUp": 3, "Flat": 4, "FortyFiveDown": 5,
-	"SingleDown": 6, "DoubleDown": 7, "NOT COMPUTABLE": 8, "RATE OUT OF RANGE": 9}
-
 // pebbleBG is a reading as Nightscout's /pebble has it: the glucose as a string in the units asked for, and on the
-// newest the delta, the uploader's battery and IOB
+// newest the delta, the uploader's battery, IOB and COB
 type pebbleBG struct {
 	SGV       string   `json:"sgv"`
 	Trend     int      `json:"trend"`
@@ -35,6 +32,7 @@ type pebbleBG struct {
 	BGDelta   *float64 `json:"bgdelta,omitempty"`
 	Battery   *string  `json:"battery,omitempty"`
 	IOB       *string  `json:"iob,omitempty"`
+	COB       *float64 `json:"cob,omitempty"`
 }
 
 // Pebble is Nightscout's /pebble, which Pebble and other watch faces read: the newest count readings (1 by default),
@@ -63,8 +61,8 @@ func Pebble() func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 			if i == count || reading.OccurredAt < cutoff {
 				break
 			}
-			bgs = append(bgs, pebbleBG{SGV: pebbleGlucose(units, reading.Mgdl), Trend: pebbleTrend(reading.Direction),
-				Direction: reading.Direction, Datetime: reading.OccurredAt})
+			bgs = append(bgs, pebbleBG{SGV: pebbleGlucose(units, reading.Mgdl), Trend: pebbleTrend(reading.Trend),
+				Direction: nightscoutmodels.TrendDirection(reading.Trend), Datetime: reading.OccurredAt})
 		}
 		if len(bgs) > 0 {
 			bgs[0].BGDelta = new(0.0)
@@ -75,10 +73,11 @@ func Pebble() func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 				}
 			}
 			dr := LastDeviceStatusFromPWD(q, r.Context())
-			if battery := GetUptimeBattery(dr); battery.Min != nil {
+			if battery := GetUptimeBattery(LastBatteryStatus(q, r.Context())); battery.Min != nil {
 				bgs[0].Battery = new(fmt.Sprint(*battery.Min.Value))
 			}
 			bgs[0].IOB = GetIOB(dr).Display
+			bgs[0].COB = GetCOB(dr).Display
 		}
 		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": []map[string]int64{{"now": time.Now().UnixMilli()}}, "bgs": bgs, "cals": []any{}})
 	}
@@ -92,10 +91,11 @@ func pebbleGlucose(units consts.Units, mgdl float64) string {
 	return strconv.FormatFloat(mgdl, 'f', 0, 64)
 }
 
-// pebbleTrend is a direction's trend number, 0 (NONE) when it has none
-func pebbleTrend(direction *string) int {
-	if direction == nil {
-		return 0
+// pebbleTrend is a reading's trend number, which watch faces show arrows for, 8 (NOT COMPUTABLE) when it has none or one
+// Nightscout has no number for, e.g. TripleUp, as Nightscout's directionToTrend
+func pebbleTrend(trend *int64) int {
+	if trend := nightscoutmodels.EntryTrend(trend); trend != nil {
+		return int(*trend)
 	}
-	return pebbleTrends[*direction]
+	return int(*nightscoutmodels.DirectionTrend(new("NOT COMPUTABLE")))
 }

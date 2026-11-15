@@ -22,7 +22,7 @@ import (
 )
 
 // NotificationEventsTable shows one page of notifications, newest first, with buttons to the pages either side
-func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64) templ.Component {
+func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -75,7 +75,7 @@ func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip in
 					{Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit}, before, events, func(row *sitemodels.SiteNotificationEvent) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -114,13 +114,13 @@ func NotificationEventNew() templ.Component {
 // notificationEventFields are what a notification has that a person can type in
 func notificationEventFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "title", Label: i18n.T(ctx, "site.data.notification_events.title_label"), Help: i18n.T(ctx, "site.data.notification_events.title_help"), Required: true, Kind: addmodal.Text, Max: "128"},
+		{Name: "title", Column: "notification_events.Title", Label: i18n.T(ctx, "site.data.notification_events.title_label"), Help: i18n.T(ctx, "site.data.notification_events.title_help"), Required: true, Kind: addmodal.Text},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.notification_events.when_help"), Kind: addmodal.When},
-		{Name: "severity", Label: i18n.T(ctx, "site.data.notification_events.severity"), Help: i18n.T(ctx, "site.data.notification_events.severity_help"), Min: "0", Max: "5", Step: "1"},
-		{Name: "notification_type", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.notification_events.type_help"), Kind: addmodal.Text, Max: "32", Options: []string{"announcement", "question"}},
-		{Name: "content", Label: i18n.T(ctx, "site.data.notification_events.content"), Help: i18n.T(ctx, "site.data.notification_events.content_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.notification_events.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "severity", Column: "notification_events.Severity", Label: i18n.T(ctx, "site.data.notification_events.severity"), Help: i18n.T(ctx, "site.data.notification_events.severity_help"), Step: "1"},
+		{Name: "notification_type", Column: "notification_events.NotificationType", Label: i18n.T(ctx, "site.data.common.type"), Help: i18n.T(ctx, "site.data.notification_events.type_help"), Kind: addmodal.Text, Options: []string{"announcement", "question"}},
+		{Name: "content", Column: "notification_events.Content", Label: i18n.T(ctx, "site.data.notification_events.content"), Help: i18n.T(ctx, "site.data.notification_events.content_help"), Kind: addmodal.Text, Wide: true},
+		{Name: "reason", Column: "notification_events.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.notification_events.reason_help"), Kind: addmodal.Text},
+		{Name: "notes", Column: "notification_events.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 

@@ -3,7 +3,6 @@ package sitecollections
 import (
 	"cmp"
 	"context"
-	"database/sql"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -199,6 +198,9 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 		if query == nil {
 			query = &apiutils.Query{}
 		}
+		if query.BeforeDate != nil {
+			query.BeforeDay(siteContext.GetSettings().Location())
+		}
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		models, herr := search(r.Context(), tx, collection, query, siteContext)
@@ -365,33 +367,25 @@ func writeError(w http.ResponseWriter, r *http.Request, acceptType httputils.Acc
 	site_templ.SiteError(herr.UserMessage(r.Context())).Render(r.Context(), w)
 }
 
-// get is the model, or nil when there is none
+// get is the model and its row, or nil when there is none
 func get[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionBase[R, M], id string, siteContext *httputils.SiteContext) (*M, *R, *apiutils.HTTPError) {
-
 	row, err := collection.GetRow(ctx, tx, id, siteContext)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
-		return nil, nil, nil
-	}
-	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
+	model, herr := apiutils.Found(row, err, collection.GetName(), apiutils.WithContext(collection.ToModel, siteContext))
+	if model == nil {
 		return nil, nil, herr
 	}
-	return collection.ToModel(row, siteContext), row, nil
+	return model, row, nil
 }
 
 func search[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionSearch[R, M], query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
 	rows, err := collection.SearchRows(ctx, tx, query, siteContext)
-	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
-		return nil, herr
-	}
-	models := make([]*M, 0, len(rows))
-	for _, row := range rows {
-		models = append(models, collection.ToModel(row, siteContext))
-	}
-	return models, nil
+	return apiutils.Searched(rows, err, collection.GetName(), apiutils.WithContext(collection.ToModel, siteContext))
 }
 
 func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionCreate[R, M], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
-
+	if herr := checkLimits(collection.GetName(), model, siteContext, false); herr != nil {
+		return herr
+	}
 	row, err := collection.CreateRow(ctx, tx, id, siteContext, model)
 	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return herr
@@ -402,7 +396,9 @@ func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 }
 
 func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionUpdate[R, M], siteContext *httputils.SiteContext, oldModel *M, oldRow *R, model *M) *apiutils.HTTPError {
-
+	if herr := checkLimits(collection.GetName(), model, siteContext, true); herr != nil {
+		return herr
+	}
 	row, err := collection.UpdateRow(ctx, tx, siteContext, oldModel, model)
 	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return herr
@@ -570,7 +566,9 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // RegenerateSummariesHandler asks for the site's summaries to be built again from its data, which a background job
-// does, as a year of them takes a while. Only its admins can, and asking again before it runs asks once.
+// does, as a year of them takes a while. Only its admins can, and asking again before it runs asks once. As each build
+// reads a year of the site's data, it shares the site's few downloads a minute, so asking again once it ran cannot keep
+// the server building.
 func RegenerateSummariesHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionSearch)
 	if siteContext == nil {
@@ -578,6 +576,10 @@ func RegenerateSummariesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
+		return
+	}
+	if allowed, wait := httputils.WithinRateLimitAll(siteContext.Config.RateLimiters.SiteDownloadLimiter(siteContext.SiteID)); !allowed {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(wait))
 		return
 	}
 	siteContext.ControlDB.Logs.SummariesRegenerationRequestedEvent(r.Context(), siteContext.SiteID, siteContext.IdentityModel.Name)

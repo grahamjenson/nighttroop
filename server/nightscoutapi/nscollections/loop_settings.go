@@ -63,3 +63,22 @@ func loopSettingsJSON(ctx context.Context, siteContext *httputils.SiteContext, i
 	}
 	return sitemodels.LoopSettingsFor(siteContext.IdentityModel, json.RawMessage(row.SettingsJson))
 }
+
+// newestLoopSettingsJSON are Loop's last seen settings, as the request's identity may see them, for a record made at
+// date that was sent with none. They are none if Loop sent them after that date, as the record is then not the newest.
+// LoopFollow reads Loop's device token and override presets from the newest profile, which is not Loop's when AAPS or
+// the careportal also send profiles to the site.
+func newestLoopSettingsJSON(ctx context.Context, siteContext *httputils.SiteContext, date int64) json.RawMessage {
+	if siteContext == nil || siteContext.SiteDB == nil {
+		return nil
+	}
+	rows, err := siteContext.SiteDB.Queries().SearchLoopSettings(ctx, sitedb.SearchLoopSettingsParams{App: ptr(loopApp), Limit: 1})
+	if err != nil {
+		slog.WarnContext(ctx, "Cannot read Loop's newest settings", "error", err)
+		return nil
+	}
+	if len(rows) == 0 || rows[0].LastSeenAt > date {
+		return nil
+	}
+	return sitemodels.LoopSettingsFor(siteContext.IdentityModel, json.RawMessage(rows[0].SettingsJson))
+}

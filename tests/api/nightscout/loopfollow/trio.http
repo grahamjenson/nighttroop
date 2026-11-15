@@ -106,7 +106,7 @@ ASSERT_LENGTH 7 "@"
 # BGCheck.swift: glucose as Double, in its units
 ASSERT_EQUALS "BG Check" "@0.eventType"
 ASSERT_EQUALS 135 "@0.glucose"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 # Overrides.swift: a Trio override's name is in notes
 ASSERT_EQUALS "Exercise" "@1.eventType"
 ASSERT_EQUALS "Walk" "@1.notes"
@@ -172,7 +172,7 @@ GET http://{{ site }}/api/v1/profiles.json?token={{ token }}&count=1&find[startD
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "default" "@0.defaultProfile"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 ASSERT_EQUALS "Pacific/Auckland" "@0.store.default.timezone"
 ASSERT_EQUALS "mg/dL" "@0.store.default.units"
 ASSERT_EQUALS 1.05 "@0.store.default.basal.1.value"

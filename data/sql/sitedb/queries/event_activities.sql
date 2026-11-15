@@ -46,7 +46,9 @@ RETURNING *;
 -- name: AllActivities :many
 SELECT * FROM activities
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
+AND occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
+AND (sqlc.narg('Before') IS NULL OR occurred_at < sqlc.narg('Before') OR id < CAST(sqlc.narg('BeforeID') AS TEXT))
+ORDER BY occurred_at DESC, id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: ActivityTotals :one
@@ -117,6 +119,29 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 --------
 -- UPDATE
 --------
+
+-- name: RewriteActivity :one
+-- RewriteActivity writes every column CreateActivity does over the activity with the ID, as a Nightscout update writes
+-- its merged document. It keeps when it was created and who by: the identity given is who updated it.
+UPDATE activities SET
+    id = sqlc.arg('ID'),
+    name = sqlc.arg('Name'),
+    activity_type = sqlc.arg('ActivityType'),
+    duration_minutes = sqlc.arg('DurationMinutes'),
+    calories = sqlc.narg('Calories'),
+    steps = sqlc.narg('Steps'),
+    heart_rate = NULLIF(CAST(sqlc.narg('HeartRate') AS INTEGER), 0),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
 
 -- name: UpdateActivity :one
 UPDATE activities SET

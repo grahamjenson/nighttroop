@@ -1,0 +1,35 @@
+INCLUDE steps/new_site_admin.steps
+
+// The virtual connector fills the last 30 minutes with readings, treatments and device statuses
+CLICK #site--settings-menu
+CLICK #site--nav--menu--connectors
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+// On a phone the graph has fewer times, and its legend is below them, so none is drawn over another: each is what a
+// click at its centre would hit
+WINDOW 390x1600
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--graph >> text=/^\d\d:\d\d$/ >> nth=0
+ASSERT_VISIBLE #site--summary--graph >> text=/^\d\d:\d\d$/ >> nth=1
+ASSERT_VISIBLE #site--summary--graph >> text=/^\d\d:\d\d$/ >> nth=-1
+ASSERT_VISIBLE #site--summary--graph >> text=Insulin
+ASSERT_VISIBLE #site--summary--graph >> text=SMB
+ASSERT_VISIBLE #site--summary--graph >> text=Carbs
+ASSERT_VISIBLE #site--summary--graph >> text=Basal
+ASSERT_VISIBLE #site--summary--graph >> text=Target
+SCREENSHOT summary_graph_phone
+
+// So it does over a longer range, where the times are further apart
+CLICK #site--summary--range-24
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 24 hours
+ASSERT_VISIBLE #site--summary--graph >> text=/^\d\d:\d\d$/ >> nth=0
+ASSERT_VISIBLE #site--summary--graph >> text=/^\d\d:\d\d$/ >> nth=-1
+ASSERT_VISIBLE #site--summary--graph >> text=Insulin
+SCREENSHOT summary_graph_phone_24_hours

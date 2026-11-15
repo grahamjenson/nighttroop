@@ -3,6 +3,7 @@ package apiutils_test
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -21,7 +22,9 @@ func TestFound(t *testing.T) {
 	}{
 		{"found", &one, nil, toModel(&one), nil},
 		{"no rows", nil, sql.ErrNoRows, nil, nil},
+		{"wrapped no rows", nil, fmt.Errorf("get: %w", sql.ErrNoRows), nil, nil},
 		{"nil row", nil, nil, nil, nil},
+		{"its own error", nil, apiutils.ErrForbidden, nil, apiutils.ErrForbidden},
 		{"error", nil, errors.New("disk"), nil, apiutils.ErrInternalServerError},
 	}
 	for _, tt := range tests {
@@ -46,6 +49,10 @@ func TestSearched(t *testing.T) {
 		t.Fatal("no rows should be an empty list")
 	}
 	if _, httpErr := apiutils.Searched([]*int(nil), errors.New("disk"), "numbers", toModel); httpErr != apiutils.ErrInternalServerError {
+		t.Fatalf("unexpected error %v", httpErr)
+	}
+	// A search's own error, such as a refused query, is kept, as ErrorFor keeps it
+	if _, httpErr := apiutils.Searched([]*int(nil), apiutils.ErrBadRequest, "numbers", toModel); httpErr != apiutils.ErrBadRequest {
 		t.Fatalf("unexpected error %v", httpErr)
 	}
 }

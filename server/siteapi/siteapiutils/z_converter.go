@@ -11,6 +11,14 @@ import (
 func QueryToAllActivities(source *apiquery.Query) sitedb.AllActivitiesParams {
 	var sitedbAllActivitiesParams sitedb.AllActivitiesParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllActivitiesParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllActivitiesParams.BeforeID = &xstring
+		}
 		sitedbAllActivitiesParams.Skip = (*source).Skip
 		sitedbAllActivitiesParams.Limit = (*source).Limit
 	}
@@ -19,6 +27,14 @@ func QueryToAllActivities(source *apiquery.Query) sitedb.AllActivitiesParams {
 func QueryToAllEventGroups(source *apiquery.Query) sitedb.AllEventGroupsParams {
 	var sitedbAllEventGroupsParams sitedb.AllEventGroupsParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllEventGroupsParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllEventGroupsParams.BeforeID = &xstring
+		}
 		sitedbAllEventGroupsParams.Skip = (*source).Skip
 		sitedbAllEventGroupsParams.Limit = (*source).Limit
 	}
@@ -27,6 +43,14 @@ func QueryToAllEventGroups(source *apiquery.Query) sitedb.AllEventGroupsParams {
 func QueryToAllFoodIntakes(source *apiquery.Query) sitedb.AllFoodIntakesParams {
 	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllFoodIntakesParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllFoodIntakesParams.BeforeID = &xstring
+		}
 		sitedbAllFoodIntakesParams.Skip = (*source).Skip
 		sitedbAllFoodIntakesParams.Limit = (*source).Limit
 	}
@@ -43,6 +67,14 @@ func QueryToAllFoodPresets(source *apiquery.Query) sitedb.AllFoodPresetsParams {
 func QueryToAllGlucoseReadings(source *apiquery.Query) sitedb.AllGlucoseReadingsParams {
 	var sitedbAllGlucoseReadingsParams sitedb.AllGlucoseReadingsParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllGlucoseReadingsParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllGlucoseReadingsParams.BeforeID = &xstring
+		}
 		sitedbAllGlucoseReadingsParams.Skip = (*source).Skip
 		sitedbAllGlucoseReadingsParams.Limit = (*source).Limit
 	}
@@ -51,6 +83,14 @@ func QueryToAllGlucoseReadings(source *apiquery.Query) sitedb.AllGlucoseReadings
 func QueryToAllInsulinDoses(source *apiquery.Query) sitedb.AllInsulinDosesParams {
 	var sitedbAllInsulinDosesParams sitedb.AllInsulinDosesParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllInsulinDosesParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllInsulinDosesParams.BeforeID = &xstring
+		}
 		sitedbAllInsulinDosesParams.Skip = (*source).Skip
 		sitedbAllInsulinDosesParams.Limit = (*source).Limit
 	}
@@ -59,6 +99,14 @@ func QueryToAllInsulinDoses(source *apiquery.Query) sitedb.AllInsulinDosesParams
 func QueryToAllNotificationEvents(source *apiquery.Query) sitedb.AllNotificationEventsParams {
 	var sitedbAllNotificationEventsParams sitedb.AllNotificationEventsParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllNotificationEventsParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllNotificationEventsParams.BeforeID = &xstring
+		}
 		sitedbAllNotificationEventsParams.Skip = (*source).Skip
 		sitedbAllNotificationEventsParams.Limit = (*source).Limit
 	}
@@ -75,6 +123,14 @@ func QueryToAllProfilePresets(source *apiquery.Query) sitedb.AllProfilePresetsPa
 func QueryToAllProfileSwitches(source *apiquery.Query) sitedb.AllProfileSwitchesParams {
 	var sitedbAllProfileSwitchesParams sitedb.AllProfileSwitchesParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllProfileSwitchesParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllProfileSwitchesParams.BeforeID = &xstring
+		}
 		sitedbAllProfileSwitchesParams.Skip = (*source).Skip
 		sitedbAllProfileSwitchesParams.Limit = (*source).Limit
 	}
@@ -83,6 +139,14 @@ func QueryToAllProfileSwitches(source *apiquery.Query) sitedb.AllProfileSwitches
 func QueryToAllTempBasals(source *apiquery.Query) sitedb.AllTempBasalsParams {
 	var sitedbAllTempBasalsParams sitedb.AllTempBasalsParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllTempBasalsParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllTempBasalsParams.BeforeID = &xstring
+		}
 		sitedbAllTempBasalsParams.Skip = (*source).Skip
 		sitedbAllTempBasalsParams.Limit = (*source).Limit
 	}
@@ -91,6 +155,14 @@ func QueryToAllTempBasals(source *apiquery.Query) sitedb.AllTempBasalsParams {
 func QueryToAllTempTargets(source *apiquery.Query) sitedb.AllTempTargetsParams {
 	var sitedbAllTempTargetsParams sitedb.AllTempTargetsParams
 	if source != nil {
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbAllTempTargetsParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring := *(*source).BeforeID
+			sitedbAllTempTargetsParams.BeforeID = &xstring
+		}
 		sitedbAllTempTargetsParams.Skip = (*source).Skip
 		sitedbAllTempTargetsParams.Limit = (*source).Limit
 	}
@@ -102,6 +174,14 @@ func QueryToDeviceReportsForDevice(source *apiquery.Query) sitedb.DeviceReportsF
 		if (*source).Device != nil {
 			xstring := *(*source).Device
 			sitedbDeviceReportsForDeviceParams.Device = &xstring
+		}
+		if (*source).Before != nil {
+			xint64 := *(*source).Before
+			sitedbDeviceReportsForDeviceParams.Before = &xint64
+		}
+		if (*source).BeforeID != nil {
+			xstring2 := *(*source).BeforeID
+			sitedbDeviceReportsForDeviceParams.BeforeID = &xstring2
 		}
 		sitedbDeviceReportsForDeviceParams.Skip = (*source).Skip
 		sitedbDeviceReportsForDeviceParams.Limit = (*source).Limit

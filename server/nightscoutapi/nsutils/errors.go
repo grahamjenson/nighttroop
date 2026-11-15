@@ -10,11 +10,14 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type HTTPError struct {
 	Status  int    `json:"status"`
 	Message string `json:"message,omitempty"`
+	// Column is the column a value refused was for, as a document refused for a value out of its column's limits says
+	Column string `json:"-"`
 }
 
 func (e *HTTPError) Error() string {
@@ -93,7 +96,8 @@ var (
 	BadBoolFieldError = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing bool field %s", field)}
 	}
-	BadGlucoseError = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing glucose: sgv or mbg must be more than 0 and at most %v mg/dL", consts.MaxGlucoseMgdl)}
+	// ErrFutureReading is a reading dated ahead of now by more than a phone clock is wrong
+	ErrFutureReading = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("date is in the future: a reading can be at most %d minutes ahead of now", int(consts.MaxFutureReading.Minutes()))}
 )
 
 // Too Many Rows Errors
@@ -103,6 +107,9 @@ var (
 	ErrTooManyBatchWrites = &HTTPError{Status: http.StatusTooManyRequests, Message: "Too many records written: send them again shortly"}
 	ErrTooManyProfiles = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many profiles: at most %d in a store", consts.MaxProfilesPerStore)}
 )
+
+// ErrSiteOverStorage is a batch that would take a site flagged for abuse past its flagged write limit
+var ErrSiteOverStorage = &HTTPError{Status: http.StatusTooManyRequests, Message: httputils.SiteOverStorageMessage}
 
 // Bad Updates
 var (

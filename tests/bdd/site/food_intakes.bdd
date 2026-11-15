@@ -64,19 +64,19 @@ ASSERT_TEXT_VISIBLE 50 g carbs
 CLICK #site--food--details--close
 ASSERT_NOT_VISIBLE #site--food--details
 
-// A page of one food intake pages through them, newest first
+// A page of one food intake pages to the older ones, and Newest goes back
 GOTO /data/food?limit=1
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Big lunch
-ASSERT_NOT_VISIBLE #site--food--previous
+ASSERT_NOT_VISIBLE #site--food--newest
 
 CLICK #site--food--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_VISIBLE #site--food--newest
 ASSERT_TEXT_VISIBLE Correction
 
-CLICK #site--food--previous
+CLICK #site--food--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

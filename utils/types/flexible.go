@@ -3,12 +3,17 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 )
 
 // Flexible types accept JSON numbers, numeric strings and bool strings, as Nightscout clients send all of them
+
+// typeError is a value sent that is not of the type kept, as the JSON decoder's own, so it says the field's path
+func typeError(data []byte, kept reflect.Type) error {
+	return &json.UnmarshalTypeError{Value: string(data[:min(len(data), 64)]), Type: kept}
+}
 
 // //////
 // FlexibleFloat64
@@ -21,7 +26,7 @@ func (f *FlexibleFloat64) UnmarshalJSON(data []byte) error {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.UseNumber()
 	if err := dec.Decode(&v); err != nil {
-		return fmt.Errorf("expected float value, got %s", data)
+		return typeError(data, reflect.TypeFor[float64]())
 	}
 
 	switch val := v.(type) {
@@ -32,16 +37,16 @@ func (f *FlexibleFloat64) UnmarshalJSON(data []byte) error {
 			*f = FlexibleFloat64(asFloat)
 			return nil
 		}
-		return fmt.Errorf("invalid float value %q", val)
+		return typeError(data, reflect.TypeFor[float64]())
 	case string:
 		var err error
 		newF, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			return fmt.Errorf("invalid float value %q", val)
+			return typeError(data, reflect.TypeFor[float64]())
 		}
 		*f = FlexibleFloat64(newF)
 	default:
-		return fmt.Errorf("expected number or string for float, got %v:%T", v, v)
+		return typeError(data, reflect.TypeFor[float64]())
 	}
 	return nil
 }
@@ -67,7 +72,7 @@ type FlexibleInt64 int64
 func (i *FlexibleInt64) UnmarshalJSON(data []byte) error {
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected int value, got %s", data)
+		return typeError(data, reflect.TypeFor[int64]())
 	}
 
 	switch val := v.(type) {
@@ -80,18 +85,18 @@ func (i *FlexibleInt64) UnmarshalJSON(data []byte) error {
 		}
 		asFloat, err := val.Float64()
 		if err != nil {
-			return fmt.Errorf("invalid int value %q: %w", val, err)
+			return typeError(data, reflect.TypeFor[int64]())
 		}
 		*i = FlexibleInt64(int64(asFloat))
 	case string:
 		var err error
 		newF, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			return fmt.Errorf("invalid int value %q: %w", val, err)
+			return typeError(data, reflect.TypeFor[int64]())
 		}
 		*i = FlexibleInt64(int64(newF))
 	default:
-		return fmt.Errorf("expected number or string for int, got %T", v)
+		return typeError(data, reflect.TypeFor[int64]())
 	}
 
 	return nil
@@ -128,7 +133,7 @@ type FlexibleBool bool
 func (b *FlexibleBool) UnmarshalJSON(data []byte) error {
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected bool value, got %s", data)
+		return typeError(data, reflect.TypeFor[bool]())
 	}
 
 	switch val := v.(type) {
@@ -141,10 +146,10 @@ func (b *FlexibleBool) UnmarshalJSON(data []byte) error {
 		} else if lower == "false" || lower == "0" {
 			*b = FlexibleBool(false)
 		} else {
-			return fmt.Errorf("invalid bool value %q", val)
+			return typeError(data, reflect.TypeFor[bool]())
 		}
 	default:
-		return fmt.Errorf("expected bool or string for bool, got %T", v)
+		return typeError(data, reflect.TypeFor[bool]())
 	}
 	return nil
 }

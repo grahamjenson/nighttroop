@@ -45,8 +45,8 @@ func TestDurationInMilliseconds(t *testing.T) {
 			}
 			site := &httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh"}}
 			treatment := DBModelToTreatment(&bundle, site)
-			require.Equal(t, test.expected, treatment.DurationInMilliseconds.Int64())
-			require.Equal(t, test.minutes, treatment.DurationMinutes.Int64())
+			require.Equal(t, test.expected, treatment.Duration.Milliseconds())
+			require.Equal(t, test.minutes, treatment.Duration.Minutes)
 		})
 	}
 }
@@ -72,8 +72,8 @@ func TestDurationGivenBackInMinutesAndMilliseconds(t *testing.T) {
 			}
 			site := &httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh"}}
 			treatment := DBModelToTreatment(&bundle, site)
-			require.Equal(t, test.expectedMinutes, treatment.DurationMinutes.Int64())
-			require.Equal(t, test.expectedMs, treatment.DurationInMilliseconds.Int64())
+			require.Equal(t, test.expectedMinutes, treatment.Duration.Minutes)
+			require.Equal(t, test.expectedMs, treatment.Duration.Milliseconds())
 		})
 	}
 }

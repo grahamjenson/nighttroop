@@ -107,6 +107,44 @@ func ExtraWritesWithinRateLimit(r *http.Request, n int) bool {
 	return false
 }
 
+// SiteOverStorageMessage says why a site flagged for abuse, as its DB is far over its size limit, is refused a write
+const SiteOverStorageMessage = "Too many writes: this site's data is far over its storage limit"
+
+// SiteFlaggedForAbuse is whether the request's site is flagged for abuse. It uses the DB's size now, not the size last
+// recorded, which can be minutes old, while a site can write many MB a minute.
+func SiteFlaggedForAbuse(siteContext *SiteContext) bool {
+	if siteContext == nil || siteContext.SiteModel == nil {
+		return false
+	}
+	site := *siteContext.SiteModel
+	if siteContext.SiteDB != nil {
+		if size := siteContext.SiteDB.EstimatedSizeKB(); size != nil {
+			site.EstimatedDbSizeKb = size
+		}
+	}
+	return site.FlaggedForAbuse()
+}
+
+// FlaggedSiteWritesWithinRateLimit spends n writes from the flagged write limit of a site flagged for abuse, none unless
+// it has them all now, and none of a site that is not flagged. It is when to try again if refused, in seconds.
+func FlaggedSiteWritesWithinRateLimit(siteContext *SiteContext, n int) (bool, int) {
+	if n <= 0 || !SiteFlaggedForAbuse(siteContext) {
+		return true, 0
+	}
+	now := time.Now()
+	writes := siteContext.Config.RateLimiters.SiteFlaggedPOSTLimiter(siteContext.SiteID).ReserveN(now, n)
+	if writes.OK() && writes.DelayFrom(now) == 0 {
+		return true, 0
+	}
+	// More than its burst is never let through, so there is no time to wait for
+	delay := time.Duration(0)
+	if writes.OK() {
+		delay = writes.DelayFrom(now)
+	}
+	writes.CancelAt(now)
+	return false, maxDuration(delay)
+}
+
 func UserUpdateConnectorsWithinRateLimit(siteContext *SiteContext) (bool, int) {
 
 	userSubdomain := siteContext.SiteID

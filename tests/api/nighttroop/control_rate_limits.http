@@ -9,6 +9,10 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "site_push" "@result.15.name"
 ASSERT_EQUALS 10 "@result.15.per_minute"
 ASSERT_EQUALS 30 "@result.15.burst"
+// A site flagged for abuse has its own far lower writes limit
+ASSERT_EQUALS "site_post_flagged" "@result.17.name"
+ASSERT_EQUALS 12 "@result.17.per_minute"
+ASSERT_EQUALS 36 "@result.17.burst"
 
 // Setting one uses it at once, and says it was set, its env default kept beside it
 NAME set_rate_limits

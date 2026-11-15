@@ -20,6 +20,10 @@ SELECT * FROM sites;
 -- name: GetSite :one
 SELECT * FROM sites WHERE id = ? AND state = 'live';
 
+-- name: GetSiteDBSizeLimits :many
+-- Each site's DB size limit, for the truncate job to find the sites far over theirs without a query for each
+SELECT id, max_db_size_kb_limit FROM sites WHERE max_db_size_kb_limit IS NOT NULL;
+
 
 -- name: SearchSites :many
 SELECT * FROM sites
@@ -107,6 +111,11 @@ SET
     last_write_at = COALESCE(?, last_write_at),
     estimated_db_size_kb = COALESCE(?, estimated_db_size_kb)
 WHERE id = ?;
+
+-- name: UpdateSiteAbuseScore :exec
+-- Only a score that changed is written
+UPDATE sites SET abuse_score = sqlc.arg('AbuseScore')
+WHERE id = sqlc.arg('ID') AND abuse_score IS NOT sqlc.arg('AbuseScore');
 
 -- name: UpdateSiteDBSize :exec
 -- Only a size that changed is written, so measuring every site rewrites none of the ones that did not

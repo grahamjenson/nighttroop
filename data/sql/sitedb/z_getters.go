@@ -946,6 +946,16 @@ func (m *EventGroup) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
+// GetEndingPumpID returns the EndingPumpID value.
+func (m EventGroup) GetEndingPumpID() *string {
+	return m.EndingPumpID
+}
+
+// SetEndingPumpID sets the EndingPumpID value and returns the updated EventGroup.
+func (m *EventGroup) SetEndingPumpID(v *string) {
+	m.EndingPumpID = v
+}
+
 // GetSensorCode returns the SensorCode value.
 func (m EventGroup) GetSensorCode() *string {
 	return m.SensorCode
@@ -984,6 +994,26 @@ func (m EventGroup) GetSyncIdentifier() *string {
 // SetSyncIdentifier sets the SyncIdentifier value and returns the updated EventGroup.
 func (m *EventGroup) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
+}
+
+// GetClientCreatedAt returns the ClientCreatedAt value.
+func (m EventGroup) GetClientCreatedAt() *int64 {
+	return m.ClientCreatedAt
+}
+
+// SetClientCreatedAt sets the ClientCreatedAt value and returns the updated EventGroup.
+func (m *EventGroup) SetClientCreatedAt(v *int64) {
+	m.ClientCreatedAt = v
+}
+
+// GetEmulatedTreatmentJson returns the EmulatedTreatmentJson value.
+func (m EventGroup) GetEmulatedTreatmentJson() *string {
+	return m.EmulatedTreatmentJson
+}
+
+// SetEmulatedTreatmentJson sets the EmulatedTreatmentJson value and returns the updated EventGroup.
+func (m *EventGroup) SetEmulatedTreatmentJson(v *string) {
+	m.EmulatedTreatmentJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -1806,6 +1836,56 @@ func (m *FoodPreset) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUnit returns the Unit value.
+func (m FoodPreset) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated FoodPreset.
+func (m *FoodPreset) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m FoodPreset) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated FoodPreset.
+func (m *FoodPreset) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m FoodPreset) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated FoodPreset.
+func (m *FoodPreset) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m FoodPreset) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated FoodPreset.
+func (m *FoodPreset) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m FoodPreset) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated FoodPreset.
+func (m *FoodPreset) SetPosition(v *int64) {
+	m.Position = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m FoodPreset) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -2006,14 +2086,14 @@ func (m *GlucoseReading) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m GlucoseReading) GetDirection() *string {
-	return m.Direction
+// GetTrend returns the Trend value.
+func (m GlucoseReading) GetTrend() *int64 {
+	return m.Trend
 }
 
-// SetDirection sets the Direction value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetDirection(v *string) {
-	m.Direction = v
+// SetTrend sets the Trend value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetTrend(v *int64) {
+	m.Trend = v
 }
 
 // GetNoise returns the Noise value.
@@ -2266,14 +2346,14 @@ func (m *GlucoseReadingsVw) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m GlucoseReadingsVw) GetDirection() *string {
-	return m.Direction
+// GetTrend returns the Trend value.
+func (m GlucoseReadingsVw) GetTrend() *int64 {
+	return m.Trend
 }
 
-// SetDirection sets the Direction value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetDirection(v *string) {
-	m.Direction = v
+// SetTrend sets the Trend value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetTrend(v *int64) {
+	m.Trend = v
 }
 
 // GetNoise returns the Noise value.
@@ -2496,24 +2576,24 @@ func (m *InsulinDose) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDose) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m InsulinDose) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated InsulinDose.
+func (m *InsulinDose) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDose) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m InsulinDose) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated InsulinDose.
+func (m *InsulinDose) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -2726,24 +2806,24 @@ func (m *InsulinDosesVw) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDosesVw) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m InsulinDosesVw) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDosesVw) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m InsulinDosesVw) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -3534,6 +3614,16 @@ func (m ProfilePreset) GetEnteredBy() *string {
 // SetEnteredBy sets the EnteredBy value and returns the updated ProfilePreset.
 func (m *ProfilePreset) SetEnteredBy(v *string) {
 	m.EnteredBy = v
+}
+
+// GetProfileName returns the ProfileName value.
+func (m ProfilePreset) GetProfileName() *string {
+	return m.ProfileName
+}
+
+// SetProfileName sets the ProfileName value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetProfileName(v *string) {
+	m.ProfileName = v
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -5846,6 +5936,26 @@ func (m *DeviceReportsForDeviceParams) SetDevice(v *string) {
 	m.Device = v
 }
 
+// GetBefore returns the Before value.
+func (m DeviceReportsForDeviceParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeviceReportsForDeviceParams.
+func (m *DeviceReportsForDeviceParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m DeviceReportsForDeviceParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated DeviceReportsForDeviceParams.
+func (m *DeviceReportsForDeviceParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m DeviceReportsForDeviceParams) GetSkip() int64 {
 	return m.Skip
@@ -5944,6 +6054,296 @@ func (m RecentDeviceNamesParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated RecentDeviceNamesParams.
 func (m *RecentDeviceNamesParams) SetLimit(v int64) {
 	m.Limit = v
+}
+
+// GetID returns the ID value.
+func (m RewriteDeviceReportParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetDeviceBatteryPercent returns the DeviceBatteryPercent value.
+func (m RewriteDeviceReportParams) GetDeviceBatteryPercent() *float64 {
+	return m.DeviceBatteryPercent
+}
+
+// SetDeviceBatteryPercent sets the DeviceBatteryPercent value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetDeviceBatteryPercent(v *float64) {
+	m.DeviceBatteryPercent = v
+}
+
+// GetIsDeviceCharging returns the IsDeviceCharging value.
+func (m RewriteDeviceReportParams) GetIsDeviceCharging() *bool {
+	return m.IsDeviceCharging
+}
+
+// SetIsDeviceCharging sets the IsDeviceCharging value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetIsDeviceCharging(v *bool) {
+	m.IsDeviceCharging = v
+}
+
+// GetPumpState returns the PumpState value.
+func (m RewriteDeviceReportParams) GetPumpState() *string {
+	return m.PumpState
+}
+
+// SetPumpState sets the PumpState value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpState(v *string) {
+	m.PumpState = v
+}
+
+// GetPumpReservoir returns the PumpReservoir value.
+func (m RewriteDeviceReportParams) GetPumpReservoir() *float64 {
+	return m.PumpReservoir
+}
+
+// SetPumpReservoir sets the PumpReservoir value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpReservoir(v *float64) {
+	m.PumpReservoir = v
+}
+
+// GetPumpBatteryPercent returns the PumpBatteryPercent value.
+func (m RewriteDeviceReportParams) GetPumpBatteryPercent() *float64 {
+	return m.PumpBatteryPercent
+}
+
+// SetPumpBatteryPercent sets the PumpBatteryPercent value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpBatteryPercent(v *float64) {
+	m.PumpBatteryPercent = v
+}
+
+// GetPumpChargingState returns the PumpChargingState value.
+func (m RewriteDeviceReportParams) GetPumpChargingState() *string {
+	return m.PumpChargingState
+}
+
+// SetPumpChargingState sets the PumpChargingState value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpChargingState(v *string) {
+	m.PumpChargingState = v
+}
+
+// GetLoopIob returns the LoopIob value.
+func (m RewriteDeviceReportParams) GetLoopIob() *float64 {
+	return m.LoopIob
+}
+
+// SetLoopIob sets the LoopIob value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetLoopIob(v *float64) {
+	m.LoopIob = v
+}
+
+// GetLoopIobBasal returns the LoopIobBasal value.
+func (m RewriteDeviceReportParams) GetLoopIobBasal() *float64 {
+	return m.LoopIobBasal
+}
+
+// SetLoopIobBasal sets the LoopIobBasal value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetLoopIobBasal(v *float64) {
+	m.LoopIobBasal = v
+}
+
+// GetLoopIobTreatment returns the LoopIobTreatment value.
+func (m RewriteDeviceReportParams) GetLoopIobTreatment() *float64 {
+	return m.LoopIobTreatment
+}
+
+// SetLoopIobTreatment sets the LoopIobTreatment value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetLoopIobTreatment(v *float64) {
+	m.LoopIobTreatment = v
+}
+
+// GetLoopCob returns the LoopCob value.
+func (m RewriteDeviceReportParams) GetLoopCob() *float64 {
+	return m.LoopCob
+}
+
+// SetLoopCob sets the LoopCob value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetLoopCob(v *float64) {
+	m.LoopCob = v
+}
+
+// GetConfigurationID returns the ConfigurationID value.
+func (m RewriteDeviceReportParams) GetConfigurationID() *string {
+	return m.ConfigurationID
+}
+
+// SetConfigurationID sets the ConfigurationID value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetConfigurationID(v *string) {
+	m.ConfigurationID = v
+}
+
+// GetLoopStatusJson returns the LoopStatusJson value.
+func (m RewriteDeviceReportParams) GetLoopStatusJson() *string {
+	return m.LoopStatusJson
+}
+
+// SetLoopStatusJson sets the LoopStatusJson value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetLoopStatusJson(v *string) {
+	m.LoopStatusJson = v
+}
+
+// GetLoopName returns the LoopName value.
+func (m RewriteDeviceReportParams) GetLoopName() *string {
+	return m.LoopName
+}
+
+// SetLoopName sets the LoopName value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetLoopName(v *string) {
+	m.LoopName = v
+}
+
+// GetPumpClock returns the PumpClock value.
+func (m RewriteDeviceReportParams) GetPumpClock() *int64 {
+	return m.PumpClock
+}
+
+// SetPumpClock sets the PumpClock value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpClock(v *int64) {
+	m.PumpClock = v
+}
+
+// GetPumpManufacturer returns the PumpManufacturer value.
+func (m RewriteDeviceReportParams) GetPumpManufacturer() *string {
+	return m.PumpManufacturer
+}
+
+// SetPumpManufacturer sets the PumpManufacturer value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpManufacturer(v *string) {
+	m.PumpManufacturer = v
+}
+
+// GetPumpModel returns the PumpModel value.
+func (m RewriteDeviceReportParams) GetPumpModel() *string {
+	return m.PumpModel
+}
+
+// SetPumpModel sets the PumpModel value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpModel(v *string) {
+	m.PumpModel = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m RewriteDeviceReportParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSuspended returns the PumpSuspended value.
+func (m RewriteDeviceReportParams) GetPumpSuspended() *bool {
+	return m.PumpSuspended
+}
+
+// SetPumpSuspended sets the PumpSuspended value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpSuspended(v *bool) {
+	m.PumpSuspended = v
+}
+
+// GetPumpBolusing returns the PumpBolusing value.
+func (m RewriteDeviceReportParams) GetPumpBolusing() *bool {
+	return m.PumpBolusing
+}
+
+// SetPumpBolusing sets the PumpBolusing value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpBolusing(v *bool) {
+	m.PumpBolusing = v
+}
+
+// GetOverrideJson returns the OverrideJson value.
+func (m RewriteDeviceReportParams) GetOverrideJson() *string {
+	return m.OverrideJson
+}
+
+// SetOverrideJson sets the OverrideJson value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetOverrideJson(v *string) {
+	m.OverrideJson = v
+}
+
+// GetPumpJson returns the PumpJson value.
+func (m RewriteDeviceReportParams) GetPumpJson() *string {
+	return m.PumpJson
+}
+
+// SetPumpJson sets the PumpJson value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetPumpJson(v *string) {
+	m.PumpJson = v
+}
+
+// GetUploaderJson returns the UploaderJson value.
+func (m RewriteDeviceReportParams) GetUploaderJson() *string {
+	return m.UploaderJson
+}
+
+// SetUploaderJson sets the UploaderJson value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetUploaderJson(v *string) {
+	m.UploaderJson = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteDeviceReportParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteDeviceReportParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteDeviceReportParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteDeviceReportParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteDeviceReportParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteDeviceReportParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteDeviceReportParams.
+func (m *RewriteDeviceReportParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -6166,56 +6566,6 @@ func (m *SoftDeleteDeviceReportParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetPumpJson returns the PumpJson value.
-func (m UpdateDeviceReportParams) GetPumpJson() *string {
-	return m.PumpJson
-}
-
-// SetPumpJson sets the PumpJson value and returns the updated UpdateDeviceReportParams.
-func (m *UpdateDeviceReportParams) SetPumpJson(v *string) {
-	m.PumpJson = v
-}
-
-// GetUploaderJson returns the UploaderJson value.
-func (m UpdateDeviceReportParams) GetUploaderJson() *string {
-	return m.UploaderJson
-}
-
-// SetUploaderJson sets the UploaderJson value and returns the updated UpdateDeviceReportParams.
-func (m *UpdateDeviceReportParams) SetUploaderJson(v *string) {
-	m.UploaderJson = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m UpdateDeviceReportParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateDeviceReportParams.
-func (m *UpdateDeviceReportParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateDeviceReportParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateDeviceReportParams.
-func (m *UpdateDeviceReportParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetID returns the ID value.
-func (m UpdateDeviceReportParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated UpdateDeviceReportParams.
-func (m *UpdateDeviceReportParams) SetID(v string) {
-	m.ID = v
-}
-
 // GetDateGTE returns the DateGTE value.
 func (m ActivityAscendingIDsParams) GetDateGTE() *int64 {
 	return m.DateGTE
@@ -6324,6 +6674,26 @@ func (m AllActivitiesParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllActivitiesParams.
 func (m *AllActivitiesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllActivitiesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllActivitiesParams.
+func (m *AllActivitiesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllActivitiesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllActivitiesParams.
+func (m *AllActivitiesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -6534,6 +6904,156 @@ func (m HardDeleteActivityParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteActivityParams.
 func (m *HardDeleteActivityParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m RewriteActivityParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m RewriteActivityParams) GetName() *string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetName(v *string) {
+	m.Name = v
+}
+
+// GetActivityType returns the ActivityType value.
+func (m RewriteActivityParams) GetActivityType() string {
+	return m.ActivityType
+}
+
+// SetActivityType sets the ActivityType value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetActivityType(v string) {
+	m.ActivityType = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m RewriteActivityParams) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
+// GetCalories returns the Calories value.
+func (m RewriteActivityParams) GetCalories() *int64 {
+	return m.Calories
+}
+
+// SetCalories sets the Calories value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetCalories(v *int64) {
+	m.Calories = v
+}
+
+// GetSteps returns the Steps value.
+func (m RewriteActivityParams) GetSteps() *int64 {
+	return m.Steps
+}
+
+// SetSteps sets the Steps value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetSteps(v *int64) {
+	m.Steps = v
+}
+
+// GetHeartRate returns the HeartRate value.
+func (m RewriteActivityParams) GetHeartRate() *int64 {
+	return m.HeartRate
+}
+
+// SetHeartRate sets the HeartRate value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetHeartRate(v *int64) {
+	m.HeartRate = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteActivityParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteActivityParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteActivityParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteActivityParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteActivityParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteActivityParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteActivityParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteActivityParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteActivityParams.
+func (m *RewriteActivityParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -6996,6 +7516,26 @@ func (m *AllFoodIntakesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetBefore returns the Before value.
+func (m AllFoodIntakesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllFoodIntakesParams.
+func (m *AllFoodIntakesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllFoodIntakesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllFoodIntakesParams.
+func (m *AllFoodIntakesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllFoodIntakesParams) GetSkip() int64 {
 	return m.Skip
@@ -7274,6 +7814,226 @@ func (m HardDeleteFoodIntakesByTypeParams) GetFoodType() *string {
 // SetFoodType sets the FoodType value and returns the updated HardDeleteFoodIntakesByTypeParams.
 func (m *HardDeleteFoodIntakesByTypeParams) SetFoodType(v *string) {
 	m.FoodType = v
+}
+
+// GetID returns the ID value.
+func (m RewriteFoodIntakeParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m RewriteFoodIntakeParams) GetName() *string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetName(v *string) {
+	m.Name = v
+}
+
+// GetFoodType returns the FoodType value.
+func (m RewriteFoodIntakeParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetFoodType(v *string) {
+	m.FoodType = v
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m RewriteFoodIntakeParams) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) {
+	m.AbsorptionTimeMinutes = v
+}
+
+// GetCarbs returns the Carbs value.
+func (m RewriteFoodIntakeParams) GetCarbs() *float64 {
+	return m.Carbs
+}
+
+// SetCarbs sets the Carbs value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetCarbs(v *float64) {
+	m.Carbs = v
+}
+
+// GetCategory returns the Category value.
+func (m RewriteFoodIntakeParams) GetCategory() *string {
+	return m.Category
+}
+
+// SetCategory sets the Category value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m RewriteFoodIntakeParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m RewriteFoodIntakeParams) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m RewriteFoodIntakeParams) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m RewriteFoodIntakeParams) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m RewriteFoodIntakeParams) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m RewriteFoodIntakeParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m RewriteFoodIntakeParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetPreBolus(v *float64) {
+	m.PreBolus = v
+}
+
+// GetUserEnteredAt returns the UserEnteredAt value.
+func (m RewriteFoodIntakeParams) GetUserEnteredAt() *int64 {
+	return m.UserEnteredAt
+}
+
+// SetUserEnteredAt sets the UserEnteredAt value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetUserEnteredAt(v *int64) {
+	m.UserEnteredAt = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteFoodIntakeParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteFoodIntakeParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteFoodIntakeParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteFoodIntakeParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteFoodIntakeParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteFoodIntakeParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteFoodIntakeParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteFoodIntakeParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteFoodIntakeParams.
+func (m *RewriteFoodIntakeParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -7826,6 +8586,26 @@ func (m *AllGlucoseReadingsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetBefore returns the Before value.
+func (m AllGlucoseReadingsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllGlucoseReadingsParams.
+func (m *AllGlucoseReadingsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllGlucoseReadingsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllGlucoseReadingsParams.
+func (m *AllGlucoseReadingsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllGlucoseReadingsParams) GetSkip() int64 {
 	return m.Skip
@@ -7906,14 +8686,14 @@ func (m *CreateGlucoseReadingParams) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m CreateGlucoseReadingParams) GetDirection() *string {
-	return m.Direction
+// GetTrend returns the Trend value.
+func (m CreateGlucoseReadingParams) GetTrend() *int64 {
+	return m.Trend
 }
 
-// SetDirection sets the Direction value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetDirection(v *string) {
-	m.Direction = v
+// SetTrend sets the Trend value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetTrend(v *int64) {
+	m.Trend = v
 }
 
 // GetNoise returns the Noise value.
@@ -8204,6 +8984,216 @@ func (m HardDeleteGlucoseReadingsByTypeParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated HardDeleteGlucoseReadingsByTypeParams.
 func (m *HardDeleteGlucoseReadingsByTypeParams) SetLimit(v int64) {
 	m.Limit = v
+}
+
+// GetID returns the ID value.
+func (m RewriteGlucoseReadingParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetMgdl returns the Mgdl value.
+func (m RewriteGlucoseReadingParams) GetMgdl() float64 {
+	return m.Mgdl
+}
+
+// SetMgdl sets the Mgdl value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetMgdl(v float64) {
+	m.Mgdl = v
+}
+
+// GetReadingType returns the ReadingType value.
+func (m RewriteGlucoseReadingParams) GetReadingType() string {
+	return m.ReadingType
+}
+
+// SetReadingType sets the ReadingType value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetReadingType(v string) {
+	m.ReadingType = v
+}
+
+// GetUnits returns the Units value.
+func (m RewriteGlucoseReadingParams) GetUnits() *consts.Units {
+	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetUnits(v *consts.Units) {
+	m.Units = v
+}
+
+// GetMeasurementMethod returns the MeasurementMethod value.
+func (m RewriteGlucoseReadingParams) GetMeasurementMethod() *string {
+	return m.MeasurementMethod
+}
+
+// SetMeasurementMethod sets the MeasurementMethod value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetMeasurementMethod(v *string) {
+	m.MeasurementMethod = v
+}
+
+// GetDelta returns the Delta value.
+func (m RewriteGlucoseReadingParams) GetDelta() *float64 {
+	return m.Delta
+}
+
+// SetDelta sets the Delta value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetDelta(v *float64) {
+	m.Delta = v
+}
+
+// GetTrend returns the Trend value.
+func (m RewriteGlucoseReadingParams) GetTrend() *int64 {
+	return m.Trend
+}
+
+// SetTrend sets the Trend value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetTrend(v *int64) {
+	m.Trend = v
+}
+
+// GetNoise returns the Noise value.
+func (m RewriteGlucoseReadingParams) GetNoise() *float64 {
+	return m.Noise
+}
+
+// SetNoise sets the Noise value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetNoise(v *float64) {
+	m.Noise = v
+}
+
+// GetFiltered returns the Filtered value.
+func (m RewriteGlucoseReadingParams) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetFiltered(v *float64) {
+	m.Filtered = v
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m RewriteGlucoseReadingParams) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetUnfiltered(v *float64) {
+	m.Unfiltered = v
+}
+
+// GetRssi returns the Rssi value.
+func (m RewriteGlucoseReadingParams) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetRssi(v *float64) {
+	m.Rssi = v
+}
+
+// GetIsCalibration returns the IsCalibration value.
+func (m RewriteGlucoseReadingParams) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m RewriteGlucoseReadingParams) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteGlucoseReadingParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteGlucoseReadingParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteGlucoseReadingParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteGlucoseReadingParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteGlucoseReadingParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteGlucoseReadingParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteGlucoseReadingParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteGlucoseReadingParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteGlucoseReadingParams.
+func (m *RewriteGlucoseReadingParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -8576,14 +9566,14 @@ func (m *UpdateGlucoseReadingParams) SetDelta(v *float64) {
 	m.Delta = v
 }
 
-// GetDirection returns the Direction value.
-func (m UpdateGlucoseReadingParams) GetDirection() *string {
-	return m.Direction
+// GetTrend returns the Trend value.
+func (m UpdateGlucoseReadingParams) GetTrend() *int64 {
+	return m.Trend
 }
 
-// SetDirection sets the Direction value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetDirection(v *string) {
-	m.Direction = v
+// SetTrend sets the Trend value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetTrend(v *int64) {
+	m.Trend = v
 }
 
 // GetNoise returns the Noise value.
@@ -8704,6 +9694,26 @@ func (m AllEventGroupsParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllEventGroupsParams.
 func (m *AllEventGroupsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllEventGroupsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllEventGroupsParams.
+func (m *AllEventGroupsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllEventGroupsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllEventGroupsParams.
+func (m *AllEventGroupsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -8966,6 +9976,16 @@ func (m *CreateEventGroupParams) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
+// GetEndingPumpID returns the EndingPumpID value.
+func (m CreateEventGroupParams) GetEndingPumpID() *string {
+	return m.EndingPumpID
+}
+
+// SetEndingPumpID sets the EndingPumpID value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetEndingPumpID(v *string) {
+	m.EndingPumpID = v
+}
+
 // GetSensorCode returns the SensorCode value.
 func (m CreateEventGroupParams) GetSensorCode() *string {
 	return m.SensorCode
@@ -8996,6 +10016,16 @@ func (m *CreateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
 	m.BolusCalculatorResultJson = v
 }
 
+// GetEmulatedTreatmentJson returns the EmulatedTreatmentJson value.
+func (m CreateEventGroupParams) GetEmulatedTreatmentJson() *string {
+	return m.EmulatedTreatmentJson
+}
+
+// SetEmulatedTreatmentJson sets the EmulatedTreatmentJson value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetEmulatedTreatmentJson(v *string) {
+	m.EmulatedTreatmentJson = v
+}
+
 // GetSyncIdentifier returns the SyncIdentifier value.
 func (m CreateEventGroupParams) GetSyncIdentifier() *string {
 	return m.SyncIdentifier
@@ -9004,6 +10034,16 @@ func (m CreateEventGroupParams) GetSyncIdentifier() *string {
 // SetSyncIdentifier sets the SyncIdentifier value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetSyncIdentifier(v *string) {
 	m.SyncIdentifier = v
+}
+
+// GetClientCreatedAt returns the ClientCreatedAt value.
+func (m CreateEventGroupParams) GetClientCreatedAt() *int64 {
+	return m.ClientCreatedAt
+}
+
+// SetClientCreatedAt sets the ClientCreatedAt value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetClientCreatedAt(v *int64) {
+	m.ClientCreatedAt = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -9456,6 +10496,376 @@ func (m *RegroupEventGroupParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetID returns the ID value.
+func (m RewriteEventGroupParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetGroupType returns the GroupType value.
+func (m RewriteEventGroupParams) GetGroupType() string {
+	return m.GroupType
+}
+
+// SetGroupType sets the GroupType value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetGroupType(v string) {
+	m.GroupType = v
+}
+
+// GetGlucoseReadingID returns the GlucoseReadingID value.
+func (m RewriteEventGroupParams) GetGlucoseReadingID() *string {
+	return m.GlucoseReadingID
+}
+
+// SetGlucoseReadingID sets the GlucoseReadingID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetGlucoseReadingID(v *string) {
+	m.GlucoseReadingID = v
+}
+
+// GetInsulinDoseID returns the InsulinDoseID value.
+func (m RewriteEventGroupParams) GetInsulinDoseID() *string {
+	return m.InsulinDoseID
+}
+
+// SetInsulinDoseID sets the InsulinDoseID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetInsulinDoseID(v *string) {
+	m.InsulinDoseID = v
+}
+
+// GetFoodIntakeID returns the FoodIntakeID value.
+func (m RewriteEventGroupParams) GetFoodIntakeID() *string {
+	return m.FoodIntakeID
+}
+
+// SetFoodIntakeID sets the FoodIntakeID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetFoodIntakeID(v *string) {
+	m.FoodIntakeID = v
+}
+
+// GetTempBasalID returns the TempBasalID value.
+func (m RewriteEventGroupParams) GetTempBasalID() *string {
+	return m.TempBasalID
+}
+
+// SetTempBasalID sets the TempBasalID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetTempBasalID(v *string) {
+	m.TempBasalID = v
+}
+
+// GetTempTargetID returns the TempTargetID value.
+func (m RewriteEventGroupParams) GetTempTargetID() *string {
+	return m.TempTargetID
+}
+
+// SetTempTargetID sets the TempTargetID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetTempTargetID(v *string) {
+	m.TempTargetID = v
+}
+
+// GetProfileSwitchID returns the ProfileSwitchID value.
+func (m RewriteEventGroupParams) GetProfileSwitchID() *string {
+	return m.ProfileSwitchID
+}
+
+// SetProfileSwitchID sets the ProfileSwitchID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetProfileSwitchID(v *string) {
+	m.ProfileSwitchID = v
+}
+
+// GetActivityID returns the ActivityID value.
+func (m RewriteEventGroupParams) GetActivityID() *string {
+	return m.ActivityID
+}
+
+// SetActivityID sets the ActivityID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetActivityID(v *string) {
+	m.ActivityID = v
+}
+
+// GetNotificationEventID returns the NotificationEventID value.
+func (m RewriteEventGroupParams) GetNotificationEventID() *string {
+	return m.NotificationEventID
+}
+
+// SetNotificationEventID sets the NotificationEventID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetNotificationEventID(v *string) {
+	m.NotificationEventID = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteEventGroupParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteEventGroupParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m RewriteEventGroupParams) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
+// GetDurationMs returns the DurationMs value.
+func (m RewriteEventGroupParams) GetDurationMs() *int64 {
+	return m.DurationMs
+}
+
+// SetDurationMs sets the DurationMs value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetDurationMs(v *int64) {
+	m.DurationMs = v
+}
+
+// GetEnteredBy returns the EnteredBy value.
+func (m RewriteEventGroupParams) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetEnteredBy(v *string) {
+	m.EnteredBy = v
+}
+
+// GetUuid returns the Uuid value.
+func (m RewriteEventGroupParams) GetUuid() *string {
+	return m.Uuid
+}
+
+// SetUuid sets the Uuid value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetUuid(v *string) {
+	m.Uuid = v
+}
+
+// GetMode returns the Mode value.
+func (m RewriteEventGroupParams) GetMode() *string {
+	return m.Mode
+}
+
+// SetMode sets the Mode value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetMode(v *string) {
+	m.Mode = v
+}
+
+// GetAutoForced returns the AutoForced value.
+func (m RewriteEventGroupParams) GetAutoForced() *bool {
+	return m.AutoForced
+}
+
+// SetAutoForced sets the AutoForced value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetAutoForced(v *bool) {
+	m.AutoForced = v
+}
+
+// GetReasons returns the Reasons value.
+func (m RewriteEventGroupParams) GetReasons() *string {
+	return m.Reasons
+}
+
+// SetReasons sets the Reasons value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetReasons(v *string) {
+	m.Reasons = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m RewriteEventGroupParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetSentHash returns the SentHash value.
+func (m RewriteEventGroupParams) GetSentHash() *string {
+	return m.SentHash
+}
+
+// SetSentHash sets the SentHash value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetSentHash(v *string) {
+	m.SentHash = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m RewriteEventGroupParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m RewriteEventGroupParams) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m RewriteEventGroupParams) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetPumpType(v *string) {
+	m.PumpType = v
+}
+
+// GetEndingPumpID returns the EndingPumpID value.
+func (m RewriteEventGroupParams) GetEndingPumpID() *string {
+	return m.EndingPumpID
+}
+
+// SetEndingPumpID sets the EndingPumpID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetEndingPumpID(v *string) {
+	m.EndingPumpID = v
+}
+
+// GetSensorCode returns the SensorCode value.
+func (m RewriteEventGroupParams) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m RewriteEventGroupParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetTransmitterID(v *string) {
+	m.TransmitterID = v
+}
+
+// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
+func (m RewriteEventGroupParams) GetBolusCalculatorResultJson() *string {
+	return m.BolusCalculatorResultJson
+}
+
+// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetBolusCalculatorResultJson(v *string) {
+	m.BolusCalculatorResultJson = v
+}
+
+// GetEmulatedTreatmentJson returns the EmulatedTreatmentJson value.
+func (m RewriteEventGroupParams) GetEmulatedTreatmentJson() *string {
+	return m.EmulatedTreatmentJson
+}
+
+// SetEmulatedTreatmentJson sets the EmulatedTreatmentJson value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetEmulatedTreatmentJson(v *string) {
+	m.EmulatedTreatmentJson = v
+}
+
+// GetSyncIdentifier returns the SyncIdentifier value.
+func (m RewriteEventGroupParams) GetSyncIdentifier() *string {
+	return m.SyncIdentifier
+}
+
+// SetSyncIdentifier sets the SyncIdentifier value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetSyncIdentifier(v *string) {
+	m.SyncIdentifier = v
+}
+
+// GetClientCreatedAt returns the ClientCreatedAt value.
+func (m RewriteEventGroupParams) GetClientCreatedAt() *int64 {
+	return m.ClientCreatedAt
+}
+
+// SetClientCreatedAt sets the ClientCreatedAt value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetClientCreatedAt(v *int64) {
+	m.ClientCreatedAt = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteEventGroupParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteEventGroupParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteEventGroupParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteEventGroupParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteEventGroupParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteEventGroupParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteEventGroupParams.
+func (m *RewriteEventGroupParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
+}
+
 // GetDateGTE returns the DateGTE value.
 func (m SearchEventGroupsParams) GetDateGTE() *int64 {
 	return m.DateGTE
@@ -9906,6 +11316,36 @@ func (m *SearchEventGroupsParams) SetEnteredByEq(v *string) {
 	m.EnteredByEq = v
 }
 
+// GetInsulinExists returns the InsulinExists value.
+func (m SearchEventGroupsParams) GetInsulinExists() *bool {
+	return m.InsulinExists
+}
+
+// SetInsulinExists sets the InsulinExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetInsulinExists(v *bool) {
+	m.InsulinExists = v
+}
+
+// GetGlucoseExists returns the GlucoseExists value.
+func (m SearchEventGroupsParams) GetGlucoseExists() *bool {
+	return m.GlucoseExists
+}
+
+// SetGlucoseExists sets the GlucoseExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetGlucoseExists(v *bool) {
+	m.GlucoseExists = v
+}
+
+// GetClientCreatedAtEQ returns the ClientCreatedAtEQ value.
+func (m SearchEventGroupsParams) GetClientCreatedAtEQ() *int64 {
+	return m.ClientCreatedAtEQ
+}
+
+// SetClientCreatedAtEQ sets the ClientCreatedAtEQ value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetClientCreatedAtEQ(v *int64) {
+	m.ClientCreatedAtEQ = v
+}
+
 // GetEnteredByNin returns the EnteredByNin value.
 func (m SearchEventGroupsParams) GetEnteredByNin() *string {
 	return m.EnteredByNin
@@ -9986,296 +11426,6 @@ func (m *SoftDeleteEventGroupsByTypeParams) SetGroupType(v string) {
 	m.GroupType = v
 }
 
-// GetGlucoseReadingID returns the GlucoseReadingID value.
-func (m UpdateEventGroupParams) GetGlucoseReadingID() *string {
-	return m.GlucoseReadingID
-}
-
-// SetGlucoseReadingID sets the GlucoseReadingID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetGlucoseReadingID(v *string) {
-	m.GlucoseReadingID = v
-}
-
-// GetInsulinDoseID returns the InsulinDoseID value.
-func (m UpdateEventGroupParams) GetInsulinDoseID() *string {
-	return m.InsulinDoseID
-}
-
-// SetInsulinDoseID sets the InsulinDoseID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetInsulinDoseID(v *string) {
-	m.InsulinDoseID = v
-}
-
-// GetFoodIntakeID returns the FoodIntakeID value.
-func (m UpdateEventGroupParams) GetFoodIntakeID() *string {
-	return m.FoodIntakeID
-}
-
-// SetFoodIntakeID sets the FoodIntakeID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetFoodIntakeID(v *string) {
-	m.FoodIntakeID = v
-}
-
-// GetTempBasalID returns the TempBasalID value.
-func (m UpdateEventGroupParams) GetTempBasalID() *string {
-	return m.TempBasalID
-}
-
-// SetTempBasalID sets the TempBasalID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetTempBasalID(v *string) {
-	m.TempBasalID = v
-}
-
-// GetTempTargetID returns the TempTargetID value.
-func (m UpdateEventGroupParams) GetTempTargetID() *string {
-	return m.TempTargetID
-}
-
-// SetTempTargetID sets the TempTargetID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetTempTargetID(v *string) {
-	m.TempTargetID = v
-}
-
-// GetProfileSwitchID returns the ProfileSwitchID value.
-func (m UpdateEventGroupParams) GetProfileSwitchID() *string {
-	return m.ProfileSwitchID
-}
-
-// SetProfileSwitchID sets the ProfileSwitchID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetProfileSwitchID(v *string) {
-	m.ProfileSwitchID = v
-}
-
-// GetActivityID returns the ActivityID value.
-func (m UpdateEventGroupParams) GetActivityID() *string {
-	return m.ActivityID
-}
-
-// SetActivityID sets the ActivityID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetActivityID(v *string) {
-	m.ActivityID = v
-}
-
-// GetNotificationEventID returns the NotificationEventID value.
-func (m UpdateEventGroupParams) GetNotificationEventID() *string {
-	return m.NotificationEventID
-}
-
-// SetNotificationEventID sets the NotificationEventID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetNotificationEventID(v *string) {
-	m.NotificationEventID = v
-}
-
-// GetNotes returns the Notes value.
-func (m UpdateEventGroupParams) GetNotes() *string {
-	return m.Notes
-}
-
-// SetNotes sets the Notes value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetNotes(v *string) {
-	m.Notes = v
-}
-
-// GetReason returns the Reason value.
-func (m UpdateEventGroupParams) GetReason() *string {
-	return m.Reason
-}
-
-// SetReason sets the Reason value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetReason(v *string) {
-	m.Reason = v
-}
-
-// GetEnteredBy returns the EnteredBy value.
-func (m UpdateEventGroupParams) GetEnteredBy() *string {
-	return m.EnteredBy
-}
-
-// SetEnteredBy sets the EnteredBy value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetEnteredBy(v *string) {
-	m.EnteredBy = v
-}
-
-// GetDurationMinutes returns the DurationMinutes value.
-func (m UpdateEventGroupParams) GetDurationMinutes() *int64 {
-	return m.DurationMinutes
-}
-
-// SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetDurationMinutes(v *int64) {
-	m.DurationMinutes = v
-}
-
-// GetDurationMs returns the DurationMs value.
-func (m UpdateEventGroupParams) GetDurationMs() *int64 {
-	return m.DurationMs
-}
-
-// SetDurationMs sets the DurationMs value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetDurationMs(v *int64) {
-	m.DurationMs = v
-}
-
-// GetUuid returns the Uuid value.
-func (m UpdateEventGroupParams) GetUuid() *string {
-	return m.Uuid
-}
-
-// SetUuid sets the Uuid value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetUuid(v *string) {
-	m.Uuid = v
-}
-
-// GetMode returns the Mode value.
-func (m UpdateEventGroupParams) GetMode() *string {
-	return m.Mode
-}
-
-// SetMode sets the Mode value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetMode(v *string) {
-	m.Mode = v
-}
-
-// GetAutoForced returns the AutoForced value.
-func (m UpdateEventGroupParams) GetAutoForced() *bool {
-	return m.AutoForced
-}
-
-// SetAutoForced sets the AutoForced value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetAutoForced(v *bool) {
-	m.AutoForced = v
-}
-
-// GetReasons returns the Reasons value.
-func (m UpdateEventGroupParams) GetReasons() *string {
-	return m.Reasons
-}
-
-// SetReasons sets the Reasons value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetReasons(v *string) {
-	m.Reasons = v
-}
-
-// GetOriginalDurationMs returns the OriginalDurationMs value.
-func (m UpdateEventGroupParams) GetOriginalDurationMs() *int64 {
-	return m.OriginalDurationMs
-}
-
-// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetOriginalDurationMs(v *int64) {
-	m.OriginalDurationMs = v
-}
-
-// GetSentHash returns the SentHash value.
-func (m UpdateEventGroupParams) GetSentHash() *string {
-	return m.SentHash
-}
-
-// SetSentHash sets the SentHash value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetSentHash(v *string) {
-	m.SentHash = v
-}
-
-// GetPumpID returns the PumpID value.
-func (m UpdateEventGroupParams) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m UpdateEventGroupParams) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m UpdateEventGroupParams) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetPumpType(v *string) {
-	m.PumpType = v
-}
-
-// GetSensorCode returns the SensorCode value.
-func (m UpdateEventGroupParams) GetSensorCode() *string {
-	return m.SensorCode
-}
-
-// SetSensorCode sets the SensorCode value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m UpdateEventGroupParams) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetBolusCalculatorResultJson returns the BolusCalculatorResultJson value.
-func (m UpdateEventGroupParams) GetBolusCalculatorResultJson() *string {
-	return m.BolusCalculatorResultJson
-}
-
-// SetBolusCalculatorResultJson sets the BolusCalculatorResultJson value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetBolusCalculatorResultJson(v *string) {
-	m.BolusCalculatorResultJson = v
-}
-
-// GetSyncIdentifier returns the SyncIdentifier value.
-func (m UpdateEventGroupParams) GetSyncIdentifier() *string {
-	return m.SyncIdentifier
-}
-
-// SetSyncIdentifier sets the SyncIdentifier value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetSyncIdentifier(v *string) {
-	m.SyncIdentifier = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m UpdateEventGroupParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateEventGroupParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetID returns the ID value.
-func (m UpdateEventGroupParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetID(v string) {
-	m.ID = v
-}
-
 // GetIncludeDeleted returns the IncludeDeleted value.
 func (m AllInsulinDosesParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
@@ -10284,6 +11434,26 @@ func (m AllInsulinDosesParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllInsulinDosesParams.
 func (m *AllInsulinDosesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllInsulinDosesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllInsulinDosesParams.
+func (m *AllInsulinDosesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllInsulinDosesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllInsulinDosesParams.
+func (m *AllInsulinDosesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -10336,24 +11506,24 @@ func (m *CreateInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m CreateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m CreateInsulinDoseParams) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m CreateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m CreateInsulinDoseParams) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -10514,6 +11684,186 @@ func (m HardDeleteInsulinDoseParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteInsulinDoseParams.
 func (m *HardDeleteInsulinDoseParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m RewriteInsulinDoseParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetDose returns the Dose value.
+func (m RewriteInsulinDoseParams) GetDose() float64 {
+	return m.Dose
+}
+
+// SetDose sets the Dose value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetDose(v float64) {
+	m.Dose = v
+}
+
+// GetDoseType returns the DoseType value.
+func (m RewriteInsulinDoseParams) GetDoseType() *string {
+	return m.DoseType
+}
+
+// SetDoseType sets the DoseType value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetDoseType(v *string) {
+	m.DoseType = v
+}
+
+// GetExtendedDose returns the ExtendedDose value.
+func (m RewriteInsulinDoseParams) GetExtendedDose() *float64 {
+	return m.ExtendedDose
+}
+
+// SetExtendedDose sets the ExtendedDose value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
+}
+
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m RewriteInsulinDoseParams) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
+}
+
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m RewriteInsulinDoseParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetAutomatic(v *bool) {
+	m.Automatic = v
+}
+
+// GetIsBasalInsulin returns the IsBasalInsulin value.
+func (m RewriteInsulinDoseParams) GetIsBasalInsulin() *bool {
+	return m.IsBasalInsulin
+}
+
+// SetIsBasalInsulin sets the IsBasalInsulin value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetIsBasalInsulin(v *bool) {
+	m.IsBasalInsulin = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m RewriteInsulinDoseParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetUnabsorbed returns the Unabsorbed value.
+func (m RewriteInsulinDoseParams) GetUnabsorbed() *float64 {
+	return m.Unabsorbed
+}
+
+// SetUnabsorbed sets the Unabsorbed value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetUnabsorbed(v *float64) {
+	m.Unabsorbed = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m RewriteInsulinDoseParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteInsulinDoseParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteInsulinDoseParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteInsulinDoseParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteInsulinDoseParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteInsulinDoseParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteInsulinDoseParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteInsulinDoseParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteInsulinDoseParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteInsulinDoseParams.
+func (m *RewriteInsulinDoseParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -10846,24 +12196,24 @@ func (m *UpdateInsulinDoseParams) SetDose(v *float64) {
 	m.Dose = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m UpdateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetExtendedDose returns the ExtendedDose value.
+func (m UpdateInsulinDoseParams) GetExtendedDose() *float64 {
+	return m.ExtendedDose
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
+// SetExtendedDose sets the ExtendedDose value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetExtendedDose(v *float64) {
+	m.ExtendedDose = v
 }
 
-// GetSplitExt returns the SplitExt value.
-func (m UpdateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
+// GetExtendedDurationMs returns the ExtendedDurationMs value.
+func (m UpdateInsulinDoseParams) GetExtendedDurationMs() *int64 {
+	return m.ExtendedDurationMs
 }
 
-// SetSplitExt sets the SplitExt value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
+// SetExtendedDurationMs sets the ExtendedDurationMs value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetExtendedDurationMs(v *int64) {
+	m.ExtendedDurationMs = v
 }
 
 // GetAutomatic returns the Automatic value.
@@ -10974,6 +12324,26 @@ func (m AllNotificationEventsParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllNotificationEventsParams.
 func (m *AllNotificationEventsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllNotificationEventsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllNotificationEventsParams.
+func (m *AllNotificationEventsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllNotificationEventsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllNotificationEventsParams.
+func (m *AllNotificationEventsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -11154,6 +12524,136 @@ func (m HardDeleteNotificationEventParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteNotificationEventParams.
 func (m *HardDeleteNotificationEventParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m RewriteNotificationEventParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetTitle returns the Title value.
+func (m RewriteNotificationEventParams) GetTitle() string {
+	return m.Title
+}
+
+// SetTitle sets the Title value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetTitle(v string) {
+	m.Title = v
+}
+
+// GetSeverity returns the Severity value.
+func (m RewriteNotificationEventParams) GetSeverity() int64 {
+	return m.Severity
+}
+
+// SetSeverity sets the Severity value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetSeverity(v int64) {
+	m.Severity = v
+}
+
+// GetContent returns the Content value.
+func (m RewriteNotificationEventParams) GetContent() *string {
+	return m.Content
+}
+
+// SetContent sets the Content value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetContent(v *string) {
+	m.Content = v
+}
+
+// GetNotificationType returns the NotificationType value.
+func (m RewriteNotificationEventParams) GetNotificationType() string {
+	return m.NotificationType
+}
+
+// SetNotificationType sets the NotificationType value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetNotificationType(v string) {
+	m.NotificationType = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteNotificationEventParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteNotificationEventParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteNotificationEventParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteNotificationEventParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteNotificationEventParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteNotificationEventParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteNotificationEventParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteNotificationEventParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteNotificationEventParams.
+func (m *RewriteNotificationEventParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -11484,6 +12984,26 @@ func (m AllProfileSwitchesParams) GetIncludeDeleted() bool {
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllProfileSwitchesParams.
 func (m *AllProfileSwitchesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
+}
+
+// GetBefore returns the Before value.
+func (m AllProfileSwitchesParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllProfileSwitchesParams.
+func (m *AllProfileSwitchesParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllProfileSwitchesParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllProfileSwitchesParams.
+func (m *AllProfileSwitchesParams) SetBeforeID(v *string) {
+	m.BeforeID = v
 }
 
 // GetSkip returns the Skip value.
@@ -11834,6 +13354,306 @@ func (m HardDeleteProfileSwitchParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteProfileSwitchParams.
 func (m *HardDeleteProfileSwitchParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m RewriteProfileSwitchParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m RewriteProfileSwitchParams) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetName(v string) {
+	m.Name = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m RewriteProfileSwitchParams) GetDurationMinutes() int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetDurationMinutes(v int64) {
+	m.DurationMinutes = v
+}
+
+// GetMultiplier returns the Multiplier value.
+func (m RewriteProfileSwitchParams) GetMultiplier() *float64 {
+	return m.Multiplier
+}
+
+// SetMultiplier sets the Multiplier value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetMultiplier(v *float64) {
+	m.Multiplier = v
+}
+
+// GetDia returns the Dia value.
+func (m RewriteProfileSwitchParams) GetDia() *float64 {
+	return m.Dia
+}
+
+// SetDia sets the Dia value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetDia(v *float64) {
+	m.Dia = v
+}
+
+// GetUnits returns the Units value.
+func (m RewriteProfileSwitchParams) GetUnits() *consts.Units {
+	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetUnits(v *consts.Units) {
+	m.Units = v
+}
+
+// GetTimezone returns the Timezone value.
+func (m RewriteProfileSwitchParams) GetTimezone() *string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetTimezone(v *string) {
+	m.Timezone = v
+}
+
+// GetCarbsHr returns the CarbsHr value.
+func (m RewriteProfileSwitchParams) GetCarbsHr() *float64 {
+	return m.CarbsHr
+}
+
+// SetCarbsHr sets the CarbsHr value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetCarbsHr(v *float64) {
+	m.CarbsHr = v
+}
+
+// GetDelay returns the Delay value.
+func (m RewriteProfileSwitchParams) GetDelay() *float64 {
+	return m.Delay
+}
+
+// SetDelay sets the Delay value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetDelay(v *float64) {
+	m.Delay = v
+}
+
+// GetTimeshift returns the Timeshift value.
+func (m RewriteProfileSwitchParams) GetTimeshift() *int64 {
+	return m.Timeshift
+}
+
+// SetTimeshift sets the Timeshift value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetTimeshift(v *int64) {
+	m.Timeshift = v
+}
+
+// GetOriginalProfileName returns the OriginalProfileName value.
+func (m RewriteProfileSwitchParams) GetOriginalProfileName() *string {
+	return m.OriginalProfileName
+}
+
+// SetOriginalProfileName sets the OriginalProfileName value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetOriginalProfileName(v *string) {
+	m.OriginalProfileName = v
+}
+
+// GetOriginalCustomizedName returns the OriginalCustomizedName value.
+func (m RewriteProfileSwitchParams) GetOriginalCustomizedName() *string {
+	return m.OriginalCustomizedName
+}
+
+// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetOriginalCustomizedName(v *string) {
+	m.OriginalCustomizedName = v
+}
+
+// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
+func (m RewriteProfileSwitchParams) GetOriginalTimeshiftMs() *int64 {
+	return m.OriginalTimeshiftMs
+}
+
+// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetOriginalTimeshiftMs(v *int64) {
+	m.OriginalTimeshiftMs = v
+}
+
+// GetOriginalPercentage returns the OriginalPercentage value.
+func (m RewriteProfileSwitchParams) GetOriginalPercentage() *int64 {
+	return m.OriginalPercentage
+}
+
+// SetOriginalPercentage sets the OriginalPercentage value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetOriginalPercentage(v *int64) {
+	m.OriginalPercentage = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m RewriteProfileSwitchParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetOriginalEnd returns the OriginalEnd value.
+func (m RewriteProfileSwitchParams) GetOriginalEnd() *int64 {
+	return m.OriginalEnd
+}
+
+// SetOriginalEnd sets the OriginalEnd value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetOriginalEnd(v *int64) {
+	m.OriginalEnd = v
+}
+
+// GetIcfgJson returns the IcfgJson value.
+func (m RewriteProfileSwitchParams) GetIcfgJson() *string {
+	return m.IcfgJson
+}
+
+// SetIcfgJson sets the IcfgJson value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetIcfgJson(v *string) {
+	m.IcfgJson = v
+}
+
+// GetCarbRatiosJson returns the CarbRatiosJson value.
+func (m RewriteProfileSwitchParams) GetCarbRatiosJson() *string {
+	return m.CarbRatiosJson
+}
+
+// SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetCarbRatiosJson(v *string) {
+	m.CarbRatiosJson = v
+}
+
+// GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
+func (m RewriteProfileSwitchParams) GetInsulinSensitivitiesJson() *string {
+	return m.InsulinSensitivitiesJson
+}
+
+// SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetInsulinSensitivitiesJson(v *string) {
+	m.InsulinSensitivitiesJson = v
+}
+
+// GetBasalRatesJson returns the BasalRatesJson value.
+func (m RewriteProfileSwitchParams) GetBasalRatesJson() *string {
+	return m.BasalRatesJson
+}
+
+// SetBasalRatesJson sets the BasalRatesJson value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetBasalRatesJson(v *string) {
+	m.BasalRatesJson = v
+}
+
+// GetTargetsHighJson returns the TargetsHighJson value.
+func (m RewriteProfileSwitchParams) GetTargetsHighJson() *string {
+	return m.TargetsHighJson
+}
+
+// SetTargetsHighJson sets the TargetsHighJson value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetTargetsHighJson(v *string) {
+	m.TargetsHighJson = v
+}
+
+// GetTargetsLowJson returns the TargetsLowJson value.
+func (m RewriteProfileSwitchParams) GetTargetsLowJson() *string {
+	return m.TargetsLowJson
+}
+
+// SetTargetsLowJson sets the TargetsLowJson value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetTargetsLowJson(v *string) {
+	m.TargetsLowJson = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteProfileSwitchParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteProfileSwitchParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteProfileSwitchParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteProfileSwitchParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteProfileSwitchParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteProfileSwitchParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteProfileSwitchParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteProfileSwitchParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteProfileSwitchParams.
+func (m *RewriteProfileSwitchParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -12326,6 +14146,26 @@ func (m *AllTempBasalsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetBefore returns the Before value.
+func (m AllTempBasalsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllTempBasalsParams.
+func (m *AllTempBasalsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllTempBasalsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllTempBasalsParams.
+func (m *AllTempBasalsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllTempBasalsParams) GetSkip() int64 {
 	return m.Skip
@@ -12524,6 +14364,156 @@ func (m HardDeleteTempBasalParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteTempBasalParams.
 func (m *HardDeleteTempBasalParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m RewriteTempBasalParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m RewriteTempBasalParams) GetDurationMinutes() int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetDurationMinutes(v int64) {
+	m.DurationMinutes = v
+}
+
+// GetRate returns the Rate value.
+func (m RewriteTempBasalParams) GetRate() float64 {
+	return m.Rate
+}
+
+// SetRate sets the Rate value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetRate(v float64) {
+	m.Rate = v
+}
+
+// GetMultiplier returns the Multiplier value.
+func (m RewriteTempBasalParams) GetMultiplier() *float64 {
+	return m.Multiplier
+}
+
+// SetMultiplier sets the Multiplier value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetMultiplier(v *float64) {
+	m.Multiplier = v
+}
+
+// GetType returns the Type value.
+func (m RewriteTempBasalParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetType(v *string) {
+	m.Type = v
+}
+
+// GetInsulinType returns the InsulinType value.
+func (m RewriteTempBasalParams) GetInsulinType() *string {
+	return m.InsulinType
+}
+
+// SetInsulinType sets the InsulinType value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetInsulinType(v *string) {
+	m.InsulinType = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m RewriteTempBasalParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetAutomatic(v *bool) {
+	m.Automatic = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteTempBasalParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteTempBasalParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteTempBasalParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteTempBasalParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteTempBasalParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteTempBasalParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteTempBasalParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteTempBasalParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteTempBasalParams.
+func (m *RewriteTempBasalParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -12916,6 +14906,26 @@ func (m *AllTempTargetsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetBefore returns the Before value.
+func (m AllTempTargetsParams) GetBefore() *int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated AllTempTargetsParams.
+func (m *AllTempTargetsParams) SetBefore(v *int64) {
+	m.Before = v
+}
+
+// GetBeforeID returns the BeforeID value.
+func (m AllTempTargetsParams) GetBeforeID() *string {
+	return m.BeforeID
+}
+
+// SetBeforeID sets the BeforeID value and returns the updated AllTempTargetsParams.
+func (m *AllTempTargetsParams) SetBeforeID(v *string) {
+	m.BeforeID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllTempTargetsParams) GetSkip() int64 {
 	return m.Skip
@@ -13104,6 +15114,146 @@ func (m HardDeleteTempTargetParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteTempTargetParams.
 func (m *HardDeleteTempTargetParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m RewriteTempTargetParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m RewriteTempTargetParams) GetDurationMinutes() int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetDurationMinutes(v int64) {
+	m.DurationMinutes = v
+}
+
+// GetHighTargetMgdl returns the HighTargetMgdl value.
+func (m RewriteTempTargetParams) GetHighTargetMgdl() float64 {
+	return m.HighTargetMgdl
+}
+
+// SetHighTargetMgdl sets the HighTargetMgdl value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetHighTargetMgdl(v float64) {
+	m.HighTargetMgdl = v
+}
+
+// GetLowTargetMgdl returns the LowTargetMgdl value.
+func (m RewriteTempTargetParams) GetLowTargetMgdl() float64 {
+	return m.LowTargetMgdl
+}
+
+// SetLowTargetMgdl sets the LowTargetMgdl value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetLowTargetMgdl(v float64) {
+	m.LowTargetMgdl = v
+}
+
+// GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
+func (m RewriteTempTargetParams) GetInsulinNeedsScaleFactor() *float64 {
+	return m.InsulinNeedsScaleFactor
+}
+
+// SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetInsulinNeedsScaleFactor(v *float64) {
+	m.InsulinNeedsScaleFactor = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m RewriteTempTargetParams) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetDurationType(v *string) {
+	m.DurationType = v
+}
+
+// GetNotes returns the Notes value.
+func (m RewriteTempTargetParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RewriteTempTargetParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m RewriteTempTargetParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RewriteTempTargetParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteTempTargetParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteTempTargetParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteTempTargetParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteTempTargetParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteTempTargetParams.
+func (m *RewriteTempTargetParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -13856,6 +16006,56 @@ func (m *CreateFoodPresetParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUnit returns the Unit value.
+func (m CreateFoodPresetParams) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m CreateFoodPresetParams) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m CreateFoodPresetParams) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m CreateFoodPresetParams) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m CreateFoodPresetParams) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetPosition(v *int64) {
+	m.Position = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m CreateFoodPresetParams) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
@@ -14014,6 +16214,226 @@ func (m HardDeleteFoodPresetsByTypeParams) GetFoodType() *string {
 // SetFoodType sets the FoodType value and returns the updated HardDeleteFoodPresetsByTypeParams.
 func (m *HardDeleteFoodPresetsByTypeParams) SetFoodType(v *string) {
 	m.FoodType = v
+}
+
+// GetID returns the ID value.
+func (m RewriteFoodPresetParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m RewriteFoodPresetParams) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetName(v string) {
+	m.Name = v
+}
+
+// GetFoodType returns the FoodType value.
+func (m RewriteFoodPresetParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetFoodType(v *string) {
+	m.FoodType = v
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m RewriteFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) {
+	m.AbsorptionTimeMinutes = v
+}
+
+// GetCarbs returns the Carbs value.
+func (m RewriteFoodPresetParams) GetCarbs() *float64 {
+	return m.Carbs
+}
+
+// SetCarbs sets the Carbs value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetCarbs(v *float64) {
+	m.Carbs = v
+}
+
+// GetCategory returns the Category value.
+func (m RewriteFoodPresetParams) GetCategory() *string {
+	return m.Category
+}
+
+// SetCategory sets the Category value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m RewriteFoodPresetParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m RewriteFoodPresetParams) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m RewriteFoodPresetParams) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m RewriteFoodPresetParams) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m RewriteFoodPresetParams) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m RewriteFoodPresetParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m RewriteFoodPresetParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetPreBolus(v *float64) {
+	m.PreBolus = v
+}
+
+// GetUnit returns the Unit value.
+func (m RewriteFoodPresetParams) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m RewriteFoodPresetParams) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m RewriteFoodPresetParams) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m RewriteFoodPresetParams) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m RewriteFoodPresetParams) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetPosition(v *int64) {
+	m.Position = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m RewriteFoodPresetParams) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m RewriteFoodPresetParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m RewriteFoodPresetParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m RewriteFoodPresetParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated RewriteFoodPresetParams.
+func (m *RewriteFoodPresetParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -14426,6 +16846,56 @@ func (m *UpdateFoodPresetParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
 }
 
+// GetUnit returns the Unit value.
+func (m UpdateFoodPresetParams) GetUnit() *string {
+	return m.Unit
+}
+
+// SetUnit sets the Unit value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetUnit(v *string) {
+	m.Unit = v
+}
+
+// GetGi returns the Gi value.
+func (m UpdateFoodPresetParams) GetGi() *float64 {
+	return m.Gi
+}
+
+// SetGi sets the Gi value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetGi(v *float64) {
+	m.Gi = v
+}
+
+// GetHidden returns the Hidden value.
+func (m UpdateFoodPresetParams) GetHidden() *bool {
+	return m.Hidden
+}
+
+// SetHidden sets the Hidden value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetHidden(v *bool) {
+	m.Hidden = v
+}
+
+// GetHideAfterUse returns the HideAfterUse value.
+func (m UpdateFoodPresetParams) GetHideAfterUse() *bool {
+	return m.HideAfterUse
+}
+
+// SetHideAfterUse sets the HideAfterUse value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetHideAfterUse(v *bool) {
+	m.HideAfterUse = v
+}
+
+// GetPosition returns the Position value.
+func (m UpdateFoodPresetParams) GetPosition() *int64 {
+	return m.Position
+}
+
+// SetPosition sets the Position value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetPosition(v *int64) {
+	m.Position = v
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateFoodPresetParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -14644,6 +17114,16 @@ func (m CreateProfilePresetParams) GetEnteredBy() *string {
 // SetEnteredBy sets the EnteredBy value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
+}
+
+// GetProfileName returns the ProfileName value.
+func (m CreateProfilePresetParams) GetProfileName() *string {
+	return m.ProfileName
+}
+
+// SetProfileName sets the ProfileName value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetProfileName(v *string) {
+	m.ProfileName = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -15496,6 +17976,46 @@ func (m *UpsertSummaryPeriodParams) SetTotalDailyBasal(v float64) {
 	m.TotalDailyBasal = v
 }
 
+// GetBefore returns the Before value.
+func (m ClearOldBolusCalculatorJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldBolusCalculatorJSONParams.
+func (m *ClearOldBolusCalculatorJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearOldDeviceReportJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldDeviceReportJSONParams.
+func (m *ClearOldDeviceReportJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearOldInsulinDoseJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldInsulinDoseJSONParams.
+func (m *ClearOldInsulinDoseJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetNow returns the Now value.
+func (m ClearOldLoopStatusesParams) GetNow() int64 {
+	return m.Now
+}
+
+// SetNow sets the Now value and returns the updated ClearOldLoopStatusesParams.
+func (m *ClearOldLoopStatusesParams) SetNow(v int64) {
+	m.Now = v
+}
+
 // GetSince returns the Since value.
 func (m ClearOldLoopStatusesParams) GetSince() int64 {
 	return m.Since
@@ -15504,6 +18024,16 @@ func (m ClearOldLoopStatusesParams) GetSince() int64 {
 // SetSince sets the Since value and returns the updated ClearOldLoopStatusesParams.
 func (m *ClearOldLoopStatusesParams) SetSince(v int64) {
 	m.Since = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearOldProfileSwitchJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearOldProfileSwitchJSONParams.
+func (m *ClearOldProfileSwitchJSONParams) SetBefore(v int64) {
+	m.Before = v
 }
 
 // GetSince returns the Since value.
@@ -15517,12 +18047,102 @@ func (m *ClearOldPumpsParams) SetSince(v int64) {
 }
 
 // GetBefore returns the Before value.
+func (m DeleteOldActivitiesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldActivitiesParams.
+func (m *DeleteOldActivitiesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
 func (m DeleteOldDeviceReportsParams) GetBefore() int64 {
 	return m.Before
 }
 
 // SetBefore sets the Before value and returns the updated DeleteOldDeviceReportsParams.
 func (m *DeleteOldDeviceReportsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldEventGroupsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldEventGroupsParams.
+func (m *DeleteOldEventGroupsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldFoodIntakesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldFoodIntakesParams.
+func (m *DeleteOldFoodIntakesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldGlucoseReadingsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldGlucoseReadingsParams.
+func (m *DeleteOldGlucoseReadingsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldInsulinDosesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldInsulinDosesParams.
+func (m *DeleteOldInsulinDosesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldNotificationEventsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldNotificationEventsParams.
+func (m *DeleteOldNotificationEventsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldProfileSwitchesParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldProfileSwitchesParams.
+func (m *DeleteOldProfileSwitchesParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldTempBasalsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldTempBasalsParams.
+func (m *DeleteOldTempBasalsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteOldTempTargetsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldTempTargetsParams.
+func (m *DeleteOldTempTargetsParams) SetBefore(v int64) {
 	m.Before = v
 }
 

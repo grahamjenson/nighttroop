@@ -14,12 +14,16 @@ const allTempBasals = `-- name: AllTempBasals :many
 
 SELECT id, duration_minutes, rate, multiplier, type, insulin_type, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllTempBasalsParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -28,7 +32,13 @@ type AllTempBasalsParams struct {
 // READ
 // ------
 func (q *Queries) AllTempBasals(ctx context.Context, arg AllTempBasalsParams) ([]*TempBasal, error) {
-	rows, err := q.query(ctx, q.allTempBasalsStmt, allTempBasals, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allTempBasalsStmt, allTempBasals,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +218,96 @@ func (q *Queries) HardDeleteTempBasal(ctx context.Context, arg HardDeleteTempBas
 	return q.exec(ctx, q.hardDeleteTempBasalStmt, hardDeleteTempBasal, arg.ID)
 }
 
+const rewriteTempBasal = `-- name: RewriteTempBasal :one
+
+UPDATE temp_basals SET
+    id = ?1,
+    duration_minutes = ?2,
+    rate = ?3,
+    multiplier = ?4,
+    type = ?5,
+    insulin_type = ?6,
+    automatic = ?7,
+    notes = ?8,
+    reason = ?9,
+    utc_offset_minutes = ?10,
+    occurred_at = ?11,
+    created_by_app_name = ?12,
+    created_by_device_name = ?13,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?14 AS TEXT),
+    updated_by_identity_id = ?15
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, duration_minutes, rate, multiplier, type, insulin_type, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteTempBasalParams struct {
+	ID                    string
+	DurationMinutes       int64
+	Rate                  float64
+	Multiplier            *float64
+	Type                  *string
+	InsulinType           *string
+	Automatic             *bool
+	Notes                 *string
+	Reason                *string
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteTempBasal writes every column CreateTempBasal does over the temp basal with the ID, as a Nightscout update
+// writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+func (q *Queries) RewriteTempBasal(ctx context.Context, arg RewriteTempBasalParams) (*TempBasal, error) {
+	row := q.queryRow(ctx, q.rewriteTempBasalStmt, rewriteTempBasal,
+		arg.ID,
+		arg.DurationMinutes,
+		arg.Rate,
+		arg.Multiplier,
+		arg.Type,
+		arg.InsulinType,
+		arg.Automatic,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i TempBasal
+	err := row.Scan(
+		&i.ID,
+		&i.DurationMinutes,
+		&i.Rate,
+		&i.Multiplier,
+		&i.Type,
+		&i.InsulinType,
+		&i.Automatic,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchTempBasals = `-- name: SearchTempBasals :many
 SELECT id, duration_minutes, rate, multiplier, type, insulin_type, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals
 WHERE
@@ -382,7 +482,6 @@ func (q *Queries) TempBasalTotals(ctx context.Context) (*TempBasalTotalsRow, err
 }
 
 const updateTempBasal = `-- name: UpdateTempBasal :one
-
 UPDATE temp_basals SET
     duration_minutes = COALESCE(?1, duration_minutes),
     rate = COALESCE(?2, rate),
@@ -415,9 +514,6 @@ type UpdateTempBasalParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams) (*TempBasal, error) {
 	row := q.queryRow(ctx, q.updateTempBasalStmt, updateTempBasal,
 		arg.DurationMinutes,

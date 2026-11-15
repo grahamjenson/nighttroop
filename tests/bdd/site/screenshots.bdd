@@ -38,6 +38,8 @@ ASSERT_VISIBLE #site--settings--getting-started-button
 ASSERT_VISIBLE #site--settings--logout-button
 SCREENSHOT site_settings_menu
 PRESS Escape
+// Wait for the menu to close, or the next click lands while it closes and leaves it shut
+ASSERT_NOT_VISIBLE #site--settings--logout-button
 
 // The Settings hub has a tab for each settings page, and Connectors is in the user menu
 CLICK #site--settings-menu

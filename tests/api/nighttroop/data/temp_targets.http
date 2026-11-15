@@ -88,7 +88,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"duration_minutes": 30}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "targets must be more than 0" "@message"
+ASSERT_CONTAINS "high_target must be from 0.1 to" "@message"
 
 NAME create_temp_target_low_above_high
 POST http://{{ site }}/data/temp-targets
@@ -96,6 +96,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"low_target": 180, "high_target": 120, "duration_minutes": 30}
 ASSERT_STATUS 400
+ASSERT_CONTAINS "the low target must be at most the high target" "@message"
 
 NAME create_temp_target_too_long
 POST http://{{ site }}/data/temp-targets
@@ -103,7 +104,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"low_target": 100, "high_target": 120, "duration_minutes": 20000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "duration must be more than 0" "@message"
+ASSERT_CONTAINS "duration_minutes must be from 1 to 10080" "@message"
 
 // Only the fields sent change
 NAME update_temp_target_notes
@@ -208,4 +209,4 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"low_target": 5, "high_target": 60, "duration_minutes": 30}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "at most 55.5 mmol/L" "@message"
+ASSERT_CONTAINS "high_target must be from 0.1 to 55.5 mmol/L" "@message"

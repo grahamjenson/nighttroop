@@ -32,7 +32,6 @@ type ToCreateParams interface {
 	TempTargetToUpdate(source TempTarget) UpdateTempTargetParams
 
 	DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams
-	DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams
 
 	// PRESETS
 	FoodPresetToCreate(source FoodPreset) CreateFoodPresetParams
@@ -43,7 +42,6 @@ type ToCreateParams interface {
 
 	// EVENT GROUP
 	EventGroupToCreate(source EventGroup) CreateEventGroupParams
-	EventGroupToUpdate(source EventGroup) UpdateEventGroupParams
 
 	SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow
 	AllEventGroupToGetEventGroup(source AllEventGroupsRow) GetEventGroupRow

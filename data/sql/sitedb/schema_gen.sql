@@ -8,9 +8,25 @@ CREATE INDEX device_reports_occurred_at_idx ON device_reports(occurred_at);
 
 CREATE INDEX device_reports_updated_at_idx ON device_reports(updated_at);
 
+CREATE UNIQUE INDEX event_groups_activity_id_idx ON event_groups(activity_id) WHERE activity_id IS NOT NULL;
+
+CREATE UNIQUE INDEX event_groups_food_intake_id_idx ON event_groups(food_intake_id) WHERE food_intake_id IS NOT NULL;
+
+CREATE UNIQUE INDEX event_groups_glucose_reading_id_idx ON event_groups(glucose_reading_id) WHERE glucose_reading_id IS NOT NULL;
+
 CREATE INDEX event_groups_group_type_occurred_at_idx ON event_groups(group_type, occurred_at);
 
+CREATE UNIQUE INDEX event_groups_insulin_dose_id_idx ON event_groups(insulin_dose_id) WHERE insulin_dose_id IS NOT NULL;
+
+CREATE UNIQUE INDEX event_groups_notification_event_id_idx ON event_groups(notification_event_id) WHERE notification_event_id IS NOT NULL;
+
 CREATE INDEX event_groups_occurred_at_idx ON event_groups(occurred_at);
+
+CREATE UNIQUE INDEX event_groups_profile_switch_id_idx ON event_groups(profile_switch_id) WHERE profile_switch_id IS NOT NULL;
+
+CREATE UNIQUE INDEX event_groups_temp_basal_id_idx ON event_groups(temp_basal_id) WHERE temp_basal_id IS NOT NULL;
+
+CREATE UNIQUE INDEX event_groups_temp_target_id_idx ON event_groups(temp_target_id) WHERE temp_target_id IS NOT NULL;
 
 CREATE INDEX event_groups_updated_at_idx ON event_groups(updated_at);
 
@@ -117,7 +133,7 @@ CREATE TABLE device_reports (
     configuration_id TEXT CHECK(length(configuration_id) = 64),
 
     -- The loop's status as sent, its openaps or loop object (which loop_name says), with its IOB, COB, reason and
-    -- predicted glucoses, most of a looping site's DB. It is kept only on its device's newest report with one.
+    -- predicted glucoses, most of a looping site's DB. Its predictions are cleared once it is a day old.
     loop_status_json TEXT CHECK(length(loop_status_json) <= 8192 AND json_valid(loop_status_json)),
     -- Which loop it is, whose status loop_status_json is
     loop_name TEXT CHECK(loop_name IN ('openaps', 'loop')),
@@ -132,9 +148,9 @@ CREATE TABLE device_reports (
     pump_bolusing INTEGER CHECK(pump_bolusing IN (0, 1)),
     override_json TEXT CHECK(length(override_json) <= 2048 AND json_valid(override_json)),
     -- The pump and uploader as sent, for their fields without a column, like AAPS's extended. The pump's, the larger,
-    -- is kept, like the loop's status, only on its device's newest report with one.
+    -- is kept only on its device's newest report with one.
     pump_json TEXT CHECK(length(pump_json) <= 4096 AND json_valid(pump_json)),
-    uploader_json TEXT CHECK(length(uploader_json) <= 1024 AND json_valid(uploader_json)),
+    uploader_json TEXT CHECK(length(uploader_json) <= 4096 AND json_valid(uploader_json)),
 
 
     -- Default Stuff
@@ -158,15 +174,15 @@ CREATE TABLE event_groups (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     group_type TEXT NOT NULL CHECK(length(group_type) > 0 AND length(group_type) <= 32),
 
-    glucose_reading_id TEXT UNIQUE REFERENCES glucose_readings(id) ON DELETE RESTRICT,
-    insulin_dose_id TEXT UNIQUE REFERENCES insulin_doses(id) ON DELETE RESTRICT,
-    food_intake_id TEXT UNIQUE REFERENCES food_intakes(id) ON DELETE RESTRICT,
-    temp_basal_id TEXT UNIQUE REFERENCES temp_basals(id) ON DELETE RESTRICT,
-    temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
-    profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
+    glucose_reading_id TEXT REFERENCES glucose_readings(id) ON DELETE RESTRICT,
+    insulin_dose_id TEXT REFERENCES insulin_doses(id) ON DELETE RESTRICT,
+    food_intake_id TEXT REFERENCES food_intakes(id) ON DELETE RESTRICT,
+    temp_basal_id TEXT REFERENCES temp_basals(id) ON DELETE RESTRICT,
+    temp_target_id TEXT REFERENCES temp_targets(id) ON DELETE RESTRICT,
+    profile_switch_id TEXT REFERENCES profile_switches(id) ON DELETE RESTRICT,
 
-    activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
-    notification_event_id TEXT UNIQUE REFERENCES notification_events(id) ON DELETE RESTRICT,
+    activity_id TEXT REFERENCES activities(id) ON DELETE RESTRICT,
+    notification_event_id TEXT REFERENCES notification_events(id) ON DELETE RESTRICT,
 
     -- who the app says entered it, as Nightscout keeps it, e.g. loop://iPhone or xdrip
     entered_by TEXT CHECK(length(entered_by) <= 64),
@@ -175,9 +191,11 @@ CREATE TABLE event_groups (
     -- (auto_forced) and why (reasons), how long it was to last in milliseconds, at most a year (original_duration_ms),
     -- and a hash of the JSON it was last sent as, to
     -- tell one sent again with changes from one sent the same (sent_hash), and the pump's ID, serial and type (pump_id,
-    -- pump_serial, pump_type), as AAPS sends with every treatment, and a sensor change's sensor code and transmitter
+    -- pump_serial, pump_type), as AAPS sends with every treatment, the pump's ID of the record that ended it, as AAPS
+    -- sends when it ends a temp basal or extended bolus (ending_pump_id), and a sensor change's sensor code and transmitter
     -- (sensor_code, transmitter_id), and AAPS's Bolus Wizard calculation, the JSON text it sends and reads back to restore the record (bolus_calculator_result_json),
-    -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier)
+    -- and Loop's id for a carb entry or dose, which it finds its own by (sync_identifier), and when iAPS's carbs were
+    -- entered, sent as creation_date, which it deletes them by (client_created_at)
     uuid TEXT CHECK(length(uuid) <= 64),
     mode TEXT CHECK(length(mode) <= 64),
     auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
@@ -187,10 +205,16 @@ CREATE TABLE event_groups (
     pump_id TEXT CHECK(length(pump_id) <= 32),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
     pump_type TEXT CHECK(length(pump_type) <= 64),
+    ending_pump_id TEXT CHECK(length(ending_pump_id) <= 32),
     sensor_code TEXT CHECK(length(sensor_code) <= 64),
     transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
     bolus_calculator_result_json TEXT CHECK(length(bolus_calculator_result_json) <= 4096 AND json_valid(bolus_calculator_result_json)),
     sync_identifier TEXT CHECK(length(sync_identifier) <= 256),
+    client_created_at INTEGER CHECK(client_created_at BETWEEN 0 AND 253402300799999),
+    -- The treatment asked for that this one carries out another way, the JSON an app sends in it and reads back, e.g.
+    -- the Combo Bolus of an extended bolus AAPS gives by a Temp Basal for a pump with none, as extendedEmulated
+    -- (emulated_treatment_json). What it gives is this treatment's, so it is never counted again
+    emulated_treatment_json TEXT CHECK(length(emulated_treatment_json) <= 4096 AND json_valid(emulated_treatment_json)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -275,6 +299,13 @@ CREATE TABLE food_presets (
     energy REAL CHECK(energy BETWEEN -20000 AND 20000),
     portions REAL CHECK(portions BETWEEN -1000 AND 1000),
     pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440),
+    -- And as Nightscout's food editor and AAPS keep them: the unit of its portion (e.g. g, ml, pcs), its glycaemic
+    -- index, whether it is hidden from a list or hidden once used, and its place in a list
+    unit TEXT CHECK(length(unit) <= 32),
+    gi REAL CHECK(gi BETWEEN 0 AND 1000),
+    hidden INTEGER CHECK(hidden IN (0, 1)),
+    hide_after_use INTEGER CHECK(hide_after_use IN (0, 1)),
+    position INTEGER CHECK(position BETWEEN -100000 AND 100000),
 
     -- Default Stuff
 
@@ -307,8 +338,10 @@ CREATE TABLE glucose_readings (
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
-    delta REAL CHECK(delta BETWEEN -1000 AND 1000),
-    direction TEXT CHECK(length(direction) <= 32),
+    delta REAL CHECK(delta BETWEEN -1000 AND 1000), -- mg/dL since the reading before, as sent
+    -- Nightscout's trend number for the direction, and 10 TripleUp and 11 TripleDown, which Nightscout has none for;
+    -- the direction is made from it (nightscoutmodels.TrendDirection)
+    trend INTEGER CHECK(trend BETWEEN 0 AND 11),
 
     -- What only some apps send, NULL for most readings: a CGM's raw signal, from xDrip+ and its followers (noise,
     -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), a noise or rssi of 0 meaning none
@@ -342,17 +375,18 @@ CREATE TABLE glucose_readings (
 CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
-    dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units, negative takes insulin back off IOB
+    dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units given at once, negative takes insulin back off IOB
     dose_type TEXT CHECK(length(dose_type) <= 32),
-    
+    -- A combo or extended bolus's units given evenly after the dose, over its extended duration, so its insulin curve is
+    -- the dose at once and the extended dose spread over the duration; the rate is the extended dose over the duration.
+    -- Once a pump ends one early, AAPS sends what was given and the duration it ran
+    extended_dose REAL CHECK(extended_dose BETWEEN 0 AND 500),
+    extended_duration_ms INTEGER CHECK(extended_duration_ms BETWEEN 0 AND 604800000), -- at most a week
 
-    -- What only some apps send, NULL for most doses: a combo bolus's split, the fraction given at once (split_now,
-    -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), whether a loop gave it
-    -- (automatic, Loop's, as LoopFollow shows it as an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), the
-    -- insulin it is of (insulin_type, Loop's, e.g. Novolog), a bolus's units not absorbed (unabsorbed, Loop's), and the
-    -- insulin AAPS says it was given with, its label, peak and end times and concentration (icfg_json)
-    split_now REAL CHECK(split_now BETWEEN 0 AND 1),
-    split_ext REAL CHECK(split_ext BETWEEN 0 AND 1),
+    -- What only some apps send, NULL for most doses: whether a loop gave it (automatic, Loop's, as LoopFollow shows it as
+    -- an SMB), whether it is basal insulin (is_basal_insulin, AAPS's), the insulin it is of (insulin_type, Loop's, e.g.
+    -- Novolog), a bolus's units not absorbed (unabsorbed, Loop's), and the insulin AAPS says it was given with, its
+    -- label, peak and end times and concentration (icfg_json)
     automatic INTEGER CHECK(automatic IN (0, 1)),
     is_basal_insulin INTEGER CHECK(is_basal_insulin IN (0, 1)),
     insulin_type TEXT CHECK(length(insulin_type) <= 64),
@@ -441,6 +475,8 @@ CREATE TABLE profile_presets (
     remote_settings_id TEXT CHECK(length(remote_settings_id) = 64),
     -- Who the app said uploaded it (enteredBy), e.g. Loop, as tools pick a loop's profiles by it
     entered_by TEXT CHECK(length(entered_by) <= 64),
+    -- The name of the settings profile the app has on, as iAPS sends it in profile
+    profile_name TEXT CHECK(length(profile_name) <= 64),
 
     -- Default Stuff
 

@@ -168,8 +168,11 @@ func newGraphChart(ctx context.Context, s *sitemodels.Summary, now int64, at loc
 		charts.WithYAxisOpts(opts.YAxis{Type: "value", Min: 0, Max: glucoseTop, SplitLine: &opts.SplitLine{Show: opts.Bool(false)}}),
 	)
 	// go-echarts has no series' clip or axis interval, so here the glucose is let past the axis's top, and the axis is
-	// marked in quarters, 0, 4, 8, 12 and 16 mmol/L, so its top is marked and none is crowded beside it
-	chart.AddJSFuncStrs(types.FuncStr(fmt.Sprintf("%%MY_ECHARTS%%.setOption({useUTC: true, yAxis: [{interval: %g}], series: [{id: 'low', clip: false}, {id: 'high', clip: false}, {id: 'in-range', clip: false}, {id: 'glucose', clip: false}]});", glucoseTop/4)))
+	// marked in quarters, 0, 4, 8, 12 and 16 mmol/L, so its top is marked and none is crowded beside it.
+	// On a phone the times are fewer, so they are not drawn over each other, and the bottom is taller, as the legend
+	// takes two lines there; a wider graph has the grid's margins above
+	chart.AddJSFuncStrs(types.FuncStr(fmt.Sprintf("%%MY_ECHARTS%%.setOption({useUTC: true, yAxis: [{interval: %g}], series: [{id: 'low', clip: false}, {id: 'high', clip: false}, {id: 'in-range', clip: false}, {id: 'glucose', clip: false}], "+
+		"media: [{option: {grid: {left: 60, bottom: 56}, xAxis: [{splitNumber: 5}]}}, {query: {maxWidth: 500}, option: {grid: {left: 40, bottom: 80}, xAxis: [{splitNumber: 3}]}}]});", glucoseTop/4)))
 	chart.ExtendYAxis(
 		// The basal's highest rate reaches basalTop up the glucose axis
 		opts.YAxis{Type: "value", Min: 0, Max: basalMax * glucoseTop / basalTop, Show: opts.Bool(false)},

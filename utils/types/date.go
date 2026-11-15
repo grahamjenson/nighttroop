@@ -209,24 +209,6 @@ func (d *DateString) UnixMilli() int64 {
 	return dateInt
 }
 
-func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
-	t := d.Time()
-	_, offsetSeconds := t.Zone()
-	dateInt := DateInt(t.UnixMilli())
-	offset := FlexibleInt64(int64(offsetSeconds) / 60)
-	return &dateInt, &offset
-}
-
-// MillisSentOffset is MillisUTCOffset with no offset for a time written in UTC, with Z, as Loop writes every time: it
-// says when, not where, so the document takes the offset of where it was made
-func (d *DateString) MillisSentOffset() (*DateInt, *FlexibleInt64) {
-	date, offset := d.MillisUTCOffset()
-	if strings.HasSuffix(strings.ToUpper(string(*d)), "Z") {
-		return date, nil
-	}
-	return date, offset
-}
-
 func (d *DateString) String() string {
 	return string(*d)
 }
@@ -237,16 +219,6 @@ func DateStringFromTime(t time.Time) DateString {
 
 func DateStringFromInt64AndUTCOffset(dateInt int64, offsetMinutes *int64) DateString {
 	return DateStringFromTime(timeInUTCOffset(dateInt, offsetMinutes))
-}
-
-// ISOOffsetLayout is ISOLayout in the time's own zone, so with three fractional digits and its UTC offset, e.g.
-// 2026-11-12T08:01:23.940Z in UTC or 2026-11-12T21:01:23.940+13:00
-const ISOOffsetLayout = "2006-01-02T15:04:05.000Z07:00"
-
-// ISODateStringFromInt64AndUTCOffset is the date as toISOString writes it, with three fractional digits, in its UTC
-// offset, so a dateString is as Nightscout gives one back and fixed-format (.SSS) parsers read it
-func ISODateStringFromInt64AndUTCOffset(dateInt int64, offsetMinutes *int64) DateString {
-	return DateString(timeInUTCOffset(dateInt, offsetMinutes).Format(ISOOffsetLayout))
 }
 
 // timeInUTCOffset is the date in milliseconds in the UTC offset in minutes, or in UTC when there is none

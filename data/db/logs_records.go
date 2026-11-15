@@ -166,8 +166,8 @@ type SiteTruncatedAttributes struct {
 	AfterSizeKB  *int64 `json:"after_size_kb"`
 }
 
-// SiteTruncatedEvent records a control identity truncating a site's DB, which started at started, and its size before
-// and after
+// SiteTruncatedEvent records by, a control identity, a site admin or the size limit, truncating a site's DB, which
+// started at started, and its size before and after
 func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by string, started time.Time, beforeSizeKB *int64, afterSizeKB *int64) {
 	l.finishedEvent(ctx, siteID, "", events.SiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
 }

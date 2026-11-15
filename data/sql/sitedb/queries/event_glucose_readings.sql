@@ -12,7 +12,7 @@ INSERT INTO glucose_readings (
     measurement_method,
 
     delta,
-    direction,
+    trend,
     noise,
     filtered,
     unfiltered,
@@ -37,7 +37,7 @@ VALUES (
     sqlc.arg('MeasurementMethod'),
 
     sqlc.arg('Delta'),
-    sqlc.arg('Direction'),
+    sqlc.narg('Trend'),
     NULLIF(CAST(sqlc.narg('Noise') AS REAL), 0),
     sqlc.narg('Filtered'),
     sqlc.narg('Unfiltered'),
@@ -76,9 +76,13 @@ SELECT CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) FROM glucose_readings WHER
 -- I wont optimize further or compromise on non-prepared statements (until it becomes necessary)!
 
 -- name: AllGlucoseReadings :many
+-- Before pages by date from occurred_at's index: the rows older than a time, or than the row at it with BeforeID,
+-- by time then id, so rows at the same time are each shown once
 SELECT * FROM glucose_readings 
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
+AND occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
+AND (sqlc.narg('Before') IS NULL OR occurred_at < sqlc.narg('Before') OR id < CAST(sqlc.narg('BeforeID') AS TEXT))
+ORDER BY occurred_at DESC, id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GlucoseReadingTotals :one
@@ -158,12 +162,42 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 -- UPDATE
 --------
 
+-- name: RewriteGlucoseReading :one
+-- RewriteGlucoseReading writes every column CreateGlucoseReading does over the glucose reading with the ID, as a
+-- Nightscout update writes its merged document. It keeps when it was created and who by: the identity given is who
+-- updated it.
+UPDATE glucose_readings SET
+    id = sqlc.arg('ID'),
+    mgdl = sqlc.arg('Mgdl'),
+    reading_type = sqlc.arg('ReadingType'),
+    units = sqlc.arg('Units'),
+    measurement_method = sqlc.arg('MeasurementMethod'),
+    delta = sqlc.arg('Delta'),
+    trend = sqlc.narg('Trend'),
+    noise = NULLIF(CAST(sqlc.narg('Noise') AS REAL), 0),
+    filtered = sqlc.narg('Filtered'),
+    unfiltered = sqlc.narg('Unfiltered'),
+    rssi = NULLIF(CAST(sqlc.narg('Rssi') AS REAL), 0),
+    is_calibration = sqlc.narg('IsCalibration'),
+    sensor_mgdl_at_pairing = sqlc.narg('SensorMgdlAtPairing'),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.narg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
+
 -- name: UpdateGlucoseReading :one
 UPDATE glucose_readings SET
     mgdl = COALESCE(sqlc.narg('Mgdl'), mgdl),
 
     delta = COALESCE(sqlc.narg('Delta'), delta),
-    direction = COALESCE(sqlc.narg('Direction'), direction),
+    trend = COALESCE(sqlc.narg('Trend'), trend),
     noise = COALESCE(NULLIF(CAST(sqlc.narg('Noise') AS REAL), 0), noise),
     filtered = COALESCE(sqlc.narg('Filtered'), filtered),
     unfiltered = COALESCE(sqlc.narg('Unfiltered'), unfiltered),

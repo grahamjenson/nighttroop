@@ -358,12 +358,20 @@ func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwr
 
 	prettyOutput := PrettifyHTML(html)
 
-	expected := r.Text
+	// The text can be a template, e.g. {{ date -1 }}
+	expected, err := Render(r.Text, ctx)
+	if err != nil {
+		return err
+	}
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
 	innerText, err := locator.InnerText(playwright.LocatorInnerTextOptions{Timeout: readWait})
+	// An input's text is the value it shows, which can differ from its value attribute
+	if tag, tagErr := locator.Evaluate("element => element.tagName", nil, playwright.LocatorEvaluateOptions{Timeout: readWait}); err == nil && tagErr == nil && tag == "INPUT" {
+		innerText, err = locator.InputValue(playwright.LocatorInputValueOptions{Timeout: readWait})
+	}
 	if err != nil {
 		t.Fatalf("\n\n%s\n failed to get inner text for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
 	}

@@ -22,7 +22,7 @@ import (
 )
 
 // TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
-func TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64) templ.Component {
+func TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -75,7 +75,7 @@ func TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit i
 					{Label: i18n.T(ctx, "site.data.common.minutes"), Numeric: true}, {Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit}, before, tempBasals, func(row *sitemodels.SiteTempBasal) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -114,12 +114,12 @@ func TempBasalNew() templ.Component {
 // tempBasalFields are what a temp basal has that a person can type in
 func tempBasalFields(ctx context.Context) []addmodal.Field {
 	return []addmodal.Field{
-		{Name: "rate", Label: i18n.T(ctx, "site.data.temp_basals.rate"), Help: i18n.T(ctx, "site.data.temp_basals.rate_help"), Required: true, Min: "0", Max: "50", Step: "any"},
-		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_basals.duration_help"), Required: true, Min: "1", Max: "1440", Step: "1"},
+		{Name: "rate", Column: "temp_basals.Rate", Label: i18n.T(ctx, "site.data.temp_basals.rate"), Help: i18n.T(ctx, "site.data.temp_basals.rate_help"), Required: true, Step: "any"},
+		{Name: "duration_minutes", Column: "temp_basals.DurationMinutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_basals.duration_help"), Required: true, Step: "1"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.temp_basals.when_help"), Kind: addmodal.When},
-		{Name: "multiplier", Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Kind: addmodal.Percent, Min: "1", Max: "1100"},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_basals.reason_help"), Kind: addmodal.Text, Max: "64"},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "multiplier", Column: "temp_basals.Multiplier", Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Kind: addmodal.Percent},
+		{Name: "reason", Column: "temp_basals.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_basals.reason_help"), Kind: addmodal.Text},
+		{Name: "notes", Column: "temp_basals.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 

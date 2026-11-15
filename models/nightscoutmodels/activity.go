@@ -18,20 +18,21 @@ type Activity struct {
 	Notes           *types.SanitizedString `json:"notes,omitempty"`        // Notes
 	Reason          *types.SanitizedString `json:"reason,omitempty"`       // Reason
 
-	// Date fields
-	CreatedAt *types.DateString `json:"created_at,omitempty"` // ISO 8601 string
-
 	// Default String Fields
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
 	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
-	// Non-JSON values to make mapping easier
-	Date             *types.DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	// Date is when it was, read from and written as its TimeAliases
+	Date             *types.DateInt       `json:"-"`
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
 }
 
 func (t *Activity) UnmarshalJSON(data []byte) error {
+	date, offset, err := activityTimes.Read(data)
+	if err != nil {
+		return err
+	}
 	type Alias Activity
 	aux := struct {
 		ID *types.IdentifierString `json:"_id"`
@@ -64,12 +65,15 @@ func (t *Activity) UnmarshalJSON(data []byte) error {
 		t.Name = aux.Class
 	}
 
-	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
-	if t.CreatedAt != nil {
-		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
-	}
-
+	t.Date, t.UtcOffsetMinutes = date, offset
 	return nil
+}
+
+// activityTimes are when an activity was
+var activityTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "created_at"}}
+
+func (t Activity) TimeAliases() types.TimeAliases {
+	return activityTimes
 }
 
 func (t *Activity) MarshalJSON() ([]byte, error) {

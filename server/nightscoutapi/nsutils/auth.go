@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -42,7 +43,7 @@ func AuthenticateExplicit(r *http.Request) (*Identity, *HTTPError) {
 		return nil, ErrMissingCredentials
 	}
 
-	ntIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	ntIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role, siteContext.IdentityModel.Client)
 	if err != nil {
 		return nil, ErrMissingCredentials
 	}
@@ -69,7 +70,13 @@ func permissionMatch(granted, wanted string) bool {
 	return true
 }
 
-func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) (*Identity, error) {
+// CaregiverPermissions are a read and write device's, the token of a carer's or follower's app such as LoopFollow or
+// Nightguard: it reads everything and writes treatments, as Nightscout's careportal does, a device status and settings.
+// It cannot add, change or delete the readings, profiles or device statuses that the PWD phone uploads
+var CaregiverPermissions = []string{"api:*:read", "api:treatments:create", "api:treatments:update", "api:treatments:delete",
+	"api:devicestatus:create", "api:settings:*"}
+
+func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole, client *string) (*Identity, error) {
 	// Collections
 	// 'entries'
 	// 'treatments'
@@ -106,10 +113,17 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	switch ntid {
 	case consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead:
 		permissions = append(permissions, "api:*:read")
-	case consts.IdentityRoleUser, consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceReadWrite:
+	case consts.IdentityRoleUser, consts.IdentityRoleDevicePWDPhone:
 		permissions = append(permissions, "api:*:*")
+	case consts.IdentityRoleDeviceReadWrite:
+		permissions = slices.Clone(CaregiverPermissions)
 	default:
 		return nil, fmt.Errorf("unknown identity role: %s", ntid)
+	}
+	// A device AAPS pairs as a client, by its QR code, reads everything and writes only the settings that client
+	// control is made of, as its role does in Nightscout; whoever sees the code can read the site
+	if client != nil && *client == sitemodels.AAPSClient {
+		permissions = []string{"api:*:read", "api:settings:create", "api:settings:update"}
 	}
 	return &Identity{
 		Name:        identityName,
@@ -121,7 +135,7 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 // as status.json's authorized. LoopFollow takes an identity as one that can write only from an exact
 // api:treatments:create, not a wildcard, so that is listed when it has it
 func Authorization(siteContext *httputils.SiteContext) (map[string]any, error) {
-	identity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	identity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role, siteContext.IdentityModel.Client)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +144,7 @@ func Authorization(siteContext *httputils.SiteContext) (map[string]any, error) {
 		return nil, err
 	}
 	permissions := identity.Permissions
-	if HasPermission(*identity, "api:treatments:create") {
+	if HasPermission(*identity, "api:treatments:create") && !slices.Contains(permissions, "api:treatments:create") {
 		permissions = append(slices.Clone(permissions), "api:treatments:create")
 	}
 	return map[string]any{"token": token, "sub": siteContext.IdentityModel.Name, "permissionGroups": [][]string{permissions},

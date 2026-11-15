@@ -588,6 +588,16 @@ func (m *Site) SetEstimatedDbSizeKb(v *int64) {
 	m.EstimatedDbSizeKb = v
 }
 
+// GetAbuseScore returns the AbuseScore value.
+func (m Site) GetAbuseScore() float64 {
+	return m.AbuseScore
+}
+
+// SetAbuseScore sets the AbuseScore value and returns the updated Site.
+func (m *Site) SetAbuseScore(v float64) {
+	m.AbuseScore = v
+}
+
 // GetTableSizesJson returns the TableSizesJson value.
 func (m Site) GetTableSizesJson() types.TableSizes {
 	return m.TableSizesJson
@@ -2938,6 +2948,16 @@ func (m *NewestPushRegistrationForAppParams) SetApp(v consts.PushApp) {
 	m.App = v
 }
 
+// GetRoles returns the Roles value.
+func (m NewestPushRegistrationForAppParams) GetRoles() []consts.IdentityRole {
+	return m.Roles
+}
+
+// SetRoles sets the Roles value and returns the updated NewestPushRegistrationForAppParams.
+func (m *NewestPushRegistrationForAppParams) SetRoles(v []consts.IdentityRole) {
+	m.Roles = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m PushCredentialForParams) GetSiteID() *string {
 	return m.SiteID
@@ -3276,6 +3296,46 @@ func (m UpdateRateLimitsParams) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateRateLimitsParams.
 func (m *UpdateRateLimitsParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
+func (m LearnSiteIdentityUnitsLabelsParams) GetUnitsMgdlLabel() *string {
+	return m.UnitsMgdlLabel
+}
+
+// SetUnitsMgdlLabel sets the UnitsMgdlLabel value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetUnitsMgdlLabel(v *string) {
+	m.UnitsMgdlLabel = v
+}
+
+// GetUnitsMmolLabel returns the UnitsMmolLabel value.
+func (m LearnSiteIdentityUnitsLabelsParams) GetUnitsMmolLabel() *string {
+	return m.UnitsMmolLabel
+}
+
+// SetUnitsMmolLabel sets the UnitsMmolLabel value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetUnitsMmolLabel(v *string) {
+	m.UnitsMmolLabel = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m LearnSiteIdentityUnitsLabelsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m LearnSiteIdentityUnitsLabelsParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated LearnSiteIdentityUnitsLabelsParams.
+func (m *LearnSiteIdentityUnitsLabelsParams) SetID(v int64) {
+	m.ID = v
 }
 
 // GetUnits returns the Units value.
@@ -5375,6 +5435,26 @@ func (m SiteExistsParams) GetID() string {
 
 // SetID sets the ID value and returns the updated SiteExistsParams.
 func (m *SiteExistsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetAbuseScore returns the AbuseScore value.
+func (m UpdateSiteAbuseScoreParams) GetAbuseScore() float64 {
+	return m.AbuseScore
+}
+
+// SetAbuseScore sets the AbuseScore value and returns the updated UpdateSiteAbuseScoreParams.
+func (m *UpdateSiteAbuseScoreParams) SetAbuseScore(v float64) {
+	m.AbuseScore = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteAbuseScoreParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteAbuseScoreParams.
+func (m *UpdateSiteAbuseScoreParams) SetID(v string) {
 	m.ID = v
 }
 

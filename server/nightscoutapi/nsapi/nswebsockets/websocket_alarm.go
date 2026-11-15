@@ -109,9 +109,13 @@ func sendAnnouncement(namespace *socketio.Namespace, event events.Event) {
 		return
 	}
 	n := bundle.NotificationEvent
+	// The site keeps an announcement's text in its notes, not its content, as the Nightscout API does
 	message := ""
-	if n.Content != nil {
-		message = *n.Content
+	for _, text := range []*string{n.Content, n.Notes, bundle.EventGroup.Notes} {
+		if text != nil && *text != "" {
+			message = *text
+			break
+		}
 	}
 	namespace.EmitTo(announcementRoom, "announcement", alarmNotification{Title: n.Title, Message: message, Group: "Announcement",
 		Timestamp: n.OccurredAt, IsAnnouncement: true})

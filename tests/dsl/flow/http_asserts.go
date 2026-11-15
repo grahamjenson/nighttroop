@@ -69,7 +69,8 @@ func (a AssertEquals) Execute(t *testing.T, name string, statusCode int, output 
 	return nil
 }
 
-// AssertContains is ASSERT_CONTAINS <expected> <actual>, e.g. ASSERT_CONTAINS "not a valid URL" "@message".
+// AssertContains is ASSERT_CONTAINS <expected> <actual>, e.g. ASSERT_CONTAINS "not a valid URL" "@message". An object
+// contains its keys, even one that is null, e.g. ASSERT_CONTAINS "size_kb" "@result".
 type AssertContains struct {
 	Path     string
 	Line     int
@@ -276,6 +277,12 @@ func AssertContainsValue(t *testing.T, expected, actual any, message string, fil
 		e, ok := expected.(string)
 		contains = ok
 		if contains {
+			_, contains = a[e]
+		}
+
+	case map[string]any:
+		e, ok := expected.(string)
+		if ok {
 			_, contains = a[e]
 		}
 

@@ -75,8 +75,20 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearDeviceReportStatusesStmt, err = db.PrepareContext(ctx, clearDeviceReportStatuses); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearDeviceReportStatuses: %w", err)
 	}
+	if q.clearOldBolusCalculatorJSONStmt, err = db.PrepareContext(ctx, clearOldBolusCalculatorJSON); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearOldBolusCalculatorJSON: %w", err)
+	}
+	if q.clearOldDeviceReportJSONStmt, err = db.PrepareContext(ctx, clearOldDeviceReportJSON); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearOldDeviceReportJSON: %w", err)
+	}
+	if q.clearOldInsulinDoseJSONStmt, err = db.PrepareContext(ctx, clearOldInsulinDoseJSON); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearOldInsulinDoseJSON: %w", err)
+	}
 	if q.clearOldLoopStatusesStmt, err = db.PrepareContext(ctx, clearOldLoopStatuses); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldLoopStatuses: %w", err)
+	}
+	if q.clearOldProfileSwitchJSONStmt, err = db.PrepareContext(ctx, clearOldProfileSwitchJSON); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearOldProfileSwitchJSON: %w", err)
 	}
 	if q.clearOldPumpsStmt, err = db.PrepareContext(ctx, clearOldPumps); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldPumps: %w", err)
@@ -132,8 +144,35 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteLoopSettingsStmt, err = db.PrepareContext(ctx, deleteLoopSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteLoopSettings: %w", err)
 	}
+	if q.deleteOldActivitiesStmt, err = db.PrepareContext(ctx, deleteOldActivities); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldActivities: %w", err)
+	}
 	if q.deleteOldDeviceReportsStmt, err = db.PrepareContext(ctx, deleteOldDeviceReports); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOldDeviceReports: %w", err)
+	}
+	if q.deleteOldEventGroupsStmt, err = db.PrepareContext(ctx, deleteOldEventGroups); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldEventGroups: %w", err)
+	}
+	if q.deleteOldFoodIntakesStmt, err = db.PrepareContext(ctx, deleteOldFoodIntakes); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldFoodIntakes: %w", err)
+	}
+	if q.deleteOldGlucoseReadingsStmt, err = db.PrepareContext(ctx, deleteOldGlucoseReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldGlucoseReadings: %w", err)
+	}
+	if q.deleteOldInsulinDosesStmt, err = db.PrepareContext(ctx, deleteOldInsulinDoses); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldInsulinDoses: %w", err)
+	}
+	if q.deleteOldNotificationEventsStmt, err = db.PrepareContext(ctx, deleteOldNotificationEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldNotificationEvents: %w", err)
+	}
+	if q.deleteOldProfileSwitchesStmt, err = db.PrepareContext(ctx, deleteOldProfileSwitches); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldProfileSwitches: %w", err)
+	}
+	if q.deleteOldTempBasalsStmt, err = db.PrepareContext(ctx, deleteOldTempBasals); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldTempBasals: %w", err)
+	}
+	if q.deleteOldTempTargetsStmt, err = db.PrepareContext(ctx, deleteOldTempTargets); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldTempTargets: %w", err)
 	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
@@ -206,6 +245,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getInsulinDoseStmt, err = db.PrepareContext(ctx, getInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query GetInsulinDose: %w", err)
+	}
+	if q.getLatestDeviceReportWithBatteryStmt, err = db.PrepareContext(ctx, getLatestDeviceReportWithBattery); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLatestDeviceReportWithBattery: %w", err)
 	}
 	if q.getLatestDeviceReportWithPWDInformationStmt, err = db.PrepareContext(ctx, getLatestDeviceReportWithPWDInformation); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLatestDeviceReportWithPWDInformation: %w", err)
@@ -336,6 +378,39 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.regroupEventGroupStmt, err = db.PrepareContext(ctx, regroupEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query RegroupEventGroup: %w", err)
 	}
+	if q.rewriteActivityStmt, err = db.PrepareContext(ctx, rewriteActivity); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteActivity: %w", err)
+	}
+	if q.rewriteDeviceReportStmt, err = db.PrepareContext(ctx, rewriteDeviceReport); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteDeviceReport: %w", err)
+	}
+	if q.rewriteEventGroupStmt, err = db.PrepareContext(ctx, rewriteEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteEventGroup: %w", err)
+	}
+	if q.rewriteFoodIntakeStmt, err = db.PrepareContext(ctx, rewriteFoodIntake); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteFoodIntake: %w", err)
+	}
+	if q.rewriteFoodPresetStmt, err = db.PrepareContext(ctx, rewriteFoodPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteFoodPreset: %w", err)
+	}
+	if q.rewriteGlucoseReadingStmt, err = db.PrepareContext(ctx, rewriteGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteGlucoseReading: %w", err)
+	}
+	if q.rewriteInsulinDoseStmt, err = db.PrepareContext(ctx, rewriteInsulinDose); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteInsulinDose: %w", err)
+	}
+	if q.rewriteNotificationEventStmt, err = db.PrepareContext(ctx, rewriteNotificationEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteNotificationEvent: %w", err)
+	}
+	if q.rewriteProfileSwitchStmt, err = db.PrepareContext(ctx, rewriteProfileSwitch); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteProfileSwitch: %w", err)
+	}
+	if q.rewriteTempBasalStmt, err = db.PrepareContext(ctx, rewriteTempBasal); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteTempBasal: %w", err)
+	}
+	if q.rewriteTempTargetStmt, err = db.PrepareContext(ctx, rewriteTempTarget); err != nil {
+		return nil, fmt.Errorf("error preparing query RewriteTempTarget: %w", err)
+	}
 	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
 	}
@@ -446,12 +521,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
-	}
-	if q.updateDeviceReportStmt, err = db.PrepareContext(ctx, updateDeviceReport); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateDeviceReport: %w", err)
-	}
-	if q.updateEventGroupStmt, err = db.PrepareContext(ctx, updateEventGroup); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateEventGroup: %w", err)
 	}
 	if q.updateFoodIntakeStmt, err = db.PrepareContext(ctx, updateFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateFoodIntake: %w", err)
@@ -579,9 +648,29 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing clearDeviceReportStatusesStmt: %w", cerr)
 		}
 	}
+	if q.clearOldBolusCalculatorJSONStmt != nil {
+		if cerr := q.clearOldBolusCalculatorJSONStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearOldBolusCalculatorJSONStmt: %w", cerr)
+		}
+	}
+	if q.clearOldDeviceReportJSONStmt != nil {
+		if cerr := q.clearOldDeviceReportJSONStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearOldDeviceReportJSONStmt: %w", cerr)
+		}
+	}
+	if q.clearOldInsulinDoseJSONStmt != nil {
+		if cerr := q.clearOldInsulinDoseJSONStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearOldInsulinDoseJSONStmt: %w", cerr)
+		}
+	}
 	if q.clearOldLoopStatusesStmt != nil {
 		if cerr := q.clearOldLoopStatusesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearOldLoopStatusesStmt: %w", cerr)
+		}
+	}
+	if q.clearOldProfileSwitchJSONStmt != nil {
+		if cerr := q.clearOldProfileSwitchJSONStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearOldProfileSwitchJSONStmt: %w", cerr)
 		}
 	}
 	if q.clearOldPumpsStmt != nil {
@@ -674,9 +763,54 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteLoopSettingsStmt: %w", cerr)
 		}
 	}
+	if q.deleteOldActivitiesStmt != nil {
+		if cerr := q.deleteOldActivitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldActivitiesStmt: %w", cerr)
+		}
+	}
 	if q.deleteOldDeviceReportsStmt != nil {
 		if cerr := q.deleteOldDeviceReportsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteOldDeviceReportsStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldEventGroupsStmt != nil {
+		if cerr := q.deleteOldEventGroupsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldEventGroupsStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldFoodIntakesStmt != nil {
+		if cerr := q.deleteOldFoodIntakesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldFoodIntakesStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldGlucoseReadingsStmt != nil {
+		if cerr := q.deleteOldGlucoseReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldGlucoseReadingsStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldInsulinDosesStmt != nil {
+		if cerr := q.deleteOldInsulinDosesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldInsulinDosesStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldNotificationEventsStmt != nil {
+		if cerr := q.deleteOldNotificationEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldNotificationEventsStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldProfileSwitchesStmt != nil {
+		if cerr := q.deleteOldProfileSwitchesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldProfileSwitchesStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldTempBasalsStmt != nil {
+		if cerr := q.deleteOldTempBasalsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldTempBasalsStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldTempTargetsStmt != nil {
+		if cerr := q.deleteOldTempTargetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldTempTargetsStmt: %w", cerr)
 		}
 	}
 	if q.deleteSummaryPeriodsStmt != nil {
@@ -797,6 +931,11 @@ func (q *Queries) Close() error {
 	if q.getInsulinDoseStmt != nil {
 		if cerr := q.getInsulinDoseStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.getLatestDeviceReportWithBatteryStmt != nil {
+		if cerr := q.getLatestDeviceReportWithBatteryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLatestDeviceReportWithBatteryStmt: %w", cerr)
 		}
 	}
 	if q.getLatestDeviceReportWithPWDInformationStmt != nil {
@@ -1014,6 +1153,61 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing regroupEventGroupStmt: %w", cerr)
 		}
 	}
+	if q.rewriteActivityStmt != nil {
+		if cerr := q.rewriteActivityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteActivityStmt: %w", cerr)
+		}
+	}
+	if q.rewriteDeviceReportStmt != nil {
+		if cerr := q.rewriteDeviceReportStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteDeviceReportStmt: %w", cerr)
+		}
+	}
+	if q.rewriteEventGroupStmt != nil {
+		if cerr := q.rewriteEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.rewriteFoodIntakeStmt != nil {
+		if cerr := q.rewriteFoodIntakeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.rewriteFoodPresetStmt != nil {
+		if cerr := q.rewriteFoodPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteFoodPresetStmt: %w", cerr)
+		}
+	}
+	if q.rewriteGlucoseReadingStmt != nil {
+		if cerr := q.rewriteGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteGlucoseReadingStmt: %w", cerr)
+		}
+	}
+	if q.rewriteInsulinDoseStmt != nil {
+		if cerr := q.rewriteInsulinDoseStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.rewriteNotificationEventStmt != nil {
+		if cerr := q.rewriteNotificationEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteNotificationEventStmt: %w", cerr)
+		}
+	}
+	if q.rewriteProfileSwitchStmt != nil {
+		if cerr := q.rewriteProfileSwitchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.rewriteTempBasalStmt != nil {
+		if cerr := q.rewriteTempBasalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteTempBasalStmt: %w", cerr)
+		}
+	}
+	if q.rewriteTempTargetStmt != nil {
+		if cerr := q.rewriteTempTargetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rewriteTempTargetStmt: %w", cerr)
+		}
+	}
 	if q.searchActivitiesStmt != nil {
 		if cerr := q.searchActivitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchActivitiesStmt: %w", cerr)
@@ -1199,16 +1393,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
 		}
 	}
-	if q.updateDeviceReportStmt != nil {
-		if cerr := q.updateDeviceReportStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateDeviceReportStmt: %w", cerr)
-		}
-	}
-	if q.updateEventGroupStmt != nil {
-		if cerr := q.updateEventGroupStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateEventGroupStmt: %w", cerr)
-		}
-	}
 	if q.updateFoodIntakeStmt != nil {
 		if cerr := q.updateFoodIntakeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateFoodIntakeStmt: %w", cerr)
@@ -1325,7 +1509,11 @@ type Queries struct {
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
 	clearDeviceReportStatusesStmt               *sql.Stmt
+	clearOldBolusCalculatorJSONStmt             *sql.Stmt
+	clearOldDeviceReportJSONStmt                *sql.Stmt
+	clearOldInsulinDoseJSONStmt                 *sql.Stmt
 	clearOldLoopStatusesStmt                    *sql.Stmt
+	clearOldProfileSwitchJSONStmt               *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
 	clearStaleSummariesStmt                     *sql.Stmt
 	countGeneralSettingsStmt                    *sql.Stmt
@@ -1344,7 +1532,16 @@ type Queries struct {
 	deleteGeneralSettingStmt                    *sql.Stmt
 	deleteGeneralSettingsBeforeStmt             *sql.Stmt
 	deleteLoopSettingsStmt                      *sql.Stmt
+	deleteOldActivitiesStmt                     *sql.Stmt
 	deleteOldDeviceReportsStmt                  *sql.Stmt
+	deleteOldEventGroupsStmt                    *sql.Stmt
+	deleteOldFoodIntakesStmt                    *sql.Stmt
+	deleteOldGlucoseReadingsStmt                *sql.Stmt
+	deleteOldInsulinDosesStmt                   *sql.Stmt
+	deleteOldNotificationEventsStmt             *sql.Stmt
+	deleteOldProfileSwitchesStmt                *sql.Stmt
+	deleteOldTempBasalsStmt                     *sql.Stmt
+	deleteOldTempTargetsStmt                    *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
@@ -1369,6 +1566,7 @@ type Queries struct {
 	getGeneralSettingStmt                       *sql.Stmt
 	getGlucoseReadingStmt                       *sql.Stmt
 	getInsulinDoseStmt                          *sql.Stmt
+	getLatestDeviceReportWithBatteryStmt        *sql.Stmt
 	getLatestDeviceReportWithPWDInformationStmt *sql.Stmt
 	getLoopSettingsStmt                         *sql.Stmt
 	getMostRecentProfileStoreStmt               *sql.Stmt
@@ -1412,6 +1610,17 @@ type Queries struct {
 	profileSwitchTotalsStmt                     *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
+	rewriteActivityStmt                         *sql.Stmt
+	rewriteDeviceReportStmt                     *sql.Stmt
+	rewriteEventGroupStmt                       *sql.Stmt
+	rewriteFoodIntakeStmt                       *sql.Stmt
+	rewriteFoodPresetStmt                       *sql.Stmt
+	rewriteGlucoseReadingStmt                   *sql.Stmt
+	rewriteInsulinDoseStmt                      *sql.Stmt
+	rewriteNotificationEventStmt                *sql.Stmt
+	rewriteProfileSwitchStmt                    *sql.Stmt
+	rewriteTempBasalStmt                        *sql.Stmt
+	rewriteTempTargetStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
 	searchDeviceReportsStmt                     *sql.Stmt
 	searchEventGroupsStmt                       *sql.Stmt
@@ -1449,8 +1658,6 @@ type Queries struct {
 	tempTargetTotalsStmt                        *sql.Stmt
 	thinOldDeviceReportsStmt                    *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
-	updateDeviceReportStmt                      *sql.Stmt
-	updateEventGroupStmt                        *sql.Stmt
 	updateFoodIntakeStmt                        *sql.Stmt
 	updateFoodPresetStmt                        *sql.Stmt
 	updateGlucoseReadingStmt                    *sql.Stmt
@@ -1486,7 +1693,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
+		clearOldBolusCalculatorJSONStmt:             q.clearOldBolusCalculatorJSONStmt,
+		clearOldDeviceReportJSONStmt:                q.clearOldDeviceReportJSONStmt,
+		clearOldInsulinDoseJSONStmt:                 q.clearOldInsulinDoseJSONStmt,
 		clearOldLoopStatusesStmt:                    q.clearOldLoopStatusesStmt,
+		clearOldProfileSwitchJSONStmt:               q.clearOldProfileSwitchJSONStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		clearStaleSummariesStmt:                     q.clearStaleSummariesStmt,
 		countGeneralSettingsStmt:                    q.countGeneralSettingsStmt,
@@ -1505,7 +1716,16 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteGeneralSettingStmt:                    q.deleteGeneralSettingStmt,
 		deleteGeneralSettingsBeforeStmt:             q.deleteGeneralSettingsBeforeStmt,
 		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
+		deleteOldActivitiesStmt:                     q.deleteOldActivitiesStmt,
 		deleteOldDeviceReportsStmt:                  q.deleteOldDeviceReportsStmt,
+		deleteOldEventGroupsStmt:                    q.deleteOldEventGroupsStmt,
+		deleteOldFoodIntakesStmt:                    q.deleteOldFoodIntakesStmt,
+		deleteOldGlucoseReadingsStmt:                q.deleteOldGlucoseReadingsStmt,
+		deleteOldInsulinDosesStmt:                   q.deleteOldInsulinDosesStmt,
+		deleteOldNotificationEventsStmt:             q.deleteOldNotificationEventsStmt,
+		deleteOldProfileSwitchesStmt:                q.deleteOldProfileSwitchesStmt,
+		deleteOldTempBasalsStmt:                     q.deleteOldTempBasalsStmt,
+		deleteOldTempTargetsStmt:                    q.deleteOldTempTargetsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
@@ -1530,6 +1750,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getGeneralSettingStmt:                       q.getGeneralSettingStmt,
 		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
 		getInsulinDoseStmt:                          q.getInsulinDoseStmt,
+		getLatestDeviceReportWithBatteryStmt:        q.getLatestDeviceReportWithBatteryStmt,
 		getLatestDeviceReportWithPWDInformationStmt: q.getLatestDeviceReportWithPWDInformationStmt,
 		getLoopSettingsStmt:                         q.getLoopSettingsStmt,
 		getMostRecentProfileStoreStmt:               q.getMostRecentProfileStoreStmt,
@@ -1573,6 +1794,17 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		profileSwitchTotalsStmt:                     q.profileSwitchTotalsStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
+		rewriteActivityStmt:                         q.rewriteActivityStmt,
+		rewriteDeviceReportStmt:                     q.rewriteDeviceReportStmt,
+		rewriteEventGroupStmt:                       q.rewriteEventGroupStmt,
+		rewriteFoodIntakeStmt:                       q.rewriteFoodIntakeStmt,
+		rewriteFoodPresetStmt:                       q.rewriteFoodPresetStmt,
+		rewriteGlucoseReadingStmt:                   q.rewriteGlucoseReadingStmt,
+		rewriteInsulinDoseStmt:                      q.rewriteInsulinDoseStmt,
+		rewriteNotificationEventStmt:                q.rewriteNotificationEventStmt,
+		rewriteProfileSwitchStmt:                    q.rewriteProfileSwitchStmt,
+		rewriteTempBasalStmt:                        q.rewriteTempBasalStmt,
+		rewriteTempTargetStmt:                       q.rewriteTempTargetStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
 		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,
 		searchEventGroupsStmt:                       q.searchEventGroupsStmt,
@@ -1610,8 +1842,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tempTargetTotalsStmt:                        q.tempTargetTotalsStmt,
 		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
-		updateDeviceReportStmt:                      q.updateDeviceReportStmt,
-		updateEventGroupStmt:                        q.updateEventGroupStmt,
 		updateFoodIntakeStmt:                        q.updateFoodIntakeStmt,
 		updateFoodPresetStmt:                        q.updateFoodPresetStmt,
 		updateGlucoseReadingStmt:                    q.updateGlucoseReadingStmt,

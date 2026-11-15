@@ -52,6 +52,9 @@ func (ws *Websocket) handleDBWrite(event string, args []json.RawMessage, auth *a
 	if allowed, _ := httputils.WithinRateLimitAll(limiters.SitePOSTLimiter(siteContext.SiteID), limiters.IdentityPOSTLimiter(siteContext.IdentityModel.ID)); !allowed {
 		return ackResult("Too many requests")
 	}
+	if allowed, _ := httputils.FlaggedSiteWritesWithinRateLimit(siteContext, 1); !allowed {
+		return ackResult(httputils.SiteOverStorageMessage)
+	}
 	// Its socket is only checked every identityRecheck, so an identity revoked since then is refused here
 	if httputils.IdentityRevoked(ctx, ws.controlDB, siteContext.IdentityModel) {
 		return ackResult("Not authorized")
@@ -76,6 +79,10 @@ func (ws *Websocket) dbAdd(ctx context.Context, collection nsutils.Collection, _
 	// The write counted once against the rate limits, so a list is capped as a batch POST is
 	if len(documents) > consts.MaxBatchRecords {
 		return ackResult("Too many records")
+	}
+	// A site flagged for abuse spends a flagged write for each record, as a batch POST does
+	if allowed, _ := httputils.FlaggedSiteWritesWithinRateLimit(httputils.GetSiteContext(ctx), len(documents)-1); !allowed {
+		return ackResult(httputils.SiteOverStorageMessage)
 	}
 	stored := []map[string]any{}
 	for _, document := range documents {

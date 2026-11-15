@@ -6,12 +6,14 @@
 
 - Uploads: glucose, pump history, carbs, temp targets, overrides, loop status, profile.
 - Downloads: carbs and temp targets that others enter. It can also use Nightscout as its CGM.
-- [iAPS](https://github.com/Artificial-Pancreas/iAPS), which Trio grew from, is nearly the same. Differences are noted.
+- [iAPS](https://github.com/Artificial-Pancreas/iAPS), which Trio grew from, is nearly the same. Differences are noted
+  here and in [iAPS and Nighttroop](iaps.md).
 - No Socket.IO, API v2 or API v3, in Trio or iAPS.
 - Checked against Trio's `main` branch:
   - Trio: `Trio/Sources/Services/Network/Nightscout/NightscoutAPI.swift`, called from `NightscoutManager.swift`.
   - iAPS: `FreeAPS/Sources/Services/Network/NightscoutAPI.swift`.
-- Tests: `tests/api/nightscout/trio/`. They send the token's SHA1 in `api-secret`, as Trio does.
+- Tests: `tests/api/nightscout/trio/`, and `tests/api/nightscout/iaps/` for iAPS. They send the token's SHA1 in
+  `api-secret`, as Trio does.
 
 ## Set up
 
@@ -57,6 +59,9 @@ a `?token=` in the URL (`NightscoutAPI`, each function's `URLComponents`). Thus 
   `/api/v1/treatments.json`.
 - Trio ignores the response body. It marks records uploaded only on a 2xx (the profile, only on a 200), else it tries
   again later.
+- A batch with up to 10 records Nighttroop cannot store: the rest are stored with a 200, so Trio marks the batch
+  uploaded and does not send the bad records again, as Nightscout stores them all. The whole batch was a 400, sent
+  again and refused each time. The site's client errors show the records left out.
 
 | Upload | When (source) | Body |
 | --- | --- | --- |
@@ -69,6 +74,7 @@ a `?token=` in the URL (`NightscoutAPI`, each function's `URLComponents`). Thus 
 | Override | Start (`OverrideStorage.getOverridesNotYetUploadedToNightscout`) | `{ eventType: "Exercise", created_at, duration, enteredBy, notes (its name) }`. `duration: 43200` (30 days) if no end |
 | Override run | Duration change or end (`uploadOverrideRuns`) | Trio first deletes the first upload ([Deletes](#deletes)): Nighttroop soft deletes it. Then the run, with the real duration. A run with the same `created_at`, while the first is kept, replaces it |
 | Note | `uploadNoteTreatment` | `{ eventType: "Note", created_at, enteredBy, notes }` |
+| BG check (iAPS) | A finger stick typed in | `{ eventType: "BG Check", created_at, enteredBy, glucose (a string, e.g. "6.8"), glucoseType: "Manual", units: "mmol" }` |
 | Connection check | `checkConnection` | `{ eventType: "Note", enteredBy: "Trio", notes: "Trio connected" }` |
 | Device status, `/api/v1/devicestatus.json` | Each loop (`performUploadDeviceStatus`) | See [Device status](#device-status) |
 | Profile, `/api/v1/profile.json` | Schedule saved (`uploadProfiles`) | See [Profile](#profile). Needs exactly a 200 |
@@ -104,17 +110,19 @@ No `created_at`: Nightscout and Nighttroop use the arrival time.
 
 Nighttroop gives back (followers read it, Trio does not):
 
-- `openaps`: whole.
+- `openaps`: whole for 1 day. After that, without the `predBGs` in `suggested` and `enacted`.
 - `pump`: all fields above while the JSON as sent is kept. After that, only the clock, battery percent and reservoir.
 - `uploader`: `battery` and `isCharging`.
 - If iOS does not know the phone's battery, Trio sends `uploader.battery` -100 (its `batteryLevel` -1 x 100).
-  Nighttroop keeps the device status without it.
+  Nighttroop keeps the device status without it, and the site's client errors show it.
 
 ### Profile
 
 - Body: `{ defaultProfile: "default", startDate, mills, units, enteredBy, store: { default: { dia, carbs_hr, delay,
   timezone, target_low, target_high, sens, basal, carbratio, units } }, bundleIdentifier, deviceToken,
   isAPNSProduction, overridePresets, teamID, expirationDate }`.
+- iAPS: no push fields. It adds `profile`, the name of the settings profile the user chose. `defaultProfile` and the
+  `store` key are always `default`. Nighttroop keeps `profile` and gives it back as sent.
 - Each schedule entry: `{ time: "HH:mm", value, timeAsSeconds }`. `units` is `mg/dl` or `mmol`.
 - The push fields let LoopFollow and Trio's remote control send Apple push notifications to Trio.
 - Nighttroop registers `deviceToken`, `bundleIdentifier` and `isAPNSProduction` as a `trio` push registration for
@@ -178,6 +186,7 @@ sends `count=500&sort$desc=dateString`.
     whole list.
 - Nighttroop gives `direction` as a Nightscout name from any case or arrow (`NOT COMPUTABLE` if unknown), and
   `noise` as a whole number. Thus one uploader's reading cannot stop Trio's glucose.
+- Nighttroop gives `trend` only as Nightscout's 0 to 9: none for `TripleUp` or `TripleDown`.
 
 ### Profile import: `GET /api/v1/profile.json?count=1`
 
@@ -210,7 +219,7 @@ When the user deletes a record in Trio, Trio deletes it by query (`deleteCarbs`,
 | Glucose | `DELETE /api/v1/entries.json?find[$or][0][id][$eq]=<id>&find[$or][1][dateString][$eq]=<ISO date>` |
 | Override | `DELETE /api/v1/treatments.json?find[created_at][$eq]=<ISO date>&find[eventType][$eq]=Exercise` |
 
-- iAPS deletes the same way, by `find[created_at][$eq]` and `find[carbs][$exists]` or similar.
+- iAPS deletes in a different way, by other filters. See [iAPS deletes](iaps.md#deletes).
 - Nighttroop:
   - Keeps Trio's `id` as the identifier, so `find[id][$eq]` finds it.
   - Soft deletes what the search finds, at most 1000 a request.
@@ -242,6 +251,9 @@ When the user deletes a record in Trio, Trio deletes it by query (`deleteCarbs`,
 | Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Fixed |
 | Temp target fetch | Works in mg/dL. Own ones left out since this PR |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
+| Glucose upload of a reading already stored (Nightscout as CGM), or another app's copy of Trio's reading | One reading (Fixed). Same as Nightscout: the last copy's values and device overwrite the reading. The fields it does not send are kept |
 | iAPS announcements (`find[enteredBy]=remote`) | Fixed |
+| iAPS profile name (`profile`) | Fixed: kept and given back as sent. Was left out |
+| iAPS BG check (`glucoseType` `Manual`, `glucose` a string in mmol) | Fixed: kept as a finger stick (`mbg`) in mg/dL, `Manual` returned. Was a 400, sent again every 5 minutes |
 | Deletes by query | Fixed (were a 405) |
 | mmol/L site or identity | Not supported by Trio's fetches. A device added for Trio is in mg/dL |

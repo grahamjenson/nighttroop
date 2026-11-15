@@ -1,0 +1,168 @@
+# LoopFollow pages a day of device statuses and caches each as never changing. The Nightscout web app's Loop pill
+# takes the last enacted and OK times from older ones, and NightscoutKit needs loop.name and loop.timestamp. So a
+# status, not only each device's newest, is kept whole for a day; after that only its predictions are cleared.
+# See docs/clients/loopfollow.md.
+
+INCLUDE steps/new_ns_site.steps
+
+######
+# Loop: a status over a day old, one under a day old, and the newest, from one phone
+######
+
+NAME loop_old
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B [{
+    "device": "loop://iPhone",
+    "created_at": "{{ time 1500 }}",
+    "loop": {
+        "name": "Loop", "version": "3.6.0", "timestamp": "{{ time 1500 }}",
+        "iob": {"iob": 1.5, "timestamp": "{{ time 1500 }}"},
+        "cob": {"cob": 12, "timestamp": "{{ time 1500 }}"},
+        "predicted": {"startDate": "{{ time 1500 }}", "values": [114, 115.88, 120.29, 123.05, 123.98, 123.57]},
+        "recommendedBolus": 0.15,
+        "enacted": {"timestamp": "{{ time 1500 }}", "rate": 0.65, "received": true, "duration": 30, "bolusVolume": 0.05}
+    }
+ }]
+ASSERT_STATUS 200
+SET loop_old_id {{ dig "loop_old.0._id" }}
+
+NAME loop_recent
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B [{
+    "device": "loop://iPhone",
+    "created_at": "{{ time 30 }}",
+    "loop": {
+        "name": "Loop", "version": "3.6.0", "timestamp": "{{ time 30 }}",
+        "iob": {"iob": 1.2, "timestamp": "{{ time 30 }}"},
+        "cob": {"cob": 8, "timestamp": "{{ time 30 }}"},
+        "predicted": {"startDate": "{{ time 30 }}", "values": [130, 128, 125]},
+        "recommendedBolus": 0
+    }
+ }]
+ASSERT_STATUS 200
+SET loop_recent_id {{ dig "loop_recent.0._id" }}
+
+NAME loop_newest
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B [{
+    "device": "loop://iPhone",
+    "created_at": "{{ time 5 }}",
+    "loop": {
+        "name": "Loop", "version": "3.6.0", "timestamp": "{{ time 5 }}",
+        "iob": {"iob": 1, "timestamp": "{{ time 5 }}"},
+        "predicted": {"startDate": "{{ time 5 }}", "values": [120, 118]}
+    }
+ }]
+ASSERT_STATUS 200
+
+######
+# Trio: the same, OpenAPS shaped
+######
+
+NAME trio_old
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "Trio",
+    "created_at": "{{ time 1500 }}",
+    "openaps": {
+        "iob": {"iob": 2.31, "basaliob": 0.42, "time": "{{ time 1500 }}"},
+        "suggested": {
+            "bg": 132, "eventualBG": 118, "sensitivityRatio": 1.1, "ISF": 45, "CR": 10, "TDD": 38.6, "current_target": 100,
+            "COB": 24, "deliverAt": "{{ time 1500 }}", "timestamp": "{{ time 1500 }}", "reason": "COB: 24",
+            "predBGs": {"IOB": [132, 130, 128, 125], "ZT": [132, 129, 125, 120]}
+        },
+        "enacted": {
+            "bg": 132, "rate": 1.2, "duration": 30, "deliverAt": "{{ time 1500 }}", "timestamp": "{{ time 1500 }}",
+            "predBGs": {"IOB": [132, 130, 128, 125]}
+        }
+    }
+}
+ASSERT_STATUS 200
+SET trio_old_id {{ dig "trio_old.0._id" }}
+
+NAME trio_recent
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "Trio",
+    "created_at": "{{ time 30 }}",
+    "openaps": {
+        "iob": {"iob": 2, "time": "{{ time 30 }}"},
+        "suggested": {"bg": 128, "eventualBG": 110, "ISF": 45, "timestamp": "{{ time 30 }}", "predBGs": {"IOB": [128, 126]}}
+    }
+}
+ASSERT_STATUS 200
+SET trio_recent_id {{ dig "trio_recent.0._id" }}
+
+NAME trio_newest
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "Trio",
+    "created_at": "{{ time 5 }}",
+    "openaps": {"suggested": {"bg": 125, "timestamp": "{{ time 5 }}", "predBGs": {"IOB": [125, 124]}}}
+}
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+######
+# Over a day old: all but the predictions, as sent
+######
+
+NAME loop_old_kept
+GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&find[_id]={{ .loop_old_id }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Loop" "@0.loop.name"
+ASSERT_EQUALS "3.6.0" "@0.loop.version"
+ASSERT_EQUALS ".loop_old.0.loop.timestamp" "@0.loop.timestamp"
+ASSERT_EQUALS 1.5 "@0.loop.iob.iob"
+ASSERT_EQUALS ".loop_old.0.loop.iob.timestamp" "@0.loop.iob.timestamp"
+ASSERT_EQUALS 12 "@0.loop.cob.cob"
+ASSERT_EQUALS 0.15 "@0.loop.recommendedBolus"
+ASSERT_EQUALS 0.65 "@0.loop.enacted.rate"
+ASSERT_EQUALS true "@0.loop.enacted.received"
+ASSERT_EQUALS ".loop_old.0.loop.predicted.startDate" "@0.loop.predicted.startDate"
+ASSERT_EQUALS null "@0.loop.predicted.values"
+
+NAME trio_old_kept
+GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&find[_id]={{ .trio_old_id }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 2.31 "@0.openaps.iob.iob"
+ASSERT_EQUALS 0.42 "@0.openaps.iob.basaliob"
+ASSERT_EQUALS 132 "@0.openaps.suggested.bg"
+ASSERT_EQUALS 45 "@0.openaps.suggested.ISF"
+ASSERT_EQUALS 10 "@0.openaps.suggested.CR"
+ASSERT_EQUALS 38.6 "@0.openaps.suggested.TDD"
+ASSERT_EQUALS 1.1 "@0.openaps.suggested.sensitivityRatio"
+ASSERT_EQUALS 118 "@0.openaps.suggested.eventualBG"
+ASSERT_EQUALS 100 "@0.openaps.suggested.current_target"
+ASSERT_EQUALS 24 "@0.openaps.suggested.COB"
+ASSERT_EQUALS ".trio_old.0.openaps.suggested.timestamp" "@0.openaps.suggested.timestamp"
+ASSERT_EQUALS ".trio_old.0.openaps.suggested.deliverAt" "@0.openaps.suggested.deliverAt"
+ASSERT_EQUALS null "@0.openaps.suggested.predBGs"
+ASSERT_EQUALS 1.2 "@0.openaps.enacted.rate"
+ASSERT_EQUALS ".trio_old.0.openaps.enacted.timestamp" "@0.openaps.enacted.timestamp"
+ASSERT_EQUALS null "@0.openaps.enacted.predBGs"
+
+######
+# Under a day old, but not the newest: whole
+######
+
+NAME loop_recent_whole
+GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&find[_id]={{ .loop_recent_id }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".loop_recent.0.loop.timestamp" "@0.loop.timestamp"
+ASSERT_EQUALS 8 "@0.loop.cob.cob"
+ASSERT_EQUALS 0 "@0.loop.recommendedBolus"
+ASSERT_LENGTH 3 "@0.loop.predicted.values"
+ASSERT_EQUALS 130 "@0.loop.predicted.values.0"
+
+NAME trio_recent_whole
+GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&find[_id]={{ .trio_recent_id }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 128 "@0.openaps.suggested.bg"
+ASSERT_EQUALS 110 "@0.openaps.suggested.eventualBG"
+ASSERT_LENGTH 2 "@0.openaps.suggested.predBGs.IOB"

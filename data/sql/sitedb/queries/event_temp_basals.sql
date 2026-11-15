@@ -30,7 +30,9 @@ RETURNING *;
 -- name: AllTempBasals :many
 SELECT * FROM temp_basals
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
+AND occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
+AND (sqlc.narg('Before') IS NULL OR occurred_at < sqlc.narg('Before') OR id < CAST(sqlc.narg('BeforeID') AS TEXT))
+ORDER BY occurred_at DESC, id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: TempBasalTotals :one
@@ -79,6 +81,29 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 --------
 -- UPDATE
 --------
+
+-- name: RewriteTempBasal :one
+-- RewriteTempBasal writes every column CreateTempBasal does over the temp basal with the ID, as a Nightscout update
+-- writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+UPDATE temp_basals SET
+    id = sqlc.arg('ID'),
+    duration_minutes = sqlc.arg('DurationMinutes'),
+    rate = sqlc.arg('Rate'),
+    multiplier = sqlc.arg('Multiplier'),
+    type = sqlc.arg('Type'),
+    insulin_type = sqlc.arg('InsulinType'),
+    automatic = sqlc.arg('Automatic'),
+    notes = sqlc.arg('Notes'),
+    reason = sqlc.arg('Reason'),
+    utc_offset_minutes = sqlc.arg('UtcOffsetMinutes'),
+    occurred_at = sqlc.arg('OccurredAt'),
+    created_by_app_name = sqlc.arg('CreatedByAppName'),
+    created_by_device_name = sqlc.arg('CreatedByDeviceName'),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(sqlc.arg('CreatedByIdentityName') AS TEXT),
+    updated_by_identity_id = sqlc.arg('CreatedByIdentityID')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
 
 -- name: UpdateTempBasal :one
 UPDATE temp_basals SET

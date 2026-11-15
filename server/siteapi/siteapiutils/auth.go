@@ -36,6 +36,12 @@ var readWriteRoles = map[consts.IdentityRole]bool{
 	consts.IdentityRoleDevicePWDPhone: true, consts.IdentityRoleDeviceReadWrite: true,
 }
 
+// caregiverStores are the treatments' stores, the only data a Caregiver device (device_read_write) changes, as on the
+// Nightscout API (nsutils.CaregiverPermissions): it cannot add, change or delete the readings, device statuses,
+// profiles, food or loop settings the PWD phone uploads
+var caregiverStores = map[string]bool{"event_groups": true, "insulin_doses": true, "food": true, "temp_basals": true,
+	"temp_targets": true, "profile_switches": true, "activities": true, "notification_events": true}
+
 // clinicianStores are what a clinician reads, the site's summaries, to see its printable report, all a clinician sees
 var clinicianStores = map[string]bool{"summary_periods": true}
 
@@ -53,8 +59,12 @@ func HasPermission(collectionName string, action Action, identity *controldb.Sit
 	if ownStores[collectionName] {
 		return readOnlyRoles[identity.Role] || readWriteRoles[identity.Role]
 	}
+	read := action == ActionSearch || action == ActionGet
 	if readOnlyRoles[identity.Role] {
-		return action == ActionSearch || action == ActionGet
+		return read
+	}
+	if identity.Role == consts.IdentityRoleDeviceReadWrite {
+		return read || caregiverStores[collectionName]
 	}
 	return readWriteRoles[identity.Role]
 }

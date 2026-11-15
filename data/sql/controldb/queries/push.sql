@@ -110,10 +110,13 @@ ORDER BY push_registrations.id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: NewestPushRegistrationForApp :one
--- A site's registration for the app last registered or registered again, as Loop's is with each profile it uploads
-SELECT * FROM push_registrations
-WHERE site_id = sqlc.arg('SiteID') AND app = sqlc.arg('App')
-ORDER BY updated_at DESC, id DESC
+-- A site's registration for the app last registered or registered again, as Loop's is with each profile it uploads,
+-- by an enabled identity with one of the Roles, so one that cannot change the site's data cannot take its commands
+SELECT push_registrations.* FROM push_registrations
+JOIN site_identities ON site_identities.id = push_registrations.identity_id
+WHERE push_registrations.site_id = sqlc.arg('SiteID') AND push_registrations.app = sqlc.arg('App')
+  AND site_identities.enabled AND site_identities.role IN (sqlc.slice('Roles'))
+ORDER BY push_registrations.updated_at DESC, push_registrations.id DESC
 LIMIT 1;
 
 -- name: GetAnySitePushRegistration :one

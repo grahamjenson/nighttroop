@@ -27,7 +27,7 @@ WHERE app = sqlc.arg('App') AND (last_seen_at < sqlc.arg('LastSeenAt') OR (last_
 ORDER BY last_seen_at DESC, id
 LIMIT 1;
 
--- name: DeleteUnreferencedLoopSettings :exec
+-- name: DeleteUnreferencedLoopSettings :execrows
 -- Deletes the sets no profile or device report refers to any more, as when the reports sent with them were thinned,
 -- but each app's last seen, its settings now, which AAPS sends only now and then
 DELETE FROM loop_settings WHERE id NOT IN (

@@ -329,3 +329,32 @@ func TestSummaryBasal(t *testing.T) {
 		{Days: 1, TotalDailyDose: 40, TotalDailyBasal: 20, GlucoseMgdlJson: "[]"}, {Days: 1, TotalDailyDose: 30, TotalDailyBasal: 10, GlucoseMgdlJson: "[]"}})
 	require.Equal(t, []float64{35, 15}, []float64{week.TotalDailyDose, week.TotalDailyBasal})
 }
+
+// A dose's insulin in a day is its dose given at once, when it is in the day, and the share of its extended dose in
+// the day, spread evenly over its extended duration, so a combo bolus over midnight is split between the days
+func TestInsulinWithin(t *testing.T) {
+	const hour = int64(60 * 60_000)
+	// The day is from 10 hours until 20 hours
+	start, end := 10*hour, 20*hour
+	combo := func(at int64, dose, extended float64, durationMs *int64) *sitedb.InsulinDose {
+		return &sitedb.InsulinDose{OccurredAt: at, Dose: dose, ExtendedDose: &extended, ExtendedDurationMs: durationMs}
+	}
+	tests := []struct {
+		name  string
+		dose  *sitedb.InsulinDose
+		units float64
+	}{
+		{"a bolus in the day", &sitedb.InsulinDose{OccurredAt: 12 * hour, Dose: 3}, 3},
+		{"a bolus before the day", &sitedb.InsulinDose{OccurredAt: 9 * hour, Dose: 3}, 0},
+		{"a combo bolus all in the day", combo(12*hour, 1, 2, new(2*hour)), 3},
+		{"an extended bolus over the day's end", combo(19*hour, 0, 2, new(2*hour)), 1},
+		{"a combo bolus over the day's start gives the day its extended share only", combo(9*hour, 1, 2, new(4*hour)), 1.5},
+		{"an extended bolus ended before the day", combo(5*hour, 0, 2, new(2*hour)), 0},
+		{"an extended dose with no duration is given at once", combo(12*hour, 1, 2, nil), 3},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.InDelta(t, test.units, insulinWithin(test.dose, start, end), 1e-9)
+		})
+	}
+}

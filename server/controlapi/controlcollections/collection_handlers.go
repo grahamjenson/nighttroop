@@ -2,8 +2,6 @@ package controlcollections
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -68,13 +66,10 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 			query = &apiutils.Query{}
 		}
 		rows, err := collection.SearchRows(r.Context(), query, controlContext)
-		if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
+		models, herr := apiutils.Searched(rows, err, collection.GetName(), collection.ToModel)
+		if herr != nil {
 			herr.Write(acceptType, w)
 			return
-		}
-		models := make([]*M, 0, len(rows))
-		for _, row := range rows {
-			models = append(models, collection.ToModel(row))
 		}
 		WriteResponse(w, r, acceptType, http.StatusOK, models, collection.SearchHTMXResponse(models, query))
 	}
@@ -140,13 +135,7 @@ func AdminOnly(next http.Handler) http.Handler {
 // get is the model, or nil when there is none
 func get[R, M any](ctx context.Context, collection CollectionBase[R, M], id string, controlContext *httputils.ControlContext) (*M, *apiutils.HTTPError) {
 	row, err := collection.GetRow(ctx, id, controlContext)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
-		return nil, nil
-	}
-	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
-		return nil, herr
-	}
-	return collection.ToModel(row), nil
+	return apiutils.Found(row, err, collection.GetName(), collection.ToModel)
 }
 
 // WriteResponse sends HTMX the component, a browser the component in a full page, and anything else the model as JSON

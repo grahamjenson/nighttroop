@@ -3,6 +3,10 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
+    1. P2: Regenerate summaries rebuilds from site data, so it removes the summaries of days whose records the
+       truncate of a site far over its size limit deleted: keep a day's summary when its records are gone
+    1. P3: A site far over its size limit that keeps writing changes records on each truncate, so its DB is vacuumed
+       every 10 minutes: vacuum only when its free pages are a large part of it
 1. Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
 1. e2e bakup_key testing. Control
@@ -17,6 +21,25 @@
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
+    1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
+       are right on real sites first, then act on them, each item its own PR:
+        1. P2: Score a site's rate-limit refusals too: a count for each site that halves every hour, of refusals by the
+           normal site and identity limits only (not the abuse throttle, nor a Blocked refusal, so they cannot feed
+           themselves). Signal c ÷ (c + 50), at most 0.79 alone, and at most 0.79 with the connectors together
+        1. P2: Over use: each write also spends 1 from `site_post_flagged` (each record of a batch); truncate the site
+           harder (step 1, then step 2 if it is still over use). Replace `FlaggedForAbuse`'s 3 times and
+           `hardTruncateSizeFactor`'s 1.5 times with the levels
+        1. P2: Abusive: each write costs 4 from `site_post_flagged`; truncate step 2 at once
+        1. P2: Blocked: refuse every write with 403 and say why, except glucose readings (the site's glucose create, every
+           Nightscout `entries` write on v1, v3 and live updates), sign in and out, alarm snooze, Alexa and Google Home,
+           and Truncate; its connectors sync glucose only. Reads are never refused
+        1. P2: Delete a site's old records (truncate step 2) only while it is also over its size limit, as deleting does
+           not help a site whose level comes from refusals or connectors
+        1. P3: Record an event when a site's level changes, and sort the control sites list by abuse score
+    1. P3: A Caregiver device can add a device status on REST but not on the socket, which gives `write` for all
+       collections at once: check each collection's create, update and delete on the socket as REST does
+    1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
+       begun at once push out others' before they finish
 
 ## Before Prod Deployment
 
@@ -55,6 +78,11 @@
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
        the temp basal in NSStatus (`nsv2/assistants.go`)
+    1. P3: Add the v2 `basal` property watch faces read: the profile's basal now (`sitemodels.BasalAt`) and the temp
+       basal running, as `display` and `current` (`basal`, `tempbasal`, `totalbasal`, `treatment`)
+    1. P4: The v2 `pump`, `openaps` and `loop` properties read only the newest loop device status of the last 20
+       minutes. Nightscout reads 6 hours (2 for the pump), so it also has a pump with no loop, and an earlier
+       enacted when the newest status has none
     1. P5: Temp targets, temp basals, profile switches and activities keep their duration in whole minutes, so the
        site's summaries end a temp target AAPS ended at 5.99 minutes at 5; only its event group keeps the
        milliseconds, for the Nightscout API's `durationInMilliseconds`
@@ -63,16 +91,20 @@
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
-    1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
-    1. P4: Support v2 authorization roles and subjects, which AAPS 4's client control (pairing and remote commands)
-       uses with an admin token, beside the `settings` documents now kept
-    1. P3: Count an AAPS bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal in the
-       summaries, reports and IOB, as it is kept and given back but still counted as a bolus
+    1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another
+       server; AAPS pairing a client again after that gets no token. Keep it in the DB if this is a problem
+    1. P3: Count an AAPS or Juggluco bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal
+       in the summaries, reports and IOB, as it is kept and given back but still counted as a bolus
+    1. P4: Food, insulin and temp targets added on the site are not Nightscout treatments until grouped, so AAPS and
+       other clients do not see them. Decide whether adding one on its page also adds its group
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
 
-
-
+1. Database:
+    1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
+       column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
+    1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
+       settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out

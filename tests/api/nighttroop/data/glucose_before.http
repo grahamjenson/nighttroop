@@ -1,0 +1,173 @@
+INCLUDE steps/new_site.steps
+
+// Paging by date: before, a time in ms, with before_id for the rows at that time, and before_date, a day in the
+// site's timezone (UTC for a new site)
+NAME use_mgdl
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+// Three readings at the same time, two days ago at noon, and one a day before them
+NAME create_tied_1
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 100, "occurred_at": {{ dayms -2 720 }}}
+ASSERT_STATUS 201
+
+NAME create_tied_2
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 200, "occurred_at": {{ dayms -2 720 }}}
+ASSERT_STATUS 201
+
+NAME create_tied_3
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 300, "occurred_at": {{ dayms -2 720 }}}
+ASSERT_STATUS 201
+
+NAME create_older
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 50, "occurred_at": {{ dayms -3 720 }}}
+ASSERT_STATUS 201
+
+// A page of one at a time walks each reading at the tied time once, by its ID, then the older one, then none
+NAME page_1
+GET http://{{ site }}/data/glucose?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS ".create_tied_1.result.occurred_at" "@result.items.0.occurred_at"
+
+NAME page_2
+GET http://{{ site }}/data/glucose?limit=1&before={{ dig "page_1.result.items.0.occurred_at" }}&before_id={{ dig "page_1.result.items.0.id" }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS ".create_tied_1.result.occurred_at" "@result.items.0.occurred_at"
+// The totals are still of every reading
+ASSERT_EQUALS 4 "@result.total"
+
+NAME page_3
+GET http://{{ site }}/data/glucose?limit=1&before={{ dig "page_2.result.items.0.occurred_at" }}&before_id={{ dig "page_2.result.items.0.id" }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS ".create_tied_1.result.occurred_at" "@result.items.0.occurred_at"
+
+NAME page_4
+GET http://{{ site }}/data/glucose?limit=1&before={{ dig "page_3.result.items.0.occurred_at" }}&before_id={{ dig "page_3.result.items.0.id" }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 50 "@result.items.0.reading"
+
+NAME page_5
+GET http://{{ site }}/data/glucose?limit=1&before={{ dig "page_4.result.items.0.occurred_at" }}&before_id={{ dig "page_4.result.items.0.id" }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// A page of two has two of the tied readings, and the next the third, then the older one
+NAME page_of_two
+GET http://{{ site }}/data/glucose?limit=2
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+
+NAME next_page_of_two
+GET http://{{ site }}/data/glucose?limit=2&before={{ dig "page_of_two.result.items.1.occurred_at" }}&before_id={{ dig "page_of_two.result.items.1.id" }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS ".create_tied_1.result.occurred_at" "@result.items.0.occurred_at"
+ASSERT_EQUALS 50 "@result.items.1.reading"
+
+// Without before_id, before is the rows older than that time
+NAME before_time
+GET http://{{ site }}/data/glucose?before={{ dayms -2 720 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 50 "@result.items.0.reading"
+
+// A date is the rows on or before that day
+NAME before_date_tied_day
+GET http://{{ site }}/data/glucose?before_date={{ date -2 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result.items"
+
+NAME before_date_older_day
+GET http://{{ site }}/data/glucose?before_date={{ date -3 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 50 "@result.items.0.reading"
+
+NAME before_date_day_before
+GET http://{{ site }}/data/glucose?before_date={{ date -4 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// A deleted reading is left out of a page by date too
+NAME delete_older
+DELETE http://{{ site }}/data/glucose/{{ dig "page_4.result.items.0.id" }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME before_time_deleted
+GET http://{{ site }}/data/glucose?before={{ dayms -2 720 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// A before that is not a time is refused
+NAME bad_before
+GET http://{{ site }}/data/glucose?before=soon
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+// Other data pages by date the same way, e.g. insulin
+NAME create_insulin
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 2, "occurred_at": {{ dayms -2 720 }}}
+ASSERT_STATUS 201
+
+NAME insulin_before
+GET http://{{ site }}/data/insulin?before={{ dayms -2 721 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+
+NAME insulin_before_date
+GET http://{{ site }}/data/insulin?before_date={{ date -3 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"

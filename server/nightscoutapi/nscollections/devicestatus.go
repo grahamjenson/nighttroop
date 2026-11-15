@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -28,27 +27,48 @@ func (c DeviceStatusCollection) Validate(nsModel nightscoutmodels.DeviceStatus, 
 	return nil
 }
 
-func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
-	nsModel = withoutUnknownLevels(ctx, nsModel)
-	createParams := NightscoutToDBCreateDeviceReport(nsModel, cc)
+// Rows are its report, so a battery or reservoir level out of its column's range, as a phone sends when it does not
+// know it, like the uploader battery -100 Trio sends when iOS does not know the phone's, is left out
+func (c DeviceStatusCollection) Rows(nsModel nightscoutmodels.DeviceStatus) []sitedb.TableRow {
+	return []sitedb.TableRow{{Table: "device_reports", Row: NightscoutToDBCreateDeviceReport(nsModel, nightscoutmodels.ConverterContext{})}}
+}
 
+func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
+	createParams, err := deviceReportParams(q, ctx, nsModel, cc)
+	if err != nil {
+		return nil, err
+	}
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}
+	return q.CreateDeviceReport(ctx, createParams)
+}
+
+// deviceReportParams are a device status's columns, with its configuration recorded
+func deviceReportParams(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext) (sitedb.CreateDeviceReportParams, error) {
+	createParams := NightscoutToDBCreateDeviceReport(nsModel, cc)
 	// AAPS's configuration is kept once in loop_settings, and the report refers to it
 	if nsModel.Configuration != nil {
 		id, err := recordLoopSettings(q, ctx, aapsApp, fromDeviceStatus, nsModel.Configuration, createParams.OccurredAt, createParams.CreatedByDeviceName)
 		if err != nil {
-			return nil, err
+			return createParams, err
 		}
 		createParams.ConfigurationID = id
 	}
-
-	return q.CreateDeviceReport(ctx, createParams)
+	return createParams, nil
 }
 
-func (c DeviceStatusCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus) (*sitedb.DeviceReport, error) {
-	return first(q.SearchDeviceReports(ctx, sitedb.SearchDeviceReportsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
+// FallbackKey is a device status's date and device
+func (c DeviceStatusCollection) FallbackKey() FallbackKey[nightscoutmodels.DeviceStatus, sitedb.DeviceReport] {
+	return FallbackKey[nightscoutmodels.DeviceStatus, sitedb.DeviceReport]{
+		search: func(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, limit int64) ([]*sitedb.DeviceReport, error) {
+			return q.SearchDeviceReports(ctx, sitedb.SearchDeviceReportsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: limit})
+		},
+		fields: []KeyField[nightscoutmodels.DeviceStatus, sitedb.DeviceReport]{
+			sameDate[nightscoutmodels.DeviceStatus, sitedb.DeviceReport](),
+			sameDevice[nightscoutmodels.DeviceStatus, sitedb.DeviceReport](),
+		},
+	}
 }
 
 func (c DeviceStatusCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.DeviceReport, error) {
@@ -62,13 +82,29 @@ func (c DeviceStatusCollection) Delete(q *sitedb.Queries, ctx context.Context, i
 	return q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
-	nsModel = withoutUnknownLevels(ctx, nsModel)
-	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
-	updateParams.ID = identifier
-	// An update changes its pump and uploader, kept as sent; its columns are as it was made
-	updateParams.PumpJson, updateParams.UploaderJson = jsonp(nsModel.Pump), jsonp(nsModel.Uploader)
-	return q.UpdateDeviceReport(ctx, updateParams)
+// RewriteModel keeps what the report's document cannot give back unless it is sent: its pump and loop status, whose
+// JSON is kept only on its device's newest report, its configuration, kept in loop_settings and given as the identity
+// may see it, and the pump's state and charging, which only a connector sets
+func (c DeviceStatusCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, sent map[string]any, stored *sitedb.DeviceReport, cc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
+	params, err := deviceReportParams(q, ctx, nsModel, cc)
+	if err != nil {
+		return nil, err
+	}
+	if _, ok := sent["pump"]; !ok {
+		params.PumpReservoir, params.PumpBatteryPercent, params.PumpClock = stored.PumpReservoir, stored.PumpBatteryPercent, stored.PumpClock
+		params.PumpManufacturer, params.PumpModel, params.PumpID = stored.PumpManufacturer, stored.PumpModel, stored.PumpID
+		params.PumpSuspended, params.PumpBolusing, params.PumpJson = stored.PumpSuspended, stored.PumpBolusing, stored.PumpJson
+	}
+	_, sentOpenAPS := sent["openaps"]
+	if _, sentLoop := sent["loop"]; !sentOpenAPS && !sentLoop {
+		params.LoopName, params.LoopStatusJson, params.LoopIob = stored.LoopName, stored.LoopStatusJson, stored.LoopIob
+		params.LoopIobBasal, params.LoopIobTreatment, params.LoopCob = stored.LoopIobBasal, stored.LoopIobTreatment, stored.LoopCob
+	}
+	if _, ok := sent["configuration"]; !ok {
+		params.ConfigurationID = stored.ConfigurationID
+	}
+	params.ID, params.PumpState, params.PumpChargingState = stored.ID, stored.PumpState, stored.PumpChargingState
+	return q.RewriteDeviceReport(ctx, sitedb.RewriteDeviceReportParams(params))
 }
 
 func (c DeviceStatusCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
@@ -172,8 +208,8 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 		nsModel.ConfigurationRaw = &configuration
 	}
 
-	// The loop's status goes back as its openaps or loop object, as it was sent, or, once a newer one came in and it was
-	// cleared, as what was extracted of it, its IOB and COB
+	// The loop's status goes back as its openaps or loop object, as it was sent, without its predictions once a day old,
+	// or, for one cleared whole by an earlier truncate, as what was extracted of it, its IOB and COB
 	if source.LoopName != nil {
 		status := extractedLoopStatus(*source.LoopName, source)
 		if source.LoopStatusJson != nil {
@@ -306,39 +342,6 @@ func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmod
 	if loop.COB != nil {
 		params.LoopCob = loop.COB.COB.Float64p()
 	}
-}
-
-// withoutUnknownLevels leaves out the phone's and pump's battery and the pump's reservoir when out of their columns'
-// ranges, as when a phone does not know them, like the uploader battery -100 Trio sends when iOS does not know the
-// phone's (its batteryLevel -1 x 100), rather than refusing the whole device status. Its pump and uploader are copied,
-// so what was sent is not changed.
-func withoutUnknownLevels(ctx context.Context, status nightscoutmodels.DeviceStatus) nightscoutmodels.DeviceStatus {
-	status.UploaderBattery = inRange(ctx, "uploaderBattery", status.UploaderBattery, 0, 100)
-	if status.Uploader != nil {
-		uploader := *status.Uploader
-		uploader.Battery = inRange(ctx, "uploader.battery", uploader.Battery, 0, 100)
-		status.Uploader = &uploader
-	}
-	if status.Pump != nil {
-		pump := *status.Pump
-		pump.Reservoir = inRange(ctx, "pump.reservoir", pump.Reservoir, 0, 10000)
-		if pump.Battery != nil {
-			battery := *pump.Battery
-			battery.Percent = inRange(ctx, "pump.battery.percent", battery.Percent, 0, 100)
-			pump.Battery = &battery
-		}
-		status.Pump = &pump
-	}
-	return status
-}
-
-// inRange is value when it is between low and high, and nil, logged as a warning, when it is not
-func inRange[T ~float64 | ~int64](ctx context.Context, field string, value *T, low, high float64) *T {
-	if value == nil || (float64(*value) >= low && float64(*value) <= high) {
-		return value
-	}
-	slog.WarnContext(ctx, "device status value out of range left out", "collection", nsutils.Devicestatus, "field", field, "value", float64(*value))
-	return nil
 }
 
 // jsonp is v as JSON, nil when it is

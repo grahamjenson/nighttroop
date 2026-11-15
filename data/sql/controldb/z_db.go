@@ -177,6 +177,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteStmt, err = db.PrepareContext(ctx, getSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSite: %w", err)
 	}
+	if q.getSiteConnectorFailuresStmt, err = db.PrepareContext(ctx, getSiteConnectorFailures); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteConnectorFailures: %w", err)
+	}
+	if q.getSiteDBSizeLimitsStmt, err = db.PrepareContext(ctx, getSiteDBSizeLimits); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteDBSizeLimits: %w", err)
+	}
 	if q.getSiteIDsWithAlarmsStmt, err = db.PrepareContext(ctx, getSiteIDsWithAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteIDsWithAlarms: %w", err)
 	}
@@ -206,6 +212,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
+	}
+	if q.learnSiteIdentityUnitsLabelsStmt, err = db.PrepareContext(ctx, learnSiteIdentityUnitsLabels); err != nil {
+		return nil, fmt.Errorf("error preparing query LearnSiteIdentityUnitsLabels: %w", err)
 	}
 	if q.listControlPasskeysStmt, err = db.PrepareContext(ctx, listControlPasskeys); err != nil {
 		return nil, fmt.Errorf("error preparing query ListControlPasskeys: %w", err)
@@ -296,6 +305,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateRateLimitsStmt, err = db.PrepareContext(ctx, updateRateLimits); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateRateLimits: %w", err)
+	}
+	if q.updateSiteAbuseScoreStmt, err = db.PrepareContext(ctx, updateSiteAbuseScore); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteAbuseScore: %w", err)
 	}
 	if q.updateSiteDBSizeStmt, err = db.PrepareContext(ctx, updateSiteDBSize); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDBSize: %w", err)
@@ -593,6 +605,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSiteStmt: %w", cerr)
 		}
 	}
+	if q.getSiteConnectorFailuresStmt != nil {
+		if cerr := q.getSiteConnectorFailuresStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteConnectorFailuresStmt: %w", cerr)
+		}
+	}
+	if q.getSiteDBSizeLimitsStmt != nil {
+		if cerr := q.getSiteDBSizeLimitsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteDBSizeLimitsStmt: %w", cerr)
+		}
+	}
 	if q.getSiteIDsWithAlarmsStmt != nil {
 		if cerr := q.getSiteIDsWithAlarmsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteIDsWithAlarmsStmt: %w", cerr)
@@ -641,6 +663,11 @@ func (q *Queries) Close() error {
 	if q.hydrateSiteStmt != nil {
 		if cerr := q.hydrateSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
+		}
+	}
+	if q.learnSiteIdentityUnitsLabelsStmt != nil {
+		if cerr := q.learnSiteIdentityUnitsLabelsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing learnSiteIdentityUnitsLabelsStmt: %w", cerr)
 		}
 	}
 	if q.listControlPasskeysStmt != nil {
@@ -793,6 +820,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateRateLimitsStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteAbuseScoreStmt != nil {
+		if cerr := q.updateSiteAbuseScoreStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteAbuseScoreStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteDBSizeStmt != nil {
 		if cerr := q.updateSiteDBSizeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteDBSizeStmt: %w", cerr)
@@ -943,6 +975,8 @@ type Queries struct {
 	getPushRegistrationStmt                 *sql.Stmt
 	getServerSettingsStmt                   *sql.Stmt
 	getSiteStmt                             *sql.Stmt
+	getSiteConnectorFailuresStmt            *sql.Stmt
+	getSiteDBSizeLimitsStmt                 *sql.Stmt
 	getSiteIDsWithAlarmsStmt                *sql.Stmt
 	getSiteIdentityStmt                     *sql.Stmt
 	getSiteIdentityByIDStmt                 *sql.Stmt
@@ -953,6 +987,7 @@ type Queries struct {
 	getSitesToDeleteInBatchStmt             *sql.Stmt
 	getSitesToDisableStmt                   *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
+	learnSiteIdentityUnitsLabelsStmt        *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
 	newestPushRegistrationForAppStmt        *sql.Stmt
@@ -983,6 +1018,7 @@ type Queries struct {
 	updateControlPasskeyUsedStmt            *sql.Stmt
 	updatePublicSiteCreationStmt            *sql.Stmt
 	updateRateLimitsStmt                    *sql.Stmt
+	updateSiteAbuseScoreStmt                *sql.Stmt
 	updateSiteDBSizeStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
 	updateSiteIdentityDateFlagsStmt         *sql.Stmt
@@ -1052,6 +1088,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getPushRegistrationStmt:                 q.getPushRegistrationStmt,
 		getServerSettingsStmt:                   q.getServerSettingsStmt,
 		getSiteStmt:                             q.getSiteStmt,
+		getSiteConnectorFailuresStmt:            q.getSiteConnectorFailuresStmt,
+		getSiteDBSizeLimitsStmt:                 q.getSiteDBSizeLimitsStmt,
 		getSiteIDsWithAlarmsStmt:                q.getSiteIDsWithAlarmsStmt,
 		getSiteIdentityStmt:                     q.getSiteIdentityStmt,
 		getSiteIdentityByIDStmt:                 q.getSiteIdentityByIDStmt,
@@ -1062,6 +1100,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSitesToDeleteInBatchStmt:             q.getSitesToDeleteInBatchStmt,
 		getSitesToDisableStmt:                   q.getSitesToDisableStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
+		learnSiteIdentityUnitsLabelsStmt:        q.learnSiteIdentityUnitsLabelsStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,
 		newestPushRegistrationForAppStmt:        q.newestPushRegistrationForAppStmt,
@@ -1092,6 +1131,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateControlPasskeyUsedStmt:            q.updateControlPasskeyUsedStmt,
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
 		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
+		updateSiteAbuseScoreStmt:                q.updateSiteAbuseScoreStmt,
 		updateSiteDBSizeStmt:                    q.updateSiteDBSizeStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:         q.updateSiteIdentityDateFlagsStmt,

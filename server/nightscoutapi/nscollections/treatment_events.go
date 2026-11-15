@@ -20,24 +20,26 @@ import (
 type treatmentEvent interface {
 	// fromTreatment sets the bundle's event of this kind from the treatment, nil when the treatment has none
 	fromTreatment(treatment nightscoutmodels.Treatment, bundle *sitedb.EventGroupsBundle)
-	// merge sets the bundle's event of this kind to the update's when it has none, otherwise merges the update's into it
-	merge(bundle *sitedb.EventGroupsBundle, update sitedb.EventGroupsBundle)
-	// write syncs the bundle's event of this kind to the DB, setting the group's ID for it:
-	// 1. Delete if the group has an ID for it but no event
-	// 2. Create if the group has an event but no ID for it
-	// 3. Update if the group has an ID and an event
-	//
-	// So an event is written again on every update of its group, even when it has not changed.
+	// keep gives the bundle's event of this kind, when the stored group has one too, its identifier and what of it a
+	// treatment does not have, so it is written over the stored one
+	keep(bundle, stored *sitedb.EventGroupsBundle)
+	// write writes the bundle's event of this kind to the DB, setting the group's ID for it: it creates one the group
+	// has no ID for, and writes one it has an ID for over the stored one. So an event is written again on every update
+	// of its group, even when it has not changed.
 	write(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) error
+	// drop deletes the stored group's event of this kind the bundle no longer has, once its group no longer refers to it
+	drop(ctx context.Context, q *sitedb.Queries, bundle, stored *sitedb.EventGroupsBundle) error
 	// hardDelete deletes the group's event of this kind, if it has one
 	hardDelete(ctx context.Context, q *sitedb.Queries, eventGroup sitedb.EventGroup) error
 	// addToTreatment sets the treatment's fields from the bundle's event of this kind, if it has one
 	addToTreatment(bundle *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, treatment *nightscoutmodels.Treatment)
+	// row is the bundle's event of this kind as its table's row, false when it has none
+	row(bundle *sitedb.EventGroupsBundle) (sitedb.TableRow, bool)
 }
 
-// eventKind is a treatmentEvent of events T, kept with create params C, update params U and hard delete params D
-type eventKind[T interface{ GetID() string }, C, U any, D ~struct{ ID string }] struct {
-	name string
+// eventKind is a treatmentEvent of events T, kept with create params C and hard delete params D
+type eventKind[T interface{ GetID() string }, C any, D ~struct{ ID string }] struct {
+	name, table string
 	// of is the bundle's ID for its event of this kind, and the event
 	of func(bundle *sitedb.EventGroupsBundle) (**string, **T)
 	// prepare, when set, fills in the fields of the treatment this kind reads from its other fields
@@ -49,15 +51,16 @@ type eventKind[T interface{ GetID() string }, C, U any, D ~struct{ ID string }] 
 	complete func(treatment nightscoutmodels.Treatment, event *T)
 	// toTreatment sets the treatment's fields from the event, which may be nil
 	toTreatment func(event *T, siteContext *httputils.SiteContext, treatment *nightscoutmodels.Treatment)
-	mergeInto   func(source, target *T)
-	toCreate    func(event T, cc nightscoutmodels.ConverterContext) C
-	create      func(q *sitedb.Queries, ctx context.Context, params C) (*T, error)
-	toUpdate    func(event T, cc nightscoutmodels.ConverterContext) U
-	update      func(q *sitedb.Queries, ctx context.Context, params U) (*T, error)
-	delete      func(q *sitedb.Queries, ctx context.Context, params D) (sql.Result, error)
+	// kept, when set, gives the event what of the stored one a treatment does not have
+	kept     func(stored, event *T)
+	toCreate func(event T, cc nightscoutmodels.ConverterContext) C
+	create   func(q *sitedb.Queries, ctx context.Context, params C) (*T, error)
+	// rewrite writes the event over the stored one with the identifier
+	rewrite func(q *sitedb.Queries, ctx context.Context, id string, params C) (*T, error)
+	delete  func(q *sitedb.Queries, ctx context.Context, params D) (sql.Result, error)
 }
 
-func (k eventKind[T, C, U, D]) fromTreatment(treatment nightscoutmodels.Treatment, bundle *sitedb.EventGroupsBundle) {
+func (k eventKind[T, C, D]) fromTreatment(treatment nightscoutmodels.Treatment, bundle *sitedb.EventGroupsBundle) {
 	_, event := k.of(bundle)
 	*event = nil
 	if k.prepare != nil {
@@ -73,7 +76,15 @@ func (k eventKind[T, C, U, D]) fromTreatment(treatment nightscoutmodels.Treatmen
 	*event = &converted
 }
 
-func (k eventKind[T, C, U, D]) addToTreatment(bundle *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
+func (k eventKind[T, C, D]) row(bundle *sitedb.EventGroupsBundle) (sitedb.TableRow, bool) {
+	_, event := k.of(bundle)
+	if *event == nil {
+		return sitedb.TableRow{}, false
+	}
+	return sitedb.TableRow{Table: k.table, Row: **event}, true
+}
+
+func (k eventKind[T, C, D]) addToTreatment(bundle *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
 	_, event := k.of(bundle)
 	k.toTreatment(*event, siteContext, treatment)
 }
@@ -85,39 +96,29 @@ func withoutSite[T any](convert func(event *T, treatment *nightscoutmodels.Treat
 	}
 }
 
-func (k eventKind[T, C, U, D]) merge(bundle *sitedb.EventGroupsBundle, update sitedb.EventGroupsBundle) {
-	_, event := k.of(bundle)
-	_, updated := k.of(&update)
-	if *updated == nil {
+func (k eventKind[T, C, D]) keep(bundle, stored *sitedb.EventGroupsBundle) {
+	id, event := k.of(bundle)
+	storedID, storedEvent := k.of(stored)
+	if *event == nil || *storedID == nil {
 		return
 	}
-	if *event == nil {
-		*event = *updated
-	} else {
-		k.mergeInto(*updated, *event)
+	*id = *storedID
+	if k.kept != nil && *storedEvent != nil {
+		k.kept(*storedEvent, *event)
 	}
 }
 
-func (k eventKind[T, C, U, D]) write(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) error {
+func (k eventKind[T, C, D]) write(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) error {
 	id, event := k.of(bundle)
 	if *event == nil {
-		if *id == nil {
-			return nil
-		}
-		if _, err := k.delete(q, ctx, D{ID: **id}); err != nil {
-			slog.ErrorContext(ctx, "failed to delete "+k.name+" from database", "error", err)
-			return err
-		}
-		*id = nil
 		return nil
 	}
-
 	verb, written, err := "create", (*T)(nil), error(nil)
 	if *id == nil {
 		written, err = k.create(q, ctx, k.toCreate(**event, cc))
 	} else {
-		verb = "update"
-		written, err = k.update(q, ctx, k.toUpdate(**event, cc))
+		verb = "rewrite"
+		written, err = k.rewrite(q, ctx, **id, k.toCreate(**event, cc))
 	}
 	if err != nil || written == nil {
 		slog.ErrorContext(ctx, "failed to "+verb+" "+k.name+" in database", "error", err, "dbModel", written)
@@ -127,7 +128,20 @@ func (k eventKind[T, C, U, D]) write(ctx context.Context, q *sitedb.Queries, bun
 	return nil
 }
 
-func (k eventKind[T, C, U, D]) hardDelete(ctx context.Context, q *sitedb.Queries, eventGroup sitedb.EventGroup) error {
+func (k eventKind[T, C, D]) drop(ctx context.Context, q *sitedb.Queries, bundle, stored *sitedb.EventGroupsBundle) error {
+	id, _ := k.of(bundle)
+	storedID, _ := k.of(stored)
+	if *storedID == nil || *id != nil {
+		return nil
+	}
+	if _, err := k.delete(q, ctx, D{ID: **storedID}); err != nil {
+		slog.ErrorContext(ctx, "failed to delete "+k.name+" from database", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (k eventKind[T, C, D]) hardDelete(ctx context.Context, q *sitedb.Queries, eventGroup sitedb.EventGroup) error {
 	id, _ := k.of(&sitedb.EventGroupsBundle{EventGroup: eventGroup})
 	if *id == nil {
 		return nil
@@ -154,13 +168,12 @@ const (
 )
 
 var (
-	glucoseReadings = eventKind[sitedb.GlucoseReading, sitedb.CreateGlucoseReadingParams, sitedb.UpdateGlucoseReadingParams, sitedb.HardDeleteGlucoseReadingParams]{
-		name: "glucose reading",
+	glucoseReadings = eventKind[sitedb.GlucoseReading, sitedb.CreateGlucoseReadingParams, sitedb.HardDeleteGlucoseReadingParams]{
+		name: "glucose reading", table: "glucose_readings",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.GlucoseReading) {
 			return &b.EventGroup.GlucoseReadingID, &b.GlucoseReading
 		},
-		// A glucose of 0 or less is no reading, as AAPS sends 0 with a Bolus Wizard that used no BG
-		has:     func(source nightscoutmodels.Treatment) bool { return source.Glucose != nil && *source.Glucose > 0 },
+		has:     func(source nightscoutmodels.Treatment) bool { return isAssigned(source.Glucose) },
 		partial: nightscoutmodels.PartialTreatmentToGlucoseReading,
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.GlucoseReading) {
 			target.ReadingType = "sgv"
@@ -174,32 +187,46 @@ var (
 				switch *source.GlucoseType {
 				case nightscoutmodels.Sensor:
 					target.ReadingType = "sgv"
-				case nightscoutmodels.Finger:
-					target.ReadingType = "mbg"
-				case nightscoutmodels.Meter:
+				case nightscoutmodels.Finger, nightscoutmodels.Meter, nightscoutmodels.Manual:
 					target.ReadingType = "mbg"
 				}
 			}
 		},
-		toTreatment: nightscoutmodels.UpdateGlucoseReadingToTreatment, mergeInto: nightscoutmodels.UpdateToGlucoseReading,
-		toCreate: nightscoutmodels.GlucoseReadingCreate, create: (*sitedb.Queries).CreateGlucoseReading,
-		toUpdate: nightscoutmodels.GlucoseReadingUpdate, update: (*sitedb.Queries).UpdateGlucoseReading,
+		// A reading the site put in the group, such as a CGM's, keeps what a treatment does not have of it, and its type
+		// when it has no glucose type to tell it
+		kept: func(stored, event *sitedb.GlucoseReading) {
+			event.Delta, event.Trend, event.Noise, event.Filtered = stored.Delta, stored.Trend, stored.Noise, stored.Filtered
+			event.Unfiltered, event.Rssi, event.IsCalibration = stored.Unfiltered, stored.Rssi, stored.IsCalibration
+			event.SensorMgdlAtPairing = stored.SensorMgdlAtPairing
+			if event.MeasurementMethod == nil {
+				event.ReadingType = stored.ReadingType
+			}
+		},
+		toTreatment: nightscoutmodels.UpdateGlucoseReadingToTreatment,
+		toCreate:    nightscoutmodels.GlucoseReadingCreate, create: (*sitedb.Queries).CreateGlucoseReading,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateGlucoseReadingParams) (*sitedb.GlucoseReading, error) {
+			params.ID = id
+			return q.RewriteGlucoseReading(ctx, sitedb.RewriteGlucoseReadingParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteGlucoseReading,
 	}
-	insulinDoses = eventKind[sitedb.InsulinDose, sitedb.CreateInsulinDoseParams, sitedb.UpdateInsulinDoseParams, sitedb.HardDeleteInsulinDoseParams]{
-		name: "insulin dose",
+	insulinDoses = eventKind[sitedb.InsulinDose, sitedb.CreateInsulinDoseParams, sitedb.HardDeleteInsulinDoseParams]{
+		name: "insulin dose", table: "insulin_doses",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.InsulinDose) {
 			return &b.EventGroup.InsulinDoseID, &b.InsulinDose
 		},
 		has:         func(source nightscoutmodels.Treatment) bool { return isAssigned(source.Insulin) },
 		partial:     nightscoutmodels.PartialTreatmentToInsulinDose,
-		toTreatment: withoutSite(nightscoutmodels.UpdateInsulinDoseToTreatment), mergeInto: nightscoutmodels.UpdateToInsulinDose,
-		toCreate: nightscoutmodels.InsulinDoseCreate, create: (*sitedb.Queries).CreateInsulinDose,
-		toUpdate: nightscoutmodels.InsulinDoseUpdate, update: (*sitedb.Queries).UpdateInsulinDose,
+		toTreatment: withoutSite(nightscoutmodels.UpdateInsulinDoseToTreatment),
+		toCreate:    nightscoutmodels.InsulinDoseCreate, create: (*sitedb.Queries).CreateInsulinDose,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateInsulinDoseParams) (*sitedb.InsulinDose, error) {
+			params.ID = id
+			return q.RewriteInsulinDose(ctx, sitedb.RewriteInsulinDoseParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteInsulinDose,
 	}
-	foodIntakes = eventKind[sitedb.FoodIntake, sitedb.CreateFoodIntakeParams, sitedb.UpdateFoodIntakeParams, sitedb.HardDeleteFoodIntakeParams]{
-		name: "food intake",
+	foodIntakes = eventKind[sitedb.FoodIntake, sitedb.CreateFoodIntakeParams, sitedb.HardDeleteFoodIntakeParams]{
+		name: "food intake", table: "food_intakes",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.FoodIntake) {
 			return &b.EventGroup.FoodIntakeID, &b.FoodIntake
 		},
@@ -207,18 +234,21 @@ var (
 			return isAssigned(source.FoodType, source.PreBolus, source.Category, source.Subcategory, source.Carbs, source.Fat, source.Protein, source.Fibre, source.Energy, source.Portions)
 		},
 		partial:     nightscoutmodels.PartialTreatmentToFoodIntake,
-		toTreatment: withoutSite(nightscoutmodels.UpdateFoodIntakeToTreatment), mergeInto: nightscoutmodels.UpdateToFoodIntake,
-		toCreate: nightscoutmodels.FoodIntakeCreate, create: (*sitedb.Queries).CreateFoodIntake,
-		toUpdate: nightscoutmodels.FoodIntakeUpdate, update: (*sitedb.Queries).UpdateFoodIntake,
+		toTreatment: withoutSite(nightscoutmodels.UpdateFoodIntakeToTreatment),
+		toCreate:    nightscoutmodels.FoodIntakeCreate, create: (*sitedb.Queries).CreateFoodIntake,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateFoodIntakeParams) (*sitedb.FoodIntake, error) {
+			params.ID = id
+			return q.RewriteFoodIntake(ctx, sitedb.RewriteFoodIntakeParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteFoodIntake,
 	}
-	tempBasals = eventKind[sitedb.TempBasal, sitedb.CreateTempBasalParams, sitedb.UpdateTempBasalParams, sitedb.HardDeleteTempBasalParams]{
-		name: "temp basal",
+	tempBasals = eventKind[sitedb.TempBasal, sitedb.CreateTempBasalParams, sitedb.HardDeleteTempBasalParams]{
+		name: "temp basal", table: "temp_basals",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.TempBasal) {
 			return &b.EventGroup.TempBasalID, &b.TempBasal
 		},
 		has: func(source nightscoutmodels.Treatment) bool {
-			return isAssigned(source.Absolute, source.Rate, source.TempBasalPercent, source.DurationMinutes)
+			return isAssigned(source.Absolute, source.Rate, source.TempBasalPercent, source.Duration)
 		},
 		partial: nightscoutmodels.PartialTreatmentToTempBasal,
 		// AAPS sends its rate as rate, and Loop as absolute too
@@ -227,13 +257,16 @@ var (
 				target.Rate = *rate
 			}
 		},
-		toTreatment: withoutSite(nightscoutmodels.UpdateTempBasalToTreatment), mergeInto: nightscoutmodels.UpdateToTempBasal,
-		toCreate: nightscoutmodels.TempBasalCreate, create: (*sitedb.Queries).CreateTempBasal,
-		toUpdate: nightscoutmodels.TempBasalUpdate, update: (*sitedb.Queries).UpdateTempBasal,
+		toTreatment: withoutSite(nightscoutmodels.UpdateTempBasalToTreatment),
+		toCreate:    nightscoutmodels.TempBasalCreate, create: (*sitedb.Queries).CreateTempBasal,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateTempBasalParams) (*sitedb.TempBasal, error) {
+			params.ID = id
+			return q.RewriteTempBasal(ctx, sitedb.RewriteTempBasalParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteTempBasal,
 	}
-	tempTargets = eventKind[sitedb.TempTarget, sitedb.CreateTempTargetParams, sitedb.UpdateTempTargetParams, sitedb.HardDeleteTempTargetParams]{
-		name: "temp target",
+	tempTargets = eventKind[sitedb.TempTarget, sitedb.CreateTempTargetParams, sitedb.HardDeleteTempTargetParams]{
+		name: "temp target", table: "temp_targets",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.TempTarget) {
 			return &b.EventGroup.TempTargetID, &b.TempTarget
 		},
@@ -247,13 +280,13 @@ var (
 				source.HighTarget = source.CorrectionRange[0]
 			}
 			// An indefinite one lasts as long as a temp target can, a week
-			if source.DurationMinutes == nil && source.DurationType != nil && *source.DurationType == indefinite {
-				source.DurationMinutes = new(types.FlexibleInt64(indefiniteMinutes))
+			if source.Duration == nil && source.DurationType != nil && *source.DurationType == indefinite {
+				source.Duration = &types.Duration{Minutes: indefiniteMinutes}
 			}
 			return source
 		},
 		has: func(source nightscoutmodels.Treatment) bool {
-			return isAssigned(source.HighTarget, source.LowTarget, source.DurationMinutes)
+			return isAssigned(source.HighTarget, source.LowTarget, source.Duration)
 		},
 		partial: nightscoutmodels.PartialTreatmentToTempTarget,
 		// The targets are kept in mg/dL, converted from the units sent, or guessed from them as glucose is, as AAPS sends
@@ -285,13 +318,15 @@ var (
 				treatment.DurationType = nil
 			}
 		},
-		mergeInto: nightscoutmodels.UpdateToTempTarget,
-		toCreate:  nightscoutmodels.TempTargetCreate, create: (*sitedb.Queries).CreateTempTarget,
-		toUpdate: nightscoutmodels.TempTargetUpdate, update: (*sitedb.Queries).UpdateTempTarget,
+		toCreate: nightscoutmodels.TempTargetCreate, create: (*sitedb.Queries).CreateTempTarget,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateTempTargetParams) (*sitedb.TempTarget, error) {
+			params.ID = id
+			return q.RewriteTempTarget(ctx, sitedb.RewriteTempTargetParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteTempTarget,
 	}
-	profileSwitches = eventKind[sitedb.ProfileSwitch, sitedb.CreateProfileSwitchParams, sitedb.UpdateProfileSwitchParams, sitedb.HardDeleteProfileSwitchParams]{
-		name: "profile switch",
+	profileSwitches = eventKind[sitedb.ProfileSwitch, sitedb.CreateProfileSwitchParams, sitedb.HardDeleteProfileSwitchParams]{
+		name: "profile switch", table: "profile_switches",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.ProfileSwitch) {
 			return &b.EventGroup.ProfileSwitchID, &b.ProfileSwitch
 		},
@@ -314,6 +349,14 @@ var (
 				if err == nil {
 
 					profile.ConvertToMGDL()
+
+					// AAPS's effective profile switch has its insulin only in its profileJson's iCfg
+					var withICfg struct {
+						ICfg *nightscoutmodels.InsulinConfig `json:"iCfg"`
+					}
+					if target.IcfgJson == nil && json.Unmarshal([]byte(*source.ProfileJSON), &withICfg) == nil {
+						target.IcfgJson = nightscoutmodels.InsulinConfigToJSON(withICfg.ICfg)
+					}
 
 					target.Dia = profile.Dia.Float64p()
 					target.Timezone = profile.Timezone.Stringp()
@@ -367,13 +410,15 @@ var (
 				treatment.Timeshift = ptr(types.FlexibleInt64(*event.Timeshift * msPerMinute))
 			}
 		},
-		mergeInto: nightscoutmodels.UpdateToProfileSwitch,
 		toCreate: nightscoutmodels.ProfileSwitchCreate, create: (*sitedb.Queries).CreateProfileSwitch,
-		toUpdate: nightscoutmodels.ProfileSwitchUpdate, update: (*sitedb.Queries).UpdateProfileSwitch,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateProfileSwitchParams) (*sitedb.ProfileSwitch, error) {
+			params.ID = id
+			return q.RewriteProfileSwitch(ctx, sitedb.RewriteProfileSwitchParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteProfileSwitch,
 	}
-	activities = eventKind[sitedb.Activity, sitedb.CreateActivityParams, sitedb.UpdateActivityParams, sitedb.HardDeleteActivityParams]{
-		name: "activity",
+	activities = eventKind[sitedb.Activity, sitedb.CreateActivityParams, sitedb.HardDeleteActivityParams]{
+		name: "activity", table: "activities",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.Activity) {
 			return &b.EventGroup.ActivityID, &b.Activity
 		},
@@ -381,13 +426,16 @@ var (
 			return isAssigned(source.Name, source.ActivityType, source.Calories, source.Steps, source.HeartRate)
 		},
 		partial:     nightscoutmodels.PartialTreatmentToActivity,
-		toTreatment: withoutSite(nightscoutmodels.UpdateActivityToTreatment), mergeInto: nightscoutmodels.UpdateToActivity,
-		toCreate: nightscoutmodels.ActivityCreate, create: (*sitedb.Queries).CreateActivity,
-		toUpdate: nightscoutmodels.ActivityUpdate, update: (*sitedb.Queries).UpdateActivity,
+		toTreatment: withoutSite(nightscoutmodels.UpdateActivityToTreatment),
+		toCreate:    nightscoutmodels.ActivityCreate, create: (*sitedb.Queries).CreateActivity,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateActivityParams) (*sitedb.Activity, error) {
+			params.ID = id
+			return q.RewriteActivity(ctx, sitedb.RewriteActivityParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteActivity,
 	}
-	notificationEvents = eventKind[sitedb.NotificationEvent, sitedb.CreateNotificationEventParams, sitedb.UpdateNotificationEventParams, sitedb.HardDeleteNotificationEventParams]{
-		name: "notification event",
+	notificationEvents = eventKind[sitedb.NotificationEvent, sitedb.CreateNotificationEventParams, sitedb.HardDeleteNotificationEventParams]{
+		name: "notification event", table: "notification_events",
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.NotificationEvent) {
 			return &b.EventGroup.NotificationEventID, &b.NotificationEvent
 		},
@@ -412,9 +460,12 @@ var (
 				target.Title = source.Name.String()
 			}
 		},
-		toTreatment: withoutSite(nightscoutmodels.UpdateNotificationEventToTreatment), mergeInto: nightscoutmodels.UpdateToNotificationEvent,
-		toCreate: nightscoutmodels.NotificationEventCreate, create: (*sitedb.Queries).CreateNotificationEvent,
-		toUpdate: nightscoutmodels.NotificationEventUpdate, update: (*sitedb.Queries).UpdateNotificationEvent,
+		toTreatment: withoutSite(nightscoutmodels.UpdateNotificationEventToTreatment),
+		toCreate:    nightscoutmodels.NotificationEventCreate, create: (*sitedb.Queries).CreateNotificationEvent,
+		rewrite: func(q *sitedb.Queries, ctx context.Context, id string, params sitedb.CreateNotificationEventParams) (*sitedb.NotificationEvent, error) {
+			params.ID = id
+			return q.RewriteNotificationEvent(ctx, sitedb.RewriteNotificationEventParams(params))
+		},
 		delete: (*sitedb.Queries).HardDeleteNotificationEvent,
 	}
 )

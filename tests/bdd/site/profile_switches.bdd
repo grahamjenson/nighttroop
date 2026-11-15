@@ -82,16 +82,16 @@ ASSERT_VISIBLE #site--profile-switch--details dt:text-is("DIA (hours)")
 CLICK #site--profile-switch--details--close
 ASSERT_NOT_VISIBLE #site--profile-switch--details
 
-// A page of one profile switch pages through them, newest first
+// A page of one profile switch pages to the older ones, and Newest goes back
 GOTO /data/profile-switches?limit=1
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Sick Day
 CLICK #site--profile-switch--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_VISIBLE #site--profile-switch--newest
 ASSERT_TEXT_VISIBLE Virtual
-CLICK #site--profile-switch--previous
+CLICK #site--profile-switch--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

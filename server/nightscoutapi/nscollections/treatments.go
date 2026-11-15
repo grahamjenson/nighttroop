@@ -3,11 +3,10 @@ package nscollections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
-	"math"
 	"reflect"
-	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -39,10 +38,6 @@ func (c TreatmentCollection) Validate(nsModel nightscoutmodels.Treatment, dbMode
 		slog.Error("treatment EventType is empty or unknown", "error", eventTypeError)
 		return nsutils.BadDataBodyErrorWithHint("EventType is nil or unknown: " + eventTypeError)
 	}
-	if err := validAmounts(nsModel); err != nil {
-		return err
-	}
-
 	// Validate the change
 	if dbModel == nil {
 		return nil
@@ -56,31 +51,20 @@ func (c TreatmentCollection) Validate(nsModel nightscoutmodels.Treatment, dbMode
 	return nil
 }
 
-func (c TreatmentCollection) ValidatePatch(nsModel nightscoutmodels.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
-	if nsModel.EventType != nil && nsModel.EventType.String() != dbModel.EventGroup.GroupType {
-		slog.Error("treatment event type is not good", "eventType", nsModel.EventType.String())
-		return nsutils.BadDataBodyError
+// Rows are its event group and its events, so insulin far outside real use refuses it, saying why, as xDrip+ drops a
+// treatment it is refused, and every one queued after it
+func (c TreatmentCollection) Rows(nsModel nightscoutmodels.Treatment) []sitedb.TableRow {
+	if nsModel.EventType == nil {
+		return nil
 	}
-	return validAmounts(nsModel)
-}
-
-// validAmounts refuses insulin or carbs far outside real use, before the database would, saying which, its range and
-// what was sent: xDrip+ drops a treatment it is refused, and every one queued after it, so it must say why
-func validAmounts(nsModel nightscoutmodels.Treatment) *nsutils.HTTPError {
-	amounts := []struct {
-		name, unit string
-		value      *types.FlexibleFloat64
-		max        float64
-	}{
-		{"insulin", "U", nsModel.Insulin, consts.MaxInsulinUnits},
-		{"carbs", "g", nsModel.Carbs, consts.MaxCarbsGrams},
-	}
-	for _, a := range amounts {
-		if a.value != nil && !(math.Abs(a.value.Float64()) <= a.max) {
-			return nsutils.BadDataBodyErrorWithHint(fmt.Sprintf("%s must be between %v and %v %s (was %v)", a.name, -a.max, a.max, a.unit, a.value.Float64()))
+	bundle := TreatmentEventGroupBundle(context.Background(), nsModel)
+	rows := []sitedb.TableRow{{Table: "event_groups", Row: bundle.EventGroup}}
+	for _, event := range treatmentEvents {
+		if row, ok := event.row(&bundle); ok {
+			rows = append(rows, row)
 		}
 	}
-	return nil
+	return rows
 }
 
 func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
@@ -115,45 +99,57 @@ func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context,
 	return &tebg, nil
 }
 
-func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment) (*sitedb.EventGroupsBundle, error) {
-	eventGroups, rerr := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
+// FallbackKey is a treatment's date, device, eventType, insulin and carbs, a zero being none, as Nightscout matches one
+// sent without an identifier (treatment-fallback-key.js), of one stored without an app's id, xDrip+'s uuid or Loop's
+// syncIdentifier. So a careportal note in the same second as xDrip+'s bolus is kept beside it rather than taking it
+// over, and AAPS's Bolus Wizard's bolus and its carbs, sent as two Meal Boluses at the same date and deleted on their
+// own by their identifiers, are two treatments.
+func (c TreatmentCollection) FallbackKey() FallbackKey[nightscoutmodels.Treatment, sitedb.EventGroupsBundle] {
+	type key = KeyField[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]
+	return FallbackKey[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]{
+		search: searchSameTimeTreatments,
+		fields: []key{
+			sameDate[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](),
+			sameDevice[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](),
+			{"eventType", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+				return sent.EventType == nil || sent.EventType.String() == stored.EventGroup.GroupType
+			}},
+			{"insulin", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+				var dose float64
+				if stored.InsulinDose != nil {
+					dose = stored.InsulinDose.Dose
+				}
+				return amount(sent.Insulin) == dose
+			}},
+			{"carbs", func(sent nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
+				var carbs float64
+				if stored.FoodIntake != nil && stored.FoodIntake.Carbs != nil {
+					carbs = *stored.FoodIntake.Carbs
+				}
+				return amount(sent.Carbs) == carbs
+			}},
+		},
+		clientIDs: []func(*sitedb.EventGroupsBundle) *string{
+			func(stored *sitedb.EventGroupsBundle) *string { return stored.EventGroup.Uuid },
+			func(stored *sitedb.EventGroupsBundle) *string { return stored.EventGroup.SyncIdentifier },
+		},
+	}
+}
+
+// searchSameTimeTreatments finds the treatments of a type and device at the date of the one sent
+func searchSameTimeTreatments(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, limit int64) ([]*sitedb.EventGroupsBundle, error) {
+	eventGroups, err := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		TypeEq:   nsModel.EventType.Stringp(),
-		Limit:    maxSameTimeTreatments,
+		Limit:    limit,
 	})
-	if rerr != nil {
-		return nil, rerr
+	bundles := make([]*sitedb.EventGroupsBundle, len(eventGroups))
+	for i, eventGroup := range eventGroups {
+		bundle := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroup))
+		bundles[i] = &bundle
 	}
-	for _, eventGroup := range eventGroups {
-		egb := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroup))
-		if sameTreatment(nsModel, &egb) {
-			return &egb, nil
-		}
-	}
-	return nil, nil
-}
-
-// maxSameTimeTreatments is how many treatments of a type at one date are looked through for one sent again
-const maxSameTimeTreatments = 10
-
-// sameTreatment is whether a treatment sent with no identifier of its own is one stored sent again, as Nightscout
-// matches one (treatment-fallback-key.js): one stored without an app's id, xDrip+'s uuid or Loop's syncIdentifier,
-// with the same carbs and insulin, a zero being none. So a careportal note in the same second as xDrip+'s bolus is
-// kept beside it rather than taking it over, and AAPS's Bolus Wizard's bolus and its carbs, sent as two Meal Boluses
-// at the same date and deleted on their own by their identifiers, are two treatments
-func sameTreatment(nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
-	if stored.EventGroup.Uuid != nil || stored.EventGroup.SyncIdentifier != nil {
-		return false
-	}
-	var storedInsulin, storedCarbs float64
-	if stored.InsulinDose != nil {
-		storedInsulin = stored.InsulinDose.Dose
-	}
-	if stored.FoodIntake != nil && stored.FoodIntake.Carbs != nil {
-		storedCarbs = *stored.FoodIntake.Carbs
-	}
-	return amount(nsModel.Insulin) == storedInsulin && amount(nsModel.Carbs) == storedCarbs
+	return bundles, err
 }
 
 // amount is a treatment's carbs or insulin, 0 when it has none
@@ -164,17 +160,12 @@ func amount(value *types.FlexibleFloat64) float64 {
 	return value.Float64()
 }
 
-// Refresh merges a treatment sent again into the one stored, as a patch does: what it sends is changed and what it
-// leaves out is kept. Loop sends a temp basal or bolus again when it ends with what was delivered, and Trio a temp
-// target that ended early with its real duration. One of another type, sent the same as it was, by the hash of its
-// JSON, or stored without that hash, is left as it is.
-func (c TreatmentCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, bool, error) {
+// Refreshes a treatment sent again with changes, by the hash of its JSON: Loop sends a temp basal or bolus again when it
+// ends with what was delivered, and Trio a temp target that ended early with its real duration. One of another type,
+// or stored without that hash, is left as it is.
+func (c TreatmentCollection) Refreshes(nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle) bool {
 	sent, resent := stored.EventGroup.SentHash, nightscoutmodels.SentHash(nsModel.SentJSON)
-	if nsModel.EventType.String() != stored.EventGroup.GroupType || sent == nil || resent == nil || *sent == *resent {
-		return stored, false, nil
-	}
-	refreshed, err := c.UpdateModel(q, ctx, nsModel, stored.EventGroup.ID, stored, cc)
-	return refreshed, true, err
+	return nsModel.EventType.String() == stored.EventGroup.GroupType && sent != nil && resent != nil && *sent != *resent
 }
 
 func (c TreatmentCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.EventGroupsBundle, error) {
@@ -188,41 +179,35 @@ func (c TreatmentCollection) GetModel(q *sitedb.Queries, ctx context.Context, id
 	return &egb, nil
 }
 
-func (c TreatmentCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, identifier string, dbModel *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, error) {
-	// This will be a partial update
-
-	nsModel.EventType = ptr(nightscoutmodels.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
-	keepTempTarget(&nsModel, dbModel.TempTarget)
-
-	updateBundle := TreatmentEventGroupBundle(ctx, nsModel)
-
-	MergeUpdateBundle(dbModel, updateBundle)
-	if err := fillTempBasal(ctx, q, nsModel, dbModel.TempBasal); err != nil {
+// RewriteModel rewrites the group and its events: an event the treatment still has keeps its identifier and what of it
+// a treatment does not have, one it no longer has is deleted once the group no longer refers to it, and one it now has
+// is created. The hash it keeps is of the fields sent, as a create's is of the treatment sent.
+func (c TreatmentCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, sent map[string]any, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, error) {
+	bundle := TreatmentEventGroupBundle(ctx, nsModel)
+	for _, event := range treatmentEvents {
+		event.keep(&bundle, stored)
+	}
+	if err := fillTempBasal(ctx, q, nsModel, bundle.TempBasal); err != nil {
 		return nil, err
 	}
-
-	// Do something with the update bundle to merge it into the dbModel
-
-	err := createUpdateEventGroup(ctx, q, dbModel, cc)
+	if err := createUpdateEventGroup(ctx, q, &bundle, cc); err != nil {
+		return nil, err
+	}
+	params := nightscoutmodels.EventGroupCreate(bundle.EventGroup, cc)
+	sentJSON, _ := json.Marshal(sent)
+	params.ID, params.SentHash = stored.EventGroup.ID, nightscoutmodels.SentHash(string(sentJSON))
+	group, err := q.RewriteEventGroup(ctx, sitedb.RewriteEventGroupParams(params))
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to rewrite event group in database", "error", err)
 		return nil, err
 	}
-
-	updateEventGroupParams := nightscoutmodels.EventGroupUpdate(dbModel.EventGroup, cc)
-	newEventGroup, err := q.UpdateEventGroup(ctx, updateEventGroupParams)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to update event group in database", "error", err)
-		return nil, err
+	bundle.EventGroup = *group
+	for _, event := range treatmentEvents {
+		if err := event.drop(ctx, q, &bundle, stored); err != nil {
+			return nil, err
+		}
 	}
-
-	if newEventGroup == nil || newEventGroup.ID == "" {
-		slog.ErrorContext(ctx, "failed to update event group in database, EventGroup is nil")
-		return nil, fmt.Errorf("newEventGroup is nil or has empty ID")
-	}
-
-	dbModel.EventGroup = *newEventGroup
-
-	return dbModel, nil
+	return &bundle, nil
 }
 
 func (c TreatmentCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
@@ -278,7 +263,7 @@ func (c TreatmentCollection) SearchModels(q *sitedb.Queries, ctx context.Context
 // Private Methods
 // ///////////////////////
 
-// createUpdateEventGroup syncs each of a bundle's events to the DB, see treatmentEvent.write
+// createUpdateEventGroup writes each of a bundle's events to the DB, see treatmentEvent.write
 func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) error {
 	for _, event := range treatmentEvents {
 		if err := event.write(ctx, q, bundle, cc); err != nil {
@@ -322,8 +307,8 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.T
 	// A duration of 0 is until cancelled for one sent indefinite, and for a Temporary Override, as Nightscout's
 	// careportal sends one, so it is kept as indefinite rather than ended as it starts
 	isIndefinite := treatment.DurationType != nil && *treatment.DurationType == indefinite
-	if d := treatment.DurationMinutes; d != nil && *d == 0 && (isIndefinite || *treatment.EventType == nightscoutmodels.TemporaryOverride) {
-		treatment.DurationMinutes, treatment.DurationInMilliseconds = nil, nil
+	if d := treatment.Duration; d != nil && d.Minutes == 0 && (isIndefinite || *treatment.EventType == nightscoutmodels.TemporaryOverride) {
+		treatment.Duration = nil
 		treatment.DurationType = new(types.ShortString(indefinite))
 	}
 	bundle := sitedb.EventGroupsBundle{EventGroup: nightscoutmodels.TreatmentToEventGroup(treatment)}
@@ -331,14 +316,6 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.T
 		event.fromTreatment(treatment, &bundle)
 	}
 	return bundle
-}
-
-// Merge a DB Event Group with one created from the
-func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.EventGroupsBundle) {
-	nightscoutmodels.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
-	for _, event := range treatmentEvents {
-		event.merge(dbModel, updateBundle)
-	}
 }
 
 // isAssigned is whether any of the values is set, which kinds of events use to tell if a treatment has one
@@ -371,23 +348,14 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	for _, event := range treatmentEvents {
 		event.addToTreatment(source, siteContext, treatment)
 	}
-	// The duration sent in milliseconds is given back, as AAPS reads it before the minutes, while it is within a minute
-	// of the minutes kept, so not once those are changed on the site
-	if ms := source.EventGroup.DurationMs; ms != nil {
-		if minutes := treatment.DurationMinutes; minutes == nil || max(*ms-int64(*minutes)*60_000, int64(*minutes)*60_000-*ms) < 60_000 {
-			treatment.DurationInMilliseconds = new(types.FlexibleInt64(*ms))
-		}
+	// The duration sent in milliseconds is kept with the minutes its event keeps, as AAPS reads it before the minutes
+	treatment.Duration = treatment.Duration.WithMs(source.EventGroup.DurationMs)
+	// A Combo Bolus gives back its dose given at once as insulin, none when all of it is extended, as AAPS reads a
+	// treatment with insulin as a bolus; all of it as enteredinsulin, which AAPS drops one without; the percents of each
+	// part as splitNow and splitExt; and the extended part's units an hour as relative, as Nightscout's careportal sends
+	if isCombo := treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus; treatment.Insulin != nil && (isCombo || amount(treatment.ExtendedDose) > 0) {
+		comboParts(treatment)
 	}
-	// A duration is given back both in minutes and in milliseconds, whichever was kept, as a client may read either
-	if treatment.DurationInMilliseconds == nil && treatment.DurationMinutes != nil {
-		treatment.DurationInMilliseconds = new(*treatment.DurationMinutes * 60_000)
-	}
-	if treatment.DurationMinutes == nil && treatment.DurationInMilliseconds != nil {
-		treatment.DurationMinutes = new((*treatment.DurationInMilliseconds + 30_000) / 60_000)
-	}
-	// The timestamp is when it happened in UTC, as created_at is written and every client sends it, whatever its
-	// utcOffset: LoopFollow reads it before created_at and drops its offset, reading the rest as UTC
-	treatment.Timestamp = new(types.DateString(types.ISOString(time.UnixMilli(source.EventGroup.OccurredAt))))
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
 	treatment.Programmed = treatment.Insulin
 	if treatment.Absolute != nil {
@@ -396,24 +364,19 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	return *treatment
 }
 
-// keepTempTarget gives an update of a temp target the duration and targets it leaves out, from the one stored, in the
-// update's units, as a caregiver's app patches only what it changes and a duration or target left out would be 0
-func keepTempTarget(nsModel *nightscoutmodels.Treatment, stored *sitedb.TempTarget) {
-	if stored == nil || !isAssigned(nsModel.HighTarget, nsModel.LowTarget, nsModel.DurationMinutes, nsModel.CorrectionRange, nsModel.DurationType) {
+// comboParts gives a Combo Bolus's insulin in all, its split and its extended rate from its dose and extended dose
+func comboParts(treatment *nightscoutmodels.Treatment) {
+	dose, extended := treatment.Insulin.Float64(), amount(treatment.ExtendedDose)
+	treatment.EnteredInsulin = new(types.FlexibleFloat64(consts.Round(dose+extended, 5)))
+	if extended <= 0 {
 		return
 	}
-	// An indefinite one is given its week's duration when it is prepared
-	if nsModel.DurationMinutes == nil && nsModel.DurationType == nil {
-		nsModel.DurationMinutes = new(types.FlexibleInt64(stored.DurationMinutes))
+	now := consts.Round(100*dose/(dose+extended), 0)
+	treatment.SplitNow, treatment.SplitExt = new(types.FlexibleFloat64(now)), new(types.FlexibleFloat64(100-now))
+	if dose == 0 {
+		treatment.Insulin = nil
 	}
-	// Loop's correction range is its targets
-	if len(nsModel.CorrectionRange) > 0 {
-		return
-	}
-	if nsModel.HighTarget == nil {
-		nsModel.HighTarget = new(types.FlexibleFloat64(nsModel.Units.FromMGDL(stored.HighTargetMgdl)))
-	}
-	if nsModel.LowTarget == nil {
-		nsModel.LowTarget = new(types.FlexibleFloat64(nsModel.Units.FromMGDL(stored.LowTargetMgdl)))
+	if ms := treatment.ExtendedDurationMs; ms != nil && *ms > 0 {
+		treatment.Relative = new(types.FlexibleFloat64(consts.Round(extended*3_600_000/float64(*ms), 3)))
 	}
 }

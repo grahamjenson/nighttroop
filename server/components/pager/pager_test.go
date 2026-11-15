@@ -49,3 +49,44 @@ func TestPagerNextStopsAtMaxQuerySkip(t *testing.T) {
 		}
 	}
 }
+
+// A dated page's Next is the rows older than its last row, by its time and ID, however far back, and a page from a
+// time shows the way back to the newest rather than which rows from the first it shows
+func TestDatedPager(t *testing.T) {
+	before := int64(1000)
+	tests := []struct {
+		name  string
+		props Props
+		has   []string
+		not   []string
+	}{
+		{"first page", Props{ID: "p", Path: "/data/glucose", Count: 2, Limit: 2, Dated: true, LastAt: 900, LastID: "a b"},
+			[]string{`id="p--next"`, `/data/glucose?skip=0&amp;limit=2&amp;before=900&amp;before_id=a+b`, `id="p--date"`, `data-pager-skip`, `>Older<`}, []string{`id="p--newest"`, `to {to}" hidden`}},
+		{"past the most skipped", Props{ID: "p", Path: "/data/glucose", Count: 2, Skip: apiquery.MaxQuerySkip, Limit: 2, Dated: true, LastAt: 900, LastID: "a"},
+			[]string{`id="p--next"`}, nil},
+		{"from a time", Props{ID: "p", Path: "/data/glucose", Count: 2, Limit: 2, Dated: true, Before: &before, LastAt: 900, LastID: "a"},
+			[]string{`id="p--newest"`, `/data/glucose?skip=0&amp;limit=2"`, `id="p--next"`, `value="1970-01-01"`, `to {to}" hidden`}, nil},
+		{"last page from a time", Props{ID: "p", Path: "/data/glucose", Count: 1, Limit: 2, Dated: true, Before: &before},
+			[]string{`id="p--newest"`}, []string{`id="p--next"`}},
+		{"by skip", Props{ID: "p", Path: "/presets/food", Count: 2, Limit: 2},
+			[]string{`/presets/food?skip=2&amp;limit=2`, `>Next<`}, []string{`id="p--date"`, `before=`}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var html bytes.Buffer
+			if err := Pager(tt.props).Render(context.Background(), &html); err != nil {
+				t.Fatal(err)
+			}
+			for _, want := range tt.has {
+				if !strings.Contains(html.String(), want) {
+					t.Errorf("missing %s in %s", want, html.String())
+				}
+			}
+			for _, unwanted := range tt.not {
+				if strings.Contains(html.String(), unwanted) {
+					t.Errorf("unexpected %s in %s", unwanted, html.String())
+				}
+			}
+		})
+	}
+}

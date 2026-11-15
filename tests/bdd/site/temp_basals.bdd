@@ -73,17 +73,17 @@ ASSERT_TEXT_VISIBLE 1.75 U/hr for 45 minutes
 ASSERT_VISIBLE #site--temp-basal--edit--notes[value="Exercise"]
 CLICK #site--temp-basal--details--close
 
-// A page of one temp basal pages through them, newest first
+// A page of one temp basal pages to the older ones, and Newest goes back
 GOTO /data/temp-basals?limit=1
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
-ASSERT_NOT_VISIBLE #site--temp-basal--previous
+ASSERT_NOT_VISIBLE #site--temp-basal--newest
 
 CLICK #site--temp-basal--next
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_VISIBLE #site--temp-basal--newest
 
-CLICK #site--temp-basal--previous
+CLICK #site--temp-basal--newest
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

@@ -112,10 +112,13 @@ type EventGroup struct {
 	PumpID                    *string
 	PumpSerial                *string
 	PumpType                  *string
+	EndingPumpID              *string
 	SensorCode                *string
 	TransmitterID             *string
 	BolusCalculatorResultJson *string
 	SyncIdentifier            *string
+	ClientCreatedAt           *int64
+	EmulatedTreatmentJson     *string
 	Notes                     *string
 	Reason                    *string
 	DurationMinutes           *int64
@@ -207,6 +210,11 @@ type FoodPreset struct {
 	Energy                *float64
 	Portions              *float64
 	PreBolus              *float64
+	Unit                  *string
+	Gi                    *float64
+	Hidden                *bool
+	HideAfterUse          *bool
+	Position              *int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByAppName      *string
@@ -233,7 +241,7 @@ type GlucoseReading struct {
 	Units                 *consts.Units
 	MeasurementMethod     *string
 	Delta                 *float64
-	Direction             *string
+	Trend                 *int64
 	Noise                 *float64
 	Filtered              *float64
 	Unfiltered            *float64
@@ -262,7 +270,7 @@ type GlucoseReadingsVw struct {
 	Units                 *consts.Units
 	MeasurementMethod     *string
 	Delta                 *float64
-	Direction             *string
+	Trend                 *int64
 	Noise                 *float64
 	Filtered              *float64
 	Unfiltered            *float64
@@ -288,8 +296,8 @@ type InsulinDose struct {
 	ID                    string
 	Dose                  float64
 	DoseType              *string
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string
@@ -314,8 +322,8 @@ type InsulinDosesVw struct {
 	ID                    *string
 	Dose                  *float64
 	DoseType              *string
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string
@@ -407,6 +415,7 @@ type ProfilePreset struct {
 	LoopSettingsID           *string
 	RemoteSettingsID         *string
 	EnteredBy                *string
+	ProfileName              *string
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64
 	CreatedAt                int64

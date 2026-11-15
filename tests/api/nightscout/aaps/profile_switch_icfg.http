@@ -1,0 +1,54 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// The insulin a switch was made with comes back in its profileJson as iCfg, as an AAPSClient follower reads it there
+// (pureProfileFromJson): from the switch's icfg, or, for an effective profile switch, from its own profileJson's iCfg
+NAME add_profile_switch_with_icfg
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 8 }},
+    "utcOffset": 780,
+    "eventType": "Profile Switch",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"iCfg\":{\"insulinLabel\":\"Lyumjev\",\"insulinEndTime\":21600000,\"insulinPeakTime\":2700000,\"concentration\":1.0}}",
+    "profile": "LocalProfile1",
+    "originalProfileName": "LocalProfile1",
+    "icfg": {"insulinLabel": "Lyumjev", "insulinEndTime": 21600000, "insulinPeakTime": 2700000, "concentration": 1.0},
+    "duration": 0,
+    "timeshift": 0,
+    "percentage": 100,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME profile_switch_icfg_in_profile_json
+GET http://{{ site }}/api/v3/treatments/{{ .add_profile_switch_with_icfg.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "\"iCfg\":{\"insulinLabel\":\"Lyumjev\",\"insulinEndTime\":21600000,\"insulinPeakTime\":2700000,\"concentration\":1}" "@result.profileJson"
+ASSERT_EQUALS "Lyumjev" "@result.icfg.insulinLabel"
+
+// AAPS's effective profile switch, a Note, has its insulin only in its profileJson
+NAME add_effective_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 7 }},
+    "utcOffset": 780,
+    "eventType": "Note",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"iCfg\":{\"insulinLabel\":\"Fiasp\",\"insulinEndTime\":18000000,\"insulinPeakTime\":3300000,\"concentration\":1.0}}",
+    "originalProfileName": "LocalProfile1",
+    "originalCustomizedName": "LocalProfile1",
+    "originalTimeshift": 0,
+    "originalPercentage": 100,
+    "originalDuration": 0,
+    "originalEnd": 0,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME effective_profile_switch_icfg
+GET http://{{ site }}/api/v3/treatments/{{ .add_effective_profile_switch.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "\"iCfg\":{\"insulinLabel\":\"Fiasp\",\"insulinEndTime\":18000000,\"insulinPeakTime\":3300000,\"concentration\":1}" "@result.profileJson"

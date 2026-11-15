@@ -30,12 +30,17 @@ var identityRoles = []consts.IdentityRole{
 
 // mgdlClients are the Nightscout clients a device can be added for that need glucose in mg/dL, so a device added for one
 // has its own units set to mg/dL whatever the site's. Any other device, "other", follows the site.
-var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel", "t1dcarer"}
+var mgdlClients = []string{"aaps", sitemodels.AAPSClient, "trio", "loop", "xdrip", "xdrip4ios", "sugarpixel", "t1dcarer"}
+
+// followClients are the Nightscout clients a device can be added for that show glucose in the units of their
+// Nightscout status, so a device added for one follows the site: Nightguard reads sgv as mg/dL and shows it in
+// settings.units
+var followClients = []string{"nightguard"}
 
 // clientMgdlLabels are how a client needs the Nightscout API to write mg/dL, where it is not mg/dL: xDrip4iOS reads a
 // BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again, and AAPS writes
 // them mg/dl, the only spelling of mg/dL its NsUnits reads exactly
-var clientMgdlLabels = map[string]string{"xdrip4ios": "mg/dl", "aaps": "mg/dl"}
+var clientMgdlLabels = map[string]string{"xdrip4ios": "mg/dl", "aaps": "mg/dl", sitemodels.AAPSClient: "mg/dl"}
 
 // ////
 // Shared
@@ -67,7 +72,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	if !slices.Contains(identityRoles, role) {
 		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.unknown_role", i18n.Data{"Role": model.Role}))
 	}
-	if model.Client != "" && model.Client != "other" && !slices.Contains(mgdlClients, model.Client) {
+	if model.Client != "" && model.Client != "other" && !slices.Contains(mgdlClients, model.Client) && !slices.Contains(followClients, model.Client) {
 		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.unknown_client", i18n.Data{"Client": model.Client}))
 	}
 
@@ -177,11 +182,7 @@ func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapi
 	if err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.bad_id", i18n.Data{"ID": id}))
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
+	identity, err := siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).GetSiteIdentityByID, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 	if err != nil {
 		return nil, err
 	}
@@ -202,11 +203,7 @@ func (s *IdentitiesCollection) GetHTMXResponse(model *sitemodels.UserIdentity) t
 // ///
 
 func (s *IdentitiesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, error) {
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.SiteID})
+	identities, err := siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).AllSiteIdentities, controldb.AllSiteIdentitiesParams{SiteID: siteContext.SiteID})
 	if err != nil {
 		return nil, err
 	}

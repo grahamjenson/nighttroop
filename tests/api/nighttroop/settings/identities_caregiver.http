@@ -1,0 +1,405 @@
+# A Caregiver device (device_read_write) is the token a carer's or follower's app has, such as LoopFollow, Nightguard
+# or T1D Carer. It reads everything and adds, changes and deletes treatments, as a careportal does. It cannot change
+# or delete the readings, profiles or device statuses the PWD phone uploads. The PWD phone can still do all of it.
+
+INCLUDE steps/new_site_admin.steps
+
+NAME create_caregiver
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "device_read_write"}
+ASSERT_STATUS 201
+SET carer_token {{ .create_caregiver.result.ns_token }}
+
+NAME pwd_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET pwd_jwt {{ .pwd_jwt.token }}
+
+NAME carer_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .carer_token }}
+ASSERT_STATUS 200
+SET carer_jwt {{ .carer_jwt.token }}
+
+######
+# The PWD phone uploads a reading, a device status and a profile
+######
+
+NAME pwd_entry
+POST http://{{ .ns_site }}/api/v3/entries
+H Authorization: Bearer {{ .pwd_jwt }}
+B {"sgv": 101, "type": "sgv", "date": {{ itime 10 }}}
+ASSERT_STATUS 201
+SET entry_id {{ dig "pwd_entry.result.identifier" }}
+
+NAME pwd_devicestatus
+POST http://{{ .ns_site }}/api/v3/devicestatus
+H Authorization: Bearer {{ .pwd_jwt }}
+B {"device": "loop://iPhone", "date": {{ itime 10 }}}
+ASSERT_STATUS 201
+SET devicestatus_id {{ dig "pwd_devicestatus.result.identifier" }}
+
+NAME pwd_profile
+POST http://{{ .ns_site }}/api/v3/profile
+H Authorization: Bearer {{ .pwd_jwt }}
+B {"units": "mg/dL", "startDate": "{{ time 10 }}", "defaultProfile": "Default", "store": {"Default": {"dia": 5,
+    "units": "mg/dL", "timezone": "UTC", "sens": [{"value": 40, "time": "00:00", "timeAsSeconds": 0}],
+    "carbratio": [{"value": 10, "time": "00:00", "timeAsSeconds": 0}],
+    "basal": [{"value": 0.8, "time": "00:00", "timeAsSeconds": 0}],
+    "target_low": [{"value": 100, "time": "00:00", "timeAsSeconds": 0}],
+    "target_high": [{"value": 110, "time": "00:00", "timeAsSeconds": 0}]}}}
+ASSERT_STATUS 201
+SET profile_id {{ dig "pwd_profile.result.identifier" }}
+
+######
+# The caregiver reads everything
+######
+
+NAME carer_reads_entries
+GET http://{{ .ns_site }}/api/v1/entries.json?token={{ .carer_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME carer_reads_devicestatus
+GET http://{{ .ns_site }}/api/v1/devicestatus.json?token={{ .carer_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME carer_reads_profile
+GET http://{{ .ns_site }}/api/v3/profile/{{ .profile_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+ASSERT_STATUS 200
+
+NAME carer_reads_settings
+GET http://{{ .ns_site }}/api/v3/settings
+H Authorization: Bearer {{ .carer_jwt }}
+ASSERT_STATUS 200
+
+// LoopFollow shows an exact api:treatments:create as "Read & Write"
+NAME carer_status
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .carer_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "api:*:read" "@authorized.permissionGroups.0.0"
+ASSERT_EQUALS "api:treatments:create" "@authorized.permissionGroups.0.1"
+ASSERT_LENGTH 6 "@authorized.permissionGroups.0"
+
+// AAPS's v2 subjects show it with the careportal role, not as an admin
+NAME subjects
+GET http://{{ .ns_site }}/api/v2/authorization/subjects
+H Authorization: Bearer {{ .pwd_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "carer" "@0.name"
+ASSERT_EQUALS "careportal" "@0.roles.0"
+ASSERT_EQUALS "read_only" "@1.name"
+ASSERT_EQUALS "readable" "@1.roles.0"
+ASSERT_EQUALS "pwd_phone" "@2.name"
+ASSERT_EQUALS "admin" "@2.roles.0"
+
+######
+# The caregiver cannot change or delete readings, profiles or device statuses, or add readings or profiles
+######
+
+NAME carer_cannot_delete_entries_v1
+DELETE http://{{ .ns_site }}/api/v1/entries/sgv?token={{ .carer_token }}
+ASSERT_STATUS 403
+ASSERT_EQUALS "Missing permission api:entries:delete" "@message"
+
+NAME carer_cannot_delete_devicestatus_v1
+DELETE http://{{ .ns_site }}/api/v1/devicestatus/{{ .devicestatus_id }}?token={{ .carer_token }}
+ASSERT_STATUS 403
+ASSERT_EQUALS "Missing permission api:devicestatus:delete" "@message"
+
+NAME carer_cannot_delete_profile_v1
+DELETE http://{{ .ns_site }}/api/v1/profile/{{ .profile_id }}?token={{ .carer_token }}
+ASSERT_STATUS 403
+ASSERT_EQUALS "Missing permission api:profile:delete" "@message"
+
+NAME carer_cannot_replace_profile_v1
+PUT http://{{ .ns_site }}/api/v1/profile?token={{ .carer_token }}
+B {"_id": "{{ .profile_id }}", "units": "mg/dL", "defaultProfile": "Default", "store": {}}
+ASSERT_STATUS 403
+ASSERT_EQUALS "Missing permission api:profile:update" "@message"
+
+NAME carer_cannot_replace_devicestatus_v1
+PUT http://{{ .ns_site }}/api/v1/devicestatus?token={{ .carer_token }}
+B {"_id": "{{ .devicestatus_id }}", "device": "carer"}
+ASSERT_STATUS 403
+ASSERT_EQUALS "Missing permission api:devicestatus:update" "@message"
+
+NAME carer_cannot_add_entries_v1
+POST http://{{ .ns_site }}/api/v1/entries?token={{ .carer_token }}
+B [{"type": "sgv", "sgv": 40, "date": {{ itime 5 }}}]
+ASSERT_STATUS 403
+ASSERT_EQUALS "Missing permission api:entries:create" "@message"
+
+NAME carer_cannot_add_profile_v1
+POST http://{{ .ns_site }}/api/v1/profile?token={{ .carer_token }}
+B {"units": "mg/dL", "startDate": "{{ time 5 }}", "defaultProfile": "Default", "store": {}}
+ASSERT_STATUS 403
+ASSERT_EQUALS "Missing permission api:profile:create" "@message"
+
+NAME carer_cannot_patch_entry_v3
+PATCH http://{{ .ns_site }}/api/v3/entries/{{ .entry_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+B {"sgv": 40}
+ASSERT_STATUS 403
+
+NAME carer_cannot_delete_entry_v3
+DELETE http://{{ .ns_site }}/api/v3/entries/{{ .entry_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+ASSERT_STATUS 403
+
+NAME carer_cannot_patch_devicestatus_v3
+PATCH http://{{ .ns_site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+B {"uploaderBattery": 5}
+ASSERT_STATUS 403
+
+NAME carer_cannot_delete_devicestatus_v3
+DELETE http://{{ .ns_site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+ASSERT_STATUS 403
+
+NAME carer_cannot_patch_profile_v3
+PATCH http://{{ .ns_site }}/api/v3/profile/{{ .profile_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+B {"defaultProfile": "Other"}
+ASSERT_STATUS 403
+
+NAME carer_cannot_delete_profile_v3
+DELETE http://{{ .ns_site }}/api/v3/profile/{{ .profile_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+ASSERT_STATUS 403
+
+// Nothing was changed or deleted
+NAME entries_kept
+GET http://{{ .ns_site }}/api/v1/entries.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 101 "@0.sgv"
+
+NAME devicestatus_kept
+GET http://{{ .ns_site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ .pwd_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "loop://iPhone" "@result.device"
+
+NAME profile_kept
+GET http://{{ .ns_site }}/api/v3/profile/{{ .profile_id }}
+H Authorization: Bearer {{ .pwd_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Default" "@result.defaultProfile"
+
+######
+# The caregiver adds, changes and deletes treatments, adds a device status and writes settings
+######
+
+NAME carer_adds_treatment_v1
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .carer_token }}
+B [{"eventType": "Carb Correction", "carbs": 15, "created_at": "{{ time 5 }}", "enteredBy": "carer"}]
+ASSERT_STATUS 200
+SET treatment_v1_id {{ dig "carer_adds_treatment_v1.0._id" }}
+
+NAME carer_replaces_treatment_v1
+PUT http://{{ .ns_site }}/api/v1/treatments?token={{ .carer_token }}
+B {"_id": "{{ .treatment_v1_id }}", "eventType": "Carb Correction", "carbs": 20, "created_at": "{{ time 5 }}", "enteredBy": "carer"}
+ASSERT_STATUS 200
+
+NAME carer_deletes_treatment_v1
+DELETE http://{{ .ns_site }}/api/v1/treatments/{{ .treatment_v1_id }}?token={{ .carer_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME carer_adds_treatment_v3
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ .carer_jwt }}
+B {"eventType": "Note", "notes": "Lunch", "date": {{ itime 4 }}}
+ASSERT_STATUS 201
+SET treatment_v3_id {{ dig "carer_adds_treatment_v3.result.identifier" }}
+
+NAME carer_patches_treatment_v3
+PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .treatment_v3_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+B {"notes": "Late lunch"}
+ASSERT_STATUS 200
+
+NAME carer_deletes_treatment_v3
+DELETE http://{{ .ns_site }}/api/v3/treatments/{{ .treatment_v3_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+ASSERT_STATUS 200
+
+NAME carer_adds_devicestatus
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ .carer_token }}
+B {"device": "carer-phone", "uploader": {"battery": 80}}
+ASSERT_STATUS 200
+
+NAME carer_writes_settings
+PUT http://{{ .ns_site }}/api/v3/settings/aaps_clientcontrol_hello_6f1d0b9e-2c4a-4e8b-9a37-5c2d8e1f4a61
+H Authorization: Bearer {{ .carer_jwt }}
+B {"app": "AAPSClient", "date": 946684800001, "envelope": "abc"}
+ASSERT_STATUS 201
+
+######
+# On the site API, with the same JWT, the caregiver reads everything and changes only treatments
+######
+
+NAME carer_site_glucose
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+SET site_glucose_id {{ dig "carer_site_glucose.result.items.0.id" }}
+
+NAME carer_site_device_statuses
+GET http://{{ site }}/data/device-status
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+SET site_devicestatus_id {{ dig "carer_site_device_statuses.result.items.0.id" }}
+
+NAME carer_site_profiles
+GET http://{{ site }}/presets/profiles
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+SET site_profile_id {{ dig "carer_site_profiles.result.items.0.id" }}
+
+NAME carer_site_cannot_add_glucose
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"reading": 2.2, "reading_type": "sgv"}
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_change_glucose
+POST http://{{ site }}/data/glucose/{{ .site_glucose_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"reading": 2.2}
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_delete_glucose
+DELETE http://{{ site }}/data/glucose/{{ .site_glucose_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_delete_devicestatus
+DELETE http://{{ site }}/data/device-status/{{ .site_devicestatus_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_change_profile
+POST http://{{ site }}/presets/profiles/{{ .site_profile_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"name": "Other"}
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_delete_profile
+DELETE http://{{ site }}/presets/profiles/{{ .site_profile_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_site_cannot_add_food_preset
+POST http://{{ site }}/presets/food
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"name": "Toast", "carbs": 15}
+ASSERT_STATUS 403
+
+// Nothing was changed or deleted
+NAME site_glucose_kept
+GET http://{{ site }}/data/glucose/{{ .site_glucose_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME site_devicestatus_kept
+GET http://{{ site }}/data/device-status/{{ .site_devicestatus_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME site_profile_kept
+GET http://{{ site }}/presets/profiles/{{ .site_profile_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME carer_site_adds_temp_target
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"low_target": 8, "high_target": 9, "duration_minutes": 30, "notes": "Walk"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "carer" "@result.created_by_identity_name"
+SET site_temp_target_id {{ .carer_site_adds_temp_target.result.id }}
+
+NAME carer_site_changes_temp_target
+POST http://{{ site }}/data/temp-targets/{{ .site_temp_target_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"notes": "Long walk"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Long walk" "@result.notes"
+
+NAME carer_site_deletes_temp_target
+DELETE http://{{ site }}/data/temp-targets/{{ .site_temp_target_id }}
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME carer_site_adds_insulin
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"dose": 1.5, "notes": "Snack"}
+ASSERT_STATUS 201
+
+######
+# The PWD phone can still change and delete them all
+######
+
+NAME pwd_patches_entry_v3
+PATCH http://{{ .ns_site }}/api/v3/entries/{{ .entry_id }}
+H Authorization: Bearer {{ .pwd_jwt }}
+B {"sgv": 102}
+ASSERT_STATUS 200
+
+NAME pwd_patches_devicestatus_v3
+PATCH http://{{ .ns_site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ .pwd_jwt }}
+B {"uploaderBattery": 20}
+ASSERT_STATUS 200
+
+NAME pwd_replaces_profile_v1
+PUT http://{{ .ns_site }}/api/v1/profile?token={{ token }}
+B {"_id": "{{ .profile_id }}", "units": "mg/dL", "startDate": "{{ time 10 }}", "defaultProfile": "Default",
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC",
+    "sens": [{"value": 40, "time": "00:00", "timeAsSeconds": 0}],
+    "carbratio": [{"value": 10, "time": "00:00", "timeAsSeconds": 0}],
+    "basal": [{"value": 0.8, "time": "00:00", "timeAsSeconds": 0}],
+    "target_low": [{"value": 100, "time": "00:00", "timeAsSeconds": 0}],
+    "target_high": [{"value": 110, "time": "00:00", "timeAsSeconds": 0}]}}}
+ASSERT_STATUS 200
+
+NAME pwd_deletes_profile_v1
+DELETE http://{{ .ns_site }}/api/v1/profile/{{ .profile_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME pwd_deletes_devicestatus_v3
+DELETE http://{{ .ns_site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ .pwd_jwt }}
+ASSERT_STATUS 200
+
+NAME pwd_deletes_entries_v1
+DELETE http://{{ .ns_site }}/api/v1/entries/sgv?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"

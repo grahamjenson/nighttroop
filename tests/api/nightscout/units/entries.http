@@ -15,7 +15,8 @@ ASSERT_EQUALS "string" "@result.type"
 #########
 
 # Rules of Units
-# Writing glucose readings will not be effected by the users settings: a reading's units are its own, or guessed
+# Writing glucose readings will not be effected by the users settings: a reading's units are its own, or mg/dL when
+# it has none, as Nightscout's entries are, and never guessed from the value
 # Reading glucose readings is always in mg/dL, as Nightscout's clients read them, whatever the users settings
 
 
@@ -23,13 +24,14 @@ ASSERT_EQUALS "string" "@result.type"
 
 # We Create 4 different Entries
 # Labeled and Unlabeled, MGDL and MMOL, each given back in mg/dL
+# An unlabeled low value is mg/dL, not mmol/L
 
-NAME create_unlabeled_mmol_entry
+NAME create_unlabeled_low_entry
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
-B { "sgv": 4.2, "type": "sgv", "date": {{ itime 0 }}}
+B { "sgv": 28, "type": "sgv", "date": {{ itime 0 }}}
 ASSERT_STATUS 201
-ASSERT_EQUALS 75.676 "@result.sgv"
+ASSERT_EQUALS 28 "@result.sgv"
 ASSERT_EQUALS "sgv" "@result.type"
 ASSERT_EQUALS "mg/dL" "@result.units"
 
@@ -60,6 +62,27 @@ ASSERT_EQUALS 272.072 "@result.sgv"
 ASSERT_EQUALS "sgv" "@result.type"
 ASSERT_EQUALS "mg/dL" "@result.units"
 
+# A patch of an unlabeled low value is mg/dL too
+
+NAME patch_unlabeled_low_entry
+PATCH http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 25, "type": "sgv" }
+ASSERT_STATUS 200
+
+NAME get_patched_unlabeled_low_entry
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 25 "@result.sgv"
+ASSERT_EQUALS "mg/dL" "@result.units"
+
+NAME patch_unlabeled_entry_back
+PATCH http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 108, "type": "sgv" }
+ASSERT_STATUS 200
+
 
 ### READ
 
@@ -72,11 +95,11 @@ B {"value": "mg/dL"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dL" "@result.value"
 
-NAME get_create_unlabeled_mmol_entry_mgdl
-GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mmol_entry.result.identifier" }}
+NAME get_create_unlabeled_low_entry_mgdl
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_low_entry.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 75.676 "@result.sgv"
+ASSERT_EQUALS 28 "@result.sgv"
 ASSERT_EQUALS "mg/dL" "@result.units"
 
 NAME get_create_unlabeled_mgdl_entry_mgdl
@@ -107,11 +130,11 @@ B {"value": "mmol/L"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mmol/L" "@result.value"
 
-NAME get_create_unlabeled_mmol_entry_mmoll
-GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mmol_entry.result.identifier" }}
+NAME get_create_unlabeled_low_entry_mmoll
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_low_entry.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 75.676 "@result.sgv"
+ASSERT_EQUALS 28 "@result.sgv"
 ASSERT_EQUALS "mg/dL" "@result.units"
 
 NAME get_create_unlabeled_mgdl_entry_mmoll

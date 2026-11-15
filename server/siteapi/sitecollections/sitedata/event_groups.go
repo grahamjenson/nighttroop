@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"slices"
+	"time"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
@@ -55,6 +56,9 @@ func (s *EventGroupsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	if err != nil {
 		return nil, err
 	}
+	if err := atEarliestEvent(ctx, q, model); err != nil {
+		return nil, err
+	}
 	group, err := q.CreateEventGroup(ctx, sitemodels.EventGroupToCreate(model, siteContext))
 	if err != nil {
 		return nil, groupingError(err)
@@ -99,11 +103,7 @@ func (s *EventGroupsCollection) UpdateHTMXResponse(model *sitemodels.SiteEventGr
 // Get Model
 // /////
 func (s *EventGroupsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.EventGroupsBundle, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	row, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id})
+	row, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetEventGroup, sitedb.GetEventGroupParams{ID: id})
 	if err != nil {
 		return nil, err
 	}
@@ -121,11 +121,7 @@ func (s *EventGroupsCollection) GetHTMXResponse(model *sitemodels.SiteEventGroup
 // ///
 
 func (s *EventGroupsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.EventGroupsBundle, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := q.AllEventGroups(ctx, siteapiutils.QueryToAllEventGroups(query))
+	rows, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllEventGroups, siteapiutils.QueryToAllEventGroups(query))
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +139,7 @@ func (s *EventGroupsCollection) SearchTotals(ctx context.Context, collectionTx *
 }
 
 func (s *EventGroupsCollection) SearchHTMXResponse(models []*sitemodels.SiteEventGroup, query *apiutils.Query) templ.Component {
-	return site_data_templ.EventGroupsTable(models, query.Skip, query.Limit)
+	return site_data_templ.EventGroupsTable(models, query.Skip, query.Limit, query.Before)
 }
 
 // ///
@@ -183,6 +179,30 @@ func checkEventsPicked(groupType string, model *sitemodels.SiteEventGroup) *apiu
 	}
 	if !picked && !slices.Contains(sitemodels.ChangeTypes, groupType) {
 		return &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "Pick at least one event to group"}
+	}
+	return nil
+}
+
+// atEarliestEvent puts a new group at the time of its earliest event picked, of those within an hour of its time, as
+// its treatment is when the food was eaten or the insulin given, not when they were grouped
+func atEarliestEvent(ctx context.Context, q *sitedb.Queries, model *sitemodels.SiteEventGroup) error {
+	at := model.OccurredAt
+	if at == 0 {
+		at = time.Now().UnixMilli()
+	}
+	window := time.Hour.Milliseconds()
+	rows, err := q.EventsToGroup(ctx, sitedb.EventsToGroupParams{From: at - window, To: at + window})
+	if err != nil {
+		return err
+	}
+	picks, earliest := model.EventPicks(), int64(0)
+	for _, row := range rows {
+		if id := picks[row.Kind]; id != nil && *id == row.ID && (earliest == 0 || row.OccurredAt < earliest) {
+			earliest = row.OccurredAt
+		}
+	}
+	if earliest != 0 {
+		model.OccurredAt = earliest
 	}
 	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/push"
@@ -66,10 +67,8 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 	if err := push.CheckRegistration(registration); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err)
 	}
-	// Loop's remote commands, such as a bolus, go to the newest Loop registered, so only an identity that can add
-	// insulin doses registers Loop or Trio, the apps on the phone that doses; a read only one could take them
-	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) &&
-		!siteapiutils.HasPermission("insulin_doses", siteapiutils.ActionCreate, siteContext.IdentityModel) {
+	// Loop and Trio take remote commands from their registration, so one that cannot change the site's data registers neither
+	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) && !can.SeeDeviceTokens(siteContext.IdentityModel) {
 		return nil, apiutils.ErrForbidden
 	}
 	q, err := collectionTx.Control()
@@ -100,11 +99,7 @@ func (s *PushRegistrationsCollection) GetRow(ctx context.Context, collectionTx *
 	if err != nil {
 		return nil, apiutils.ErrNotFound
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetPushRegistration(ctx, controldb.GetPushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
+	return siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).GetPushRegistration, controldb.GetPushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
 		IdentityID: PushIdentity(siteContext)})
 }
 
@@ -118,11 +113,7 @@ func (s *PushRegistrationsCollection) GetHTMXResponse(model *sitemodels.PushRegi
 
 // SearchRows is the signed in identity's registrations, newest first
 func (s *PushRegistrationsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*controldb.PushRegistration, error) {
-	q, err := collectionTx.Control()
-	if err != nil {
-		return nil, err
-	}
-	return q.SearchPushRegistrations(ctx, controldb.SearchPushRegistrationsParams{SiteID: siteContext.SiteID,
+	return siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).SearchPushRegistrations, controldb.SearchPushRegistrationsParams{SiteID: siteContext.SiteID,
 		IdentityID: &siteContext.IdentityModel.ID, Skip: query.Skip, Limit: query.Limit})
 }
 
@@ -141,11 +132,7 @@ func (s *PushRegistrationsCollection) DeleteRow(ctx context.Context, collectionT
 	if err != nil {
 		return apiutils.ErrNotFound
 	}
-	q, err := collectionTx.Control()
-	if err != nil {
-		return err
-	}
-	_, err = q.DeletePushRegistration(ctx, controldb.DeletePushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
+	_, err = siteapiutils.ControlQuery(ctx, collectionTx, (*controldb.Queries).DeletePushRegistration, controldb.DeletePushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
 		IdentityID: PushIdentity(siteContext)})
 	return err
 }

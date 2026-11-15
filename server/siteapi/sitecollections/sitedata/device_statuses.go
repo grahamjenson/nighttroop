@@ -99,7 +99,7 @@ func (s *DeviceStatusesCollection) SearchTotals(ctx context.Context, collectionT
 
 func (s *DeviceStatusesCollection) SearchHTMXResponse(models []*sitemodels.SiteDeviceStatus, query *apiutils.Query) templ.Component {
 	if query.Device != nil {
-		return site_data_templ.DeviceStatusHistory(*query.Device, models, query.Skip, query.Limit)
+		return site_data_templ.DeviceStatusHistory(*query.Device, models, query.Skip, query.Limit, query.Before)
 	}
 	return site_data_templ.DeviceStatusGroups(models)
 }

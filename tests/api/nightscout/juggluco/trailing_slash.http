@@ -1,0 +1,89 @@
+# Juggluco adds each path to the Nightscout URL as it was typed, so a URL typed with a trailing "/" makes it ask for
+# //api/v1/entries. A path with repeated slashes is the same path with one slash, and needs the same auth.
+
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+######
+# API v1, with the api-secret header
+######
+
+NAME juggluco_slash_post_entries_v1
+POST http://{{ site }}//api/v1/entries
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [{"type":"sgv","device":"3MH000TEST","date":{{ dayms -1 600 }},"sgv":123,"direction":"Flat"},{"type":"sgv","device":"3MH000TEST","date":{{ dayms -1 605 }},"sgv":128,"direction":"Flat"}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME juggluco_slash_get_entries_json_v1
+GET http://{{ site }}//api/v1/entries.json?find[date][$gte]={{ dayms -1 590 }}&find[date][$lte]={{ dayms -1 610 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 128 "@0.sgv"
+
+// More slashes, and slashes in the middle of the path, are one slash too
+NAME juggluco_slashes_get_entries_v1
+GET http://{{ site }}///api//v1///entries?find[date][$gte]={{ dayms -1 590 }}&find[date][$lte]={{ dayms -1 610 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+// The path with one slash is as it was
+NAME juggluco_one_slash_get_entries_v1
+GET http://{{ site }}/api/v1/entries.json?find[date][$gte]={{ dayms -1 590 }}&find[date][$lte]={{ dayms -1 610 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+// Repeated slashes do not get past the auth
+NAME juggluco_slash_no_token_v1
+GET http://{{ site }}//api/v1/entries.json
+ASSERT_STATUS 401
+
+NAME juggluco_slash_no_token_post_v1
+POST http://{{ site }}//api/v1/entries
+H Content-Type: application/json
+B [{"type":"sgv","device":"3MH000TEST","date":{{ dayms -1 615 }},"sgv":140}]
+ASSERT_STATUS 401
+
+######
+# API v3, with a JWT
+######
+
+NAME juggluco_slash_gettoken
+GET http://{{ site }}//api/v2/authorization/request/{{ token }}
+ASSERT_STATUS 200
+SET juggluco_slash_jwt {{ .juggluco_slash_gettoken.token }}
+
+NAME juggluco_slash_post_entry_v3
+POST http://{{ site }}//api/v3/entries
+H Authorization: Bearer {{ .juggluco_slash_jwt }}
+H Content-Type: application/json
+B {"app":"Juggluco","device":"3MH000TEST","date":{{ dayms -1 620 }},"sgv":131,"direction":"Flat","type":"sgv","utcOffset":0,"identifier":"54534554-3030-3048-50ee-1236eeeeeeee"}
+ASSERT_STATUS 201
+
+NAME juggluco_slash_get_entry_v3
+GET http://{{ site }}//api/v3/entries/54534554-3030-3048-50ee-1236eeeeeeee
+H Authorization: Bearer {{ .juggluco_slash_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 131 "@result.sgv"
+
+NAME juggluco_slash_no_token_v3
+GET http://{{ site }}//api/v3/entries
+ASSERT_STATUS 401
+
+// v3's version needs no token, with one slash or more
+NAME juggluco_slash_version_v3
+GET http://{{ site }}//api/v3/version
+ASSERT_STATUS 200
+
+######
+# Socket.IO keeps the slash at the end of its path
+######
+
+NAME juggluco_slash_socketio_open
+GET http://{{ site }}//socket.io/?EIO=4&transport=polling
+ASSERT_STATUS 200

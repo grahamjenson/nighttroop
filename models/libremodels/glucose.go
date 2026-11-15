@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -68,7 +69,7 @@ func ReadingToCreate(r Reading, createdByIdentityName string) sitedb.CreateGluco
 	}
 	if r.TrendArrow != nil {
 		if direction, ok := trendDirections[*r.TrendArrow]; ok {
-			params.Direction = &direction
+			params.Trend = nightscoutmodels.DirectionTrend(&direction)
 		}
 	}
 	return params

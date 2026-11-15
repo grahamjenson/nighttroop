@@ -53,8 +53,8 @@ type CreateMapConverter interface {
 	//
 	// goverter:ignore Notes Reason MeasurementMethod
 	// goverter:map . ReadingType | SetReadingType
-	// goverter:map Trend Delta
 	// goverter:map RSSI Rssi
+	// goverter:map Direction Trend | DirectionTrend
 	EntryToCreate(source Entry, ctx ConverterContext) sitedb.CreateGlucoseReadingParams
 
 	///////
@@ -67,6 +67,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
+	// goverter:map GI Gi
 	//
 	FoodToCreate(source Food, ctx ConverterContext) sitedb.CreateFoodPresetParams
 
@@ -177,6 +178,9 @@ func ShortStringToString(source types.ShortString) string {
 	return string(source)
 }
 func SanitizedStringToString(source types.SanitizedString) string {
+	return string(source)
+}
+func ClientIDToString(source types.ClientID) string {
 	return string(source)
 }
 func SetReadingType(source Entry) string {

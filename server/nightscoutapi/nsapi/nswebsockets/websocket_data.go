@@ -152,13 +152,13 @@ func clientData(collection nsutils.Collection, record nsutils.Document) (string,
 	return "", nil, false
 }
 
-// mgdl is a glucose value in mg/dL, as the client data always has it, from the site's units
+// mgdl is an entry's glucose value in mg/dL, as the client data always has it, from its units, mg/dL when it has none
 func mgdl(value any, units any) any {
 	glucose, ok := value.(float64)
 	if !ok {
 		return value
 	}
-	var from *consts.Units
+	from := new(consts.UnitsMGDL)
 	if parsed, err := consts.ParseUnits(fmt.Sprint(units)); err == nil {
 		from = &parsed
 	}

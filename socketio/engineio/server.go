@@ -16,6 +16,13 @@ import (
 	"golang.org/x/time/rate"
 )
 
+type closingKey struct{}
+
+// WithClosing is ctx for an HTTP server's BaseContext, so each session opened through it is closed when closing ends
+func WithClosing(ctx, closing context.Context) context.Context {
+	return context.WithValue(ctx, closingKey{}, closing)
+}
+
 // Config is how a Server runs its sessions; zero values take the defaults
 type Config struct {
 	PingInterval     time.Duration // how often the server (v4) or client (v3) pings, 25s by default
@@ -25,7 +32,8 @@ type Config struct {
 	MaxBuffered      int           // how many packets can wait for a session's next poll before it is closed, 1,000 by default
 	MaxBufferedBytes int           // how many bytes of them can wait before it is closed, 2MB by default
 	MaxPacketRate    float64       // how many packets a second a client may send, averaged, 20 by default; it may burst 5 seconds' worth
-	// CheckOrigin decides which browser origins may open a websocket; nil allows only the server's own origin, and clients that send none
+	// CheckOrigin decides which browser origins may open a websocket; nil allows only the server's own origin (see
+	// sameOrigin), and clients that send none
 	CheckOrigin func(*http.Request) bool
 	// ClientKey is who a handshake is from, such as its IP. A client may have at most MaxUnauthorized sessions open that
 	// are not yet authorized (see Session.Authorize), MaxSessions by default, so it cannot take every session.
@@ -172,6 +180,13 @@ func (s *Server) open(r *http.Request, version int, upgrades []string) (*Session
 	session.client = client
 	s.sessions[session.id] = session
 	s.mu.Unlock()
+	// A session ends as the HTTP server shuts down, as Shutdown does not wait for or close websockets
+	if closing, ok := r.Context().Value(closingKey{}).(context.Context); ok {
+		stop := context.AfterFunc(closing, func() { session.Close("server shutting down") })
+		session.mu.Lock()
+		session.stopClosing = stop
+		session.mu.Unlock()
+	}
 
 	open := openPayload{
 		SID:          session.id,
@@ -301,12 +316,16 @@ type Session struct {
 	probing   bool // the client is upgrading, so a poll is ended at once, as it waits for its poll to end to upgrade
 	posting   bool
 	closed    bool
+	reason    string // why it closed, for a close handler set after
 	onMessage func(data string)
 	onClose   func(reason string)
 	notify    chan struct{} // wakes the waiting poll, or the websocket writer
 	upgrade   chan struct{} // closed once the session is on a websocket
 	alive     chan struct{} // a pong (v4) or ping (v3) came
 	done      chan struct{}
+
+	// stopClosing stops the session being closed as the server shuts down, once it is closed
+	stopClosing func() bool
 }
 
 func newSession(server *Server, r *http.Request, version int) *Session {
@@ -343,11 +362,18 @@ func (s *Session) OnMessage(handler func(data string)) {
 	s.mu.Unlock()
 }
 
-// OnClose sets the handler called once when the session closes
+// OnClose sets the handler called once when the session closes. One set once it is closed, as the server can close a
+// session after its open packet is sent but before onConnection sets it, is called at once.
 func (s *Session) OnClose(handler func(reason string)) {
 	s.mu.Lock()
-	s.onClose = handler
+	closed, reason := s.closed, s.reason
+	if !closed {
+		s.onClose = handler
+	}
 	s.mu.Unlock()
+	if closed && handler != nil {
+		handler(reason)
+	}
 }
 
 // Done is closed when the session closes
@@ -387,9 +413,13 @@ func (s *Session) Close(reason string) {
 		s.mu.Unlock()
 		return
 	}
-	s.closed = true
-	onClose, ws := s.onClose, s.ws
+	s.closed, s.reason = true, reason
+	onClose, ws, stopClosing := s.onClose, s.ws, s.stopClosing
 	s.mu.Unlock()
+
+	if stopClosing != nil {
+		stopClosing()
+	}
 
 	s.server.remove(s.id)
 	close(s.done)

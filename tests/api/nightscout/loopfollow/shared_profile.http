@@ -1,0 +1,100 @@
+# LoopFollow reads Loop's device token, bundle identifier and override presets from the newest profile's loopSettings.
+# If AAPS or the careportal then sends a profile without them, that profile has Loop's newest loopSettings, so
+# LoopFollow can still control Loop. A read only token gets them without the device token.
+# See docs/clients/loopfollow.md.
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME loop_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 60 }}", "units": "mg/dL", "enteredBy": "Loop",
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}},
+    "loopSettings": {"dosingEnabled": true, "maximumBolus": 10, "bundleIdentifier": "com.ABCDE12345.loopkit.Loop", "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+        "overridePresets": [{"name": "Running", "symbol": "🏃", "insulinNeedsScaleFactor": 0.8, "targetRange": [140, 160], "duration": 3600}]}}
+ASSERT_STATUS 200
+
+NAME aaps_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "LocalProfile1", "startDate": "{{ time 10 }}", "units": "mg/dl", "enteredBy": "AAPS",
+    "store": {"LocalProfile1": {"dia": 5, "units": "mg/dl", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.9}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 12}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}}
+ASSERT_STATUS 200
+
+######
+# With the pwd token: AAPS's profile, with Loop's loopSettings
+######
+
+NAME current_profile
+GET http://{{ site }}/api/v1/profile/current?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "LocalProfile1" "@defaultProfile"
+ASSERT_EQUALS 0.9 "@store.LocalProfile1.basal.0.value"
+ASSERT_EQUALS null "@store.Default"
+ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0" "@loopSettings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@loopSettings.bundleIdentifier"
+ASSERT_EQUALS "Running" "@loopSettings.overridePresets.0.name"
+ASSERT_EQUALS 140 "@loopSettings.overridePresets.0.targetRange.0"
+
+# LoopFollow's profile read (NightscoutUtils, ProfileManager)
+NAME newest_profile
+GET http://{{ site }}/api/v1/profiles.json?count=1&find[startDate][$lte]={{ utctime -1 }}.000Z&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "LocalProfile1" "@0.defaultProfile"
+ASSERT_EXISTS "@0.store.LocalProfile1"
+ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0" "@0.loopSettings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
+ASSERT_EQUALS "Running" "@0.loopSettings.overridePresets.0.name"
+
+NAME v3_profile
+GET http://{{ site }}/api/v3/profile?limit=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "LocalProfile1" "@result.0.defaultProfile"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@result.0.loopSettings.bundleIdentifier"
+
+######
+# With the read only token: Loop's loopSettings without the device token
+######
+
+NAME read_current_profile
+GET http://{{ site }}/api/v1/profile/current?token={{ read_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "LocalProfile1" "@defaultProfile"
+ASSERT_EQUALS null "@loopSettings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@loopSettings.bundleIdentifier"
+ASSERT_EQUALS "Running" "@loopSettings.overridePresets.0.name"
+
+NAME read_newest_profile
+GET http://{{ site }}/api/v1/profiles.json?count=1&token={{ read_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "LocalProfile1" "@0.defaultProfile"
+ASSERT_EQUALS null "@0.loopSettings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
+
+######
+# A profile older than Loop's is not changed, and a profile's own loopSettings are kept
+######
+
+NAME older_profiles
+GET http://{{ site }}/api/v1/profiles.json?count=2&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Default" "@1.defaultProfile"
+ASSERT_EQUALS 10 "@1.loopSettings.maximumBolus"
+
+NAME careportal_older_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Old", "startDate": "{{ time 120 }}", "units": "mg/dl", "enteredBy": "careportal",
+    "store": {"Old": {"dia": 5, "units": "mg/dl", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.7}], "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 12}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}}
+ASSERT_STATUS 200
+
+NAME all_profiles
+GET http://{{ site }}/api/v1/profiles.json?count=3&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS "Old" "@2.defaultProfile"
+ASSERT_EQUALS null "@2.loopSettings"

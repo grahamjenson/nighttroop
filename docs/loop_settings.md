@@ -15,8 +15,8 @@ records sent often:
 **Note:** A device status's `openaps` and `loop` objects are not settings. They are the loop's state at that cycle:
 IOB, COB, predictions, what it enacted, and the cycle's effective ISF, CR and targets.
 
-They change every cycle, and stay in `device_reports.loop_status_json` only on each device's newest report with one.
-The truncate every 10 minutes clears the others', keeping IOB and COB in their own columns.
+They change every cycle, and stay in `device_reports.loop_status_json`. After a day, the truncate every 10 minutes
+removes their predictions, and keeps the rest.
 
 ## The table
 
@@ -52,6 +52,8 @@ record is.
   status's `configuration`.
 - The converters (`DBToNightscoutProfileStore`, `DBToNightscoutDeviceStatus`) find the row by its ID: one primary key
   lookup for each record that has one.
+- A profile sent with no Loop or Trio settings gets Loop's last seen set (`SearchLoopSettings`, limit 1), if that set
+  is not newer than the profile. Thus LoopFollow can control Loop after AAPS or the careportal sends a profile.
 - The reference is not a foreign key. A set deleted on the site's Loop Settings page keeps its records. They read back
   as if no settings were sent, and nothing else changes.
 
@@ -83,7 +85,8 @@ each setting whose value differs, was added or was removed, old then new:
 - Truncating a site (My Account's Truncate, or control's) deletes the sets no profile or device report refers to
   (examples: their device reports were thinned or deleted, or a profile was deleted).
 - It keeps each app's last seen set: its current settings, which AAPS sends only now and then.
-- The job every 10 minutes does not delete sets.
+- The job every 10 minutes does not delete sets. Exception: if a site is over 1.5 times its DB size limit, the job
+  deletes them as a truncate does.
 - Deleting a site deletes its whole DB, with `loop_settings`.
 
 ## History and limits

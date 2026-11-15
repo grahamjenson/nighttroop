@@ -14,8 +14,10 @@
 
 ## Set up
 
-1. Add a device as Other (it works on an mmol/L site too). For remote commands, use a Read & Write token
+1. Add a device as Other (it works on an mmol/L site too). For remote commands, use a Caregiver token
    (`device_read_write`). Else, read-only is sufficient.
+   - A Caregiver token reads everything and writes treatments. It cannot change readings, profiles or device
+     statuses. LoopFollow sends no uploads, so it needs no more.
 2. Give LoopFollow the token. Nighttroop has no API secret.
 3. Connect. LoopFollow shows "OK (Read & Write)" or "OK (Read)".
 4. Optional: turn on "Enable WebSocket" to poll sooner.
@@ -113,6 +115,15 @@ missing, never a number or null.
 | Loop (`DeviceStatusLoop.swift`) | `loop.failureReason` (any value, even null, shows a failure), `loop.enacted`, `loop.iob.iob`, `loop.cob.cob`, `loop.predicted.values` (`[Double]`, force cast), `loop.recommendedBolus`, `loop.recommendedTempBasal.timestamp` (force cast to a String), `loop.timestamp`; top level `override.active`, `override.multiplier`, `override.currentCorrectionRange.minValue`/`maxValue` |
 | Trio, OpenAPS (`DeviceStatusOpenAPS.swift`) | `device`, `openaps.failureReason`, `openaps.iob.iob`. From `openaps.suggested` (else `enacted`): `deliverAt` or `timestamp`, `ISF`, `CR`, `COB` (else from `reason`), `sensitivityRatio`, `eventualBG`, `current_target`, `TDD`, and `predBGs.ZT`, `IOB`, `COB`, `UAM` as `[Double]` |
 
+Nighttroop keeps each status's `loop` or `openaps` as sent for 1 day, also when a newer status comes in:
+
+- After 1 day, it removes only the predictions: `loop.predicted.values`, and `predBGs` in `openaps.suggested` and
+  `openaps.enacted`.
+- All other fields stay as sent, e.g. `loop.timestamp`, `loop.recommendedBolus`, `loop.predicted.startDate`,
+  `suggested.bg`, `ISF`, `sensitivityRatio`, `eventualBG`, `current_target`, `CR`, `TDD`, `deliverAt`.
+- LoopFollow reads `predicted.values` and `predBGs` with optional casts. A status without them shows no prediction.
+- The status keeps its `srvModified`, so a client that has it does not read it again.
+
 ### Profile
 
 - When: every 10 minutes (30 with the socket), and when the socket says the profile changed (`Task/ProfileTask.swift`,
@@ -127,6 +138,10 @@ missing, never a number or null.
     `targetRange` as `[Double]`, `insulinNeedsScaleFactor`, `symbol`).
   - Trio Remote Control: top level `deviceToken`, `bundleIdentifier`, `isAPNSProduction`, `teamID`, `expirationDate`
     (string), `overridePresets` (`name`, `duration`, `percentage`, `target` in mg/dL).
+- On a site that AAPS or the careportal also sends profiles to, the newest profile is not always Loop's.
+  - If the newest has no `loopSettings` and no Trio remote settings, Nighttroop adds Loop's last `loopSettings`.
+  - Its `store` and `defaultProfile` stay as sent. A read only token gets no `deviceToken`.
+  - Test: `loopfollow/shared_profile.http`.
 
 ### Database size and Nightscout tab
 
@@ -179,6 +194,7 @@ missing, never a number or null.
 | Site, sensor and insulin ages | Works (with the zoneless fix) |
 | **Device status** | |
 | Loop and OpenAPS objects, IOB, COB, predictions | Works |
+| Statuses older than the newest, in the last day | Fixed: kept as sent for 1 day, then without predictions (were IOB and COB only, 10 minutes after a newer status). `loopfollow/devicestatus_day.http` |
 | `pump.clock`, `manufacturer`, `model` | Works since #516 (were dropped) |
 | `pump.pumpID` | Works since #514, while the status as sent is kept (as the latest is) |
 | `pump.bolusIncrement` | Fixed, while the status as sent is kept (as the latest is) |
@@ -187,8 +203,9 @@ missing, never a number or null.
 | Loop `override` | Works since #516 (was dropped) |
 | **Profile** | |
 | Profile, schedules, Loop's `loopSettings` | Works |
+| Loop's `loopSettings` after AAPS or the careportal sends a newer profile | Fixed: the newer profile has Loop's last `loopSettings` (was none, so no remote commands) |
 | Trio remote control settings and override presets | Works since #516 (were dropped) |
-| `deviceToken`s for a read-only token | Left out, as they push to the phone. Remote commands need a Read & Write token |
+| `deviceToken`s for a read-only token | Left out, as they push to the phone. Remote commands need a Caregiver or PWD phone token |
 | Profile history for the remote diagnostics | Fixed: `count` gives that many stores, newest first (was only the latest) |
 | **Other** | |
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |

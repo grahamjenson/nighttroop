@@ -38,9 +38,6 @@ const FIRST_READ_ONLY_NAME = "read_only"
 
 const CONTROL_IDENTITY_SUBDOMAIN = "control"
 
-// The control DB schema has CHECK(length(name) <= 32) on identity names
-const MAX_IDENTITY_NAME_LENGTH = 32
-
 type ControlRole string
 
 const (
@@ -205,3 +202,12 @@ const MaxProfilesPerStore = 20
 // ProfilesDefaultCount is how many profile stores a v1 profile search gives with no count, Nightscout's
 // PROFILES_DEFAULT_COUNT
 const ProfilesDefaultCount = 10
+
+// EntriesDefaultCount is how many readings a v1 search gives with no count, Nightscout's ENTRIES_DEFAULT_COUNT
+const EntriesDefaultCount = 10
+
+// DeviceStatusDefaultCount is how many device statuses a v1 search gives with no count, as Nightscout gives
+const DeviceStatusDefaultCount = 10
+
+// TreatmentsDefaultCount is how many treatments a v1 search with no count and no find gives, as Nightscout gives
+const TreatmentsDefaultCount = 100

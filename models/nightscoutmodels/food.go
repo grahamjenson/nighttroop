@@ -18,7 +18,8 @@ type Food struct {
 	Category    *types.ShortString `json:"category,omitempty"`
 	Subcategory *types.ShortString `json:"subcategory,omitempty"`
 
-	Unit *FoodUnit `json:"unit,omitempty"`
+	// Unit is the unit of its portion, e.g. g, ml or pcs
+	Unit *types.ShortString `json:"unit,omitempty"`
 
 	AbsorptionTimeMinutes *types.FlexibleInt64   `json:"absorptionTime,omitempty"`
 	PreBolus              *types.FlexibleFloat64 `json:"preBolus,omitempty"`
@@ -28,7 +29,8 @@ type Food struct {
 	Fibre                 *types.FlexibleFloat64 `json:"fibre,omitempty"`
 	Energy                *types.FlexibleFloat64 `json:"energy,omitempty"`
 	GI                    *types.FlexibleFloat64 `json:"gi,omitempty"`
-	Portions              *types.FlexibleFloat64 `json:"portions,omitempty"`
+	// Portions is Nightscout's portion, the amount the carbs are for, as AAPS reads it; portions is read too
+	Portions *types.FlexibleFloat64 `json:"portion,omitempty"`
 
 	// QuickPick
 	HideAfterUse *types.FlexibleBool  `json:"hideafteruse,omitempty"`
@@ -47,7 +49,8 @@ type Food struct {
 func (t *Food) UnmarshalJSON(data []byte) error {
 	type Alias Food
 	aux := struct {
-		ID *types.IdentifierString `json:"_id"`
+		ID       *types.IdentifierString `json:"_id"`
+		Portions *types.FlexibleFloat64  `json:"portions"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -62,21 +65,12 @@ func (t *Food) UnmarshalJSON(data []byte) error {
 	if t.Identifier == nil {
 		t.Identifier = aux.ID
 	}
+	if t.Portions == nil {
+		t.Portions = aux.Portions
+	}
 
 	return nil
 }
-
-type FoodUnit string
-
-const (
-	UnitGram      FoodUnit = "g"
-	UnitOunce     FoodUnit = "oz"
-	UnitPortion   FoodUnit = "portion"
-	UnitServing   FoodUnit = "serving"
-	UnitItem      FoodUnit = "item"
-	UnitPackage   FoodUnit = "package"
-	UnitContainer FoodUnit = "container"
-)
 
 func (t Food) GetDevice() *string {
 	return t.Device.Stringp()

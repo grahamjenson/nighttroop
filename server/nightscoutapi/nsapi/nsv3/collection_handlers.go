@@ -89,6 +89,10 @@ func Remove(store nsutils.Store) http.HandlerFunc {
 
 		permanent := r.URL.Query().Get("permanent") == "true"
 		err := store.Delete(r.Context(), collection, identifier, permanent)
+		// Deleting one deleted already changes nothing and is done, as in Nightscout
+		if err == nsutils.ErrGone && !permanent {
+			err = nil
+		}
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return

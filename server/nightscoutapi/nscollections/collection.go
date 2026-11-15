@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -51,19 +52,75 @@ type CollectionDB[NS, DM any] interface {
 	HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error)
 	// Delete deletes a model, softly or, when permanent, for good
 	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
+	// Rows are the rows, by their table, the model is stored as, for its values to be checked against their columns'
+	// limits
+	Rows(nsModel NS) []sitedb.TableRow
 }
 
-// CollectionDeduplicator is a CollectionDB that looks for a model already stored that a new one repeats, which a
-// create returns instead. It is only asked when the new model has a date, as with nothing to match on it would find
-// the newest.
-type CollectionDeduplicator[NS, DM any] interface {
-	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
+// CollectionKeyed is a CollectionDB whose model sent again is found by its fallback key when no model has its
+// identifier, as Nightscout finds a duplicate (treatment-fallback-key.js, API v3's dedup). Without one, only the
+// identifier finds a duplicate. A create returns the duplicate instead.
+type CollectionKeyed[NS, DM any] interface {
+	FallbackKey() FallbackKey[NS, DM]
 }
 
-// CollectionDateDeduplicator is a CollectionDeduplicator whose duplicate is found by its date even for a model named
-// by an identifier none has, as Nightscout upserts an entry on its date and type whatever its _id
-type CollectionDateDeduplicator interface {
-	DuplicateWhateverItsIdentifier()
+// FallbackKey is the fields a model sent again has the same as the one stored. An app's own id, like xDrip+'s uuid or
+// Loop's syncIdentifier, is the identifier of a model sent without an _id, so the identifier finds it first.
+type FallbackKey[NS, DM any] struct {
+	// search finds at most limit models stored at the sent model's date, with an index of the key's fields
+	search func(q *sitedb.Queries, ctx context.Context, nsModel NS, limit int64) ([]*DM, error)
+	// fields must each be the same, each compared in its own way
+	fields []KeyField[NS, DM]
+	// clientIDs are the apps' ids a stored model can have: one stored with an app's id is found only by its identifier
+	clientIDs []func(stored *DM) *string
+	// whateverItsIdentifier finds a duplicate of a model sent with an identifier no model has too, as Nightscout
+	// upserts an entry on its date and type whatever its _id
+	whateverItsIdentifier bool
+}
+
+// KeyField is a field of a fallback key, and whether the model sent and the one stored have the same value of it
+type KeyField[NS, DM any] struct {
+	name string
+	same func(sent NS, stored *DM) bool
+}
+
+// maxSameTimeDuplicates is how many models a fallback key's search looks through for the one sent again, so a lookup
+// stays cheap however many are stored at one date
+const maxSameTimeDuplicates = 10
+
+// matches is whether the model sent repeats the one stored, by the key
+func (k FallbackKey[NS, DM]) matches(sent NS, stored *DM) bool {
+	for _, clientID := range k.clientIDs {
+		if clientID(stored) != nil {
+			return false
+		}
+	}
+	for _, field := range k.fields {
+		if !field.same(sent, stored) {
+			return false
+		}
+	}
+	return true
+}
+
+// sameDate is a fallback key's date, the same to the millisecond
+func sameDate[NS SharedNSFields, DM SharedDBFields]() KeyField[NS, DM] {
+	return KeyField[NS, DM]{"date", func(sent NS, stored *DM) bool {
+		return sent.GetDate() != nil && *sent.GetDate() == (*stored).GetOccurredAt()
+	}}
+}
+
+// sameDevice is a fallback key's device. A model sent without one has the same as any, as a search without one finds
+// any device's.
+func sameDevice[NS SharedNSFields, DM SharedDBFields]() KeyField[NS, DM] {
+	return KeyField[NS, DM]{"device", func(sent NS, stored *DM) bool {
+		return kept(sent.GetDevice(), (*stored).GetCreatedByDeviceName())
+	}}
+}
+
+// kept is whether a value sent leaves the stored one as it is, as one not sent does
+func kept[T comparable](sent *T, stored *T) bool {
+	return sent == nil || (stored != nil && *sent == *stored)
 }
 
 // CollectionStored is a CollectionDB that does more once a model created, replaced or refreshed is stored, outside its
@@ -72,34 +129,24 @@ type CollectionStored[NS any] interface {
 	Stored(ctx context.Context, siteContext *httputils.SiteContext, nsModel NS)
 }
 
-// CollectionRefresher is a CollectionDeduplicator whose duplicate takes the values of the model repeating it, as
-// Nightscout upserts one sent again, or, for treatments, the values it sends, keeping the rest. It is the duplicate as it is now, and whether it changed, which it must not when
-// the values are the same, so a client sending a batch again changes nothing.
+// CollectionRefresher is a CollectionDB whose duplicate is updated with the model repeating it, as Nightscout
+// upserts one sent again, when Refreshes says it is: the fields sent are merged into it as a patch's are. A duplicate
+// the merge leaves as it is is not changed, so a client sending a batch again changes nothing.
 type CollectionRefresher[NS, DM any] interface {
-	Refresh(q *sitedb.Queries, ctx context.Context, nsModel NS, duplicate *DM, cc nightscoutmodels.ConverterContext) (*DM, bool, error)
+	Refreshes(nsModel NS, duplicate *DM) bool
 }
 
-// CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented
+// CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented.
+// RewriteModel writes the model, converted as a create converts it, over the stored one, every column, keeping its
+// identifier, when and by whom it was created, and what of it only the database has, which may depend on the fields
+// sent.
 type CollectionPatcher[NS, DM any] interface {
-	UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, identifier string, old *DM, cc nightscoutmodels.ConverterContext) (*DM, error)
-}
-
-// patchValidator is a CollectionPatcher that checks a patch other than as Validate checks a replace
-type patchValidator[NS, DM any] interface {
-	ValidatePatch(nsModel NS, old *DM) *nsutils.HTTPError
+	RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel NS, sent map[string]any, stored *DM, cc nightscoutmodels.ConverterContext) (*DM, error)
 }
 
 // CollectionTypeDeleter is a CollectionDB that can delete everything of one type; without it that is not implemented
 type CollectionTypeDeleter interface {
 	DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error)
-}
-
-// first is the first row a search found, or nil when it found none
-func first[T any](rows []*T, err error) (*T, error) {
-	if err != nil || len(rows) == 0 {
-		return nil, err
-	}
-	return rows[0], nil
 }
 
 // named is a CollectionDB's name and how it makes its database models into Nightscout models, for it to embed
@@ -159,27 +206,22 @@ func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext
 
 // document is a database model as this collection's document
 func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteContext) nsutils.Document {
-	return stored[NS]{meta: row(*dbModel), model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
+	m := row(*dbModel)
+	// One kept with no offset, a food or a profile sent without one, is in the site's timezone, as Nightscout's
+	if (*dbModel).GetUtcOffsetMinutes() == nil {
+		m.utcOffset = siteUtcOffset(siteContext)(m.occurredAt)
+	}
+	return stored[NS]{meta: m, model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
-func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError) {
-	m := c.db
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data", "error", err, "collection", m.Name())
-		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
-	}
-
-	if err := ValidateInputData(data); err != nil {
-		return nil, false, err
-	}
-	if nsModel, err = withUtcOffset(data, nsModel, siteUtcOffset(siteContext)); err != nil {
-		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
-	}
-
-	if err := m.Validate(nsModel, nil); err != nil {
-		return nil, false, err
+// Create stores the model sent, see createdModel, unless it has a duplicate, see duplicate. It returns the duplicate,
+// and true, in its place, refreshed when the model is the duplicate sent again, see resent.
+func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.createdModel(ctx, siteContext, data, &left)
+	if httpErr != nil {
+		return nil, false, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -188,49 +230,23 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 	defer tx.Rollback()
 
-	var duplicateDBModel *DM
-	identifier := nsModel.GetIdentifier()
-	if identifier != nil && *identifier == "" {
-		identifier = nil
+	identifier := sentIdentifier(nsModel)
+	duplicate, httpErr := c.duplicate(ctx, q, nsModel, identifier)
+	if httpErr != nil {
+		return nil, false, httpErr
 	}
-	if identifier != nil {
-		if duplicateDBModel, httpErr = c.identifiedDuplicate(q, ctx, *identifier); httpErr != nil {
-			return nil, false, httpErr
-		}
-		if duplicateDBModel == nil {
-			duplicateDBModel, err = c.dateDuplicate(q, ctx, nsModel)
-		}
-	} else if deduplicator, ok := any(m).(CollectionDeduplicator[NS, DM]); ok && nsModel.GetDate() != nil {
-		duplicateDBModel, err = deduplicator.GetDuplicate(q, ctx, nsModel)
+	if duplicate != nil && resent(nsModel, identifier, duplicate) {
+		return c.repeated(ctx, siteContext, tx, q, nsModel, data, duplicate)
 	}
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
-	}
-	// One naming its identifier repeats its duplicate only with the same date, as Loop sends a dose again when it ends
-	if duplicateDBModel != nil && (identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicateDBModel).GetOccurredAt())) {
-		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel)
-	}
-	if duplicateDBModel != nil {
-		return c.document(duplicateDBModel, siteContext), true, nil
+	if duplicate != nil {
+		return c.document(duplicate, siteContext), true, nil
 	}
 
-	dbModel, err := m.CreateModel(
-		q,
-		ctx,
-		nsModel,
-		converterContext(siteContext),
-		identifier,
-	)
-
+	dbModel, err := c.db.CreateModel(q, ctx, nsModel, converterContext(siteContext), identifier)
 	if httpErr := c.stored(dbModel, err, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
-	// A treatment or reading sent already deleted, isValid false, is kept soft deleted, as Nightscout keeps isValid as
-	// sent: AAPS uploads what it deleted while offline so, and a follower would otherwise take it as current. Presets
-	// are not soft deleted, so a food or profile keeps being stored as before.
-	valid, sent := data["isValid"].(bool)
-	deleted := sent && !valid && (m.Name() == string(nsutils.Treatments) || m.Name() == string(nsutils.Entries))
+	deleted := c.sentDeleted(data)
 	if deleted {
 		if dbModel, httpErr = c.softDeleted(q, ctx, dbModel); httpErr != nil {
 			return nil, false, httpErr
@@ -248,6 +264,67 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	siteContext.PublishModelChange(events.Created, dbModel)
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbModel, siteContext), false, nil
+}
+
+// createdModel is the model a create stores: the fields sent decoded, given the site's UTC offset when sent without
+// one, and checked, its values out of their columns' limits left out and said in left
+func (c Collection[NS, DM]) createdModel(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, left *leftOut) (NS, *nsutils.HTTPError) {
+	nsModel, httpErr := c.decode(data, left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data", "error", httpErr, "collection", c.db.Name())
+		return nsModel, httpErr
+	}
+	if httpErr := ValidateInputData(data); httpErr != nil {
+		return nsModel, httpErr
+	}
+	nsModel, err := withUtcOffset(data, nsModel, siteUtcOffset(siteContext))
+	if err != nil {
+		return nsModel, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	if httpErr := c.db.Validate(nsModel, nil); httpErr != nil {
+		return nsModel, httpErr
+	}
+	return c.withinLimits(data, nsModel, left)
+}
+
+// sentIdentifier is the identifier the model was sent with, nil when it was sent with none or an empty one
+func sentIdentifier[NS SharedNSFields](nsModel NS) *string {
+	identifier := nsModel.GetIdentifier()
+	if identifier != nil && *identifier == "" {
+		return nil
+	}
+	return identifier
+}
+
+// duplicate is the model stored that a create repeats: the one with the identifier sent, see identifiedDuplicate,
+// or else the one the fallback key finds, see keyDuplicate. It is nil when there is none.
+func (c Collection[NS, DM]) duplicate(ctx context.Context, q *sitedb.Queries, nsModel NS, identifier *string) (*DM, *nsutils.HTTPError) {
+	if identifier != nil {
+		identified, httpErr := c.identifiedDuplicate(q, ctx, *identifier)
+		if httpErr != nil || identified != nil {
+			return identified, httpErr
+		}
+	}
+	keyed, err := c.keyDuplicate(q, ctx, nsModel, identifier != nil)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	return keyed, nil
+}
+
+// resent is whether the model sent is its duplicate sent again, which can refresh it. One naming its identifier is
+// sent again only with the same date, as Loop sends a dose again when it ends.
+func resent[NS SharedNSFields, DM SharedDBFields](nsModel NS, identifier *string, duplicate *DM) bool {
+	return identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicate).GetOccurredAt())
+}
+
+// sentDeleted is whether a treatment or reading was sent already deleted, isValid false. It is kept soft deleted, as
+// Nightscout keeps isValid as sent: AAPS uploads what it deleted while offline so, and a follower would otherwise take
+// it as current. Presets are not soft deleted, so a food or profile keeps being stored as before.
+func (c Collection[NS, DM]) sentDeleted(data map[string]any) bool {
+	valid, sent := data["isValid"].(bool)
+	return sent && !valid && (c.db.Name() == string(nsutils.Treatments) || c.db.Name() == string(nsutils.Entries))
 }
 
 // softDeleted deletes the model just stored, as a soft delete does, and is it deleted
@@ -268,40 +345,107 @@ func (c Collection[NS, DM]) softDeleted(q *sitedb.Queries, ctx context.Context, 
 	return deleted, nil
 }
 
-// repeated is the duplicate a create repeats, given the create's values when the collection is a CollectionRefresher
-func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
+// repeated is the duplicate a create repeats, with the fields sent merged into it when the collection is a
+// CollectionRefresher and it refreshes the duplicate. It is changed only when its document is, so the write is rolled
+// back otherwise, before the duplicate's document is read, as that may read the site's database.
+func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, data map[string]any, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
 	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
-	if !ok {
+	if !ok || !refresher.Refreshes(nsModel, duplicate) {
+		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
-	refreshed, changed, err := refresher.Refresh(q, ctx, nsModel, duplicate, converterContext(siteContext))
-	if httpErr := c.stored(refreshed, err, "refresh"); httpErr != nil {
+	refreshed, merged, httpErr := c.rewrite(ctx, siteContext, q, duplicate, data, &leftOut{})
+	if httpErr != nil {
 		return nil, false, httpErr
 	}
-	if changed {
-		if httpErr := c.commit(tx, "refresh"); httpErr != nil {
-			return nil, false, httpErr
-		}
-		siteContext.PublishModelChange(events.Updated, refreshed)
-		c.afterStored(ctx, siteContext, nsModel)
+	if !c.changed(duplicate, refreshed, siteContext) {
+		_ = tx.Rollback()
+		return c.document(duplicate, siteContext), true, nil
 	}
+	if httpErr := c.commit(tx, "refresh"); httpErr != nil {
+		return nil, false, httpErr
+	}
+	siteContext.PublishModelChange(events.Updated, refreshed)
+	c.afterStored(ctx, siteContext, merged)
 	return c.document(refreshed, siteContext), true, nil
+}
+
+// rewrite writes the stored model's document with the fields sent merged into it, see merged, converted and checked as
+// a create's model is, over the stored model, its values out of their columns' limits left out and said in left. It is
+// the model written and the merged one.
+func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.SiteContext, q *sitedb.Queries, stored *DM, data map[string]any, left *leftOut) (*DM, NS, *nsutils.HTTPError) {
+	var merged NS
+	rewriter, ok := any(c.db).(CollectionPatcher[NS, DM])
+	if !ok {
+		return nil, merged, nsutils.ErrNotImplemented
+	}
+	document, merged, err := c.merged(stored, data, siteContext)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to merge the fields sent into the stored model", "error", err, "collection", c.db.Name())
+		return nil, merged, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	if err := c.db.Validate(merged, stored); err != nil {
+		slog.ErrorContext(ctx, "validation failed for the merged model", "error", err, "collection", c.db.Name())
+		return nil, merged, err
+	}
+	merged, httpErr := c.withinLimits(document, merged, left)
+	if httpErr != nil {
+		return nil, merged, httpErr
+	}
+	rewritten, err := rewriter.RewriteModel(q, ctx, merged, data, stored, converterContext(siteContext))
+	if httpErr := c.stored(rewritten, err, "update"); httpErr != nil {
+		return nil, merged, httpErr
+	}
+	return rewritten, merged, nil
+}
+
+// merged is the stored model's document, as API v1 gives it, with the fields sent laid over it, see mergeFields, read
+// as a create reads the fields sent. Its duration is the stored whole minutes, as API v3 gives them, as API v1 gives the
+// nearest ones, which would be read back as sent
+func (c Collection[NS, DM]) merged(stored *DM, data map[string]any, siteContext *httputils.SiteContext) (map[string]any, NS, error) {
+	var model NS
+	var aliases map[string][]string
+	var glucose []string
+	var defaultUnits *consts.Units
+	if fields, ok := any(model).(interface{ MergeAliases() map[string][]string }); ok {
+		aliases = fields.MergeAliases()
+	}
+	if fields, ok := any(model).(interface{ GlucoseFields() []string }); ok {
+		glucose = fields.GlucoseFields()
+	}
+	if fields, ok := any(model).(interface{ DefaultGlucoseUnits() *consts.Units }); ok {
+		defaultUnits = fields.DefaultGlucoseUnits()
+	}
+	storedDocument := c.document(stored, withoutSiteDB(siteContext))
+	document := storedDocument.Fields(false)
+	if minutes, ok := storedDocument.Fields(true)["duration"]; ok {
+		document["duration"] = minutes
+	}
+	document = mergeFields(document, data, aliases, glucose, defaultUnits)
+	err := utils.ConvertViaJSON(document, &model)
+	return document, model, err
+}
+
+// changed is whether the rewritten model's document is not the stored one's, the server's fields left out
+func (c Collection[NS, DM]) changed(stored, rewritten *DM, siteContext *httputils.SiteContext) bool {
+	before, _ := json.Marshal(c.db.ToNS(stored, withoutSiteDB(siteContext)))
+	after, _ := json.Marshal(c.db.ToNS(rewritten, withoutSiteDB(siteContext)))
+	return string(before) != string(after)
+}
+
+// withoutSiteDB is the site's context for a document read in a write's transaction, which holds the site's database:
+// what the document reads from another table, a device status's configuration, is left out, and the collection keeps
+// it unless it is sent
+func withoutSiteDB(siteContext *httputils.SiteContext) *httputils.SiteContext {
+	without := *siteContext
+	without.SiteDB = nil
+	return &without
 }
 
 // identifiedDuplicate is the model a create naming its identifier repeats, as in Nightscout, which keeps that
 // identifier so the client can delete or replace the document by it. Its only duplicate is the model stored with
 // it; one deleted is removed for good, as a client like Juggluco changes a document by deleting it and creating it
 // again.
-// dateDuplicate is the model one named by an identifier none has repeats, found by its date, for a collection that
-// finds duplicates so whatever their identifier
-func (c Collection[NS, DM]) dateDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error) {
-	deduplicator, ok := any(c.db).(CollectionDeduplicator[NS, DM])
-	if _, byDate := any(c.db).(CollectionDateDeduplicator); !ok || !byDate || nsModel.GetDate() == nil {
-		return nil, nil
-	}
-	return deduplicator.GetDuplicate(q, ctx, nsModel)
-}
-
 func (c Collection[NS, DM]) identifiedDuplicate(q *sitedb.Queries, ctx context.Context, identifier string) (*DM, *nsutils.HTTPError) {
 	if httpErr := nsutils.ValidateIdentifierIsntBad(identifier); httpErr != nil {
 		return nil, httpErr
@@ -323,9 +467,30 @@ func (c Collection[NS, DM]) identifiedDuplicate(q *sitedb.Queries, ctx context.C
 	return nil, nil
 }
 
+// keyDuplicate is the model a model sent with a date repeats, found by the collection's fallback key. A model sent
+// with an identifier, which no model has, has one only for a key that finds one whatever its identifier.
+func (c Collection[NS, DM]) keyDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS, identified bool) (*DM, error) {
+	keyed, ok := any(c.db).(CollectionKeyed[NS, DM])
+	if !ok || nsModel.GetDate() == nil {
+		return nil, nil
+	}
+	key := keyed.FallbackKey()
+	if identified && !key.whateverItsIdentifier {
+		return nil, nil
+	}
+	found, err := key.search(q, ctx, nsModel, maxSameTimeDuplicates)
+	for _, stored := range found {
+		if key.matches(nsModel, stored) {
+			return stored, nil
+		}
+	}
+	return nil, err
+}
+
+// Get is the model with the identifier. As in Nightscout, a deleted one is gone, unless deleted ones are asked for.
 func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
-	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, query.IncludeDeleted)
+	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, true)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -335,6 +500,9 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 	}
 	if dbModel == nil {
 		return nil, nsutils.ErrNotFound
+	}
+	if (*dbModel).GetDeletedAt() != nil && !query.IncludeDeleted {
+		return nil, nsutils.ErrGone
 	}
 	return c.document(dbModel, siteContext), nil
 }
@@ -437,6 +605,13 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 	// A permanent delete can remove a record already soft deleted.
 	deleted, err := m.GetModel(q, ctx, identifier, permanent)
 	if err == sql.ErrNoRows || (err == nil && deleted == nil) {
+		// One deleted already is gone rather than not found, which API v3 answers as done, as Nightscout does, since
+		// AAPS deletes a treatment again after a follower's delete reaches it
+		if !permanent {
+			if gone, goneErr := m.GetModel(q, ctx, identifier, true); goneErr == nil && gone != nil && (*gone).GetDeletedAt() != nil {
+				return nsutils.ErrGone
+			}
+		}
 		return nsutils.ErrNotFound
 	}
 	if err != nil {
@@ -518,7 +693,11 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 	}
 	defer tx.Rollback()
 
-	query.IncludeDeleted, query.Skip, query.Limit = false, 0, apiquery.MaxQueryLimit
+	// A count deletes that many, the newest first, as iAPS deletes its newest override
+	query.IncludeDeleted, query.Skip = false, 0
+	if !query.CountGiven {
+		query.Limit = apiquery.MaxQueryLimit
+	}
 	found, err := c.db.SearchModels(q, ctx, query)
 	for i := 0; err == nil && i < len(found); i++ {
 		_, err = c.db.Delete(q, ctx, (*found[i]).GetID(), false)
@@ -537,13 +716,14 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 	return len(found), nil
 }
 
-func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
 	m := c.db
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
-		return nil, false, nsutils.BadDataBodyError
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data to model", "error", httpErr, "collection", m.Name())
+		return nil, false, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -564,18 +744,22 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		kept := *(*replaced).GetUtcOffsetMinutes()
 		offset = func(int64) int64 { return kept }
 	}
+	var err error
 	if nsModel, err = withUtcOffset(data, nsModel, offset); err != nil {
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
-	// One created with an identifier none has repeats one at its date, for a collection that finds them so
+	if nsModel, httpErr = c.withinLimits(data, nsModel, &left); httpErr != nil {
+		return nil, false, httpErr
+	}
+	// One created with an identifier none has repeats one with its fallback key, for a key that finds them so
 	if replaced == nil {
-		duplicate, err := c.dateDuplicate(q, ctx, nsModel)
+		duplicate, err := c.keyDuplicate(q, ctx, nsModel, true)
 		if err != nil {
 			slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 			return nil, false, nsutils.ErrInternal
 		}
 		if duplicate != nil {
-			return c.repeated(ctx, siteContext, tx, q, nsModel, duplicate)
+			return c.repeated(ctx, siteContext, tx, q, nsModel, data, duplicate)
 		}
 	}
 
@@ -644,17 +828,19 @@ func (c Collection[NS, DM]) validateReplace(ctx context.Context, nsModel NS, rep
 	return nil
 }
 
-func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (nsutils.Document, *nsutils.HTTPError) {
+// Patch merges the fields sent into the stored model, see rewrite, once it is found not deleted, not modified since the
+// client read it, and the fields sent do not change those a document keeps
+func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (_ nsutils.Document, httpErr *nsutils.HTTPError) {
 	m := c.db
-	patcher, ok := any(m).(CollectionPatcher[NS, DM])
-	if !ok {
+	if _, ok := any(m).(CollectionPatcher[NS, DM]); !ok {
 		return nil, nsutils.ErrNotImplemented
 	}
-	var nsModel NS
-	err := utils.ConvertViaJSON(data, &nsModel)
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
-		return nil, nsutils.BadDataBodyError
+	var left leftOut
+	defer func() { left.record(ctx, httpErr) }()
+	nsModel, httpErr := c.decode(data, &left)
+	if httpErr != nil {
+		slog.ErrorContext(ctx, "failed to map data to model", "error", httpErr, "collection", m.Name())
+		return nil, httpErr
 	}
 
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -685,25 +871,8 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, err
 	}
 
-	validate := m.Validate
-	if v, ok := any(m).(patchValidator[NS, DM]); ok {
-		validate = v.ValidatePatch
-	}
-	if err := validate(nsModel, updateingModel); err != nil {
-		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
-		return nil, err
-	}
-
-	dbModel, err := patcher.UpdateModel(
-		q,
-		ctx,
-		nsModel,
-		identifier,
-		updateingModel,
-		converterContext(siteContext),
-	)
-
-	if httpErr := c.stored(dbModel, err, "patch"); httpErr != nil {
+	dbModel, _, httpErr := c.rewrite(ctx, siteContext, q, updateingModel, data, &left)
+	if httpErr != nil {
 		return nil, httpErr
 	}
 	if err := q.MarkStale(ctx, updateingModel); err != nil {
@@ -792,7 +961,7 @@ func (c Collection[NS, DM]) commit(tx *sql.Tx, action string) *nsutils.HTTPError
 	return nil
 }
 
-// stored is the error from storing a model with CreateModel or UpdateModel. Data the database refuses is the client's error.
+// stored is the error from storing a model with CreateModel or RewriteModel. Data the database refuses is the client's error.
 func (c Collection[NS, DM]) stored(dbModel *DM, err error, action string) *nsutils.HTTPError {
 	if err != nil {
 		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {

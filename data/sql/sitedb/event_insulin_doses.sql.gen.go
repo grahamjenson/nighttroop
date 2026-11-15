@@ -12,14 +12,18 @@ import (
 
 const allInsulinDoses = `-- name: AllInsulinDoses :many
 
-SELECT id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
+SELECT id, dose, dose_type, extended_dose, extended_duration_ms, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllInsulinDosesParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -28,7 +32,13 @@ type AllInsulinDosesParams struct {
 // READ
 // ------
 func (q *Queries) AllInsulinDoses(ctx context.Context, arg AllInsulinDosesParams) ([]*InsulinDose, error) {
-	rows, err := q.query(ctx, q.allInsulinDosesStmt, allInsulinDoses, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allInsulinDosesStmt, allInsulinDoses,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +50,8 @@ func (q *Queries) AllInsulinDoses(ctx context.Context, arg AllInsulinDosesParams
 			&i.ID,
 			&i.Dose,
 			&i.DoseType,
-			&i.SplitNow,
-			&i.SplitExt,
+			&i.ExtendedDose,
+			&i.ExtendedDurationMs,
 			&i.Automatic,
 			&i.IsBasalInsulin,
 			&i.InsulinType,
@@ -79,8 +89,8 @@ INSERT INTO insulin_doses (
     id,
     dose,
     dose_type,
-    split_now,
-    split_ext,
+    extended_dose,
+    extended_duration_ms,
     automatic,
     is_basal_insulin,
     insulin_type,
@@ -98,15 +108,15 @@ INSERT INTO insulin_doses (
     created_by_identity_id
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, dose, dose_type, extended_dose, extended_duration_ms, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateInsulinDoseParams struct {
 	ID                    string
 	Dose                  float64
 	DoseType              *string
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string
@@ -130,8 +140,8 @@ func (q *Queries) CreateInsulinDose(ctx context.Context, arg CreateInsulinDosePa
 		arg.ID,
 		arg.Dose,
 		arg.DoseType,
-		arg.SplitNow,
-		arg.SplitExt,
+		arg.ExtendedDose,
+		arg.ExtendedDurationMs,
 		arg.Automatic,
 		arg.IsBasalInsulin,
 		arg.InsulinType,
@@ -151,8 +161,8 @@ func (q *Queries) CreateInsulinDose(ctx context.Context, arg CreateInsulinDosePa
 		&i.ID,
 		&i.Dose,
 		&i.DoseType,
-		&i.SplitNow,
-		&i.SplitExt,
+		&i.ExtendedDose,
+		&i.ExtendedDurationMs,
 		&i.Automatic,
 		&i.IsBasalInsulin,
 		&i.InsulinType,
@@ -176,7 +186,7 @@ func (q *Queries) CreateInsulinDose(ctx context.Context, arg CreateInsulinDosePa
 }
 
 const getInsulinDose = `-- name: GetInsulinDose :one
-SELECT id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, dose, dose_type, extended_dose, extended_duration_ms, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetInsulinDoseParams struct {
@@ -191,8 +201,8 @@ func (q *Queries) GetInsulinDose(ctx context.Context, arg GetInsulinDoseParams) 
 		&i.ID,
 		&i.Dose,
 		&i.DoseType,
-		&i.SplitNow,
-		&i.SplitExt,
+		&i.ExtendedDose,
+		&i.ExtendedDurationMs,
 		&i.Automatic,
 		&i.IsBasalInsulin,
 		&i.InsulinType,
@@ -247,8 +257,110 @@ func (q *Queries) InsulinDoseTotals(ctx context.Context) (*InsulinDoseTotalsRow,
 	return &i, err
 }
 
+const rewriteInsulinDose = `-- name: RewriteInsulinDose :one
+
+UPDATE insulin_doses SET
+    id = ?1,
+    dose = ?2,
+    dose_type = ?3,
+    extended_dose = ?4,
+    extended_duration_ms = ?5,
+    automatic = ?6,
+    is_basal_insulin = ?7,
+    insulin_type = ?8,
+    unabsorbed = ?9,
+    icfg_json = ?10,
+    notes = ?11,
+    reason = ?12,
+    utc_offset_minutes = ?13,
+    occurred_at = ?14,
+    created_by_app_name = ?15,
+    created_by_device_name = ?16,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?17 AS TEXT),
+    updated_by_identity_id = ?18
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, dose, dose_type, extended_dose, extended_duration_ms, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteInsulinDoseParams struct {
+	ID                    string
+	Dose                  float64
+	DoseType              *string
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
+	Automatic             *bool
+	IsBasalInsulin        *bool
+	InsulinType           *string
+	Unabsorbed            *float64
+	IcfgJson              *string
+	Notes                 *string
+	Reason                *string
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteInsulinDose writes every column CreateInsulinDose does over the insulin dose with the ID, as a Nightscout
+// update writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+func (q *Queries) RewriteInsulinDose(ctx context.Context, arg RewriteInsulinDoseParams) (*InsulinDose, error) {
+	row := q.queryRow(ctx, q.rewriteInsulinDoseStmt, rewriteInsulinDose,
+		arg.ID,
+		arg.Dose,
+		arg.DoseType,
+		arg.ExtendedDose,
+		arg.ExtendedDurationMs,
+		arg.Automatic,
+		arg.IsBasalInsulin,
+		arg.InsulinType,
+		arg.Unabsorbed,
+		arg.IcfgJson,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i InsulinDose
+	err := row.Scan(
+		&i.ID,
+		&i.Dose,
+		&i.DoseType,
+		&i.ExtendedDose,
+		&i.ExtendedDurationMs,
+		&i.Automatic,
+		&i.IsBasalInsulin,
+		&i.InsulinType,
+		&i.Unabsorbed,
+		&i.IcfgJson,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchInsulinDoses = `-- name: SearchInsulinDoses :many
-SELECT id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
+SELECT id, dose, dose_type, extended_dose, extended_duration_ms, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -362,8 +474,8 @@ func (q *Queries) SearchInsulinDoses(ctx context.Context, arg SearchInsulinDoses
 			&i.ID,
 			&i.Dose,
 			&i.DoseType,
-			&i.SplitNow,
-			&i.SplitExt,
+			&i.ExtendedDose,
+			&i.ExtendedDurationMs,
 			&i.Automatic,
 			&i.IsBasalInsulin,
 			&i.InsulinType,
@@ -418,12 +530,11 @@ func (q *Queries) SoftDeleteInsulinDose(ctx context.Context, arg SoftDeleteInsul
 }
 
 const updateInsulinDose = `-- name: UpdateInsulinDose :one
-
 UPDATE insulin_doses SET
     dose_type = COALESCE(?1, dose_type),
     dose = COALESCE(?2, dose),
-    split_now = COALESCE(?3, split_now),
-    split_ext = COALESCE(?4, split_ext),
+    extended_dose = COALESCE(?3, extended_dose),
+    extended_duration_ms = COALESCE(?4, extended_duration_ms),
     automatic = COALESCE(?5, automatic),
     is_basal_insulin = COALESCE(?6, is_basal_insulin),
     insulin_type = COALESCE(NULLIF(CAST(?7 AS TEXT), ''), insulin_type),
@@ -437,14 +548,14 @@ UPDATE insulin_doses SET
     updated_by_identity_id = ?12,
     updated_by_identity_name = ?13
 WHERE id = ?14 AND deleted_at IS NULL
-RETURNING id, dose, dose_type, split_now, split_ext, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, dose, dose_type, extended_dose, extended_duration_ms, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateInsulinDoseParams struct {
 	DoseType              *string
 	Dose                  *float64
-	SplitNow              *float64
-	SplitExt              *float64
+	ExtendedDose          *float64
+	ExtendedDurationMs    *int64
 	Automatic             *bool
 	IsBasalInsulin        *bool
 	InsulinType           *string
@@ -457,15 +568,12 @@ type UpdateInsulinDoseParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateInsulinDose(ctx context.Context, arg UpdateInsulinDoseParams) (*InsulinDose, error) {
 	row := q.queryRow(ctx, q.updateInsulinDoseStmt, updateInsulinDose,
 		arg.DoseType,
 		arg.Dose,
-		arg.SplitNow,
-		arg.SplitExt,
+		arg.ExtendedDose,
+		arg.ExtendedDurationMs,
 		arg.Automatic,
 		arg.IsBasalInsulin,
 		arg.InsulinType,
@@ -482,8 +590,8 @@ func (q *Queries) UpdateInsulinDose(ctx context.Context, arg UpdateInsulinDosePa
 		&i.ID,
 		&i.Dose,
 		&i.DoseType,
-		&i.SplitNow,
-		&i.SplitExt,
+		&i.ExtendedDose,
+		&i.ExtendedDurationMs,
 		&i.Automatic,
 		&i.IsBasalInsulin,
 		&i.InsulinType,

@@ -43,10 +43,14 @@ func TestEventGroupsClient(t *testing.T) {
 	require.Equal(t, 30.0, *byKind[nighttroop.FoodIntakeId].Amount)
 	require.False(t, byKind[nighttroop.InsulinDoseId].Picked)
 
-	// A change has no events to pick, and an unknown type is refused
+	// A site change can have only a glucose, a prime has no events to pick, and an unknown type is refused
 	change, err := site.ListEventGroupChoicesWithResponse(ctx, &nighttroop.ListEventGroupChoicesParams{GroupType: nighttroop.GroupSiteChange}, auth)
 	require.NoError(t, err)
-	require.Empty(t, *change.JSON200.Result)
+	require.Len(t, *change.JSON200.Result, 1)
+	require.Equal(t, nighttroop.GlucoseReadingId, (*change.JSON200.Result)[0].Kind)
+	prime, err := site.ListEventGroupChoicesWithResponse(ctx, &nighttroop.ListEventGroupChoicesParams{GroupType: nighttroop.GroupPrime}, auth)
+	require.NoError(t, err)
+	require.Empty(t, *prime.JSON200.Result)
 	unknown, err := site.ListEventGroupChoicesWithResponse(ctx, &nighttroop.ListEventGroupChoicesParams{GroupType: "Unknown"}, auth)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusBadRequest, unknown.StatusCode())

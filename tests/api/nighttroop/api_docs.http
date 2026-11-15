@@ -9,6 +9,9 @@ ASSERT_EXISTS "@paths./site"
 NAME create_site_for_api_docs
 POST http://localhost/site
 ASSERT_STATUS 200
+// The site's URL and its Nightscout URL, so a client does not build them
+ASSERT_CONTAINS "localhost" "@url"
+ASSERT_CONTAINS "ns.localhost" "@pwd_ns_url"
 
 NAME get_site_openapi
 GET http://{{ .create_site_for_api_docs.site_subdomain }}.localhost/openapi.json

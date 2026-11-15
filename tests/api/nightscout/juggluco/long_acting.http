@@ -1,0 +1,56 @@
+# Juggluco's long-acting insulin, see docs/clients/juggluco.md. writetreatment (common.cpp) and writetreatmentV3
+# (uploadtreatment.cpp) send an amount the user mapped to long-acting insulin with eventType "<none>",
+# "notes":"Long-Acting" and its label as insulinType. It is a Correction Bolus with isBasalInsulin, as AAPS sends a
+# bolus of basal insulin, so a follower does not count it as a bolus.
+
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME juggluco_put_long_acting_v1
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"_id":"ba2e3bbbbbbbbbbbbbbbbbbb","date":{{ dayms -1 605 }},"eventType":"<none>","enteredBy":"Juggluco","created_at":"{{ date -1 }}T10:05:00.000Z","notes":"Long-Acting","carbs":null,"insulin":14,"insulinType":"Levemir"}
+ASSERT_STATUS 200
+
+// A rapid-acting amount is a bolus
+NAME juggluco_put_rapid_acting_v1
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B {"_id":"ba0e12bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 606 }},"eventType":"<none>","enteredBy":"Juggluco","created_at":"{{ date -1 }}T10:06:00.000Z","notes":"Rapid-Acting","carbs":null,"insulin":4.5,"insulinType":"Novorapid"}
+ASSERT_STATUS 200
+
+NAME juggluco_long_acting_v1
+GET http://{{ site }}/api/v1/treatments?find[date][$gte]={{ dayms -1 600 }}&find[date][$lte]={{ dayms -1 610 }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Correction Bolus" "@0.eventType"
+ASSERT_EQUALS null "@0.isBasalInsulin"
+ASSERT_EQUALS 14 "@1.insulin"
+ASSERT_EQUALS "Correction Bolus" "@1.eventType"
+ASSERT_EQUALS true "@1.isBasalInsulin"
+ASSERT_EQUALS "Levemir" "@1.insulinType"
+
+// v3, with "test V3" ticked: the JWT from NightPost.gettoken, then writetreatmentV3's body
+NAME juggluco_gettoken
+GET http://{{ site }}/api/v2/authorization/request/{{ token }}
+ASSERT_STATUS 200
+SET juggluco_jwt {{ .juggluco_gettoken.token }}
+
+NAME juggluco_post_long_acting_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"identifier":"0fffffff-ffff-ffff-ffff-3bffffffffff","_id":"ba2e3cbbbbbbbbbbbbbbbbbb","date":{{ dayms -1 620 }},"utcOffset":0,"eventType":"<none>","app":"Juggluco","notes":"Long-Acting","insulin":20,"insulinType":"Tresiba"}
+ASSERT_STATUS 201
+
+NAME juggluco_long_acting_v3
+GET http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-3bffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Correction Bolus" "@result.eventType"
+ASSERT_EQUALS true "@result.isBasalInsulin"
+ASSERT_EQUALS 20 "@result.insulin"

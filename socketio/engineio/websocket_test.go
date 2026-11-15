@@ -121,3 +121,53 @@ func TestWebSocketRejectsBadInput(t *testing.T) {
 		})
 	}
 }
+
+// TestSameOrigin checks which Origins may open a websocket to a Host, with the Origin scheme's default port
+// sent on either side or neither
+func TestSameOrigin(t *testing.T) {
+	tests := []struct {
+		origin  string
+		host    string
+		allowed bool
+	}{
+		{"", "site.example", true},
+		{"https://site.example", "site.example", true},
+		{"https://site.example", "site.example:443", true},
+		{"https://site.example:443", "site.example", true},
+		{"https://site.example:443", "site.example:443", true},
+		{"http://site.example", "site.example:80", true},
+		{"http://site.example:80", "site.example", true},
+		{"wss://site.example", "site.example:443", true},
+		{"ws://site.example:80", "site.example", true},
+		{"HTTPS://Site.Example", "SITE.example:443", true},
+		{"http://localhost:3000", "localhost:3000", true},
+		{"http://[::1]:80", "[::1]", true},
+		// a port other than the scheme's default is a different origin
+		{"https://site.example:8443", "site.example", false},
+		{"https://site.example", "site.example:8443", false},
+		{"https://site.example", "site.example:4443", false},
+		{"https://site.example", "site.example:80", false},
+		{"http://site.example", "site.example:443", false},
+		{"http://site.example:443", "site.example", false},
+		{"http://localhost:3000", "localhost:3001", false},
+		// another host is refused, however its port is written
+		{"https://other.example", "site.example", false},
+		{"https://other.example:443", "site.example:443", false},
+		{"https://site.example.other.example", "site.example", false},
+		{"https://site.example@other.example", "site.example", false},
+		{"https://sub.site.example", "site.example", false},
+		{"null", "site.example", false},
+		{"site.example", "site.example", false},
+		{"://site.example", "site.example", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.origin+" to "+tt.host, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "http://"+tt.host+"/socket.io/", nil)
+			r.Host = tt.host
+			if tt.origin != "" {
+				r.Header.Set("Origin", tt.origin)
+			}
+			require.Equal(t, tt.allowed, sameOrigin(r))
+		})
+	}
+}

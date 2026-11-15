@@ -29,3 +29,5 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS 150 "@0.sgv"
+// The reading takes the device of the last copy, as Nightscout sets the fields sent over the stored entry
+ASSERT_EQUALS "Trio" "@0.device"

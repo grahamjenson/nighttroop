@@ -84,8 +84,12 @@ type QueryValues struct {
 	// Trio's carbs and temp targets fetches, and who entered a treatment, as Trio and iAPS leave out their own
 	CarbsExists    *types.FlexibleBool `mapstructure:"carbsexists,omitempty" json:"carbsexists,omitempty"`
 	DurationExists *types.FlexibleBool `mapstructure:"durationexists,omitempty" json:"durationexists,omitempty"`
-	EnteredByEq    *types.ShortString  `mapstructure:"enteredbyeq,omitempty" json:"enteredbyeq,omitempty"`
-	EnteredByNin   *QueryStringArray   `mapstructure:"enteredbynin,omitempty" json:"enteredbynin,omitempty"`
+	// iAPS deletes insulin by find[bolus][$exists], manual glucose by find[glucose][$exists], and carbs by creation_date
+	InsulinExists     *types.FlexibleBool `mapstructure:"insulinexists,omitempty" json:"insulinexists,omitempty"`
+	GlucoseExists     *types.FlexibleBool `mapstructure:"glucoseexists,omitempty" json:"glucoseexists,omitempty"`
+	ClientCreatedAtEQ *types.DateInt      `mapstructure:"creationdateeq,omitempty" json:"creationdateeq,omitempty"`
+	EnteredByEq       *types.ShortString  `mapstructure:"enteredbyeq,omitempty" json:"enteredbyeq,omitempty"`
+	EnteredByNin      *QueryStringArray   `mapstructure:"enteredbynin,omitempty" json:"enteredbynin,omitempty"`
 
 	// Altering Return values or structure
 	// Limits
@@ -178,13 +182,18 @@ var forwardLookupName = map[string][]string{
 
 	"nameeq": {"name", "find[name][$eq]",
 		"defaultProfile", "find[defaultProfile][$eq]",
-		"device", "find[device][$eq]",
 		"app", "find[app][$eq]",
 		"subject", "find[subject][$eq]",
 	},
 
+	// The device that sent it, in every collection: v1's find[device] is read as its $eq
+	"deviceeq": {"device", "device$eq", "find[device][$eq]"},
+
 	"carbsexists":    {"carbs$exists", "find[carbs][$exists]"},
 	"durationexists": {"duration$exists", "find[duration][$exists]"},
+	"insulinexists":  {"insulin$exists", "find[insulin][$exists]", "find[bolus][$exists]"},
+	"glucoseexists":  {"glucose$exists", "find[glucose][$exists]"},
+	"creationdateeq": {"creation_date$eq", "find[creation_date][$eq]"},
 	"enteredbyeq":    {"enteredBy", "enteredBy$eq", "find[enteredBy][$eq]"},
 	"enteredbynin":   {"enteredBy$nin", "find[enteredBy][$nin]"},
 

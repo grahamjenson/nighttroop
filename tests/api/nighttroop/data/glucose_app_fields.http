@@ -34,11 +34,15 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 2 "@result.noise"
 ASSERT_EQUALS 141.7 "@result.unfiltered"
 
-// Each is still refused far outside real use, as a column of its own was
+// Sent to Nightscout, one far outside real use is left out, and the reading kept
 NAME noise_out_of_range
 POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
 B {"sgv": 124, "type": "sgv", "device": "xDrip", "noise": 5000}
-ASSERT_STATUS 400
+ASSERT_STATUS 200
+ASSERT_EQUALS 124 "@0.sgv"
+ASSERT_EQUALS null "@0.noise"
+
+// Each is still refused far outside real use on the site, as a column of its own was
 
 NAME rssi_out_of_range
 POST http://{{ site }}/data/glucose/{{ .reading_id }}

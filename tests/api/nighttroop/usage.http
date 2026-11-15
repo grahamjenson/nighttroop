@@ -1,0 +1,40 @@
+INCLUDE steps/new_site.steps
+
+// The site's admin reads its storage and truncates it, as on its Usage page
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET admin_jwt {{ .login_admin.token }}
+
+// The PWD phone is not an admin, so it cannot see the usage
+NAME usage_not_admin
+GET http://{{ site }}/usage
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// The usage has the DB size (null as a test's DB is in memory), its limit, and its tables, largest first
+NAME usage
+GET http://{{ site }}/usage
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_CONTAINS "size_kb" "@result"
+ASSERT_EQUALS 20480 "@result.limit_kb"
+ASSERT_EQUALS null "@result.before_size_kb"
+ASSERT_EXISTS "@result.tables.0.name"
+ASSERT_EXISTS "@result.tables.0.bytes"
+ASSERT_EXISTS "@result.tables.0.records"
+
+// A truncate gives the size after it, the size before it, and the tables again
+NAME truncate
+POST http://{{ site }}/usage/truncate
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_CONTAINS "size_kb" "@result"
+ASSERT_CONTAINS "before_size_kb" "@result"
+ASSERT_EQUALS 20480 "@result.limit_kb"
+ASSERT_EXISTS "@result.tables.0.name"

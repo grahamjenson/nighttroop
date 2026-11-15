@@ -3,7 +3,10 @@ package nscollections
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
+	"net/http"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -26,28 +29,38 @@ func NewEntriesCollection() CollectionStore {
 // Cannot change properties
 
 func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	if err := validateEntryMgdl(nsModel); err != nil {
+	if err := validateEntryDate(nsModel); err != nil {
+		return err
+	}
+	if err := validateEntryNotErrorCode(nsModel); err != nil {
 		return err
 	}
 	return validateEntryType(nsModel, dbModel)
 }
 
-// A patch without sgv or mbg leaves the reading as it is
-func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	if nsModel.SGV != nil || nsModel.MBG != nil {
-		if err := validateEntryMgdl(nsModel); err != nil {
-			return err
-		}
+// validateEntryNotErrorCode refuses a CGM's error code, a sgv of 1 to 12 (Dexcom's special values), as glucose out of
+// range, so a batch leaves it out: Nightscout shows one as ?, but a follower reading it as glucose, as Trio's
+// Nightscout CGM does, takes it for a severe low
+func validateEntryNotErrorCode(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
+	if nightscoutmodels.SetReadingType(nsModel) != "sgv" || nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxCGMErrorCode {
+		return nil
 	}
-	return validateEntryType(nsModel, dbModel)
+	return &nsutils.HTTPError{Status: http.StatusBadRequest, Column: "mgdl",
+		Message: nsutils.BadDataBodyErrorWithHint(fmt.Sprintf("sgv %v is a CGM error code, not glucose", *nsModel.Mgdl)).Message}
 }
 
-// Refuse glucose far outside real use, checked in mg/dL as it is stored
-func validateEntryMgdl(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
-	if nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxGlucoseMgdl {
-		return nsutils.BadGlucoseError
+// validateEntryDate refuses a reading dated well ahead of now, beyond a phone clock's error, as followers, Loop's and
+// Trio's Nightscout CGM among them, show the newest reading as the current one
+func validateEntryDate(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
+	if date := nsModel.GetDate(); date != nil && *date > time.Now().Add(consts.MaxFutureReading).UnixMilli() {
+		return nsutils.ErrFutureReading
 	}
 	return nil
+}
+
+// Rows are its reading, whose glucose is out of range when far outside real use, checked in mg/dL as it is stored
+func (c EntriesCollection) Rows(nsModel nightscoutmodels.Entry) []sitedb.TableRow {
+	return []sitedb.TableRow{{Table: "glucose_readings", Row: nightscoutmodels.EntryToCreate(nsModel, nightscoutmodels.ConverterContext{})}}
 }
 
 func validateEntryType(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
@@ -72,43 +85,30 @@ func (c EntriesCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 
-func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
-	// A reading at a date is the same one whichever device sent it, as Nightscout upserts an entry on its date and type:
-	// xDrip+ sends a careportal's BG Check back as its own meter reading, and Trio, with Nightscout as its CGM, uploads
-	// each reading it downloads under its own id and device
-	readingType := nightscoutmodels.SetReadingType(nsModel)
-	return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: 1}))
-}
-
-// DuplicateWhateverItsIdentifier finds a reading sent with an _id none has by its date and type, as Nightscout does
-func (c EntriesCollection) DuplicateWhateverItsIdentifier() {}
-
-// Refresh gives a reading sent again the values it was sent with, as Nightscout upserts a reading on its date and type:
-// xDrip4iOS smooths and rebuilds readings by sending them again without their _id. One of another type, or sent with
-// the values it has, is left as it is.
-func (c EntriesCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, bool, error) {
-	p := nightscoutmodels.EntryToUpdate(nsModel, cc)
-	if nightscoutmodels.SetReadingType(nsModel) != stored.ReadingType || (kept(p.Mgdl, &stored.Mgdl) && kept(p.Delta, stored.Delta) &&
-		kept(p.Direction, stored.Direction) && kept(signal(p.Noise), stored.Noise) && kept(p.Filtered, stored.Filtered) &&
-		kept(p.Unfiltered, stored.Unfiltered) && kept(signal(p.Rssi), stored.Rssi)) {
-		return stored, false, nil
+// FallbackKey is a reading's date and type, whichever device sent it and whatever its _id, as Nightscout upserts an
+// entry on its date and type: xDrip+ sends a careportal's BG Check back as its own meter reading, and Trio, with
+// Nightscout as its CGM, uploads each reading it downloads under its own id and device
+func (c EntriesCollection) FallbackKey() FallbackKey[nightscoutmodels.Entry, sitedb.GlucoseReading] {
+	return FallbackKey[nightscoutmodels.Entry, sitedb.GlucoseReading]{
+		search: func(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, limit int64) ([]*sitedb.GlucoseReading, error) {
+			readingType := nightscoutmodels.SetReadingType(nsModel)
+			return q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: limit})
+		},
+		fields: []KeyField[nightscoutmodels.Entry, sitedb.GlucoseReading]{
+			sameDate[nightscoutmodels.Entry, sitedb.GlucoseReading](),
+			{"type", func(sent nightscoutmodels.Entry, stored *sitedb.GlucoseReading) bool {
+				return nightscoutmodels.SetReadingType(sent) == stored.ReadingType
+			}},
+		},
+		whateverItsIdentifier: true,
 	}
-	p.ID = stored.ID
-	updated, err := q.UpdateGlucoseReading(ctx, p)
-	return updated, true, err
 }
 
-// kept is whether a value sent leaves the stored one as it is, as one not sent does
-func kept[T comparable](sent *T, stored *T) bool {
-	return sent == nil || (stored != nil && *sent == *stored)
-}
-
-// signal is a CGM's noise or rssi sent, nil for 0, which means it has none and is stored as NULL
-func signal(sent *float64) *float64 {
-	if sent != nil && *sent == 0 {
-		return nil
-	}
-	return sent
+// Refreshes a reading sent again of its type, as Nightscout upserts a reading on its date and type: xDrip4iOS smooths
+// and rebuilds readings by sending them again without their _id. As Nightscout $sets the fields sent, whoever sends
+// them, their device too, an xDrip+ follower's copy of a looper's reading overwrites it.
+func (c EntriesCollection) Refreshes(nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading) bool {
+	return nightscoutmodels.SetReadingType(nsModel) == stored.ReadingType
 }
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
@@ -131,11 +131,11 @@ func (c EntriesCollection) DeleteType(q *sitedb.Queries, ctx context.Context, ty
 	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString, Limit: apiquery.MaxQueryLimit})
 }
 
-func (c EntriesCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
-	updateParams := nightscoutmodels.EntryToUpdate(nsModel, uc)
-	updateParams.ID = identifier
-
-	return q.UpdateGlucoseReading(ctx, updateParams)
+// RewriteModel keeps the reading's notes and reason, from the site, and how it was measured, which an entry does not have
+func (c EntriesCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, _ map[string]any, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
+	params := nightscoutmodels.EntryToCreate(nsModel, cc)
+	params.ID, params.Notes, params.Reason, params.MeasurementMethod = stored.ID, stored.Notes, stored.Reason, stored.MeasurementMethod
+	return q.RewriteGlucoseReading(ctx, sitedb.RewriteGlucoseReadingParams(params))
 }
 
 func (c EntriesCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {

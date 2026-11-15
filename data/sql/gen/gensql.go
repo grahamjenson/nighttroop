@@ -62,6 +62,7 @@ func New{{.Name}}Statements(sqldb *sql.DB) (*{{.Name}}Statements, error) {
 
 func main() {
 	folder := flag.String("folder", "", "SQL file to embed")
+	limits := flag.Bool("limits", false, "write the columns' limits, z_limits.go")
 
 	flag.Parse()
 
@@ -90,6 +91,12 @@ func main() {
 	err = gen.BuildSQLC(*folder)
 	if err != nil {
 		log.Fatalf("Failed to build SQLC: %v", err)
+	}
+
+	if *limits {
+		if err := gen.BuildLimits(*folder); err != nil {
+			log.Fatalf("Failed to build limits: %v", err)
+		}
 	}
 
 }

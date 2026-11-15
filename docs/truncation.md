@@ -158,7 +158,9 @@ One every 5 minutes per device: phone battery, pump reservoir and battery, the l
 
 **Today** (`data/sql/sitedb/queries/truncate.sql`, every 10 minutes):
 
-- The loop status and pump as sent stay only on each device's newest report.
+- The loop status stays as sent for a day. After that, its predictions are removed (Loop's `predicted.values`, openaps'
+  `predBGs`).
+- The pump as sent stays only on each device's newest report.
 - Reports thin to every 10 minutes after an hour, 20 after a week, and hourly after two weeks.
 - All are deleted after 30 days.
 - The day's summary keeps the loop's IOB (total, basal, treatment) and COB every 5 minutes.
@@ -275,6 +277,9 @@ A day's summary cannot be rebuilt once its raw rows start to go. So:
 - A site over its limit is compacted with shorter ages (example: half of each), down to a floor: never less than 2
   days of full data.
 - Control's **Truncate** button runs the same compaction now, with those shorter ages, and vacuums the DB.
+- **Today:** the 10-minute job truncates a site over 1.5 times its limit harder. It clears JSON over a day old, deletes
+  device reports over 7 days old and, if still over, readings and treatments over 90 days old. See
+  `REQUIREMENTS.md`, "Truncation of a site far over its size limit".
 
 ## What a person sees
 

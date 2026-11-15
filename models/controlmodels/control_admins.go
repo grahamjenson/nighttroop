@@ -1,6 +1,12 @@
 package controlmodels
 
-import "nighttroop.t1d.nz/utils/consts"
+import (
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/consts"
+)
+
+// AdminNameLimit is what a control identity's name takes, as its table checks
+var AdminNameLimit, _ = controldb.ColumnLimitOf("control_identities", "Name")
 
 // ControlAdmin is what control shows of one of its admins: who it is, its role, and who made and last changed it, never
 // its password or TOTP secret

@@ -1,0 +1,90 @@
+INCLUDE steps/new_ns_site.steps
+
+// As in Nightscout, API v3 reads a deleted document as gone, 410, and one never kept or deleted for good as not
+// found, 404. AAPS reads a document by its identifier to learn if a follower deleted it. The 410 has the status and a
+// message, and nothing of the deleted document.
+
+NAME create_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 120, "type": "sgv", "date": {{ itime 10 }} }
+ASSERT_STATUS 201
+SET entry_id {{ .create_entry.result.identifier }}
+
+NAME create_treatment
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Note", "created_at": "{{ time 10 }}", "notes": "to be deleted" }
+ASSERT_STATUS 201
+SET treatment_id {{ .create_treatment.result.identifier }}
+
+NAME create_devicestatus
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B { "device": "deleted-phone" }
+ASSERT_STATUS 201
+SET devicestatus_id {{ .create_devicestatus.result.identifier }}
+
+NAME delete_entry
+DELETE http://{{ site }}/api/v3/entries/{{ .entry_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_treatment
+DELETE http://{{ site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_devicestatus
+DELETE http://{{ site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME read_deleted_entry
+GET http://{{ site }}/api/v3/entries/{{ .entry_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 410
+ASSERT_EQUALS 410 "@status"
+ASSERT_LENGTH 2 "@"
+
+NAME read_deleted_treatment
+GET http://{{ site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 410
+ASSERT_EQUALS 410 "@status"
+ASSERT_LENGTH 2 "@"
+
+NAME read_deleted_devicestatus
+GET http://{{ site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 410
+ASSERT_EQUALS 410 "@status"
+ASSERT_LENGTH 2 "@"
+
+// API v1 does not change: a deleted treatment is not found by its identifier, and a find by it is empty
+NAME read_deleted_treatment_v1
+GET http://{{ site }}/api/v1/treatments/{{ .treatment_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 404
+
+NAME find_deleted_treatment_v1
+GET http://{{ site }}/api/v1/treatments.json?find[_id]={{ .treatment_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// One deleted for good is not found
+NAME delete_treatment_permanently
+DELETE http://{{ site }}/api/v3/treatments/{{ .treatment_id }}?permanent=true
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME read_permanently_deleted_treatment
+GET http://{{ site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME read_never_kept_treatment
+GET http://{{ site }}/api/v3/treatments/NOT_REAL_ID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404

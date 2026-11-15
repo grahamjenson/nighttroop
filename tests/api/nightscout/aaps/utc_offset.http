@@ -52,6 +52,19 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 540 "@result.utcOffset"
 
+# A food keeps no offset, so it has the site's
+NAME food_without_offset
+POST http://{{ .ns_site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B {"type": "food", "name": "Banana", "category": "Fruit", "portion": 120, "unit": "g", "carbs": 27}
+ASSERT_STATUS 201
+
+NAME food_has_site_offset
+GET http://{{ .ns_site }}/api/v3/food/{{ .food_without_offset.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 540 "@result.utcOffset"
+
 # One sent with its offset keeps it
 SET status_date {{ itime 4 }}
 NAME device_status_with_offset

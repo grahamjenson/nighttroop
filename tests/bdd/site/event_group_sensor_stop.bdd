@@ -13,8 +13,9 @@ SCREENSHOT event_group_sensor_stop_type
 CLICK #site--event-group--add--sensor-stop
 ASSERT_VISIBLE #site--event-group--create--modal
 ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Sensor Stop
-// It has no events to pick, just its time, notes, and its sensor's code and transmitter
-ASSERT_VISIBLE #site--event-group--create--no-events
+// It can have a glucose, as a finger glucose is taken to check a sensor, besides its time, notes, and its sensor's
+// code and transmitter
+ASSERT_VISIBLE #site--event-group--create--glucose-reading-id
 ASSERT_NOT_VISIBLE #site--event-group--create--insulin-dose-id
 // A new time finds its events again, which lands before it is added
 HOLD /data/event-groups/choices
@@ -22,7 +23,7 @@ INPUT #site--event-group--create--occurred-at 2026-01-02T08:00
 CLICK #site--event-group--create--reason
 ASSERT_HELD /data/event-groups/choices
 RELEASE /data/event-groups/choices
-ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--no-events
+ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--glucose-reading-id
 INPUT #site--event-group--create--notes Sensor failed
 CLICK #site--event-group--create--submit
 ASSERT_STATUS 201
@@ -36,7 +37,7 @@ CLICK #site--event-group--add
 CLICK #site--event-group--add--sensor-change
 ASSERT_VISIBLE #site--event-group--create--modal
 ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Sensor Change
-ASSERT_VISIBLE #site--event-group--create--no-events
+ASSERT_VISIBLE #site--event-group--create--glucose-reading-id
 ASSERT_VISIBLE #site--event-group--create--sensor-code
 ASSERT_VISIBLE #site--event-group--create--transmitter-id
 // A new time finds its events again, which lands before it is added
@@ -45,7 +46,7 @@ INPUT #site--event-group--create--occurred-at 2026-01-02T09:00
 CLICK #site--event-group--create--reason
 ASSERT_HELD /data/event-groups/choices
 RELEASE /data/event-groups/choices
-ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--no-events
+ASSERT_VISIBLE #site--event-group--create--events:not(.htmx-request) #site--event-group--create--glucose-reading-id
 INPUT #site--event-group--create--sensor-code 1234
 INPUT #site--event-group--create--transmitter-id 8G1234
 INPUT #site--event-group--create--notes Left arm
@@ -59,7 +60,7 @@ CLICK #eventGroupsTable tbody tr:has(td:text-is("Sensor Change"))
 ASSERT_VISIBLE #site--event-group--details
 ASSERT_VISIBLE #site--event-group--events >> text=sensor code 1234
 ASSERT_VISIBLE #site--event-group--events >> text=transmitter 8G1234
-ASSERT_VISIBLE #site--event-group--edit--no-events
+ASSERT_VISIBLE #site--event-group--edit--glucose-reading-id
 SCREENSHOT event_group_sensor_change_details
 
 // Editing it changes its transmitter and notes, keeping its sensor code
@@ -72,13 +73,28 @@ ASSERT_NOT_VISIBLE #site--event-group--details
 ASSERT_VISIBLE #eventGroupsTable >> text=sensor code 1234, transmitter 8G5678
 ASSERT_VISIBLE #eventGroupsTable >> text=Right arm
 
-// A site change has no sensor, so no sensor code
+// A site change has no sensor, so no sensor code, but can have the glucose taken as it was changed
+CLICK #site--nav--data
+CLICK #site--data--glucose-button
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading-type Meter
+INPUT #site--glucose--create--reading 9.6
+INPUT #site--glucose--create--occurred-at 2026-01-02T10:00
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--data
+CLICK #site--data--event-groups-button
 CLICK #site--event-group--add
 CLICK #site--event-group--add--site-change
-ASSERT_VISIBLE #site--event-group--create--no-events
 ASSERT_NOT_VISIBLE #site--event-group--create--sensor-code
+INPUT #site--event-group--create--occurred-at 2026-01-02T10:00
+CLICK #site--event-group--create--reason
+INPUT #site--event-group--create--glucose-reading-id 10:00:00 9.6 mmol/L mbg
 INPUT #site--event-group--create--notes New pod
+CLICK #site--event-group--create--reason
+SCREENSHOT event_group_site_change_glucose
 CLICK #site--event-group--create--submit
 ASSERT_STATUS 201
 ASSERT_VISIBLE #eventGroupsTable >> text="Site Change"
 ASSERT_VISIBLE #eventGroupsTable >> text=New pod
+ASSERT_VISIBLE #eventGroupsTable tbody tr:has(td:text-is("Site Change")) >> text=9.6

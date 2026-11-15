@@ -1,0 +1,107 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// The virtual connector, backfilled, fills from the midnight a day before its first reading: 8 insulin doses a day,
+// a temp basal at the start of each sync and backfill, and a status every 5 minutes from each of 2 devices
+CLICK #site--settings-menu
+CLICK #site--nav--menu--connectors
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+
+// Insulin doses: the first page has a date to jump to and Older, but not Newest
+GOTO /data/insulin?limit=3
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 3
+ASSERT_VISIBLE #site--insulin--date
+ASSERT_TEXT_EQUALS #site--insulin--next Older
+ASSERT_NOT_VISIBLE #site--insulin--newest
+SCREENSHOT insulin_first_page
+
+// Older shows the doses older than the last one shown, and Newest goes back
+CLICK #site--insulin--next
+ASSERT_STATUS 200
+ASSERT_PATH /data/insulin
+ASSERT_COUNT #insulinDosesTable tbody tr:not([data-empty]) 3
+ASSERT_VISIBLE #site--insulin--newest
+ASSERT_NOT_VISIBLE "Showing 1 to 3"
+SCREENSHOT insulin_older_page
+CLICK #site--insulin--newest
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 3
+ASSERT_NOT_VISIBLE #site--insulin--newest
+
+// A date jumps to the doses on or before that day, and keeps the day it shows
+INPUT #site--insulin--date {{ date -1 }}
+WAIT_VISIBLE 5 #site--insulin--newest
+ASSERT_VISIBLE #site--insulin--date[value="{{ date -1 }}"]
+ASSERT_COUNT #insulinDosesTable tbody tr:not([data-empty]) 3
+ASSERT_VISIBLE #site--insulin--next
+SCREENSHOT insulin_jump_to_date
+
+// A day before the first dose has none, and no Older
+INPUT #site--insulin--date {{ date -3 }}
+WAIT_VISIBLE 5 #site--insulin--empty
+ASSERT_NOT_VISIBLE #site--insulin--next
+ASSERT_VISIBLE #site--insulin--newest
+
+// Temp basals page Older and Newest one at a time
+GOTO /data/temp-basals?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_VISIBLE #site--temp-basal--date
+ASSERT_TEXT_EQUALS #site--temp-basal--next Older
+ASSERT_NOT_VISIBLE #site--temp-basal--newest
+SCREENSHOT temp_basal_first_page
+CLICK #site--temp-basal--next
+ASSERT_STATUS 200
+ASSERT_COUNT #tempBasalsTable tbody tr:not([data-empty]) 1
+ASSERT_VISIBLE #site--temp-basal--newest
+SCREENSHOT temp_basal_older_page
+CLICK #site--temp-basal--newest
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// The backfill's temp basal is on the day before
+INPUT #site--temp-basal--date {{ date -1 }}
+WAIT_VISIBLE 5 #site--temp-basal--newest
+ASSERT_VISIBLE #site--temp-basal--date[value="{{ date -1 }}"]
+ASSERT_COUNT #tempBasalsTable tbody tr:not([data-empty]) 1
+SCREENSHOT temp_basal_jump_to_date
+
+// A device's statuses page by date too, and keep to that device
+GOTO /data/device-status
+ASSERT_STATUS 200
+CLICK #site--device-status--show-all-0
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 20
+ASSERT_VISIBLE #site--device-status--date
+ASSERT_TEXT_EQUALS #site--device-status--next Older
+ASSERT_NOT_VISIBLE #site--device-status--newest
+CLICK #site--device-status--next
+ASSERT_STATUS 200
+ASSERT_COUNT #deviceStatusTable tbody tr:not([data-empty]) 20
+ASSERT_VISIBLE #site--device-status--newest
+ASSERT_VISIBLE #site--device-status--all-devices
+SCREENSHOT device_status_older_page
+CLICK #site--device-status--newest
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 20
+
+INPUT #site--device-status--date {{ date -1 }}
+WAIT_VISIBLE 5 #site--device-status--newest
+ASSERT_VISIBLE #site--device-status--date[value="{{ date -1 }}"]
+ASSERT_COUNT #deviceStatusTable tbody tr:not([data-empty]) 20
+ASSERT_VISIBLE #site--device-status--all-devices
+SCREENSHOT device_status_jump_to_date
+
+// A day before the first status has none
+INPUT #site--device-status--date {{ date -3 }}
+WAIT_VISIBLE 5 #deviceStatusTable--empty
+ASSERT_NOT_VISIBLE #site--device-status--next

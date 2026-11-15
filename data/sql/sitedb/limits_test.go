@@ -1,86 +1,74 @@
 package sitedb_test
 
 import (
-	"context"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
 // Every way in writes through the site DB, so its limits refuse values far outside real use, such as a 1000 unit bolus
-// or 10000 g of carbs, while still taking negative insulin and food, which take back too much
+// or 10000 g of carbs, while still taking negative insulin and food, which take back too much. Each column's least and
+// most are written, and just past them, so the limits values are checked by before they are written are its CHECKs.
 func TestSiteDataLimits(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
-	q, ctx, now := site.SiteDB.Queries(), context.Background(), time.Now().UnixMilli()
-	tests := []struct {
-		name    string
-		write   func(id string, v float64) error
-		ok      []float64
-		refused []float64
-	}{
-		{"insulin dose", func(id string, v float64) error {
-			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: v, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{-10, 0.05, 500}, []float64{1000, -1000}},
-		{"combo bolus split", func(id string, v float64) error {
-			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, SplitNow: &v, SplitExt: &v, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{0, 0.5, 1}, []float64{70, -0.1}},
-		{"carbs", func(id string, v float64) error {
-			_, err := q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: id, Carbs: &v, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{-50, 0, 1000}, []float64{10000, -1001}},
-		{"glucose", func(id string, v float64) error {
-			_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: v, ReadingType: "sgv", OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{39, 1000}, []float64{0, 1001}},
-		{"temp basal rate", func(id string, v float64) error {
-			_, err := q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: id, DurationMinutes: 30, Rate: v, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{0, 35}, []float64{-1, 1000}},
-		{"temp basal multiplier", func(id string, v float64) error {
-			_, err := q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: id, DurationMinutes: 30, Multiplier: &v, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{0, 11}, []float64{-0.1, 12}},
-		{"temp target duration", func(id string, v float64) error {
-			_, err := q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: id, DurationMinutes: int64(v), HighTargetMgdl: 140, LowTargetMgdl: 120, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{0, 10080}, []float64{-1, 20000}},
-		{"heart rate", func(id string, v float64) error {
-			hr := int64(v)
-			_, err := q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: id, ActivityType: "exercise", HeartRate: &hr, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{60}, []float64{1000, -1}},
-		{"loop IOB", func(id string, v float64) error {
-			_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, LoopIob: &v, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{-3, 20}, []float64{5000}},
-		{"profile switch multiplier", func(id string, v float64) error {
-			_, err := q.CreateProfileSwitch(ctx, sitedb.CreateProfileSwitchParams{ID: id, Name: id, Multiplier: &v, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{0, 1, 10}, []float64{50, -1}},
-		{"occurred at", func(id string, v float64) error {
-			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, OccurredAt: int64(v), CreatedByIdentityName: "test"})
-			return err
-		}, []float64{float64(now)}, []float64{-1, 1e15}},
-		{"utc offset", func(id string, v float64) error {
-			offset := int64(v)
-			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, UtcOffsetMinutes: &offset, OccurredAt: now, CreatedByIdentityName: "test"})
-			return err
-		}, []float64{720, -600}, []float64{100000}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			for _, v := range tt.ok {
-				require.NoError(t, tt.write(fmt.Sprintf("%s ok %v", tt.name, v), v), v)
-			}
-			for _, v := range tt.refused {
-				require.ErrorContains(t, tt.write(fmt.Sprintf("%s refused %v", tt.name, v), v), "CHECK constraint failed", v)
-			}
-		})
-	}
+	q, now, id, by := site.SiteDB.Queries(), time.Now().UnixMilli(), strconv.Itoa, "test"
+	// Only an update writes who updated a record, and its limit is the creator's
+	const updatedBy = "UpdatedByIdentityName"
+	testutils.CheckColumnLimits(t, sitedb.ColumnLimits, map[string]testutils.LimitRecipe{
+		"activities": testutils.Recipe(func(i int) sitedb.CreateActivityParams {
+			return sitedb.CreateActivityParams{ID: id(i), ActivityType: "exercise", OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateActivity), updatedBy),
+		"device_reports": testutils.Recipe(func(i int) sitedb.CreateDeviceReportParams {
+			return sitedb.CreateDeviceReportParams{ID: id(i), OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateDeviceReport), updatedBy),
+		"event_groups": testutils.Recipe(func(i int) sitedb.CreateEventGroupParams {
+			return sitedb.CreateEventGroupParams{ID: id(i), GroupType: "note", OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateEventGroup), updatedBy),
+		// Negative carbs, fat, protein and the rest take back too much
+		"food_intakes": testutils.Recipe(func(i int) sitedb.CreateFoodIntakeParams {
+			return sitedb.CreateFoodIntakeParams{ID: id(i), OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateFoodIntake), updatedBy),
+		"food_presets": testutils.Recipe(func(i int) sitedb.CreateFoodPresetParams {
+			return sitedb.CreateFoodPresetParams{ID: id(i), Name: id(i), CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateFoodPreset), updatedBy),
+		"general_settings": testutils.Recipe(func(i int) sitedb.UpsertGeneralSettingParams {
+			return sitedb.UpsertGeneralSettingParams{Key: id(i), Type: "aaps", ValueJson: "{}", CreatedByIdentityName: by}
+		}, testutils.NoResult(q.UpsertGeneralSetting)),
+		// A reading of 0 mg/dL is none, though one just above is kept
+		"glucose_readings": testutils.Recipe(func(i int) sitedb.CreateGlucoseReadingParams {
+			return sitedb.CreateGlucoseReadingParams{ID: id(i), Mgdl: 100, ReadingType: "sgv", OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateGlucoseReading), updatedBy),
+		// Negative insulin takes back too much, off IOB
+		"insulin_doses": testutils.Recipe(func(i int) sitedb.CreateInsulinDoseParams {
+			return sitedb.CreateInsulinDoseParams{ID: id(i), Dose: 1, OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateInsulinDose), updatedBy),
+		// A set of settings is kept once, seen first and last when it is written
+		"loop_settings": testutils.Recipe(func(i int) sitedb.UpsertLoopSettingsParams {
+			return sitedb.UpsertLoopSettingsParams{ID: fmt.Sprintf("%064d", i), App: "loop", Source: "profile", SettingsJson: "{}", SeenAt: now}
+		}, q.UpsertLoopSettings).As("FirstSeenAt", "SeenAt").As("LastSeenAt", "SeenAt"),
+		"notification_events": testutils.Recipe(func(i int) sitedb.CreateNotificationEventParams {
+			return sitedb.CreateNotificationEventParams{ID: id(i), Title: "title", NotificationType: "note", OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateNotificationEvent), updatedBy),
+		"profile_presets": testutils.Recipe(func(i int) sitedb.CreateProfilePresetParams {
+			return sitedb.CreateProfilePresetParams{ID: id(i), Name: id(i), ProfileStoreID: "store", OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateProfilePreset), updatedBy),
+		"profile_switches": testutils.Recipe(func(i int) sitedb.CreateProfileSwitchParams {
+			return sitedb.CreateProfileSwitchParams{ID: id(i), Name: id(i), OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateProfileSwitch), updatedBy),
+		"summary_period": testutils.Recipe(func(i int) sitedb.UpsertSummaryPeriodParams {
+			return sitedb.UpsertSummaryPeriodParams{Period: "day", Date: fmt.Sprintf("%010d", i), Timezone: "UTC", Days: 1,
+				GlucoseMgdlJson: "[]", LoopIobJson: "[]", LoopIobBasalJson: "[]", LoopIobTreatmentJson: "[]", LoopCobJson: "[]"}
+		}, testutils.NoResult(q.UpsertSummaryPeriod)),
+		"temp_basals": testutils.Recipe(func(i int) sitedb.CreateTempBasalParams {
+			return sitedb.CreateTempBasalParams{ID: id(i), DurationMinutes: 30, Rate: 1, OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateTempBasal), updatedBy),
+		// A temp target lasts at most a week
+		"temp_targets": testutils.Recipe(func(i int) sitedb.CreateTempTargetParams {
+			return sitedb.CreateTempTargetParams{ID: id(i), DurationMinutes: 30, HighTargetMgdl: 140, LowTargetMgdl: 120, OccurredAt: now, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateTempTarget), updatedBy),
+	})
 }

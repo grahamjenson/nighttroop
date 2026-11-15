@@ -1,0 +1,60 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// Nightscout's careportal sends a glucose with a change, question, exercise or carbs, as AAPS sends a Question with
+// the sensor glucose and xDrip+ a sensor start with a finger glucose. Each keeps its glucose, as it was sent.
+NAME add_with_glucose
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [
+  {"eventType": "Carb Correction", "created_at": "{{ time 1 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl", "carbs": 10},
+  {"eventType": "Question", "created_at": "{{ time 2 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "Exercise", "created_at": "{{ time 3 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "Site Change", "created_at": "{{ time 4 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "Sensor Start", "created_at": "{{ time 5 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "Sensor Change", "created_at": "{{ time 6 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "Sensor Stop", "created_at": "{{ time 7 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "Pump Battery Change", "created_at": "{{ time 8 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "Insulin Change", "created_at": "{{ time 9 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "D.A.D. Alert", "created_at": "{{ time 10 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"},
+  {"eventType": "OpenAPS Offline", "created_at": "{{ time 11 }}", "glucose": 173, "glucoseType": "Finger", "units": "mg/dl"}
+]
+ASSERT_STATUS 200
+
+NAME each_keeps_its_glucose
+GET http://{{ site }}/api/v1/treatments.json?count=11
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 173 "@0.glucose"
+ASSERT_EQUALS "Finger" "@0.glucoseType"
+ASSERT_EQUALS "mg/dl" "@0.units"
+ASSERT_EQUALS 173 "@1.glucose"
+ASSERT_EQUALS "Finger" "@1.glucoseType"
+ASSERT_EQUALS "mg/dl" "@1.units"
+ASSERT_EQUALS 173 "@2.glucose"
+ASSERT_EQUALS "Finger" "@2.glucoseType"
+ASSERT_EQUALS "mg/dl" "@2.units"
+ASSERT_EQUALS 173 "@3.glucose"
+ASSERT_EQUALS "Finger" "@3.glucoseType"
+ASSERT_EQUALS "mg/dl" "@3.units"
+ASSERT_EQUALS 173 "@4.glucose"
+ASSERT_EQUALS "Finger" "@4.glucoseType"
+ASSERT_EQUALS "mg/dl" "@4.units"
+ASSERT_EQUALS 173 "@5.glucose"
+ASSERT_EQUALS "Finger" "@5.glucoseType"
+ASSERT_EQUALS "mg/dl" "@5.units"
+ASSERT_EQUALS 173 "@6.glucose"
+ASSERT_EQUALS "Finger" "@6.glucoseType"
+ASSERT_EQUALS "mg/dl" "@6.units"
+ASSERT_EQUALS 173 "@7.glucose"
+ASSERT_EQUALS "Finger" "@7.glucoseType"
+ASSERT_EQUALS "mg/dl" "@7.units"
+ASSERT_EQUALS 173 "@8.glucose"
+ASSERT_EQUALS "Finger" "@8.glucoseType"
+ASSERT_EQUALS "mg/dl" "@8.units"
+ASSERT_EQUALS 173 "@9.glucose"
+ASSERT_EQUALS "Finger" "@9.glucoseType"
+ASSERT_EQUALS "mg/dl" "@9.units"
+ASSERT_EQUALS 173 "@10.glucose"
+ASSERT_EQUALS "Finger" "@10.glucoseType"
+ASSERT_EQUALS "mg/dl" "@10.units"

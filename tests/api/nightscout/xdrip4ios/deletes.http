@@ -107,6 +107,17 @@ NAME xdrip4ios_delete_bad_date
 DELETE http://{{ site }}/api/v1/entries.json?find[date][$gte]=yesterday&token={{ token }}
 ASSERT_STATUS 400
 
+# A date with no end, or no start, could delete all the readings (R2-11): find[date][$gte] alone is at most a day ago
+NAME xdrip4ios_delete_from_1970
+DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&find[date][$gte]=0&token={{ token }}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "1 day" "@message"
+
+NAME xdrip4ios_delete_up_to_now
+DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&find[date][$lte]={{ itime 0 }}&token={{ token }}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "needs a find[...][$gte]" "@message"
+
 # A token that can only read cannot delete
 NAME xdrip4ios_delete_read_only
 DELETE http://{{ site }}/api/v1/entries.json?find[date][$gte]={{ dayms -1 600 }}&token={{ dig "create_new_site.read_only_nstoken" }}

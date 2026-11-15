@@ -77,3 +77,25 @@ B {
     "app": "AAPS"
  }
 ASSERT_STATUS 400
+
+// A switch from the careportal or the site, with no originalProfileName, is kept in minutes, which API v1 gives back.
+// API v3 and its storage socket, which AAPS reads, give it in milliseconds, so AAPS shifts its profile by the hour
+NAME add_careportal_switch_shifted
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Profile Switch", "profile": "NSmmol", "percentage": 90, "timeshift": 60, "duration": 20, "created_at": "{{ time 3 }}"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 60 "@0.timeshift"
+
+NAME careportal_switch_shifted_v3
+GET http://{{ site }}/api/v3/treatments/{{ dig "add_careportal_switch_shifted.0._id" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 3600000 "@result.timeshift"
+ASSERT_EQUALS 90 "@result.percentage"
+
+NAME careportal_switch_shifted_v1
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Profile%20Switch&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 60 "@0.timeshift"

@@ -36,9 +36,11 @@ func TestValuesMeaningNoneAreNotStored(t *testing.T) {
 	require.Nil(t, group.PumpID)
 	require.Equal(t, &serial, group.PumpSerial)
 
-	group, err = q.UpdateEventGroup(ctx, sitedb.UpdateEventGroupParams{ID: "g", PumpSerial: &empty, UpdatedByIdentityName: &by})
+	// A treatment rewritten with its merged document has none of what it was rewritten without
+	group, err = q.RewriteEventGroup(ctx, sitedb.RewriteEventGroupParams{ID: "g", GroupType: "Temp Basal", PumpSerial: &empty,
+		OccurredAt: now, CreatedByIdentityName: by})
 	require.NoError(t, err)
-	require.Equal(t, &serial, group.PumpSerial)
+	require.Nil(t, group.PumpSerial)
 
 	activity, err := q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: "a", ActivityType: "exercise", HeartRate: &heartRate,
 		OccurredAt: now, CreatedByIdentityName: "test"})

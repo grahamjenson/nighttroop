@@ -27,6 +27,8 @@ func TestClient(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, created.StatusCode(), string(created.Body))
 	newSite := created.JSON200
+	require.Equal(t, config.SiteURL(newSite.SiteSubdomain), newSite.Url)
+	require.Equal(t, config.LinkURL(newSite.SiteSubdomain+".ns"), newSite.PwdNsUrl)
 
 	// A site's API is on its own host
 	site, err := nighttroop.NewClientWithResponses("http://"+newSite.SiteSubdomain+".localhost", httpClient)

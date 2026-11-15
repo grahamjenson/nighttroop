@@ -56,11 +56,11 @@ ASSERT_VISIBLE #site--glucose--earliest--ago:has-text("day")
 ASSERT_VISIBLE #site--glucose--totals
 SCREENSHOT glucose_totals
 
-// The next page is the next 50, under the same totals
+// The next page is the next 50 older readings, under the same totals
 CLICK #site--glucose--next
-ASSERT_TEXT_VISIBLE Showing 51 to 100
+ASSERT_COUNT #glucoseReadingsTable tbody tr:not([data-empty]) 50
 ASSERT_VISIBLE #site--glucose--totals
-ASSERT_VISIBLE #site--glucose--previous
+ASSERT_VISIBLE #site--glucose--newest
 
 // A page of a collection with nothing in it counts none, with no times
 GOTO /data/activities

@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/limits"
 )
 
 type SummaryCollection struct{}
@@ -45,6 +46,15 @@ const maxDevices = 20
 
 // maxSwitchMinutes is how long before the summary a profile switch with a duration is looked for, as one still in force
 const maxSwitchMinutes = 7 * 24 * 60
+
+// maxTempTargetMinutes and maxTempBasalMinutes are the longest the site takes, so one still running is looked for
+var maxTempTargetMinutes, maxTempBasalMinutes = maxMinutes("temp_targets.DurationMinutes"), maxMinutes("temp_basals.DurationMinutes")
+
+// maxMinutes is the most of a column of minutes the site takes
+func maxMinutes(column string) int64 {
+	limit, _ := limits.Of(column)
+	return int64(*limit.Max)
+}
 
 // Watches is whether a change is to something the summary shows, so its events stream tells the summary page to update.
 // An alarm is the identity's own, as the stream sends an identity only its own.

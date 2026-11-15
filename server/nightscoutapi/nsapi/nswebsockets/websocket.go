@@ -271,7 +271,7 @@ func (ws *Websocket) identity(socket *socketio.Socket, token, secret string) (co
 		slog.InfoContext(r.Context(), "Websocket authorization failed", "error", err)
 		return ctx, nil
 	}
-	nsIdentity, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role))
+	nsIdentity, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role), identity.Client)
 	if err != nil {
 		return ctx, nil
 	}

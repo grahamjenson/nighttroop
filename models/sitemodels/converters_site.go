@@ -96,6 +96,7 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// goverter:map Trend Direction | nighttroop.t1d.nz/models/nightscoutmodels:TrendDirection
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *SiteGlucoseReading
 
 	// goverter:context siteContext
@@ -106,6 +107,7 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:map Direction Trend | nighttroop.t1d.nz/models/nightscoutmodels:DirectionTrend
 	// The site does not set an AAPS calibration
 	// goverter:ignore IsCalibration SensorMgdlAtPairing
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
@@ -116,6 +118,7 @@ type SiteConverter interface {
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// The site does not set an AAPS calibration
 	// goverter:ignore IsCalibration SensorMgdlAtPairing
+	// goverter:map Direction Trend | nighttroop.t1d.nz/models/nightscoutmodels:DirectionTrend
 	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
 
 	///////
@@ -275,9 +278,9 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// The site does not set AAPS's running mode, nor the pump, nor its insulin, nor a Bolus Wizard's calculation
-	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs SentHash PumpID PumpSerial PumpType BolusCalculatorResultJson
-	// nor Loop's ids
-	// goverter:ignore SyncIdentifier
+	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationMs SentHash PumpID PumpSerial PumpType EndingPumpID BolusCalculatorResultJson EmulatedTreatmentJson
+	// nor Loop's ids, nor iAPS's carb entry time and id
+	// goverter:ignore SyncIdentifier ClientCreatedAt
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
 
 	// goverter:context siteContext
@@ -294,6 +297,7 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// goverter:map ExtendedDurationMs ExtendedDurationMinutes | MsToMinutes
 	InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose
 
 	// goverter:context siteContext
@@ -304,6 +308,7 @@ type SiteConverter interface {
 	// Only a loop's upload says whether a dose was automatic or basal insulin, its insulin, how much is not absorbed and
 	// the insulin it was given with
 	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson
+	// goverter:map ExtendedDurationMinutes ExtendedDurationMs | MinutesToMs
 	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
 
 	// goverter:context siteContext
@@ -313,6 +318,7 @@ type SiteConverter interface {
 	// Only a loop's upload says whether a dose was automatic or basal insulin, its insulin, how much is not absorbed and
 	// the insulin it was given with
 	// goverter:ignore Automatic IsBasalInsulin InsulinType Unabsorbed IcfgJson
+	// goverter:map ExtendedDurationMinutes ExtendedDurationMs | MinutesToMs
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
 	///////
@@ -349,11 +355,13 @@ type SiteConverter interface {
 	// goverter:map ID | NewSiteDataID
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:ignore Unit Gi Hidden HideAfterUse Position
 	FoodPresetToCreate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.CreateFoodPresetParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore Unit Gi Hidden HideAfterUse Position
 	FoodPresetToUpdate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.UpdateFoodPresetParams
 
 	///////

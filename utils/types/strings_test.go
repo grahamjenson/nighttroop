@@ -33,26 +33,20 @@ func TestIdentifierFromJSON(t *testing.T) {
 	}
 }
 
-// A device token is kept whole, as Apple's are of no fixed length, and one too long to be a token is empty rather than
-// cut or refuse the upload
-func TestDeviceTokenString(t *testing.T) {
+// A short string is kept whole, as the column or JSON it is kept in limits it, and a number or a bool is kept as text
+func TestShortString(t *testing.T) {
 	tests := []struct {
-		name  string
-		token string
-		want  string
+		name, data, want string
 	}{
-		{"a 64 character token", strings.Repeat("ab", 32), strings.Repeat("ab", 32)},
-		{"Trio's 160 character token", strings.Repeat("ab", 80), strings.Repeat("ab", 80)},
-		{"the longest token", strings.Repeat("a", types.MaxDeviceTokenLength), strings.Repeat("a", types.MaxDeviceTokenLength)},
-		{"a token too long", strings.Repeat("a", types.MaxDeviceTokenLength+1), ""},
-		{"a token that is not hex", "asd", "asd"},
+		{"Trio's 160 character APNs token", `"` + strings.Repeat("ab", 80) + `"`, strings.Repeat("ab", 80)},
+		{"longer than 64", `"` + strings.Repeat("a", 300) + `"`, strings.Repeat("a", 300)},
+		{"a number", "12.5", "12.5"},
+		{"a bool", "true", "true"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(tt.token)
-			assert.NoError(t, err)
-			var got types.DeviceTokenString
-			assert.NoError(t, json.Unmarshal(data, &got))
+			var got types.ShortString
+			assert.NoError(t, json.Unmarshal([]byte(tt.data), &got))
 			assert.Equal(t, tt.want, string(got))
 		})
 	}

@@ -23,7 +23,7 @@ import (
 )
 
 // TempTargetsTable shows one page of temp targets, newest first, with buttons to the pages either side
-func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64) templ.Component {
+func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64, before *int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -78,7 +78,7 @@ func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limi
 					{Label: i18n.T(ctx, "site.data.common.reason")}, {Label: i18n.T(ctx, "site.data.common.device")}, {Actions: true},
 				},
 			},
-			Pager: &pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit},
+			Pager: pager.Dated(pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit}, before, tempTargets, func(row *sitemodels.SiteTempTarget) (int64, string) { return row.OccurredAt, row.ID }),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -116,16 +116,16 @@ func TempTargetNew() templ.Component {
 
 // tempTargetFields are what a temp target has that a person can type in
 func tempTargetFields(ctx context.Context) []addmodal.Field {
-	attributes, units := glucoseInputAttributes(ctx), string(*glucoseUnits(ctx))
-	low, high := fmt.Sprint(attributes["min"]), fmt.Sprint(attributes["max"])
+	units := glucoseUnits(ctx)
+	// A target is more than 0 mg/dL, as checkTempTarget takes
 	return []addmodal.Field{
-		{Name: "low_target", Label: i18n.T(ctx, "site.data.temp_targets.low", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.temp_targets.low_help"), Required: true, Min: low, Max: high, Step: "any"},
-		{Name: "high_target", Label: i18n.T(ctx, "site.data.temp_targets.high", i18n.Data{"Units": units}), Help: i18n.T(ctx, "site.data.temp_targets.high_help"), Required: true, Min: low, Max: high, Step: "any"},
-		{Name: "duration_minutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_targets.duration_help"), Required: true, Min: "1", Max: "10080", Step: "1"},
+		{Name: "low_target", Column: "temp_targets.LowTargetMgdl", Units: units, Label: i18n.T(ctx, "site.data.temp_targets.low", i18n.Data{"Units": string(*units)}), Help: i18n.T(ctx, "site.data.temp_targets.low_help"), Required: true, Step: "any"},
+		{Name: "high_target", Column: "temp_targets.HighTargetMgdl", Units: units, Label: i18n.T(ctx, "site.data.temp_targets.high", i18n.Data{"Units": string(*units)}), Help: i18n.T(ctx, "site.data.temp_targets.high_help"), Required: true, Step: "any"},
+		{Name: "duration_minutes", Column: "temp_targets.DurationMinutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_targets.duration_help"), Required: true, Step: "1"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.temp_targets.when_help"), Kind: addmodal.When},
-		{Name: "insulin_needs_scale_factor", Label: i18n.T(ctx, "site.data.temp_targets.insulin_needs"), Help: i18n.T(ctx, "site.data.temp_targets.insulin_needs_help"), Min: "0", Max: "10", Step: "any"},
-		{Name: "reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_targets.reason_help"), Kind: addmodal.Text, Max: "64", Options: []string{"Activity", "Eating Soon", "Hypo"}},
-		{Name: "notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Max: "1024", Wide: true},
+		{Name: "insulin_needs_scale_factor", Column: "temp_targets.InsulinNeedsScaleFactor", Label: i18n.T(ctx, "site.data.temp_targets.insulin_needs"), Help: i18n.T(ctx, "site.data.temp_targets.insulin_needs_help"), Step: "any"},
+		{Name: "reason", Column: "temp_targets.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_targets.reason_help"), Kind: addmodal.Text, Options: []string{"Activity", "Eating Soon", "Hypo"}},
+		{Name: "notes", Column: "temp_targets.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 

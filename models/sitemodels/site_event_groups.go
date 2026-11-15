@@ -60,27 +60,28 @@ type SiteEventChoice struct {
 }
 
 // EventGroupTypeKinds are the kinds of event, by the group's field for each, that each type of group can have; the
-// Nightscout API drops a treatment's others, and the site refuses them
+// Nightscout API drops a treatment's others, and the site refuses them. Each type Nightscout's careportal sends a
+// glucose with can have one, as AAPS and xDrip+ send a finger or sensor glucose with a change or question
 var EventGroupTypeKinds = map[nightscoutmodels.TreatmentEventType][]string{
 	nightscoutmodels.Announcement:      {"glucose_reading_id", "notification_event_id"},
 	nightscoutmodels.BGCheck:           {"glucose_reading_id"},
 	nightscoutmodels.BolusWizard:       {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
-	nightscoutmodels.CarbCorrection:    {"food_intake_id"},
+	nightscoutmodels.CarbCorrection:    {"food_intake_id", "glucose_reading_id"},
 	nightscoutmodels.ComboBolus:        {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
 	nightscoutmodels.CorrectionBolus:   {"insulin_dose_id", "glucose_reading_id"},
-	nightscoutmodels.DADAlert:          {},
-	nightscoutmodels.Exercise:          {"activity_id"},
-	nightscoutmodels.InsulinChange:     {},
+	nightscoutmodels.DADAlert:          {"glucose_reading_id"},
+	nightscoutmodels.Exercise:          {"activity_id", "glucose_reading_id"},
+	nightscoutmodels.InsulinChange:     {"glucose_reading_id"},
 	nightscoutmodels.MealBolus:         {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
 	nightscoutmodels.Note:              {"glucose_reading_id", "insulin_dose_id", "food_intake_id", "profile_switch_id", "activity_id"},
-	nightscoutmodels.OpenAPSOffline:    {},
+	nightscoutmodels.OpenAPSOffline:    {"glucose_reading_id"},
 	nightscoutmodels.ProfileSwitch:     {"profile_switch_id"},
-	nightscoutmodels.PumpBatteryChange: {},
-	nightscoutmodels.Question:          {"notification_event_id"},
-	nightscoutmodels.SensorChange:      {},
-	nightscoutmodels.SensorStart:       {},
-	nightscoutmodels.SensorStop:        {},
-	nightscoutmodels.SiteChange:        {},
+	nightscoutmodels.PumpBatteryChange: {"glucose_reading_id"},
+	nightscoutmodels.Question:          {"notification_event_id", "glucose_reading_id"},
+	nightscoutmodels.SensorChange:      {"glucose_reading_id"},
+	nightscoutmodels.SensorStart:       {"glucose_reading_id"},
+	nightscoutmodels.SensorStop:        {"glucose_reading_id"},
+	nightscoutmodels.SiteChange:        {"glucose_reading_id"},
 	nightscoutmodels.SnackBolus:        {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
 	nightscoutmodels.TempBasal:         {"temp_basal_id"},
 	nightscoutmodels.TemporaryTarget:   {"temp_target_id"},
@@ -96,7 +97,7 @@ var EventGroupTypeKinds = map[nightscoutmodels.TreatmentEventType][]string{
 	nightscoutmodels.ExternalInsulin:   {"insulin_dose_id"},
 }
 
-// ChangeTypes are the types of group that change a sensor, site or pump part, which have no events, only the group's
+// ChangeTypes are the types of group that change a sensor, site or pump part, which need no events, only the group's
 // time, notes, and a sensor's code and transmitter
 var ChangeTypes = []string{
 	nightscoutmodels.SensorStart.String(),

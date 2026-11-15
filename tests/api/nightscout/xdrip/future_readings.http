@@ -1,0 +1,46 @@
+# A reading dated well ahead of now, as xDrip+ uploaded one 30 minutes ahead (X10), is not kept: followers, and Loop's
+# and Trio's Nightscout CGM, would show it as the current reading. Up to 15 minutes ahead is kept, for a phone clock.
+
+INCLUDE steps/new_ns_site.steps
+
+# A batch keeps the reading now and leaves out the one 30 minutes ahead
+NAME xdrip_future_in_batch
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "xDrip-DexcomG6", "type": "sgv", "sgv": 120, "direction": "Flat", "date": {{ itime 0 }}},
+   {"device": "xDrip-DexcomG6", "type": "sgv", "sgv": 177, "direction": "Flat", "date": {{ itime -30 }}}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 120 "@0.sgv"
+
+# One alone is refused, saying why
+NAME xdrip_future_alone
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B {"device": "xDrip-DexcomG6", "type": "mbg", "mbg": 130, "date": {{ itime -30 }}}
+ASSERT_STATUS 400
+ASSERT_EQUALS "date is in the future: a reading can be at most 15 minutes ahead of now" "@message"
+
+# As on API v3
+NAME future_v3
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {"device": "xDrip-DexcomG6", "type": "sgv", "sgv": 150, "date": {{ itime -30 }}, "app": "xdrip"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "date is in the future" "@message"
+
+# 10 minutes ahead is a phone clock that is fast, so it is kept
+NAME xdrip_fast_clock
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "xDrip-DexcomG6", "type": "sgv", "sgv": 125, "direction": "Flat", "date": {{ itime -10 }}}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME only_kept_readings
+GET http://{{ site }}/api/v1/entries.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 125 "@0.sgv"
+ASSERT_EQUALS 120 "@1.sgv"

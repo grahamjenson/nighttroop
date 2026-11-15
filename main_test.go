@@ -1,10 +1,12 @@
 package main
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/stretchr/testify/require"
@@ -45,5 +47,30 @@ func TestRequestHeadersAreLimited(t *testing.T) {
 			defer res.Body.Close()
 			require.Equal(t, test.status, res.StatusCode)
 		})
+	}
+}
+
+// A server whose port is in use gives the error, for run to shut down with, rather than exiting at once, and one shut
+// down gives none
+func TestServeGivesTheErrorThatStopsIt(t *testing.T) {
+	ok := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	taken, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	t.Cleanup(func() { taken.Close() })
+
+	select {
+	case err := <-serve(newHTTPServer(taken.Addr().String(), ok)):
+		require.ErrorContains(t, err, "address already in use")
+	case <-time.After(5 * time.Second):
+		t.Fatal("a server whose port is in use gave no error")
+	}
+
+	httpServer := newHTTPServer("127.0.0.1:0", ok)
+	served := serve(httpServer)
+	require.NoError(t, httpServer.Shutdown(t.Context()))
+	select {
+	case err := <-served:
+		t.Fatalf("a server shut down gave an error: %v", err)
+	case <-time.After(100 * time.Millisecond):
 	}
 }

@@ -35,11 +35,13 @@ const (
 	GroupCarbCorrection    EventGroupType = "Carb Correction"
 	GroupComboBolus        EventGroupType = "Combo Bolus"
 	GroupCorrectionBolus   EventGroupType = "Correction Bolus"
+	GroupDADAlert          EventGroupType = "D.A.D. Alert"
 	GroupExercise          EventGroupType = "Exercise"
 	GroupExternalInsulin   EventGroupType = "External Insulin"
 	GroupInsulinChange     EventGroupType = "Insulin Change"
 	GroupMealBolus         EventGroupType = "Meal Bolus"
 	GroupNote              EventGroupType = "Note"
+	GroupOpenAPSOffline    EventGroupType = "OpenAPS Offline"
 	GroupPrime             EventGroupType = "Prime"
 	GroupProfileSwitch     EventGroupType = "Profile Switch"
 	GroupPumpBatteryChange EventGroupType = "Pump Battery Change"
@@ -137,6 +139,9 @@ type CreatedSite struct {
 	// BackupKey Gets a new admin login on the recover page; it works once
 	BackupKey string `json:"backup_key"`
 
+	// PwdNsUrl The PWD phone's Nightscout URL, on the site's Nightscout host
+	PwdNsUrl string `json:"pwd_ns_url"`
+
 	// PwdNstoken The PWD phone's Nightscout token
 	PwdNstoken string `json:"pwd_nstoken"`
 
@@ -146,6 +151,9 @@ type CreatedSite struct {
 
 	// TotpSecret The admin's TOTP secret
 	TotpSecret string `json:"totp_secret"`
+
+	// Url The site's URL, for the browser and the site's API
+	Url string `json:"url"`
 }
 
 // Error defines model for Error.
@@ -221,7 +229,7 @@ type EventGroup struct {
 	UtcOffsetMinutes      *int64      `json:"utc_offset_minutes,omitempty"`
 }
 
-// EventGroupType A type of group the site can add: a Nightscout treatment's eventType. A change (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir Change, Pump Battery Change) has no events.
+// EventGroupType A type of group the site can add: a Nightscout treatment's eventType. A change (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime, Insulin Change, Reservoir Change, Pump Battery Change) needs no events; all but Cannula Fill, Prime and Reservoir Change can have a glucose.
 type EventGroupType string
 
 // EventKind A kind of event, named by the event group's field for its ID
@@ -299,20 +307,24 @@ type InsulinDose struct {
 	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
 	CreatedByIdentityName *string `json:"created_by_identity_name,omitempty"`
 
-	// Dose Units of insulin
+	// Dose Units of insulin given at once
 	Dose     *float64 `json:"dose,omitempty"`
 	DoseType *string  `json:"dose_type,omitempty"`
-	Id       *string  `json:"id,omitempty"`
-	Notes    *string  `json:"notes,omitempty"`
+
+	// ExtendedDose A combo or extended bolus's units given evenly over extended_duration_minutes after the dose
+	ExtendedDose *float64 `json:"extended_dose,omitempty"`
+
+	// ExtendedDurationMinutes How long the extended dose is given over
+	ExtendedDurationMinutes *int64  `json:"extended_duration_minutes,omitempty"`
+	Id                      *string `json:"id,omitempty"`
+	Notes                   *string `json:"notes,omitempty"`
 
 	// OccurredAt Now, if not sent when creating
-	OccurredAt            *int64   `json:"occurred_at,omitempty"`
-	Reason                *string  `json:"reason,omitempty"`
-	SplitExt              *float64 `json:"split_ext,omitempty"`
-	SplitNow              *float64 `json:"split_now,omitempty"`
-	UpdatedAt             *int64   `json:"updated_at,omitempty"`
-	UpdatedByIdentityName *string  `json:"updated_by_identity_name,omitempty"`
-	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes,omitempty"`
+	OccurredAt            *int64  `json:"occurred_at,omitempty"`
+	Reason                *string `json:"reason,omitempty"`
+	UpdatedAt             *int64  `json:"updated_at,omitempty"`
+	UpdatedByIdentityName *string `json:"updated_by_identity_name,omitempty"`
+	UtcOffsetMinutes      *int64  `json:"utc_offset_minutes,omitempty"`
 }
 
 // LoginRequest defines model for LoginRequest.
@@ -437,6 +449,34 @@ type SearchPage struct {
 	Limit *int64 `json:"limit,omitempty"`
 	Skip  *int64 `json:"skip,omitempty"`
 	Total *int64 `json:"total,omitempty"`
+}
+
+// SiteCreationRefused defines model for SiteCreationRefused.
+type SiteCreationRefused struct {
+	Error string `json:"error"`
+}
+
+// SiteTable A table of a site's DB
+type SiteTable struct {
+	// Bytes The bytes the table and its indexes take in the DB file
+	Bytes   int64  `json:"bytes"`
+	Name    string `json:"name"`
+	Records int64  `json:"records"`
+}
+
+// SiteUsage A site's storage, as its Usage page shows it
+type SiteUsage struct {
+	// BeforeSizeKb The DB size in KB before a truncate; null in GET /usage, or when it was never measured
+	BeforeSizeKb *int64 `json:"before_size_kb"`
+
+	// LimitKb The DB size limit in KB, null when there is none
+	LimitKb *int64 `json:"limit_kb"`
+
+	// SizeKb The DB size in KB; after a truncate, the size after it. Null when it was never measured.
+	SizeKb *int64 `json:"size_kb"`
+
+	// Tables The DB's tables as last measured, largest first; empty when they cannot be measured
+	Tables []SiteTable `json:"tables"`
 }
 
 // Summary The parts of the summary described here; the rest is kept in AdditionalProperties
@@ -593,6 +633,15 @@ type TempTarget struct {
 
 // Units defines model for Units.
 type Units string
+
+// Before defines model for Before.
+type Before = int64
+
+// BeforeDate defines model for BeforeDate.
+type BeforeDate = openapi_types.Date
+
+// BeforeId defines model for BeforeId.
+type BeforeId = string
 
 // Id defines model for Id.
 type Id = string
@@ -807,6 +856,13 @@ type PasskeySignedIn struct {
 	Redirect *string `json:"redirect,omitempty"`
 }
 
+// SiteUsageResult defines model for SiteUsageResult.
+type SiteUsageResult struct {
+	// Result A site's storage, as its Usage page shows it
+	Result *SiteUsage `json:"result,omitempty"`
+	Status *int       `json:"status,omitempty"`
+}
+
 // EventGroupBody defines model for EventGroupBody.
 type EventGroupBody = EventGroup
 
@@ -915,6 +971,15 @@ type NsV1GetParams struct {
 	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
 }
 
+// NsV2CreateRoleJSONBody defines parameters for NsV2CreateRole.
+type NsV2CreateRoleJSONBody map[string]interface{}
+
+// NsV2UpdateRoleJSONBody defines parameters for NsV2UpdateRole.
+type NsV2UpdateRoleJSONBody map[string]interface{}
+
+// NsV2CreateSubjectJSONBody defines parameters for NsV2CreateSubject.
+type NsV2CreateSubjectJSONBody map[string]interface{}
+
 // NsV3SearchParams defines parameters for NsV3Search.
 type NsV3SearchParams struct {
 	// Limit At most 1000
@@ -964,6 +1029,15 @@ type ListEventGroupsParams struct {
 
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Before Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id
+	Before *Before `form:"before,omitempty" json:"before,omitempty"`
+
+	// BeforeId With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id
+	BeforeId *BeforeId `form:"before_id,omitempty" json:"before_id,omitempty"`
+
+	// BeforeDate The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id
+	BeforeDate *BeforeDate `form:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 // ListEventGroupChoicesParams defines parameters for ListEventGroupChoices.
@@ -984,6 +1058,15 @@ type ListFoodIntakesParams struct {
 
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Before Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id
+	Before *Before `form:"before,omitempty" json:"before,omitempty"`
+
+	// BeforeId With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id
+	BeforeId *BeforeId `form:"before_id,omitempty" json:"before_id,omitempty"`
+
+	// BeforeDate The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id
+	BeforeDate *BeforeDate `form:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 // ListGlucoseReadingsParams defines parameters for ListGlucoseReadings.
@@ -993,6 +1076,15 @@ type ListGlucoseReadingsParams struct {
 
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Before Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id
+	Before *Before `form:"before,omitempty" json:"before,omitempty"`
+
+	// BeforeId With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id
+	BeforeId *BeforeId `form:"before_id,omitempty" json:"before_id,omitempty"`
+
+	// BeforeDate The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id
+	BeforeDate *BeforeDate `form:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 // ListInsulinDosesParams defines parameters for ListInsulinDoses.
@@ -1002,6 +1094,15 @@ type ListInsulinDosesParams struct {
 
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Before Pages by date, with no limit to how far back: the rows older than this time, in milliseconds. To get the page after a page, send its last row's occurred_at here and its id as before_id
+	Before *Before `form:"before,omitempty" json:"before,omitempty"`
+
+	// BeforeId With before, the id of a row at that time: the rows at that time with a smaller id are also older, as rows are ordered by occurred_at then id
+	BeforeId *BeforeId `form:"before_id,omitempty" json:"before_id,omitempty"`
+
+	// BeforeDate The rows on or before this day, as 2006-01-02, in the timezone from the settings. It replaces before and before_id
+	BeforeDate *BeforeDate `form:"before_date,omitempty" json:"before_date,omitempty"`
 }
 
 // PasskeyLoginFinishJSONBody defines parameters for PasskeyLoginFinish.
@@ -1050,6 +1151,15 @@ type NsV1ReplaceByBodyJSONRequestBody = NsDocument
 
 // NsV1ReplaceJSONRequestBody defines body for NsV1Replace for application/json ContentType.
 type NsV1ReplaceJSONRequestBody = NsDocument
+
+// NsV2CreateRoleJSONRequestBody defines body for NsV2CreateRole for application/json ContentType.
+type NsV2CreateRoleJSONRequestBody NsV2CreateRoleJSONBody
+
+// NsV2UpdateRoleJSONRequestBody defines body for NsV2UpdateRole for application/json ContentType.
+type NsV2UpdateRoleJSONRequestBody NsV2UpdateRoleJSONBody
+
+// NsV2CreateSubjectJSONRequestBody defines body for NsV2CreateSubject for application/json ContentType.
+type NsV2CreateSubjectJSONRequestBody NsV2CreateSubjectJSONBody
 
 // NsV3CreateJSONRequestBody defines body for NsV3Create for application/json ContentType.
 type NsV3CreateJSONRequestBody = NsDocument
@@ -1801,6 +1911,30 @@ type ClientInterface interface {
 	// NsV2Authorize request
 	NsV2Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// NsV2Roles request
+	NsV2Roles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2CreateRoleWithBody request with any body
+	NsV2CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV2CreateRole(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2UpdateRoleWithBody request with any body
+	NsV2UpdateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV2UpdateRole(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2Subjects request
+	NsV2Subjects(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2CreateSubjectWithBody request with any body
+	NsV2CreateSubjectWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV2CreateSubject(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2DeleteSubject request
+	NsV2DeleteSubject(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// NsV2Properties request
 	NsV2Properties(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1975,6 +2109,15 @@ type ClientInterface interface {
 
 	// GetSummary request
 	GetSummary(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetUsage request
+	GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DownloadSiteData request
+	DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// TruncateSite request
+	TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// WelcomePasskeyBegin request
 	WelcomePasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2299,6 +2442,114 @@ func (c *Client) NsV2CheckPermission(ctx context.Context, permission string, req
 
 func (c *Client) NsV2Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV2AuthorizeRequest(c.Server, token)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2Roles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2RolesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateRoleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateRole(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateRoleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2UpdateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2UpdateRoleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2UpdateRole(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2UpdateRoleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2Subjects(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2SubjectsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateSubjectWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateSubjectRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CreateSubject(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CreateSubjectRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2DeleteSubject(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2DeleteSubjectRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -3055,6 +3306,42 @@ func (c *Client) CreateSite(ctx context.Context, reqEditors ...RequestEditorFn) 
 
 func (c *Client) GetSummary(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetUsageRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDownloadSiteDataRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTruncateSiteRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -4284,6 +4571,214 @@ func NewNsV2AuthorizeRequest(server string, token string) (*http.Request, error)
 	return req, nil
 }
 
+// NewNsV2RolesRequest generates requests for NsV2Roles
+func NewNsV2RolesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2CreateRoleRequest calls the generic NsV2CreateRole builder with application/json body
+func NewNsV2CreateRoleRequest(server string, body NsV2CreateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV2CreateRoleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV2CreateRoleRequestWithBody generates requests for NsV2CreateRole with any type of body
+func NewNsV2CreateRoleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2UpdateRoleRequest calls the generic NsV2UpdateRole builder with application/json body
+func NewNsV2UpdateRoleRequest(server string, body NsV2UpdateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV2UpdateRoleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV2UpdateRoleRequestWithBody generates requests for NsV2UpdateRole with any type of body
+func NewNsV2UpdateRoleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2SubjectsRequest generates requests for NsV2Subjects
+func NewNsV2SubjectsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/subjects")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2CreateSubjectRequest calls the generic NsV2CreateSubject builder with application/json body
+func NewNsV2CreateSubjectRequest(server string, body NsV2CreateSubjectJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV2CreateSubjectRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV2CreateSubjectRequestWithBody generates requests for NsV2CreateSubject with any type of body
+func NewNsV2CreateSubjectRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/subjects")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2DeleteSubjectRequest generates requests for NsV2DeleteSubject
+func NewNsV2DeleteSubjectRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/subjects/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewNsV2PropertiesRequest generates requests for NsV2Properties
 func NewNsV2PropertiesRequest(server string) (*http.Request, error) {
 	var err error
@@ -5064,6 +5559,54 @@ func NewListEventGroupsRequest(server string, params *ListEventGroupsParams) (*h
 
 		}
 
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before", runtime.ParamLocationQuery, *params.Before); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_id", runtime.ParamLocationQuery, *params.BeforeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeDate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_date", runtime.ParamLocationQuery, *params.BeforeDate); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -5361,6 +5904,54 @@ func NewListFoodIntakesRequest(server string, params *ListFoodIntakesParams) (*h
 
 		}
 
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before", runtime.ParamLocationQuery, *params.Before); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_id", runtime.ParamLocationQuery, *params.BeforeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeDate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_date", runtime.ParamLocationQuery, *params.BeforeDate); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -5581,6 +6172,54 @@ func NewListGlucoseReadingsRequest(server string, params *ListGlucoseReadingsPar
 
 		}
 
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before", runtime.ParamLocationQuery, *params.Before); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_id", runtime.ParamLocationQuery, *params.BeforeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeDate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_date", runtime.ParamLocationQuery, *params.BeforeDate); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -5788,6 +6427,54 @@ func NewListInsulinDosesRequest(server string, params *ListInsulinDosesParams) (
 		if params.Skip != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before", runtime.ParamLocationQuery, *params.Before); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_id", runtime.ParamLocationQuery, *params.BeforeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BeforeDate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "before_date", runtime.ParamLocationQuery, *params.BeforeDate); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -6476,6 +7163,87 @@ func NewGetSummaryRequest(server string, params *GetSummaryParams) (*http.Reques
 	return req, nil
 }
 
+// NewGetUsageRequest generates requests for GetUsage
+func NewGetUsageRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDownloadSiteDataRequest generates requests for DownloadSiteData
+func NewDownloadSiteDataRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage/download")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewTruncateSiteRequest generates requests for TruncateSite
+func NewTruncateSiteRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage/truncate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewWelcomePasskeyBeginRequest generates requests for WelcomePasskeyBegin
 func NewWelcomePasskeyBeginRequest(server string) (*http.Request, error) {
 	var err error
@@ -6662,6 +7430,30 @@ type ClientWithResponsesInterface interface {
 	// NsV2AuthorizeWithResponse request
 	NsV2AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV2AuthorizeResponse, error)
 
+	// NsV2RolesWithResponse request
+	NsV2RolesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2RolesResponse, error)
+
+	// NsV2CreateRoleWithBodyWithResponse request with any body
+	NsV2CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error)
+
+	NsV2CreateRoleWithResponse(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error)
+
+	// NsV2UpdateRoleWithBodyWithResponse request with any body
+	NsV2UpdateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error)
+
+	NsV2UpdateRoleWithResponse(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error)
+
+	// NsV2SubjectsWithResponse request
+	NsV2SubjectsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2SubjectsResponse, error)
+
+	// NsV2CreateSubjectWithBodyWithResponse request with any body
+	NsV2CreateSubjectWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error)
+
+	NsV2CreateSubjectWithResponse(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error)
+
+	// NsV2DeleteSubjectWithResponse request
+	NsV2DeleteSubjectWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*NsV2DeleteSubjectResponse, error)
+
 	// NsV2PropertiesWithResponse request
 	NsV2PropertiesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2PropertiesResponse, error)
 
@@ -6836,6 +7628,15 @@ type ClientWithResponsesInterface interface {
 
 	// GetSummaryWithResponse request
 	GetSummaryWithResponse(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*GetSummaryResponse, error)
+
+	// GetUsageWithResponse request
+	GetUsageWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsageResponse, error)
+
+	// DownloadSiteDataWithResponse request
+	DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error)
+
+	// TruncateSiteWithResponse request
+	TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error)
 
 	// WelcomePasskeyBeginWithResponse request
 	WelcomePasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*WelcomePasskeyBeginResponse, error)
@@ -7340,6 +8141,144 @@ func (r NsV2AuthorizeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsV2AuthorizeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2RolesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]map[string]interface{}
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2RolesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2RolesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2CreateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2CreateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2CreateRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2UpdateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2UpdateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2UpdateRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2SubjectsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]map[string]interface{}
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2SubjectsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2SubjectsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2CreateSubjectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2CreateSubjectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2CreateSubjectResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2DeleteSubjectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2DeleteSubjectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2DeleteSubjectResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8443,6 +9382,8 @@ type CreateSiteResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *CreatedSite
+	JSON403      *SiteCreationRefused
+	JSON429      *SiteCreationRefused
 	JSONDefault  *Error
 }
 
@@ -8479,6 +9420,74 @@ func (r GetSummaryResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetUsageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SiteUsageResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetUsageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetUsageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DownloadSiteDataResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DownloadSiteDataResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DownloadSiteDataResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type TruncateSiteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SiteUsageResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r TruncateSiteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TruncateSiteResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8767,6 +9776,84 @@ func (c *ClientWithResponses) NsV2AuthorizeWithResponse(ctx context.Context, tok
 		return nil, err
 	}
 	return ParseNsV2AuthorizeResponse(rsp)
+}
+
+// NsV2RolesWithResponse request returning *NsV2RolesResponse
+func (c *ClientWithResponses) NsV2RolesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2RolesResponse, error) {
+	rsp, err := c.NsV2Roles(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2RolesResponse(rsp)
+}
+
+// NsV2CreateRoleWithBodyWithResponse request with arbitrary body returning *NsV2CreateRoleResponse
+func (c *ClientWithResponses) NsV2CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error) {
+	rsp, err := c.NsV2CreateRoleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV2CreateRoleWithResponse(ctx context.Context, body NsV2CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateRoleResponse, error) {
+	rsp, err := c.NsV2CreateRole(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateRoleResponse(rsp)
+}
+
+// NsV2UpdateRoleWithBodyWithResponse request with arbitrary body returning *NsV2UpdateRoleResponse
+func (c *ClientWithResponses) NsV2UpdateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error) {
+	rsp, err := c.NsV2UpdateRoleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2UpdateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV2UpdateRoleWithResponse(ctx context.Context, body NsV2UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2UpdateRoleResponse, error) {
+	rsp, err := c.NsV2UpdateRole(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2UpdateRoleResponse(rsp)
+}
+
+// NsV2SubjectsWithResponse request returning *NsV2SubjectsResponse
+func (c *ClientWithResponses) NsV2SubjectsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2SubjectsResponse, error) {
+	rsp, err := c.NsV2Subjects(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2SubjectsResponse(rsp)
+}
+
+// NsV2CreateSubjectWithBodyWithResponse request with arbitrary body returning *NsV2CreateSubjectResponse
+func (c *ClientWithResponses) NsV2CreateSubjectWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error) {
+	rsp, err := c.NsV2CreateSubjectWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateSubjectResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV2CreateSubjectWithResponse(ctx context.Context, body NsV2CreateSubjectJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV2CreateSubjectResponse, error) {
+	rsp, err := c.NsV2CreateSubject(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CreateSubjectResponse(rsp)
+}
+
+// NsV2DeleteSubjectWithResponse request returning *NsV2DeleteSubjectResponse
+func (c *ClientWithResponses) NsV2DeleteSubjectWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*NsV2DeleteSubjectResponse, error) {
+	rsp, err := c.NsV2DeleteSubject(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2DeleteSubjectResponse(rsp)
 }
 
 // NsV2PropertiesWithResponse request returning *NsV2PropertiesResponse
@@ -9320,6 +10407,33 @@ func (c *ClientWithResponses) GetSummaryWithResponse(ctx context.Context, params
 		return nil, err
 	}
 	return ParseGetSummaryResponse(rsp)
+}
+
+// GetUsageWithResponse request returning *GetUsageResponse
+func (c *ClientWithResponses) GetUsageWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsageResponse, error) {
+	rsp, err := c.GetUsage(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetUsageResponse(rsp)
+}
+
+// DownloadSiteDataWithResponse request returning *DownloadSiteDataResponse
+func (c *ClientWithResponses) DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error) {
+	rsp, err := c.DownloadSiteData(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDownloadSiteDataResponse(rsp)
+}
+
+// TruncateSiteWithResponse request returning *TruncateSiteResponse
+func (c *ClientWithResponses) TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error) {
+	rsp, err := c.TruncateSite(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTruncateSiteResponse(rsp)
 }
 
 // WelcomePasskeyBeginWithResponse request returning *WelcomePasskeyBeginResponse
@@ -10015,6 +11129,204 @@ func ParseNsV2AuthorizeResponse(rsp *http.Response) (*NsV2AuthorizeResponse, err
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest NsAuthorization
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2RolesResponse parses an HTTP response from a NsV2RolesWithResponse call
+func ParseNsV2RolesResponse(rsp *http.Response) (*NsV2RolesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2RolesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2CreateRoleResponse parses an HTTP response from a NsV2CreateRoleWithResponse call
+func ParseNsV2CreateRoleResponse(rsp *http.Response) (*NsV2CreateRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2CreateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2UpdateRoleResponse parses an HTTP response from a NsV2UpdateRoleWithResponse call
+func ParseNsV2UpdateRoleResponse(rsp *http.Response) (*NsV2UpdateRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2UpdateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2SubjectsResponse parses an HTTP response from a NsV2SubjectsWithResponse call
+func ParseNsV2SubjectsResponse(rsp *http.Response) (*NsV2SubjectsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2SubjectsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2CreateSubjectResponse parses an HTTP response from a NsV2CreateSubjectWithResponse call
+func ParseNsV2CreateSubjectResponse(rsp *http.Response) (*NsV2CreateSubjectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2CreateSubjectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2DeleteSubjectResponse parses an HTTP response from a NsV2DeleteSubjectWithResponse call
+func ParseNsV2DeleteSubjectResponse(rsp *http.Response) (*NsV2DeleteSubjectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2DeleteSubjectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -11634,6 +12946,20 @@ func ParseCreateSiteResponse(rsp *http.Response) (*CreateSiteResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest SiteCreationRefused
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest SiteCreationRefused
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -11662,6 +12988,98 @@ func ParseGetSummaryResponse(rsp *http.Response) (*GetSummaryResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SummaryList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUsageResponse parses an HTTP response from a GetUsageWithResponse call
+func ParseGetUsageResponse(rsp *http.Response) (*GetUsageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetUsageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SiteUsageResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDownloadSiteDataResponse parses an HTTP response from a DownloadSiteDataWithResponse call
+func ParseDownloadSiteDataResponse(rsp *http.Response) (*DownloadSiteDataResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DownloadSiteDataResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseTruncateSiteResponse parses an HTTP response from a TruncateSiteWithResponse call
+func ParseTruncateSiteResponse(rsp *http.Response) (*TruncateSiteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TruncateSiteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SiteUsageResult
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

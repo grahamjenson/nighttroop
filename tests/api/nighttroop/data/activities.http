@@ -77,7 +77,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "Forever", "duration_minutes": 2000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "duration must be from 1 to 1440" "@message"
+ASSERT_CONTAINS "duration_minutes must be from 1 to 1440" "@message"
 
 NAME create_activity_bad_heart_rate
 POST http://{{ site }}/data/activities
@@ -85,7 +85,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "Run", "heart_rate": 900}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "heart rate must be from 20 to 250" "@message"
+ASSERT_CONTAINS "heart_rate must be from 20 to 250" "@message"
 
 NAME create_activity_name_too_long
 POST http://{{ site }}/data/activities

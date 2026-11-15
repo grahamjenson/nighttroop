@@ -1,7 +1,6 @@
 package sitepresets
 
 import (
-	"cmp"
 	"context"
 
 	"github.com/a-h/templ"
@@ -12,12 +11,6 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// maxPresetGrams is far more of any one nutrient than a portion has
-const maxPresetGrams = 1000
-
-// maxAbsorptionMinutes is a day, far longer than any food takes
-const maxAbsorptionMinutes = 24 * 60
 
 type FoodPresetsCollection struct{}
 
@@ -33,9 +26,6 @@ func (s *FoodPresetsCollection) GetRoute() string {
 func (s *FoodPresetsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodPreset) (*sitedb.FoodPreset, error) {
 	if model.Name == nil || *model.Name == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.name")
-	}
-	if herr := checkFoodPreset(model); herr != nil {
-		return nil, herr
 	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateFoodPreset, sitemodels.FoodPresetToCreate(model, siteContext))
 }
@@ -53,9 +43,6 @@ func (s *FoodPresetsCollection) CreateHTMXResponse(model *sitemodels.SiteFoodPre
 func (s *FoodPresetsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteFoodPreset, model *sitemodels.SiteFoodPreset) (*sitedb.FoodPreset, error) {
 	if model.Name != nil && *model.Name == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("errors.missing_field.name")
-	}
-	if herr := checkFoodPreset(model); herr != nil {
-		return nil, herr
 	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateFoodPreset, sitemodels.FoodPresetToUpdate(model, siteContext))
@@ -95,15 +82,4 @@ func (s *FoodPresetsCollection) DeleteRow(ctx context.Context, collectionTx *sit
 
 func (s *FoodPresetsCollection) DeleteHTMXResponse(model *sitemodels.SiteFoodPreset) templ.Component {
 	return site_presets_templ.FoodPresetDeleted()
-}
-
-// checkFoodPreset keeps any nutrients and absorption time sent within what a portion of food could have
-func checkFoodPreset(model *sitemodels.SiteFoodPreset) *apiutils.HTTPError {
-	return cmp.Or(
-		apiutils.CheckRange("errors.data.food", model.Carbs, 0, maxPresetGrams),
-		apiutils.CheckRange("errors.data.food", model.Fat, 0, maxPresetGrams),
-		apiutils.CheckRange("errors.data.food", model.Protein, 0, maxPresetGrams),
-		apiutils.CheckRange("errors.data.food", model.Fibre, 0, maxPresetGrams),
-		apiutils.CheckRange("errors.data.absorption_time", model.AbsorptionTimeMinutes, 0, maxAbsorptionMinutes),
-	)
 }

@@ -11,10 +11,11 @@ B {"date": {{ itime 20 }}, "utcOffset": 780, "isReadOnly": false, "isValid": fal
 ASSERT_STATUS 201
 SET deleted_id {{ .create_deleted_carbs.identifier }}
 
-NAME deleted_carbs_not_found
+// As in Nightscout, reading it is gone
+NAME deleted_carbs_gone
 GET http://{{ site }}/api/v3/treatments/{{ .deleted_id }}
 H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 404
+ASSERT_STATUS 410
 
 NAME deleted_carbs_not_searched
 GET http://{{ site }}/api/v3/treatments?eventType$eq=Meal%20Bolus

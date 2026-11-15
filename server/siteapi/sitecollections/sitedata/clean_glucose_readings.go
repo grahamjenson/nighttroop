@@ -70,7 +70,7 @@ func (s *CleanGlucoseReadingsCollection) SearchHTMXResponse(models []*sitemodels
 	for i, model := range models {
 		readings[i] = &model.SiteGlucoseReading
 	}
-	return site_data_templ.GlucoseReadingsTable(readings, query.Skip, query.Limit)
+	return site_data_templ.GlucoseReadingsTable(readings, query.Skip, query.Limit, query.Before)
 }
 
 // GetRow is the cleaned reading a reading is, or was merged into

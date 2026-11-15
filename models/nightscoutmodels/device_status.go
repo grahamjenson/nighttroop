@@ -1,9 +1,11 @@
 package nightscoutmodels
 
 import (
-	"cmp"
 	"encoding/json"
 	"log/slog"
+	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -26,9 +28,8 @@ type DeviceStatus struct {
 	// OverrideRaw is Loop's override in force
 	OverrideRaw *json.RawMessage `json:"override,omitempty"`
 
-	// Date Fields
-	Date      *types.DateInt    `json:"date,omitempty"` // Unix timestamp in milliseconds
-	CreatedAt *types.DateString `json:"created_at,omitempty"`
+	// Date is when it was, read from and written as its TimeAliases
+	Date *types.DateInt `json:"-"`
 
 	// Default String Fields
 	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
@@ -43,6 +44,10 @@ type DeviceStatus struct {
 }
 
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
+	date, offset, err := deviceStatusTimes.Read(data)
+	if err != nil {
+		return err
+	}
 	type Alias DeviceStatus
 	aux := struct {
 		ID *types.IdentifierString `json:"_id"`
@@ -61,13 +66,7 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 		t.Identifier = aux.ID
 	}
 
-	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
-	if t.CreatedAt != nil {
-		if t.Date == nil || t.UtcOffsetMinutes == nil {
-			date, offset := t.CreatedAt.MillisSentOffset()
-			t.Date, t.UtcOffsetMinutes = date, cmp.Or(t.UtcOffsetMinutes, offset)
-		}
-	}
+	t.Date, t.UtcOffsetMinutes = date, offset
 	// Loop's pump says the phone's offset, where its UTC times do not
 	if t.UtcOffsetMinutes == nil && t.Pump != nil && t.Pump.SecondsFromGMT != nil && max(*t.Pump.SecondsFromGMT, -*t.Pump.SecondsFromGMT) <= 24*60*60 {
 		t.UtcOffsetMinutes = new(*t.Pump.SecondsFromGMT / 60)
@@ -91,6 +90,9 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 			slog.Warn("failed to unmarshal loop data", "error", err)
 		}
 	}
+	if t.Date == nil {
+		t.Date = loopTime(t.OpenAPS, t.Loop)
+	}
 	if t.ConfigurationRaw != nil {
 		t.Configuration = &map[string]any{}
 		err := json.Unmarshal(*t.ConfigurationRaw, t.Configuration)
@@ -101,6 +103,30 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// loopTime is when the loop in a device status sent with no date ran, its openaps.suggested or loop timestamp, as Trio
+// uploads its queued loops newest first with no created_at, and the oldest, kept as now, was read as the current one.
+// One well ahead of now is not used, so a phone's bad clock cannot keep its status the newest.
+func loopTime(openAPS *OpenAPSStatus, loop *LoopStatus) *types.DateInt {
+	var sent *types.DateString
+	if openAPS != nil && openAPS.Suggested != nil {
+		sent = openAPS.Suggested.Timestamp
+	}
+	if sent == nil && loop != nil {
+		sent = loop.Timestamp
+	}
+	if sent == nil || sent.Time().IsZero() || sent.Time().After(time.Now().Add(consts.MaxFutureReading)) {
+		return nil
+	}
+	return new(types.DateInt(sent.UnixMilli()))
+}
+
+// deviceStatusTimes are when a device status was
+var deviceStatusTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "created_at"}}
+
+func (t DeviceStatus) TimeAliases() types.TimeAliases {
+	return deviceStatusTimes
 }
 
 func (t DeviceStatus) GetDevice() *string {
@@ -268,22 +294,16 @@ type UploaderStatus struct {
 	IsCharging *types.FlexibleBool  `json:"isCharging,omitempty"`
 	Name       *types.ShortString   `json:"name,omitempty"`
 	Timestamp  *types.DateString    `json:"timestamp,omitempty"`
-}
-
-// UnmarshalJSON leaves out a battery that is not a number, like the "50 days (voltage: 285/275)" xDrip+ sends for a
-// Dexcom transmitter, rather than refusing the device status
-func (u *UploaderStatus) UnmarshalJSON(data []byte) error {
-	type Alias UploaderStatus
-	aux := struct {
-		Battery json.RawMessage `json:"battery"`
-		*Alias
-	}{Alias: (*Alias)(u)}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	var battery *types.FlexibleInt64
-	if json.Unmarshal(aux.Battery, &battery) == nil {
-		u.Battery = battery
-	}
-	return nil
+	// A Dexcom transmitter's, as xDrip+ sends it as its own device status: its days in use and their estimate, its
+	// status, battery voltages, resistance and its status, temperature, when it was last queried, and its type
+	Days             *types.FlexibleFloat64 `json:"days,omitempty"`
+	DaysEstimate     *types.ShortString     `json:"daysEstimate,omitempty"`
+	Status           *types.ShortString     `json:"status,omitempty"`
+	VoltageA         *types.FlexibleFloat64 `json:"voltagea,omitempty"`
+	VoltageB         *types.FlexibleFloat64 `json:"voltageb,omitempty"`
+	Resistance       *types.FlexibleFloat64 `json:"resistance,omitempty"`
+	ResistanceStatus *types.ShortString     `json:"resistance_status,omitempty"`
+	Temperature      *types.FlexibleFloat64 `json:"temperature,omitempty"`
+	LastQueried      *types.FlexibleInt64   `json:"lastQueried,omitempty"`
+	Type             *types.ShortString     `json:"type,omitempty"`
 }

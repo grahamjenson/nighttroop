@@ -3,7 +3,10 @@ package nscollections
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/json/jsontext"
+	"maps"
 	"net/http/httptest"
+	"slices"
 	"testing"
 	"time"
 
@@ -18,6 +21,26 @@ import (
 	"nighttroop.t1d.nz/utils/types"
 )
 
+// fieldsDocument is a document made of its fields
+type fieldsDocument struct {
+	id                   string
+	modified, occurredAt int64
+	fields               map[string]any
+}
+
+func (d fieldsDocument) Identifier() string         { return d.id }
+func (d fieldsDocument) Modified() int64            { return d.modified }
+func (d fieldsDocument) OccurredAt() int64          { return d.occurredAt }
+func (d fieldsDocument) Fields(bool) map[string]any { return maps.Clone(d.fields) }
+func (d fieldsDocument) JSON(_ bool, only []string) json.RawMessage {
+	fields := d.Fields(true)
+	if len(only) > 0 {
+		maps.DeleteFunc(fields, func(name string, _ any) bool { return !slices.Contains(only, name) })
+	}
+	raw, _ := json.Marshal(fields)
+	return raw
+}
+
 // mmolSite is a site whose settings write glucose in mmol/L
 func mmolSite() *httputils.SiteContext {
 	return &httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", Units: new(consts.UnitsMMOLL)}}
@@ -29,10 +52,10 @@ func dayOfEntries() []nsutils.Document {
 	entries := NewEntriesCollection().(Collection[nightscoutmodels.Entry, sitedb.GlucoseReading])
 	documents := make([]nsutils.Document, 0, 288)
 	for i := range int64(288) {
-		delta, noise, direction, device, utcOffset := float64(i%7)-3, 1.0, "Flat", "xDrip-DexcomG6", int64(780)
+		delta, noise, trend, device, utcOffset := float64(i%7)-3, 1.0, int64(4), "xDrip-DexcomG6", int64(780)
 		occurredAt := 1_700_000_000_000 + i*300_000
 		documents = append(documents, entries.document(&sitedb.GlucoseReading{ID: "0123456789abcdef01234567", Mgdl: 100 + float64(i%50),
-			ReadingType: "sgv", Delta: &delta, Direction: &direction, Noise: &noise, CreatedByDeviceName: &device,
+			ReadingType: "sgv", Delta: &delta, Trend: &trend, Noise: &noise, CreatedByDeviceName: &device,
 			UtcOffsetMinutes: &utcOffset, OccurredAt: occurredAt, CreatedAt: occurredAt, UpdatedAt: occurredAt, CreatedByIdentityName: "xdrip"}, siteContext))
 	}
 	return documents
@@ -56,6 +79,13 @@ func mapFields[NS any](s stored[NS], v3 bool, only []string) map[string]any {
 	}
 	if out == nil {
 		out = map[string]any{}
+	}
+	if timed, ok := any(s.model).(interface{ TimeAliases() types.TimeAliases }); ok {
+		for _, alias := range timed.TimeAliases().Written(s.occurredAt, v3) {
+			var value any
+			_ = json.Unmarshal([]byte(alias[1]), &value)
+			out[alias[0]] = value
+		}
 	}
 	out["created_at"] = types.ISOString(time.UnixMilli(s.occurredAt))
 	out["utcOffset"] = s.utcOffset
@@ -95,15 +125,13 @@ func model[NS any](t *testing.T, sent string) NS {
 	return out
 }
 
-// A document is written from its model's JSON with the fields, and values, it had when it was read back as a map
-// first, in either API version and with or without fields asked for: the server's over the model's, units labelled
-// as the settings write them, and HTML, nested objects and numbers as they were
-func TestDocumentJSONIsItsFields(t *testing.T) {
+// testDocuments are documents of each kind, with HTML, escapes, nested objects, numbers and units to write
+func testDocuments(t *testing.T) map[string]nsutils.Document {
 	m := meta{id: "0123456789abcdef01234567", srvCreated: 1_700_000_001_000, srvModified: 1_700_000_002_000,
-		occurredAt: 1_700_000_000_000, utcOffset: 780, subject: "Tom & <Jerry>"}
+		occurredAt: 1_700_000_000_000, utcOffset: 780, subject: "Tom & <Jerry> \u2028 é"}
 	deleted := m
 	deleted.deletedAt = new(int64(1_700_000_003_000))
-	documents := map[string]nsutils.Document{
+	return map[string]nsutils.Document{
 		"entry": dayOfEntries()[0],
 		"labelled units": stored[nightscoutmodels.Treatment]{meta: m, unitsLabels: map[string]string{"mg/dL": "mg/dl"},
 			model: model[nightscoutmodels.Treatment](t, `{"eventType":"BG Check","glucose":5.5,"units":"mg/dl","glucoseType":"Finger"}`)},
@@ -113,8 +141,42 @@ func TestDocumentJSONIsItsFields(t *testing.T) {
 			`{"device":"openaps://phone","openaps":{"iob":{"iob":1.50,"time":1700000000000,"big":12345678901234567},"z":{"b":[1,2.0,3e2],"a":"<"}},"pump":{"battery":{"percent":80}}}`)},
 		"setting": stored[setting]{meta: m, model: setting{Identifier: "units", Value: map[string]any{"z": 1, "a": []any{1.5, "x"}}, Type: "json"}},
 		"empty":   stored[setting]{},
+		"general setting": stored[json.RawMessage]{meta: m, model: json.RawMessage("{\"a\":1.50,\"c\":1e21,\"d\":1e-7," +
+			"\"e\":0.000001,\"f\":12345678901234567,\"h\":\"<\u2028>\",\"i\":1E2,\"k\":\"\\u0041\",\"Z\":0,\"value\":[2.50]}")},
+		"general setting with non-ASCII names": stored[json.RawMessage]{meta: m,
+			model: json.RawMessage("{\"\u00e9\":1,\"\u03a9\":2,\"\u2028\":\"\u00e9\",\"z\":true}")},
 	}
-	for name, document := range documents {
+}
+
+// A search's response is its documents' JSON as an encoder writes them: an array on API v1, and its result on API v3,
+// an empty one when there are none
+func TestWriteRecordsIsItsDocumentsJSON(t *testing.T) {
+	documents := []nsutils.Document{fieldsDocument{id: "bg", fields: map[string]any{"enteredBy": "Tom & <Jerry> ", "glucose": 5.0}}}
+	for _, document := range testDocuments(t) {
+		documents = append(documents, document)
+	}
+	for _, records := range [][]nsutils.Document{nil, documents, dayOfEntries()} {
+		v1, v3 := []json.RawMessage{}, []json.RawMessage{}
+		for _, record := range records {
+			v1 = append(v1, record.JSON(false, nil))
+			v3 = append(v3, record.JSON(true, nil))
+		}
+		response := httptest.NewRecorder()
+		nsutils.WriteRecordsV1(response, records, nil)
+		require.Equal(t, written(t, v1), response.Body.String())
+		require.Equal(t, "application/json", response.Header().Get("Content-Type"))
+		response = httptest.NewRecorder()
+		nsutils.WriteRecordsV3(response, records, nil)
+		require.Equal(t, written(t, map[string]any{"status": 200, "result": v3}), response.Body.String())
+		require.Equal(t, 200, response.Code)
+	}
+}
+
+// A document is written from its model's JSON with the fields, and values, it had when it was read back as a map
+// first, in either API version and with or without fields asked for: the server's over the model's, units labelled
+// as the settings write them, and HTML, nested objects and numbers as they were
+func TestDocumentJSONIsItsFields(t *testing.T) {
+	for name, document := range testDocuments(t) {
 		for _, v3 := range []bool{false, true} {
 			for _, only := range [][]string{nil, {"_id", "identifier", "units", "notes", "date", "openaps", "value", "missing"}} {
 				var want map[string]any
@@ -127,12 +189,29 @@ func TestDocumentJSONIsItsFields(t *testing.T) {
 					want = mapFields(s, v3, only)
 				case stored[setting]:
 					want = mapFields(s, v3, only)
+				case stored[json.RawMessage]:
+					want = mapFields(s, v3, only)
 				}
 				require.Equal(t, written(t, want), written(t, document.JSON(v3, only)), "%s v3=%v fields=%v", name, v3, only)
 				if only == nil {
 					require.Equal(t, written(t, want), written(t, document.Fields(v3)), "%s v3=%v", name, v3)
 				}
 			}
+		}
+	}
+}
+
+// A document is written as Canonicalize writes it, as it was when the whole object was read again to write it, with
+// -0 as 0 and its non-ASCII names and nested objects in order
+func TestDocumentJSONIsCanonical(t *testing.T) {
+	documents := testDocuments(t)
+	documents["negative zero"] = stored[json.RawMessage]{model: json.RawMessage(`{"b":-0,"j":-0.0,"n":{"y":-0,"x":1.0}}`)}
+	for name, document := range documents {
+		for _, v3 := range []bool{false, true} {
+			written := document.JSON(v3, nil)
+			canonical := jsontext.Value(slices.Clone(written))
+			require.NoError(t, canonical.Canonicalize(jsontext.EscapeForJS(true)))
+			require.Equal(t, string(canonical), string(written), "%s v3=%v", name, v3)
 		}
 	}
 }

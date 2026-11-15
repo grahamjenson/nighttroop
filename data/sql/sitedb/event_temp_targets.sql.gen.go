@@ -14,12 +14,16 @@ const allTempTargets = `-- name: AllTempTargets :many
 
 SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, duration_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-ORDER BY occurred_at DESC
-LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
+AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+ORDER BY occurred_at DESC, id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type AllTempTargetsParams struct {
 	IncludeDeleted bool
+	Before         *int64
+	BeforeID       *string
 	Skip           int64
 	Limit          int64
 }
@@ -28,7 +32,13 @@ type AllTempTargetsParams struct {
 // READ
 // ------
 func (q *Queries) AllTempTargets(ctx context.Context, arg AllTempTargetsParams) ([]*TempTarget, error) {
-	rows, err := q.query(ctx, q.allTempTargetsStmt, allTempTargets, arg.IncludeDeleted, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.allTempTargetsStmt, allTempTargets,
+		arg.IncludeDeleted,
+		arg.Before,
+		arg.BeforeID,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -199,6 +209,92 @@ type HardDeleteTempTargetParams struct {
 
 func (q *Queries) HardDeleteTempTarget(ctx context.Context, arg HardDeleteTempTargetParams) (sql.Result, error) {
 	return q.exec(ctx, q.hardDeleteTempTargetStmt, hardDeleteTempTarget, arg.ID)
+}
+
+const rewriteTempTarget = `-- name: RewriteTempTarget :one
+
+UPDATE temp_targets SET
+    id = ?1,
+    duration_minutes = ?2,
+    high_target_mgdl = ?3,
+    low_target_mgdl = ?4,
+    insulin_needs_scale_factor = ?5,
+    duration_type = ?6,
+    notes = ?7,
+    reason = ?8,
+    utc_offset_minutes = ?9,
+    occurred_at = ?10,
+    created_by_app_name = ?11,
+    created_by_device_name = ?12,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = CAST(?13 AS TEXT),
+    updated_by_identity_id = ?14
+WHERE id = ?1 AND deleted_at IS NULL
+RETURNING id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, duration_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RewriteTempTargetParams struct {
+	ID                      string
+	DurationMinutes         int64
+	HighTargetMgdl          float64
+	LowTargetMgdl           float64
+	InsulinNeedsScaleFactor *float64
+	DurationType            *string
+	Notes                   *string
+	Reason                  *string
+	UtcOffsetMinutes        *int64
+	OccurredAt              int64
+	CreatedByAppName        *string
+	CreatedByDeviceName     *string
+	CreatedByIdentityName   string
+	CreatedByIdentityID     *int64
+}
+
+// ------
+// UPDATE
+// ------
+// RewriteTempTarget writes every column CreateTempTarget does over the temp target with the ID, as a Nightscout update
+// writes its merged document. It keeps when it was created and who by: the identity given is who updated it.
+func (q *Queries) RewriteTempTarget(ctx context.Context, arg RewriteTempTargetParams) (*TempTarget, error) {
+	row := q.queryRow(ctx, q.rewriteTempTargetStmt, rewriteTempTarget,
+		arg.ID,
+		arg.DurationMinutes,
+		arg.HighTargetMgdl,
+		arg.LowTargetMgdl,
+		arg.InsulinNeedsScaleFactor,
+		arg.DurationType,
+		arg.Notes,
+		arg.Reason,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	var i TempTarget
+	err := row.Scan(
+		&i.ID,
+		&i.DurationMinutes,
+		&i.HighTargetMgdl,
+		&i.LowTargetMgdl,
+		&i.InsulinNeedsScaleFactor,
+		&i.DurationType,
+		&i.Notes,
+		&i.Reason,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
 }
 
 const searchTempTargets = `-- name: SearchTempTargets :many
@@ -374,7 +470,6 @@ func (q *Queries) TempTargetTotals(ctx context.Context) (*TempTargetTotalsRow, e
 }
 
 const updateTempTarget = `-- name: UpdateTempTarget :one
-
 UPDATE temp_targets SET
     duration_minutes = COALESCE(?1, duration_minutes),
     high_target_mgdl = COALESCE(?2, high_target_mgdl),
@@ -403,9 +498,6 @@ type UpdateTempTargetParams struct {
 	ID                    string
 }
 
-// ------
-// UPDATE
-// ------
 func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetParams) (*TempTarget, error) {
 	row := q.queryRow(ctx, q.updateTempTargetStmt, updateTempTarget,
 		arg.DurationMinutes,

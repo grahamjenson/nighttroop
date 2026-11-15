@@ -41,6 +41,34 @@ ASSERT_EQUALS 3 "@bgs.1.trend"
 ASSERT_EQUALS "100" "@bgs.2.sgv"
 ASSERT_EQUALS 4 "@bgs.2.trend"
 
+// A direction with no trend number (TripleUp) or no direction is 8 (NOT COMPUTABLE), as in Nightscout
+NAME post_older_entries
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 90, "date": {{ itime 20 }}}, {"type": "sgv", "sgv": 95, "direction": "TripleUp", "date": {{ itime 15 }}}]
+ASSERT_STATUS 200
+
+NAME pebble_not_computable
+GET http://{{ site }}/pebble?token={{ token }}&count=5&units=mg/dl
+ASSERT_STATUS 200
+ASSERT_LENGTH 5 "@bgs"
+ASSERT_EQUALS "95" "@bgs.3.sgv"
+ASSERT_EQUALS "TripleUp" "@bgs.3.direction"
+ASSERT_EQUALS 8 "@bgs.3.trend"
+ASSERT_EQUALS "90" "@bgs.4.sgv"
+ASSERT_EQUALS 8 "@bgs.4.trend"
+
+// The newest has the loop's IOB as a string and COB as a number, as in Nightscout
+NAME post_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {"device": "openaps://phone", "openaps": {"iob": {"iob": 1.127, "time": "{{ time 0 }}"}, "suggested": {"COB": 12.03}}, "created_at": "{{ time 0 }}"}
+ASSERT_STATUS 200
+
+NAME pebble_iob_cob
+GET http://{{ site }}/pebble?token={{ read_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "1.13" "@bgs.0.iob"
+ASSERT_EQUALS 12 "@bgs.0.cob"
+
 NAME pebble_no_token
 GET http://{{ site }}/pebble
 ASSERT_STATUS 401

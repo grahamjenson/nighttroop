@@ -1,0 +1,46 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS deletes a treatment again after a follower's delete of it reaches AAPS. As in Nightscout, deleting one already
+// deleted is answered 200 and changes nothing; one never kept is not found
+NAME add_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"date": {{ itime 10 }}, "utcOffset": 780, "eventType": "Carb Correction", "carbs": 12.0, "app": "AAPS"}
+ASSERT_STATUS 201
+SET carbs_id {{ .add_carbs.identifier }}
+
+// Deleted by a follower, through API v1
+NAME follower_deletes_carbs
+DELETE http://{{ site }}/api/v1/treatments/{{ .carbs_id }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME aaps_deletes_carbs_again
+DELETE http://{{ site }}/api/v3/treatments/{{ .carbs_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME carbs_still_deleted
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS false "@result.0.isValid"
+
+NAME delete_never_kept
+DELETE http://{{ site }}/api/v3/treatments/NOT_REAL_ID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+// A permanent delete still removes it for good
+NAME delete_permanently
+DELETE http://{{ site }}/api/v3/treatments/{{ .carbs_id }}?permanent=true
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_after_permanent
+DELETE http://{{ site }}/api/v3/treatments/{{ .carbs_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404

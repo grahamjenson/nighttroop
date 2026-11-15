@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -30,22 +31,20 @@ type Entry struct {
 	MBG       *types.FlexibleFloat64 `json:"mbg,omitempty"`
 	Direction *string                `json:"direction,omitempty"`
 	Trend     *types.FlexibleFloat64 `json:"trend,omitempty"`
+	Delta     *types.FlexibleFloat64 `json:"delta,omitempty"` // mg/dL since the reading before, as sent
 	Units     *consts.Units          `json:"units,omitempty"`
 
 	Filtered   *types.FlexibleFloat64 `json:"filtered,omitempty"`
 	Unfiltered *types.FlexibleFloat64 `json:"unfiltered,omitempty"`
 	RSSI       *types.FlexibleFloat64 `json:"rssi,omitempty"`
 	Noise      *types.FlexibleFloat64 `json:"noise,omitempty"`
-	SysTime    *types.DateString      `json:"sysTime,omitempty"`
 
 	// AAPS's calibration is an mbg with isCalibration, and the sensor's reading then in mg/dL
 	IsCalibration       *bool                  `json:"isCalibration,omitempty"`
 	SensorMgdlAtPairing *types.FlexibleFloat64 `json:"sensorMgdlAtPairing,omitempty"`
 
-	// Date fields
-	Date             *types.DateInt       `json:"date,omitempty"`
-	DateString       *types.DateString    `json:"dateString,omitempty"`
-	Mills            *types.DateInt       `json:"mills,omitempty"`
+	// Date is when it was, read from and written as its TimeAliases
+	Date             *types.DateInt       `json:"-"`
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`
 
 	// Default String Fields
@@ -54,10 +53,14 @@ type Entry struct {
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Mgdl        *types.FlexibleFloat64 `json:"-"`
+	Mgdl *types.FlexibleFloat64 `json:"-"`
 }
 
 func (t *Entry) UnmarshalJSON(data []byte) error {
+	date, offset, err := entryTimes.Read(data)
+	if err != nil {
+		return err
+	}
 	type Alias Entry
 	aux := struct {
 		ID *types.IdentifierString `json:"_id"`
@@ -71,7 +74,6 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-
 
 	// Identitfiers
 	if t.Identifier == nil {
@@ -89,26 +91,29 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		}
 
 		if value != nil {
-			res := types.FlexibleFloat64(t.Units.ToMGDL(value.Float64()))
+			res := types.FlexibleFloat64(cmp.Or(t.Units, t.DefaultGlucoseUnits()).ToMGDL(value.Float64()))
 			t.Mgdl = &res
 		}
 	}
 
-	// A date sent is kept, with its milliseconds, which Loop's dateString does not have; the dateString gives the
-	// date when it is not sent, and the UTC offset when it is not sent
-	if t.DateString != nil {
-		date, offset := t.DateString.MillisUTCOffset()
-		t.Date, t.UtcOffsetMinutes = cmp.Or(t.Date, date), cmp.Or(t.UtcOffsetMinutes, offset)
-	}
-
-	if t.Mills != nil && t.Date == nil {
-		t.Date = t.Mills
-	}
-
 	t.Direction = EntryDirection(t.Direction)
+	// A trend sent without a direction gives it, as a client may send only Nightscout's trend number, 0 to 9
+	if t.Direction == nil && t.Trend != nil && t.Trend.Float64() == math.Trunc(t.Trend.Float64()) && t.Trend.Float64() < nightscoutTrends {
+		t.Direction = TrendDirection(new(int64(t.Trend.Float64())))
+	}
 	t.Noise = WholeNoise((*float64)(t.Noise))
 
+	t.Date, t.UtcOffsetMinutes = date, offset
 	return nil
+}
+
+// entryTimes are when a reading was: a date sent is kept, with its milliseconds, which Loop's dateString does not
+// have, and xDrip4iOS's sysTime is read but not given back
+var entryTimes = types.TimeAliases{{Name: "date", Millis: true}, {Name: "dateString"}, {Name: "mills", Millis: true},
+	{Name: "sysTime", Write: types.WriteNever}}
+
+func (t Entry) TimeAliases() types.TimeAliases {
+	return entryTimes
 }
 
 // directions are Nightscout's directions, by their names in any case and by their arrows, as Trio reads a fetch of
@@ -138,6 +143,45 @@ func EntryDirection(direction *string) *string {
 		return &name
 	}
 	return new("NOT COMPUTABLE")
+}
+
+// trends are the directions by their trend number: Nightscout's 0 to 9, then TripleUp and TripleDown, which Nighttroop
+// accepts and Nightscout has no number for
+var trends = []string{"NONE", "DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown",
+	"DoubleDown", "NOT COMPUTABLE", "RATE OUT OF RANGE", "TripleUp", "TripleDown"}
+
+// nightscoutTrends are how many trend numbers Nightscout has
+const nightscoutTrends = 10
+
+// DirectionTrend is a direction's trend number, as EntryDirection names it, and none for none
+func DirectionTrend(direction *string) *int64 {
+	if name := EntryDirection(direction); name != nil {
+		return new(int64(slices.Index(trends, *name)))
+	}
+	return nil
+}
+
+// TrendDirection is a trend number's direction, and none for none or a number without one
+func TrendDirection(trend *int64) *string {
+	if trend == nil || *trend < 0 || *trend >= int64(len(trends)) {
+		return nil
+	}
+	return new(trends[*trend])
+}
+
+// EntryTrend is a trend number as an entry gives it back, Nightscout's 0 to 9, and none for TripleUp and TripleDown, as
+// Trio reads it as Nightscout's
+func EntryTrend(trend *int64) *types.FlexibleFloat64 {
+	if trend == nil || *trend >= nightscoutTrends {
+		return nil
+	}
+	return new(types.FlexibleFloat64(*trend))
+}
+
+// MergeAliases are the fields a merge takes out of the stored entry when one is sent: the direction and the trend say
+// the same, and a direction sent wins over a trend
+func (t Entry) MergeAliases() map[string][]string {
+	return map[string][]string{"direction": {"trend"}, "trend": {"direction"}}
 }
 
 // WholeNoise is a CGM's noise as the whole number Nightscout's apps read, as Trio refuses a fraction
@@ -206,4 +250,14 @@ func (t Entry) GetUtcOffsetMinutes() *int64 {
 
 func (t Entry) GetIdentifier() *string {
 	return t.Identifier.Stringp()
+}
+
+// GlucoseFields are the fields whose glucose is in the entry's units
+func (t Entry) GlucoseFields() []string {
+	return []string{"sgv", "mbg"}
+}
+
+// DefaultGlucoseUnits are the units of glucose sent without units, mg/dL as Nightscout's entries are, never guessed
+func (t Entry) DefaultGlucoseUnits() *consts.Units {
+	return new(consts.UnitsMGDL)
 }

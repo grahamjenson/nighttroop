@@ -107,7 +107,7 @@ func (s *SiteContext) PublishModelChange(action events.Action, model any) {
 func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb.SiteIdentity) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
-	siteContext.mgdlSettings = nil
+	siteContext.settings, siteContext.mgdlSettings = nil, nil
 	if identityModel != nil {
 		aslog.AddAttrs(ctx, slog.Int64("identity_id", identityModel.ID), slog.String("identity_name", identityModel.Name), slog.String("role", string(identityModel.Role)))
 	}
