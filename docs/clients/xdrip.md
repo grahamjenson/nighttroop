@@ -190,13 +190,14 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
   - Follower `treatments`, and `devicestatus.json?count=1` with `uploaderBattery`.
   - Follower `mbg` entries: as in Nightscout. Since #514 they have no `sgv`. The follower takes every entry as a
     reading (`cgm/nsfollow/EntryProcessor.java`), so a finger stick is a reading of 0.
+- **Same as Nightscout, entries:**
+  - Follower with Nightscout upload on: it uploads each reading it downloads (whole `sgv`, `Flat`, device
+    `xDrip-NSFollower Nightscout Follow`). The copy overwrites the looper's reading, its device too. Nightscout sets
+    the fields sent over the entry with the same date and type. Test: `xdrip/follower_echo.http`.
 - **Fixed, authentication:** `api-secret` as the SHA1 of a device token (#512).
 - **Fixed, entries:**
-  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once, with the
-    careportal's values. It was kept twice, as a reading with another device.
-  - Follower with Nightscout upload on: it uploads each reading it downloads (whole `sgv`, `Flat`, device
-    `xDrip-NSFollower Nightscout Follow`). The looper's reading is kept, and gets only the fields it does not have.
-    It was overwritten. Test: `xdrip/follower_echo.http`.
+  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once. It was kept twice,
+    as a reading with another device. The reading takes the values and device of the copy, as a Nightscout upsert does.
   - Follower with Nightscout upload on and a Caregiver token: its readings are refused (403). xDrip+ then sends the
     batch again, and sends no device status or treatments. Turn upload off on a follower.
   - A `cal` (#512): left out, so the batch is not refused.
