@@ -26,11 +26,15 @@ type WebSocket struct {
 const writeTimeout = 10 * time.Second
 
 // UpgradeWebSocket turns an Engine.IO websocket request into a WebSocket for its EIO version.
-// A message longer than maxPayload bytes closes the connection; checkOrigin, if not nil, decides which origins may connect.
+// A message longer than maxPayload bytes closes the connection; checkOrigin, if not nil, decides which origins may
+// connect, and nil allows only sameOrigin.
 func UpgradeWebSocket(w http.ResponseWriter, r *http.Request, maxPayload int, checkOrigin func(*http.Request) bool) (*WebSocket, error) {
 	version, err := strconv.Atoi(r.URL.Query().Get("EIO"))
 	if err != nil || (version != V3 && version != V4) {
 		return nil, fmt.Errorf("%w: unsupported EIO version", ErrBadPacket)
+	}
+	if checkOrigin == nil {
+		checkOrigin = sameOrigin
 	}
 	upgrader := websocket.Upgrader{CheckOrigin: checkOrigin}
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -39,6 +43,28 @@ func UpgradeWebSocket(w http.ResponseWriter, r *http.Request, maxPayload int, ch
 	}
 	conn.SetReadLimit(int64(maxPayload))
 	return &WebSocket{conn: conn, version: version}, nil
+}
+
+// defaultPorts are the port each scheme's URLs have when they give none
+var defaultPorts = map[string]string{"http": "80", "ws": "80", "https": "443", "wss": "443"}
+
+// sameOrigin allows a request with no Origin, as non-browser clients send, or one from the host it was sent to.
+// A browser leaves the default port out of its Origin and a proxy or client may put it in the Host, or the other
+// way round, so the Origin scheme's default port is taken off both before they are compared.
+func sameOrigin(r *http.Request) bool {
+	origin := r.Header["Origin"]
+	if len(origin) == 0 {
+		return true
+	}
+	u, err := url.Parse(origin[0])
+	if err != nil || u.Host == "" {
+		return false
+	}
+	port, ok := defaultPorts[u.Scheme]
+	if !ok {
+		return strings.EqualFold(u.Host, r.Host)
+	}
+	return strings.EqualFold(strings.TrimSuffix(u.Host, ":"+port), strings.TrimSuffix(r.Host, ":"+port))
 }
 
 // DialWebSocket connects to the Engine.IO server at rawURL (e.g. http://host/socket.io/) over websocket.
