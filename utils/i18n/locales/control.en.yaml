@@ -288,6 +288,12 @@ control:
     not_created: "Site Not Created"
     inactive: "Inactive"
     over_limit: "Over limit"
+    abuse: "Abuse"
+    abuse_good: "Good"
+    abuse_fair: "Fair"
+    abuse_over_use: "Over use"
+    abuse_abusive: "Abusive"
+    abuse_blocked: "Blocked"
   site:
     lifecycle_created: "Created {{.CreatedAt}} · Batch {{.BatchName}}"
     lifecycle_disabled: "Disabled {{.ChangedAt}}"

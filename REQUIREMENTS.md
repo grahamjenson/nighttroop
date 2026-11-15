@@ -115,6 +115,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Site details also show the DB size limit: 20 MB for a new site.
 - Sort by time since last write (first to archive) or DB size.
 - Not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS`: inactive.
+- The sites list has an Abuse column: each site's abuse level and score (for example `Good · 0.00`). See
+  [Abuse levels](#abuse-levels).
 - On a phone: no wider than the window. Sort buttons and both cards wrap. The table scrolls sideways.
 
 #### Site creation
@@ -131,7 +133,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - `/sites/{id}` opens on a click, laid out like a site's summary. Back returns to the sites. An API client gets the
   site.
-- Top: ID, state badge, Inactive and Over limit badges; created, batch, and disabled, archived or deleted times; Open
+- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, batch, and disabled, archived or deleted times; Open
   Site link (new tab) while live.
 - DB size:
   - measured on disk when the page opens, kept on the site's record;
@@ -1829,6 +1831,33 @@ harder:
 - A request's IP is its TCP peer.
   - Behind a trusted proxy (`TRUSTED_PROXIES`): the hop before it in `X-Forwarded-For`, or on Fly.io `Fly-Client-IP`.
   - Any other peer that sets these headers keeps its own IP's limits.
+
+#### Abuse levels
+
+- Every 5 minutes, the resource check gives each open site an abuse score from 0 to 1, and keeps it on the site.
+- The score has these signals, each from 0 to 1:
+  - Size: 0 at or under its DB size limit, 0.4 at 2 times it, 0.8 at 3 times it, 1 at 3.5 times it or more.
+    - If the size or the limit is not known, this signal is 0.
+  - Connectors: from the most failed syncs in a row (c) of the site's connectors that are on, c ÷ (c + 5), at most 0.39.
+    - One failed sync: 0.17. Two in a row: 0.29. Four or more: 0.39.
+    - One sync that works sets the connector's count back to 0.
+    - A connector that is off is left out.
+- Each signal raises the score, and they add up: score = 1 − (1 − size) × (1 − connectors). Only the size can make
+  the score 0.4 or more alone.
+- The score gives the level:
+
+| Level    | Score        |
+|----------|--------------|
+| Good     | under 0.2    |
+| Fair     | 0.2 to < 0.4 |
+| Over use | 0.4 to < 0.6 |
+| Abusive  | 0.6 to < 0.8 |
+| Blocked  | 0.8 or more  |
+
+- Control admins see each site's level and score on the sites list and the site page. Grey: Good and Fair. Amber:
+  Over use. Red: Abusive and Blocked.
+- The server does not treat a site differently by its level yet. The [abuse flag](#abuse-flag) and the
+  [truncation of a site far over its size limit](#truncation-of-a-site-far-over-its-size-limit) still use the DB size.
 
 #### Server load
 

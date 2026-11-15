@@ -588,6 +588,16 @@ func (m *Site) SetEstimatedDbSizeKb(v *int64) {
 	m.EstimatedDbSizeKb = v
 }
 
+// GetAbuseScore returns the AbuseScore value.
+func (m Site) GetAbuseScore() float64 {
+	return m.AbuseScore
+}
+
+// SetAbuseScore sets the AbuseScore value and returns the updated Site.
+func (m *Site) SetAbuseScore(v float64) {
+	m.AbuseScore = v
+}
+
 // GetTableSizesJson returns the TableSizesJson value.
 func (m Site) GetTableSizesJson() types.TableSizes {
 	return m.TableSizesJson
@@ -5425,6 +5435,26 @@ func (m SiteExistsParams) GetID() string {
 
 // SetID sets the ID value and returns the updated SiteExistsParams.
 func (m *SiteExistsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetAbuseScore returns the AbuseScore value.
+func (m UpdateSiteAbuseScoreParams) GetAbuseScore() float64 {
+	return m.AbuseScore
+}
+
+// SetAbuseScore sets the AbuseScore value and returns the updated UpdateSiteAbuseScoreParams.
+func (m *UpdateSiteAbuseScoreParams) SetAbuseScore(v float64) {
+	m.AbuseScore = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteAbuseScoreParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteAbuseScoreParams.
+func (m *UpdateSiteAbuseScoreParams) SetID(v string) {
 	m.ID = v
 }
 

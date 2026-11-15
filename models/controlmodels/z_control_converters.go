@@ -347,6 +347,7 @@ func SiteFromDB(source *controldb.Site) *Site {
 			xint642 := *(*source).EstimatedDbSizeKb
 			controlmodelsSite.EstimatedDbSizeKb = &xint642
 		}
+		controlmodelsSite.AbuseScore = (*source).AbuseScore
 		controlmodelsSite.CreatedAt = (*source).CreatedAt
 		if (*source).LastSeenAt != nil {
 			xint643 := *(*source).LastSeenAt
