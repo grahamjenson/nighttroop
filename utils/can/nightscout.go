@@ -44,14 +44,15 @@ func NightscoutPermissions(role consts.IdentityRole, client *string) ([]string, 
 	return permissions, nil
 }
 
-// IdentityHaveNightscoutToken is whether the role is given a Nightscout token: not an admin, nor a clinician, who sees
-// only the printable report
+// IdentityHaveNightscoutToken is whether the role is given a Nightscout token: a user, a read only user and each device,
+// not an admin, nor a clinician, who sees only the printable report. A role it does not know has none.
 func IdentityHaveNightscoutToken(role consts.IdentityRole) bool {
 	switch role {
-	case consts.IdentityRoleAdmin, consts.IdentityRoleClinician:
-		return false
-	default:
+	case consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDevicePWDPhone,
+		consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite:
 		return true
+	default:
+		return false
 	}
 }
 

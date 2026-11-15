@@ -1898,6 +1898,8 @@ harder:
 | Caregiver device (`device_read_write`) | Nightscout token | Yes | Treatments only | No |
 | Read only device | Nightscout token | Yes | No | No |
 
+- An identity has one of these roles, and a control identity is an admin or a reader. The server stores no other role,
+  however the identity is made (the site pages, AAPS pairing, setup or recovery).
 - A Caregiver device is for a carer's or follower's app, such as LoopFollow, Nightguard or T1D Carer. On the
   Nightscout API:
   - It reads everything.
