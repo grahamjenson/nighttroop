@@ -129,19 +129,19 @@ func TestSummaryEventsOnAlarmChanges(t *testing.T) {
 // An identity streaming its push registrations' changes is sent its own, not another identity's apps and devices
 func TestPushRegistrationEventsStreamToTheirIdentityAlone(t *testing.T) {
 	s := newEventsSite(t)
-	register := func(identity string, role consts.IdentityRole, bundleID, token string) {
-		resp := s.request(identity, role, http.MethodPost, "/settings/push-registrations", `{"app": "loop", "provider": "apns", "bundle_id": "`+
+	register := func(identity string, role consts.IdentityRole, app, bundleID, token string) {
+		resp := s.request(identity, role, http.MethodPost, "/settings/push-registrations", `{"app": "`+app+`", "provider": "apns", "bundle_id": "`+
 			bundleID+`", "production": true, "token": "`+token+`"}`)
 		require.Equal(t, http.StatusCreated, resp.StatusCode)
 	}
 	stream := s.stream(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, "/settings/push-registrations/events")
 
-	// The phone registering its Loop is not streamed to the read only device; the device registering its own is
-	register(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, "com.PHONE12345.loopkit.Loop", strings.Repeat("a1", 32))
-	register(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, "com.KITCHEN123.loopkit.Loop", strings.Repeat("b2", 32))
+	// The phone registering its Loop is not streamed to the read only device; the device registering its LoopFollow is
+	register(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, "loop", "com.PHONE12345.loopkit.Loop", strings.Repeat("a1", 32))
+	register(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, "loopfollow", "com.KITCHEN123.LoopFollow", strings.Repeat("b2", 32))
 	event, data := nextEvent(t, stream)
 	require.Equal(t, "event: created\n", event)
-	require.Contains(t, data, `"bundle_id":"com.KITCHEN123.loopkit.Loop"`)
+	require.Contains(t, data, `"bundle_id":"com.KITCHEN123.LoopFollow"`)
 }
 
 // An identity streaming its settings' changes is sent its own, not another identity's, and told the site's changed,

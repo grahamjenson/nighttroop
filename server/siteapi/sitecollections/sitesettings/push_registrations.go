@@ -66,6 +66,12 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 	if err := push.CheckRegistration(registration); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err)
 	}
+	// Loop's remote commands, such as a bolus, go to the newest Loop registered, so only an identity that can add
+	// insulin doses registers Loop or Trio, the apps on the phone that doses; a read only one could take them
+	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) &&
+		!siteapiutils.HasPermission("insulin_doses", siteapiutils.ActionCreate, siteContext.IdentityModel) {
+		return nil, apiutils.ErrForbidden
+	}
 	q, err := collectionTx.Control()
 	if err != nil {
 		return nil, err

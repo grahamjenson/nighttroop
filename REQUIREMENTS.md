@@ -1749,6 +1749,8 @@ Every 10 minutes, the server truncates every site:
   - Provider: `apns` or `fcm`.
   - Bundle ID, and if it is a production build.
   - Token: kept encrypted, never returned.
+- If the identity cannot add insulin doses, it cannot register `loop` or `trio` (403), as Loop's remote commands go
+  to the newest Loop.
 - A token registered again is updated, or moved from another identity of the site. Another site gets its own, and
   cannot take or change this one.
 - An APNs token has 64 to 256 hex characters, in upper or lower case.
