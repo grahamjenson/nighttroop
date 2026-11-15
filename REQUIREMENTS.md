@@ -313,21 +313,31 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 ### Rate limits
 
-- Refreshes every 10 seconds. Lists each limiter kind: every request, the control site's signed out, an IP's, sign ins,
-  sites created, a site's and an identity's reads and writes, a flagged site's writes, connector changes, identities
-  created, downloads.
-- Each kind:
-  - what one is for (server, IP, site, identity, username or IP on a site);
-  - rate a minute, burst, and how many are kept;
-  - the most used one's spent burst: amber from half, red while any would refuse;
+- Shows the limits in groups. Each group has a card with a title and one line that says what it protects:
+  - **Server**: every request, and the control site's before signing in;
+  - **Sign in**: sign ins for each username and IP, and requests to a site before signing in;
+  - **Site creation**: new sites, from the server and from each IP;
+  - **Site reads and writes**: each site's and identity's reads and writes, and a flagged site's writes;
+  - **Site actions**: connector changes, identities created, downloads, printable reports and pushes.
+- Each limit shows its env variables, its env default, and its rate and burst now.
+- Under each limit are the limiter kinds that use it. Each kind shows:
+  - what one is for (server, IP, site, identity, username or IP on a site), and its multiple of the limit if more
+    than 1 (a site's reads and writes: "4× the limit");
+  - rate a minute and burst now, and how many are kept;
+  - a bar and a percent: the burst that the most used one spent;
   - how many would refuse now.
+- The limiter kinds refresh every 10 seconds. A refresh does not change a value that an admin types.
+- Highlights:
+  - A limit that a control admin set shows "set here", and its env default is struck through.
+  - A limiter kind is amber from half its burst spent, and red while any would refuse.
+  - A group title shows "Nearly full" (amber) or "Refusing" (red) when one of its limiter kinds is amber or red.
 - Reading spends nothing and names no site, identity or IP.
-- Above them: each limit's env variables and defaults, and its rate and burst now.
-  - A control admin can save new values. All limiters of its kind (kept and new) use them immediately and after
-    restarts. It shows "set here".
+- A control admin can save a limit's new rate and burst.
+  - All limiters of its kind (kept and new) use them immediately and after restarts.
   - The env default, or blank, goes back to the env value.
   - Refused: rate 0 or less, burst under 1.
   - Other control identities only see them.
+- On a phone, the page is no wider than the window. Each group's table scrolls sideways in its card.
 - A site's reads and writes have 4 times an identity's limit. Test: one identity spends all its own (for example, a
   day's backlog upload). A carer's carbs and AAPSClient's commands still go through.
 - Over a site's or identity's limit: 429, with `Retry-After` the seconds until one is accepted, at least 1.

@@ -1,18 +1,20 @@
 package control_rate_limits_templ
 
 import (
-	"context"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
 // labels are the ids of what each kind of rate limiter limits
@@ -68,126 +70,176 @@ var pers = map[string]string{
 	"site_ip":  "control.rate_limits.per_site_ip",
 }
 
-// cells are a kind of rate limiter's row: what it limits, per what, its rate and burst, how many are kept, how full the
-// most used is and how many would refuse
-func cells(ctx context.Context, s config.RateLimiterStats) []string {
-	return []string{i18n.T(ctx, labels[s.Name]), i18n.T(ctx, pers[s.Per]), number(s.PerMinute), fmt.Sprint(s.Burst),
-		fmt.Sprint(s.Tracked), fmt.Sprintf("%.0f%%", s.FullestPercent), fmt.Sprint(s.Limited)}
+// groups are the rate limit settings in groups of what they protect, each with the ids of its title and note
+var groups = []struct {
+	name, title, note string
+	settings          []string
+}{
+	{"server", "control.rate_limits.group_server", "control.rate_limits.group_server_note", []string{"global", "global_ip"}},
+	{"sign_in", "control.rate_limits.group_sign_in", "control.rate_limits.group_sign_in_note", []string{"login", "login_name", "site_unauth"}},
+	{"site_create", "control.rate_limits.group_site_create", "control.rate_limits.group_site_create_note", []string{"site_create", "site_create_ip"}},
+	{"site_data", "control.rate_limits.group_site_data", "control.rate_limits.group_site_data_note", []string{"site_get", "site_post", "site_post_flagged"}},
+	{"site_actions", "control.rate_limits.group_site_actions", "control.rate_limits.group_site_actions_note",
+		[]string{"site_update_connectors", "site_identity_create", "site_download", "site_report_print", "site_push"}},
 }
 
-// cellClass right aligns the numbers, and colours the last two amber once the most used limiter has spent half its
-// burst, and red while any would refuse
-func cellClass(s config.RateLimiterStats, i int) string {
+// level is how close a kind of rate limiter is to refusing: 2 while any would refuse, 1 once the most used has spent
+// half its burst, else 0
+func level(s config.RateLimiterStats) int {
 	switch {
-	case i < 2:
-		return ""
-	case i < 5:
-		return "text-right tabular-nums"
 	case s.Limited > 0:
-		return "text-right tabular-nums font-semibold text-red-700"
+		return 2
 	case s.FullestPercent >= 50:
-		return "text-right tabular-nums font-semibold text-amber-800"
+		return 1
 	}
-	return "text-right tabular-nums"
+	return 0
 }
 
-// RateLimits shows each rate limit, which an admin can change, then each kind of rate limiter, its rate and burst,
-// and how close the ones kept are to refusing, which is read again every 10 seconds
+// groupLevel is the highest level of the rate limiters that use the group's settings
+func groupLevel(stats []config.RateLimiterStats, settings []string) int {
+	highest := 0
+	for _, s := range stats {
+		if slices.Contains(settings, s.Setting) {
+			highest = max(highest, level(s))
+		}
+	}
+	return highest
+}
+
+// levelClasses are the colours of a rate limiter's bar, and of its fullest and refusing, at each level
+var levelClasses = []struct{ bar, text string }{
+	{"bg-primary", ""}, {"bg-amber-500", "font-semibold text-amber-800"}, {"bg-red-600", "font-semibold text-red-700"},
+}
+
+// headClasses are the widths of a group's columns, the same in every group so they line up, and right align the numbers
+var headClasses = []string{"", "w-32", "w-32 text-right", "w-32 text-right", "w-14 text-right", "w-32", "w-20 text-right"}
+
+// RateLimits shows the rate limits in groups of what they protect. Under each setting, which an admin can change, are
+// the kinds of rate limiter that use it, with their rate and burst now and how close the ones kept are to refusing,
+// read again every 10 seconds.
 templ RateLimits(stats []config.RateLimiterStats, settings []config.RateSetting, admin bool) {
 	<div class="mx-auto max-w-5xl space-y-6">
 		@heading.Page(i18n.T(ctx, "control.rate_limits.title")) {
 			{ i18n.T(ctx, "control.rate_limits.intro") }
 		}
-		@card.Card(card.Props{}) {
-			@RateSettings(settings, admin)
-		}
-		@card.Card(card.Props{}) {
-			@RateLimitStats(stats, false)
-		}
+		// Only the parts marked data-rate-limits-live are swapped in, so rates being typed are left as they are
+		<div id="control--rate-limits--refresh" hx-get="/rate-limits" hx-trigger="every 10s" hx-select-oob="[data-rate-limits-live]" hx-swap="none"></div>
+		@RateSettings(settings, stats, admin)
 	</div>
 }
 
-// RateLimitStats is each kind of rate limiter, its rate and burst, and how close the ones kept are to refusing, read
-// again every 10 seconds, or out of band as the rates are saved
-templ RateLimitStats(stats []config.RateLimiterStats, oob bool) {
-	<section
-		id="control--rate-limits"
-		hx-get="/rate-limits"
-		hx-trigger="every 10s"
-		hx-select="#control--rate-limits"
-		hx-target="this"
-		hx-swap="outerHTML"
-		if oob {
-			hx-swap-oob="true"
-		}
-	>
-		@table.Table(table.Props{ID: "controlRateLimitsTable", Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					for i, head := range []string{"control.rate_limits.limiter", "control.rate_limits.per", "control.rate_limits.rate", "control.rate_limits.burst",
-						"control.rate_limits.kept", "control.rate_limits.fullest", "control.rate_limits.refusing"} {
-						@table.Head(table.HeadProps{Class: cellClass(config.RateLimiterStats{}, i)}) {
-							{ i18n.T(ctx, head) }
-						}
-					}
+// groupStatus is a marker beside a group's title while any of its rate limiters is nearly full or would refuse
+templ groupStatus(name string, stats []config.RateLimiterStats, settings []string) {
+	<span id={ "control--rate-limits--group--" + name + "--status" } data-rate-limits-live>
+		switch groupLevel(stats, settings) {
+			case 2:
+				@badge.Badge(badge.Props{Variant: badge.VariantError}) {
+					{ i18n.T(ctx, "control.rate_limits.refusing") }
 				}
-			}
-			@table.Body() {
-				for _, s := range stats {
-					@table.Row(table.RowProps{ID: "control--rate-limits--" + s.Name}) {
-						for i, cell := range cells(ctx, s) {
-							@table.Cell(table.CellProps{Class: cellClass(s, i)}) {
-								{ cell }
-							}
-						}
-					}
+			case 1:
+				@badge.Badge(badge.Props{Variant: badge.VariantWarning}) {
+					{ i18n.T(ctx, "control.rate_limits.nearly_full") }
 				}
-			}
 		}
-	</section>
+	</span>
 }
 
-// RateSettings is each rate limit, its env variable and default, and its rate now, which an admin can change: one
-// set to its default, or left blank, uses the env's from then on
-templ RateSettings(settings []config.RateSetting, admin bool) {
+// settingRow is a rate limit setting: what it limits, its env variables and default, struck through while an admin
+// has set it here, and its rate and burst now, which an admin can change
+templ settingRow(s config.RateSetting, admin bool) {
+	@table.Row(table.RowProps{ID: "control--rate-settings--" + s.Name, Class: utils.TwMerge("border-t-2", utils.If(s.Set, "bg-primary/5"))}) {
+		@table.Cell(table.CellProps{Class: utils.TwMerge("whitespace-normal border-l-4 border-l-transparent", utils.If(s.Set, "border-l-primary"))}) {
+			<div class="font-medium text-gray-900">
+				{ i18n.T(ctx, settingLabels[s.Name]) }
+				if s.Set {
+					@badge.Badge(badge.Props{ID: "control--rate-settings--" + s.Name + "--set", Variant: badge.VariantPrimary, Class: "ml-1"}) {
+						{ i18n.T(ctx, "control.rate_limits.set_here") }
+					}
+				}
+			</div>
+			<div class="break-all font-mono text-xs text-gray-500">{ s.Env + "_LIMIT/_BURST" }</div>
+			<div id={ "control--rate-settings--" + s.Name + "--default" } class={ "text-xs tabular-nums text-gray-500", templ.KV("line-through", s.Set) }>
+				{ i18n.T(ctx, "control.rate_limits.env_default_of", i18n.Data{"Rate": number(s.Default.PerMinute), "Burst": s.Default.Burst}) }
+			</div>
+		}
+		@table.Cell()
+		for _, field := range []struct{ name, value string }{{"per_minute", number(s.Rate.PerMinute)}, {"burst", fmt.Sprint(s.Rate.Burst)}} {
+			@table.Cell() {
+				@input.Input(input.Props{ID: "control--rate-settings--" + s.Name + "--" + field.name, Name: s.Name + "-" + field.name,
+					Type: input.TypeNumber, Class: "text-right", Value: field.value, Readonly: !admin, Attributes: templ.Attributes{"min": "0", "step": "any"}})
+			}
+		}
+		@table.Cell(table.CellProps{Attributes: templ.Attributes{"colspan": "3"}})
+	}
+}
+
+// limiterRow is a kind of rate limiter that uses a setting: what one is kept for and how many times the setting's rate
+// it has, its rate and burst now, how many are kept, how much of its burst the most used has spent, and how many would
+// refuse. It is read again every 10 seconds.
+templ limiterRow(s config.RateLimiterStats) {
+	{{ colours := levelClasses[level(s)] }}
+	<tr id={ "control--rate-limits--" + s.Name } data-rate-limits-live class={ "border-b text-gray-600", templ.KV("bg-amber-100", level(s) == 1), templ.KV("bg-red-100", level(s) == 2) }>
+		@table.Cell(table.CellProps{Class: "whitespace-normal pl-6"}) {
+			{ "↳ " + i18n.T(ctx, labels[s.Name]) }
+		}
+		@table.Cell(table.CellProps{Class: "whitespace-nowrap"}) {
+			{ i18n.T(ctx, pers[s.Per]) + utils.If(s.Scale > 1, ", "+i18n.T(ctx, "control.rate_limits.scale", i18n.Data{"Scale": s.Scale})) }
+		}
+		for _, cell := range []string{number(s.PerMinute), fmt.Sprint(s.Burst), fmt.Sprint(s.Tracked)} {
+			@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+				{ cell }
+			}
+		}
+		@table.Cell() {
+			<div class="flex items-center gap-2">
+				<div class="h-2 w-20 overflow-hidden rounded-full bg-gray-200">
+					<div id={ "control--rate-limits--" + s.Name + "--bar" } class={ "h-full min-w-[2px] rounded-full", colours.bar } style={ fmt.Sprintf("width: %.0f%%", s.FullestPercent) }></div>
+				</div>
+				<span class={ "tabular-nums", colours.text }>{ fmt.Sprintf("%.0f%%", s.FullestPercent) }</span>
+			</div>
+		}
+		@table.Cell(table.CellProps{Class: utils.TwMerge("text-right tabular-nums", colours.text)}) {
+			{ fmt.Sprint(s.Limited) }
+		}
+	</tr>
+}
+
+// RateSettings is a card for each group of rate limits, saying what they protect, with each setting and the kinds of
+// rate limiter that use it. An admin can change each setting: one set to its default, or left blank, uses the env's
+// from then on.
+templ RateSettings(settings []config.RateSetting, stats []config.RateLimiterStats, admin bool) {
 	<form
 		id="control--rate-settings"
+		class="space-y-6"
 		hx-post="/rate-limits"
 		hx-target="this"
 		hx-swap="outerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
-		@table.Table(table.Props{Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					for _, head := range []string{"control.rate_limits.limit", "control.rate_limits.env", "control.rate_limits.env_default",
-						"control.rate_limits.rate", "control.rate_limits.burst"} {
-						@table.Head() {
-							{ i18n.T(ctx, head) }
-						}
-					}
-				}
-			}
-			@table.Body() {
-				for _, s := range settings {
-					@table.Row(table.RowProps{ID: "control--rate-settings--" + s.Name}) {
-						@table.Cell() {
-							{ i18n.T(ctx, settingLabels[s.Name]) }
-							if s.Set {
-								<span class="ml-1 text-xs font-semibold text-primary">{ i18n.T(ctx, "control.rate_limits.set_here") }</span>
+		for _, group := range groups {
+			@card.Card(card.Props{ID: "control--rate-limits--group--" + group.name, Title: i18n.T(ctx, group.title),
+				Note: i18n.T(ctx, group.note), Action: groupStatus(group.name, stats, group.settings)}) {
+				@table.Table(table.Props{ID: "control--rate-limits--group--" + group.name + "--table", Class: "min-w-[60rem] table-fixed rounded-lg border border-gray-200"}) {
+					@table.Header() {
+						@table.Row() {
+							for i, head := range []string{"control.rate_limits.limit", "control.rate_limits.per", "control.rate_limits.rate", "control.rate_limits.burst",
+								"control.rate_limits.kept", "control.rate_limits.fullest", "control.rate_limits.refusing"} {
+								@table.Head(table.HeadProps{Class: headClasses[i]}) {
+									{ i18n.T(ctx, head) }
+								}
 							}
 						}
-						@table.Cell(table.CellProps{Class: "font-mono text-xs"}) {
-							{ s.Env + "_LIMIT/_BURST" }
-						}
-						@table.Cell(table.CellProps{Class: "tabular-nums"}) {
-							{ number(s.Default.PerMinute) + ", " + fmt.Sprint(s.Default.Burst) }
-						}
-						for _, field := range []struct{ name, value string }{{"per_minute", number(s.Rate.PerMinute)}, {"burst", fmt.Sprint(s.Rate.Burst)}} {
-							@table.Cell(table.CellProps{Class: "w-32"}) {
-								@input.Input(input.Props{ID: "control--rate-settings--" + s.Name + "--" + field.name, Name: s.Name + "-" + field.name,
-									Type: input.TypeNumber, Value: field.value, Readonly: !admin, Attributes: templ.Attributes{"min": "0", "step": "any"}})
+					}
+					@table.Body() {
+						for _, name := range group.settings {
+							if i := slices.IndexFunc(settings, func(s config.RateSetting) bool { return s.Name == name }); i >= 0 {
+								@settingRow(settings[i], admin)
+							}
+							for _, s := range stats {
+								if s.Setting == name {
+									@limiterRow(s)
+								}
 							}
 						}
 					}
@@ -195,7 +247,7 @@ templ RateSettings(settings []config.RateSetting, admin bool) {
 			}
 		}
 		if admin {
-			<div class="mt-4 flex justify-end">
+			<div class="flex justify-end">
 				@button.Button(button.Props{ID: "control--rate-settings--save", Type: button.TypeSubmit}) {
 					{ i18n.T(ctx, "control.rate_limits.save") }
 				}
@@ -204,9 +256,8 @@ templ RateSettings(settings []config.RateSetting, admin bool) {
 	</form>
 }
 
-// RateSettingsSaved is the rate limits as saved, the limiters' rates now, and a toast saying so
+// RateSettingsSaved is the rate limits as saved, with the limiters' rates now, and a toast saying so
 templ RateSettingsSaved(settings []config.RateSetting, stats []config.RateLimiterStats) {
-	@RateSettings(settings, true)
-	@RateLimitStats(stats, true)
+	@RateSettings(settings, stats, true)
 	@successtoast.OOB(i18n.T(ctx, "control.rate_limits.saved"))
 }

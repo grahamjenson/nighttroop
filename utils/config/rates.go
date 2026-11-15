@@ -227,10 +227,13 @@ func (r *RateLimiters) SiteLoginAllow(name string, ip string) (bool, int) {
 }
 
 // RateLimiterStats is how close one kind of rate limiter is to refusing. One is kept for each Per: the server, an IP, a
-// site, an identity, a login name or an IP on a site; each refills at PerMinute up to Burst.
+// site, an identity, a login name or an IP on a site; each refills at PerMinute up to Burst, Scale times the rate of
+// the RateSetting named Setting.
 type RateLimiterStats struct {
 	Name      string  `json:"name"`
 	Per       string  `json:"per"`
+	Setting   string  `json:"setting"`
+	Scale     int     `json:"scale"`
 	PerMinute float64 `json:"per_minute"`
 	Burst     int     `json:"burst"`
 	// Tracked is how many are kept, Limited how many would refuse a request now, and FullestPercent how much of its
@@ -372,7 +375,7 @@ func (r *RateLimiters) Stats(now time.Time) []RateLimiterStats {
 	stats := make([]RateLimiterStats, 0, len(kinds))
 	for _, kind := range kinds {
 		current := r.rate(kind.setting).scaled(kind.scale)
-		s := RateLimiterStats{Name: kind.name, Per: kind.per, PerMinute: current.PerMinute, Burst: current.Burst, Tracked: len(kind.limiters)}
+		s := RateLimiterStats{Name: kind.name, Per: kind.per, Setting: kind.setting, Scale: kind.scale, PerMinute: current.PerMinute, Burst: current.Burst, Tracked: len(kind.limiters)}
 		for _, limiter := range kind.limiters {
 			tokens := limiter.TokensAt(now)
 			if tokens < 1 {
