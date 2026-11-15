@@ -1738,6 +1738,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Cannot be opened or migrated, also after a restore.
   - Has no DB file and was not restored. Its batch is not uploaded without it.
 - The server serves nothing until every live site is open and migrated. Else `update.sh` rolls the release back.
+- If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
 - A site DB that cannot be opened keeps its file and backup. A fixed deploy opens it with its data.
 - A site creation that fails part way leaves no site or identities.
 - A DB (control, site, jobs, logs or live) with a failed migration, when next opened:
