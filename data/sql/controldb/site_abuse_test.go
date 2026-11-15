@@ -9,8 +9,8 @@ import (
 
 func kb(n int64) *int64 { return &n }
 
-// A site's abuse score and level from its signals: its size alone can reach Blocked, its refusals at most Abusive, its
-// connectors at most Fair, and its refusals and connectors together at most Abusive
+// A site's abuse score and level from its signals: its size alone can reach Blocked, its connectors at most Fair, and
+// the two add up
 func TestAbuseSignalsScore(t *testing.T) {
 	limit := kb(20480)
 	times := func(f float64) *int64 { return kb(int64(f * 20480)) }
@@ -32,13 +32,8 @@ func TestAbuseSignalsScore(t *testing.T) {
 		{"size alone reaches 1", controldb.AbuseSignals{SizeKB: times(10), LimitKB: limit}, 1, controldb.AbuseBlocked},
 		{"connectors alone never above Fair", controldb.AbuseSignals{ConnectorFailures: 1}, 0.39, controldb.AbuseFair},
 		{"connectors under their cap", controldb.AbuseSignals{ConnectorFailures: 0.1}, 0.1, controldb.AbuseGood},
-		{"50 refusals", controldb.AbuseSignals{Refusals: 50}, 0.5, controldb.AbuseOverUse},
-		{"refusals alone never Blocked", controldb.AbuseSignals{Refusals: 1e9}, 0.79, controldb.AbuseAbusive},
-		{"no refusals below 0", controldb.AbuseSignals{Refusals: -5}, 0, controldb.AbuseGood},
-		{"refusals and connectors never Blocked", controldb.AbuseSignals{Refusals: 1e9, ConnectorFailures: 1}, 0.79, controldb.AbuseAbusive},
-		{"refusals and connectors together", controldb.AbuseSignals{Refusals: 50, ConnectorFailures: 0.3}, 0.65, controldb.AbuseAbusive},
 		{"size and connectors together", controldb.AbuseSignals{SizeKB: times(1.6), LimitKB: limit, ConnectorFailures: 1}, 1 - 0.76*0.61, controldb.AbuseOverUse},
-		{"size and every other signal", controldb.AbuseSignals{SizeKB: times(2.2), LimitKB: limit, Refusals: 1e9, ConnectorFailures: 1}, 1 - 0.52*0.21, controldb.AbuseBlocked},
+		{"size and connectors reach Blocked", controldb.AbuseSignals{SizeKB: times(2.7), LimitKB: limit, ConnectorFailures: 1}, 1 - 0.32*0.61, controldb.AbuseBlocked},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -71,4 +66,28 @@ func TestAbuseLevelOf(t *testing.T) {
 func TestSiteAbuseLevel(t *testing.T) {
 	require.Equal(t, controldb.AbuseGood, (&controldb.Site{EstimatedDbSizeKb: kb(1 << 30), MaxDbSizeKbLimit: kb(20480)}).AbuseLevel())
 	require.Equal(t, controldb.AbuseAbusive, (&controldb.Site{AbuseScore: 0.7}).AbuseLevel())
+}
+
+// A site is flagged for abuse only once its DB is over 3 times its size limit, and not while either is unknown
+func TestSiteFlaggedForAbuse(t *testing.T) {
+	tests := []struct {
+		name        string
+		size, limit *int64
+		want        bool
+	}{
+		{"no size", nil, kb(20480), false},
+		{"no limit", kb(1 << 30), nil, false},
+		{"under its limit", kb(10000), kb(20480), false},
+		{"over its limit, under 3 times it", kb(40960), kb(20480), false},
+		{"exactly 3 times its limit", kb(3 * 20480), kb(20480), false},
+		{"over 3 times its limit", kb(3*20480 + 1), kb(20480), true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			site := &controldb.Site{EstimatedDbSizeKb: tt.size, MaxDbSizeKbLimit: tt.limit}
+			if got := site.FlaggedForAbuse(); got != tt.want {
+				t.Errorf("FlaggedForAbuse() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

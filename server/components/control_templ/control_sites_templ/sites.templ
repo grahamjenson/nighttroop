@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/card"
@@ -69,6 +70,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 			Columns: []table.Column{
 				{Label: i18n.T(ctx, "control.sites.site")}, {Label: i18n.T(ctx, "control.sites.state")}, {Label: i18n.T(ctx, "control.sites.created")}, {Label: i18n.T(ctx, "control.sites.last_seen")},
 				{Label: i18n.T(ctx, "control.sites.last_write")}, {Label: i18n.T(ctx, "control.sites.db_size"), Numeric: true},
+				{Label: i18n.T(ctx, "control.sites.abuse")},
 			},
 		},
 		Pager: &pager.Props{ID: "control--sites", Path: "/sites?order=" + order, Count: len(sites), Skip: skip, Limit: limit},
@@ -229,6 +231,24 @@ templ siteRow(site *controlmodels.Site) {
 				}
 			}
 		}
+		@table.Cell() {
+			@abuseBadge(site, "control--site--"+site.ID+"--abuse")
+		}
+	}
+}
+
+// abuseVariants are the colours of the abuse levels: grey while fine, amber once over use, red once abusive
+var abuseVariants = map[controldb.AbuseLevel]badge.Variant{controldb.AbuseGood: badge.VariantNeutral, controldb.AbuseFair: badge.VariantNeutral,
+	controldb.AbuseOverUse: badge.VariantWarning, controldb.AbuseAbusive: badge.VariantError, controldb.AbuseBlocked: badge.VariantError}
+
+// abuseLabels are the abuse levels' labels' ids
+var abuseLabels = map[controldb.AbuseLevel]string{controldb.AbuseGood: "control.sites.abuse_good", controldb.AbuseFair: "control.sites.abuse_fair",
+	controldb.AbuseOverUse: "control.sites.abuse_over_use", controldb.AbuseAbusive: "control.sites.abuse_abusive", controldb.AbuseBlocked: "control.sites.abuse_blocked"}
+
+// abuseBadge is the site's abuse level, with its score, as the resource check last scored it
+templ abuseBadge(site *controlmodels.Site, id string) {
+	@badge.Badge(badge.Props{ID: id, Variant: abuseVariants[site.AbuseLevel()]}) {
+		{ i18n.T(ctx, abuseLabels[site.AbuseLevel()]) } · { fmt.Sprintf("%.2f", site.AbuseScore) }
 	}
 }
 
@@ -301,6 +321,7 @@ templ SitePage(page *controlmodels.SitePage) {
 						{ i18n.T(ctx, "control.sites.over_limit") }
 					}
 				}
+				@abuseBadge(site, "control--site--abuse")
 			</div>
 			<p id="control--site--lifecycle" class="mt-1 text-sm text-gray-500">{ lifecycle(ctx, site) }</p>
 		</div>

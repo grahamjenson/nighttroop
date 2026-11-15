@@ -674,7 +674,7 @@ func (db *ControlDB) RecordSiteSizes(ctx context.Context, sites []*SiteDB) error
 }
 
 // RecordAbuseScores scores each site for abuse, from its DB's size now and its connectors' failures, and keeps the
-// scores in one transaction, so a request reads its site's level without measuring them
+// scores in one transaction, so the control pages show each site's level without measuring them
 func (db *ControlDB) RecordAbuseScores(ctx context.Context, sites []*SiteDB) error {
 	limits, err := db.Queries.GetSiteDBSizeLimits(ctx)
 	failures, failuresErr := db.Queries.GetSiteConnectorFailureRates(ctx)
