@@ -121,8 +121,8 @@ func testDocuments(t *testing.T) map[string]nsutils.Document {
 	}
 }
 
-// A search's response is its documents' JSON as an encoder writes them: an array on API v1, and its result on API v3
-// with each treatment's parts, an empty one when there are none
+// A search's response is its documents' JSON as an encoder writes them: an array on API v1, and its result on API v3,
+// an empty one when there are none
 func TestWriteRecordsIsItsDocumentsJSON(t *testing.T) {
 	documents := []nsutils.Document{fieldsDocument{id: "bg", fields: map[string]any{"enteredBy": "Tom & <Jerry> ", "glucose": 5.0}}}
 	for _, document := range testDocuments(t) {
@@ -132,9 +132,7 @@ func TestWriteRecordsIsItsDocumentsJSON(t *testing.T) {
 		v1, v3 := []json.RawMessage{}, []json.RawMessage{}
 		for _, record := range records {
 			v1 = append(v1, record.JSON(false, nil))
-		}
-		for _, part := range nsutils.V3Parts(records) {
-			v3 = append(v3, part.JSON(true, nil))
+			v3 = append(v3, record.JSON(true, nil))
 		}
 		response := httptest.NewRecorder()
 		nsutils.WriteRecordsV1(response, records, nil)
