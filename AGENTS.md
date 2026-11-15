@@ -96,8 +96,8 @@ The words the pages, toasts, errors and docs use for one thing (UI text is in `u
 
 ## Nightscout Compatibility
 
-- The nightscout APIs should remain compatible with clients like AAPS, Trio, Loop, Xdrip...
-- Do not fix bugs that already exist in Nightscout by changing Nighttroop. If a bug exists in Nighttroop, but works in Nightscout, then it is a bug.
+- The nightscout APIs should remain compatible with clients like AAPS, Trio, Loop, Xdrip, T1DCarer...
+- In the Nightscout API: Do not fix bugs that exist in Nightscout by making Nighttroop's code more complicated. If a fixed bug makes code more readable or less complicated, fix that bug.
 
 ## SQL
 
