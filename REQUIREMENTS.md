@@ -1477,12 +1477,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   page, whose `timestamp` is a date).
 - A treatment with both insulin and carbs (a Meal Bolus) is one document on API v1 and v3, as Nightscout gives it.
   AAPS reads only its insulin.
-- A meter reading (`mbg`) that no treatment has, and that AAPS did not send, is also a treatment on API v3. This
-  applies to searches by date only, history, and the storage socket. AAPS takes finger sticks only from BG Checks.
-  - It is a read-only `BG Check`: its `mbg` as `glucose`, `glucoseType` `Finger`, its device as `enteredBy`.
-  - Its identifier is the reading's identifier with `finger` after it.
-  - A read by that identifier gives it. A delete by it deletes the reading.
-  - A careportal BG Check has its own reading, so it is given once.
+- A meter reading (`mbg` entry) is only an entry on API v1, API v3 and the sockets, as on Nightscout. It is not a
+  treatment. AAPS takes finger sticks only from BG Check treatments, so it does not get an xDrip+ meter reading.
 
 #### Notes and values
 

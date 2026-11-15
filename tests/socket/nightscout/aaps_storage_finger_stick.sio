@@ -1,5 +1,5 @@
-# AAPS takes finger sticks only from BG Check treatments, so its /storage socket subscribed to treatments gets a meter
-# reading in no treatment, as xDrip+ sends a blood test, as a read-only BG Check, as API v3 gives it. See docs/clients/aaps.md
+# xDrip+ sends a blood test only as a meter reading (mbg). As on Nightscout, the /storage socket gives it only to the
+# entries, never to the treatments, so AAPS gets no BG Check for it. See docs/clients/aaps.md
 
 NAME create_new_site
 POST http://localhost/site
@@ -14,7 +14,7 @@ T 5s
 
 NAME subscribe
 EMIT subscribe
-B {"accessToken":"{{ token }}","collections":["treatments"]}
+B {"accessToken":"{{ token }}","collections":["treatments","entries"]}
 ACK
 ASSERT_EQUALS true "@success"
 
@@ -23,15 +23,17 @@ POST http://{{ site }}/api/v1/entries?token={{ token }}
 B [{"type":"mbg","mbg":118,"device":"Manual Entry","date":{{ itime 5 }}}]
 ASSERT_STATUS 200
 
-NAME bg_check_created
+NAME entry_created
 WAIT create
 T 5s
-ASSERT_EQUALS "treatments" "@colName"
-ASSERT_EQUALS "BG Check" "@doc.eventType"
-ASSERT_EQUALS 118 "@doc.glucose"
-ASSERT_EQUALS "Finger" "@doc.glucoseType"
-ASSERT_EQUALS true "@doc.isReadOnly"
-ASSERT_EXISTS "@doc.srvModified"
+ASSERT_EQUALS "entries" "@colName"
+ASSERT_EQUALS "mbg" "@doc.type"
+ASSERT_EQUALS 118 "@doc.mbg"
+
+NAME no_bg_check
+COLLECT create
+T 1s
+ASSERT_LENGTH 0 "@"
 
 NAME disconnect
 DISCONNECT
