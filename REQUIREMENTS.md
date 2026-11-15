@@ -1894,7 +1894,7 @@ harder:
 | Read only user | Nightscout token | Yes | No | No |
 | Clinician | Password | No | No | No |
 | PWD phone (the loop's phone) | Nightscout token | Yes | Yes | No |
-| Caregiver device (`device_read_write`) | Nightscout token | Yes | Treatments only, on the Nightscout API | No |
+| Caregiver device (`device_read_write`) | Nightscout token | Yes | Treatments only | No |
 | Read only device | Nightscout token | Yes | No | No |
 
 - A Caregiver device is for a carer's or follower's app, such as LoopFollow, Nightguard or T1D Carer. On the
@@ -1903,6 +1903,12 @@ harder:
   - It adds, changes and deletes treatments, adds a device status, and reads and writes settings.
   - It cannot add readings or profiles, or change or delete readings, profiles or device statuses: 403.
   - On the socket, `authorize` gives it `write` false and `write_treatment` true. It writes only treatments there.
+- On the site API, with the JWT from `/api/v2/authorization/request`, a Caregiver device:
+  - Reads all the site's data.
+  - Adds, changes and deletes event groups, insulin, food, temp basals, temp targets, profile switches, activities and
+    notifications.
+  - Cannot add, change or delete glucose readings, device statuses, profiles, food presets or loop settings: 403.
+  - Changes its own settings, alarms and push registrations.
 - The Users & Devices page names it "Caregiver". The Device card says what it can and cannot change.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
