@@ -3,6 +3,7 @@ package nscollections
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/json/jsontext"
 	"maps"
 	"net/http/httptest"
 	"slices"
@@ -127,7 +128,7 @@ func model[NS any](t *testing.T, sent string) NS {
 // testDocuments are documents of each kind, with HTML, escapes, nested objects, numbers and units to write
 func testDocuments(t *testing.T) map[string]nsutils.Document {
 	m := meta{id: "0123456789abcdef01234567", srvCreated: 1_700_000_001_000, srvModified: 1_700_000_002_000,
-		occurredAt: 1_700_000_000_000, utcOffset: 780, subject: "Tom & <Jerry>"}
+		occurredAt: 1_700_000_000_000, utcOffset: 780, subject: "Tom & <Jerry> \u2028 é"}
 	deleted := m
 	deleted.deletedAt = new(int64(1_700_000_003_000))
 	return map[string]nsutils.Document{
@@ -140,6 +141,10 @@ func testDocuments(t *testing.T) map[string]nsutils.Document {
 			`{"device":"openaps://phone","openaps":{"iob":{"iob":1.50,"time":1700000000000,"big":12345678901234567},"z":{"b":[1,2.0,3e2],"a":"<"}},"pump":{"battery":{"percent":80}}}`)},
 		"setting": stored[setting]{meta: m, model: setting{Identifier: "units", Value: map[string]any{"z": 1, "a": []any{1.5, "x"}}, Type: "json"}},
 		"empty":   stored[setting]{},
+		"general setting": stored[json.RawMessage]{meta: m, model: json.RawMessage("{\"a\":1.50,\"c\":1e21,\"d\":1e-7," +
+			"\"e\":0.000001,\"f\":12345678901234567,\"h\":\"<\u2028>\",\"i\":1E2,\"k\":\"\\u0041\",\"Z\":0,\"value\":[2.50]}")},
+		"general setting with non-ASCII names": stored[json.RawMessage]{meta: m,
+			model: json.RawMessage("{\"\u00e9\":1,\"\u03a9\":2,\"\u2028\":\"\u00e9\",\"z\":true}")},
 	}
 }
 
@@ -184,12 +189,29 @@ func TestDocumentJSONIsItsFields(t *testing.T) {
 					want = mapFields(s, v3, only)
 				case stored[setting]:
 					want = mapFields(s, v3, only)
+				case stored[json.RawMessage]:
+					want = mapFields(s, v3, only)
 				}
 				require.Equal(t, written(t, want), written(t, document.JSON(v3, only)), "%s v3=%v fields=%v", name, v3, only)
 				if only == nil {
 					require.Equal(t, written(t, want), written(t, document.Fields(v3)), "%s v3=%v", name, v3)
 				}
 			}
+		}
+	}
+}
+
+// A document is written as Canonicalize writes it, as it was when the whole object was read again to write it, with
+// -0 as 0 and its non-ASCII names and nested objects in order
+func TestDocumentJSONIsCanonical(t *testing.T) {
+	documents := testDocuments(t)
+	documents["negative zero"] = stored[json.RawMessage]{model: json.RawMessage(`{"b":-0,"j":-0.0,"n":{"y":-0,"x":1.0}}`)}
+	for name, document := range documents {
+		for _, v3 := range []bool{false, true} {
+			written := document.JSON(v3, nil)
+			canonical := jsontext.Value(slices.Clone(written))
+			require.NoError(t, canonical.Canonicalize(jsontext.EscapeForJS(true)))
+			require.Equal(t, string(canonical), string(written), "%s v3=%v", name, v3)
 		}
 	}
 }
