@@ -117,6 +117,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS`: inactive.
 - The sites list has an Abuse column: each site's abuse level and score (for example `Good · 0.00`). See
   [Abuse levels](#abuse-levels).
+- The sites list has a Backup Uploaded column: the time since the site's batch was last uploaded to S3, or Never.
+  Hover shows the time.
 - On a phone: no wider than the window. Sort buttons and both cards wrap. The table scrolls sideways.
 
 #### Site creation
@@ -146,6 +148,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - table sizes as last measured (at creation, by the 5-minute resource check after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
+- Backup tiles: backup size in MB (`-` if no backup), time since the last backup copy, and time since the last upload
+  to S3. A time that did not occur is Never.
 - Identities, and the latest 10 events and 10 errors (no site column). Each opens its details. A link shows all for
   the site.
 - On a phone: no wider than the window, all identity actions tappable. Role, TOTP and last seen are a line under the
@@ -1734,6 +1738,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - In the next round, a write made during a copy is copied, and a failed upload is tried again.
 - A batch whose last site is deleted or archived is uploaded empty. A restore then gives an empty batch.
 - A batch that never had a site is not uploaded.
+- The control DB records on each site:
+  - when the site was last copied, and the size of the copy on disk;
+  - when its batch was last uploaded. If S3 is not connected or the upload fails, this time does not change.
 
 #### Restore and start
 

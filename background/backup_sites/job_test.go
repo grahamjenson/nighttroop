@@ -173,6 +173,49 @@ func TestBackupSiteBatchUploadsAgainAfterAFailedUpload(t *testing.T) {
 	require.Equal(t, copiedAt, backupTime(t, site))
 }
 
+// A site records when its backup was copied and the copy's size, and when its batch was uploaded: only once S3 has it,
+// not while S3 is off, as the upload then sends nothing, nor when the upload fails
+func TestBackupSiteBatchRecordsTheBackupOnTheSite(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, uploads, fail := t.Context(), [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	// A copy, as the config is shared by the package's tests
+	cfg := *controlDB.ServerConfig
+	cfg.Status.S3Working, jobs.ServerConfig = false, &cfg
+	site := fileSite(t, controlDB, "qaaaaaaa")
+	stored := func() *controldb.Site {
+		stored, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
+		require.NoError(t, err)
+		return stored
+	}
+	require.Nil(t, stored().BackedUpAt)
+
+	started := time.Now().UnixMilli()
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	backedUp := stored()
+	require.NotNil(t, backedUp.BackedUpAt)
+	require.GreaterOrEqual(t, *backedUp.BackedUpAt, started)
+	info, err := os.Stat(site.BackupPath)
+	require.NoError(t, err)
+	require.NotNil(t, backedUp.BackupSizeKb)
+	require.Equal(t, info.Size()/1024, *backedUp.BackupSizeKb)
+	require.Nil(t, backedUp.BackupUploadedAt, "S3 is off")
+
+	// Written to, so it is copied and uploaded again, but the upload fails
+	cfg.Status.S3Working, fail = true, true
+	_, err = site.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "new", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	time.Sleep(2 * time.Millisecond)
+	require.Error(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.Greater(t, *stored().BackedUpAt, *backedUp.BackedUpAt)
+	require.Nil(t, stored().BackupUploadedAt, "the upload failed")
+
+	fail = false
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.NotNil(t, stored().BackupUploadedAt)
+	require.GreaterOrEqual(t, *stored().BackupUploadedAt, *stored().BackedUpAt)
+}
+
 func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, batch := t.Context(), site.SiteDB.Subdomain[:1]

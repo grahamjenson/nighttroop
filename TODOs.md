@@ -9,6 +9,8 @@
        every 10 minutes: vacuum only when its free pages are a large part of it
 1. Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
+    1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up one batch
+       each run, so a new site's batch may not be backed up, and its tiles are checked only before a backup
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
 
