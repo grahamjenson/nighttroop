@@ -12,14 +12,15 @@ import (
 	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
-// Variant is a badge's colour: the theme's for branding and live states, amber for a warning, red for an error and
-// grey for anything else
+// Variant is a badge's colour: the theme's for branding and live states, green for what went well, amber for a
+// warning, red for an error and grey for anything else
 type Variant string
 
 const (
 	VariantNeutral Variant = "neutral"
 	VariantPrimary Variant = "primary"
 	VariantGold    Variant = "gold"
+	VariantSuccess Variant = "success"
 	VariantWarning Variant = "warning"
 	VariantError   Variant = "error"
 )
@@ -28,6 +29,7 @@ var variantClasses = map[Variant]string{
 	VariantNeutral: "bg-gray-100 text-gray-700",
 	VariantPrimary: "bg-primary/10 text-primary",
 	VariantGold:    "bg-brand-gold text-brand-night",
+	VariantSuccess: "bg-green-50 text-green-800",
 	VariantWarning: "bg-amber-100 text-amber-800",
 	VariantError:   "bg-red-100 text-red-800",
 }
@@ -75,7 +77,7 @@ func Badge(p Props) templ.Component {
 				var templ_7745c5c3_Var2 string
 				templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/badge/badge.templ`, Line: 40, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/badge/badge.templ`, Line: 42, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 				if templ_7745c5c3_Err != nil {
@@ -172,7 +174,7 @@ func Live(id string, events string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.badge.live"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/badge/badge.templ`, Line: 58, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/badge/badge.templ`, Line: 60, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {

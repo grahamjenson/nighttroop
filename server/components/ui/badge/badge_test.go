@@ -24,6 +24,7 @@ func TestBadge(t *testing.T) {
 		{"neutral", Props{}, base + "bg-gray-100 text-gray-700"},
 		{"primary", Props{Variant: VariantPrimary}, base + "bg-primary/10 text-primary"},
 		{"gold", Props{Variant: VariantGold}, base + "bg-brand-gold text-brand-night"},
+		{"success", Props{Variant: VariantSuccess}, base + "bg-green-50 text-green-800"},
 		{"warning", Props{Variant: VariantWarning}, base + "bg-amber-100 text-amber-800"},
 		{"error", Props{Variant: VariantError}, base + "bg-red-100 text-red-800"},
 		{"unknown", Props{Variant: "unknown"}, base + "bg-gray-100 text-gray-700"},

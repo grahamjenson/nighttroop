@@ -1,6 +1,7 @@
 package control_jobs_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"context"
 	"fmt"
 	"time"
@@ -24,13 +25,9 @@ func duration(ctx context.Context, job *controlmodels.Job) string {
 	return display.Duration(ctx, job.FinishedAt - job.ConsumerFetchedAt)
 }
 
-// statusClass shows failed jobs as errors
-func statusClass(job *controlmodels.Job) string {
-	if job.JobStatus == "failed" {
-		return "font-medium text-red-700"
-	}
-	return ""
-}
+// statusVariants are the colour of each job status's badge: green for completed, red for failed and the theme's for
+// one a consumer has fetched. A queued job's is grey.
+var statusVariants = map[string]badge.Variant{"completed": badge.VariantSuccess, "failed": badge.VariantError, "fetched": badge.VariantPrimary}
 
 // JobsTable shows one page of jobs, newest first, with buttons to the pages either side
 templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
@@ -69,7 +66,9 @@ templ jobRow(job *controlmodels.Job) {
 			<span class="block max-w-xs truncate">{ job.Job }</span>
 		}
 		@table.Cell() {
-			<span class={ statusClass(job) }>{ i18n.Stored(ctx, "job_statuses", job.JobStatus) }</span>
+			@badge.Badge(badge.Props{ID: fmt.Sprintf("control--job--%d--status", job.ID), Variant: statusVariants[job.JobStatus]}) {
+				{ i18n.Stored(ctx, "job_statuses", job.JobStatus) }
+			}
 		}
 		@table.Cell() {
 			<span title={ display.DateTime(&job.CreatedAt) }>{ display.Ago(ctx, &job.CreatedAt, time.Now()) }</span>

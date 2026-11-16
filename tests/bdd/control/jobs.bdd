@@ -16,6 +16,8 @@ ASSERT_PATH /jobs
 ASSERT_VISIBLE #controlJobsTable
 ASSERT_TEXT_VISIBLE Showing 1 to
 ASSERT_TEXT_VISIBLE completed
+// A completed job's status is a green badge
+ASSERT_VISIBLE #controlJobsTable [id$="--status"].bg-green-50:text-is("completed") >> nth=0
 // Durations read in the units that suit them: a quick one in ms
 ASSERT_VISIBLE #controlJobsTable td >> text=/^\d+ ms$/ >> nth=0
 SCREENSHOT jobs
