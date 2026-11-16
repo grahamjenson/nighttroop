@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/stat"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -138,13 +139,13 @@ func mostGoroutines(model controlmodels.Usage) float64 {
 	return most * 1.1
 }
 
-// Usage is how many use the server and how much, and its resources. It asks for itself again every 10 seconds, and
-// swaps in its new numbers.
+// Usage is how many use the server and how much, and its resources. It asks for itself again every 10 seconds, with the
+// resource graphs' range, and swaps in its new numbers.
 templ Usage(model controlmodels.Usage) {
 	<div
 		id="control--usage"
 		class="mx-auto max-w-5xl space-y-6"
-		hx-get="/usage"
+		hx-get={ "/usage?resources=" + model.ResourcesRange }
 		hx-trigger="every 10s"
 		hx-select="#control--usage"
 		hx-target="this"
@@ -191,6 +192,7 @@ templ Usage(model controlmodels.Usage) {
 			@stat.NoteTile("control--usage--uptime", i18n.T(ctx, "control.usage.uptime"), display.Duration(ctx, model.Server.UptimeMs), i18n.T(ctx, "control.usage.since_start"))
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.resources")}) {
+			@resourceRangeToggles(model.ResourcesRange)
 			if len(model.ResourceReadings) == 0 {
 				<p id="control--usage--resources-empty" class="text-sm text-gray-500">{ i18n.T(ctx, "control.usage.resources_empty") }</p>
 			} else {
@@ -238,6 +240,21 @@ templ Usage(model controlmodels.Usage) {
 			}
 		}
 		@slowestQueries(model)
+	</div>
+}
+
+// resourceRangeLabels are each of controlmodels.ResourceRanges' toggle labels
+var resourceRangeLabels = map[string]string{"hour": "control.usage.resources_hour", "day": "control.usage.resources_day",
+	"3days": "control.usage.resources_3days"}
+
+// resourceRangeToggles pick how far back the resource graphs show
+templ resourceRangeToggles(selected string) {
+	<div id="control--usage--resources-range" class="segmented mb-3 ml-auto flex w-fit">
+		for _, r := range controlmodels.ResourceRanges {
+			@nav.Toggle("control--usage--resources-range-"+r.Name, "/usage?resources="+r.Name, button.SizeSm, r.Name == selected) {
+				{ i18n.T(ctx, resourceRangeLabels[r.Name]) }
+			}
+		}
 	</div>
 }
 

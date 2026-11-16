@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
@@ -59,7 +58,9 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.SinceStart = config.Usage.Snapshot(now, usageRoutes)
 	model.Pushes = push.CountsAt(now)
 	model.Server = config.Usage.Server(config.DBDir(), now)
-	model.ResourcesSince = now.Add(-db.KeepResourceReadings).UnixMilli()
+	var back time.Duration
+	model.ResourcesRange, back = controlmodels.ResourceRange(r.URL.Query().Get("resources"))
+	model.ResourcesSince = now.Add(-back).UnixMilli()
 	model.MemoryAlertPercent, model.DiskAlertPercent = config.MemoryAlertPercent, config.DiskAlertPercent
 	model.SlowestQueries, model.QuerySamplePercent = sqltiming.Slowest(usageQueries), config.QuerySamplePercent
 	readings, err := controlContext.ControlDB.Live.Queries.ResourceReadingsSince(ctx, livedb.ResourceReadingsSinceParams{Since: model.ResourcesSince})
