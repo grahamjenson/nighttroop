@@ -164,7 +164,7 @@ func periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex flex-wrap gap-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"segmented\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1202,7 +1202,7 @@ func regenerateSummaries() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<section id=\"site--summaries--maintenance\" class=\"flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500\"><p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<section id=\"site--summaries--maintenance\" class=\"flex flex-wrap items-center justify-between gap-3 panel border-dashed p-4 text-sm text-gray-500\"><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

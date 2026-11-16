@@ -436,6 +436,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 ### Common page parts
 
+#### Page look
+
+- Every page is a grey canvas. Each card, tile and table section is a flat white panel with a thin border.
+- A row of range or period buttons is one joined control. The chosen button is filled.
+- Each Add button beside a page title has a plus icon.
+
 #### Footer and legal notes
 
 - Every footer links (each in a new tab) to contact, terms of service, privacy policy and API docs.
@@ -526,6 +532,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Contents
 
 - The home page: latest glucose and its age, the loop's IOB and COB, treatments, and each device's latest status.
+- In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
@@ -534,7 +541,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Glucose graph
 
-- Glucose, carbs and insulin on one grid. Range buttons: 6 hours (default), 24 hours, 48 hours, a week.
+- Glucose, carbs and insulin on one grid, in a panel titled **Glucose and treatments**. Range buttons, after a clock
+  icon: 6 hours (default), 24 hours, 48 hours, a week.
 - Axis always 0 to 16 mmol/L (288 mg/dL), marked each quarter. A reading above 16 shows past the top, with no stretch;
   its tooltip gives the real value.
 - Drawn:

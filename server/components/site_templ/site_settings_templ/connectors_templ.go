@@ -289,7 +289,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 			}
 			templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "><div class=\"rounded-xl border border-gray-200 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "><div class=\"panel\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -683,7 +683,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 			}
 			templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "><div class=\"rounded-xl border border-gray-200 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "><div class=\"panel\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1081,7 +1081,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 			}
 			templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "><div class=\"rounded-xl border border-gray-200 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "><div class=\"panel\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1428,7 +1428,7 @@ func VirtualConnectorForm(synSource *sitemodels.Connector) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<form hx-post=\"/settings/connectors/virtual\" hx-target=\"#toaster\" hx-swap=\"beforeend\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"mt-4\"><div class=\"rounded-xl border border-gray-200 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<form hx-post=\"/settings/connectors/virtual\" hx-target=\"#toaster\" hx-swap=\"beforeend\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"mt-4\"><div class=\"panel\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -109,7 +109,7 @@ func DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) templ.Component
 			return templ_7745c5c3_Err
 		}
 		if len(statuses) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<section id=\"site--device-status--empty\" class=\"rounded-xl border border-gray-200 p-4 text-sm text-gray-500 shadow-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<section id=\"site--device-status--empty\" class=\"panel p-4 text-sm text-gray-500\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -128,7 +128,7 @@ func DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) templ.Component
 			}
 		}
 		for i, group := range groupByDevice(statuses) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h2 class=\"flex items-center gap-2 font-semibold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<section class=\"panel p-4\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h2 class=\"flex items-center gap-2 font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -319,7 +319,7 @@ func DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus,
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<section class=\"panel p-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

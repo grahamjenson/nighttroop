@@ -115,7 +115,7 @@ func orDefault(order string) string {
 templ createSiteForm() {
 	<form
 		id="control--sites--create"
-		class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+		class="panel flex flex-col gap-3 p-4"
 		hx-post="/sites"
 		hx-target="#modal-container"
 		hx-swap="innerHTML"
@@ -152,7 +152,7 @@ templ createSiteForm() {
 templ PublicSiteCreation(on bool) {
 	<form
 		id="control--sites--public-creation"
-		class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+		class="panel flex flex-col gap-3 p-4"
 		hx-post="/settings"
 		hx-swap="outerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"

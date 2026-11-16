@@ -59,12 +59,12 @@ templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 			{ i18n.T(ctx, "site.data.device_statuses.about") }
 		}
 		if len(statuses) == 0 {
-			<section id="site--device-status--empty" class="rounded-xl border border-gray-200 p-4 text-sm text-gray-500 shadow-sm">
+			<section id="site--device-status--empty" class="panel p-4 text-sm text-gray-500">
 				{ i18n.T(ctx, "site.data.device_statuses.none") }
 			</section>
 		}
 		for i, group := range groupByDevice(statuses) {
-			<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			<section class="panel p-4">
 				<div class="mb-4 flex items-center justify-between gap-2">
 					<h2 class="flex items-center gap-2 font-semibold">
 						@icon.Smartphone(icon.Props{Class: "size-4"})
@@ -101,7 +101,7 @@ templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus
 			}
 		</div>
 		@searchTotals("site--device-status", "site.data.device_statuses.noun")
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+		<section class="panel p-4">
 			@deviceStatusTable("deviceStatusTable", statuses)
 			@pager.Pager(*pager.Dated(pager.Props{ID: "site--device-status", Path: "/data/device-status?device=" + url.QueryEscape(device), Count: len(statuses), Skip: skip, Limit: limit}, before, statuses, func(row *sitemodels.SiteDeviceStatus) (int64, string) { return row.OccurredAt, row.ID }))
 		</section>

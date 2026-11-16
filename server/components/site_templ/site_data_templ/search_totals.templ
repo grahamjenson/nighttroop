@@ -16,7 +16,7 @@ import (
 // there are over every page, by the noun message's plural form for them, and the days of the earliest and latest
 templ searchTotals(id, noun string) {
 	if totals := apiutils.TotalsFrom(ctx); totals != nil {
-		<section id={ id + "--totals" } aria-label={ i18n.T(ctx, "site.data.totals.label") } class="grid grid-cols-3 divide-x divide-gray-200 rounded-xl border border-gray-200 bg-white shadow-sm">
+		<section id={ id + "--totals" } aria-label={ i18n.T(ctx, "site.data.totals.label") } class="grid grid-cols-3 divide-x divide-gray-200 panel">
 			@totalsCell(i18n.T(ctx, "site.data.totals.records"), icon.Database) {
 				<p class="flex flex-wrap items-baseline gap-x-1.5">
 					<span id={ id + "--total" } class="text-lg font-bold tabular-nums text-gray-900 sm:text-2xl">

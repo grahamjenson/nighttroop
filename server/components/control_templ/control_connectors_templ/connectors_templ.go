@@ -200,7 +200,7 @@ func SharedHosts(hosts []*controlmodels.SharedHost) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		if len(hosts) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<section id=\"control--shared-hosts\" class=\"space-y-2 rounded-xl border border-gray-200 p-4 shadow-sm\"><h2 class=\"font-semibold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<section id=\"control--shared-hosts\" class=\"panel space-y-2 p-4\"><h2 class=\"font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -179,7 +179,7 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 
 // roleCard explains a role, in neutral colours, as no role is a warning or an error
 templ roleCard(title string, description string) {
-	<div class="rounded-xl border border-gray-200 p-4">
+	<div class="panel p-4">
 		<h2 class="font-semibold text-brand-night">{ title }</h2>
 		<p class="mt-1 text-sm text-gray-700">{ description }</p>
 	</div>

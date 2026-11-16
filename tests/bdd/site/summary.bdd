@@ -61,6 +61,10 @@ ASSERT_NEW_URL
 ASSERT_PATH /
 ASSERT_VISIBLE #site--summary--glucose--reading
 ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+// The ranges are one control with a clock, the latest glucose is a panel in the grid of tiles, and the graph has a title
+ASSERT_VISIBLE .segmented:has(svg) > #site--summary--range-6
+ASSERT_VISIBLE .grid > #site--summary--glucose.panel
+ASSERT_VISIBLE .panel:has(#site--summary--graph) h2:text-is("Glucose and treatments")
 SCREENSHOT summary
 ASSERT_NOT_VISIBLE #site--summary--iob >> text="–"
 ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"

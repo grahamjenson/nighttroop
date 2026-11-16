@@ -96,7 +96,7 @@ templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
 	<div class="flex flex-wrap items-center justify-between gap-2">
 		@periodNav(name, "site--reports", "site--reports--title", title(ctx, p), link(report, p.Period, first.AddDate(0, 0, -1)),
 			next(report, p, time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)), p.Period)
-		<div class="flex flex-wrap gap-1">
+		<div class="segmented">
 			for _, kind := range periods {
 				@nav.Toggle("site--reports--period-"+kind.Period, link(report, kind.Period, last), button.SizeSm, kind.Period == p.Period) {
 					{ i18n.T(ctx, kind.Label) }
@@ -286,7 +286,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 // regenerateSummaries offers an admin, below the summaries rather than as the page's main action, to build them again
 // from the site's data, for when they look wrong, as after changing its timezone or uploading old readings
 templ regenerateSummaries() {
-	<section id="site--summaries--maintenance" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+	<section id="site--summaries--maintenance" class="flex flex-wrap items-center justify-between gap-3 panel border-dashed p-4 text-sm text-gray-500">
 		<p>{ i18n.T(ctx, "site.reports.summaries.maintenance") }</p>
 		@button.Button(button.Props{ID: "site--summaries--regenerate", Variant: button.VariantOutline, Size: button.SizeSm,
 			Attributes: templ.Attributes{"hx-post": "/reports/summaries/regenerate", "hx-swap": "none", "hx-status:4xx": "target:#toaster swap:beforeend",

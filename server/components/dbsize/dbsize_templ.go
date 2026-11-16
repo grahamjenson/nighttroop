@@ -152,7 +152,7 @@ func Panel(prefix string, sizeKB, limitKB *int64, tables []*controlmodels.SiteTa
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"rounded-xl border border-gray-200 bg-white p-6 shadow-sm\"><div class=\"flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"panel p-4\"><div class=\"flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

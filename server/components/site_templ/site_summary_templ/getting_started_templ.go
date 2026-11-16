@@ -422,7 +422,7 @@ func step(id, number string, ic func(...icon.Props) templ.Component, title strin
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" class=\"flex flex-col rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-700 shadow-sm\"><div class=\"mb-3 flex items-center gap-3\"><span class=\"flex size-9 items-center justify-center rounded-full bg-brand-gold/20 text-brand-night\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" class=\"panel flex flex-col p-5 text-sm text-gray-700\"><div class=\"mb-3 flex items-center gap-3\"><span class=\"flex size-9 items-center justify-center rounded-full bg-brand-gold/20 text-brand-night\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

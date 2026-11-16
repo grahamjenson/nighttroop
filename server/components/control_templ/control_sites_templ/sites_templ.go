@@ -251,7 +251,7 @@ func createSiteForm() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<form id=\"control--sites--create\" class=\"flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm\" hx-post=\"/sites\" hx-target=\"#modal-container\" hx-swap=\"innerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<form id=\"control--sites--create\" class=\"panel flex flex-col gap-3 p-4\" hx-post=\"/sites\" hx-target=\"#modal-container\" hx-swap=\"innerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -352,7 +352,7 @@ func PublicSiteCreation(on bool) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<form id=\"control--sites--public-creation\" class=\"flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm\" hx-post=\"/settings\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"public_site_creation\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<form id=\"control--sites--public-creation\" class=\"panel flex flex-col gap-3 p-4\" hx-post=\"/settings\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"public_site_creation\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
