@@ -121,8 +121,10 @@ ASSERT_NOT_VISIBLE #site--summary--graph >> text=0.35U
 ASSERT_NOT_VISIBLE #site--summary--graph >> text=0.45U
 
 // The glucose axis is always 0 to 16 mmol/L, whatever the readings, and the targets in force are edged by darker lines,
-// in the legend as Target
-ASSERT_DRAWN #site--summary--graph >> text=/^16$/
+// in the legend as Target. ECharts right-aligns the glucose axis's 5 labels, the graph's only text with
+// text-anchor="end", so the 16 found is not a time axis label, such as a midnight on the 16th
+ASSERT_COUNT #site--summary--graph text[text-anchor="end"] 5
+ASSERT_DRAWN #site--summary--graph text[text-anchor="end"] >> text=/^16$/
 ASSERT_DRAWN #site--summary--graph >> text=Target
 
 // Pointing at a time shows what was then: the time, the nearest reading and when it was, and the basal and targets in
