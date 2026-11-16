@@ -123,26 +123,16 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			err = site_login_templ.LoginTOTP().Render(r.Context(), w)
 			if err != nil {
 				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to render TOTP login page: %w", err))
-				return
 			}
 			return
-		} else {
-			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
-			if err != nil {
-				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
-				return
-			}
-
-			// Set proper cookie and redirect to dashboard
-			config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
-
-			slog.InfoContext(r.Context(), "User logged in", "device", identity.Name, "role", identity.Role)
-			httputils.RecordAuthClient(r, identity)
-			recordSignIn(r, identity)
-			w.Header().Set("HX-Redirect", "/")
-			w.WriteHeader(http.StatusOK)
 		}
 
+		if err := signIn(w, r, config, identity, "password"); err != nil {
+			identityLoginErrorHTMX(w, r, "", err)
+			return
+		}
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -197,25 +187,12 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 			return
 		}
 
-		// TOTP is valid, generate the real JWT token
-		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
-		if err != nil {
-			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
+		// TOTP is valid, so the pre-auth token is swapped for the sign in cookie
+		if err := signIn(w, r, config, identity, "totp"); err != nil {
+			identityLoginErrorHTMX(w, r, "", err)
 			return
 		}
-
-		// Clear the pre-auth token cookie
 		config.Security.ClearUserPreAuthCookie(w)
-
-		// Set proper cookie and redirect to dashboard
-		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
-
-		slog.InfoContext(r.Context(), "User logged in", "identity", identity.Name, "role", identity.Role)
-		httputils.RecordAuthClient(r, identity)
-		recordSignIn(r, identity)
-
-		// Just render the dashboard HTMX here
-
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusOK)
 	}
@@ -309,13 +286,13 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
+		identityLoginErrorAPI(w, r, fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
 	// Reject names no identity can have before they reach the rate limiter, which keys on them
 	if !nameLimit.Takes(creds.Name) {
-		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
+		identityLoginErrorAPI(w, r, fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
 		return
 	}
 
@@ -328,13 +305,13 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 
 	identity, err := loginTheUserAPI(r.Context(), siteContext.ControlDB, siteContext.SiteID, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
-		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
+		identityLoginErrorAPI(w, r, fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
 	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
 	if err != nil {
-		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
+		identityLoginErrorAPI(w, r, fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
@@ -345,6 +322,19 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 
 	slog.InfoContext(r.Context(), "User logged in", "identity", identity.Name, "role", identity.Role)
 	recordSignIn(r, identity)
+}
+
+// signIn gives the browser the identity's sign in cookie, and records the sign in, how it was made and the app it is from
+func signIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, identity *controldb.SiteIdentity, method string) error {
+	token, expiresAt, err := cfg.Security.GenerateUserJWTToken(identity.SiteID, identity.Name, string(identity.Role))
+	if err != nil {
+		return fmt.Errorf("failed to generate JWT token: %w", err)
+	}
+	cfg.Security.SetUserLoginCookie(w, token, expiresAt)
+	slog.InfoContext(r.Context(), "User logged in", "identity", identity.Name, "role", identity.Role, "method", method)
+	httputils.RecordAuthClient(r, identity)
+	recordSignIn(r, identity)
+	return nil
 }
 
 // recordSignIn records a sign in to the site, or a refused one when there is no identity, with where it is from
@@ -397,15 +387,15 @@ func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// loginFailed records a refused sign in and logs why, which the answer does not say
+func loginFailed(r *http.Request, err error) {
+	recordSignIn(r, nil)
+	slog.InfoContext(r.Context(), "Identity Login Failed", "error", err, "stack", errors.LocalStack())
+}
+
 // We have a very generic error to not give any hints about how far through it was rejected
 func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
-	recordSignIn(r, nil)
-	allArgs := []any{
-		"error", err,
-		"stack", errors.LocalStack(),
-	}
-	slog.InfoContext(r.Context(), "Identity Login Failed", allArgs...)
-
+	loginFailed(r, err)
 	if usrMsg == "" {
 		usrMsg = i18n.T(r.Context(), "site.login.invalid_attempt")
 	}
@@ -417,18 +407,9 @@ func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg strin
 }
 
 // We have a very generic error to not give any hints about how far through it was rejected
-func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
-	recordSignIn(r, nil)
-	allArgs := []any{
-		"error", err,
-		"stack", errors.LocalStack(),
-	}
-	slog.InfoContext(r.Context(), "Identity Login Failed", allArgs...)
-
-	if usrMsg == "" {
-		usrMsg = "Invalid login attempt"
-	}
-	http.Error(w, usrMsg, http.StatusUnauthorized)
+func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, err error) {
+	loginFailed(r, err)
+	http.Error(w, "Invalid login attempt", http.StatusUnauthorized)
 }
 
 // nameLimit is what a site identity's name takes, as its table checks
