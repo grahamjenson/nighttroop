@@ -169,7 +169,9 @@ SET
     disabled_at = NULL,
     archived_at = NULL,
     last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+    last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    -- Its batch's backup left it out while it was archived, so the batch is uploaded again soon
+    backup_uploaded_at = NULL
 WHERE id = ? AND state = 'archived';
 
 -- Pass a list of sites as a string to delete
@@ -191,6 +193,11 @@ RETURNING id;
 -- Get sites that are live  or diabled
 -- We must backup even empty sites because a rehydrated control will expect them
 SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
+
+
+-- name: GetBatchesNotUploaded :many
+-- The batches with a live or disabled site that is not in an upload of its batch yet, e.g. a new or restored site
+SELECT DISTINCT batch FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY batch;
 
 
 -- name: BatchHadSites :one

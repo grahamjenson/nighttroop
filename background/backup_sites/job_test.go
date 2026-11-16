@@ -158,6 +158,30 @@ func TestBackupSiteBatchUploadsEmptyOnceItsLastSiteGoes(t *testing.T) {
 	require.Len(t, uploads, 2)
 }
 
+// A new site's batch is uploaded on the next tick, not only on its batch's turn, so a VPS restored from S3 has it
+func TestBackupBatchesNotUploadedUploadsOnlyBatchesWithANewSite(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, uploads, fail := t.Context(), [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	// A copy, as the config is shared by the package's tests
+	cfg := *controlDB.ServerConfig
+	cfg.Status.S3Working, jobs.ServerConfig = true, &cfg
+	uploaded := fileSite(t, controlDB, "qaaaaaaa")
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.Len(t, uploads, 1)
+
+	added := fileSite(t, controlDB, "raaaaaaa")
+	jobs.BackupBatchesNotUploaded(ctx)
+	require.Equal(t, [][]string{{uploaded.BackupPath}, {added.BackupPath}}, uploads)
+	stored, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: added.Subdomain})
+	require.NoError(t, err)
+	require.NotNil(t, stored.BackupUploadedAt)
+
+	// Every site is in an upload of its batch, so nothing is uploaded
+	jobs.BackupBatchesNotUploaded(ctx)
+	require.Len(t, uploads, 2)
+}
+
 func TestBackupSiteBatchUploadsAgainAfterAFailedUpload(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, uploads, fail := t.Context(), [][]string{}, true
