@@ -26,6 +26,10 @@ type dbWriter func(ctx context.Context, collection nsutils.Collection, id string
 // dbCollections are the collections a socket can write, as in Nightscout
 var dbCollections = []nsutils.Collection{nsutils.Treatments, nsutils.Entries, nsutils.Devicestatus, nsutils.Profile, nsutils.Food, nsutils.Activity}
 
+// dbActions are what each db write does to a collection, which needs that permission on it
+var dbActions = map[string]nsutils.CollectionAction{"dbAdd": nsutils.CollectionActionCreate, "dbUpdate": nsutils.CollectionActionUpdate,
+	"dbUpdateUnset": nsutils.CollectionActionUpdate, "dbRemove": nsutils.CollectionActionDelete}
+
 // ackResult is a reply that only says how an event went, as Nightscout's are
 func ackResult(message string) map[string]string { return map[string]string{"result": message} }
 
@@ -43,7 +47,8 @@ func (ws *Websocket) handleDBWrite(event string, args []json.RawMessage, auth *a
 	if auth == nil {
 		return ackResult("Not authorized")
 	}
-	if collection == nsutils.Treatments && !auth.WriteTreatment || collection != nsutils.Treatments && !auth.Write {
+	// Each collection's create, update and delete need the permission the REST API's do, not write for every collection
+	if !nsutils.CollectionActionHasPermission(collection, auth.identity, dbActions[event]) {
 		return ackResult("Not permitted")
 	}
 	// A websocket's events skip the HTTP rate limits, so each write counts against them here

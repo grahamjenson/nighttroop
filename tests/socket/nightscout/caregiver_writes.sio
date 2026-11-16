@@ -1,5 +1,5 @@
-# A Caregiver device (device_read_write) writes treatments on a socket, as on the REST API, but cannot change or delete
-# the readings, profiles or device statuses the PWD phone uploads
+# A Caregiver device (device_read_write) writes treatments and adds a device status on a socket, as on the REST API, but
+# cannot change or delete the readings, profiles or device statuses the PWD phone uploads
 
 NAME create_new_site
 POST http://localhost/site
@@ -45,6 +45,19 @@ EMIT dbRemove
 B {"collection":"treatments","_id":"{{ .treatment_id }}"}
 ACK
 ASSERT_EQUALS "success" "@result"
+
+NAME add_devicestatus
+EMIT dbAdd
+B {"collection":"devicestatus","data":{"device":"loopfollow://carer","uploaderBattery":80}}
+ACK
+ASSERT_EQUALS "loopfollow://carer" "@0.device"
+SET devicestatus_id {{ dig "add_devicestatus.0._id" }}
+
+NAME update_own_devicestatus_refused
+EMIT dbUpdate
+B {"collection":"devicestatus","_id":"{{ .devicestatus_id }}","data":{"uploaderBattery":10}}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
 
 NAME add_entry_refused
 EMIT dbAdd
