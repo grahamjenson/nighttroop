@@ -82,6 +82,12 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 		if err := b.DeleteUnusedSites(ctx, batch); err != nil {
 			slog.ErrorContext(ctx, "Error deleting unused sites", "error", err, "batch", batch)
 		}
+		// Tests run each job once, so this backs up one batch, but they see every site truncated straight away
+		if b.ServerConfig.IsTest() {
+			if err := b.controlDB.TruncateSites(ctx, b.controlDB.AllSites()); err != nil {
+				slog.ErrorContext(ctx, "Cannot truncate the sites", "error", err)
+			}
+		}
 
 		return b.BackupSiteBatch(ctx, batch)
 	})
@@ -170,6 +176,11 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 
 	if err != nil {
 		return fmt.Errorf("cannot get site batch: %w", err)
+	}
+	// Truncated first, so the backup has none of what truncating clears, and a site it changed is copied now. One that
+	// cannot be truncated is still backed up.
+	if err := b.controlDB.TruncateSites(ctx, sites); err != nil {
+		slog.ErrorContext(ctx, "Cannot truncate the batch's sites", "error", err)
 	}
 
 	siteIDs, paths := []string{}, []string{}

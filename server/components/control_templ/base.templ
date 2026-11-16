@@ -1,6 +1,7 @@
 package control_templ
 
 import (
+	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/components/confirm"
 	"context"
 	"fmt"
@@ -35,8 +36,8 @@ templ ControlBase() {
 			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 			<link rel="apple-touch-icon" href="/logo.png"/>
 			<!-- Tailwind CSS -->
-			<link href="/style_gen.css" rel="stylesheet"/>
-			<script src="/htmx.js"></script>
+			<link href={ static.URL("/style_gen.css") } rel="stylesheet"/>
+			<script src={ static.URL("/htmx.js") }></script>
 			@copybutton.Script()
 			@input.Script()
 			@label.Script()
@@ -45,7 +46,7 @@ templ ControlBase() {
 			@checkbox.Script()
 			@selectbox.Script()
 			@toast.Script()
-			<script src="/qrcode.js"></script>
+			<script src={ static.URL("/qrcode.js") }></script>
 		</head>
 		<body class="min-h-screen flex flex-col">
 			@testsite.Banner()

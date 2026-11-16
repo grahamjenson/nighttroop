@@ -1,11 +1,13 @@
 package public_templ
 
+import "nighttroop.t1d.nz/server/assets/static"
+
 // APIDocs is the API's documentation, Redoc's page of its OpenAPI schema, /openapi.json: a menu of every endpoint
 // and a search beside them, each with its parameters, body, responses and an example, in the site's colours
 templ APIDocs() {
 	@PublicBase() {
 		<div id="api-docs" class="w-full flex-1"></div>
-		<script src="/redoc.standalone.js"></script>
+		<script src={ static.URL("/redoc.standalone.js") }></script>
 		<script>
 			Redoc.init("/openapi.json", {
 				expandResponses: "200",
