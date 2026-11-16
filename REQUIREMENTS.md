@@ -453,6 +453,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - If a request has the file's version, the browser keeps the file for a year and does not ask again.
 - If a request has no version, or another one, the browser checks the file's `ETag` each time.
 
+#### Graph script
+
+- A site page loads ECharts only when it draws a graph: the summary's graph and the TDD report's chart.
+- The first graph in a tab loads it. Each later graph uses it at once.
+- A page with no graph, such as the sign in page or a data page, does not load it.
+
 #### Footer and legal notes
 
 - Every footer links (each in a new tab) to contact, terms of service, privacy policy and API docs.

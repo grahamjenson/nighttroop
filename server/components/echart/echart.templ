@@ -1,0 +1,41 @@
+// Package echart draws a go-echarts chart, loading ECharts only once a page has one
+package echart
+
+import (
+	"strings"
+
+	"nighttroop.t1d.nz/server/assets/static"
+)
+
+// Loader gives the page withECharts, which runs a chart's script once ECharts has loaded. ECharts is a megabyte, so
+// it is not in the head of every page: the first chart a tab draws loads it, and later ones use it at once.
+templ Loader() {
+	<script data-src={ static.URL("/echarts.min.js") }>
+		{
+			const src = document.currentScript.dataset.src
+			let loading
+			window.withECharts = (draw) => (loading ??= new Promise((loaded) => {
+				const script = document.createElement("script")
+				script.id = "echarts-script"
+				script.src = src
+				script.onload = loaded
+				document.head.append(script)
+			})).then(draw)
+		}
+	</script>
+}
+
+// Chart is a chart filling a box with id: the chart's own element, chartID, then go-echarts' script, which draws it
+// when the page or an htmx swap loads, run once ECharts has loaded
+templ Chart(id, chartID, script string) {
+	<div id={ id } class="h-90 w-full text-xs">
+		<div id={ chartID } class="h-full w-full"></div>
+		@templ.Raw(whenLoaded(script))
+	</div>
+}
+
+// whenLoaded is go-echarts' script tag with its code in a function withECharts runs
+func whenLoaded(script string) string {
+	code := strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(script), `<script type="text/javascript">`), "</script>")
+	return "<script>withECharts(() => {" + code + "})</script>"
+}

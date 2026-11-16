@@ -1,6 +1,7 @@
 package site_reports_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/echart"
 	"context"
 	"fmt"
 	"slices"
@@ -145,10 +146,7 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 		@card.Card(card.Props{Title: i18n.T(ctx, "site.reports.tdd.total_daily_dose")}) {
 			if len(withInsulin) > 0 {
 				{{ chart := tddChart(ctx, withInsulin, first, last, today) }}
-				<div id="site--reports--tdd--chart" class="h-90 w-full text-xs">
-					<div id={ chart.ChartID } class="h-full w-full"></div>
-					@templ.Raw(chart.RenderSnippet().Script)
-				</div>
+				@echart.Chart("site--reports--tdd--chart", chart.ChartID, chart.RenderSnippet().Script)
 			} else {
 				<p id="site--reports--tdd--empty" class="text-sm text-gray-500">{ i18n.T(ctx, "site.reports.tdd.empty") }</p>
 			}
