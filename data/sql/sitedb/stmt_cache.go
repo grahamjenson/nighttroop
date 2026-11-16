@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"sync"
+	"time"
 )
 
 // stmtCache runs each of a site's queries as a statement prepared the first time it is run, then reused, so SQLite does
@@ -69,6 +70,9 @@ func (c *stmtCache) Close() {
 	})
 }
 
+// prepareInTxWait is how long a transaction waits for another connection to prepare a query on
+const prepareInTxWait = 20 * time.Millisecond
+
 // txStmts runs a site's queries in a transaction, each with its cached statement on the transaction's connection
 type txStmts struct {
 	*sql.Tx
@@ -83,9 +87,12 @@ func (t *txStmts) stmt(ctx context.Context, query string) *sql.Stmt {
 	if !t.cache.prepareInTx {
 		return nil
 	}
-	// Prepared on another of the DB's connections, as the transaction holds its own (a file's DB opens as many as it
-	// needs), then again on the transaction's by StmtContext, which keeps it for that connection's later transactions
-	s, err := t.cache.stmt(ctx, query)
+	// Prepared on another of the DB's connections, as the transaction holds its own, then again on the transaction's by
+	// StmtContext, which keeps it for that connection's later transactions. A site has only maxOpenConns connections,
+	// so if none is free soon it runs unprepared, rather than wait for one held by a transaction waiting for this one.
+	prepareCtx, cancel := context.WithTimeout(ctx, prepareInTxWait)
+	defer cancel()
+	s, err := t.cache.stmt(prepareCtx, query)
 	if err != nil {
 		return nil
 	}

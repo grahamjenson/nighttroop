@@ -284,6 +284,7 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	}
 	sqldb.SetMaxIdleConns(maxIdleConns)
 	sqldb.SetConnMaxIdleTime(connMaxIdleTime)
+	sqldb.SetMaxOpenConns(maxOpenConns)
 
 	return sqldb, nil
 }
@@ -296,6 +297,12 @@ const maxIdleConns = 1
 // connMaxIdleTime is how long a site DB's connection is kept unused before it is closed. A site's apps each send a
 // request every minute or few, so with a longer time nearly every site kept a connection open between them.
 var connMaxIdleTime = 5 * time.Second
+
+// maxOpenConns is how many connections a site's DB opens at most, each with its own parsed schema, statements and page
+// cache, so a site with many requests at once cannot hold many megabytes. More requests wait for one of them. A
+// connection is never held while waiting for another (in memory, a DB has only one), except to prepare a query first
+// run in a transaction, which does not wait (stmtCache).
+const maxOpenConns = 2
 
 // OpenInMemorySqliteDB opens a DB kept only in memory, as every DB is in tests, with its foreign keys checked as a
 // file's are (OpenSqliteDB), so a test fails on a row a site's DB would refuse
