@@ -77,7 +77,7 @@ templ Page(p Props) {
 
 // Table is a list's table, with its rows as its children, then the row saying it has none
 templ Table(p TableProps) {
-	@table.Table(table.Props{ID: p.ID, Class: "rounded-lg border border-gray-200"}) {
+	@table.Table(table.Props{ID: p.ID}) {
 		@table.Heads(p.Columns)
 		@table.Body() {
 			{ children... }

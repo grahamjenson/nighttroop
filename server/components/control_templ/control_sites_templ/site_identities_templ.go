@@ -552,7 +552,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.Table(table.Props{ID: "control--site--identities--table", Class: "rounded-lg border border-gray-200 text-sm"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.Table(table.Props{ID: "control--site--identities--table"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -201,7 +201,7 @@ templ details(v View, kind string, row Row) {
 
 // EventsTable is a table of events, newest first, each opening its details
 templ EventsTable(v View, id string, events []Row) {
-	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+	@table.Table(table.Props{ID: id}) {
 		@table.Header() {
 			@table.Row() {
 				@head(i18n.T(ctx, "common.log_view.event"))
@@ -249,7 +249,7 @@ templ EventModal(v View, event Row) {
 
 // ErrorsTable is a table of errors, newest first, each opening its details
 templ ErrorsTable(v View, id string, errors []Row) {
-	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+	@table.Table(table.Props{ID: id}) {
 		@table.Header() {
 			@table.Row() {
 				@head(i18n.T(ctx, "common.log_view.error"))
@@ -285,7 +285,7 @@ templ ErrorModal(v View, e Row) {
 
 // LogsTable is a table of logs, newest first, each opening its details
 templ LogsTable(v View, id string, logs []Row) {
-	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+	@table.Table(table.Props{ID: id}) {
 		@table.Header() {
 			@table.Row() {
 				@head(i18n.T(ctx, "common.log_view.level"))
