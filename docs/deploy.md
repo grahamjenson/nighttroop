@@ -22,7 +22,7 @@ the same.
 | Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history |
 | Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history |
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |
-| Local backups of the control and site DBs | `data/backup/` | They are uploaded | Nothing, while the DBs are there |
+| Local backups of the control and site DBs, each compressed with LZ4 (`.sqlite.lz4`) | `data/backup/` | They are uploaded, as `<host>/backup/<batch or controldb>.tar.enc` | Nothing, while the DBs are there |
 | `update.sh` copies of `./data` | `backups/data-<time>.tar.gz`, the newest 5 | No | The way back to before a release |
 | `KEY_SETS` | `nighttroop.env` | No. Keep it in a password manager. | Every encrypted credential and S3 backup |
 

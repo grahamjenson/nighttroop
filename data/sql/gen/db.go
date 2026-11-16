@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	{{ if eq .PkgName "sitedb" }}"time"{{ end }}
 
 	"nighttroop.t1d.nz/data/sql/migrateup"
@@ -168,8 +169,12 @@ func (db *DB) TryCloseAndDelete() {
 	utils.DeleteFile(db.BackupPath)
 }
 
+// Backup copies the DB, compressed with LZ4, to its backup path, and deletes the uncompressed copy kept before
 func (db *DB) Backup(ctx context.Context) error {
-	return backup.SqliteBackup(ctx, db.SQLiteDB, db.BackupPath)
+	if err := backup.CompressedBackup(ctx, db.SQLiteDB, db.BackupPath); err != nil {
+		return err
+	}
+	return utils.DeleteFile(strings.TrimSuffix(db.BackupPath, ".lz4"))
 }
 
 // Vacuum rebuilds the DB without its free pages, then checkpoints the write-ahead log, so the file shrinks to the data
@@ -249,16 +254,16 @@ func GetPath(subdomain string, serverConfig *config.ServerConfig) string {
 
 func GetBackupPath(subdomain string, serverConfig *config.ServerConfig) string {
 	batch := subdomain[0:1]
-	return fmt.Sprintf("%s/site/%s/%s.sqlite", serverConfig.BackupDir(), string(batch), subdomain)
+	return fmt.Sprintf("%s/site/%s/%s.sqlite.lz4", serverConfig.BackupDir(), string(batch), subdomain)
 }
 
 func GetS3BatchPath(batch string, serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/backup/%s.tar.lz4.enc", serverConfig.HostName, batch)
+	return fmt.Sprintf("%s/backup/%s.tar.enc", serverConfig.HostName, batch)
 }
 
 func GetS3ArchivePath(subdomain string, serverConfig *config.ServerConfig) string {
 	batch := subdomain[0:1]
-	return fmt.Sprintf("%s/archive/site/%s/%s.tar.lz4.enc", serverConfig.HostName, batch, subdomain)
+	return fmt.Sprintf("%s/archive/site/%s/%s.tar.enc", serverConfig.HostName, batch, subdomain)
 }
 
 {{ else }}
@@ -268,11 +273,11 @@ func GetPath(serverConfig *config.ServerConfig) string {
 }
 
 func GetBackupPath(serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/%s.sqlite", serverConfig.BackupDir(), "{{ .PkgName }}")
+	return fmt.Sprintf("%s/%s.sqlite.lz4", serverConfig.BackupDir(), "{{ .PkgName }}")
 }
 
 func GetS3Path(serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/backup/%s.tar.lz4.enc", serverConfig.HostName,  "{{ .PkgName }}")
+	return fmt.Sprintf("%s/backup/%s.tar.enc", serverConfig.HostName,  "{{ .PkgName }}")
 }
 
 {{ end }}

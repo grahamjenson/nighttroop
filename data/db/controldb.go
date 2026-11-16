@@ -384,7 +384,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 	}
 	defer os.RemoveAll(dir)
 	path := filepath.Join(dir, filepath.Base(site.BackupPath))
-	if err := backup.SqliteBackup(ctx, site.SQLiteDB, path); err != nil {
+	if err := backup.CompressedBackup(ctx, site.SQLiteDB, path); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
 	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {

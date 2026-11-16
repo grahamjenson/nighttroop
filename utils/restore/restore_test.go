@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"crypto/rand"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -62,33 +63,104 @@ func newClient(t *testing.T) (*s3utils.S3Client, *fakeS3) {
 	return s3utils.NewS3Client(&serverConfig), fake
 }
 
-// backup is a file, too big for one encrypted segment, packed as a backup kept at key, and that file's content
-func backup(t *testing.T, c *s3utils.S3Client, key, name string) ([]byte, []byte) {
+// backup is a DB file, too big for one encrypted segment, packed as a backup kept at key, and that file's content.
+// It is a tar of the file compressed with LZ4 and named name.lz4, or, when legacy, as backups were packed before, a tar
+// of the file as it is, compressed with LZ4 as a whole.
+func backup(t *testing.T, c *s3utils.S3Client, key, name string, legacy bool) ([]byte, []byte) {
 	content := make([]byte, 2<<20)
 	_, err := rand.Read(content)
 	require.NoError(t, err)
 
+	// Small blocks, as a real DB is many blocks, so a cut off download has already written some of the file
+	compress := func(w io.Writer) *lz4.Writer {
+		lz := lz4.NewWriter(w)
+		require.NoError(t, lz.Apply(lz4.BlockSizeOption(lz4.Block64Kb)))
+		return lz
+	}
+	entry := content
+	if !legacy {
+		var compressed bytes.Buffer
+		lz := compress(&compressed)
+		_, err = lz.Write(content)
+		require.NoError(t, err)
+		require.NoError(t, lz.Close())
+		entry, name = compressed.Bytes(), name+".lz4"
+	}
+
 	var archive bytes.Buffer
 	enc, err := c.ServerConfig.Security.EncryptingWriterFor(&archive, key)
 	require.NoError(t, err)
-	// Small blocks, as a real DB is many blocks, so a cut off download has already written some of the file
-	lz := lz4.NewWriter(enc)
-	require.NoError(t, lz.Apply(lz4.BlockSizeOption(lz4.Block64Kb)))
-	tw := tar.NewWriter(lz)
-	require.NoError(t, tw.WriteHeader(&tar.Header{Name: name, Mode: 0o600, Size: int64(len(content)), Typeflag: tar.TypeReg}))
-	_, err = tw.Write(content)
+	var w io.WriteCloser = enc
+	if legacy {
+		w = compress(enc)
+	}
+	tw := tar.NewWriter(w)
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: name, Mode: 0o600, Size: int64(len(entry)), Typeflag: tar.TypeReg}))
+	_, err = tw.Write(entry)
 	require.NoError(t, err)
 	require.NoError(t, tw.Close())
-	require.NoError(t, lz.Close())
+	if legacy {
+		require.NoError(t, w.Close())
+	}
 	require.NoError(t, enc.Close())
 	return archive.Bytes(), content
+}
+
+// legacyKey is where a backup kept at key was kept before backups were compressed file by file
+func legacyKey(key string) string {
+	return strings.TrimSuffix(key, ".tar.enc") + ".tar.lz4.enc"
+}
+
+// A control DB and a site batch are restored from their backups, each DB in them compressed by itself
+func TestRestoreDecompressesEachDB(t *testing.T) {
+	c, fake := newClient(t)
+	controlKey, controlPath := controldb.GetS3Path(c.ServerConfig), controldb.GetPath(c.ServerConfig)
+	controlArchive, controlContent := backup(t, c, controlKey, filepath.Base(controlPath), false)
+	fake.set(controlKey, controlArchive)
+	batchKey, folder := sitedb.GetS3BatchPath("a", c.ServerConfig), sitedb.GetBatchFolder("a", c.ServerConfig)
+	batchArchive, siteContent := backup(t, c, batchKey, "abcdef.sqlite", false)
+	fake.set(batchKey, batchArchive)
+
+	require.NoError(t, restore.TryDownloadExtractControlDbs(c))
+	require.NoError(t, restore.TryRestoreAllFiles(c))
+
+	got, err := os.ReadFile(controlPath)
+	require.NoError(t, err)
+	require.Equal(t, controlContent, got)
+	got, err = os.ReadFile(filepath.Join(folder, "abcdef.sqlite"))
+	require.NoError(t, err)
+	require.Equal(t, siteContent, got)
+	require.NoFileExists(t, filepath.Join(folder, "abcdef.sqlite.lz4"))
+}
+
+// A backup kept as backups were before, at the key they were kept at, is restored while there is no backup at the new
+// key, and the new key's backup is restored once there is one
+func TestRestoreReadsLegacyBackups(t *testing.T) {
+	c, fake := newClient(t)
+	key, folder := sitedb.GetS3BatchPath("a", c.ServerConfig), sitedb.GetBatchFolder("a", c.ServerConfig)
+	require.NotEqual(t, key, legacyKey(key))
+	legacy, legacyContent := backup(t, c, legacyKey(key), "abcdef.sqlite", true)
+	fake.set(legacyKey(key), legacy)
+
+	require.NoError(t, restore.TryRestoreAllFiles(c))
+	got, err := os.ReadFile(filepath.Join(folder, "abcdef.sqlite"))
+	require.NoError(t, err)
+	require.Equal(t, legacyContent, got)
+
+	require.NoError(t, os.RemoveAll(folder))
+	current, content := backup(t, c, key, "abcdef.sqlite", false)
+	fake.set(key, current)
+	require.NoError(t, restore.TryRestoreAllFiles(c))
+	got, err = os.ReadFile(filepath.Join(folder, "abcdef.sqlite"))
+	require.NoError(t, err)
+	require.Equal(t, content, got)
 }
 
 // A control DB download that is cut off leaves no control DB, so the next start downloads it again
 func TestCutOffControlDownloadLeavesNoControlDB(t *testing.T) {
 	c, fake := newClient(t)
 	key, path := controldb.GetS3Path(c.ServerConfig), controldb.GetPath(c.ServerConfig)
-	archive, content := backup(t, c, key, filepath.Base(path))
+	archive, content := backup(t, c, key, filepath.Base(path), false)
 
 	fake.set(key, archive[:len(archive)/2])
 	require.Error(t, restore.TryDownloadExtractControlDbs(c))
@@ -112,7 +184,7 @@ func TestCutOffControlDownloadLeavesNoControlDB(t *testing.T) {
 func TestFailedBatchDownloadIsRetried(t *testing.T) {
 	c, fake := newClient(t)
 	key, folder := sitedb.GetS3BatchPath("a", c.ServerConfig), sitedb.GetBatchFolder("a", c.ServerConfig)
-	archive, content := backup(t, c, key, "abcdef.sqlite")
+	archive, content := backup(t, c, key, "abcdef.sqlite", false)
 
 	fake.set(key, archive[:len(archive)/2])
 	require.Error(t, restore.TryRestoreAllFiles(c))

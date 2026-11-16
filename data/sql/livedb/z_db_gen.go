@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
@@ -112,8 +113,12 @@ func (db *DB) TryCloseAndDelete() {
 	utils.DeleteFile(db.BackupPath)
 }
 
+// Backup copies the DB, compressed with LZ4, to its backup path, and deletes the uncompressed copy kept before
 func (db *DB) Backup(ctx context.Context) error {
-	return backup.SqliteBackup(ctx, db.SQLiteDB, db.BackupPath)
+	if err := backup.CompressedBackup(ctx, db.SQLiteDB, db.BackupPath); err != nil {
+		return err
+	}
+	return utils.DeleteFile(strings.TrimSuffix(db.BackupPath, ".lz4"))
 }
 
 // Vacuum rebuilds the DB without its free pages, then checkpoints the write-ahead log, so the file shrinks to the data
@@ -184,11 +189,11 @@ func GetPath(serverConfig *config.ServerConfig) string {
 }
 
 func GetBackupPath(serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/%s.sqlite", serverConfig.BackupDir(), "livedb")
+	return fmt.Sprintf("%s/%s.sqlite.lz4", serverConfig.BackupDir(), "livedb")
 }
 
 func GetS3Path(serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/backup/%s.tar.lz4.enc", serverConfig.HostName, "livedb")
+	return fmt.Sprintf("%s/backup/%s.tar.enc", serverConfig.HostName, "livedb")
 }
 
 // Migrations are the DB's migrations, in their migrations folder

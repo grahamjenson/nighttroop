@@ -263,9 +263,9 @@ func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Re
 	go func() {
 		defer pw.Close()
 		// An upload logs only when it fails, as every backup is one
-		_, err := c.createTarLZ4(paths, pw, key)
+		_, err := c.createTar(paths, pw, key)
 		if err != nil {
-			slog.ErrorContext(ctx, "Error creating tar LZ4", "key", key, "error", err)
+			slog.ErrorContext(ctx, "Error creating tar", "key", key, "error", err)
 			// Important: propagate error to the reader side
 			pw.CloseWithError(err)
 		}
@@ -314,12 +314,14 @@ func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath 
 
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), transferTimeout)
 	defer cancel()
-	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(key),
-	})
+	var noSuchKeyError *types.NoSuchKey
+	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
+	// Until the first backup in the new format replaces it, the backup is the one kept before, at its legacy key
+	if errors.As(err, &noSuchKeyError) && LegacyKey(key) != key {
+		key = LegacyKey(key)
+		out, err = c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
+	}
 	if err != nil {
-		var noSuchKeyError *types.NoSuchKey
 		if errors.As(err, &noSuchKeyError) {
 			info = "Not Found"
 			return 0, false, nil
@@ -341,11 +343,11 @@ func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath 
 	defer os.RemoveAll(staging)
 
 	cr := &utils.CountingReader{R: out.Body}
-	err = c.ExtractTarLZ4(cr, staging, key)
+	err = c.ExtractTar(cr, staging, key)
 
-	info = fmt.Sprintf("downloaded and extracted %d bytes", cr.Bytes)
+	info = fmt.Sprintf("downloaded and extracted %d bytes of %s", cr.Bytes, key)
 	if err != nil {
-		return cr.Bytes, true, fmt.Errorf("cannot extract tar LZ4: %w", err)
+		return cr.Bytes, true, fmt.Errorf("cannot extract tar: %w", err)
 	}
 
 	if err := moveInto(staging, outpath); err != nil {
@@ -375,9 +377,18 @@ func moveInto(dir string, outpath string) error {
 // END OF DOWNLOAD METHODS
 ////
 
-// createTarLZ4 writes files to writer as a tar, compressed with LZ4 and encrypted with the server's keys, and is how
-// many bytes it wrote
-func (c *S3Client) createTarLZ4(files []string, writer io.Writer, objectKey string) (int64, error) {
+// LegacyKey is where the backup kept at key was kept before each DB in it was compressed by itself: there it is a tar
+// of the DBs, compressed with LZ4 as a whole, then encrypted
+func LegacyKey(key string) string {
+	if base, ok := strings.CutSuffix(key, ".tar.enc"); ok {
+		return base + ".tar.lz4.enc"
+	}
+	return key
+}
+
+// createTar writes files, each DB already compressed with LZ4 when backed up, to writer as a tar encrypted with the
+// server's keys, and is how many bytes it wrote
+func (c *S3Client) createTar(files []string, writer io.Writer, objectKey string) (int64, error) {
 	cw := &utils.CountingWriter{W: writer}
 	// Wrap all up in encryption
 	encWriter, err := c.ServerConfig.Security.EncryptingWriterFor(cw, objectKey)
@@ -385,27 +396,18 @@ func (c *S3Client) createTarLZ4(files []string, writer io.Writer, objectKey stri
 		return 0, fmt.Errorf("cannot create encrypting writer: %w", err)
 	}
 
-	// Wrap in LZ4 writer
-	lz4Writer := lz4.NewWriter(encWriter)
-
-	// Create tar writer
-	tarWriter := tar.NewWriter(lz4Writer)
+	tarWriter := tar.NewWriter(encWriter)
 
 	for _, file := range files {
 		if err := addFileToTar(tarWriter, file); err != nil {
 			tarWriter.Close()
-			lz4Writer.Close()
 			encWriter.Close()
 			return cw.Bytes, fmt.Errorf("adding %s to tar: %w", file, err)
 		}
 	}
 
-	// Replace the defers with this at the end of createTarLZ4:
 	if err := tarWriter.Close(); err != nil {
 		return cw.Bytes, fmt.Errorf("closing tar writer: %w", err)
-	}
-	if err := lz4Writer.Close(); err != nil {
-		return cw.Bytes, fmt.Errorf("closing lz4 writer: %w", err)
 	}
 	if err := encWriter.Close(); err != nil {
 		return cw.Bytes, fmt.Errorf("closing enc writer: %w", err)
@@ -445,21 +447,18 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 // createFile is os.Create, which tests can stand in for to fail a file's close
 var createFile = func(name string) (io.WriteCloser, error) { return os.Create(name) }
 
-// ExtractTarLZ4 decrypts, decompresses and untars the backup kept at the object key from reader into outputDir,
-// refusing an entry that would be written outside it
-func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string, objectKey string) error {
-
-	// Wrap with decryption
+// ExtractTar decrypts and untars the backup kept at the object key from reader into outputDir, decompressing each
+// `.lz4` file in it to its name without `.lz4`, and refusing an entry that would be written outside outputDir. A
+// backup kept at a legacy key, or with none, is decompressed as a whole instead.
+func (c *S3Client) ExtractTar(reader io.Reader, outputDir string, objectKey string) error {
 	decReader, err := c.ServerConfig.Security.DecryptingReaderFor(reader, objectKey)
 	if err != nil {
 		return fmt.Errorf("cannot create decrypting reader: %w", err)
 	}
-
-	// Wrap with LZ4 reader
-	lz4Reader := lz4.NewReader(decReader)
-
-	// Create tar reader from decompressed stream
-	tarReader := tar.NewReader(lz4Reader)
+	if LegacyKey(objectKey) == objectKey {
+		decReader = lz4.NewReader(decReader)
+	}
+	tarReader := tar.NewReader(decReader)
 
 	for {
 
@@ -476,7 +475,7 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string, objectKey s
 		// Security Check: dont let the tar file escape the output directory
 		// e.g. if header.Name is "../../etc/passwd" or "/absolute/path/to/file"
 		////
-		name := filepath.Clean(header.Name)
+		name, compressed := strings.CutSuffix(filepath.Clean(header.Name), ".lz4")
 		if filepath.IsAbs(name) {
 			return fmt.Errorf("archive contains absolute path: %s", header.Name)
 		}
@@ -507,8 +506,12 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string, objectKey s
 				return fmt.Errorf("creating file: %w", err)
 			}
 
+			var entry io.Reader = tarReader
+			if compressed {
+				entry = lz4.NewReader(tarReader)
+			}
 			// Closed here rather than deferred, as this loops over every file; the write's error is the one returned
-			if _, err := io.Copy(outFile, tarReader); err != nil {
+			if _, err := io.Copy(outFile, entry); err != nil {
 				outFile.Close()
 				return fmt.Errorf("writing file: %w", err)
 			}
