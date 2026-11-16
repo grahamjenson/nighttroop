@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -77,7 +78,7 @@ func TestRequestLogsAndSentryRedactCredentials(t *testing.T) {
 func TestResponsesAreGzippedWhenAccepted(t *testing.T) {
 	router := chi.NewRouter()
 	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
-	css := ".a { color: red; }"
+	css := strings.Repeat(".a { color: red; }\n", 100)
 	router.Get("/style_gen.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 		_, _ = w.Write([]byte(css))
