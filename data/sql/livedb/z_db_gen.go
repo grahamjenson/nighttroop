@@ -246,7 +246,7 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	// cannot wait for a snapshot that is already stale. Read only transactions still begin deferred.
 	//
 	// Each connection's page cache is cacheSize KiB, set with a PRAGMA, as the driver reads no _cache_size: a site's
-	// connection kept SQLite's default of 2MiB, not 100KiB, which under load held about 0.45MB more for each site.
+	// connection kept SQLite's default of 2MiB, not 100KiB, which under load held about 4MB more for each site.
 	dsn := fmt.Sprintf("file:%s?_pragma=cache_size(%v)&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1&_txlock=immediate", path, -cacheSize)
 
 	sqldb, err := sqltiming.Open("livedb", dsn)
