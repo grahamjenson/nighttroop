@@ -191,6 +191,8 @@ site:
       temp_basal: "Temp Basal"
       temp_basal_detail: "{{.Rate}} for {{.Minutes}} min"
     device:
+      title: "Devices"
+      all: "All device statuses"
       phone: "Phone"
       reservoir: "Reservoir"
       pump: "Pump"

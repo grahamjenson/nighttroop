@@ -99,6 +99,9 @@ ASSERT_NOT_VISIBLE #site--summary--insulin-carbs >> text=virtual://nighttroop
 ASSERT_NOT_VISIBLE #site--summary--treatments >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
+// The devices have a title, and a link to all their statuses
+ASSERT_VISIBLE #site--summary--devices h2:text-is("Devices")
+ASSERT_TEXT_EQUALS #site--summary--all-devices All device statuses
 
 // The latest glucose, each dose and meal, and each other treatment say how long ago they were, in words, all within the last half
 // hour here
