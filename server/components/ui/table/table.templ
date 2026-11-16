@@ -122,8 +122,9 @@ templ Footer(props ...FooterProps) {
 	</tfoot>
 }
 
-// Row is a table row. One with hx-get, which opens its details when clicked, can also be tabbed to and opened with
-// Enter, though not by Enter on a button in it, such as its delete.
+// Row is a table row. One with hx-get, which opens its details when clicked, shows it can be: it has a pointer and
+// the theme's accent while pointed at or focused, where a row that opens nothing does not change. It can also be
+// tabbed to and opened with Enter, though not by Enter on a button in it, such as its delete.
 templ Row(props ...RowProps) {
 	{{ var p RowProps }}
 	if len(props) > 0 {
@@ -136,8 +137,8 @@ templ Row(props ...RowProps) {
 		}
 		class={
 			utils.TwMerge(
-				"border-b transition-colors hover:bg-muted/50",
-				utils.If(opens, "focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"),
+				"border-b transition-colors",
+				utils.If(opens, "cursor-pointer hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"),
 				utils.If(p.Selected, "data-[tui-table-state-selected]:bg-muted"),
 				p.Class,
 			),
