@@ -1,6 +1,7 @@
 package pager
 
 import (
+	"nighttroop.t1d.nz/server/components/ui/table"
 	"context"
 	"fmt"
 	"net/url"
@@ -70,7 +71,9 @@ templ Pager(p Props) {
 // Empty is the last row of a table's body, saying it has no rows. It is always there, shown only while it is the only
 // row, so it goes once a row is added and comes back once the last is deleted.
 templ Empty(id string, columns int, text string) {
-	<tr id={ id } data-empty class="hidden only:table-row"><td colspan={ strconv.Itoa(columns) } class="p-4 text-sm text-gray-500">{ text }</td></tr>
+	<tr id={ id } data-empty class="hidden only:table-row">
+		@table.EmptyCell(columns, text)
+	</tr>
 }
 
 var scriptOnce = templ.NewOnceHandle()

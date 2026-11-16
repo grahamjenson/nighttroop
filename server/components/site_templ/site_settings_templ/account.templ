@@ -36,7 +36,7 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 			@table.Table(table.Props{ID: "site--account--passkeys"}) {
 				@table.Body() {
 					if len(passkeys) == 0 {
-						<tr><td class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "site.settings.account.no_passkeys") }</td></tr>
+						@table.Empty("", 1, i18n.T(ctx, "site.settings.account.no_passkeys"))
 					}
 					for _, passkey := range passkeys {
 						@table.Row() {

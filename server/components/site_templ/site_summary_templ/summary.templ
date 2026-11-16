@@ -301,7 +301,7 @@ templ treatmentsTable(list []treatment) {
 	@table.Table(table.Props{ID: "site--summary--treatments"}) {
 		@table.Body() {
 			if len(list) == 0 {
-				<tr><td class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "site.summary.treatments.none") }</td></tr>
+				@table.Empty("", 1, i18n.T(ctx, "site.summary.treatments.none"))
 			}
 			for _, t := range list {
 				@table.Row() {
@@ -340,7 +340,7 @@ templ insulinCarbsTable(list []intake) {
 		}
 		@table.Body() {
 			if len(list) == 0 {
-				<tr><td colspan="3" class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "site.summary.intake.none") }</td></tr>
+				@table.Empty("", 3, i18n.T(ctx, "site.summary.intake.none"))
 			}
 			for _, i := range list {
 				@table.Row() {
