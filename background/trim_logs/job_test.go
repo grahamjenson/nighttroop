@@ -3,6 +3,7 @@ package trim_logs_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background/trim_logs"
@@ -15,6 +16,9 @@ import (
 type scheduler map[string]func(context.Context) error
 
 func (s scheduler) AddFunc(name string, spec string, cmd func(context.Context) error) { s[name] = cmd }
+func (s scheduler) AddFuncSoon(name string, _, _ time.Duration, cmd func(context.Context) error) {
+	s[name] = cmd
+}
 
 func TestTrimLogsDBCron(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)

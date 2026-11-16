@@ -68,7 +68,8 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, reading := range readings {
 		model.ResourceReadings = append(model.ResourceReadings, controlmodels.ResourceReading{At: reading.At, CPUPercent: reading.CpuPercent,
-			CPUPeggedSeconds: reading.CpuPeggedSeconds, MemoryPercent: reading.MemoryPercent, DiskPercent: reading.DiskPercent})
+			CPUPeggedSeconds: reading.CpuPeggedSeconds, MemoryPercent: reading.MemoryPercent, DiskPercent: reading.DiskPercent,
+			Goroutines: reading.Goroutines})
 	}
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, model, control_usage_templ.Usage(model))
 }

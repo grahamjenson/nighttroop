@@ -206,6 +206,16 @@ func (m *ResourceReading) SetDiskTotalBytes(v *int64) {
 	m.DiskTotalBytes = v
 }
 
+// GetGoroutines returns the Goroutines value.
+func (m ResourceReading) GetGoroutines() int64 {
+	return m.Goroutines
+}
+
+// SetGoroutines sets the Goroutines value and returns the updated ResourceReading.
+func (m *ResourceReading) SetGoroutines(v int64) {
+	m.Goroutines = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m DeleteAlarmParams) GetSiteID() string {
 	return m.SiteID
@@ -574,6 +584,16 @@ func (m CreateResourceReadingParams) GetDiskTotalBytes() *int64 {
 // SetDiskTotalBytes sets the DiskTotalBytes value and returns the updated CreateResourceReadingParams.
 func (m *CreateResourceReadingParams) SetDiskTotalBytes(v *int64) {
 	m.DiskTotalBytes = v
+}
+
+// GetGoroutines returns the Goroutines value.
+func (m CreateResourceReadingParams) GetGoroutines() int64 {
+	return m.Goroutines
+}
+
+// SetGoroutines sets the Goroutines value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetGoroutines(v int64) {
+	m.Goroutines = v
 }
 
 // GetBefore returns the Before value.

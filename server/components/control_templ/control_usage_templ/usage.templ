@@ -1,9 +1,11 @@
 package control_usage_templ
 
 import (
+	"context"
 	"fmt"
-	"slices"
 	"maps"
+	"math"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -36,30 +38,105 @@ func graphY(percent float64, top float64) float64 {
 	return graphH - graphH*min(max(percent, 0), top)/top
 }
 
+// graphX is a check's place across the graph, by its time across the checks kept
+func graphX(model controlmodels.Usage, at int64) float64 {
+	return graphW * float64(at-model.ResourcesSince) / float64(max(model.Now-model.ResourcesSince, 1))
+}
+
 // resourcePoints are a graph line's points: each check's value, placed by its time across the checks kept. A check
-// without the value, as memory on a Mac, is left out.
+// without the value, as memory on a Mac, is left out. Of the many checks in one unit across, only the lowest and highest
+// are drawn, so a graph of 3 days of checks every 30 seconds still has its peaks, but in a few hundred points.
 func resourcePoints(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64, top float64) string {
 	points := []string{}
-	for _, reading := range model.ResourceReadings {
-		if v := value(reading); v != nil {
-			x := graphW * float64(reading.At-model.ResourcesSince) / float64(max(model.Now-model.ResourcesSince, 1))
-			points = append(points, fmt.Sprintf("%.1f,%.1f", x, graphY(*v, top)))
+	// The unit's lowest and highest checks so far, as x,y, the first of them the earlier
+	var first, second [2]float64
+	unit := -1
+	draw := func() {
+		if unit >= 0 {
+			points = append(points, fmt.Sprintf("%.1f,%.1f", first[0], first[1]))
+			if second != first {
+				points = append(points, fmt.Sprintf("%.1f,%.1f", second[0], second[1]))
+			}
 		}
 	}
+	for _, reading := range model.ResourceReadings {
+		v := value(reading)
+		if v == nil {
+			continue
+		}
+		point := [2]float64{graphX(model, reading.At), graphY(*v, top)}
+		switch {
+		case int(point[0]) != unit:
+			draw()
+			unit, first, second = int(point[0]), point, point
+		case point[1] < min(first[1], second[1]) || point[1] > max(first[1], second[1]):
+			// The new extreme replaces the old one on its side, and comes after the other, which is kept
+			low, high := first, second
+			if low[1] > high[1] {
+				low, high = high, low
+			}
+			if point[1] < low[1] {
+				first, second = high, point
+			} else {
+				first, second = low, point
+			}
+		}
+	}
+	draw()
 	return strings.Join(points, " ")
 }
 
-// latestPercent is the newest check's value, or a dash when it has none
-func latestPercent(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64) string {
+// latestValue is the newest check's value, shown with show, or a dash when it has none
+func latestValue(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64, show func(float64) string) string {
 	if len(model.ResourceReadings) == 0 || value(model.ResourceReadings[len(model.ResourceReadings)-1]) == nil {
 		return "-"
 	}
-	return fmt.Sprintf("%.0f%%", *value(model.ResourceReadings[len(model.ResourceReadings)-1]))
+	return show(*value(model.ResourceReadings[len(model.ResourceReadings)-1]))
 }
 
-func cpuPercent(r controlmodels.ResourceReading) *float64 { return &r.CPUPercent }
+// hoverColumns is how many columns each graph is split into to hover, each showing the check nearest its middle
+const hoverColumns = 60
+
+// hoverValues are each column's check nearest its middle, shown with show and how long ago it was, or "" where no
+// check in the column has the value
+func hoverValues(ctx context.Context, model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64, show func(float64) string) []string {
+	shown := make([]string, hoverColumns)
+	nearest := make([]float64, hoverColumns)
+	for _, reading := range model.ResourceReadings {
+		v := value(reading)
+		if v == nil {
+			continue
+		}
+		column := graphX(model, reading.At) * hoverColumns / graphW
+		i := min(max(int(column), 0), hoverColumns-1)
+		if distance := math.Abs(column - float64(i) - 0.5); shown[i] == "" || distance < nearest[i] {
+			shown[i], nearest[i] = show(*v)+" · "+display.TimeAgo(ctx, reading.At, model.NowTime()), distance
+		}
+	}
+	return shown
+}
+
+func percent(value float64) string {
+	return fmt.Sprintf("%.0f%%", value)
+}
+
+func whole(value float64) string {
+	return fmt.Sprintf("%.0f", value)
+}
+
+func cpuPercent(r controlmodels.ResourceReading) *float64    { return &r.CPUPercent }
 func memoryPercent(r controlmodels.ResourceReading) *float64 { return r.MemoryPercent }
-func diskPercent(r controlmodels.ResourceReading) *float64 { return r.DiskPercent }
+func diskPercent(r controlmodels.ResourceReading) *float64   { return r.DiskPercent }
+func goroutines(r controlmodels.ResourceReading) *float64    { return new(float64(r.Goroutines)) }
+
+// mostGoroutines is the goroutines graph's top: the most of any check, and a little over so its line is below the top
+func mostGoroutines(model controlmodels.Usage) float64 {
+	most := 1.0
+	for _, reading := range model.ResourceReadings {
+		most = max(most, float64(reading.Goroutines))
+	}
+	return most * 1.1
+}
 
 // Usage is how many use the server and how much, and its resources. It asks for itself again every 10 seconds, and
 // swaps in its new numbers.
@@ -117,10 +194,11 @@ templ Usage(model controlmodels.Usage) {
 			if len(model.ResourceReadings) == 0 {
 				<p id="control--usage--resources-empty" class="text-sm text-gray-500">{ i18n.T(ctx, "control.usage.resources_empty") }</p>
 			} else {
-				<div class="grid gap-3 sm:grid-cols-3">
-					@resourceGraph(model, "cpu", i18n.T(ctx, "control.usage.mean_cpu"), cpuPercent, -1, 100*float64(max(model.Server.CPUs, 1)))
-					@resourceGraph(model, "memory", i18n.T(ctx, "control.usage.memory_used"), memoryPercent, model.MemoryAlertPercent, 100)
-					@resourceGraph(model, "disk", i18n.T(ctx, "control.usage.db_disk_used"), diskPercent, model.DiskAlertPercent, 100)
+				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+					@resourceGraph(model, "cpu", i18n.T(ctx, "control.usage.mean_cpu"), cpuPercent, percent, -1, 100*float64(max(model.Server.CPUs, 1)))
+					@resourceGraph(model, "memory", i18n.T(ctx, "control.usage.memory_used"), memoryPercent, percent, model.MemoryAlertPercent, 100)
+					@resourceGraph(model, "goroutines", i18n.T(ctx, "control.usage.goroutines"), goroutines, whole, -1, mostGoroutines(model))
+					@resourceGraph(model, "disk", i18n.T(ctx, "control.usage.db_disk_used"), diskPercent, percent, model.DiskAlertPercent, 100)
 				</div>
 			}
 		}
@@ -165,19 +243,33 @@ templ Usage(model controlmodels.Usage) {
 
 // resourceGraph is a small graph of a resource's percent over the checks kept, with a dashed line at the level it
 // warns at, unless alertPercent is negative
-templ resourceGraph(model controlmodels.Usage, name string, label string, value func(controlmodels.ResourceReading) *float64, alertPercent int, top float64) {
+// resourceGraph is a resource's checks drawn from 0 at its bottom to top at its top, with its alert level dashed, and,
+// hovering a column, the value and age of the check nearest it
+templ resourceGraph(model controlmodels.Usage, name string, label string, value func(controlmodels.ResourceReading) *float64, show func(float64) string, alertPercent int, top float64) {
 	<div class="rounded-lg border border-gray-200 p-3">
 		<div class="flex justify-between text-xs font-semibold uppercase tracking-wide text-gray-500">
 			<span>{ label }</span>
-			<span id={ "control--usage--resources-" + name + "-latest" } class="tabular-nums">{ latestPercent(model, value) }</span>
+			<span id={ "control--usage--resources-" + name + "-latest" } class="tabular-nums">{ latestValue(model, value, show) }</span>
 		</div>
-		<svg id={ "control--usage--resources-" + name } viewBox={ fmt.Sprintf("0 0 %.0f %.0f", graphW, graphH) } preserveAspectRatio="none" class="mt-2 h-16 w-full overflow-visible" role="img" aria-label={ i18n.T(ctx, "control.usage.graph_label", i18n.Data{"GraphName": label}) }>
-			<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphH) } y2={ fmt.Sprint(graphH) } class="stroke-gray-200" vector-effect="non-scaling-stroke"></line>
-			if alertPercent >= 0 {
-				<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(alertPercent), top)) } y2={ fmt.Sprint(graphY(float64(alertPercent), top)) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
-			}
-			<polyline points={ resourcePoints(model, value, top) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
-		</svg>
+		<div id={ "control--usage--resources-" + name } class="relative mt-2 h-16">
+			<svg viewBox={ fmt.Sprintf("0 0 %.0f %.0f", graphW, graphH) } preserveAspectRatio="none" class="h-16 w-full overflow-visible" role="img" aria-label={ i18n.T(ctx, "control.usage.graph_label", i18n.Data{"GraphName": label}) }>
+				<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphH) } y2={ fmt.Sprint(graphH) } class="stroke-gray-200" vector-effect="non-scaling-stroke"></line>
+				if alertPercent >= 0 {
+					<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(alertPercent), top)) } y2={ fmt.Sprint(graphY(float64(alertPercent), top)) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
+				}
+				<polyline points={ resourcePoints(model, value, top) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+			</svg>
+			<div class="absolute inset-0 flex">
+				for i, shown := range hoverValues(ctx, model, value, show) {
+					<div class="group relative h-full flex-1">
+						if shown != "" {
+							<div class="invisible absolute inset-y-0 left-1/2 w-px bg-gray-400 group-hover:visible"></div>
+							<div id={ fmt.Sprintf("control--usage--resources-%s-hover-%d", name, i) } class="invisible absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs tabular-nums text-white group-hover:visible">{ shown }</div>
+						}
+					</div>
+				}
+			</div>
+		</div>
 		<div class="text-xs text-gray-500">{ i18n.T(ctx, "control.usage.graph_note") }</div>
 	</div>
 }

@@ -29,6 +29,7 @@ CREATE TABLE resource_readings (
     memory_percent REAL,
     memory_total_bytes INTEGER,
     disk_percent REAL,
-    disk_total_bytes INTEGER
+    disk_total_bytes INTEGER,
+    goroutines INTEGER NOT NULL
 ) STRICT;
 

@@ -10,9 +10,9 @@ import (
 )
 
 const createResourceReading = `-- name: CreateResourceReading :exec
-INSERT INTO resource_readings (at, cpu_percent, cpu_pegged_seconds, memory_percent, memory_total_bytes, disk_percent, disk_total_bytes)
+INSERT INTO resource_readings (at, cpu_percent, cpu_pegged_seconds, memory_percent, memory_total_bytes, disk_percent, disk_total_bytes, goroutines)
 VALUES (?1, ?2, ?3, ?4, ?5,
-    ?6, ?7)
+    ?6, ?7, ?8)
 `
 
 type CreateResourceReadingParams struct {
@@ -23,6 +23,7 @@ type CreateResourceReadingParams struct {
 	MemoryTotalBytes *int64
 	DiskPercent      *float64
 	DiskTotalBytes   *int64
+	Goroutines       int64
 }
 
 func (q *Queries) CreateResourceReading(ctx context.Context, arg CreateResourceReadingParams) error {
@@ -34,6 +35,7 @@ func (q *Queries) CreateResourceReading(ctx context.Context, arg CreateResourceR
 		arg.MemoryTotalBytes,
 		arg.DiskPercent,
 		arg.DiskTotalBytes,
+		arg.Goroutines,
 	)
 	return err
 }
@@ -52,7 +54,7 @@ func (q *Queries) DeleteResourceReadingsBefore(ctx context.Context, arg DeleteRe
 }
 
 const latestResourceReading = `-- name: LatestResourceReading :one
-SELECT at, cpu_percent, cpu_pegged_seconds, memory_percent, memory_total_bytes, disk_percent, disk_total_bytes FROM resource_readings ORDER BY at DESC LIMIT 1
+SELECT at, cpu_percent, cpu_pegged_seconds, memory_percent, memory_total_bytes, disk_percent, disk_total_bytes, goroutines FROM resource_readings ORDER BY at DESC LIMIT 1
 `
 
 func (q *Queries) LatestResourceReading(ctx context.Context) (*ResourceReading, error) {
@@ -66,12 +68,13 @@ func (q *Queries) LatestResourceReading(ctx context.Context) (*ResourceReading, 
 		&i.MemoryTotalBytes,
 		&i.DiskPercent,
 		&i.DiskTotalBytes,
+		&i.Goroutines,
 	)
 	return &i, err
 }
 
 const resourceReadingsSince = `-- name: ResourceReadingsSince :many
-SELECT at, cpu_percent, cpu_pegged_seconds, memory_percent, memory_total_bytes, disk_percent, disk_total_bytes FROM resource_readings WHERE at >= ?1 ORDER BY at
+SELECT at, cpu_percent, cpu_pegged_seconds, memory_percent, memory_total_bytes, disk_percent, disk_total_bytes, goroutines FROM resource_readings WHERE at >= ?1 ORDER BY at
 `
 
 type ResourceReadingsSinceParams struct {
@@ -96,6 +99,7 @@ func (q *Queries) ResourceReadingsSince(ctx context.Context, arg ResourceReading
 			&i.MemoryTotalBytes,
 			&i.DiskPercent,
 			&i.DiskTotalBytes,
+			&i.Goroutines,
 		); err != nil {
 			return nil, err
 		}
