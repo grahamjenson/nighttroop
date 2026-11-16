@@ -221,7 +221,7 @@ templ RateSettings(settings []config.RateSetting, stats []config.RateLimiterStat
 		for _, group := range groups {
 			@card.Card(card.Props{ID: "control--rate-limits--group--" + group.name, Title: i18n.T(ctx, group.title),
 				Note: i18n.T(ctx, group.note), Action: groupStatus(group.name, stats, group.settings)}) {
-				@table.Table(table.Props{ID: "control--rate-limits--group--" + group.name + "--table", Class: "min-w-[60rem] table-fixed rounded-lg border border-gray-200"}) {
+				@table.Table(table.Props{ID: "control--rate-limits--group--" + group.name + "--table", Class: "min-w-[60rem] table-fixed"}) {
 					@table.Header() {
 						@table.Row() {
 							for i, head := range []string{"control.rate_limits.limit", "control.rate_limits.per", "control.rate_limits.rate", "control.rate_limits.burst",

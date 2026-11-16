@@ -125,7 +125,7 @@ templ Usage(model controlmodels.Usage) {
 			}
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.routes")}) {
-			@table.Table(table.Props{ID: "control--usage--routes", Class: "rounded-lg border border-gray-200"}) {
+			@table.Table(table.Props{ID: "control--usage--routes"}) {
 				@table.Header() {
 					@table.Row() {
 						@table.Head() {
@@ -196,7 +196,7 @@ func numberClass(number bool) string {
 // slowestQueries are the DB queries whose sampled runs took the longest in all, where speeding one up saves the most
 templ slowestQueries(model controlmodels.Usage) {
 	@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.slowest_queries"), Note: i18n.T(ctx, "control.usage.slowest_queries_note", i18n.Data{"SamplePercent": model.QuerySamplePercent})}) {
-		@table.Table(table.Props{ID: "control--usage--queries", Class: "rounded-lg border border-gray-200"}) {
+		@table.Table(table.Props{ID: "control--usage--queries"}) {
 			@table.Header() {
 				@table.Row() {
 					for i, head := range []string{"control.usage.query", "control.usage.runs", "control.usage.mean_ms", "control.usage.p95_ms",

@@ -1014,7 +1014,7 @@ func EventsTable(v View, id string, events []Row) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.Table(table.Props{ID: id}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1272,7 +1272,7 @@ func ErrorsTable(v View, id string, errors []Row) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.Table(table.Props{ID: id}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1556,7 +1556,7 @@ func LogsTable(v View, id string, logs []Row) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.Table(table.Props{ID: id}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

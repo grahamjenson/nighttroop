@@ -644,7 +644,7 @@ func Usage(model controlmodels.Usage) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = table.Table(table.Props{ID: "control--usage--routes", Class: "rounded-lg border border-gray-200"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = table.Table(table.Props{ID: "control--usage--routes"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1119,7 +1119,7 @@ func slowestQueries(model controlmodels.Usage) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = table.Table(table.Props{ID: "control--usage--queries", Class: "rounded-lg border border-gray-200"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var47), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = table.Table(table.Props{ID: "control--usage--queries"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var47), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
