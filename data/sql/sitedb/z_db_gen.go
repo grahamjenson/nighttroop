@@ -39,7 +39,9 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 	path := GetPath(subdomain, serverConfig)
 	backuppath := GetBackupPath(subdomain, serverConfig)
 
-	cacheSize := 100
+	// A site's page cache is 64 KiB a connection, not SQLite's 2 MB: each of thousands of sites keeps up to
+	// maxIdleConns connections, and a site's few requests read few pages
+	cacheSize := 64
 
 	db := &DB{
 		ServerConfig: serverConfig,
@@ -269,8 +271,9 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 
 	// A file has many connections, so a write transaction takes the write lock when it begins (_txlock=immediate): a
 	// write between its read and its own write would otherwise fail it at once with SQLITE_BUSY, as the busy timeout
-	// cannot wait for a snapshot that is already stale. Read only transactions still begin deferred.
-	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1&_txlock=immediate", path, -cacheSize)
+	// cannot wait for a snapshot that is already stale. Read only transactions still begin deferred. The driver has no
+	// _cache_size key, so the page cache's size, in KiB, is set by its PRAGMA.
+	dsn := fmt.Sprintf("file:%s?_pragma=cache_size(%v)&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1&_txlock=immediate", path, -cacheSize)
 
 	sqldb, err := sqltiming.Open("sitedb", dsn)
 	if err != nil {
@@ -283,15 +286,14 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 }
 
 // maxIdleConns is how many idle connections a site's DB keeps. A connection holds its files, page cache, parsed schema
-// (about 0.2MB) and the statements it has prepared (about 0.9MB once it has run most of a site's queries). Opening one
-// runs the DSN's PRAGMAs and parses the schema again, which under load took a quarter of the CPU when a site kept only
-// one. A busy site runs on one connection, as each query is prepared on the connection that runs it, and its few
-// requests at once reuse up to four, while a quiet site closes them all once unused for connMaxIdleTime, so thousands
-// of mostly idle sites still hold none.
-const maxIdleConns = 4
+// (about 0.2MB) and the statements it has prepared (about 0.9MB once it has run most of a site's queries), and opening
+// one runs the DSN's PRAGMAs and parses the schema again. A site's requests rarely overlap, and each query is prepared
+// on the connection that runs it, so it keeps one, and requests at once open more that close as soon as they are done.
+const maxIdleConns = 1
 
-// connMaxIdleTime is how long a site DB's connection is kept unused before it is closed
-var connMaxIdleTime = 30 * time.Second
+// connMaxIdleTime is how long a site DB's connection is kept unused before it is closed. A site's apps each send a
+// request every minute or few, so with a longer time nearly every site kept a connection open between them.
+var connMaxIdleTime = 5 * time.Second
 
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 

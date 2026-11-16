@@ -587,6 +587,45 @@ func (r *RunBackgroundJobs) Execute(t *testing.T, page playwright.Page, ctx map[
 	return page, nil
 }
 
+// AvoidMidnight waits, from 2 minutes before midnight UTC to After past it, until After past it
+type AvoidMidnight struct {
+	After time.Duration
+
+	TestPath string
+	TestLine int
+}
+
+func (r *AvoidMidnight) AddAssert(BrowserAssert) {}
+
+func (r *AvoidMidnight) ToFlatString() string {
+	return fmt.Sprintf("AVOID_MIDNIGHT %d", int(r.After.Minutes()))
+}
+
+func (r *AvoidMidnight) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *AvoidMidnight) Execute(t *testing.T, page playwright.Page, _ map[string]any) (playwright.Page, error) {
+	if wait := midnightWait(time.Now().UTC(), r.After); wait > 0 {
+		t.Logf("%s: waiting %s, until %s past midnight UTC", r.ToErrorLine("AVOID_MIDNIGHT"), wait.Round(time.Second), r.After)
+		time.Sleep(wait)
+	}
+	return page, nil
+}
+
+// midnightWait is how long from now until after past midnight UTC, when now is from 2 minutes before midnight to
+// then, and 0 otherwise
+func midnightWait(now time.Time, after time.Duration) time.Duration {
+	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	if sinceMidnight := now.Sub(midnight); sinceMidnight < after {
+		return after - sinceMidnight
+	}
+	if untilMidnight := midnight.AddDate(0, 0, 1).Sub(now); untilMidnight <= 2*time.Minute {
+		return untilMidnight + after
+	}
+	return 0
+}
+
 // WaitVisible waits up to Seconds for Locator to be visible, failing if it is not, for what a timer on the page shows
 // later than an assert waits
 type WaitVisible struct {
