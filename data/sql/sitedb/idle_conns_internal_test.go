@@ -40,7 +40,7 @@ func TestIdleConnectionsClose(t *testing.T) {
 	require.NoError(t, MigrateUp(db))
 
 	// More reads at once than are kept need a connection each, and maxIdleConns of them are kept after
-	require.Equal(t, 4, maxIdleConns)
+	require.Equal(t, 1, maxIdleConns)
 	readAtOnce(t, db, maxIdleConns+2)
 	require.Equal(t, maxIdleConns, db.Stats().Idle)
 

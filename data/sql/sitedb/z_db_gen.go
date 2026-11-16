@@ -289,13 +289,13 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 }
 
 // maxIdleConns is how many idle connections a site's DB keeps. A connection holds its files, page cache and parsed
-// schema, about 0.6MB, and opening one runs the DSN's PRAGMAs and parses the schema again, which under load took a
-// quarter of the CPU when a site kept only one. A busy site's few requests at once reuse up to four, while a quiet site
-// closes them all once unused for connMaxIdleTime, so thousands of mostly idle sites still hold none.
-const maxIdleConns = 4
+// schema, about 0.6MB, and opening one runs the DSN's PRAGMAs and parses the schema again. A site's requests rarely
+// overlap, so it keeps one, and requests at once open more that close as soon as they are done.
+const maxIdleConns = 1
 
-// connMaxIdleTime is how long a site DB's connection is kept unused before it is closed
-var connMaxIdleTime = 30 * time.Second
+// connMaxIdleTime is how long a site DB's connection is kept unused before it is closed. A site's apps each send a
+// request every minute or few, so with a longer time nearly every site kept a connection open between them.
+var connMaxIdleTime = 5 * time.Second
 
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 
