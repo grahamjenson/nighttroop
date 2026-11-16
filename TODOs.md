@@ -38,8 +38,6 @@
         1. P2: Delete a site's old records (truncate step 2) only while it is also over its size limit, as deleting does
            not help a site whose level comes from refusals or connectors
         1. P3: Record an event when a site's level changes, and sort the control sites list by abuse score
-    1. P3: A Caregiver device can add a device status on REST but not on the socket, which gives `write` for all
-       collections at once: check each collection's create, update and delete on the socket as REST does
     1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
        begun at once push out others' before they finish
 

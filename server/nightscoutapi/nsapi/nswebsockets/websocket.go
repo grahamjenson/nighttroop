@@ -233,11 +233,12 @@ func (ws *Websocket) withinReadLimit(ctx context.Context) bool {
 	return allowed
 }
 
-// authorization is what authorize answers, as Nightscout does
+// authorization is what authorize answers, as Nightscout does, and the identity each db write is checked against
 type authorization struct {
 	Read           bool `json:"read"`
 	Write          bool `json:"write"`
 	WriteTreatment bool `json:"write_treatment"`
+	identity       *nsutils.Identity
 }
 
 // authorize finds the identity for a token, a JWT or the token given as the API secret, and what it may do. It is
@@ -252,6 +253,7 @@ func (ws *Websocket) authorize(socket *socketio.Socket, token, secret string) (c
 		Read:           nsutils.HasPermission(*nsIdentity, "api:*:read"),
 		Write:          nsutils.HasPermission(*nsIdentity, "api:*:create"),
 		WriteTreatment: nsutils.HasPermission(*nsIdentity, "api:treatments:create"),
+		identity:       nsIdentity,
 	}, true
 }
 

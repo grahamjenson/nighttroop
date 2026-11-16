@@ -1938,7 +1938,9 @@ harder:
   - It reads everything.
   - It adds, changes and deletes treatments, adds a device status, and reads and writes settings.
   - It cannot add readings or profiles, or change or delete readings, profiles or device statuses: 403.
-  - On the socket, `authorize` gives it `write` false and `write_treatment` true. It writes only treatments there.
+  - On the socket, `authorize` gives it `write` false and `write_treatment` true. Its `dbAdd`, `dbUpdate`,
+    `dbUpdateUnset` and `dbRemove` have the same permissions as on REST. If it does not have the permission, the
+    answer is `Not permitted`.
 - On the site API, with the JWT from `/api/v2/authorization/request`, a Caregiver device:
   - Reads all the site's data.
   - Adds, changes and deletes event groups, insulin, food, temp basals, temp targets, profile switches, activities and

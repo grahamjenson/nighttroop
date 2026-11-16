@@ -63,7 +63,7 @@ func TestSocketWritesAreRateLimited(t *testing.T) {
 		return ackResult("success")
 	}
 	args := []json.RawMessage{json.RawMessage(`{"collection":"treatments","data":{}}`)}
-	auth := &authorization{Read: true, Write: true, WriteTreatment: true}
+	auth := &authorization{Read: true, Write: true, WriteTreatment: true, identity: &nsutils.Identity{Permissions: []string{"api:*:*"}}}
 
 	for range 3 {
 		require.Equal(t, ackResult("success"), ws.handleDBWrite("dbAdd", args, auth, ctx, write))
@@ -134,7 +134,7 @@ func TestSocketOfARevokedIdentityIsRefusedAndDisconnected(t *testing.T) {
 			args := []json.RawMessage{json.RawMessage(`{"collection":"treatments","data":{}}`)}
 			write := func(context.Context, nsutils.Collection, string, json.RawMessage) any { return ackResult("success") }
 			writeCtx := httputils.SetIdentityModelInSiteContext(httputils.CreateSiteContext(context.Background(), testConfig, controlDB, nil, nil, identity.SiteID, "127.0.0.1", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON), identity)
-			require.Equal(t, ackResult("Not authorized"), ws.handleDBWrite("dbAdd", args, &authorization{Write: true, WriteTreatment: true}, writeCtx, write))
+			require.Equal(t, ackResult("Not authorized"), ws.handleDBWrite("dbAdd", args, &authorization{Write: true, WriteTreatment: true, identity: &nsutils.Identity{Permissions: []string{"api:*:*"}}}, writeCtx, write))
 			require.Eventually(t, func() bool { return !client.Connected("/alarm") }, 2*time.Second, 10*time.Millisecond)
 		})
 	}
