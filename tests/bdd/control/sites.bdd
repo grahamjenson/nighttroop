@@ -36,6 +36,9 @@ ASSERT_TEXT_VISIBLE Never
 ASSERT_VISIBLE #controlSitesTable td >> text=/^Live/ >> nth=0
 ASSERT_NOT_VISIBLE #controlSitesTable td >> text=/^live/
 SCREENSHOT sites
+// The order buttons are one joined control after a sort icon
+ASSERT_VISIBLE #control--sites--order.segmented > #control--sites--order-created
+ASSERT_DRAWN #control--sites--order > svg
 
 // The sites can be ordered by how long since they were written to, the first to archive, or by DB size
 CLICK #control--sites--order-last_write

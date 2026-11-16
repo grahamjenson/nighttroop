@@ -108,7 +108,6 @@
        head, before the page draws
     1. P4: Give the components' scripts (`utils.ScriptURL`) the version of their file, not the time the server
        started, so a browser keeps them as it does the other static files
-    1. P4: Use the `panel` and `segmented` classes on the control site's order buttons and the public pages' boxes
 
 1. Backups:
     1. P4: Remove the restore's fallback to the old `.tar.lz4.enc` backups (`s3utils.LegacyKey`). Lifecycle rules

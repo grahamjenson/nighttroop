@@ -441,7 +441,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Page look
 
 - Every page is a grey canvas. Each card, tile and table section is a flat white panel with a thin border.
-- A row of range or period buttons is one joined control. The chosen button is filled.
+- A row of range, period or order buttons is one joined control. The chosen button is filled.
+- The control site's order buttons are after a sort icon.
+- The public pages' boxes (credentials, recover form, notes) are the same panels.
 - Each Add button beside a page title has a plus icon.
 
 #### Static files

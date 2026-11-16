@@ -45,7 +45,7 @@ func RecoverSite() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-screen flex flex-col items-center px-6 py-6 bg-gradient-to-b from-slate-100 via-slate-50 to-white\"><a href=\"/\" class=\"flex items-center gap-3\"><img src=\"/logo.svg\" alt=\"\" class=\"size-10\"> <span class=\"text-3xl font-extrabold tracking-tight text-slate-900\">Nighttroop</span></a><div id=\"panel-content\" class=\"mt-6 w-full max-w-3xl\"><form id=\"public--recover--form\" class=\"mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4\" hx-post=\"/recover\" hx-target=\"#panel-content\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><h1 class=\"text-xl font-semibold text-slate-900\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-screen flex flex-col items-center px-6 py-6 bg-gradient-to-b from-slate-100 via-slate-50 to-white\"><a href=\"/\" class=\"flex items-center gap-3\"><img src=\"/logo.svg\" alt=\"\" class=\"size-10\"> <span class=\"text-3xl font-extrabold tracking-tight text-slate-900\">Nighttroop</span></a><div id=\"panel-content\" class=\"mt-6 w-full max-w-3xl\"><form id=\"public--recover--form\" class=\"panel mx-auto max-w-md space-y-4 p-6\" hx-post=\"/recover\" hx-target=\"#panel-content\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><h1 class=\"text-xl font-semibold text-slate-900\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
