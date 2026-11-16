@@ -122,6 +122,16 @@ WHERE id = sqlc.arg('ID') AND abuse_score IS NOT sqlc.arg('AbuseScore');
 UPDATE sites SET estimated_db_size_kb = sqlc.arg('EstimatedDbSizeKb')
 WHERE id = sqlc.arg('ID') AND estimated_db_size_kb IS NOT sqlc.arg('EstimatedDbSizeKb');
 
+-- name: UpdateSiteBackedUp :exec
+-- The site's backup copy was made now, at BackupSizeKb on disk
+UPDATE sites SET backed_up_at = CAST(unixepoch('subsec') * 1000 AS INTEGER), backup_size_kb = CAST(sqlc.arg('BackupSizeKb') AS INTEGER)
+WHERE id = sqlc.arg('ID');
+
+-- name: UpdateSitesBackupUploaded :exec
+-- The sites were uploaded to S3 now, in one batch
+UPDATE sites SET backup_uploaded_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id IN (sqlc.slice('IDs'));
+
 
 -------
 -- DELETE

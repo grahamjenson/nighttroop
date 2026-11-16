@@ -638,6 +638,36 @@ func (m *Site) SetSummariesCheckedAt(v *int64) {
 	m.SummariesCheckedAt = v
 }
 
+// GetBackedUpAt returns the BackedUpAt value.
+func (m Site) GetBackedUpAt() *int64 {
+	return m.BackedUpAt
+}
+
+// SetBackedUpAt sets the BackedUpAt value and returns the updated Site.
+func (m *Site) SetBackedUpAt(v *int64) {
+	m.BackedUpAt = v
+}
+
+// GetBackupSizeKb returns the BackupSizeKb value.
+func (m Site) GetBackupSizeKb() *int64 {
+	return m.BackupSizeKb
+}
+
+// SetBackupSizeKb sets the BackupSizeKb value and returns the updated Site.
+func (m *Site) SetBackupSizeKb(v *int64) {
+	m.BackupSizeKb = v
+}
+
+// GetBackupUploadedAt returns the BackupUploadedAt value.
+func (m Site) GetBackupUploadedAt() *int64 {
+	return m.BackupUploadedAt
+}
+
+// SetBackupUploadedAt sets the BackupUploadedAt value and returns the updated Site.
+func (m *Site) SetBackupUploadedAt(v *int64) {
+	m.BackupUploadedAt = v
+}
+
 // GetState returns the State value.
 func (m Site) GetState() string {
 	return m.State
@@ -5458,6 +5488,26 @@ func (m *UpdateSiteAbuseScoreParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetBackupSizeKb returns the BackupSizeKb value.
+func (m UpdateSiteBackedUpParams) GetBackupSizeKb() int64 {
+	return m.BackupSizeKb
+}
+
+// SetBackupSizeKb sets the BackupSizeKb value and returns the updated UpdateSiteBackedUpParams.
+func (m *UpdateSiteBackedUpParams) SetBackupSizeKb(v int64) {
+	m.BackupSizeKb = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteBackedUpParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteBackedUpParams.
+func (m *UpdateSiteBackedUpParams) SetID(v string) {
+	m.ID = v
+}
+
 // GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
 func (m UpdateSiteDBSizeParams) GetEstimatedDbSizeKb() *int64 {
 	return m.EstimatedDbSizeKb
@@ -5556,5 +5606,15 @@ func (m UpdateSiteTableSizesParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateSiteTableSizesParams.
 func (m *UpdateSiteTableSizesParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetIDs returns the IDs value.
+func (m UpdateSitesBackupUploadedParams) GetIDs() []string {
+	return m.IDs
+}
+
+// SetIDs sets the IDs value and returns the updated UpdateSitesBackupUploadedParams.
+func (m *UpdateSitesBackupUploadedParams) SetIDs(v []string) {
+	m.IDs = v
 }
 

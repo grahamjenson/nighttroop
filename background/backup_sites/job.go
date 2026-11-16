@@ -188,6 +188,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 		if err := copyBackup(aslog.WithSite(ctx, backupSite.Subdomain), backupSite); err != nil {
 			return fmt.Errorf("cannot backup site db %s: %w", backupSite.Subdomain, err)
 		}
+		b.recordBackup(aslog.WithSite(ctx, backupSite.Subdomain), backupSite)
 	}
 
 	batchSites := strings.Join(slices.Sorted(slices.Values(siteIDs)), ",")
@@ -208,6 +209,12 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
 	b.uploaded.Store(char, batchSites)
+	// Upload sends nothing while S3 is off
+	if b.ServerConfig.Status.S3Working {
+		if err := b.controlDB.Queries.UpdateSitesBackupUploaded(ctx, controldb.UpdateSitesBackupUploadedParams{IDs: siteIDs}); err != nil {
+			slog.ErrorContext(ctx, "Cannot record the batch's upload on its sites", "error", err)
+		}
+	}
 	b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(paths), started, b.ServerConfig.Status.S3Working)
 
 	// Copy the control db to the backup location
@@ -232,6 +239,18 @@ func copyBackup(ctx context.Context, site *db.SiteDB) error {
 		_ = utils.DeleteFile(site.BackupPath)
 	}
 	return err
+}
+
+// recordBackup records on the site that its backup was copied now, with the copy's size on disk. Not recording it
+// does not stop the backup.
+func (b *BackupSiteJobManager) recordBackup(ctx context.Context, site *db.SiteDB) {
+	info, err := os.Stat(site.BackupPath)
+	if err == nil {
+		err = b.controlDB.Queries.UpdateSiteBackedUp(ctx, controldb.UpdateSiteBackedUpParams{ID: site.Subdomain, BackupSizeKb: info.Size() / 1024})
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "Cannot record the site's backup", "error", err)
+	}
 }
 
 // backupIsCurrent is whether site's backup is dated after its DB file and write-ahead log were last written, so a

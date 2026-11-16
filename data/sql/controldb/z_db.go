@@ -309,6 +309,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteAbuseScoreStmt, err = db.PrepareContext(ctx, updateSiteAbuseScore); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteAbuseScore: %w", err)
 	}
+	if q.updateSiteBackedUpStmt, err = db.PrepareContext(ctx, updateSiteBackedUp); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteBackedUp: %w", err)
+	}
 	if q.updateSiteDBSizeStmt, err = db.PrepareContext(ctx, updateSiteDBSize); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDBSize: %w", err)
 	}
@@ -338,6 +341,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateSiteTableSizesStmt, err = db.PrepareContext(ctx, updateSiteTableSizes); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteTableSizes: %w", err)
+	}
+	if q.updateSitesBackupUploadedStmt, err = db.PrepareContext(ctx, updateSitesBackupUploaded); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSitesBackupUploaded: %w", err)
 	}
 	if q.updateSitesSettingsStmt, err = db.PrepareContext(ctx, updateSitesSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSitesSettings: %w", err)
@@ -825,6 +831,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteAbuseScoreStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteBackedUpStmt != nil {
+		if cerr := q.updateSiteBackedUpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteBackedUpStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteDBSizeStmt != nil {
 		if cerr := q.updateSiteDBSizeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteDBSizeStmt: %w", cerr)
@@ -873,6 +884,11 @@ func (q *Queries) Close() error {
 	if q.updateSiteTableSizesStmt != nil {
 		if cerr := q.updateSiteTableSizesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteTableSizesStmt: %w", cerr)
+		}
+	}
+	if q.updateSitesBackupUploadedStmt != nil {
+		if cerr := q.updateSitesBackupUploadedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSitesBackupUploadedStmt: %w", cerr)
 		}
 	}
 	if q.updateSitesSettingsStmt != nil {
@@ -1019,6 +1035,7 @@ type Queries struct {
 	updatePublicSiteCreationStmt            *sql.Stmt
 	updateRateLimitsStmt                    *sql.Stmt
 	updateSiteAbuseScoreStmt                *sql.Stmt
+	updateSiteBackedUpStmt                  *sql.Stmt
 	updateSiteDBSizeStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
 	updateSiteIdentityDateFlagsStmt         *sql.Stmt
@@ -1029,6 +1046,7 @@ type Queries struct {
 	updateSiteIdentityTOTPStmt              *sql.Stmt
 	updateSiteSummariesCheckedAtStmt        *sql.Stmt
 	updateSiteTableSizesStmt                *sql.Stmt
+	updateSitesBackupUploadedStmt           *sql.Stmt
 	updateSitesSettingsStmt                 *sql.Stmt
 	upsertPushRegistrationStmt              *sql.Stmt
 }
@@ -1132,6 +1150,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
 		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
 		updateSiteAbuseScoreStmt:                q.updateSiteAbuseScoreStmt,
+		updateSiteBackedUpStmt:                  q.updateSiteBackedUpStmt,
 		updateSiteDBSizeStmt:                    q.updateSiteDBSizeStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:         q.updateSiteIdentityDateFlagsStmt,
@@ -1142,6 +1161,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteIdentityTOTPStmt:              q.updateSiteIdentityTOTPStmt,
 		updateSiteSummariesCheckedAtStmt:        q.updateSiteSummariesCheckedAtStmt,
 		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
+		updateSitesBackupUploadedStmt:           q.updateSitesBackupUploadedStmt,
 		updateSitesSettingsStmt:                 q.updateSitesSettingsStmt,
 		upsertPushRegistrationStmt:              q.upsertPushRegistrationStmt,
 	}
