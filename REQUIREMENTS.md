@@ -787,6 +787,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Add: type (Meter or Sensor), trend as arrow and name (`↗ FortyFiveUp`), as in table and details.
   - Above page one: small graphs of the last 10 days, same scale, oldest first, each with the range shaded and time in
     range. The last is today so far, from clean readings. Title: "Last N days", or "Today" on a new site's first day.
+  - A day with no readings shows "No readings" in place of its graph, and no time in range.
 - **Insulin doses**
   - Dose: the units given at once. A combo or extended bolus also has an extended dose (U) and the minutes it is given
     over. A dose of 0 is refused, except when it has an extended dose.

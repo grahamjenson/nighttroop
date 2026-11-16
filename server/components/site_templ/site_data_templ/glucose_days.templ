@@ -53,8 +53,13 @@ func glucoseDayLabel(ctx context.Context, day *sitemodels.SiteSummaryDaily, toda
 	return date.Format(display.ShortDayLayout)
 }
 
+// hasGlucose is whether a day has any reading to draw, so a day with none says so rather than showing only the range
+func hasGlucose(day *sitemodels.SiteSummaryDaily) bool {
+	return slices.ContainsFunc(day.Glucose, func(value *float64) bool { return value != nil })
+}
+
 // GlucoseDays are the days' glucose as small graphs of the same scale, oldest first so today is last, each with the
-// range shaded and its time in range
+// range shaded and its time in range, or that it has no readings
 templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 	{{ bottom, top := glucoseDaysAxis(ctx, days) }}
 	{{ low, high := RangeBounds(ctx) }}
@@ -68,14 +73,20 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 							<span class="tabular-nums text-gray-600" title={ i18n.T(ctx, "site.data.glucose_days.time_in_range") }>{ display.Percent(day.TimeInRange) }</span>
 						}
 					</div>
-					<svg class="mt-1 h-16 w-full" viewBox={ fmt.Sprintf("0 0 %d %.0f", max(len(day.Glucose), 1), glucoseDaysHeight) } preserveAspectRatio="none" role="img" aria-label={ i18n.T(ctx, "site.data.glucose_days.glucose_on", i18n.Data{"Date": day.Date}) }>
-						<rect class="fill-glucose-in-range/10" x="0" width="100%" y={ glucoseDaysY(high, bottom, top) } height={ fmt.Sprintf("%.1f", glucoseDaysHeight*(high-low)/(top-bottom)) }></rect>
-						for slot, value := range day.Glucose {
-							if value != nil {
-								<rect class={ GlucoseColours[glucoseRange(ctx, *value)].Fill } x={ fmt.Sprint(slot) } y={ glucoseDaysMarkY(*value, bottom, top) } width="1.5" height={ fmt.Sprint(glucoseDaysMark) }></rect>
+					if !hasGlucose(day) {
+						<p id={ "site--glucose--day--" + day.Date + "--none" } class="mt-1 flex h-16 items-center justify-center rounded border border-dashed border-gray-200 text-xs text-gray-400">
+							{ i18n.T(ctx, "site.data.glucose_days.no_readings") }
+						</p>
+					} else {
+						<svg class="mt-1 h-16 w-full" viewBox={ fmt.Sprintf("0 0 %d %.0f", max(len(day.Glucose), 1), glucoseDaysHeight) } preserveAspectRatio="none" role="img" aria-label={ i18n.T(ctx, "site.data.glucose_days.glucose_on", i18n.Data{"Date": day.Date}) }>
+							<rect class="fill-glucose-in-range/10" x="0" width="100%" y={ glucoseDaysY(high, bottom, top) } height={ fmt.Sprintf("%.1f", glucoseDaysHeight*(high-low)/(top-bottom)) }></rect>
+							for slot, value := range day.Glucose {
+								if value != nil {
+									<rect class={ GlucoseColours[glucoseRange(ctx, *value)].Fill } x={ fmt.Sprint(slot) } y={ glucoseDaysMarkY(*value, bottom, top) } width="1.5" height={ fmt.Sprint(glucoseDaysMark) }></rect>
+								}
 							}
-						}
-					</svg>
+						</svg>
+					}
 				</li>
 			}
 		</ol>

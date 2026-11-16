@@ -66,6 +66,7 @@ site:
       time_in_range: "Time in range"
       glucose_on: "Glucose on {{.Date}}"
       last_days: "Last {{.Days}} days"
+      no_readings: "No readings"
     insulin_doses:
       title: "Insulin Doses"
       about: "Newest first. Click an insulin dose to see all its details."
