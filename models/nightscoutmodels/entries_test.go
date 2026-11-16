@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -21,82 +22,70 @@ const EntryFixture = `  {
     "created_at": "2024-12-09T20:41:45.284Z"
   }`
 
-func Test_JSON_entry(t *testing.T) {
+// An entry as AAPS uploads it is stored with its reading, type, trend, time, device and the identity that sent it
+func TestEntryToCreate(t *testing.T) {
 	var entry Entry
-	err := json.Unmarshal([]byte(EntryFixture), &entry)
-	assert.NoError(t, err)
-
+	require.NoError(t, json.Unmarshal([]byte(EntryFixture), &entry))
 	assert.Equal(t, int64(0), entry.UtcOffsetMinutes.Int64())
 
-	entryJson, err := json.MarshalIndent(entry, "", "  ")
-	fmt.Printf("entry JSON: %s %v\n", entryJson, err)
+	params := EntryToCreate(entry, ConverterContext{123, "identityName"})
+	assert.NotEmpty(t, params.ID)
+	assert.Equal(t, 56.0, params.Mgdl)
+	assert.Equal(t, "sgv", params.ReadingType)
+	assert.Equal(t, new(int64(5)), params.Trend, "FortyFiveDown")
+	assert.Equal(t, int64(1733776878000), params.OccurredAt)
+	assert.Equal(t, new("AAPS-DexcomG6"), params.CreatedByDeviceName)
+	assert.Equal(t, "identityName", params.CreatedByIdentityName)
+	assert.Equal(t, new(int64(123)), params.CreatedByIdentityID)
 }
 
-func Test_entryToCreateParams(t *testing.T) {
-	var entry Entry
-	err := json.Unmarshal([]byte(EntryFixture), &entry)
-	assert.NoError(t, err)
+// Each trend number is a direction that reads back as the same number, and an entry gives it back as Nightscout's 0 to
+// 9, with none for TripleUp and TripleDown. Another way of writing a direction is read as its number, an unknown one as
+// NOT COMPUTABLE, and none or a number without a direction is none
+func TestTrendDirection(t *testing.T) {
+	trends := []struct {
+		direction string
+		entry     *types.FlexibleFloat64
+	}{
+		{"NONE", new(types.FlexibleFloat64(0))},
+		{"DoubleUp", new(types.FlexibleFloat64(1))},
+		{"SingleUp", new(types.FlexibleFloat64(2))},
+		{"FortyFiveUp", new(types.FlexibleFloat64(3))},
+		{"Flat", new(types.FlexibleFloat64(4))},
+		{"FortyFiveDown", new(types.FlexibleFloat64(5))},
+		{"SingleDown", new(types.FlexibleFloat64(6))},
+		{"DoubleDown", new(types.FlexibleFloat64(7))},
+		{"NOT COMPUTABLE", new(types.FlexibleFloat64(8))},
+		{"RATE OUT OF RANGE", new(types.FlexibleFloat64(9))},
+		{"TripleUp", nil},
+		{"TripleDown", nil},
+	}
+	for trend, tt := range trends {
+		t.Run(tt.direction, func(t *testing.T) {
+			number := int64(trend)
+			assert.Equal(t, tt.direction, *TrendDirection(&number))
+			assert.Equal(t, number, *DirectionTrend(&tt.direction))
+			assert.Equal(t, tt.entry, EntryTrend(&number))
+		})
+	}
 
-	createParams := EntryToCreate(entry, ConverterContext{123, "identityName"})
-
-	assert.NotNil(t, createParams)
-
-	paramsJson, err := json.MarshalIndent(createParams, "", "  ")
-	fmt.Printf("CreateentryParams JSON: %s %v\n", paramsJson, err)
-	fmt.Println(" ")
-	entryJson, err := json.MarshalIndent(entry, "", "  ")
-	fmt.Printf("entry JSON: %s %v\n", entryJson, err)
-}
-
-func TestDirectionTrend(t *testing.T) {
-	tests := []struct {
+	written := []struct {
 		direction *string
-		want      *int64
+		trend     *int64
 	}{
 		{nil, nil},
 		{new(""), nil},
-		{new("NONE"), new(int64(0))},
-		{new("DoubleUp"), new(int64(1))},
 		{new("singleup"), new(int64(2))},
 		{new("↗"), new(int64(3))},
-		{new("Flat"), new(int64(4))},
-		{new("FortyFiveDown"), new(int64(5))},
-		{new("SingleDown"), new(int64(6))},
-		{new("DoubleDown"), new(int64(7))},
-		{new("NOT COMPUTABLE"), new(int64(8))},
-		{new("RATE OUT OF RANGE"), new(int64(9))},
-		{new("TripleUp"), new(int64(10))},
-		{new("TripleDown"), new(int64(11))},
 		{new("Sideways"), new(int64(8))},
 	}
-	for _, tt := range tests {
-		t.Run(fmt.Sprint(tt.direction), func(t *testing.T) {
-			assert.Equal(t, tt.want, DirectionTrend(tt.direction))
-		})
-	}
-}
-
-func TestTrendDirection(t *testing.T) {
-	tests := []struct {
-		trend int64
-		want  string
-		entry *types.FlexibleFloat64
-	}{
-		{0, "NONE", new(types.FlexibleFloat64(0))},
-		{1, "DoubleUp", new(types.FlexibleFloat64(1))},
-		{3, "FortyFiveUp", new(types.FlexibleFloat64(3))},
-		{4, "Flat", new(types.FlexibleFloat64(4))},
-		{7, "DoubleDown", new(types.FlexibleFloat64(7))},
-		{8, "NOT COMPUTABLE", new(types.FlexibleFloat64(8))},
-		{9, "RATE OUT OF RANGE", new(types.FlexibleFloat64(9))},
-		{10, "TripleUp", nil},
-		{11, "TripleDown", nil},
-	}
-	for _, tt := range tests {
-		t.Run(tt.want, func(t *testing.T) {
-			assert.Equal(t, tt.want, *TrendDirection(&tt.trend))
-			assert.Equal(t, tt.trend, *DirectionTrend(&tt.want))
-			assert.Equal(t, tt.entry, EntryTrend(&tt.trend))
+	for _, tt := range written {
+		name := "nil"
+		if tt.direction != nil {
+			name = fmt.Sprintf("%q", *tt.direction)
+		}
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tt.trend, DirectionTrend(tt.direction))
 		})
 	}
 	for _, trend := range []*int64{nil, new(int64(-1)), new(int64(12))} {
