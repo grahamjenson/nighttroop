@@ -349,15 +349,10 @@ func passkeySignIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerCon
 		PasskeyError(w, r, http.StatusForbidden, i18n.T(r.Context(), "common.passkey.not_on_website"), nil)
 		return
 	}
-	token, expiresAt, err := cfg.Security.GenerateUserJWTToken(identity.SiteID, identity.Name, string(identity.Role))
-	if err != nil {
+	if err := signIn(w, r, cfg, identity, "passkey"); err != nil {
 		PasskeyError(w, r, http.StatusInternalServerError, i18n.T(r.Context(), "common.passkey.sign_in_failed"), err)
 		return
 	}
-	cfg.Security.SetUserLoginCookie(w, token, expiresAt)
-	slog.InfoContext(r.Context(), "User logged in with a passkey", "identity", identity.Name, "role", identity.Role)
-	httputils.RecordAuthClient(r, identity)
-	recordSignIn(r, identity)
 	apiutils.WriteJSON(w, http.StatusOK, map[string]string{"redirect": "/"})
 }
 
