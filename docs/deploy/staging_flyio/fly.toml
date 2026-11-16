@@ -61,5 +61,5 @@ swap_size_mb = 512
 # Measured with 500 sites: about 50 MB with none in use, and 1.5 MB more for each site used in the last 30 seconds, so
 # 256 MB holds about 130 sites in use at once before it swaps
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+  size = "shared-cpu-4x"
+  memory = "1024mb"
