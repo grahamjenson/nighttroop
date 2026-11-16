@@ -27,6 +27,8 @@ ASSERT_VISIBLE #controlSitesTable
 CLICK #control--menu
 CLICK #control--jobs-button
 ASSERT_STATUS 200
+// Its status is a red badge
+ASSERT_VISIBLE #controlJobsTable tbody tr:has(td:text-is("connector_job")) [id$="--status"].bg-red-100:text-is("failed") >> nth=0
 CLICK #controlJobsTable tbody tr:has(td:text-is("connector_job")):has-text("failed") >> nth=0
 ASSERT_VISIBLE #control--job--details
 ASSERT_VISIBLE #control--job--logs

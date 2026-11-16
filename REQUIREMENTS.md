@@ -191,6 +191,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 ### Background jobs
 
 - Jobs page: newest first, with duration. A click shows details and errors.
+- A job's status is a badge: green for completed, red for failed, the brand colour for fetched, grey for queued.
 - Job stats page: each day, newest first, with totals, errors, and mean and spread of durations in suitable units.
 - A failed job, and each day's stats, link to the logs of failed runs (the day's last 16), filtered by `job_id`.
 - Each cron or queued run logs its name and own `job_id`, plus `queued_job_id` if queued and `site_id` for site work.
