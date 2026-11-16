@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -140,6 +141,47 @@ var StaticToastJsETag = generateETag([]byte(StaticToastJs))
 var StaticToastMinJs []byte
 var StaticToastMinJsETag = generateETag([]byte(StaticToastMinJs))
 
+// versions are each file's version, the hash in its ETag, by its path
+var versions = map[string]string{
+	"/checkbox.js":                     strings.Trim(StaticCheckboxJsETag, "\""),
+	"/checkbox.min.js":                 strings.Trim(StaticCheckboxMinJsETag, "\""),
+	"/copybutton.js":                   strings.Trim(StaticCopybuttonJsETag, "\""),
+	"/copybutton.min.js":               strings.Trim(StaticCopybuttonMinJsETag, "\""),
+	"/dropdown.js":                     strings.Trim(StaticDropdownJsETag, "\""),
+	"/dropdown.min.js":                 strings.Trim(StaticDropdownMinJsETag, "\""),
+	"/echarts.min.js":                  strings.Trim(StaticEchartsMinJsETag, "\""),
+	"/empty":                           strings.Trim(StaticEmptyETag, "\""),
+	"/favicon.ico":                     strings.Trim(StaticFaviconIcoETag, "\""),
+	"/floating_ui_core.js":             strings.Trim(StaticFloatingUiCoreJsETag, "\""),
+	"/floating_ui_dom.js":              strings.Trim(StaticFloatingUiDomJsETag, "\""),
+	"/htmx.js":                         strings.Trim(StaticHtmxJsETag, "\""),
+	"/htmx_sse.js":                     strings.Trim(StaticHtmxSseJsETag, "\""),
+	"/input.js":                        strings.Trim(StaticInputJsETag, "\""),
+	"/input.min.js":                    strings.Trim(StaticInputMinJsETag, "\""),
+	"/inputotp.js":                     strings.Trim(StaticInputotpJsETag, "\""),
+	"/inputotp.min.js":                 strings.Trim(StaticInputotpMinJsETag, "\""),
+	"/label.js":                        strings.Trim(StaticLabelJsETag, "\""),
+	"/label.min.js":                    strings.Trim(StaticLabelMinJsETag, "\""),
+	"/logo.png":                        strings.Trim(StaticLogoPngETag, "\""),
+	"/logo.svg":                        strings.Trim(StaticLogoSvgETag, "\""),
+	"/popover.js":                      strings.Trim(StaticPopoverJsETag, "\""),
+	"/popover.min.js":                  strings.Trim(StaticPopoverMinJsETag, "\""),
+	"/qrcode.js":                       strings.Trim(StaticQrcodeJsETag, "\""),
+	"/redoc.standalone.js":             strings.Trim(StaticRedocStandaloneJsETag, "\""),
+	"/redoc.standalone.js.LICENSE.txt": strings.Trim(StaticRedocStandaloneJsLicenseTxtETag, "\""),
+	"/robots.txt":                      strings.Trim(StaticRobotsTxtETag, "\""),
+	"/selectbox.js":                    strings.Trim(StaticSelectboxJsETag, "\""),
+	"/selectbox.min.js":                strings.Trim(StaticSelectboxMinJsETag, "\""),
+	"/style_gen.css":                   strings.Trim(StaticStyleGenCssETag, "\""),
+	"/toast.js":                        strings.Trim(StaticToastJsETag, "\""),
+	"/toast.min.js":                    strings.Trim(StaticToastMinJsETag, "\""),
+}
+
+// URL is a file's path with its version. A changed file has a new URL, so a browser keeps the file at this one.
+func URL(path string) string {
+	return path + "?v=" + versions[path]
+}
+
 func AddStaticRoutes(r chi.Router) error {
 	r.Get("/checkbox.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "checkbox.js", "text/javascript; charset=utf-8", StaticCheckboxJsETag, StaticCheckboxJs)
@@ -245,8 +287,13 @@ func AddStaticRoutes(r chi.Router) error {
 func serve(w http.ResponseWriter, r *http.Request, fileName string, contentType string, etag string, body []byte) {
 	w.Header().Set("Content-Type", contentType)
 
-	// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-	w.Header().Set("Cache-Control", "no-cache")
+	// A URL with the file's version never changes what it gives, so a browser keeps it for a year without asking
+	// again. Any other must revalidate with the ETag to see new deploys.
+	if r.URL.Query().Get("v") == strings.Trim(etag, "\"") {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	} else {
+		w.Header().Set("Cache-Control", "no-cache")
+	}
 	w.Header().Set("ETag", etag)
 	if r.Header.Get("If-None-Match") == etag {
 		w.WriteHeader(http.StatusNotModified)

@@ -66,3 +66,29 @@ func BenchmarkGetEcharts(b *testing.B) {
 		}
 	}
 }
+
+// A file's versioned URL is kept by the browser for a year; its plain URL, or one with another version, is checked
+// against the ETag each time
+func TestVersionedURLsAreKept(t *testing.T) {
+	handler := router()
+	url := static.URL("/style_gen.css")
+	require.Regexp(t, `^/style_gen\.css\?v=[0-9a-f]{16}$`, url)
+	tests := []struct {
+		name         string
+		path         string
+		cacheControl string
+	}{
+		{"its version", url, "public, max-age=31536000, immutable"},
+		{"no version", "/style_gen.css", "no-cache"},
+		{"another version", "/style_gen.css?v=0123456789abcdef", "no-cache"},
+		{"an empty version", "/style_gen.css?v=", "no-cache"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			res := get(handler, test.path, "", "")
+			require.Equal(t, http.StatusOK, res.Code)
+			require.Equal(t, test.cacheControl, res.Header().Get("Cache-Control"))
+			require.Equal(t, static.StaticStyleGenCss, res.Body.Bytes())
+		})
+	}
+}

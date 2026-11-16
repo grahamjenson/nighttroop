@@ -7,6 +7,8 @@ package public_templ
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "nighttroop.t1d.nz/server/assets/static"
+
 // APIDocs is the API's documentation, Redoc's page of its OpenAPI schema, /openapi.json: a menu of every endpoint
 // and a search beside them, each with its parameters, body, responses and an example, in the site's colours
 func APIDocs() templ.Component {
@@ -38,7 +40,20 @@ func APIDocs() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"api-docs\" class=\"w-full flex-1\"></div><script src=\"/redoc.standalone.js\"></script> <script>\n\t\t\tRedoc.init(\"/openapi.json\", {\n\t\t\t\texpandResponses: \"200\",\n\t\t\t\ttheme: {\n\t\t\t\t\tcolors: { primary: { main: \"#10203F\" } },\n\t\t\t\t\ttypography: {\n\t\t\t\t\t\tfontFamily: \"ui-sans-serif, system-ui, sans-serif\",\n\t\t\t\t\t\theadings: { fontFamily: \"ui-sans-serif, system-ui, sans-serif\" },\n\t\t\t\t\t\tcode: { fontFamily: \"ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace\" },\n\t\t\t\t\t},\n\t\t\t\t\tsidebar: { backgroundColor: \"#f9fafb\", activeTextColor: \"#10203F\" },\n\t\t\t\t\trightPanel: { backgroundColor: \"#10203F\" },\n\t\t\t\t},\n\t\t\t}, document.getElementById(\"api-docs\"))\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"api-docs\" class=\"w-full flex-1\"></div><script src=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(static.URL("/redoc.standalone.js")).ResolveURL(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/api_docs.templ`, Line: 10, Col: 50}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"></script> <script>\n\t\t\tRedoc.init(\"/openapi.json\", {\n\t\t\t\texpandResponses: \"200\",\n\t\t\t\ttheme: {\n\t\t\t\t\tcolors: { primary: { main: \"#10203F\" } },\n\t\t\t\t\ttypography: {\n\t\t\t\t\t\tfontFamily: \"ui-sans-serif, system-ui, sans-serif\",\n\t\t\t\t\t\theadings: { fontFamily: \"ui-sans-serif, system-ui, sans-serif\" },\n\t\t\t\t\t\tcode: { fontFamily: \"ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace\" },\n\t\t\t\t\t},\n\t\t\t\t\tsidebar: { backgroundColor: \"#f9fafb\", activeTextColor: \"#10203F\" },\n\t\t\t\t\trightPanel: { backgroundColor: \"#10203F\" },\n\t\t\t\t},\n\t\t\t}, document.getElementById(\"api-docs\"))\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

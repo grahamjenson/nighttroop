@@ -442,6 +442,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A row of range or period buttons is one joined control. The chosen button is filled.
 - Each Add button beside a page title has a plus icon.
 
+#### Static files
+
+- Each page links its style and scripts with the file's version: `/style_gen.css?v=<hash>`.
+- If a request has the file's version, the browser keeps the file for a year and does not ask again.
+- If a request has no version, or another one, the browser checks the file's `ETag` each time.
+
 #### Footer and legal notes
 
 - Every footer links (each in a new tab) to contact, terms of service, privacy policy and API docs.
