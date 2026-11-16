@@ -1,0 +1,52 @@
+INCLUDE steps/control_login.steps
+
+// A control admin reads Go's runtime stats, with its memory, and its profiles, to see where memory and CPU go
+NAME vars
+GET http://control.localhost/debug/vars
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@memstats.HeapAlloc"
+
+NAME heap_profile
+GET http://control.localhost/debug/pprof/heap
+H Authorization: Bearer {{ .control_jwt }}
+ASSERT_STATUS 200
+
+NAME goroutines
+GET http://control.localhost/debug/pprof/goroutine?debug=1
+H Authorization: Bearer {{ .control_jwt }}
+ASSERT_STATUS 200
+
+// A read only admin cannot, as the profiles show the server's code and its memory
+NAME add_reader
+POST http://control.localhost/admins
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"name": "api_pprof_reader", "role": "read"}
+ASSERT_STATUS 201
+
+NAME reader_login
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "api_pprof_reader", "password": "{{ .add_reader.result.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+NAME reader_cannot_profile
+GET http://control.localhost/debug/pprof/heap
+H Authorization: Bearer {{ .reader_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME reader_cannot_read_vars
+GET http://control.localhost/debug/vars
+H Authorization: Bearer {{ .reader_login.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// Nor can anyone not signed in
+NAME signed_out
+GET http://control.localhost/debug/pprof/heap
+H Accept: application/json
+ASSERT_STATUS 401

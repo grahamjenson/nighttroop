@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
 
@@ -67,6 +68,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		admin.Post("/admins/{id}/password", controlapi.ResetControlAdminPasswordHandler)
 		admin.Post("/admins/{id}/totp", controlapi.ResetControlAdminTOTPHandler)
 		admin.Delete("/admins/{id}", controlapi.DeleteControlAdminHandler)
+		// Go's profiles (/debug/pprof/) and runtime stats (/debug/vars), to see where the server's memory and CPU go. A
+		// CPU profile or trace must take under the 30 seconds a request has, e.g. ?seconds=20
+		admin.Mount("/debug", middleware.Profiler())
 
 		// Not here yet: a site's API use per device and DB table sizes
 	})

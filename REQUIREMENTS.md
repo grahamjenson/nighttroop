@@ -314,6 +314,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - CPU: the last 5 seconds as htop shows it, 100% for each core (up to 400% on 4 cores);
   - the 25 slowest DB queries by total time, of the `QUERY_SAMPLE_PERCENT` (10%) sampled since start: DB, name, runs,
     and mean, 95th percentile, longest and total ms.
+- Go's profiles at `/debug/pprof/` (heap, CPU, goroutines and more) and runtime stats at `/debug/vars`, for a control
+  admin only. A read only admin gets 403. A CPU profile or trace must end in under 30 seconds (example: `?seconds=20`).
 
 ### Rate limits
 
