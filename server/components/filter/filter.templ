@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -84,6 +85,7 @@ templ Filter(p Props) {
 		</select>
 		}
 		@button.Button(button.Props{ID: p.ID + "--submit", Type: "submit", Variant: button.VariantOutline}) {
+			@icon.ListFilter()
 			{ i18n.T(ctx, "common.filter.filter") }
 		}
 		// Once a type, search or ID is chosen, one click goes back to every row

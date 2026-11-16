@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/utils/consts"
@@ -501,6 +502,7 @@ templ connectorActions(source *sitemodels.Connector, connectorType consts.Connec
 						"hx-swap":    "outerHTML",
 					},
 				}) {
+					@icon.Trash2()
 					{ i18n.T(ctx, "site.settings.connectors.delete") }
 				}
 			}
@@ -513,6 +515,7 @@ templ connectorActions(source *sitemodels.Connector, connectorType consts.Connec
 				ID:   "site--settings--" + name + "-connector--submit",
 				Type: button.TypeSubmit,
 			}) {
+				@icon.Save()
 				{ i18n.T(ctx, "site.settings.connectors.save") }
 			}
 		</div>
@@ -538,6 +541,7 @@ templ BackfillButton(name string) {
 			"hx-status:5xx":   "target:#toaster swap:beforeend",
 		},
 	}) {
+		@icon.History()
 		{ i18n.T(ctx, "site.settings.connectors.backfill") }
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/config"
@@ -249,6 +250,7 @@ templ RateSettings(settings []config.RateSetting, stats []config.RateLimiterStat
 		if admin {
 			<div class="flex justify-end">
 				@button.Button(button.Props{ID: "control--rate-settings--save", Type: button.TypeSubmit}) {
+					@icon.Save()
 					{ i18n.T(ctx, "control.rate_limits.save") }
 				}
 			</div>

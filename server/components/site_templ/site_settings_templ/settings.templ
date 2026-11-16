@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/alert"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -221,6 +222,7 @@ templ deleteSite() {
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			@button.Button(button.Props{ID: "site--settings--delete-site", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+				@icon.Trash2()
 				{ i18n.T(ctx, "site.settings.delete_site.title") }
 			}
 		</form>
@@ -303,6 +305,7 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 						Class:      "h-auto min-h-9 w-full whitespace-normal sm:w-auto",
 						Attributes: templ.Attributes{"form": column.FormID},
 					}) {
+						@icon.Save()
 						{ column.Save }
 					}
 				</div>

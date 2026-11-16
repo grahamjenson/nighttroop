@@ -141,6 +141,7 @@ templ createSiteForm() {
 				})
 			}
 			@button.Button(button.Props{ID: "control--sites--create--submit", Type: button.TypeSubmit}) {
+				@icon.Plus()
 				{ i18n.T(ctx, "control.sites.create_submit") }
 			}
 		</div>

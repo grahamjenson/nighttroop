@@ -194,6 +194,7 @@ templ addForm() {
 			</select>
 		}
 		@button.Button(button.Props{ID: "control--admins--add--submit", Type: button.TypeSubmit}) {
+			@icon.Plus()
 			{ i18n.T(ctx, "control.admins.add") }
 		}
 	</form>
