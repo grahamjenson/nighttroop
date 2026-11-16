@@ -1,7 +1,10 @@
 package sitedb
 
 import (
-	"database/sql"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"testing"
 
@@ -11,35 +14,39 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-// cached is the statement db keeps for query, or nil
-func cached(db *DB, query string) *sql.Stmt {
-	s, _ := db.stmts.stmts.Load(query)
-	stmt, _ := s.(*sql.Stmt)
-	return stmt
+// addReadings adds readings from to to in a transaction, each with a note of noteLength
+func addReadings(t *testing.T, db *DB, from, to, noteLength int) {
+	tx, err := db.SQLiteDB.BeginTx(t.Context(), nil)
+	require.NoError(t, err)
+	note := strings.Repeat("n", noteLength)
+	for i := from; i < to; i++ {
+		_, err = db.QueriesWithTx(tx).CreateGlucoseReading(t.Context(), CreateGlucoseReadingParams{ID: fmt.Sprint(i), Mgdl: 100,
+			ReadingType: "sgv", OccurredAt: int64(i + 1), Notes: &note, CreatedByIdentityName: "test"})
+		require.NoError(t, err)
+	}
+	require.NoError(t, tx.Commit())
 }
 
-// A site's queries are each prepared the first time it runs one, then reused, in and out of a transaction, so SQLite
-// does not parse them again, while preparing all of them at open kept about 3.5MB of memory for each site
-func TestSiteQueriesArePreparedOnFirstUse(t *testing.T) {
+// A site's DB runs its queries, in a transaction or not, on the connection it has, each prepared there on its first
+// run. Preparing a query first run in a transaction on another connection kept a second one open, with its own schema
+// and copy of each statement, which doubled a busy site's memory.
+func TestSiteQueriesUseOneConnection(t *testing.T) {
 	for _, mode := range []consts.ServerMode{consts.Test, consts.Development} { // in memory, then in a file
 		t.Run(string(mode), func(t *testing.T) {
 			ctx := t.Context()
 			db, err := NewDB(ctx, "abcdefgh", &config.ServerConfig{Mode: mode, DataDir: t.TempDir()})
 			require.NoError(t, err)
 			t.Cleanup(func() { db.Close() })
-			require.Nil(t, cached(db, allActivities), "nothing is prepared at open")
 
-			// Prepared once, then reused, while a query never run is never prepared
-			_, err = db.Queries().AllActivities(ctx, AllActivitiesParams{Limit: 1})
-			require.NoError(t, err)
-			stmt := cached(db, allActivities)
-			require.NotNil(t, stmt)
-			_, err = db.Queries().AllActivities(ctx, AllActivitiesParams{Limit: 1})
-			require.NoError(t, err)
-			require.Same(t, stmt, cached(db, allActivities))
-			require.Nil(t, cached(db, allTempTargets))
+			for i := range 3 {
+				addReadings(t, db, i, i+1, 0)
+				readings, err := db.Queries().SearchGlucoseReadings(ctx, SearchGlucoseReadingsParams{Limit: 10})
+				require.NoError(t, err)
+				require.Len(t, readings, i+1)
+			}
+			require.Equal(t, 1, db.SQLiteDB.Stats().OpenConnections)
 
-			// Many first runs at once each succeed, and keep one statement
+			// Many first runs at once each succeed
 			var wg sync.WaitGroup
 			for range 10 {
 				wg.Go(func() {
@@ -48,31 +55,43 @@ func TestSiteQueriesArePreparedOnFirstUse(t *testing.T) {
 				})
 			}
 			wg.Wait()
-			require.NotNil(t, cached(db, allTempTargets))
-
-			// A transaction runs the cached statement on its own connection. A query first run in one is prepared
-			// for later, except in memory, where the transaction holds the only connection, so it runs unprepared.
-			tx, err := db.SQLiteDB.BeginTx(ctx, nil)
-			require.NoError(t, err)
-			_, err = db.QueriesWithTx(tx).AllActivities(ctx, AllActivitiesParams{Limit: 1})
-			require.NoError(t, err)
-			require.Same(t, stmt, cached(db, allActivities))
-			require.NotNil(t, (&txStmts{Tx: tx, cache: db.stmts}).stmt(ctx, allActivities))
-			_, err = db.QueriesWithTx(tx).CreateGlucoseReading(ctx, CreateGlucoseReadingParams{ID: "1", Mgdl: 100, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "test"})
-			require.NoError(t, err)
-			require.NoError(t, tx.Commit())
-			require.Equal(t, mode == consts.Development, cached(db, createGlucoseReading) != nil)
-
-			// A query that fails to prepare is not kept, so it is tried again
-			_, err = db.stmts.stmt(ctx, "SELECT nothing FROM nowhere")
-			require.Error(t, err)
-			require.Nil(t, cached(db, "SELECT nothing FROM nowhere"))
-
-			// Closing the DB closes them all
-			require.NoError(t, db.Close())
-			count := 0
-			db.stmts.stmts.Range(func(_, _ any) bool { count++; return true })
-			require.Zero(t, count, "statements left open")
 		})
 	}
+}
+
+// residentKB is the process's resident memory in KB, which counts SQLite's, or 0 when the OS cannot say
+func residentKB() int {
+	status, _ := os.ReadFile("/proc/self/status")
+	for line := range strings.Lines(string(status)) {
+		if fields := strings.Fields(line); len(fields) > 1 && fields[0] == "VmRSS:" {
+			kb, _ := strconv.Atoi(fields[1])
+			return kb
+		}
+	}
+	return 0
+}
+
+// A connection finalizes its statements when it closes, as one closed with any left open is kept by SQLite, with its
+// schema and statements, about 1MB, for the life of the server: so connections opened and closed as a site is busy, then
+// idle for connMaxIdleTime, do not add up
+func TestClosedConnectionsFreeTheirStatements(t *testing.T) {
+	ctx := t.Context()
+	db, err := NewDB(ctx, "abcdefgh", &config.ServerConfig{Mode: consts.Development, DataDir: t.TempDir()})
+	require.NoError(t, err)
+	t.Cleanup(func() { db.Close() })
+	db.SQLiteDB.SetMaxIdleConns(0) // each connection closes once used
+	write := func(from, to int) {
+		for i := from; i < to; i++ {
+			addReadings(t, db, i, i+1, 0)
+			_, err := db.Queries().SearchEventGroups(ctx, SearchEventGroupsParams{Limit: 1})
+			require.NoError(t, err)
+		}
+	}
+	write(0, 20)
+	before := residentKB()
+	write(20, 320)
+	if before == 0 {
+		t.Skip("the OS does not say the process's memory")
+	}
+	require.Less(t, residentKB()-before, 100*1024, "300 connections, each kept with its statements, would keep about 300MB")
 }

@@ -63,7 +63,7 @@ type sqliteStmt interface {
 func (c connector) Connect(ctx context.Context) (driver.Conn, error) {
 	conn, err := c.Connector.Connect(ctx)
 	if inner, ok := conn.(sqliteConn); ok && err == nil {
-		return &timedConn{sqliteConn: inner, db: c.db}, nil
+		return &timedConn{sqliteConn: inner, db: c.db, stmts: map[string]*cachedStmt{}}, nil
 	}
 	return conn, err
 }
@@ -71,6 +71,46 @@ func (c connector) Connect(ctx context.Context) (driver.Conn, error) {
 type timedConn struct {
 	sqliteConn
 	db string
+	// stmts are the sqlc queries the connection has run, each prepared the first time it runs one, so SQLite does not
+	// parse it again each run. They are prepared on the connection that runs them, in a transaction or not, so a
+	// busy DB needs no other connection to prepare one, and are finalized when it closes.
+	stmts map[string]*cachedStmt
+}
+
+// cachedStmt is a query's statement on a connection, and whether its rows are open, when the query runs unprepared
+type cachedStmt struct {
+	sqliteStmt
+	open bool
+}
+
+// stmt is the connection's statement for query, prepared on its first run, or nil to run it unprepared: one that is not
+// an sqlc query, such as a migration, or one whose rows are still open
+func (c *timedConn) stmt(ctx context.Context, query string) (*cachedStmt, error) {
+	if !strings.HasPrefix(query, "-- name: ") {
+		return nil, nil
+	}
+	s, ok := c.stmts[query]
+	if !ok {
+		prepared, err := c.sqliteConn.PrepareContext(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		s = &cachedStmt{sqliteStmt: prepared.(sqliteStmt)}
+		c.stmts[query] = s
+	}
+	if s.open {
+		return nil, nil
+	}
+	return s, nil
+}
+
+// Close finalizes the connection's statements, then closes it
+func (c *timedConn) Close() error {
+	for _, s := range c.stmts {
+		s.Close()
+	}
+	clear(c.stmts)
+	return c.sqliteConn.Close()
 }
 
 // Unwrap is the driver's own connection, for what only it does, e.g. backing up the DB
@@ -88,13 +128,44 @@ func (c *timedConn) PrepareContext(ctx context.Context, query string) (driver.St
 
 func (c *timedConn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	start := time.Now()
-	result, err := c.sqliteConn.ExecContext(ctx, query, args)
+	s, err := c.stmt(ctx, query)
+	var result driver.Result
+	if s != nil {
+		result, err = s.ExecContext(ctx, args)
+	} else if err == nil {
+		result, err = c.sqliteConn.ExecContext(ctx, query, args)
+	}
 	record(ctx, c.db, Name(query), start, -1)
 	return result, err
 }
 
 func (c *timedConn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
-	return timeRows(ctx, c.db, Name(query), func() (driver.Rows, error) { return c.sqliteConn.QueryContext(ctx, query, args) })
+	return timeRows(ctx, c.db, Name(query), func() (driver.Rows, error) {
+		s, err := c.stmt(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		if s == nil {
+			return c.sqliteConn.QueryContext(ctx, query, args)
+		}
+		rows, err := s.QueryContext(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+		s.open = true
+		return &stmtRows{Rows: rows, stmt: s}, nil
+	})
+}
+
+// stmtRows are a cached statement's rows, which free it to run again once closed
+type stmtRows struct {
+	driver.Rows
+	stmt *cachedStmt
+}
+
+func (r *stmtRows) Close() error {
+	r.stmt.open = false
+	return r.Rows.Close()
 }
 
 // BeginTx is timed as BEGIN, as a write transaction waits there for the write lock

@@ -27,7 +27,6 @@ type DB struct {
 	SQLiteDB     *sql.DB
 	ServerConfig *config.ServerConfig
 	queries      *Queries
-	stmts        *stmtCache
 	InMemory     bool
 
 	Path       string
@@ -70,8 +69,7 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 		return db, fmt.Errorf("sitedb Migration Error for: %s %w", path, err)
 	}
 
-	db.stmts = &stmtCache{DB: sqldb, prepareInTx: !db.InMemory}
-	db.queries = New(db.stmts)
+	db.queries = New(sqldb)
 	// Every site's DB is opened at start, so the connection that migrated it is closed now rather than kept idle until
 	// connMaxIdleTime, which for thousands of sites briefly holds about 0.9MB of SQLite's memory each. One in memory
 	// keeps its connection, as closing it would lose the DB.
@@ -83,16 +81,16 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 	return db, nil
 }
 
-// Queries are the site's queries, each prepared when first run, as parsing them each time was most of a busy server's
-// CPU. Preparing all of them at open kept about 3.5MB of SQLite's memory for each site, while these are prepared on each
-// connection that runs them and freed with it once idle for connMaxIdleTime, so only a busy site's queries cost memory.
+// Queries are the site's queries. sqltiming prepares each on the connection that first runs it, as parsing them each
+// time was most of a busy server's CPU, and finalizes them with that connection once idle for connMaxIdleTime, so only
+// a busy site's queries cost memory. Preparing all of them at open kept about 3.5MB of SQLite's memory for each site.
 func (db *DB) Queries() *Queries {
 	return db.queries
 }
 
-// QueriesWithTx are the site's queries in tx, each run with its prepared statement on tx's connection
+// QueriesWithTx are the site's queries in tx, each run with its statement prepared on tx's connection
 func (db *DB) QueriesWithTx(tx *sql.Tx) *Queries {
-	return New(&txStmts{Tx: tx, cache: db.stmts})
+	return New(tx)
 }
 
 func (db *DB) Name() string {
@@ -111,7 +109,6 @@ func (db *DB) Close() error {
 	if db == nil || db.SQLiteDB == nil {
 		return nil
 	}
-	db.stmts.Close()
 	return db.SQLiteDB.Close()
 }
 
@@ -285,10 +282,12 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	return sqldb, nil
 }
 
-// maxIdleConns is how many idle connections a site's DB keeps. A connection holds its files, page cache and parsed
-// schema, about 0.6MB, and opening one runs the DSN's PRAGMAs and parses the schema again, which under load took a
-// quarter of the CPU when a site kept only one. A busy site's few requests at once reuse up to four, while a quiet site
-// closes them all once unused for connMaxIdleTime, so thousands of mostly idle sites still hold none.
+// maxIdleConns is how many idle connections a site's DB keeps. A connection holds its files, page cache, parsed schema
+// (about 0.2MB) and the statements it has prepared (about 0.9MB once it has run most of a site's queries). Opening one
+// runs the DSN's PRAGMAs and parses the schema again, which under load took a quarter of the CPU when a site kept only
+// one. A busy site runs on one connection, as each query is prepared on the connection that runs it, and its few
+// requests at once reuse up to four, while a quiet site closes them all once unused for connMaxIdleTime, so thousands
+// of mostly idle sites still hold none.
 const maxIdleConns = 4
 
 // connMaxIdleTime is how long a site DB's connection is kept unused before it is closed
