@@ -54,6 +54,9 @@ ASSERT_TEXT_VISIBLE Showing 1 to
 // the resource check scores every 5 minutes: a new site's, the newest, is Good. The server does not treat a site
 // differently by it yet.
 ASSERT_TEXT_EQUALS #controlSitesTable>tbody>tr:first-child>td:last-child Good · 0.00
+// Each site shows when its backup was last uploaded to S3. The new site's is not, as no backup job has run
+ASSERT_TEXT_VISIBLE Backup Uploaded
+ASSERT_TEXT_EQUALS #controlSitesTable>tbody>tr:first-child>td:nth-last-child(2) Never
 
 // Clicking a site opens its own page, laid out like a site's summary: its state, its DB size against its limit, tiles
 // of when it was last used, its identities and its last error, then its identities, and its latest events and errors.
@@ -87,6 +90,12 @@ ASSERT_TEXT_EQUALS #control--site--last-write Never
 ASSERT_TEXT_EQUALS #control--site--identity-count 3
 ASSERT_TEXT_EQUALS #control--site--identity-types 1 person, 2 devices
 ASSERT_TEXT_EQUALS #control--site--last-error None
+// Tiles show its backup's size, and when the backup job last copied it and uploaded it to S3. The new site has no
+// backup yet.
+ASSERT_TEXT_EQUALS #control--site--backup-size -
+ASSERT_TEXT_EQUALS #control--site--backed-up Never
+ASSERT_TEXT_EQUALS #control--site--backup-uploaded Never
+SCREENSHOT site_backup
 ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 // Its actions are a grid, each saying what it does: one not disabled cannot be archived, which says when it is offered,
 // but one no one has used can be disabled, and one whose DB is here, however small, can be truncated

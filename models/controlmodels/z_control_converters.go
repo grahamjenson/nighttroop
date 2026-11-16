@@ -369,6 +369,18 @@ func SiteFromDB(source *controldb.Site) *Site {
 			xint647 := *(*source).DeletedAt
 			controlmodelsSite.DeletedAt = &xint647
 		}
+		if (*source).BackedUpAt != nil {
+			xint648 := *(*source).BackedUpAt
+			controlmodelsSite.BackedUpAt = &xint648
+		}
+		if (*source).BackupSizeKb != nil {
+			xint649 := *(*source).BackupSizeKb
+			controlmodelsSite.BackupSizeKb = &xint649
+		}
+		if (*source).BackupUploadedAt != nil {
+			xint6410 := *(*source).BackupUploadedAt
+			controlmodelsSite.BackupUploadedAt = &xint6410
+		}
 		pControlmodelsSite = &controlmodelsSite
 	}
 	return pControlmodelsSite

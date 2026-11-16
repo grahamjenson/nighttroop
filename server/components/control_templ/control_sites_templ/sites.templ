@@ -70,7 +70,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 			Columns: []table.Column{
 				{Label: i18n.T(ctx, "control.sites.site")}, {Label: i18n.T(ctx, "control.sites.state")}, {Label: i18n.T(ctx, "control.sites.created")}, {Label: i18n.T(ctx, "control.sites.last_seen")},
 				{Label: i18n.T(ctx, "control.sites.last_write")}, {Label: i18n.T(ctx, "control.sites.db_size"), Numeric: true},
-				{Label: i18n.T(ctx, "control.sites.abuse")},
+				{Label: i18n.T(ctx, "control.sites.backup_uploaded")}, {Label: i18n.T(ctx, "control.sites.abuse")},
 			},
 		},
 		Pager: &pager.Props{ID: "control--sites", Path: "/sites?order=" + order, Count: len(sites), Skip: skip, Limit: limit},
@@ -232,6 +232,9 @@ templ siteRow(site *controlmodels.Site) {
 			}
 		}
 		@table.Cell() {
+			<span id={ "control--site--" + site.ID + "--backup-uploaded" } title={ display.DateTime(site.BackupUploadedAt) }>{ display.Ago(ctx, site.BackupUploadedAt, time.Now()) }</span>
+		}
+		@table.Cell() {
 			@abuseBadge(site, "control--site--"+site.ID+"--abuse")
 		}
 	}
@@ -300,7 +303,7 @@ func siteURL(ctx context.Context, siteID string) string {
 
 // SitePage is a site's own page, laid out like a site's summary: its state and when it changed, a grid of what can be
 // done to it, its DB size against its limit, tiles of when it was last used, its identities and its last
-// error, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
+// error, tiles of its backup's size and when it was copied and uploaded, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
 templ SitePage(page *controlmodels.SitePage) {
 	{{ site := page.Site }}
 	@heading.Title(site.ID)
@@ -334,6 +337,11 @@ templ SitePage(page *controlmodels.SitePage) {
 				<div id="control--site--identity-types" class="text-xs text-gray-500">{ identityTypes(ctx, page.Identities) }</div>
 			}
 			@stat.Tile("control--site--last-error", i18n.T(ctx, "control.site.last_error"), lastError(ctx, page.Errors), icon.TriangleAlert)
+		</div>
+		<div id="control--site--backup" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+			@stat.Tile("control--site--backup-size", i18n.T(ctx, "control.site.backup_size"), sizeMB(site.BackupSizeKb), icon.HardDrive)
+			@stat.Tile("control--site--backed-up", i18n.T(ctx, "control.site.backed_up"), display.Ago(ctx, site.BackedUpAt, time.Now()), icon.DatabaseBackup)
+			@stat.Tile("control--site--backup-uploaded", i18n.T(ctx, "control.site.backup_uploaded"), display.Ago(ctx, site.BackupUploadedAt, time.Now()), icon.CloudUpload)
 		</div>
 		@stat.Section(i18n.T(ctx, "control.site.identities"), "", "", "") {
 			@SiteIdentities(site.ID, page.Identities)
