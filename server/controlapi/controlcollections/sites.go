@@ -206,7 +206,7 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// TruncateHandler truncates all of a site's device reports, as the job every 10 minutes does its newest, then shrinks
+// TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks
 // its DB, while its DB is here. Only admins can.
 func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)

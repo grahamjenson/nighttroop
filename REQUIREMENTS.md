@@ -166,7 +166,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | Disable | After a confirmation | Not served. Socket.IO connections close. |
 | Archive | After disable. Needs S3. | Uploaded to S3. |
 | Restore | From the archived sites page | Live again. |
-| Truncate | Live or disabled, any size | Truncates all device statuses (as the 10-minute job does the newest), deletes old loop settings no record refers to, shrinks the DB. |
+| Truncate | Live or disabled, any size | Truncates all device statuses (as each backup does the newest), deletes old loop settings no record refers to, shrinks the DB. |
 
 - Download DB (`/sites/{id}/db`):
   - the same zip and code as a site admin's Download Data: `<site>-<date>.zip` holding `<site>-<date>.sqlite`, a
@@ -1796,7 +1796,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Device status truncation
 
-Every 10 minutes, the server truncates every site:
+Before it backs up a site, every hour, the server truncates it:
 
 - Loop status (`openaps` or `loop`): kept as sent for 1 day. Followers (e.g. LoopFollow) read a day of statuses.
   - If a status is more than 1 day older than now and its device's newest status, the predictions are removed.
@@ -1818,7 +1818,7 @@ Every 10 minutes, the server truncates every site:
 
 #### Truncation of a site far over its size limit
 
-If a site's DB is over 1.5 times its DB size limit (30 MB at the 20 MB default), the 10-minute job also truncates it
+If a site's DB is over 1.5 times its DB size limit (30 MB at the 20 MB default), the backup also truncates it
 harder:
 
 1. Step 1:

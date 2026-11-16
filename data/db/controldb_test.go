@@ -235,7 +235,7 @@ func TestTruncateClearsOldLoopStatuses(t *testing.T) {
 	}
 	updatedAt := report("aaps-old").UpdatedAt
 
-	require.NoError(t, controlDB.TruncateSites(ctx))
+	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
 	for device, status := range statuses {
 		require.JSONEq(t, status[1], *report(device + "-old").LoopStatusJson, "%s's status over a day old has no predictions", device)
 		require.Equal(t, new(1.2), report(device+"-old").LoopIob, "%s's IOB extracted from it is kept", device)
@@ -292,7 +292,7 @@ func TestTruncateClearsOldPumps(t *testing.T) {
 		return report
 	}
 
-	require.NoError(t, controlDB.TruncateSites(ctx))
+	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
 	require.Nil(t, report("old").PumpJson, "an older pump is cleared")
 	require.Equal(t, new(60.0), report("old").PumpBatteryPercent, "its battery extracted from it is kept")
 	require.JSONEq(t, pump, *report("newest").PumpJson, "the newest with a pump is kept")
@@ -334,7 +334,7 @@ func TestTruncateDeletesUnreferencedLoopSettings(t *testing.T) {
 		return true
 	}
 
-	require.NoError(t, controlDB.TruncateSites(ctx))
+	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
 	require.True(t, kept("unreferenced") && kept("deleted-profile"), "the job every 10 minutes keeps them")
 	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
@@ -428,7 +428,7 @@ func TestTruncateThinsOldDeviceReports(t *testing.T) {
 	f.delete(fmt.Sprintf("aaps-%d", (14*day+time.Hour)/time.Minute+2))
 	f.delete(fmt.Sprintf("aaps-%d", (30*day+time.Hour)/time.Minute+2))
 
-	require.NoError(t, controlDB.TruncateSites(t.Context()))
+	require.NoError(t, controlDB.TruncateSites(t.Context(), controlDB.AllSites()))
 	remaining := f.remaining()
 	removed := 0
 	for id, report := range f.reports {

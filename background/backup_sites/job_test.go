@@ -3,6 +3,7 @@ package backup_sites_test
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -88,6 +89,22 @@ func TestBackupSiteBatchCopiesAndUploadsOnlyWhatChanged(t *testing.T) {
 	require.ElementsMatch(t, []string{written.BackupPath, unwritten.BackupPath}, uploads[1])
 	require.NotEqual(t, writtenAt, backupTime(t, written))
 	require.Equal(t, unwrittenAt, backupTime(t, unwritten))
+}
+
+// A backup truncates its batch's sites first, so it has none of what truncating clears
+func TestBackupSiteBatchTruncatesItsSitesFirst(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, uploads, fail := t.Context(), [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	site, device := fileSite(t, controlDB, "taaaaaaa"), "phone"
+	old := time.Now().AddDate(0, 0, -40).UnixMilli()
+	_, err := site.Queries().CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "old", OccurredAt: old, CreatedByDeviceName: &device, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "t"))
+	require.Len(t, uploads, 1)
+	_, err = site.Queries().GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
+	require.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 // A site only read since its backup is not copied again, though while its connection is open its write-ahead log is
