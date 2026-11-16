@@ -186,10 +186,7 @@ templ roleCard(title string, description string) {
 }
 
 templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
-	@table.Table(table.Props{
-		ID:    id,
-		Class: "rounded-lg border border-gray-200",
-	}) {
+	@table.Table(table.Props{ID: id}) {
 		@table.Header() {
 			@table.Row() {
 				@table.Head() {

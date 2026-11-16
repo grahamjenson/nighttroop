@@ -20,7 +20,7 @@ import (
 // with one, or sign in to the site as it. The new credentials are shown above the table, once.
 templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 	<div id="control--site--identities--reset"></div>
-	@table.Table(table.Props{ID: "control--site--identities--table", Class: "rounded-lg border border-gray-200 text-sm"}) {
+	@table.Table(table.Props{ID: "control--site--identities--table"}) {
 		@table.Header() {
 			@table.Row() {
 				@table.Head() {

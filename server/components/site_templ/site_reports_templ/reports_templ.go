@@ -705,7 +705,7 @@ func TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) templ.Compon
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = table.Table(table.Props{ID: "site--reports--tdd--table", Class: "rounded-lg border border-gray-200"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = table.Table(table.Props{ID: "site--reports--tdd--table"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1146,7 +1146,7 @@ func SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSum
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var40), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = table.Table(table.Props{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var40), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

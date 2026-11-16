@@ -103,10 +103,6 @@
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
 
-1. Pages:
-    1. P4: Give the components' scripts (`utils.ScriptURL`) the version of their file, not the time the server
-       started, so a browser keeps them as it does the other static files
-
 1. Backups:
     1. P4: Remove the restore's fallback to the old `.tar.lz4.enc` backups (`s3utils.LegacyKey`). Lifecycle rules
        expire only replaced versions (30 days for sites, 90 for control), and nothing replaces an object at an old

@@ -999,7 +999,7 @@ func RateSettings(settings []config.RateSetting, stats []config.RateLimiterStats
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = table.Table(table.Props{ID: "control--rate-limits--group--" + group.name + "--table", Class: "min-w-[60rem] table-fixed rounded-lg border border-gray-200"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var44), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = table.Table(table.Props{ID: "control--rate-limits--group--" + group.name + "--table", Class: "min-w-[60rem] table-fixed"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var44), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

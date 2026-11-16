@@ -448,7 +448,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Static files
 
-- Each page links its style and scripts with the file's version: `/style_gen.css?v=<hash>`.
+- Each page links its style and scripts, and each component's script, with the file's version:
+  `/style_gen.css?v=<hash>`.
 - If a request has the file's version, the browser keeps the file for a year and does not ask again.
 - If a request has no version, or another one, the browser checks the file's `ETag` each time.
 
@@ -767,6 +768,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
 - Every table is close set: small headings on a grey band, and each row as tall as its text or its button.
+- A table has no border of its own. Its panel is its frame.
 - Add or delete updates the "Showing" count without a reload. Deleting the last record shows the empty table.
 
 #### Confirmation dialogs

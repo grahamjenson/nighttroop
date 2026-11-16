@@ -158,7 +158,7 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 			</p>
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "site.reports.tdd.each_day")}) {
-			@table.Table(table.Props{ID: "site--reports--tdd--table", Class: "rounded-lg border border-gray-200"}) {
+			@table.Table(table.Props{ID: "site--reports--tdd--table"}) {
 				@table.Header() {
 					@table.Row() {
 						@table.Head() {
@@ -230,7 +230,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 		{{ year := i18n.Data{"Year": first.Format("2006")} }}
 		for _, kind := range slices.Backward(periods) {
 			@card.Card(card.Props{ID: "site--summaries--" + kind.Period, Title: i18n.T(ctx, kind.Title, year)}) {
-				@table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}) {
+				@table.Table(table.Props{}) {
 					@table.Header() {
 						@table.Row() {
 							@table.Head() {

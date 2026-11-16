@@ -29,6 +29,8 @@ ASSERT_VISIBLE #glucose_readings_table > div:has(h1) > #site--glucose--add
 // It has a plus icon, and the table is in a white panel on the page's grey canvas
 ASSERT_DRAWN #site--glucose--add > svg
 ASSERT_VISIBLE .panel #glucoseReadingsTable
+// The panel is the table's only frame: the table has no border of its own
+ASSERT_NOT_VISIBLE #glucoseReadingsTable.border
 // Its headings are small on a grey band, and its rows are close set
 ASSERT_VISIBLE #glucoseReadingsTable thead.bg-gray-50 th.text-xs:text-is("Time")
 ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> td[class~="py-1.5"] >> nth=0
