@@ -1,0 +1,40 @@
+// Package head is what the site, control and public pages' heads share
+package head
+
+import (
+	"nighttroop.t1d.nz/server/assets/static"
+	"nighttroop.t1d.nz/server/components/ui/checkbox"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
+	"nighttroop.t1d.nz/server/components/ui/dropdown"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/label"
+	"nighttroop.t1d.nz/server/components/ui/selectbox"
+	"nighttroop.t1d.nz/server/components/ui/toast"
+)
+
+// Common is the start of every page's head: its metas, icons and style, then htmx, the QR code and the copy button
+templ Common() {
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	// No settle delay: htmx's CSS transitions give a swapped input its old attributes until it settles, which empties
+	// the focused one, such as a date picked or a search sent with Enter
+	<meta name="htmx-config" content="defaultSettleDelay:0"/>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+	<link rel="apple-touch-icon" href="/logo.png"/>
+	<link href={ static.URL("/style_gen.css") } rel="stylesheet"/>
+	<script src={ static.URL("/htmx.js") }></script>
+	<script src={ static.URL("/qrcode.js") }></script>
+	@copybutton.Script()
+}
+
+// Components are the scripts of the components a signed in page uses, on the site and on control
+templ Components() {
+	@input.Script()
+	@label.Script()
+	@dropdown.Script()
+	@inputotp.Script()
+	@checkbox.Script()
+	@selectbox.Script()
+	@toast.Script()
+}
