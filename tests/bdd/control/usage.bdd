@@ -65,3 +65,20 @@ ASSERT_TEXT_VISIBLE goroutine
 GOTO {{ .control_url }}/debug/vars
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE memstats
+
+// The header links the pages an admin opens most, each with its icon, one click away
+GOTO {{ .control_url }}/
+ASSERT_STATUS 200
+ASSERT_DRAWN #control--nav--usage > svg
+CLICK #control--nav--usage
+ASSERT_PATH /usage
+ASSERT_VISIBLE #control--usage--sites-day
+CLICK #control--nav--jobs
+ASSERT_PATH /jobs
+CLICK #control--nav--events
+ASSERT_PATH /events
+CLICK #control--nav--errors
+ASSERT_PATH /errors
+CLICK #control--nav--sites
+ASSERT_PATH /sites
+SCREENSHOT header_links
