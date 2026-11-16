@@ -41,6 +41,7 @@ All host names come from one domain (`example.nz` in this guide):
 2. Caddy proxies the request to Nighttroop on port 3000, over the private Docker network.
 3. Nighttroop uses the client IP in `X-Forwarded-For`, from its only trusted proxy (`TRUSTED_PROXIES`), Caddy
    (`172.30.0.2`). Thus rate limits apply to each visitor.
+4. Caddy compresses the response with zstd or gzip. Nighttroop does not compress responses.
 
 ## Requirements
 

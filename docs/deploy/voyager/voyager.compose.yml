@@ -65,6 +65,8 @@ configs:
           # Public resolvers see the challenge record as soon as Cloudflare's nameservers have it
           resolvers 1.1.1.1 8.8.8.8
         }
+        # Nighttroop sends its responses as they are, so Caddy compresses them
+        encode zstd gzip
         reverse_proxy nighttroop:3000
       }
 

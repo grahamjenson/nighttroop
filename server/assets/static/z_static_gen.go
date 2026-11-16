@@ -2,16 +2,12 @@
 package static
 
 import (
-	"bytes"
-	"compress/gzip"
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
-	"sync"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -19,37 +15,30 @@ import (
 //go:embed checkbox.js
 var StaticCheckboxJs []byte
 var StaticCheckboxJsETag = generateETag([]byte(StaticCheckboxJs))
-var StaticCheckboxJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCheckboxJs) })
 
 //go:embed checkbox.min.js
 var StaticCheckboxMinJs []byte
 var StaticCheckboxMinJsETag = generateETag([]byte(StaticCheckboxMinJs))
-var StaticCheckboxMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCheckboxMinJs) })
 
 //go:embed copybutton.js
 var StaticCopybuttonJs []byte
 var StaticCopybuttonJsETag = generateETag([]byte(StaticCopybuttonJs))
-var StaticCopybuttonJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCopybuttonJs) })
 
 //go:embed copybutton.min.js
 var StaticCopybuttonMinJs []byte
 var StaticCopybuttonMinJsETag = generateETag([]byte(StaticCopybuttonMinJs))
-var StaticCopybuttonMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCopybuttonMinJs) })
 
 //go:embed dropdown.js
 var StaticDropdownJs []byte
 var StaticDropdownJsETag = generateETag([]byte(StaticDropdownJs))
-var StaticDropdownJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticDropdownJs) })
 
 //go:embed dropdown.min.js
 var StaticDropdownMinJs []byte
 var StaticDropdownMinJsETag = generateETag([]byte(StaticDropdownMinJs))
-var StaticDropdownMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticDropdownMinJs) })
 
 //go:embed echarts.min.js
 var StaticEchartsMinJs []byte
 var StaticEchartsMinJsETag = generateETag([]byte(StaticEchartsMinJs))
-var StaticEchartsMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticEchartsMinJs) })
 
 //go:embed empty
 var StaticEmpty []byte
@@ -62,52 +51,42 @@ var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
 //go:embed floating_ui_core.js
 var StaticFloatingUiCoreJs []byte
 var StaticFloatingUiCoreJsETag = generateETag([]byte(StaticFloatingUiCoreJs))
-var StaticFloatingUiCoreJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticFloatingUiCoreJs) })
 
 //go:embed floating_ui_dom.js
 var StaticFloatingUiDomJs []byte
 var StaticFloatingUiDomJsETag = generateETag([]byte(StaticFloatingUiDomJs))
-var StaticFloatingUiDomJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticFloatingUiDomJs) })
 
 //go:embed htmx.js
 var StaticHtmxJs []byte
 var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
-var StaticHtmxJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticHtmxJs) })
 
 //go:embed htmx_sse.js
 var StaticHtmxSseJs []byte
 var StaticHtmxSseJsETag = generateETag([]byte(StaticHtmxSseJs))
-var StaticHtmxSseJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticHtmxSseJs) })
 
 //go:embed input.js
 var StaticInputJs []byte
 var StaticInputJsETag = generateETag([]byte(StaticInputJs))
-var StaticInputJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputJs) })
 
 //go:embed input.min.js
 var StaticInputMinJs []byte
 var StaticInputMinJsETag = generateETag([]byte(StaticInputMinJs))
-var StaticInputMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputMinJs) })
 
 //go:embed inputotp.js
 var StaticInputotpJs []byte
 var StaticInputotpJsETag = generateETag([]byte(StaticInputotpJs))
-var StaticInputotpJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputotpJs) })
 
 //go:embed inputotp.min.js
 var StaticInputotpMinJs []byte
 var StaticInputotpMinJsETag = generateETag([]byte(StaticInputotpMinJs))
-var StaticInputotpMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputotpMinJs) })
 
 //go:embed label.js
 var StaticLabelJs []byte
 var StaticLabelJsETag = generateETag([]byte(StaticLabelJs))
-var StaticLabelJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticLabelJs) })
 
 //go:embed label.min.js
 var StaticLabelMinJs []byte
 var StaticLabelMinJsETag = generateETag([]byte(StaticLabelMinJs))
-var StaticLabelMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticLabelMinJs) })
 
 //go:embed logo.png
 var StaticLogoPng []byte
@@ -116,197 +95,168 @@ var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
 //go:embed logo.svg
 var StaticLogoSvg []byte
 var StaticLogoSvgETag = generateETag([]byte(StaticLogoSvg))
-var StaticLogoSvgGzip = sync.OnceValue(func() []byte { return gzipped(StaticLogoSvg) })
 
 //go:embed popover.js
 var StaticPopoverJs []byte
 var StaticPopoverJsETag = generateETag([]byte(StaticPopoverJs))
-var StaticPopoverJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticPopoverJs) })
 
 //go:embed popover.min.js
 var StaticPopoverMinJs []byte
 var StaticPopoverMinJsETag = generateETag([]byte(StaticPopoverMinJs))
-var StaticPopoverMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticPopoverMinJs) })
 
 //go:embed qrcode.js
 var StaticQrcodeJs []byte
 var StaticQrcodeJsETag = generateETag([]byte(StaticQrcodeJs))
-var StaticQrcodeJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticQrcodeJs) })
 
 //go:embed redoc.standalone.js
 var StaticRedocStandaloneJs []byte
 var StaticRedocStandaloneJsETag = generateETag([]byte(StaticRedocStandaloneJs))
-var StaticRedocStandaloneJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticRedocStandaloneJs) })
 
 //go:embed redoc.standalone.js.LICENSE.txt
 var StaticRedocStandaloneJsLicenseTxt []byte
 var StaticRedocStandaloneJsLicenseTxtETag = generateETag([]byte(StaticRedocStandaloneJsLicenseTxt))
-var StaticRedocStandaloneJsLicenseTxtGzip = sync.OnceValue(func() []byte { return gzipped(StaticRedocStandaloneJsLicenseTxt) })
 
 //go:embed robots.txt
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
-var StaticRobotsTxtGzip = sync.OnceValue(func() []byte { return gzipped(StaticRobotsTxt) })
 
 //go:embed selectbox.js
 var StaticSelectboxJs []byte
 var StaticSelectboxJsETag = generateETag([]byte(StaticSelectboxJs))
-var StaticSelectboxJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticSelectboxJs) })
 
 //go:embed selectbox.min.js
 var StaticSelectboxMinJs []byte
 var StaticSelectboxMinJsETag = generateETag([]byte(StaticSelectboxMinJs))
-var StaticSelectboxMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticSelectboxMinJs) })
 
 //go:embed style_gen.css
 var StaticStyleGenCss []byte
 var StaticStyleGenCssETag = generateETag([]byte(StaticStyleGenCss))
-var StaticStyleGenCssGzip = sync.OnceValue(func() []byte { return gzipped(StaticStyleGenCss) })
 
 //go:embed toast.js
 var StaticToastJs []byte
 var StaticToastJsETag = generateETag([]byte(StaticToastJs))
-var StaticToastJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticToastJs) })
 
 //go:embed toast.min.js
 var StaticToastMinJs []byte
 var StaticToastMinJsETag = generateETag([]byte(StaticToastMinJs))
-var StaticToastMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticToastMinJs) })
 
 func AddStaticRoutes(r chi.Router) error {
 	r.Get("/checkbox.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "checkbox.js", "text/javascript; charset=utf-8", StaticCheckboxJsETag, StaticCheckboxJs, StaticCheckboxJsGzip)
+		serve(w, r, "checkbox.js", "text/javascript; charset=utf-8", StaticCheckboxJsETag, StaticCheckboxJs)
 	})
 	r.Get("/checkbox.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "checkbox.min.js", "text/javascript; charset=utf-8", StaticCheckboxMinJsETag, StaticCheckboxMinJs, StaticCheckboxMinJsGzip)
+		serve(w, r, "checkbox.min.js", "text/javascript; charset=utf-8", StaticCheckboxMinJsETag, StaticCheckboxMinJs)
 	})
 	r.Get("/copybutton.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "copybutton.js", "text/javascript; charset=utf-8", StaticCopybuttonJsETag, StaticCopybuttonJs, StaticCopybuttonJsGzip)
+		serve(w, r, "copybutton.js", "text/javascript; charset=utf-8", StaticCopybuttonJsETag, StaticCopybuttonJs)
 	})
 	r.Get("/copybutton.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "copybutton.min.js", "text/javascript; charset=utf-8", StaticCopybuttonMinJsETag, StaticCopybuttonMinJs, StaticCopybuttonMinJsGzip)
+		serve(w, r, "copybutton.min.js", "text/javascript; charset=utf-8", StaticCopybuttonMinJsETag, StaticCopybuttonMinJs)
 	})
 	r.Get("/dropdown.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "dropdown.js", "text/javascript; charset=utf-8", StaticDropdownJsETag, StaticDropdownJs, StaticDropdownJsGzip)
+		serve(w, r, "dropdown.js", "text/javascript; charset=utf-8", StaticDropdownJsETag, StaticDropdownJs)
 	})
 	r.Get("/dropdown.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "dropdown.min.js", "text/javascript; charset=utf-8", StaticDropdownMinJsETag, StaticDropdownMinJs, StaticDropdownMinJsGzip)
+		serve(w, r, "dropdown.min.js", "text/javascript; charset=utf-8", StaticDropdownMinJsETag, StaticDropdownMinJs)
 	})
 	r.Get("/echarts.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "echarts.min.js", "text/javascript; charset=utf-8", StaticEchartsMinJsETag, StaticEchartsMinJs, StaticEchartsMinJsGzip)
+		serve(w, r, "echarts.min.js", "text/javascript; charset=utf-8", StaticEchartsMinJsETag, StaticEchartsMinJs)
 	})
 	r.Get("/empty", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "empty", "application/octet-stream", StaticEmptyETag, StaticEmpty, nil)
+		serve(w, r, "empty", "application/octet-stream", StaticEmptyETag, StaticEmpty)
 	})
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "favicon.ico", "image/x-icon", StaticFaviconIcoETag, StaticFaviconIco, nil)
+		serve(w, r, "favicon.ico", "image/x-icon", StaticFaviconIcoETag, StaticFaviconIco)
 	})
 	r.Get("/floating_ui_core.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "floating_ui_core.js", "text/javascript; charset=utf-8", StaticFloatingUiCoreJsETag, StaticFloatingUiCoreJs, StaticFloatingUiCoreJsGzip)
+		serve(w, r, "floating_ui_core.js", "text/javascript; charset=utf-8", StaticFloatingUiCoreJsETag, StaticFloatingUiCoreJs)
 	})
 	r.Get("/floating_ui_dom.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "floating_ui_dom.js", "text/javascript; charset=utf-8", StaticFloatingUiDomJsETag, StaticFloatingUiDomJs, StaticFloatingUiDomJsGzip)
+		serve(w, r, "floating_ui_dom.js", "text/javascript; charset=utf-8", StaticFloatingUiDomJsETag, StaticFloatingUiDomJs)
 	})
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "htmx.js", "text/javascript; charset=utf-8", StaticHtmxJsETag, StaticHtmxJs, StaticHtmxJsGzip)
+		serve(w, r, "htmx.js", "text/javascript; charset=utf-8", StaticHtmxJsETag, StaticHtmxJs)
 	})
 	r.Get("/htmx_sse.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "htmx_sse.js", "text/javascript; charset=utf-8", StaticHtmxSseJsETag, StaticHtmxSseJs, StaticHtmxSseJsGzip)
+		serve(w, r, "htmx_sse.js", "text/javascript; charset=utf-8", StaticHtmxSseJsETag, StaticHtmxSseJs)
 	})
 	r.Get("/input.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "input.js", "text/javascript; charset=utf-8", StaticInputJsETag, StaticInputJs, StaticInputJsGzip)
+		serve(w, r, "input.js", "text/javascript; charset=utf-8", StaticInputJsETag, StaticInputJs)
 	})
 	r.Get("/input.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "input.min.js", "text/javascript; charset=utf-8", StaticInputMinJsETag, StaticInputMinJs, StaticInputMinJsGzip)
+		serve(w, r, "input.min.js", "text/javascript; charset=utf-8", StaticInputMinJsETag, StaticInputMinJs)
 	})
 	r.Get("/inputotp.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "inputotp.js", "text/javascript; charset=utf-8", StaticInputotpJsETag, StaticInputotpJs, StaticInputotpJsGzip)
+		serve(w, r, "inputotp.js", "text/javascript; charset=utf-8", StaticInputotpJsETag, StaticInputotpJs)
 	})
 	r.Get("/inputotp.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "inputotp.min.js", "text/javascript; charset=utf-8", StaticInputotpMinJsETag, StaticInputotpMinJs, StaticInputotpMinJsGzip)
+		serve(w, r, "inputotp.min.js", "text/javascript; charset=utf-8", StaticInputotpMinJsETag, StaticInputotpMinJs)
 	})
 	r.Get("/label.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "label.js", "text/javascript; charset=utf-8", StaticLabelJsETag, StaticLabelJs, StaticLabelJsGzip)
+		serve(w, r, "label.js", "text/javascript; charset=utf-8", StaticLabelJsETag, StaticLabelJs)
 	})
 	r.Get("/label.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "label.min.js", "text/javascript; charset=utf-8", StaticLabelMinJsETag, StaticLabelMinJs, StaticLabelMinJsGzip)
+		serve(w, r, "label.min.js", "text/javascript; charset=utf-8", StaticLabelMinJsETag, StaticLabelMinJs)
 	})
 	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "logo.png", "image/png", StaticLogoPngETag, StaticLogoPng, nil)
+		serve(w, r, "logo.png", "image/png", StaticLogoPngETag, StaticLogoPng)
 	})
 	r.Get("/logo.svg", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "logo.svg", "image/svg+xml", StaticLogoSvgETag, StaticLogoSvg, StaticLogoSvgGzip)
+		serve(w, r, "logo.svg", "image/svg+xml", StaticLogoSvgETag, StaticLogoSvg)
 	})
 	r.Get("/popover.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "popover.js", "text/javascript; charset=utf-8", StaticPopoverJsETag, StaticPopoverJs, StaticPopoverJsGzip)
+		serve(w, r, "popover.js", "text/javascript; charset=utf-8", StaticPopoverJsETag, StaticPopoverJs)
 	})
 	r.Get("/popover.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "popover.min.js", "text/javascript; charset=utf-8", StaticPopoverMinJsETag, StaticPopoverMinJs, StaticPopoverMinJsGzip)
+		serve(w, r, "popover.min.js", "text/javascript; charset=utf-8", StaticPopoverMinJsETag, StaticPopoverMinJs)
 	})
 	r.Get("/qrcode.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "qrcode.js", "text/javascript; charset=utf-8", StaticQrcodeJsETag, StaticQrcodeJs, StaticQrcodeJsGzip)
+		serve(w, r, "qrcode.js", "text/javascript; charset=utf-8", StaticQrcodeJsETag, StaticQrcodeJs)
 	})
 	r.Get("/redoc.standalone.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "redoc.standalone.js", "text/javascript; charset=utf-8", StaticRedocStandaloneJsETag, StaticRedocStandaloneJs, StaticRedocStandaloneJsGzip)
+		serve(w, r, "redoc.standalone.js", "text/javascript; charset=utf-8", StaticRedocStandaloneJsETag, StaticRedocStandaloneJs)
 	})
 	r.Get("/redoc.standalone.js.LICENSE.txt", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "redoc.standalone.js.LICENSE.txt", "text/plain; charset=utf-8", StaticRedocStandaloneJsLicenseTxtETag, StaticRedocStandaloneJsLicenseTxt, StaticRedocStandaloneJsLicenseTxtGzip)
+		serve(w, r, "redoc.standalone.js.LICENSE.txt", "text/plain; charset=utf-8", StaticRedocStandaloneJsLicenseTxtETag, StaticRedocStandaloneJsLicenseTxt)
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "robots.txt", "text/plain; charset=utf-8", StaticRobotsTxtETag, StaticRobotsTxt, StaticRobotsTxtGzip)
+		serve(w, r, "robots.txt", "text/plain; charset=utf-8", StaticRobotsTxtETag, StaticRobotsTxt)
 	})
 	r.Get("/selectbox.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "selectbox.js", "text/javascript; charset=utf-8", StaticSelectboxJsETag, StaticSelectboxJs, StaticSelectboxJsGzip)
+		serve(w, r, "selectbox.js", "text/javascript; charset=utf-8", StaticSelectboxJsETag, StaticSelectboxJs)
 	})
 	r.Get("/selectbox.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "selectbox.min.js", "text/javascript; charset=utf-8", StaticSelectboxMinJsETag, StaticSelectboxMinJs, StaticSelectboxMinJsGzip)
+		serve(w, r, "selectbox.min.js", "text/javascript; charset=utf-8", StaticSelectboxMinJsETag, StaticSelectboxMinJs)
 	})
 	r.Get("/style_gen.css", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "style_gen.css", "text/css; charset=utf-8", StaticStyleGenCssETag, StaticStyleGenCss, StaticStyleGenCssGzip)
+		serve(w, r, "style_gen.css", "text/css; charset=utf-8", StaticStyleGenCssETag, StaticStyleGenCss)
 	})
 	r.Get("/toast.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "toast.js", "text/javascript; charset=utf-8", StaticToastJsETag, StaticToastJs, StaticToastJsGzip)
+		serve(w, r, "toast.js", "text/javascript; charset=utf-8", StaticToastJsETag, StaticToastJs)
 	})
 	r.Get("/toast.min.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "toast.min.js", "text/javascript; charset=utf-8", StaticToastMinJsETag, StaticToastMinJs, StaticToastMinJsGzip)
+		serve(w, r, "toast.min.js", "text/javascript; charset=utf-8", StaticToastMinJsETag, StaticToastMinJs)
 	})
 
 	return nil
 }
 
-// serve writes a file, gzipped once and kept for clients that accept it, so a request does not compress it again
-func serve(w http.ResponseWriter, r *http.Request, fileName string, contentType string, etag string, body []byte, gzipBody func() []byte) {
+// serve writes a file as it is; the proxy in front, Fly's or Caddy's, compresses it
+func serve(w http.ResponseWriter, r *http.Request, fileName string, contentType string, etag string, body []byte) {
 	w.Header().Set("Content-Type", contentType)
 
 	// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("ETag", etag)
-	if gzipBody != nil {
-		w.Header().Add("Vary", "Accept-Encoding")
-	}
 	if r.Header.Get("If-None-Match") == etag {
 		w.WriteHeader(http.StatusNotModified)
 		return
-	}
-
-	if gzipBody != nil && strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-		// The compress middleware leaves a response that already has an encoding
-		w.Header().Set("Content-Encoding", "gzip")
-		body = gzipBody()
 	}
 
 	_, err := w.Write(body)
 	if err != nil {
 		slog.Error("Failed to write response for "+fileName, "error", err)
 	}
-}
-
-func gzipped(body []byte) []byte {
-	var buf bytes.Buffer
-	writer, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	writer.Write(body)
-	writer.Close()
-	return buf.Bytes()
 }
 
 func generateETag(data []byte) string {

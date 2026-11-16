@@ -56,9 +56,8 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
 	router.Use(timeoutUnlessLongLived)
-	router.Use(compress)
+	// Responses are not compressed here: the proxy in front, Fly's or Caddy's, compresses them
 	if controlDB != nil {
-		// Inside the compression, so it reads why a request was refused as it was written
 		router.Use(RecordClientErrors(controlDB.Logs))
 	}
 	router.Use(withSupportEmail(config.SupportEmail))
@@ -66,7 +65,6 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(withTestSite(config.TestSite))
 	router.Use(withDBIPCredit)
 	if controlDB != nil && config.CaptureRequests {
-		// Inside the compression, so the response body is captured as the handler wrote it
 		router.Use(CaptureRequests(controlDB.Logs))
 	}
 }
