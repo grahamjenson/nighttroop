@@ -56,8 +56,7 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
 	router.Use(timeoutUnlessLongLived)
-	// Gzip text responses, like the pages, styles, scripts and JSON, for clients that accept it
-	router.Use(middleware.Compress(5))
+	router.Use(compress)
 	if controlDB != nil {
 		// Inside the compression, so it reads why a request was refused as it was written
 		router.Use(RecordClientErrors(controlDB.Logs))
