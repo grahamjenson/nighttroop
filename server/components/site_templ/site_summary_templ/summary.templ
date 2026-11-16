@@ -180,6 +180,14 @@ templ summaryContent(summary *sitemodels.Summary) {
 		}
 	</div>
 	<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+		if len(summary.DeviceStatuses) > 0 {
+			<div class="col-span-full flex items-center justify-between">
+				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ i18n.T(ctx, "site.summary.device.title") }</h2>
+				@nav.Link("site--summary--all-devices", "/data/device-status", "text-sm text-primary underline") {
+					{ i18n.T(ctx, "site.summary.device.all") }
+				}
+			</div>
+		}
 		for _, status := range summary.DeviceStatuses {
 			@deviceCard(status)
 		}
