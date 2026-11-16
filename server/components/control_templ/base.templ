@@ -125,6 +125,15 @@ templ menuItem(id string, path string, label string, itemIcon func(...icon.Props
 	}
 }
 
+// headerLinks are the pages linked in the header itself: the address of each, the message of its name, and its icon
+var headerLinks = []struct {
+	slug, label string
+	icon        func(...icon.Props) templ.Component
+}{
+	{"sites", "control.menu.sites", icon.Users}, {"usage", "control.menu.usage", icon.Gauge}, {"jobs", "control.menu.jobs", icon.ListChecks},
+	{"events", "control.menu.events", icon.Activity}, {"errors", "control.menu.errors", icon.TriangleAlert},
+}
+
 templ Header() {
 	<nav class="bg-brand-night border-b border-white/10 shadow-sm">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -134,6 +143,15 @@ templ Header() {
 					<img id="control--nav--logo" src="/logo.svg" alt="" class="size-8"/>
 					{ i18n.T(ctx, "control.base.title") }
 				</a>
+				// The pages an admin opens most, one click away in a wide window; the menu has every page
+				<div id="control--nav--links" class="ml-6 mr-auto hidden items-center gap-1 md:flex">
+					for _, link := range headerLinks {
+						@nav.Link("control--nav--"+link.slug, "/"+link.slug, "flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-gray-300 transition hover:bg-white/10 hover:text-white") {
+							@link.icon(icon.Props{Class: "size-4"})
+							{ i18n.T(ctx, link.label) }
+						}
+					}
+				</div>
 				<!-- Right side -->
 				<div class="flex items-center gap-4">
 					@dropdown.Dropdown(dropdown.Props{ID: "control--menu"}) {
