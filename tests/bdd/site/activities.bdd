@@ -8,6 +8,9 @@ CLICK #site--data--activities-button
 ASSERT_STATUS 200
 ASSERT_PATH /data/activities
 ASSERT_VISIBLE #site--activity--empty
+// It says so in the middle of the table, under an icon
+ASSERT_VISIBLE #site--activity--empty > td.text-center
+ASSERT_DRAWN #site--activity--empty svg
 SCREENSHOT activities_empty
 
 // An activity typed in happens now, added to the top of the table

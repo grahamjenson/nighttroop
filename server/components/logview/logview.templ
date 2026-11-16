@@ -122,7 +122,7 @@ templ AttributesDetail(id string, raw json.RawMessage) {
 
 // Empty fills a table of no rows, of the number of columns, with text saying there are none
 templ Empty(columns int, text string) {
-	<tr><td colspan={ fmt.Sprint(columns) } class="p-4 text-sm text-gray-500">{ text }</td></tr>
+	@table.Empty("", columns, text)
 }
 
 // columns is how many columns a table has, with its About column when the View has one
