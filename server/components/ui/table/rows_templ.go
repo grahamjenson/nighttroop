@@ -104,7 +104,7 @@ func DeleteCell(id, path, confirm string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Cell(CellProps{Class: "py-0.5"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -153,6 +153,7 @@ func DeleteButton(id, path, confirm string) templ.Component {
 			ID:      id,
 			Variant: button.VariantGhost,
 			Size:    button.SizeIcon,
+			Class:   "size-7",
 			Attributes: templ.Attributes{
 				"title":                i18n.T(ctx, "common.table.delete"),
 				"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),

@@ -82,7 +82,7 @@ templ Header(props ...HeaderProps) {
 		if p.ID != "" {
 			id={ p.ID }
 		}
-		class={ utils.TwMerge("[&_tr]:border-b", p.Class) }
+		class={ utils.TwMerge("bg-gray-50 [&_tr]:border-b", p.Class) }
 		{ p.Attributes... }
 	>
 		{ children... }
@@ -155,7 +155,8 @@ templ Row(props ...RowProps) {
 	</tr>
 }
 
-// Head and Cell keep their text on one line, so a time or a value and its unit never break apart on a phone; a table
+// Head and Cell are close set, as a dashboard's table is, so a page shows more rows: a heading is small on a
+// grey band, and a row is as tall as its text. They keep their text on one line, so a time or a value and its unit never break apart on a phone; a table
 // too wide for its card scrolls sideways instead. A cell of free text, like notes, can wrap with whitespace-normal.
 templ Head(props ...HeadProps) {
 	{{ var p HeadProps }}
@@ -168,7 +169,7 @@ templ Head(props ...HeadProps) {
 		}
 		class={
 			utils.TwMerge(
-				"h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-muted-foreground",
+				"h-8 px-3 text-left align-middle text-xs font-semibold whitespace-nowrap text-gray-500",
 				"[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
 				p.Class,
 			),
@@ -190,7 +191,7 @@ templ Cell(props ...CellProps) {
 		}
 		class={
 			utils.TwMerge(
-				"p-2 align-middle whitespace-nowrap",
+				"px-3 py-1.5 align-middle whitespace-nowrap",
 				"[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
 				p.Class,
 			),
