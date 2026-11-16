@@ -36,6 +36,21 @@ func TestRecoverSiteAdmin(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, passkeys)
 
+	// An admin another made, which could take the site back, is turned off; an identity that is not an admin is not
+	_, err = controlDB.CreateSiteIdentity(ctx, q, siteID, "other", consts.IdentityRoleAdmin, nil)
+	require.NoError(t, err)
+	_, err = controlDB.CreateSiteIdentity(ctx, q, siteID, "user", consts.IdentityRoleUser, nil)
+	require.NoError(t, err)
+	recovered, err = controlDB.RecoverSiteAdmin(ctx, siteID, recovered.BackupKey)
+	require.NoError(t, err)
+	identity, err := q.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteID, Name: "other"})
+	require.NoError(t, err)
+	require.False(t, identity.Enabled)
+	identity, err = q.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteID, Name: "user"})
+	require.NoError(t, err)
+	require.True(t, identity.Enabled)
+	require.True(t, admin().Enabled)
+
 	// The key it used works no more, and the one it gave works in its place, making a deleted admin again
 	_, err = controlDB.RecoverSiteAdmin(ctx, siteID, site.BackupPassword)
 	require.ErrorIs(t, err, db.ErrBadBackupKey)

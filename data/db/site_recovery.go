@@ -24,7 +24,8 @@ type RecoveredAdmin struct {
 
 // RecoverSiteAdmin proves ownership of a site with its backup key, the one secret only its creator was shown. The
 // key works once: it is replaced by a new one, and the site's admin gets a new password and TOTP, or is made again
-// if it is gone, so whoever had the old credentials or key is shut out.
+// if it is gone, and the site's other admins are turned off, so whoever had the old credentials or key is shut out,
+// even through an admin they added.
 func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backupKey string) (*RecoveredAdmin, error) {
 	site, err := db.Queries.GetSite(ctx, controldb.GetSiteParams{ID: siteID})
 	if err != nil {
@@ -65,6 +66,9 @@ func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backup
 	reset, err := q.ResetSiteAdminCredentials(ctx, controldb.ResetSiteAdminCredentialsParams{PasswordHash: passwordHash, TotpSecretEnc: totpSecretEnc, SiteID: siteID, Name: name})
 	if err == nil {
 		err = q.DeleteSiteAdminPasskeys(ctx, controldb.DeleteSiteAdminPasskeysParams{SiteID: siteID, Name: name})
+	}
+	if err == nil {
+		err = q.DisableOtherSiteAdmins(ctx, controldb.DisableOtherSiteAdminsParams{SiteID: siteID, Name: name})
 	}
 	if err != nil {
 		return nil, err

@@ -123,6 +123,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSitesStmt, err = db.PrepareContext(ctx, deleteSites); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSites: %w", err)
 	}
+	if q.disableOtherSiteAdminsStmt, err = db.PrepareContext(ctx, disableOtherSiteAdmins); err != nil {
+		return nil, fmt.Errorf("error preparing query DisableOtherSiteAdmins: %w", err)
+	}
 	if q.disableSiteStmt, err = db.PrepareContext(ctx, disableSite); err != nil {
 		return nil, fmt.Errorf("error preparing query DisableSite: %w", err)
 	}
@@ -519,6 +522,11 @@ func (q *Queries) Close() error {
 	if q.deleteSitesStmt != nil {
 		if cerr := q.deleteSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSitesStmt: %w", cerr)
+		}
+	}
+	if q.disableOtherSiteAdminsStmt != nil {
+		if cerr := q.disableOtherSiteAdminsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing disableOtherSiteAdminsStmt: %w", cerr)
 		}
 	}
 	if q.disableSiteStmt != nil {
@@ -973,6 +981,7 @@ type Queries struct {
 	deleteSiteIdentityPasskeysStmt          *sql.Stmt
 	deleteSitePushCredentialsStmt           *sql.Stmt
 	deleteSitesStmt                         *sql.Stmt
+	disableOtherSiteAdminsStmt              *sql.Stmt
 	disableSiteStmt                         *sql.Stmt
 	disableSitesStmt                        *sql.Stmt
 	finishConnectorBackfillStmt             *sql.Stmt
@@ -1088,6 +1097,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteSiteIdentityPasskeysStmt:          q.deleteSiteIdentityPasskeysStmt,
 		deleteSitePushCredentialsStmt:           q.deleteSitePushCredentialsStmt,
 		deleteSitesStmt:                         q.deleteSitesStmt,
+		disableOtherSiteAdminsStmt:              q.disableOtherSiteAdminsStmt,
 		disableSiteStmt:                         q.disableSiteStmt,
 		disableSitesStmt:                        q.disableSitesStmt,
 		finishConnectorBackfillStmt:             q.finishConnectorBackfillStmt,

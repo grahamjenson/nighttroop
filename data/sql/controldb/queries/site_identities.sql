@@ -72,6 +72,13 @@ UPDATE site_identities SET password_hash = sqlc.arg('PasswordHash'), totp_secret
     credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') AND role = 'admin';
 
+-- A recovery turns off the site's other admins and refuses their JWTs, so one that whoever had the old credentials
+-- added cannot take the site back
+-- name: DisableOtherSiteAdmins :exec
+UPDATE site_identities SET enabled = 0, updated_by_identity_name = 'backup key',
+    credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE site_id = sqlc.arg('SiteID') AND name != sqlc.arg('Name') AND role = 'admin';
+
 -- name: UpdateSiteIdentityEnabled :exec
 UPDATE site_identities
 SET
