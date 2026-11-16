@@ -375,6 +375,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The usage page graphs the CPU, memory, goroutines and DB disk of each check. Hovering a graph shows the check nearest
   the pointer, and how long ago it was.
 - The usage page graphs mean CPU (100% a core), memory and DB disk used, each with a dashed line at its alert level.
+- The graphs show the last hour. Toggles above them show the **Last hour**, **Last day** or **Last 3 days**.
+- The page refresh keeps the range. If the `resources` value in the URL is not known, the graphs show the last hour.
 
 ## Site
 

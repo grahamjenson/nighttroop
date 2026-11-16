@@ -30,6 +30,8 @@ type Usage struct {
 	// runs, and the levels memory and disk warn at
 	ResourceReadings   []ResourceReading `json:"resource_readings"`
 	ResourcesSince     int64             `json:"resources_since"`
+	// ResourcesRange is how far back the graphs show, one of ResourceRanges, as asked for with the resources query value
+	ResourcesRange     string            `json:"resources_range"`
 	MemoryAlertPercent int               `json:"memory_alert_percent"`
 	DiskAlertPercent   int               `json:"disk_alert_percent"`
 
@@ -53,4 +55,21 @@ type ResourceReading struct {
 // NowTime is Now as a time
 func (u Usage) NowTime() time.Time {
 	return time.UnixMilli(u.Now)
+}
+
+// ResourceRanges are how far back the resource graphs can show, by their resources query value, the first the default.
+// None is longer than the resource checks are kept.
+var ResourceRanges = []struct {
+	Name string
+	Back time.Duration
+}{{"hour", time.Hour}, {"day", 24 * time.Hour}, {"3days", 3 * 24 * time.Hour}}
+
+// ResourceRange is the range named, or the default for any other name
+func ResourceRange(name string) (string, time.Duration) {
+	for _, r := range ResourceRanges {
+		if r.Name == name {
+			return r.Name, r.Back
+		}
+	}
+	return ResourceRanges[0].Name, ResourceRanges[0].Back
 }
