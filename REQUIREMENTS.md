@@ -773,6 +773,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   unit, stays together), except notes.
 - Every table is close set: small headings on a grey band, and each row as tall as its text or its button.
 - A table has no border of its own. Its panel is its frame.
+- A row that opens its details has a pointer, and the accent colour while pointed at or focused. Other rows, and the
+  headings, do not change.
 - Add or delete updates the "Showing" count without a reload. Deleting the last record shows the empty table.
 - An empty table says so in its middle, under an icon. This is the same on every table.
 

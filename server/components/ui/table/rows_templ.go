@@ -52,7 +52,7 @@ func ModalRow(id, path string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Row(RowProps{ID: id, Class: "cursor-pointer", Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Row(RowProps{ID: id, Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -9,7 +9,7 @@ import (
 
 // ModalRow opens path in #modal-container when clicked, or on Enter; its children are the cells
 templ ModalRow(id, path string) {
-	@Row(RowProps{ID: id, Class: "cursor-pointer", Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}) {
+	@Row(RowProps{ID: id, Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}) {
 		{ children... }
 	}
 }

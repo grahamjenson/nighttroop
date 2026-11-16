@@ -2370,16 +2370,6 @@
       }
     }
   }
-  .hover\:bg-muted\/50 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--muted);
-        @supports (color: color-mix(in lab, red, red)) {
-          background-color: color-mix(in oklab, var(--muted) 50%, transparent);
-        }
-      }
-    }
-  }
   .hover\:bg-primary\/90 {
     &:hover {
       @media (hover: hover) {
@@ -2547,14 +2537,6 @@
   .focus-visible\:bg-accent {
     &:focus-visible {
       background-color: var(--accent);
-    }
-  }
-  .focus-visible\:bg-muted\/50 {
-    &:focus-visible {
-      background-color: var(--muted);
-      @supports (color: color-mix(in lab, red, red)) {
-        background-color: color-mix(in oklab, var(--muted) 50%, transparent);
-      }
     }
   }
   .focus-visible\:text-accent-foreground {

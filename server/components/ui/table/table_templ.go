@@ -471,8 +471,9 @@ func Footer(props ...FooterProps) templ.Component {
 	})
 }
 
-// Row is a table row. One with hx-get, which opens its details when clicked, can also be tabbed to and opened with
-// Enter, though not by Enter on a button in it, such as its delete.
+// Row is a table row. One with hx-get, which opens its details when clicked, shows it can be: it has a pointer and
+// the theme's accent while pointed at or focused, where a row that opens nothing does not change. It can also be
+// tabbed to and opened with Enter, though not by Enter on a button in it, such as its delete.
 func Row(props ...RowProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -512,7 +513,7 @@ func Row(props ...RowProps) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 135, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 136, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 				if templ_7745c5c3_Err != nil {
@@ -528,8 +529,8 @@ func Row(props ...RowProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 = []any{utils.TwMerge(
-				"border-b transition-colors hover:bg-muted/50",
-				utils.If(opens, "focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"),
+				"border-b transition-colors",
+				utils.If(opens, "cursor-pointer hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"),
 				utils.If(p.Selected, "data-[tui-table-state-selected]:bg-muted"),
 				p.Class,
 			),
@@ -634,7 +635,7 @@ func Head(props ...HeadProps) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 168, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 169, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 				if templ_7745c5c3_Err != nil {
@@ -740,7 +741,7 @@ func Cell(props ...CellProps) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 190, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 191, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 				if templ_7745c5c3_Err != nil {
@@ -846,7 +847,7 @@ func Caption(props ...CaptionProps) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 212, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 213, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 				if templ_7745c5c3_Err != nil {
