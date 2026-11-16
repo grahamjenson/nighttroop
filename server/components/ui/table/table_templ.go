@@ -220,7 +220,7 @@ func Header(props ...HeaderProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var7 = []any{utils.TwMerge("[&_tr]:border-b", p.Class)}
+			var templ_7745c5c3_Var7 = []any{utils.TwMerge("bg-gray-50 [&_tr]:border-b", p.Class)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var7...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -593,7 +593,8 @@ func Row(props ...RowProps) templ.Component {
 	})
 }
 
-// Head and Cell keep their text on one line, so a time or a value and its unit never break apart on a phone; a table
+// Head and Cell are close set, as a dashboard's table is, so a page shows more rows: a heading is small on a
+// grey band, and a row is as tall as its text. They keep their text on one line, so a time or a value and its unit never break apart on a phone; a table
 // too wide for its card scrolls sideways instead. A cell of free text, like notes, can wrap with whitespace-normal.
 func Head(props ...HeadProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -633,7 +634,7 @@ func Head(props ...HeadProps) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 167, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 168, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 				if templ_7745c5c3_Err != nil {
@@ -649,7 +650,7 @@ func Head(props ...HeadProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var23 = []any{utils.TwMerge(
-				"h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-muted-foreground",
+				"h-8 px-3 text-left align-middle text-xs font-semibold whitespace-nowrap text-gray-500",
 				"[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
 				p.Class,
 			),
@@ -739,7 +740,7 @@ func Cell(props ...CellProps) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 189, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 190, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 				if templ_7745c5c3_Err != nil {
@@ -755,7 +756,7 @@ func Cell(props ...CellProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var27 = []any{utils.TwMerge(
-				"p-2 align-middle whitespace-nowrap",
+				"px-3 py-1.5 align-middle whitespace-nowrap",
 				"[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
 				p.Class,
 			),
@@ -845,7 +846,7 @@ func Caption(props ...CaptionProps) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 211, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 212, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 				if templ_7745c5c3_Err != nil {

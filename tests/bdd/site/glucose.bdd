@@ -29,6 +29,9 @@ ASSERT_VISIBLE #glucose_readings_table > div:has(h1) > #site--glucose--add
 // It has a plus icon, and the table is in a white panel on the page's grey canvas
 ASSERT_DRAWN #site--glucose--add > svg
 ASSERT_VISIBLE .panel #glucoseReadingsTable
+// Its headings are small on a grey band, and its rows are close set
+ASSERT_VISIBLE #glucoseReadingsTable thead.bg-gray-50 th.text-xs:text-is("Time")
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> td[class~="py-1.5"] >> nth=0
 // A row's delete icon is grey, so a table is not a column of red, and turns red as it is pointed at
 ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]:has(svg.text-gray-400)
 HOVER #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]

@@ -749,6 +749,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Add (the main action): right of the title, below it on a phone. Same on presets and push credentials.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
+- Every table is close set: small headings on a grey band, and each row as tall as its text or its button.
 - Add or delete updates the "Showing" count without a reload. Deleting the last record shows the empty table.
 
 #### Confirmation dialogs

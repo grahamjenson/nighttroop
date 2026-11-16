@@ -16,7 +16,7 @@ templ ModalRow(id, path string) {
 
 // DeleteCell is a cell with a DeleteButton
 templ DeleteCell(id, path, confirm string) {
-	@Cell() {
+	@Cell(CellProps{Class: "py-0.5"}) {
 		<div class="flex justify-end">
 			@DeleteButton(id, path, confirm)
 		</div>
@@ -30,6 +30,7 @@ templ DeleteButton(id, path, confirm string) {
 		ID:      id,
 		Variant: button.VariantGhost,
 		Size:    button.SizeIcon,
+		Class:   "size-7",
 		Attributes: templ.Attributes{
 			"title":                i18n.T(ctx, "common.table.delete"),
 			"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
