@@ -273,7 +273,10 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	// A file has many connections, so a write transaction takes the write lock when it begins (_txlock=immediate): a
 	// write between its read and its own write would otherwise fail it at once with SQLITE_BUSY, as the busy timeout
 	// cannot wait for a snapshot that is already stale. Read only transactions still begin deferred.
-	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1&_txlock=immediate", path, -cacheSize)
+	//
+	// Each connection's page cache is cacheSize KiB, set with a PRAGMA, as the driver reads no _cache_size: a site's
+	// connection kept SQLite's default of 2MiB, not 100KiB, which under load held about 0.45MB more for each site.
+	dsn := fmt.Sprintf("file:%s?_pragma=cache_size(%v)&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1&_txlock=immediate", path, -cacheSize)
 
 	sqldb, err := sqltiming.Open("sitedb", dsn)
 	if err != nil {
