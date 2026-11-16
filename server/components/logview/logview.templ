@@ -88,7 +88,7 @@ templ Page(p PageProps) {
 				{ p.Description }
 			}
 		}
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+		<section class="panel p-4">
 			{ children... }
 			@pager.Pager(pager.Props{ID: p.Pager, Path: p.Path, Count: p.Count, Skip: p.Skip, Limit: p.Limit})
 		</section>

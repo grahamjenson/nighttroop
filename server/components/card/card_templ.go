@@ -71,7 +71,7 @@ func Card(p Props) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var3 = []any{"rounded-xl border bg-white p-4 shadow-sm", templ.KV("border-gray-200", !p.Danger), templ.KV("border-red-200", p.Danger)}
+			var templ_7745c5c3_Var3 = []any{"panel p-4", templ.KV("border-red-200", p.Danger)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var3...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

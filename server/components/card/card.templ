@@ -20,7 +20,7 @@ templ Card(p Props) {
 		if p.ID != "" {
 			id={ p.ID }
 		}
-		class={ "rounded-xl border bg-white p-4 shadow-sm", templ.KV("border-gray-200", !p.Danger), templ.KV("border-red-200", p.Danger) }
+		class={ "panel p-4", templ.KV("border-red-200", p.Danger) }
 	>
 		{{ header := p.Title != "" || p.Action != nil }}
 		if header {

@@ -16,8 +16,8 @@ ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormusersTable"]:
 ASSERT_VISIBLE #identities_table label[for="select-form-createIdentityFormusersTable"]:has-text("Role")
 ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormdevicesTable"]:has-text("Name")
 // The role cards are neutral, as red, blue and green are for errors, information and success
-ASSERT_VISIBLE #identities_table .border-gray-200>h2.text-brand-night:text-is("Admin")
-ASSERT_VISIBLE #identities_table .border-gray-200>h2.text-brand-night:text-is("Device")
+ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Admin")
+ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Device")
 ASSERT_NOT_VISIBLE #identities_table .bg-red-50
 SCREENSHOT identities
 

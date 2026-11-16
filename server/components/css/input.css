@@ -61,8 +61,23 @@
         background: var(--color-foreground);
     }
 
+    /* The page is a grey canvas, so its white panels stand out as a dashboard's widgets do */
     body {
-        @apply bg-background text-foreground;
+        @apply bg-gray-100 text-foreground;
+    }
+}
+
+/* A white box on the page's canvas, flat with a thin border: every card, tile and table's section */
+@utility panel {
+    @apply rounded-md border border-gray-200 bg-white;
+}
+
+/* A row of nav.Toggle buttons joined in one control, as a dashboard's time range is */
+@utility segmented {
+    @apply panel inline-flex flex-wrap items-center gap-0.5 p-0.5;
+
+    & > button {
+        @apply h-7 border-0 shadow-none;
     }
 }
 /* Toast stack. #toaster is the fixed, top-centre column and each toast in it

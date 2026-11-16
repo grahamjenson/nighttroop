@@ -641,7 +641,7 @@ func settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemod
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var26 = []any{"grid grid-cols-1 gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1)}
+			var templ_7745c5c3_Var26 = []any{"panel grid grid-cols-1 gap-2 p-4 sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var26...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

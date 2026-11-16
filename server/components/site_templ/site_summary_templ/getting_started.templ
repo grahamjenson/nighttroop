@@ -91,7 +91,7 @@ templ GettingStarted() {
 
 // step is one numbered card of the guide, or unnumbered when it can be done in any order
 templ step(id, number string, ic func(...icon.Props) templ.Component, title string) {
-	<li id={ id } class="flex flex-col rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-700 shadow-sm">
+	<li id={ id } class="panel flex flex-col p-5 text-sm text-gray-700">
 		<div class="mb-3 flex items-center gap-3">
 			<span class="flex size-9 items-center justify-center rounded-full bg-brand-gold/20 text-brand-night">
 				@ic(icon.Props{Class: "size-5"})

@@ -116,7 +116,8 @@ templ Summary(summary *sitemodels.Summary) {
 				</div>
 				<span id="site--summary--hours" class="text-sm text-gray-500">{ i18n.T(ctx, "site.summary.last_hours", i18n.Data{"Hours": summary.Hours}) }</span>
 			</div>
-			<div class="flex gap-1">
+			<div class="segmented">
+				@icon.Clock(icon.Props{Class: "mx-1.5 size-4 text-gray-500"})
 				for _, r := range ranges {
 					@nav.Toggle(fmt.Sprintf("site--summary--range-%d", r.Hours), fmt.Sprintf("/?hours=%d", r.Hours), button.SizeSm, summary.Hours == r.Hours) {
 						{ i18n.T(ctx, r.Label) }
@@ -145,14 +146,13 @@ templ Summary(summary *sitemodels.Summary) {
 
 // summaryContent is everything in the summary below its header, which reloads as the summary's data changes
 templ summaryContent(summary *sitemodels.Summary) {
-	@glucoseHero(summary)
-	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+	// The latest glucose is two tiles wide and, in a wide window, two high, beside the two rows of tiles
+	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+		@glucoseHero(summary)
 		@stat.Tile("site--summary--iob", i18n.T(ctx, "site.summary.iob"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
 		@stat.Tile("site--summary--cob", i18n.T(ctx, "site.summary.cob"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
 		@stat.Tile("site--summary--reservoir", i18n.T(ctx, "site.summary.reservoir"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
 		@stat.Tile("site--summary--phone-battery", i18n.T(ctx, "site.summary.phone_battery"), loopValue(ctx, summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
-	</div>
-	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 		@stat.Tile("site--summary--time-in-range", i18n.T(ctx, "site.summary.time_in_range"), display.Percent(summary.Today.TimeInRange), icon.Target) {
 			@previous("site--summary--time-in-range--yesterday", i18n.T(ctx, "site.summary.yesterday"), display.Percent(summary.Yesterday.TimeInRange))
 			@previous("site--summary--time-in-range--last-week", i18n.T(ctx, "site.summary.last_week"), display.Percent(summary.LastWeek.TimeInRange))
@@ -168,7 +168,7 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@stat.Tile("site--summary--sensor-started", i18n.T(ctx, "site.summary.sensor_started"), ago(ctx, summary.SensorStartedAt), icon.Activity)
 		@stat.Tile("site--summary--site-changed", i18n.T(ctx, "site.summary.site_changed"), ago(ctx, summary.SiteChangedAt), icon.Bandage)
 	</div>
-	@card.Card(card.Props{}) {
+	@card.Card(card.Props{Title: i18n.T(ctx, "site.summary.graph.title")}) {
 		@Graph(summary)
 	}
 	<div class="grid gap-4 lg:grid-cols-2">
@@ -219,7 +219,7 @@ func staleTrigger(ctx context.Context, summary *sitemodels.Summary, now time.Tim
 }
 
 templ glucoseHero(summary *sitemodels.Summary) {
-	<div id="site--summary--glucose" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+	<div id="site--summary--glucose" class="panel col-span-2 flex flex-wrap items-center p-4 sm:col-span-4 lg:col-span-2 lg:row-span-2">
 		if len(summary.GlucoseReadings) > 0 {
 			{{ latest := summary.GlucoseReadings[0] }}
 			{{ outOfRange, stale := display.GlucoseRange(latest.Reading, summary.RangeLow, summary.RangeHigh), staleFor(ctx, latest.OccurredAt, time.Now()) }}
@@ -232,7 +232,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 						}
 					}
 				</div>
-				<div class="flex items-baseline gap-2">
+				<div class="flex flex-wrap items-baseline gap-2">
 					// An old reading is grey, as it may no longer be the glucose
 					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseColours[outOfRange].Text, stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(ctx, latest.Reading, latest.Units) }</span>
 					<span class="text-lg text-gray-500">{ display.Units(latest.Units) }</span>
@@ -269,7 +269,7 @@ templ previous(id, label, text string) {
 templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 	<button
 		id={ "site--summary--device--" + status.ID }
-		class="rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm hover:bg-gray-50"
+		class="panel p-4 text-left hover:border-primary"
 		hx-get={ "/data/device-status/" + status.ID }
 		hx-target="#modal-container"
 		hx-swap="innerHTML"

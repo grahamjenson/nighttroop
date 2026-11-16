@@ -26,6 +26,9 @@ ASSERT_VISIBLE #site--glucose--days
 ASSERT_NOT_VISIBLE #site--glucose--days h2:text-is("Last 1 days")
 // Adding a reading is the page's main action, beside its title rather than alone in a row above the table
 ASSERT_VISIBLE #glucose_readings_table > div:has(h1) > #site--glucose--add
+// It has a plus icon, and the table is in a white panel on the page's grey canvas
+ASSERT_DRAWN #site--glucose--add > svg
+ASSERT_VISIBLE .panel #glucoseReadingsTable
 // A row's delete icon is grey, so a table is not a column of red, and turns red as it is pointed at
 ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]:has(svg.text-gray-400)
 HOVER #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]
