@@ -232,18 +232,20 @@ DELETE FROM glucose_readings WHERE id = ?;
 
 -- SoftDeleteGlucoseReadingsByType deletes at most Limit of the type, the newest first
 -- name: SoftDeleteGlucoseReadingsByType :execresult
+-- Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id IN (
-    SELECT g.id FROM glucose_readings g WHERE g.reading_type = sqlc.arg('ReadingType') AND g.deleted_at IS NULL
+    SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(sqlc.arg('ReadingType') AS TEXT) AND g.deleted_at IS NULL
     ORDER BY g.occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER)
 );
 
 -- HardDeleteGlucoseReadingsByType deletes at most Limit of the type, soft deleted or not, the newest first
 -- name: HardDeleteGlucoseReadingsByType :execresult
+-- Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 DELETE FROM glucose_readings WHERE id IN (
-    SELECT g.id FROM glucose_readings g WHERE g.reading_type = sqlc.arg('ReadingType')
+    SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(sqlc.arg('ReadingType') AS TEXT)
     ORDER BY g.occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER)
 );

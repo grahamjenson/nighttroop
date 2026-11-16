@@ -764,7 +764,7 @@ LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
-WHERE eg.id = ? AND (CAST(?2 AS BOOL) = TRUE OR eg.deleted_at IS NULL)
+WHERE eg.id = CAST(?1 AS TEXT) AND (CAST(?2 AS BOOL) = TRUE OR eg.deleted_at IS NULL)
 `
 
 type GetEventGroupParams struct {
@@ -784,6 +784,7 @@ type GetEventGroupRow struct {
 	NotificationEventsVw NotificationEventsVw
 }
 
+// Its ID is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*GetEventGroupRow, error) {
 	row := q.queryRow(ctx, q.getEventGroupStmt, getEventGroup, arg.ID, arg.IncludeDeleted)
 	var i GetEventGroupRow
@@ -1023,7 +1024,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 }
 
 const getEventGroupOfTypeWithoutJoins = `-- name: GetEventGroupOfTypeWithoutJoins :many
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, sent_hash, pump_id, pump_serial, pump_type, ending_pump_id, sensor_code, transmitter_id, bolus_calculator_result_json, sync_identifier, client_created_at, emulated_treatment_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name from event_groups WHERE group_type = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, sent_hash, pump_id, pump_serial, pump_type, ending_pump_id, sensor_code, transmitter_id, bolus_calculator_result_json, sync_identifier, client_created_at, emulated_treatment_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name from event_groups WHERE group_type = CAST(?1 AS TEXT) AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER)
 `
@@ -1034,6 +1035,7 @@ type GetEventGroupOfTypeWithoutJoinsParams struct {
 	Limit          int64
 }
 
+// Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEventGroupOfTypeWithoutJoinsParams) ([]*EventGroup, error) {
 	rows, err := q.query(ctx, q.getEventGroupOfTypeWithoutJoinsStmt, getEventGroupOfTypeWithoutJoins, arg.GroupType, arg.IncludeDeleted, arg.Limit)
 	if err != nil {

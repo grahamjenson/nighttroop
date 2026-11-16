@@ -466,7 +466,7 @@ func (q *Queries) HardDeleteGlucoseReading(ctx context.Context, arg HardDeleteGl
 
 const hardDeleteGlucoseReadingsByType = `-- name: HardDeleteGlucoseReadingsByType :execresult
 DELETE FROM glucose_readings WHERE id IN (
-    SELECT g.id FROM glucose_readings g WHERE g.reading_type = ?1
+    SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(?1 AS TEXT)
     ORDER BY g.occurred_at DESC LIMIT CAST(?2 AS INTEGER)
 )
 `
@@ -477,6 +477,7 @@ type HardDeleteGlucoseReadingsByTypeParams struct {
 }
 
 // HardDeleteGlucoseReadingsByType deletes at most Limit of the type, soft deleted or not, the newest first
+// Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardDeleteGlucoseReadingsByTypeParams) (sql.Result, error) {
 	return q.exec(ctx, q.hardDeleteGlucoseReadingsByTypeStmt, hardDeleteGlucoseReadingsByType, arg.ReadingType, arg.Limit)
 }
@@ -790,7 +791,7 @@ UPDATE glucose_readings SET
     updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?1
 WHERE id IN (
-    SELECT g.id FROM glucose_readings g WHERE g.reading_type = ?2 AND g.deleted_at IS NULL
+    SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(?2 AS TEXT) AND g.deleted_at IS NULL
     ORDER BY g.occurred_at DESC LIMIT CAST(?3 AS INTEGER)
 )
 `
@@ -802,6 +803,7 @@ type SoftDeleteGlucoseReadingsByTypeParams struct {
 }
 
 // SoftDeleteGlucoseReadingsByType deletes at most Limit of the type, the newest first
+// Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) SoftDeleteGlucoseReadingsByType(ctx context.Context, arg SoftDeleteGlucoseReadingsByTypeParams) (sql.Result, error) {
 	return q.exec(ctx, q.softDeleteGlucoseReadingsByTypeStmt, softDeleteGlucoseReadingsByType, arg.UpdatedByIdentityName, arg.ReadingType, arg.Limit)
 }

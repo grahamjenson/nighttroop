@@ -58,8 +58,9 @@ ORDER BY created_by_device_name
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: DeviceReportsForDevice :many
+-- Its device is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 SELECT * FROM device_reports
-WHERE deleted_at IS NULL AND created_by_device_name = sqlc.arg('Device')
+WHERE deleted_at IS NULL AND created_by_device_name = CAST(sqlc.narg('Device') AS TEXT)
 AND occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
 AND (sqlc.narg('Before') IS NULL OR occurred_at < sqlc.narg('Before') OR id < CAST(sqlc.narg('BeforeID') AS TEXT))
 ORDER BY occurred_at DESC, id DESC

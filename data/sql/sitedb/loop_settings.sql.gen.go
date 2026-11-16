@@ -66,7 +66,7 @@ func (q *Queries) GetLoopSettings(ctx context.Context, arg GetLoopSettingsParams
 
 const getPreviousLoopSettings = `-- name: GetPreviousLoopSettings :one
 SELECT id, app, source, settings_json, first_seen_at, last_seen_at, created_by_device_name, created_at FROM loop_settings
-WHERE app = ?1 AND (last_seen_at < ?2 OR (last_seen_at = ?2 AND id > ?3))
+WHERE app = CAST(?1 AS TEXT) AND (last_seen_at < CAST(?2 AS INTEGER) OR (last_seen_at = CAST(?2 AS INTEGER) AND id > ?3))
 ORDER BY last_seen_at DESC, id
 LIMIT 1
 `
@@ -79,6 +79,7 @@ type GetPreviousLoopSettingsParams struct {
 
 // The set of the same app last seen before this one, the next of the app's down the Loop Settings page, which its
 // changes are shown from
+// Its app and time are CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) GetPreviousLoopSettings(ctx context.Context, arg GetPreviousLoopSettingsParams) (*LoopSetting, error) {
 	row := q.queryRow(ctx, q.getPreviousLoopSettingsStmt, getPreviousLoopSettings, arg.App, arg.LastSeenAt, arg.ID)
 	var i LoopSetting

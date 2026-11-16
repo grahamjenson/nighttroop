@@ -92,7 +92,8 @@ RETURNING *;
 SELECT * from event_groups WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL);
 
 -- name: GetEventGroupOfTypeWithoutJoins :many
-SELECT * from event_groups WHERE group_type = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
+-- Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
+SELECT * from event_groups WHERE group_type = CAST(sqlc.arg('GroupType') AS TEXT) AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
@@ -138,6 +139,7 @@ FROM event_groups WHERE deleted_at IS NULL;
 
 
 -- name: GetEventGroup :one
+-- Its ID is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
@@ -162,7 +164,7 @@ LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
 LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
-WHERE eg.id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR eg.deleted_at IS NULL);
+WHERE eg.id = CAST(sqlc.arg('ID') AS TEXT) AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR eg.deleted_at IS NULL);
 
 
 

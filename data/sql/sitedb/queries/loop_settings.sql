@@ -22,8 +22,9 @@ DELETE FROM loop_settings WHERE id = ?;
 -- name: GetPreviousLoopSettings :one
 -- The set of the same app last seen before this one, the next of the app's down the Loop Settings page, which its
 -- changes are shown from
+-- Its app and time are CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 SELECT * FROM loop_settings
-WHERE app = sqlc.arg('App') AND (last_seen_at < sqlc.arg('LastSeenAt') OR (last_seen_at = sqlc.arg('LastSeenAt') AND id > sqlc.arg('ID')))
+WHERE app = CAST(sqlc.arg('App') AS TEXT) AND (last_seen_at < CAST(sqlc.arg('LastSeenAt') AS INTEGER) OR (last_seen_at = CAST(sqlc.arg('LastSeenAt') AS INTEGER) AND id > sqlc.arg('ID')))
 ORDER BY last_seen_at DESC, id
 LIMIT 1;
 

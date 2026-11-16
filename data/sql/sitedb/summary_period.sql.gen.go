@@ -113,7 +113,7 @@ func (q *Queries) MarkSummariesStale(ctx context.Context, arg MarkSummariesStale
 const searchSummaryPeriods = `-- name: SearchSummaryPeriods :many
 SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, created_at, updated_at FROM summary_period
 WHERE
-    period = ?1
+    period = CAST(?1 AS TEXT)
     AND (CAST(?2 AS TEXT) IS NULL OR date >= ?2)
     AND (CAST(?3 AS TEXT) IS NULL OR date <= ?3)
 ORDER BY date DESC
@@ -128,6 +128,7 @@ type SearchSummaryPeriodsParams struct {
 	Limit   int64
 }
 
+// Its period is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) SearchSummaryPeriods(ctx context.Context, arg SearchSummaryPeriodsParams) ([]*SummaryPeriod, error) {
 	rows, err := q.query(ctx, q.searchSummaryPeriodsStmt, searchSummaryPeriods,
 		arg.Period,
