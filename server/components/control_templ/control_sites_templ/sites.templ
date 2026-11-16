@@ -345,14 +345,14 @@ templ SitePage(page *controlmodels.SitePage) {
 			@stat.Tile("control--site--backed-up", i18n.T(ctx, "control.site.backed_up"), display.Ago(ctx, site.BackedUpAt, time.Now()), icon.DatabaseBackup)
 			@stat.Tile("control--site--backup-uploaded", i18n.T(ctx, "control.site.backup_uploaded"), display.Ago(ctx, site.BackupUploadedAt, time.Now()), icon.CloudUpload)
 		</div>
-		@stat.Section(i18n.T(ctx, "control.site.identities"), "", "", "") {
+		@card.Card(card.Props{Title: i18n.T(ctx, "control.site.identities"), Scroll: true}) {
 			@SiteIdentities(site.ID, page.Identities)
 		}
 		<div class="grid gap-4 lg:grid-cols-2">
-			@stat.Section(i18n.T(ctx, "control.site.latest_events"), "control--site--events--all", i18n.T(ctx, "control.site.see_all"), "/events?site_id="+site.ID) {
+			@card.Card(card.Props{Title: i18n.T(ctx, "control.site.latest_events"), Scroll: true, Action: stat.Link("control--site--events--all", i18n.T(ctx, "control.site.see_all"), "/events?site_id="+site.ID)}) {
 				@control_logs_templ.EventsList("control--site--events--table", page.Events, false)
 			}
-			@stat.Section(i18n.T(ctx, "control.site.latest_errors"), "control--site--errors--all", i18n.T(ctx, "control.site.see_all"), "/errors?site_id="+site.ID) {
+			@card.Card(card.Props{Title: i18n.T(ctx, "control.site.latest_errors"), Scroll: true, Action: stat.Link("control--site--errors--all", i18n.T(ctx, "control.site.see_all"), "/errors?site_id="+site.ID)}) {
 				@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors, false)
 			}
 		</div>
