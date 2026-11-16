@@ -229,10 +229,10 @@ func TestTruncateClearsOldLoopStatuses(t *testing.T) {
 
 	require.NoError(t, controlDB.TruncateSites(ctx))
 	for device, status := range statuses {
-		require.JSONEq(t, status[1], *report(device+"-old").LoopStatusJson, "%s's status over a day old has no predictions", device)
+		require.JSONEq(t, status[1], *report(device + "-old").LoopStatusJson, "%s's status over a day old has no predictions", device)
 		require.Equal(t, new(1.2), report(device+"-old").LoopIob, "%s's IOB extracted from it is kept", device)
-		require.JSONEq(t, status[0], *report(device+"-recent").LoopStatusJson, "%s's status under a day old is kept whole", device)
-		require.JSONEq(t, status[0], *report(device+"-newest").LoopStatusJson, "%s's newest is kept whole", device)
+		require.JSONEq(t, status[0], *report(device + "-recent").LoopStatusJson, "%s's status under a day old is kept whole", device)
+		require.JSONEq(t, status[0], *report(device + "-newest").LoopStatusJson, "%s's newest is kept whole", device)
 	}
 	require.Equal(t, updatedAt, report("aaps-old").UpdatedAt, "clients syncing by srvModified do not fetch it again")
 	require.JSONEq(t, loopCleared, *report("stopped-old").LoopStatusJson)
@@ -496,10 +496,8 @@ func TestNewControlDBOpensEverySite(t *testing.T) {
 func TestCreateSiteWhenIdentitiesFail(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, siteID := t.Context(), "failsite"
-	// An identity already holding the device's name makes the site's second identity fail, after the site and its admin
-	// are written. Only a test's in-memory control DB, without foreign keys, lets it be made before its site.
-	require.NoError(t, controlDB.Queries.CreateSiteIdentity(ctx, controldb.CreateSiteIdentityParams{SiteID: siteID,
-		Name: consts.FIRST_PWD_NAME, PasswordHash: "taken", Role: consts.IdentityRoleDevicePWDPhone, CreatedByIdentityName: "test"}))
+	// The site's second identity fails, after the site and its admin are written
+	db.FailSiteIdentitiesAfterAdmin(t)
 
 	_, err := controlDB.CreateSiteWithID(ctx, siteID)
 	require.ErrorContains(t, err, "cannot create admin identity")

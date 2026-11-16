@@ -262,9 +262,11 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 // little memory, and they are kept for the life of the server.
 const maxIdleConns = 32
 
+// OpenInMemorySqliteDB opens a DB kept only in memory, as every DB is in tests, with its foreign keys checked as a
+// file's are (OpenSqliteDB), so a test fails on a row a site's DB would refuse
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 
-	sqldb, err := sqltiming.Open("controldb", ":memory:")
+	sqldb, err := sqltiming.Open("controldb", ":memory:?_foreign_keys=1")
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}

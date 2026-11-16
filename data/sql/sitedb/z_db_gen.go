@@ -297,9 +297,11 @@ const maxIdleConns = 4
 // connMaxIdleTime is how long a site DB's connection is kept unused before it is closed
 var connMaxIdleTime = 30 * time.Second
 
+// OpenInMemorySqliteDB opens a DB kept only in memory, as every DB is in tests, with its foreign keys checked as a
+// file's are (OpenSqliteDB), so a test fails on a row a site's DB would refuse
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 
-	sqldb, err := sqltiming.Open("sitedb", ":memory:")
+	sqldb, err := sqltiming.Open("sitedb", ":memory:?_foreign_keys=1")
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}

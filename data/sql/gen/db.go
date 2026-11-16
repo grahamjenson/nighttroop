@@ -361,9 +361,11 @@ var connMaxIdleTime = 30 * time.Second
 const maxIdleConns = 32
 {{ end }}
 
+// OpenInMemorySqliteDB opens a DB kept only in memory, as every DB is in tests, with its foreign keys checked as a
+// file's are (OpenSqliteDB), so a test fails on a row a site's DB would refuse
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 
-	sqldb, err := sqltiming.Open("{{ .PkgName }}", ":memory:")
+	sqldb, err := sqltiming.Open("{{ .PkgName }}", ":memory:?_foreign_keys=1")
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
