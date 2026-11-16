@@ -316,6 +316,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     and mean, 95th percentile, longest and total ms.
 - Go's profiles at `/debug/pprof/` (heap, CPU, goroutines and more) and runtime stats at `/debug/vars`, for a control
   admin only. A read only admin gets 403. A CPU profile or trace must end in under 30 seconds (example: `?seconds=20`).
+- At the top of the usage page, a control admin has two buttons, Profiles (pprof) and Runtime stats (vars). Each opens
+  its page in a new tab. A read only admin does not see them.
 
 ### Rate limits
 
