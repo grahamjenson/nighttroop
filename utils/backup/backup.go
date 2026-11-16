@@ -120,7 +120,11 @@ func writeCompressed(data []byte, path string) error {
 	// Once renamed there is nothing to remove
 	defer os.Remove(file.Name())
 	lz := lz4.NewWriter(file)
-	_, err = lz.Write(data)
+	// 64 KB blocks, not LZ4's default 4 MB: each backup held 4 MB buffers, 16% of the live heap under load on staging
+	err = lz.Apply(lz4.BlockSizeOption(lz4.Block64Kb))
+	if err == nil {
+		_, err = lz.Write(data)
+	}
 	if err == nil {
 		err = lz.Close()
 	}
