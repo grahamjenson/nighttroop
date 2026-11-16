@@ -91,7 +91,8 @@ WHERE profile_store_id = (
 ) ORDER BY is_default DESC;
 
 -- name: GetProfileStore :many
-SELECT * FROM profile_presets WHERE profile_store_id = ? ORDER BY is_default DESC;
+-- Its ID is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
+SELECT * FROM profile_presets WHERE profile_store_id = CAST(sqlc.arg('ProfileStoreID') AS TEXT) ORDER BY is_default DESC;
 
 
 

@@ -321,13 +321,14 @@ func (q *Queries) GetProfilePreset(ctx context.Context, arg GetProfilePresetPara
 }
 
 const getProfileStore = `-- name: GetProfileStore :many
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_id, remote_settings_id, entered_by, profile_name, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_presets WHERE profile_store_id = ? ORDER BY is_default DESC
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_id, remote_settings_id, entered_by, profile_name, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_presets WHERE profile_store_id = CAST(?1 AS TEXT) ORDER BY is_default DESC
 `
 
 type GetProfileStoreParams struct {
 	ProfileStoreID string
 }
 
+// Its ID is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) GetProfileStore(ctx context.Context, arg GetProfileStoreParams) ([]*ProfilePreset, error) {
 	rows, err := q.query(ctx, q.getProfileStoreStmt, getProfileStore, arg.ProfileStoreID)
 	if err != nil {

@@ -34,9 +34,10 @@ RETURNING *;
 SELECT * FROM summary_period WHERE period = ? AND date = ?;
 
 -- name: SearchSummaryPeriods :many
+-- Its period is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 SELECT * FROM summary_period
 WHERE
-    period = sqlc.arg('Period')
+    period = CAST(sqlc.arg('Period') AS TEXT)
     AND (CAST(sqlc.narg('DateGTE') AS TEXT) IS NULL OR date >= sqlc.narg('DateGTE'))
     AND (CAST(sqlc.narg('DateLTE') AS TEXT) IS NULL OR date <= sqlc.narg('DateLTE'))
 ORDER BY date DESC

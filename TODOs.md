@@ -112,6 +112,10 @@
        these on start, as the restore staging folders are
 
 1. Database:
+    1. P3: CAST the bare values that a column equals in the other DBs' queries, as the site DB's are (data/sql/README.md),
+       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities`, `GetBatchSitesToBackUp` and its
+       push queries, `jobsdb`'s `MarkJobsForConsumer`, `livedb`'s `IdentityAlarms`, and `logsdb`'s site and connector
+       searches
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
     1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
