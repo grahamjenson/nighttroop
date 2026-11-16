@@ -843,7 +843,7 @@ func (db *ControlDB) createSiteRows(ctx context.Context, subdomain string, backu
 	if _, err := q.CreateSite(ctx, controldb.CreateSiteParams{ID: subdomain, BackupKeyHash: backupKeyHash}); err != nil {
 		return nil, nil, nil, fmt.Errorf("cannot create site: %w", err)
 	}
-	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createSiteDefaultIdentities(ctx, q, subdomain)
+	adminIdentity, pwdIdentity, readOnlyIdentity, err := createSiteIdentities(db, ctx, q, subdomain)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("cannot create admin identity: %w", err)
 	}
@@ -852,6 +852,9 @@ func (db *ControlDB) createSiteRows(ctx context.Context, subdomain string, backu
 	}
 	return adminIdentity, pwdIdentity, readOnlyIdentity, nil
 }
+
+// createSiteIdentities makes a new site's first identities, in its transaction; a test makes it fail partway
+var createSiteIdentities = (*ControlDB).createSiteDefaultIdentities
 
 func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, q *controldb.Queries, subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
 	// Create Default Admin User
