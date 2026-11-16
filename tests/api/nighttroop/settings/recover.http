@@ -41,6 +41,20 @@ B {"name": "admin", "password": "{{ .recover.password }}", "totp": "123123"}
 ASSERT_STATUS 200
 SET jwt {{ .login_recovered_admin.token }}
 
+// An admin made with the old credentials, which could take the site back after a recovery
+NAME create_other_admin
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "other", "role": "admin"}
+ASSERT_STATUS 201
+
+NAME login_other_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "other", "password": "{{ .create_other_admin.result.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
 // The key works once, so using it again is refused, and the new one works in its place
 NAME recover_used_key
 POST http://{{ site }}/recover
@@ -60,6 +74,19 @@ NAME jwt_before_recovery_refused
 GET http://{{ site }}/logs/events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
+ASSERT_STATUS 401
+
+// The recovery disabled the other admin, so its JWT and its credentials are refused
+NAME other_admin_jwt_refused
+GET http://{{ site }}/logs/events
+H Authorization: Bearer {{ .login_other_admin.token }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME other_admin_login_refused
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "other", "password": "{{ .create_other_admin.result.password }}", "totp": "123123"}
 ASSERT_STATUS 401
 
 NAME login_after_recovery

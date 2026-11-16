@@ -4889,6 +4889,26 @@ func (m *DeleteSiteIdentityParams) SetID(v int64) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m DisableOtherSiteAdminsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DisableOtherSiteAdminsParams.
+func (m *DisableOtherSiteAdminsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetName returns the Name value.
+func (m DisableOtherSiteAdminsParams) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated DisableOtherSiteAdminsParams.
+func (m *DisableOtherSiteAdminsParams) SetName(v string) {
+	m.Name = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m GetSiteIdentityParams) GetSiteID() string {
 	return m.SiteID
 }

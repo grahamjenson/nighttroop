@@ -429,6 +429,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - The public **recover page** takes a site ID and backup key, then gives the admin a new password and TOTP, gives the
   site a new backup key, and removes the admin's passkeys (a lost device cannot sign in).
+- A recovery disables every other admin identity of the site, so an admin that an attacker added cannot take the
+  site back.
 - A key works one time. A wrong key is refused with no reason.
 - Rate limited for each IP, and for each site from all IPs at a much higher limit.
 - It opens `/welcome` on the site's address with the new credentials, as for a new site, less the phone and read only
