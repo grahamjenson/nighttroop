@@ -40,13 +40,14 @@ type Usage struct {
 }
 
 // ResourceReading is a check of the server's resources: its mean CPU since the check before and the longest it was at
-// 100%, and the memory and disk used, unset where they could not be read
+// 100%, the memory and disk used, unset where they could not be read, and the goroutines running
 type ResourceReading struct {
 	At               int64    `json:"at"`
 	CPUPercent       float64  `json:"cpu_percent"`
 	CPUPeggedSeconds int64    `json:"cpu_pegged_seconds"`
 	MemoryPercent    *float64 `json:"memory_percent"`
 	DiskPercent      *float64 `json:"disk_percent"`
+	Goroutines       int64    `json:"goroutines"`
 }
 
 // NowTime is Now as a time

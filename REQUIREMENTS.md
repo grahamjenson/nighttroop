@@ -145,7 +145,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - the five largest tables (with their indexes), darkest first, then Other;
   - a key: name, records in thousands, MB and share (for example, `7.9k · 6.11 MB · 54%`). Other sums its tables'
     records. Hover names a part;
-  - table sizes as last measured (at creation, by the 5-minute resource check after a size change, at truncate), not
+  - table sizes as last measured (at creation, by the 5-minute site measurement after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
 - Backup tiles: backup size in MB (`-` if no backup), time since the last backup copy, and time since the last upload
@@ -354,11 +354,13 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 ### Resource alerts
 
-- Every 5 minutes the server checks:
+- Every 30 seconds, from 10 seconds after start, the server checks:
   - memory, of the container's limit (else the machine's);
   - space used on the DBs' disk;
-  - how long the CPU stayed at 100% of every core, sampled every 5 seconds;
-  - each site's DB file and write-ahead log. DB size thus includes sync writes, and is at least its tables' sum.
+  - the goroutines running;
+  - the mean CPU, and how long it stayed at 100% of every core, sampled every 5 seconds.
+- Every 5 minutes it measures each site's DB file and write-ahead log. DB size thus includes sync writes, and is at
+  least its tables' sum.
 
 | Alert | Env variable | Default |
 | --- | --- | --- |
@@ -370,6 +372,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   totals (for example, "Disk high: 12.0 GB free of 954.0 GB."), and CPU seconds at 100%.
 - Events: "Resource high" when over, "Resource recovered" when back under.
 - The last 3 days of checks are kept while the server runs, and reset at restart.
+- The usage page graphs the CPU, memory, goroutines and DB disk of each check. Hovering a graph shows the check nearest
+  the pointer, and how long ago it was.
 - The usage page graphs mean CPU (100% a core), memory and DB disk used, each with a dashed line at its alert level.
 
 ## Site
@@ -1883,7 +1887,7 @@ harder:
 
 #### Abuse levels
 
-- Every 5 minutes, the resource check gives each open site an abuse score from 0 to 1, and keeps it on the site.
+- Every 5 minutes, the site measurement gives each open site an abuse score from 0 to 1, and keeps it on the site.
 - The score has these signals, each from 0 to 1:
   - Size: 0 at or under its DB size limit, 0.4 at 2 times it, 0.8 at 3 times it, 1 at 3.5 times it or more.
     - If the size or the limit is not known, this signal is 0.

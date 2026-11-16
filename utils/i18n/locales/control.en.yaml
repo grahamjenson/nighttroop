@@ -432,7 +432,7 @@ control:
     db_disk_used: "DB disk used"
     disk_free: "{{.FreeBytes}} free on disk"
     uptime: "Uptime"
-    resources: "Resources, checked every 5 minutes"
+    resources: "Resources, checked every 30 seconds"
     resources_empty: "Not checked yet since the server started."
     mean_cpu: "Mean CPU"
     memory_used: "Memory used"

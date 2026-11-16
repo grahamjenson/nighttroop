@@ -35,4 +35,5 @@ type ResourceReading struct {
 	MemoryTotalBytes *int64
 	DiskPercent      *float64
 	DiskTotalBytes   *int64
+	Goroutines       int64
 }

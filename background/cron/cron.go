@@ -17,6 +17,8 @@ import (
 // CronScheduler runs jobs on a schedule. Each run's context logs the job's name and a job_id of its own.
 type CronScheduler interface {
 	AddFunc(name string, spec string, cmd func(ctx context.Context) error)
+	// AddFuncSoon runs cmd soon after the scheduler starts, then every every
+	AddFuncSoon(name string, soon time.Duration, every time.Duration, cmd func(ctx context.Context) error)
 }
 
 type ACron struct {
@@ -43,6 +45,30 @@ func (c *ACron) AddFunc(name string, spec string, cmd func(ctx context.Context) 
 }
 
 func (c *ACron) RawAddFunc(name string, spec string, cmd func(ctx context.Context) error) (cron.EntryID, error) {
+	return c.Cron.AddFunc(spec, c.wrap(name, cmd))
+}
+
+func (c *ACron) AddFuncSoon(name string, soon time.Duration, every time.Duration, cmd func(ctx context.Context) error) {
+	c.Cron.Schedule(&soonThenEvery{soon: soon, every: every}, cron.FuncJob(c.wrap(name, cmd)))
+}
+
+// soonThenEvery is a schedule that runs first soon after the scheduler starts, then every every
+type soonThenEvery struct {
+	soon, every time.Duration
+	started     bool
+}
+
+func (s *soonThenEvery) Next(t time.Time) time.Time {
+	if !s.started {
+		s.started = true
+		return t.Add(s.soon)
+	}
+	return t.Add(s.every)
+}
+
+// wrap runs cmd as the job name, with its own context, recording each run, and skipping a run while the last is still
+// running
+func (c *ACron) wrap(name string, cmd func(ctx context.Context) error) func() {
 	// Skip if still running channel
 	var ch = make(chan struct{}, 1)
 	ch <- struct{}{}
@@ -94,5 +120,5 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func(ctx context.Contex
 
 	}
 
-	return c.Cron.AddFunc(spec, wrappedCmd)
+	return wrappedCmd
 }

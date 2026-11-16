@@ -45,6 +45,17 @@ ASSERT_VISIBLE #control--usage--queries td >> text=/^(site|control|jobs|logs|liv
 ASSERT_VISIBLE #control--usage--queries th >> text=/^p95 ms$/
 SCREENSHOT usage
 
+// The resources are checked every 30 seconds, from soon after the server starts: the CPU, memory, goroutines and DB
+// disk, each in a graph. Hovering a graph shows the check nearest the pointer, and how long ago it was.
+RUN_BACKGROUND_JOBS
+GOTO {{ .control_url }}/usage
+ASSERT_VISIBLE #control--usage--resources-goroutines
+ASSERT_VISIBLE #control--usage--resources-goroutines-latest >> text=/^\d+$/
+ASSERT_NOT_VISIBLE #control--usage--resources-cpu-hover-59
+HOVER #control--usage--resources-cpu-hover-59 >> xpath=..
+ASSERT_VISIBLE #control--usage--resources-cpu-hover-59 >> text=/^\d+% · \d+m ago$/
+SCREENSHOT usage_hover
+
 // At its top, an admin's buttons open Go's profiles (pprof) and runtime stats (vars) in a new tab
 ASSERT_VISIBLE #control--usage--pprof[href="/debug/pprof/"][target="_blank"]
 ASSERT_VISIBLE #control--usage--vars[href="/debug/vars"][target="_blank"]
