@@ -14,7 +14,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A site over 1.5 times its DB size limit (20 MB, so over 30720 KB) is truncated harder by the job every 10 minutes:
+// A site over 1.5 times its DB size limit (20 MB, so over 30720 KB) is truncated harder by each backup:
 // first the JSON that matters only while recent is cleared and device reports over 7 days old are deleted; then, only
 // if it is still over, readings and treatments over 90 days old are deleted, but the newest of each type, and its
 // summaries are kept. A site under 1.5 times its limit gets only the job's usual truncate.
@@ -90,7 +90,7 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 				measured++
 				return new(test.sizesKB[min(measured, len(test.sizesKB))-1])
 			})
-			require.NoError(t, controlDB.TruncateSites(ctx))
+			require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
 
 			gone := func(err error) bool {
 				if errors.Is(err, sql.ErrNoRows) {
@@ -171,7 +171,7 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 
 			// A run that changes nothing more logs nothing
 			measured = 0
-			require.NoError(t, controlDB.TruncateSites(ctx))
+			require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
 			truncated, err = controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_truncated"), Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, truncated, 1)

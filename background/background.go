@@ -9,7 +9,6 @@ import (
 	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/background/check_alarms"
 	"nighttroop.t1d.nz/background/check_resources"
-	"nighttroop.t1d.nz/background/truncate_sites"
 	"nighttroop.t1d.nz/background/connectors"
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
@@ -50,7 +49,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 	// Backup Control Jobs
 	backupControlJobManager.SetupCron(cron, queue)
 
-	// Backup Site Jobs
+	// Backup Site Jobs, which truncate each batch's sites before backing them up
 	backupSiteJobManager.SetupCron(cron)
 
 	// Summarise Jobs
@@ -58,8 +57,6 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Trim the logs DB's tables to their newest rows
 	trim_logs.SetupCron(cron, config, controlDB.Logs)
-	// Clear every site's raw JSON older than TRUNCATE_RAW_JSON_AFTER_DAYS, the largest part of its DB
-	truncate_sites.SetupCron(cron, controlDB)
 
 	// Check each identity's alarms on new readings, and periodically
 	check_alarms.SetupCron(cron, config, controlDB)

@@ -439,8 +439,8 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	return nil
 }
 
-// TruncateSite truncates a site as the job every 10 minutes does, but looking at all its device reports, so it clears
-// those the job no longer looks at, such as the newest of a device that then went a day without reporting. It deletes
+// TruncateSite truncates a site as each backup does, but looking at all its device reports, so it clears
+// those the backup no longer looks at, such as the newest of a device that then went a day without reporting. It deletes
 // the loop settings no record refers to any more, then shrinks its DB, without its free pages, and records its new
 // size, which it returns.
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
@@ -465,17 +465,17 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	return sizeKB, db.RecordSiteTableSizes(ctx, []*SiteDB{site})
 }
 
-// TruncateSites truncates every open site, as the job every 10 minutes does, without shrinking their DBs, as SQLite
-// uses the space again for what comes next. It truncates harder a site far over its DB size limit. It goes on past a
-// site it cannot truncate, returning each one's error.
-func (db *ControlDB) TruncateSites(ctx context.Context) error {
+// TruncateSites truncates sites, as each batch's backup does before copying them, without shrinking their DBs, as
+// SQLite uses the space again for what comes next. It truncates harder a site far over its DB size limit. It goes on
+// past a site it cannot truncate, returning each one's error.
+func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB) error {
 	limits, err := db.Queries.GetSiteDBSizeLimits(ctx)
 	errs := []error{err}
 	limitsKB := map[string]int64{}
 	for _, limit := range limits {
 		limitsKB[limit.ID] = *limit.MaxDbSizeKbLimit
 	}
-	for _, site := range db.sites.all() {
+	for _, site := range sites {
 		siteCtx := aslog.WithSite(ctx, site.Subdomain)
 		err := truncateSite(siteCtx, site, time.Now().Add(-truncateLooksBack).UnixMilli())
 		if limitKB, ok := limitsKB[site.Subdomain]; ok && err == nil {
