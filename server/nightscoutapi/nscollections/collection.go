@@ -593,6 +593,7 @@ func (c Collection[NS, DM]) byKey(q *sitedb.Queries, ctx context.Context, ids []
 	return models, nil
 }
 
+// Delete deletes the model with the identifier, softly or, when permanent, for good, and publishes it as deleted
 func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	m := c.db
 	tx, q, httpErr := c.begin(ctx, siteContext)
@@ -623,32 +624,49 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		label = "Hard"
 	}
 	res, err := m.Delete(q, ctx, identifier, permanent)
-	// Treatments delete with RETURNING, so a missing ID is no rows rather than 0 rows affected
-	if err == sql.ErrNoRows {
-		return nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to delete by ID", "error", err, "collection", m.Name(), "permanent", permanent)
-		return nsutils.ErrInternal
-	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to get rows affected for delete", "error", err, "collection", m.Name())
-		return nsutils.ErrInternal
+	rowsAffected, httpErr := c.deletedRows(ctx, res, err, "by ID", permanent)
+	if httpErr != nil {
+		return httpErr
 	}
 	if rowsAffected == 0 {
 		return nsutils.ErrNotFound
 	}
 	slog.InfoContext(ctx, label+" Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
-	if err := q.MarkStale(ctx, deleted); err != nil {
-		slog.ErrorContext(ctx, "failed to mark summaries stale", "error", err, "collection", m.Name())
-		return nsutils.ErrInternal
+	if httpErr := c.markStale(ctx, q, deleted); httpErr != nil {
+		return httpErr
 	}
 
 	if httpErr := c.commit(tx, "delete"); httpErr != nil {
 		return httpErr
 	}
 	siteContext.PublishModelChange(events.Deleted, deleted)
+	return nil
+}
+
+// deletedRows is how many rows a delete, by ID or by type, removed, from what the delete returned
+func (c Collection[NS, DM]) deletedRows(ctx context.Context, res sql.Result, err error, by string, permanent bool) (int64, *nsutils.HTTPError) {
+	// Treatments delete with RETURNING, so a missing ID is no rows rather than 0 rows affected
+	if err == sql.ErrNoRows {
+		return 0, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to delete "+by, "error", err, "collection", c.db.Name(), "permanent", permanent)
+		return 0, nsutils.ErrInternal
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to get rows affected for delete", "error", err, "collection", c.db.Name())
+		return 0, nsutils.ErrInternal
+	}
+	return rowsAffected, nil
+}
+
+// markStale marks stale the summaries the changed model is in, so they are made again
+func (c Collection[NS, DM]) markStale(ctx context.Context, q *sitedb.Queries, model *DM) *nsutils.HTTPError {
+	if err := q.MarkStale(ctx, model); err != nil {
+		slog.ErrorContext(ctx, "failed to mark summaries stale", "error", err, "collection", c.db.Name())
+		return nsutils.ErrInternal
+	}
 	return nil
 }
 
@@ -664,17 +682,9 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 	defer tx.Rollback()
 
 	res, err := m.DeleteType(q, ctx, typeString, permanent)
-	if err == sql.ErrNoRows {
-		return 0, nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to delete by type", "error", err, "collection", c.db.Name(), "permanent", permanent)
-		return 0, nsutils.ErrInternal
-	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to get rows affected for delete", "error", err, "collection", c.db.Name())
-		return 0, nsutils.ErrInternal
+	rowsAffected, httpErr := c.deletedRows(ctx, res, err, "by type", permanent)
+	if httpErr != nil {
+		return 0, httpErr
 	}
 
 	if httpErr := c.commit(tx, "delete"); httpErr != nil {
@@ -716,6 +726,8 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 	return len(found), nil
 }
 
+// Replace stores the model sent in the place of the one with the identifier, see removeReplaced and replacingModel,
+// and true when it creates it. One created repeating a duplicate, see keyDuplicate, returns the duplicate instead.
 func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (_ nsutils.Document, _ bool, httpErr *nsutils.HTTPError) {
 	m := c.db
 	var left leftOut
@@ -736,19 +748,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	if httpErr != nil {
 		return nil, false, httpErr
 	}
-	if httpErr := c.validateReplace(ctx, nsModel, replaced, data, identifier); httpErr != nil {
-		return nil, false, httpErr
-	}
-	offset := siteUtcOffset(siteContext)
-	if replaced != nil && (*replaced).GetUtcOffsetMinutes() != nil {
-		kept := *(*replaced).GetUtcOffsetMinutes()
-		offset = func(int64) int64 { return kept }
-	}
-	var err error
-	if nsModel, err = withUtcOffset(data, nsModel, offset); err != nil {
-		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
-	}
-	if nsModel, httpErr = c.withinLimits(data, nsModel, &left); httpErr != nil {
+	if nsModel, httpErr = c.replacingModel(ctx, siteContext, nsModel, replaced, data, identifier, &left); httpErr != nil {
 		return nil, false, httpErr
 	}
 	// One created with an identifier none has repeats one with its fallback key, for a key that finds them so
@@ -767,9 +767,8 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	if httpErr := c.stored(dbCreateModel, err, "replace"); httpErr != nil {
 		return nil, false, httpErr
 	}
-	if err := q.MarkStale(ctx, replaced); err != nil {
-		slog.ErrorContext(ctx, "failed to mark summaries stale", "error", err, "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
+	if httpErr := c.markStale(ctx, q, replaced); httpErr != nil {
+		return nil, false, httpErr
 	}
 
 	if httpErr := c.commit(tx, "replace"); httpErr != nil {
@@ -784,6 +783,25 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	}
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbCreateModel, siteContext), creatingNewRecord, nil
+}
+
+// replacingModel is the model a replace stores: checked against the record replaced, see validateReplace, given the
+// replaced record's UTC offset, or else the site's, when sent without one, and its values out of their columns' limits
+// left out and said in left
+func (c Collection[NS, DM]) replacingModel(ctx context.Context, siteContext *httputils.SiteContext, nsModel NS, replaced *DM, data map[string]any, identifier string, left *leftOut) (NS, *nsutils.HTTPError) {
+	if httpErr := c.validateReplace(ctx, nsModel, replaced, data, identifier); httpErr != nil {
+		return nsModel, httpErr
+	}
+	offset := siteUtcOffset(siteContext)
+	if replaced != nil && (*replaced).GetUtcOffsetMinutes() != nil {
+		kept := *(*replaced).GetUtcOffsetMinutes()
+		offset = func(int64) int64 { return kept }
+	}
+	nsModel, err := withUtcOffset(data, nsModel, offset)
+	if err != nil {
+		return nsModel, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	return c.withinLimits(data, nsModel, left)
 }
 
 // removeReplaced is the record a replace takes the place of, deleted for good so its replacement can take its
@@ -849,35 +867,21 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	}
 	defer tx.Rollback()
 
-	updateingModel, err := m.GetModel(q, ctx, identifier, true)
-
-	if err == sql.ErrNoRows {
-		// Check no Record exists
-		return nil, nsutils.ErrNotFound
-	} else if err != nil {
-		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
-		return nil, nsutils.ErrInternal
+	patched, httpErr := c.toPatch(ctx, q, identifier)
+	if httpErr != nil {
+		return nil, httpErr
 	}
-	// As in Nightscout, a deleted record is gone, so it cannot be patched
-	if updateingModel != nil && (*updateingModel).GetDeletedAt() != nil {
-		return nil, nsutils.ErrGone
-	}
-	if nsutils.ModifiedSince(ctx, (*updateingModel).GetUpdatedAt()) {
-		return nil, nsutils.ErrModifiedSince
-	}
-
-	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier, false); err != nil {
+	if err := ValidateNotChangingSharedFields(patched, nsModel, data, identifier, false); err != nil {
 		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
 
-	dbModel, _, httpErr := c.rewrite(ctx, siteContext, q, updateingModel, data, &left)
+	dbModel, _, httpErr := c.rewrite(ctx, siteContext, q, patched, data, &left)
 	if httpErr != nil {
 		return nil, httpErr
 	}
-	if err := q.MarkStale(ctx, updateingModel); err != nil {
-		slog.ErrorContext(ctx, "failed to mark summaries stale", "error", err, "collection", m.Name())
-		return nil, nsutils.ErrInternal
+	if httpErr := c.markStale(ctx, q, patched); httpErr != nil {
+		return nil, httpErr
 	}
 
 	if httpErr := c.commit(tx, "patch"); httpErr != nil {
@@ -886,6 +890,25 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 
 	siteContext.PublishModelChange(events.Updated, dbModel)
 	return c.document(dbModel, siteContext), nil
+}
+
+// toPatch is the stored model a patch changes. As in Nightscout, a deleted one is gone, so it cannot be patched.
+func (c Collection[NS, DM]) toPatch(ctx context.Context, q *sitedb.Queries, identifier string) (*DM, *nsutils.HTTPError) {
+	stored, err := c.db.GetModel(q, ctx, identifier, true)
+	if err == sql.ErrNoRows {
+		return nil, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", c.db.Name(), "identifier", identifier)
+		return nil, nsutils.ErrInternal
+	}
+	if stored != nil && (*stored).GetDeletedAt() != nil {
+		return nil, nsutils.ErrGone
+	}
+	if nsutils.ModifiedSince(ctx, (*stored).GetUpdatedAt()) {
+		return nil, nsutils.ErrModifiedSince
+	}
+	return stored, nil
 }
 
 func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {
