@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/server/assets/static"
+	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
 func router() http.Handler {
@@ -91,4 +92,14 @@ func TestVersionedURLsAreKept(t *testing.T) {
 			require.Equal(t, static.StaticStyleGenCss, res.Body.Bytes())
 		})
 	}
+}
+
+// A component's script is linked with its file's version, so the browser keeps it too
+func TestComponentScriptsAreKept(t *testing.T) {
+	url := utils.ScriptURL("/toast.min.js")
+	require.Equal(t, static.URL("/toast.min.js"), url)
+	require.Regexp(t, `^/toast\.min\.js\?v=[0-9a-f]{16}$`, url)
+	res := get(router(), url, "", "")
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Equal(t, "public, max-age=31536000, immutable", res.Header().Get("Cache-Control"))
 }
