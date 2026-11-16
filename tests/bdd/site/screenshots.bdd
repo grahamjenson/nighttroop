@@ -54,6 +54,8 @@ ASSERT_PATH /settings/connectors
 
 ASSERT_VISIBLE #site--settings--nightscout-connector--enable
 ASSERT_VISIBLE #site--settings--nightscout-connector--url
+// Its button that saves has an icon
+ASSERT_DRAWN #site--settings--nightscout-connector--submit > svg
 ASSERT_VISIBLE #site--settings--nightscout-connector--password
 // Not saved yet, it has nothing to delete or backfill
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--delete

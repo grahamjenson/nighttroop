@@ -373,6 +373,7 @@ templ resetButton(props button.Props, identityID int64, credential string, title
 		props.Attributes["title"] = title
 	}}
 	@button.Button(props) {
+		@icon.RotateCcw()
 		{ children... }
 	}
 }
@@ -463,6 +464,7 @@ templ formCreateIdentity(tableid string, device bool, roles []sitemodels.RoleOpt
 					@button.Button(button.Props{
 						Type: "submit",
 					}) {
+						@icon.Plus()
 						if device {
 							{ i18n.T(ctx, "site.settings.identities.add_device") }
 						} else {

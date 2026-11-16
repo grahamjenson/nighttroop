@@ -140,6 +140,7 @@ func formHandlers(p Props) templ.Attributes {
 // SubmitButton submits the form, from outside it, as in a modal's actions
 templ SubmitButton(p Props) {
 	@button.Button(button.Props{ID: p.ID + "--submit", Type: button.TypeSubmit, Attributes: templ.Attributes{"form": p.ID}}) {
+		@icon.Save()
 		{ p.Submit }
 	}
 }

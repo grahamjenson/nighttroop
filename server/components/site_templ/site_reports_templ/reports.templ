@@ -225,6 +225,7 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 			}
 			// The printable report is a page of its own, without the site's header, so opens in a new tab
 			@button.Button(button.Props{ID: "site--summaries--print", Href: "/reports/print", Target: "_blank", Variant: button.VariantOutline, Size: button.SizeSm}) {
+				@icon.Printer()
 				{ i18n.T(ctx, "site.reports.summaries.printable") }
 			}
 		</div>
@@ -292,6 +293,7 @@ templ regenerateSummaries() {
 			Attributes: templ.Attributes{"hx-post": "/reports/summaries/regenerate", "hx-swap": "none", "hx-status:4xx": "target:#toaster swap:beforeend",
 				"hx-status:5xx": "target:#toaster swap:beforeend",
 				"hx-confirm": i18n.T(ctx, "site.reports.summaries.regenerate_confirm")}}) {
+			@icon.RefreshCw()
 			{ i18n.T(ctx, "site.reports.summaries.regenerate") }
 		}
 	</section>

@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/config"
@@ -160,7 +161,7 @@ func RateLimits(stats []config.RateLimiterStats, settings []config.RateSetting, 
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.rate_limits.intro"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 123, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 124, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -213,7 +214,7 @@ func groupStatus(name string, stats []config.RateLimiterStats, settings []string
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--rate-limits--group--" + name + "--status").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 133, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 134, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -240,7 +241,7 @@ func groupStatus(name string, stats []config.RateLimiterStats, settings []string
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.rate_limits.refusing"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 137, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 138, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -268,7 +269,7 @@ func groupStatus(name string, stats []config.RateLimiterStats, settings []string
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.rate_limits.nearly_full"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 141, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 142, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -339,7 +340,7 @@ func settingRow(s config.RateSetting, admin bool) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, settingLabels[s.Name]))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 153, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 154, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -365,7 +366,7 @@ func settingRow(s config.RateSetting, admin bool) templ.Component {
 						var templ_7745c5c3_Var15 string
 						templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.rate_limits.set_here"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 156, Col: 51}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 157, Col: 51}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 						if templ_7745c5c3_Err != nil {
@@ -385,7 +386,7 @@ func settingRow(s config.RateSetting, admin bool) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(s.Env + "_LIMIT/_BURST")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 160, Col: 83}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 161, Col: 83}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -406,7 +407,7 @@ func settingRow(s config.RateSetting, admin bool) templ.Component {
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--rate-settings--" + s.Name + "--default").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 161, Col: 62}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 162, Col: 62}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 					if templ_7745c5c3_Err != nil {
@@ -451,7 +452,7 @@ func settingRow(s config.RateSetting, admin bool) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.rate_limits.env_default_of", i18n.Data{"Rate": number(s.Default.PerMinute), "Burst": s.Default.Burst}))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 162, Col: 129}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 163, Col: 129}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -546,7 +547,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--rate-limits--" + s.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 181, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 182, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -603,7 +604,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs("↳ " + i18n.T(ctx, labels[s.Name]))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 183, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 184, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -630,7 +631,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, pers[s.Per]) + utils.If(s.Scale > 1, ", "+i18n.T(ctx, "control.rate_limits.scale", i18n.Data{"Scale": s.Scale})))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 186, Col: 129}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 187, Col: 129}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -658,7 +659,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(cell)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 190, Col: 10}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 191, Col: 10}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -698,7 +699,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--rate-limits--" + s.Name + "--bar").Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 196, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 197, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 				if templ_7745c5c3_Err != nil {
@@ -729,7 +730,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %.0f%%", s.FullestPercent))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 196, Col: 172}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 197, Col: 172}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {
@@ -796,7 +797,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.0f%%", s.FullestPercent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 198, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 199, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {
@@ -827,7 +828,7 @@ func limiterRow(s config.RateLimiterStats) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(s.Limited))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 202, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 203, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -937,7 +938,7 @@ func RateSettings(settings []config.RateSetting, stats []config.RateLimiterStats
 									var templ_7745c5c3_Var48 string
 									templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, head))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 229, Col: 28}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 230, Col: 28}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 									if templ_7745c5c3_Err != nil {
@@ -1027,10 +1028,18 @@ func RateSettings(settings []config.RateSetting, stats []config.RateLimiterStats
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
+				templ_7745c5c3_Err = icon.Save().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, " ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 				var templ_7745c5c3_Var51 string
 				templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.rate_limits.save"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 252, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_rate_limits_templ/rate_limits.templ`, Line: 254, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 				if templ_7745c5c3_Err != nil {
@@ -1042,12 +1051,12 @@ func RateSettings(settings []config.RateSetting, stats []config.RateLimiterStats
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

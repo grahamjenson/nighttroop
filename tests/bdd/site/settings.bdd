@@ -29,6 +29,9 @@ CLICK #site--settings--site--timezone--browser
 ASSERT_VISIBLE #site--settings--site--timezone:not(:placeholder-shown)
 ASSERT_VISIBLE #site--settings--identity--timezone:placeholder-shown
 SCREENSHOT browser_timezone
+// Each button that saves has an icon
+ASSERT_DRAWN #site--settings--site--save > svg
+ASSERT_DRAWN #site--settings--identity--save > svg
 
 INPUT #site--settings--site--units mg/dL
 INPUT #site--settings--site--date_format DD/MM/YYYY

@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -43,6 +44,7 @@ templ Printable(generated time.Time, months []*PeriodReport) {
 					}
 				}
 				@button.Button(button.Props{ID: "site--print--print", Attributes: templ.Attributes{"onclick": templ.JSUnsafeFuncCall("window.print()")}}) {
+					@icon.Printer()
 					{ i18n.T(ctx, "site.reports.print.print") }
 				}
 			</div>

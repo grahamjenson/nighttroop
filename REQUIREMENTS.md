@@ -755,6 +755,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - A table for each kind, newest first and paged: add, view, edit, delete.
 - Add (the main action): right of the title, below it on a phone. Same on presets and push credentials.
+- Each main button has an icon before its words: save, add, delete, reset, backfill, filter, print and regenerate.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
 - Every table is close set: small headings on a grey band, and each row as tall as its text or its button.
