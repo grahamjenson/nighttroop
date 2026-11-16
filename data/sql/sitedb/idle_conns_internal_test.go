@@ -1,6 +1,7 @@
 package sitedb
 
 import (
+	"context"
 	"database/sql"
 	"path/filepath"
 	"testing"
@@ -41,7 +42,8 @@ func TestIdleConnectionsClose(t *testing.T) {
 
 	// More reads at once than are kept need a connection each, and maxIdleConns of them are kept after
 	require.Equal(t, 1, maxIdleConns)
-	readAtOnce(t, db, maxIdleConns+2)
+	require.Equal(t, 2, maxOpenConns)
+	readAtOnce(t, db, maxOpenConns)
 	require.Equal(t, maxIdleConns, db.Stats().Idle)
 
 	// Then they close, once unused
@@ -57,7 +59,7 @@ func TestNewDBLeavesNoConnectionOpen(t *testing.T) {
 	require.Equal(t, 0, file.SQLiteDB.Stats().OpenConnections)
 	_, err = file.Queries().AllActivities(t.Context(), AllActivitiesParams{Limit: 1})
 	require.NoError(t, err)
-	readAtOnce(t, file.SQLiteDB, maxIdleConns+2)
+	readAtOnce(t, file.SQLiteDB, maxOpenConns)
 	require.Equal(t, maxIdleConns, file.SQLiteDB.Stats().Idle)
 
 	memory, err := NewDB(t.Context(), "abcdefgh", &config.ServerConfig{Mode: consts.Test, DataDir: t.TempDir()})
@@ -67,4 +69,28 @@ func TestNewDBLeavesNoConnectionOpen(t *testing.T) {
 	_, err = memory.Queries().AllActivities(t.Context(), AllActivitiesParams{Limit: 1})
 	require.NoError(t, err)
 	require.Equal(t, 1, memory.SQLiteDB.Stats().OpenConnections)
+}
+
+// A site's DB opens at most maxOpenConns connections, so a site's many requests at once cannot hold many megabytes. A
+// transaction that first runs a query while the other connection is in use runs it unprepared, rather than wait for
+// that connection, which may be held by another transaction waiting for this one's write lock.
+func TestSiteOpensAtMostMaxOpenConns(t *testing.T) {
+	db, err := NewDB(t.Context(), "abcdefgh", &config.ServerConfig{Mode: consts.Development, DataDir: t.TempDir()})
+	require.NoError(t, err)
+	t.Cleanup(func() { db.Close() })
+	require.Equal(t, maxOpenConns, db.SQLiteDB.Stats().MaxOpenConnections)
+
+	other, err := db.SQLiteDB.Conn(t.Context())
+	require.NoError(t, err)
+	defer other.Close()
+	tx, err := db.SQLiteDB.BeginTx(t.Context(), nil)
+	require.NoError(t, err)
+	defer tx.Rollback()
+
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
+	defer cancel()
+	_, err = db.QueriesWithTx(tx).CreateGlucoseReading(ctx, CreateGlucoseReadingParams{ID: "1", Mgdl: 100, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "test"})
+	require.NoError(t, err)
+	require.Nil(t, cached(db, createGlucoseReading), "run unprepared")
+	require.NoError(t, tx.Commit())
 }
