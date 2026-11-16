@@ -33,7 +33,22 @@ ASSERT_VISIBLE #site--glucose--days li:last-child >> text=Today
 ASSERT_DRAWN #site--glucose--days li:last-child svg rect >> nth=1
 ASSERT_DRAWN #site--glucose--days li >> nth=-2 >> svg rect >> nth=1
 ASSERT_VISIBLE #site--glucose--days li:last-child [title="Time in range"]
+ASSERT_NOT_VISIBLE #site--glucose--days li:last-child >> text=No readings
+// The first day has no readings, so it says so rather than showing only the range, and has no time in range
+ASSERT_VISIBLE #site--glucose--days li >> nth=0 >> text=No readings
+ASSERT_NOT_VISIBLE #site--glucose--days li >> nth=0 >> svg
+ASSERT_NOT_VISIBLE #site--glucose--days li >> nth=0 >> [title="Time in range"]
 SCREENSHOT glucose_days
+
+// On a phone the days are two to a row, and a day with no readings still says so. The window is tall enough for the
+// whole page, so fitting it checks only its width.
+WINDOW 390x2000
+GOTO /data/glucose?limit=10
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--days li >> nth=0 >> text=No readings
+ASSERT_FITS
+SCREENSHOT glucose_days_phone
+WINDOW 1280x720
 
 // The days are only on the first page of readings
 GOTO /data/glucose?skip=100
