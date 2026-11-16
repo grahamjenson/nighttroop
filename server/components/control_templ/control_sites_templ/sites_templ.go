@@ -1323,7 +1323,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = stat.Section(i18n.T(ctx, "control.site.identities"), "", "", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var62), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = card.Card(card.Props{Title: i18n.T(ctx, "control.site.identities"), Scroll: true}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var62), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1349,7 +1349,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = stat.Section(i18n.T(ctx, "control.site.latest_events"), "control--site--events--all", i18n.T(ctx, "control.site.see_all"), "/events?site_id="+site.ID).Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = card.Card(card.Props{Title: i18n.T(ctx, "control.site.latest_events"), Scroll: true, Action: stat.Link("control--site--events--all", i18n.T(ctx, "control.site.see_all"), "/events?site_id="+site.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1371,7 +1371,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = stat.Section(i18n.T(ctx, "control.site.latest_errors"), "control--site--errors--all", i18n.T(ctx, "control.site.see_all"), "/errors?site_id="+site.ID).Render(templ.WithChildren(ctx, templ_7745c5c3_Var64), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = card.Card(card.Props{Title: i18n.T(ctx, "control.site.latest_errors"), Scroll: true, Action: stat.Link("control--site--errors--all", i18n.T(ctx, "control.site.see_all"), "/errors?site_id="+site.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var64), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

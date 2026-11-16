@@ -172,10 +172,10 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@Graph(summary)
 	}
 	<div class="grid gap-4 lg:grid-cols-2">
-		@stat.Section(i18n.T(ctx, "site.summary.insulin_and_carbs"), "", "", "") {
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.summary.insulin_and_carbs"), Scroll: true}) {
 			@insulinCarbsTable(insulinAndCarbs(ctx, summary))
 		}
-		@stat.Section(i18n.T(ctx, "site.summary.other_treatments"), "", "", "") {
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.summary.other_treatments"), Scroll: true}) {
 			@treatmentsTable(otherTreatments(ctx, summary))
 		}
 	</div>

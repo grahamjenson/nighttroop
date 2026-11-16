@@ -4,13 +4,12 @@ import (
 	"regexp"
 	"strings"
 
-	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 )
 
 // The boxes of figures a summary is made of, such as a site's summary and a site's page in control: tiles of one
-// figure each, and titled sections of a list
+// figure each, and the link a card of a list has to all its records
 
 // numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago",
 // a number's comma or space between its digits, as in 1.234,5 or 1 234,5, kept in it
@@ -58,22 +57,8 @@ templ NoteTile(id, label, text, note string) {
 	}
 }
 
-// Section is a titled list, scrolling when it is long, with a link to the page of all its records when it has one
-templ Section(title, linkID, linkText, path string) {
-	@card.Card(card.Props{Title: title, Scroll: true, Action: allLink(linkID, linkText, path)}) {
-		{ children... }
-	}
-}
-
-// allLink is a section's link to the page of all its records, or nil when it has none
-func allLink(id, text, path string) templ.Component {
-	if path == "" {
-		return nil
-	}
-	return link(id, text, path)
-}
-
-templ link(id, text, path string) {
+// Link is a card's action linking the page of all its records, such as See all
+templ Link(id, text, path string) {
 	@nav.Link(id, path, "text-sm text-primary underline") {
 		{ text }
 	}
