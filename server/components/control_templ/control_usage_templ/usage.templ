@@ -141,7 +141,7 @@ templ Usage(model controlmodels.Usage) {
 				}
 				@table.Body() {
 					if len(model.SinceStart.Routes) == 0 {
-						<tr><td colspan="3" class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "control.usage.no_requests") }</td></tr>
+						@table.Empty("", 3, i18n.T(ctx, "control.usage.no_requests"))
 					}
 					for _, route := range model.SinceStart.Routes {
 						@table.Row() {
@@ -209,7 +209,7 @@ templ slowestQueries(model controlmodels.Usage) {
 			}
 			@table.Body() {
 				if len(model.SlowestQueries) == 0 {
-					<tr><td colspan="6" class="p-4 text-sm text-gray-500">{ i18n.T(ctx, "control.usage.no_queries") }</td></tr>
+					@table.Empty("", 6, i18n.T(ctx, "control.usage.no_queries"))
 				}
 				for _, q := range model.SlowestQueries {
 					@table.Row() {
