@@ -1737,6 +1737,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 #### Backups
 
 - Site DBs go to S3 in batches, and the control DB separately. S3 keeps old versions for a retention period.
+- Each batch of site DBs is backed up every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), and the control DB every 30
+  seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the server stops.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<batch>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`.
   - A copy cut short does not replace the last copy.
