@@ -1,6 +1,7 @@
 package public_templ
 
 import (
+	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -19,9 +20,9 @@ templ PublicBase() {
 			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 			<link rel="apple-touch-icon" href="/logo.png"/>
 			<!-- Tailwind CSS -->
-			<link href="/style_gen.css" rel="stylesheet"/>
-			<script src="/htmx.js"></script>
-			<script src="/qrcode.js"></script>
+			<link href={ static.URL("/style_gen.css") } rel="stylesheet"/>
+			<script src={ static.URL("/htmx.js") }></script>
+			<script src={ static.URL("/qrcode.js") }></script>
 			@copybutton.Script()
 		</head>
 		// As tall as the window, with the page's content filling what the footer leaves, so a page that fits needs no scrolling

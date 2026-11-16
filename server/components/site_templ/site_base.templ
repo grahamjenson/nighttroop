@@ -1,6 +1,7 @@
 package site_templ
 
 import (
+	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/components/confirm"
 	"context"
 
@@ -34,9 +35,9 @@ templ Base() {
 			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 			<link rel="apple-touch-icon" href="/logo.png"/>
 			<!-- Tailwind CSS -->
-			<link href="/style_gen.css" rel="stylesheet"/>
-			<script src="/htmx.js"></script>
-			<script src="/htmx_sse.js"></script>
+			<link href={ static.URL("/style_gen.css") } rel="stylesheet"/>
+			<script src={ static.URL("/htmx.js") }></script>
+			<script src={ static.URL("/htmx_sse.js") }></script>
 			<script>
 				// A live update stream refused as its sign in has ended goes to the login page, as htmx does for its own
 				// requests, rather than asking for the stream again and again
@@ -51,8 +52,8 @@ templ Base() {
 			@selectbox.Script()
 			@toast.Script()
 			@pager.Script()
-			<script src="/qrcode.js"></script>
-			<script src="/echarts.min.js"></script>
+			<script src={ static.URL("/qrcode.js") }></script>
+			<script src={ static.URL("/echarts.min.js") }></script>
 		</head>
 		// As tall as the window, so a page that fills what is left, like the login, needs no scrolling
 		<body hx-ext="response-targets" class="flex min-h-dvh flex-col">

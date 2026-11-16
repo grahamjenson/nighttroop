@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	_ "embed"
 	
 	"github.com/go-chi/chi/v5"
@@ -36,6 +37,18 @@ var {{.VarName}}ETag = generateETag([]byte({{.VarName}}))
 {{- end}}
 
 
+// versions are each file's version, the hash in its ETag, by its path
+var versions = map[string]string{
+	{{- range .GetFileVars }}
+	"/{{.FileName}}": strings.Trim({{.VarName}}ETag, "\""),
+	{{- end}}
+}
+
+// URL is a file's path with its version. A changed file has a new URL, so a browser keeps the file at this one.
+func URL(path string) string {
+	return path + "?v=" + versions[path]
+}
+
 func AddStaticRoutes(r chi.Router) error {
 	{{- range .GetFileVars }}
 	r.Get("/{{.FileName}}", func(w http.ResponseWriter, r *http.Request) {
@@ -50,8 +63,13 @@ func AddStaticRoutes(r chi.Router) error {
 func serve(w http.ResponseWriter, r *http.Request, fileName string, contentType string, etag string, body []byte) {
 	w.Header().Set("Content-Type", contentType)
 
-	// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-	w.Header().Set("Cache-Control", "no-cache")
+	// A URL with the file's version never changes what it gives, so a browser keeps it for a year without asking
+	// again. Any other must revalidate with the ETag to see new deploys.
+	if r.URL.Query().Get("v") == strings.Trim(etag, "\"") {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	} else {
+		w.Header().Set("Cache-Control", "no-cache")
+	}
 	w.Header().Set("ETag", etag)
 	if r.Header.Get("If-None-Match") == etag {
 		w.WriteHeader(http.StatusNotModified)
