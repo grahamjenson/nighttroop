@@ -18,7 +18,7 @@ the same.
 | Data | On the server | Backed up to S3 | If missing |
 | --- | --- | --- | --- |
 | Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Every 30 seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`), and on stop | Every site: the server starts new, in setup |
-| Site DBs: readings, treatments and settings of each site | `data/db/site/<batch>/<site>.sqlite`, a batch for each first letter | Each batch every 5 minutes (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), and on stop | The start stops until restored ([5.8](#58-restore-missing-sites)) |
+| Site DBs: readings, treatments and settings of each site | `data/db/site/<batch>/<site>.sqlite`, a batch for each first letter | Each batch every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), and on stop | The start stops until restored ([5.8](#58-restore-missing-sites)) |
 | Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history |
 | Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history |
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |

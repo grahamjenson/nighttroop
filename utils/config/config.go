@@ -434,7 +434,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),
-		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 300), // 5 minutes
+		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 3600), // 1 hour
 		SiteBackupRetentionDays:        configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
 		ControlBackupRetentionDays:     configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
 
