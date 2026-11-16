@@ -78,6 +78,13 @@ func TestCompressedBackupHasWhatIsOnlyInTheWAL(t *testing.T) {
 	compressed, err := os.Open(site.BackupPath)
 	require.NoError(t, err)
 	defer compressed.Close()
+	// Its frame is in 64 KB blocks: the block size is bits 4 to 6 of the frame descriptor's second byte, 4 for 64 KB
+	frameStart := make([]byte, 6)
+	_, err = io.ReadFull(compressed, frameStart)
+	require.NoError(t, err)
+	require.Equal(t, byte(4), frameStart[5]>>4&0x7)
+	_, err = compressed.Seek(0, io.SeekStart)
+	require.NoError(t, err)
 	restored, err := os.Create(filepath.Join(dir, "restored.sqlite"))
 	require.NoError(t, err)
 	_, err = io.Copy(restored, lz4.NewReader(compressed))
