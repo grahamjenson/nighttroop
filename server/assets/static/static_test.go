@@ -1,73 +1,57 @@
 package static_test
 
 import (
-	"bytes"
-	"compress/gzip"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/server/assets/static"
 )
 
-// router serves the static files behind the same compression as the site's routers
 func router() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.Compress(5))
 	static.AddStaticRoutes(r)
 	return r
 }
 
-func get(handler http.Handler, path string, acceptEncoding string) *httptest.ResponseRecorder {
+func get(handler http.Handler, path string, acceptEncoding string, ifNoneMatch string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodGet, path, nil)
 	if acceptEncoding != "" {
 		req.Header.Set("Accept-Encoding", acceptEncoding)
+	}
+	if ifNoneMatch != "" {
+		req.Header.Set("If-None-Match", ifNoneMatch)
 	}
 	res := httptest.NewRecorder()
 	handler.ServeHTTP(res, req)
 	return res
 }
 
-func gunzip(t *testing.T, body []byte) []byte {
-	reader, err := gzip.NewReader(bytes.NewReader(body))
-	require.NoError(t, err)
-	unzipped, err := io.ReadAll(reader)
-	require.NoError(t, err)
-	return unzipped
-}
-
-func TestStaticFilesAreGzipped(t *testing.T) {
+// Static files are sent as they are, even to a client that accepts gzip, as the proxy in front compresses them
+func TestStaticFilesAreNotCompressed(t *testing.T) {
 	handler := router()
 	tests := []struct {
-		name           string
-		path           string
-		acceptEncoding string
-		body           []byte
-		gzipped        bool
+		name string
+		path string
+		body []byte
 	}{
-		{"scripts are gzipped", "/echarts.min.js", "gzip, deflate, br", static.StaticEchartsMinJs, true},
-		{"styles are gzipped", "/style_gen.css", "gzip", static.StaticStyleGenCss, true},
-		{"svgs are gzipped", "/logo.svg", "gzip", static.StaticLogoSvg, true},
-		{"not gzipped for a client that does not accept it", "/echarts.min.js", "", static.StaticEchartsMinJs, false},
-		{"pngs are already compressed", "/logo.png", "gzip", static.StaticLogoPng, false},
+		{"a script", "/echarts.min.js", static.StaticEchartsMinJs},
+		{"a style", "/style_gen.css", static.StaticStyleGenCss},
+		{"an svg", "/logo.svg", static.StaticLogoSvg},
+		{"a png", "/logo.png", static.StaticLogoPng},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			res := get(handler, test.path, test.acceptEncoding)
+			res := get(handler, test.path, "gzip, deflate, br", "")
 			require.Equal(t, http.StatusOK, res.Code)
-			body := res.Body.Bytes()
-			if test.gzipped {
-				require.Equal(t, "gzip", res.Header().Get("Content-Encoding"))
-				require.Equal(t, "Accept-Encoding", res.Header().Get("Vary"))
-				body = gunzip(t, body)
-			} else {
-				require.Empty(t, res.Header().Get("Content-Encoding"))
-			}
-			require.Equal(t, test.body, body)
+			require.Empty(t, res.Header().Get("Content-Encoding"))
+			require.Equal(t, test.body, res.Body.Bytes())
+
+			// A browser that has the file is told it is unchanged
+			res = get(handler, test.path, "gzip", res.Header().Get("ETag"))
+			require.Equal(t, http.StatusNotModified, res.Code)
 		})
 	}
 }
@@ -76,7 +60,7 @@ func TestStaticFilesAreGzipped(t *testing.T) {
 func BenchmarkGetEcharts(b *testing.B) {
 	handler := router()
 	for b.Loop() {
-		res := get(handler, "/echarts.min.js", "gzip")
+		res := get(handler, "/echarts.min.js", "gzip", "")
 		if res.Code != http.StatusOK {
 			b.Fatalf("status %d", res.Code)
 		}

@@ -40,8 +40,7 @@ const (
 var clientErrorStatuses = []int{http.StatusBadRequest, http.StatusMethodNotAllowed, http.StatusRequestEntityTooLarge,
 	http.StatusUnprocessableEntity}
 
-// errorBody keeps the start of a response refused with a client error, to say why. It is after compression, so it
-// reads the body as it was written.
+// errorBody keeps the start of a response refused with a client error, to say why
 type errorBody struct {
 	status func() int
 	body   []byte

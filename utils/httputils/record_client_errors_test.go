@@ -50,8 +50,6 @@ func TestRecordClientErrors(t *testing.T) {
 			})
 			send := func() {
 				r := httptest.NewRequest(http.MethodPost, "/api/v1/entries?token=querytoken123", nil)
-				// The response is compressed, as it is for every client that accepts gzip
-				r.Header.Set("Accept-Encoding", "gzip")
 				r.Header.Set("User-Agent", "AAPS/3.3.1")
 				r = r.WithContext(CreateSiteContext(r.Context(), cfg, controlDB, nil, &controldb.Site{ID: "somesite"}, "somesite", "", HTTPActionWrite, AcceptTypeJSON, ContentTypeJSON))
 				router.ServeHTTP(httptest.NewRecorder(), r)

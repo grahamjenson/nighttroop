@@ -2,7 +2,6 @@ package httputils
 
 import (
 	"bytes"
-	"compress/gzip"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -75,7 +74,8 @@ func TestRequestLogsAndSentryRedactCredentials(t *testing.T) {
 	assert.Nil(t, RedactSentryEvent(&sentry.Event{}, nil).Request)
 }
 
-func TestResponsesAreGzippedWhenAccepted(t *testing.T) {
+// Responses are not compressed, even for a client that accepts gzip, as the proxy in front compresses them
+func TestResponsesAreNotCompressed(t *testing.T) {
 	router := chi.NewRouter()
 	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
 	css := strings.Repeat(".a { color: red; }\n", 100)
@@ -87,17 +87,6 @@ func TestResponsesAreGzippedWhenAccepted(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/style_gen.css", nil)
 	r.Header.Set("Accept-Encoding", "gzip")
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, r)
-	require.Equal(t, "gzip", w.Header().Get("Content-Encoding"))
-	reader, err := gzip.NewReader(w.Body)
-	require.NoError(t, err)
-	body, err := io.ReadAll(reader)
-	require.NoError(t, err)
-	assert.Equal(t, css, string(body))
-
-	// A client that does not accept gzip gets it as it is
-	r = httptest.NewRequest(http.MethodGet, "/style_gen.css", nil)
-	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
 	assert.Empty(t, w.Header().Get("Content-Encoding"))
 	assert.Equal(t, css, w.Body.String())
