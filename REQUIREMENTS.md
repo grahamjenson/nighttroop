@@ -1733,6 +1733,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 #### Backups
 
 - Site DBs go to S3 in batches, and the control DB separately. S3 keeps old versions for a retention period.
+- A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
+  `data/backup/site/<batch>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`.
+  - A copy cut short does not replace the last copy.
+  - The backup deletes the uncompressed `.sqlite` copy kept there before.
+- An upload is a tar of the compressed copies, encrypted, and not compressed again: `<host>/backup/<batch>.tar.enc`,
+  `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<batch>/<site>.tar.enc`.
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A batch with the same sites, none copied again, is not uploaded again until the server restarts.
 - In the next round, a write made during a copy is copied, and a failed upload is tried again.
@@ -1746,6 +1752,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - A missing control DB or site batch folder is restored from S3 on start. A failed or cut download leaves nothing,
   and the next start tries again.
+- A restore decompresses each `.lz4` copy to its `.sqlite` DB.
+- A restore (on start, or of an archived site) without a backup at its `.tar.enc` key uses the old backup at the same
+  key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.
+- `cmd/keysets/decrypt_tar_lz4_enc.go` decrypts and unpacks a backup of either kind, given its object key.
 - A start removes only the staging folders that a stopped restore or archive left beside the DBs and backups.
 - A live site whose DB file is missing, but whose batch folder is there:
   - Is restored from its batch's latest S3 backup (one download a batch) and opened.

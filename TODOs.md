@@ -105,6 +105,14 @@
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
 
+1. Backups:
+    1. P4: Remove the restore's fallback to the old `.tar.lz4.enc` backups (`s3utils.LegacyKey`). Lifecycle rules
+       expire only replaced versions (30 days for sites, 90 for control), and nothing replaces an object at an old
+       key, so it stays. First, once every batch and the control DB has a `.tar.enc` backup, delete their old keys.
+       Then upload each old archive again as `.tar.enc`, or keep the fallback for archives.
+    1. P5: A backup killed while it writes leaves its temp file (`.<site>.sqlite.lz4-*`) in `data/backup`; remove
+       these on start, as the restore staging folders are
+
 1. Database:
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field

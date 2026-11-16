@@ -13,8 +13,9 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
-// something like cat file.tar.lz4.enc | go run decrypt_tar_lz4_enc.go <its object key>, as host/backup/a.tar.lz4.enc,
-// which it was encrypted for; without one, only a backup from before backups were bound decrypts
+// something like cat a.tar.enc | go run decrypt_tar_lz4_enc.go <its object key>, as host/backup/a.tar.enc, which it was
+// encrypted for. It writes each DB in it decompressed, as a.sqlite. A backup kept before at host/backup/a.tar.lz4.enc
+// decrypts with that key; without a key, only a backup from before backups were bound decrypts.
 func main() {
 	// Create Empty Config and
 	configs := config.ServerConfig{}
@@ -33,7 +34,7 @@ func main() {
 	if len(os.Args) > 1 {
 		objectKey = os.Args[1]
 	}
-	if err := s3Client.ExtractTarLZ4(os.Stdin, ".", objectKey); err != nil {
+	if err := s3Client.ExtractTar(os.Stdin, ".", objectKey); err != nil {
 		log.Fatal(fmt.Errorf("failed to extract backup: %w", err))
 	}
 }

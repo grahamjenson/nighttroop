@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pierrec/lz4/v4"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -117,10 +119,13 @@ func TestArchiveSiteDuringBatchBackup(t *testing.T) {
 	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, _ string, _ s3utils.Retention, paths []string) error {
 		require.NoError(t, utils.MkParentDirs(site.SiteDB.BackupPath))
 		require.NoError(t, os.WriteFile(site.SiteDB.BackupPath, []byte("half written"), 0o600))
-		data, err := os.ReadFile(paths[0])
+		file, err := os.Open(paths[0])
+		require.NoError(t, err)
+		defer file.Close()
+		data, err := io.ReadAll(lz4.NewReader(file))
 		require.NoError(t, err)
 		uploaded = paths[0]
-		require.True(t, strings.HasPrefix(string(data), "SQLite format 3\x00"), "the archive is a whole DB")
+		require.True(t, strings.HasPrefix(string(data), "SQLite format 3\x00"), "the archive is a whole DB, compressed")
 		return nil
 	}))
 	// Named as the site's DB so it hydrates, and removed once uploaded
@@ -143,14 +148,17 @@ func TestHydrateSite(t *testing.T) {
 	_, err = site.SiteDB.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 
-	// A stand in for S3, holding the archive's file
-	archive := filepath.Join(t.TempDir(), siteID+".sqlite")
+	// A stand in for S3, holding the archive's compressed file, and decompressing it as a download does
+	archive := filepath.Join(t.TempDir(), siteID+".sqlite.lz4")
 	download := func(_ context.Context, key string, outpath string) (int64, bool, error) {
 		require.Equal(t, sitedb.GetS3ArchivePath(siteID, &fileCfg), key)
-		data, err := os.ReadFile(archive)
+		file, err := os.Open(archive)
 		if errors.Is(err, os.ErrNotExist) {
 			return 0, false, nil
 		}
+		require.NoError(t, err)
+		defer file.Close()
+		data, err := io.ReadAll(lz4.NewReader(file))
 		require.NoError(t, err)
 		return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, siteID+".sqlite"), data, 0o600)
 	}
