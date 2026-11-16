@@ -10,8 +10,11 @@ import (
 	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/usage"
 )
@@ -70,7 +73,7 @@ templ Usage(model controlmodels.Usage) {
 		hx-target="this"
 		hx-swap="outerHTML"
 	>
-		@heading.Page(i18n.T(ctx, "control.usage.title")) {
+		@heading.PageWith(i18n.T(ctx, "control.usage.title"), debugLinks()) {
 			{ i18n.T(ctx, "control.usage.intro", i18n.Data{"StartedAgo": display.TimeAgo(ctx, model.SinceStart.Started, model.NowTime())}) }
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.active"), Class: tiles}) {
@@ -222,5 +225,22 @@ templ slowestQueries(model controlmodels.Usage) {
 				}
 			}
 		}
+	}
+}
+
+// debugLinks open Go's profiles (pprof) and runtime stats (vars) in a new tab, for an admin, the only one who can open
+// them, to see where the server's memory and CPU go
+templ debugLinks() {
+	if httputils.IsControlAdmin(ctx) {
+		<div class="flex gap-2">
+			@button.Button(button.Props{ID: "control--usage--pprof", Href: "/debug/pprof/", Target: "_blank", Variant: button.VariantOutline, Size: button.SizeSm}) {
+				{ i18n.T(ctx, "control.usage.pprof") }
+				@icon.ExternalLink(icon.Props{Class: "size-4"})
+			}
+			@button.Button(button.Props{ID: "control--usage--vars", Href: "/debug/vars", Target: "_blank", Variant: button.VariantOutline, Size: button.SizeSm}) {
+				{ i18n.T(ctx, "control.usage.vars") }
+				@icon.ExternalLink(icon.Props{Class: "size-4"})
+			}
+		</div>
 	}
 }

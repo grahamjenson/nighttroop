@@ -387,6 +387,8 @@ control:
   usage:
     title: "Usage"
     intro: "How many use the server and how much. Active sites and users are from the DB; the rest is counted since the server started {{.StartedAgo}}. Updates every 10 seconds."
+    pprof: "Profiles (pprof)"
+    vars: "Runtime stats (vars)"
     active: "Active"
     sites_today: "Sites today"
     seen_day: "seen in the last 24 hours"

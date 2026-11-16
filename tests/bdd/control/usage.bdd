@@ -44,3 +44,13 @@ ASSERT_NOT_VISIBLE #control--usage--queries td >> text=No queries sampled yet.
 ASSERT_VISIBLE #control--usage--queries td >> text=/^(site|control|jobs|logs|live)db\.\S/ >> nth=0
 ASSERT_VISIBLE #control--usage--queries th >> text=/^p95 ms$/
 SCREENSHOT usage
+
+// At its top, an admin's buttons open Go's profiles (pprof) and runtime stats (vars) in a new tab
+ASSERT_VISIBLE #control--usage--pprof[href="/debug/pprof/"][target="_blank"]
+ASSERT_VISIBLE #control--usage--vars[href="/debug/vars"][target="_blank"]
+GOTO {{ .control_url }}/debug/pprof/
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE goroutine
+GOTO {{ .control_url }}/debug/vars
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE memstats
