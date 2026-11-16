@@ -20,7 +20,7 @@ import (
 templ CreateSite(open bool) {
 	@createPage() {
 		if !open {
-			<p id="public--create-site-off" class="rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
+			<p id="public--create-site-off" class="panel px-6 py-4 text-slate-700">
 				{ i18n.T(ctx, "public.create_site.turned_off") }
 			</p>
 		} else {
@@ -59,7 +59,7 @@ templ SiteWelcome() {
 
 // WelcomeGone is a new or recovered site's welcome page whose credentials were already shown, or waited too long to be
 templ WelcomeGone(recoverURL string) {
-	<p id="public--welcome-gone" class="public--compact max-w-xl rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
+	<p id="public--welcome-gone" class="public--compact panel max-w-xl px-6 py-4 text-slate-700">
 		{ i18n.T(ctx, "public.welcome_gone.already_shown") }
 		<a id="public--welcome-gone--recover-link" href={ templ.SafeURL(recoverURL) } class="font-medium text-brand-night underline">{ i18n.T(ctx, "public.welcome_gone.recover_page") }</a>.
 	</p>
@@ -109,7 +109,7 @@ templ createPage() {
 
 templ feature(ic func(...icon.Props) templ.Component, title, body string) {
 	// On a phone only its title shows, so the page still fits the window
-	<div class="rounded-xl border border-slate-200 bg-white px-4 py-2 sm:p-4 shadow-sm">
+	<div class="panel px-4 py-2 sm:p-4">
 		<dt class="flex items-center gap-2 font-semibold text-slate-900">
 			@ic(icon.Props{Class: "size-5 text-brand-night"})
 			{ title }
@@ -316,7 +316,7 @@ templ TOTPCheckFailed() {
 
 // step is a numbered step, with its hint beside its title
 templ step(n, title, hint string) {
-	<section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+	<section class="panel overflow-hidden">
 		<header class="flex items-center gap-3 px-5 py-3">
 			<span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-night text-sm font-bold text-white">{ n }</span>
 			<h2 class="font-semibold text-slate-900">

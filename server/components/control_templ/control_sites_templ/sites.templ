@@ -93,9 +93,10 @@ templ siteForms() {
 
 // siteOrderToggles reorder the sites, from their first page
 templ siteOrderToggles(order string, limit int64) {
-	<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
+	<div id="control--sites--order" class="segmented mb-3 ml-auto flex w-fit">
+		@icon.ArrowUpDown(icon.Props{Class: "mx-1.5 size-4 text-gray-500"})
 		for _, siteOrder := range siteOrders {
-			@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL("/sites?order="+siteOrder.order, 0, limit), button.SizeDefault, siteOrder.order == order) {
+			@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL("/sites?order="+siteOrder.order, 0, limit), button.SizeSm, siteOrder.order == order) {
 				{ i18n.T(ctx, siteOrder.label) }
 			}
 		}

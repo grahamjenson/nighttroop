@@ -17,7 +17,7 @@ templ RecoverSite() {
 				<span class="text-3xl font-extrabold tracking-tight text-slate-900">Nighttroop</span>
 			</a>
 			<div id="panel-content" class="mt-6 w-full max-w-3xl">
-				<form id="public--recover--form" class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4" hx-post="/recover" hx-target="#panel-content" hx-status:4xx="target:#error-container" hx-status:5xx="target:#error-container">
+				<form id="public--recover--form" class="panel mx-auto max-w-md space-y-4 p-6" hx-post="/recover" hx-target="#panel-content" hx-status:4xx="target:#error-container" hx-status:5xx="target:#error-container">
 					<h1 class="text-xl font-semibold text-slate-900">{ i18n.T(ctx, "public.recover_site.title") }</h1>
 					<p class="text-sm text-slate-500">
 						{ i18n.T(ctx, "public.recover_site.intro") }

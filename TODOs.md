@@ -107,7 +107,6 @@
     1. P3: Load ECharts (1 MB) only on the pages with a graph, and after the page: every site page loads it in its
        head, before the page draws
     1. P4: Give the static files versioned URLs, so a browser keeps them without asking for each again on every page
-    1. P4: Use the `panel` and `segmented` classes on the control site's order buttons and the public pages' boxes
 
 1. Backups:
     1. P4: Remove the restore's fallback to the old `.tar.lz4.enc` backups (`s3utils.LegacyKey`). Lifecycle rules
