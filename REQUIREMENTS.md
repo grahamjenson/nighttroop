@@ -448,7 +448,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Static files
 
-- Each page links its style and scripts with the file's version: `/style_gen.css?v=<hash>`.
+- Each page links its style and scripts, and each component's script, with the file's version:
+  `/style_gen.css?v=<hash>`.
 - If a request has the file's version, the browser keeps the file for a year and does not ask again.
 - If a request has no version, or another one, the browser checks the file's `ETag` each time.
 
