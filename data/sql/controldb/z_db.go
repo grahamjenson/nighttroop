@@ -147,6 +147,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getBatchSitesToBackUpStmt, err = db.PrepareContext(ctx, getBatchSitesToBackUp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetBatchSitesToBackUp: %w", err)
 	}
+	if q.getBatchesNotUploadedStmt, err = db.PrepareContext(ctx, getBatchesNotUploaded); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBatchesNotUploaded: %w", err)
+	}
 	if q.getConnectorStmt, err = db.PrepareContext(ctx, getConnector); err != nil {
 		return nil, fmt.Errorf("error preparing query GetConnector: %w", err)
 	}
@@ -559,6 +562,11 @@ func (q *Queries) Close() error {
 	if q.getBatchSitesToBackUpStmt != nil {
 		if cerr := q.getBatchSitesToBackUpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getBatchSitesToBackUpStmt: %w", cerr)
+		}
+	}
+	if q.getBatchesNotUploadedStmt != nil {
+		if cerr := q.getBatchesNotUploadedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBatchesNotUploadedStmt: %w", cerr)
 		}
 	}
 	if q.getConnectorStmt != nil {
@@ -981,6 +989,7 @@ type Queries struct {
 	getAnyPushCredentialStmt                *sql.Stmt
 	getAnySitePushRegistrationStmt          *sql.Stmt
 	getBatchSitesToBackUpStmt               *sql.Stmt
+	getBatchesNotUploadedStmt               *sql.Stmt
 	getConnectorStmt                        *sql.Stmt
 	getConnectorsToRunStmt                  *sql.Stmt
 	getControlIdentityStmt                  *sql.Stmt
@@ -1096,6 +1105,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAnyPushCredentialStmt:                q.getAnyPushCredentialStmt,
 		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
 		getBatchSitesToBackUpStmt:               q.getBatchSitesToBackUpStmt,
+		getBatchesNotUploadedStmt:               q.getBatchesNotUploadedStmt,
 		getConnectorStmt:                        q.getConnectorStmt,
 		getConnectorsToRunStmt:                  q.getConnectorsToRunStmt,
 		getControlIdentityStmt:                  q.getControlIdentityStmt,

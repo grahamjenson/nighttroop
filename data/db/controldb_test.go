@@ -166,6 +166,7 @@ func TestHydrateSite(t *testing.T) {
 	// A live site, open here, is not hydrated
 	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID, download), "already open")
 
+	require.NoError(t, controlDB.Queries.UpdateSitesBackupUploaded(ctx, controldb.UpdateSitesBackupUploadedParams{IDs: []string{siteID}}))
 	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
 	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, _ string, _ s3utils.Retention, paths []string) error {
@@ -188,6 +189,8 @@ func TestHydrateSite(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "live", row.State)
 	require.Nil(t, row.ArchivedAt)
+	// Its batch's backup left it out while it was archived, so the batch is to be uploaded again soon
+	require.Nil(t, row.BackupUploadedAt)
 	require.Nil(t, row.DisabledAt)
 	require.NotNil(t, row.LastSeenAt)
 	require.InDelta(t, time.Now().UnixMilli(), *row.LastSeenAt, 60_000)

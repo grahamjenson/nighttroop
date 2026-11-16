@@ -1766,6 +1766,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - In the next round, a write made during a copy is copied, and a failed upload is tried again.
 - A batch whose last site is deleted or archived is uploaded empty. A restore then gives an empty batch.
 - A batch that never had a site is not uploaded.
+- If a live site is not in an upload of its batch, such as a new or restored site, its batch uploads at the next tick
+  of the batch backups (`BATCH_BACKUP_INTERVAL_IN_SECONDS` / 26). It does not wait for its batch's turn.
 - The control DB records on each site:
   - when the site was last copied, and the size of the copy on disk;
   - when its batch was last uploaded. If S3 is not connected or the upload fails, this time does not change.

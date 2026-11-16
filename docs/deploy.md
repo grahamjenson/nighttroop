@@ -222,7 +222,7 @@ A rollback loses nothing: a version that is never healthy took no requests. Dele
 | Problem | Result | Fix |
 | --- | --- | --- |
 | The previous version is not healthy (exit 2) | Nighttroop is down | Not the release: S3, a setting, the disk, the VPS. Read `docker compose logs nighttroop`, fix it, and `docker compose up -d`. |
-| The new version uploaded backups before it failed | S3 has backups in the new format | The previous version replaces them in 5 minutes. Do not restore a new VPS from S3 before then. |
+| The new version uploaded backups before it failed | S3 has backups in the new format | The previous version replaces them in one batch backup interval (1 hour). Do not restore a new VPS from S3 before then. |
 
 ### After a version serves: fix forward
 
@@ -242,7 +242,7 @@ again.
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |
 | Two servers use one bucket (such as a new VPS while the old one runs) | Each overwrites the other's backups | Stop the old server, with its last uploads, before you start the new one. |
-| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 30 seconds old, batches up to 5 minutes. Jobs, logs and live DBs start empty. | Expected. Sites made in those seconds are in the control DB but not a batch: the start stops ([5.8](#58-restore-missing-sites)). |
+| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 30 seconds old, batches up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but not a batch, the start stops ([5.8](#58-restore-missing-sites)). |
 
 ## Staging deploy
 

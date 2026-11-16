@@ -89,8 +89,26 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 			}
 		}
 
+		b.BackupBatchesNotUploaded(ctx)
 		return b.BackupSiteBatch(ctx, batch)
 	})
+}
+
+// BackupBatchesNotUploaded backs up each batch with a live site that is not in an upload of its batch yet, such as a
+// new or restored site, so it is in S3 within a tick and not only on its batch's turn, up to an interval later. Until
+// then, a new VPS restored from S3 has the site in its control DB but not in its batch, and cannot start. It runs in
+// the backup cron's function, so never at the same time as that batch's turn.
+func (b *BackupSiteJobManager) BackupBatchesNotUploaded(ctx context.Context) {
+	batches, err := b.controlDB.Queries.GetBatchesNotUploaded(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Cannot get the batches with sites not uploaded", "error", err)
+		return
+	}
+	for _, batch := range batches {
+		if err := b.BackupSiteBatch(ctx, batch); err != nil {
+			slog.ErrorContext(ctx, "Error backing up site batch", "error", err, "batch", batch)
+		}
+	}
 }
 
 func (b *BackupSiteJobManager) DeleteUnusedSites(ctx context.Context, batch string) error {
