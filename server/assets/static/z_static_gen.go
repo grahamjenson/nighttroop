@@ -13,25 +13,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-//go:embed checkbox.js
-var StaticCheckboxJs []byte
-var StaticCheckboxJsETag = generateETag([]byte(StaticCheckboxJs))
-
 //go:embed checkbox.min.js
 var StaticCheckboxMinJs []byte
 var StaticCheckboxMinJsETag = generateETag([]byte(StaticCheckboxMinJs))
 
-//go:embed copybutton.js
-var StaticCopybuttonJs []byte
-var StaticCopybuttonJsETag = generateETag([]byte(StaticCopybuttonJs))
-
 //go:embed copybutton.min.js
 var StaticCopybuttonMinJs []byte
 var StaticCopybuttonMinJsETag = generateETag([]byte(StaticCopybuttonMinJs))
-
-//go:embed dropdown.js
-var StaticDropdownJs []byte
-var StaticDropdownJsETag = generateETag([]byte(StaticDropdownJs))
 
 //go:embed dropdown.min.js
 var StaticDropdownMinJs []byte
@@ -49,14 +37,6 @@ var StaticEmptyETag = generateETag([]byte(StaticEmpty))
 var StaticFaviconIco []byte
 var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
 
-//go:embed floating_ui_core.js
-var StaticFloatingUiCoreJs []byte
-var StaticFloatingUiCoreJsETag = generateETag([]byte(StaticFloatingUiCoreJs))
-
-//go:embed floating_ui_dom.js
-var StaticFloatingUiDomJs []byte
-var StaticFloatingUiDomJsETag = generateETag([]byte(StaticFloatingUiDomJs))
-
 //go:embed htmx.js
 var StaticHtmxJs []byte
 var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
@@ -65,25 +45,13 @@ var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
 var StaticHtmxSseJs []byte
 var StaticHtmxSseJsETag = generateETag([]byte(StaticHtmxSseJs))
 
-//go:embed input.js
-var StaticInputJs []byte
-var StaticInputJsETag = generateETag([]byte(StaticInputJs))
-
 //go:embed input.min.js
 var StaticInputMinJs []byte
 var StaticInputMinJsETag = generateETag([]byte(StaticInputMinJs))
 
-//go:embed inputotp.js
-var StaticInputotpJs []byte
-var StaticInputotpJsETag = generateETag([]byte(StaticInputotpJs))
-
 //go:embed inputotp.min.js
 var StaticInputotpMinJs []byte
 var StaticInputotpMinJsETag = generateETag([]byte(StaticInputotpMinJs))
-
-//go:embed label.js
-var StaticLabelJs []byte
-var StaticLabelJsETag = generateETag([]byte(StaticLabelJs))
 
 //go:embed label.min.js
 var StaticLabelMinJs []byte
@@ -96,10 +64,6 @@ var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
 //go:embed logo.svg
 var StaticLogoSvg []byte
 var StaticLogoSvgETag = generateETag([]byte(StaticLogoSvg))
-
-//go:embed popover.js
-var StaticPopoverJs []byte
-var StaticPopoverJsETag = generateETag([]byte(StaticPopoverJs))
 
 //go:embed popover.min.js
 var StaticPopoverMinJs []byte
@@ -121,10 +85,6 @@ var StaticRedocStandaloneJsLicenseTxtETag = generateETag([]byte(StaticRedocStand
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
 
-//go:embed selectbox.js
-var StaticSelectboxJs []byte
-var StaticSelectboxJsETag = generateETag([]byte(StaticSelectboxJs))
-
 //go:embed selectbox.min.js
 var StaticSelectboxMinJs []byte
 var StaticSelectboxMinJsETag = generateETag([]byte(StaticSelectboxMinJs))
@@ -133,47 +93,32 @@ var StaticSelectboxMinJsETag = generateETag([]byte(StaticSelectboxMinJs))
 var StaticStyleGenCss []byte
 var StaticStyleGenCssETag = generateETag([]byte(StaticStyleGenCss))
 
-//go:embed toast.js
-var StaticToastJs []byte
-var StaticToastJsETag = generateETag([]byte(StaticToastJs))
-
 //go:embed toast.min.js
 var StaticToastMinJs []byte
 var StaticToastMinJsETag = generateETag([]byte(StaticToastMinJs))
 
 // versions are each file's version, the hash in its ETag, by its path
 var versions = map[string]string{
-	"/checkbox.js":                     strings.Trim(StaticCheckboxJsETag, "\""),
 	"/checkbox.min.js":                 strings.Trim(StaticCheckboxMinJsETag, "\""),
-	"/copybutton.js":                   strings.Trim(StaticCopybuttonJsETag, "\""),
 	"/copybutton.min.js":               strings.Trim(StaticCopybuttonMinJsETag, "\""),
-	"/dropdown.js":                     strings.Trim(StaticDropdownJsETag, "\""),
 	"/dropdown.min.js":                 strings.Trim(StaticDropdownMinJsETag, "\""),
 	"/echarts.min.js":                  strings.Trim(StaticEchartsMinJsETag, "\""),
 	"/empty":                           strings.Trim(StaticEmptyETag, "\""),
 	"/favicon.ico":                     strings.Trim(StaticFaviconIcoETag, "\""),
-	"/floating_ui_core.js":             strings.Trim(StaticFloatingUiCoreJsETag, "\""),
-	"/floating_ui_dom.js":              strings.Trim(StaticFloatingUiDomJsETag, "\""),
 	"/htmx.js":                         strings.Trim(StaticHtmxJsETag, "\""),
 	"/htmx_sse.js":                     strings.Trim(StaticHtmxSseJsETag, "\""),
-	"/input.js":                        strings.Trim(StaticInputJsETag, "\""),
 	"/input.min.js":                    strings.Trim(StaticInputMinJsETag, "\""),
-	"/inputotp.js":                     strings.Trim(StaticInputotpJsETag, "\""),
 	"/inputotp.min.js":                 strings.Trim(StaticInputotpMinJsETag, "\""),
-	"/label.js":                        strings.Trim(StaticLabelJsETag, "\""),
 	"/label.min.js":                    strings.Trim(StaticLabelMinJsETag, "\""),
 	"/logo.png":                        strings.Trim(StaticLogoPngETag, "\""),
 	"/logo.svg":                        strings.Trim(StaticLogoSvgETag, "\""),
-	"/popover.js":                      strings.Trim(StaticPopoverJsETag, "\""),
 	"/popover.min.js":                  strings.Trim(StaticPopoverMinJsETag, "\""),
 	"/qrcode.js":                       strings.Trim(StaticQrcodeJsETag, "\""),
 	"/redoc.standalone.js":             strings.Trim(StaticRedocStandaloneJsETag, "\""),
 	"/redoc.standalone.js.LICENSE.txt": strings.Trim(StaticRedocStandaloneJsLicenseTxtETag, "\""),
 	"/robots.txt":                      strings.Trim(StaticRobotsTxtETag, "\""),
-	"/selectbox.js":                    strings.Trim(StaticSelectboxJsETag, "\""),
 	"/selectbox.min.js":                strings.Trim(StaticSelectboxMinJsETag, "\""),
 	"/style_gen.css":                   strings.Trim(StaticStyleGenCssETag, "\""),
-	"/toast.js":                        strings.Trim(StaticToastJsETag, "\""),
 	"/toast.min.js":                    strings.Trim(StaticToastMinJsETag, "\""),
 }
 
@@ -183,20 +128,11 @@ func URL(path string) string {
 }
 
 func AddStaticRoutes(r chi.Router) error {
-	r.Get("/checkbox.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "checkbox.js", "text/javascript; charset=utf-8", StaticCheckboxJsETag, StaticCheckboxJs)
-	})
 	r.Get("/checkbox.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "checkbox.min.js", "text/javascript; charset=utf-8", StaticCheckboxMinJsETag, StaticCheckboxMinJs)
 	})
-	r.Get("/copybutton.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "copybutton.js", "text/javascript; charset=utf-8", StaticCopybuttonJsETag, StaticCopybuttonJs)
-	})
 	r.Get("/copybutton.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "copybutton.min.js", "text/javascript; charset=utf-8", StaticCopybuttonMinJsETag, StaticCopybuttonMinJs)
-	})
-	r.Get("/dropdown.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "dropdown.js", "text/javascript; charset=utf-8", StaticDropdownJsETag, StaticDropdownJs)
 	})
 	r.Get("/dropdown.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "dropdown.min.js", "text/javascript; charset=utf-8", StaticDropdownMinJsETag, StaticDropdownMinJs)
@@ -210,32 +146,17 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "favicon.ico", "image/x-icon", StaticFaviconIcoETag, StaticFaviconIco)
 	})
-	r.Get("/floating_ui_core.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "floating_ui_core.js", "text/javascript; charset=utf-8", StaticFloatingUiCoreJsETag, StaticFloatingUiCoreJs)
-	})
-	r.Get("/floating_ui_dom.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "floating_ui_dom.js", "text/javascript; charset=utf-8", StaticFloatingUiDomJsETag, StaticFloatingUiDomJs)
-	})
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "htmx.js", "text/javascript; charset=utf-8", StaticHtmxJsETag, StaticHtmxJs)
 	})
 	r.Get("/htmx_sse.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "htmx_sse.js", "text/javascript; charset=utf-8", StaticHtmxSseJsETag, StaticHtmxSseJs)
 	})
-	r.Get("/input.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "input.js", "text/javascript; charset=utf-8", StaticInputJsETag, StaticInputJs)
-	})
 	r.Get("/input.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "input.min.js", "text/javascript; charset=utf-8", StaticInputMinJsETag, StaticInputMinJs)
 	})
-	r.Get("/inputotp.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "inputotp.js", "text/javascript; charset=utf-8", StaticInputotpJsETag, StaticInputotpJs)
-	})
 	r.Get("/inputotp.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "inputotp.min.js", "text/javascript; charset=utf-8", StaticInputotpMinJsETag, StaticInputotpMinJs)
-	})
-	r.Get("/label.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "label.js", "text/javascript; charset=utf-8", StaticLabelJsETag, StaticLabelJs)
 	})
 	r.Get("/label.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "label.min.js", "text/javascript; charset=utf-8", StaticLabelMinJsETag, StaticLabelMinJs)
@@ -245,9 +166,6 @@ func AddStaticRoutes(r chi.Router) error {
 	})
 	r.Get("/logo.svg", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "logo.svg", "image/svg+xml", StaticLogoSvgETag, StaticLogoSvg)
-	})
-	r.Get("/popover.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "popover.js", "text/javascript; charset=utf-8", StaticPopoverJsETag, StaticPopoverJs)
 	})
 	r.Get("/popover.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "popover.min.js", "text/javascript; charset=utf-8", StaticPopoverMinJsETag, StaticPopoverMinJs)
@@ -264,17 +182,11 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "robots.txt", "text/plain; charset=utf-8", StaticRobotsTxtETag, StaticRobotsTxt)
 	})
-	r.Get("/selectbox.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "selectbox.js", "text/javascript; charset=utf-8", StaticSelectboxJsETag, StaticSelectboxJs)
-	})
 	r.Get("/selectbox.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "selectbox.min.js", "text/javascript; charset=utf-8", StaticSelectboxMinJsETag, StaticSelectboxMinJs)
 	})
 	r.Get("/style_gen.css", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "style_gen.css", "text/css; charset=utf-8", StaticStyleGenCssETag, StaticStyleGenCss)
-	})
-	r.Get("/toast.js", func(w http.ResponseWriter, r *http.Request) {
-		serve(w, r, "toast.js", "text/javascript; charset=utf-8", StaticToastJsETag, StaticToastJs)
 	})
 	r.Get("/toast.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "toast.min.js", "text/javascript; charset=utf-8", StaticToastMinJsETag, StaticToastMinJs)
