@@ -5,13 +5,13 @@ import (
 	"slices"
 	"strings"
 
-	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -72,7 +72,7 @@ templ AddDeviceModal() {
 				<div class="mt-2 grid grid-cols-5 gap-1.5 sm:gap-2">
 					for _, client := range deviceClients {
 						<label class={ choiceClass, "min-w-0 flex-col items-center gap-0.5 px-0.5 text-center" }>
-							<input type="radio" name="client" value={ client.Value } id={ id + "--client-" + client.Value } class="sr-only" required data-role={ string(client.Role) } data-name={ client.Name } data-forced?={ sitemodels.ClientRoles[client.Value] != "" }/>
+							<input type="radio" name="client" value={ client.Value } id={ id + "--client-" + client.Value } class="sr-only" required data-role={ string(client.Role) } data-name={ client.Name } data-forced?={ can.ClientRoles[client.Value] != "" }/>
 							if slices.Contains(clientLogos, client.Value) {
 								<img src={ static.URL("/logos/" + client.Value + ".png") } alt="" class="size-7 rounded-lg"/>
 							} else {

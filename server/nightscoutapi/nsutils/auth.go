@@ -3,7 +3,6 @@ package nsutils
 import (
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/utils/can"
@@ -27,13 +26,9 @@ func Require(permission string, allowDefault bool, next func(http.ResponseWriter
 	}
 }
 
+// HasPermission is whether the identity's Nightscout permissions grant the permission, see can.NightscoutPermitted
 func HasPermission(identity Identity, permission string) bool {
-	for _, granted := range identity.Permissions {
-		if permissionMatch(granted, permission) {
-			return true
-		}
-	}
-	return false
+	return can.NightscoutPermitted(identity.Permissions, permission)
 }
 
 func AuthenticateExplicit(r *http.Request) (*Identity, *HTTPError) {
@@ -47,26 +42,6 @@ func AuthenticateExplicit(r *http.Request) (*Identity, *HTTPError) {
 		return nil, ErrMissingCredentials
 	}
 	return ntIdentity, nil
-}
-
-func permissionMatch(granted, wanted string) bool {
-	if granted == "*" || granted == "api:*:*" {
-		return true
-	}
-	gotParts := strings.Split(granted, ":")
-	wantParts := strings.Split(wanted, ":")
-	if len(gotParts) != len(wantParts) {
-		return granted == wanted
-	}
-	for i := range gotParts {
-		if gotParts[i] == "*" || gotParts[i] == "all" {
-			continue
-		}
-		if gotParts[i] != wantParts[i] {
-			return false
-		}
-	}
-	return true
 }
 
 // NighttroopIdentityToNightscoutIdentity is the identity with its Nightscout permissions, see can.NightscoutPermissions

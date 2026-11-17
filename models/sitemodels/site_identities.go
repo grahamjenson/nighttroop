@@ -2,7 +2,6 @@ package sitemodels
 
 import (
 	"nighttroop.t1d.nz/utils/authclients"
-	"nighttroop.t1d.nz/utils/consts"
 )
 
 type UserIdentity struct {
@@ -32,10 +31,3 @@ type UserIdentity struct {
 	Client string `json:"client,omitempty"`
 	NSURL  string `json:"-"`
 }
-
-// ClientRoles are the roles a device for a client must have: a loop (AAPS, Trio or Loop) uploads the treatments it
-// gives and reads the profile it loops with, so it is the PWD phone
-var ClientRoles = map[string]consts.IdentityRole{
-	"aaps": consts.IdentityRoleDevicePWDPhone, "trio": consts.IdentityRoleDevicePWDPhone, "loop": consts.IdentityRoleDevicePWDPhone,
-}
-

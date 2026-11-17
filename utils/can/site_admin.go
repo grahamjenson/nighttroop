@@ -35,3 +35,9 @@ func IdentitySeeAllPushRegistrations(role consts.IdentityRole) bool {
 func IdentityResetOthersCredentials(role consts.IdentityRole) bool {
 	return role == consts.IdentityRoleAdmin
 }
+
+// ClientRoles are the roles an admin must give a device for a client, and cannot change: a loop (AAPS, Trio or Loop)
+// uploads the treatments it gives and reads the profile it loops with, so it is the PWD phone
+var ClientRoles = map[string]consts.IdentityRole{
+	"aaps": consts.IdentityRoleDevicePWDPhone, "trio": consts.IdentityRoleDevicePWDPhone, "loop": consts.IdentityRoleDevicePWDPhone,
+}

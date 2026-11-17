@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
@@ -60,7 +61,7 @@ func (s *IdentitiesCollection) GetRoute() string {
 
 func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
 	// A device for a client that must have a role has it, and cannot be made with another
-	if forced, ok := sitemodels.ClientRoles[model.Client]; ok {
+	if forced, ok := can.ClientRoles[model.Client]; ok {
 		if model.Role != "" && consts.IdentityRole(model.Role) != forced {
 			return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.identities.device_role", i18n.Data{"Client": model.Client, "Role": forced}))
 		}
@@ -278,7 +279,7 @@ func checkCanRemoveIdentity(ctx context.Context, q *controldb.Queries, siteConte
 	if identity.CurrentIdentity {
 		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.identities.not_yourself"))
 	}
-	if consts.IdentityRole(identity.Role) != consts.IdentityRoleAdmin || !identity.Enabled {
+	if !can.IdentityAdministerSite(consts.IdentityRole(identity.Role)) || !identity.Enabled {
 		return nil
 	}
 
@@ -288,7 +289,7 @@ func checkCanRemoveIdentity(ctx context.Context, q *controldb.Queries, siteConte
 	}
 	admins := 0
 	for _, i := range identities {
-		if i.Role == consts.IdentityRoleAdmin && i.Enabled {
+		if can.IdentityAdministerSite(i.Role) && i.Enabled {
 			admins++
 		}
 	}

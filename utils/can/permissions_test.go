@@ -240,3 +240,37 @@ func TestNightscoutMatrix(t *testing.T) {
 		}
 	}
 }
+
+// A granted permission matches the wanted one part by part, and "*" matches any part
+func TestNightscoutPermitted(t *testing.T) {
+	tests := []struct {
+		granted []string
+		wanted  string
+		want    bool
+	}{
+		{nil, "api:entries:read", false},
+		{[]string{"*"}, "api:entries:delete", true},
+		{[]string{"api:*:*"}, "api:entries:delete", true},
+		{[]string{"api:*:read"}, "api:entries:read", true},
+		{[]string{"api:*:read"}, "api:entries:create", false},
+		{[]string{"api:*:read"}, "api:*:read", true},
+		{[]string{"api:*:read"}, "api:*:create", false},
+		{[]string{"api:settings:*"}, "api:settings:update", true},
+		{[]string{"api:settings:*"}, "api:treatments:update", false},
+		{CaregiverNightscoutPermissions, "api:treatments:create", true},
+		{CaregiverNightscoutPermissions, "api:entries:create", false},
+		{CaregiverNightscoutPermissions, "api:*:delete", false},
+		{[]string{"api:entries"}, "api:entries:read", false},
+	}
+	for _, test := range tests {
+		require.Equal(t, test.want, NightscoutPermitted(test.granted, test.wanted), "%v %s", test.granted, test.wanted)
+	}
+}
+
+// A loop's device is the PWD phone. Any other client's device has the role the admin picks
+func TestClientRoles(t *testing.T) {
+	for _, client := range []string{"aaps", "trio", "loop"} {
+		require.Equal(t, consts.IdentityRoleDevicePWDPhone, ClientRoles[client], client)
+	}
+	require.Len(t, ClientRoles, 3)
+}
