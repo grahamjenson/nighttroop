@@ -2085,7 +2085,7 @@ harder:
   It says to give each device its own identity.
 - The whole modal shows with no scrolling, on a phone too.
 - Step 1, the app: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer and Other, each a tile with
-  its icon and its name. SugarPixel, T1D Carer and Other have their first letter in place of an icon.
+  its icon and its name. SugarPixel and Other have their first letter in place of an icon.
 - Step 2, what it can do: Read, Caregiver or PWD Phone, each with a line in plain words. The app picks the role to
   start with:
   - AAPS, Trio or Loop: PWD Phone, and the other roles cannot be picked. The server refuses them with another role.
