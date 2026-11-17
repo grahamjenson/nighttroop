@@ -63,10 +63,12 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.ResourcesSince = now.Add(-back).UnixMilli()
 	model.MemoryAlertPercent, model.DiskAlertPercent = config.MemoryAlertPercent, config.DiskAlertPercent
 	model.SlowestQueries, model.QuerySamplePercent = sqltiming.Slowest(usageQueries), config.QuerySamplePercent
-	var tables []controldb.TableSize
-	model.ControlDBSizeKB, tables = controlContext.ControlDB.ControlDBSize()
-	for _, table := range tables {
-		model.ControlDBTables = append(model.ControlDBTables, &controlmodels.SiteTable{Name: table.Name, Bytes: table.Bytes, Records: table.Records})
+	for _, serverDB := range controlContext.ControlDB.ServerDBs() {
+		shown := &controlmodels.ServerDB{Name: serverDB.Name, SizeKB: serverDB.SizeKB}
+		for _, table := range serverDB.Tables {
+			shown.Tables = append(shown.Tables, &controlmodels.SiteTable{Name: table.Name, Bytes: table.Bytes, Records: table.Records})
+		}
+		model.ServerDBs = append(model.ServerDBs, shown)
 	}
 	readings, err := controlContext.ControlDB.Live.Queries.ResourceReadingsSince(ctx, livedb.ResourceReadingsSinceParams{Since: model.ResourcesSince})
 	if err != nil {

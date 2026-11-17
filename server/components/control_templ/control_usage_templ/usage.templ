@@ -205,8 +205,15 @@ templ Usage(model controlmodels.Usage) {
 				</div>
 			}
 		}
-		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.control_db")}) {
-			@dbsize.Panel("control--usage--control", model.ControlDBSizeKB, nil, model.ControlDBTables)
+		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.server_dbs")}) {
+			<div class="space-y-4">
+				for _, serverDB := range model.ServerDBs {
+					<div id={ "control--usage--" + serverDB.Name } class="space-y-1">
+						<div class="text-sm font-semibold text-gray-700">{ i18n.T(ctx, serverDBLabels[serverDB.Name]) }</div>
+						@dbsize.Panel("control--usage--"+serverDB.Name, serverDB.SizeKB, nil, serverDB.Tables)
+					</div>
+				}
+			</div>
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.routes")}) {
 			@table.Table(table.Props{ID: "control--usage--routes"}) {
@@ -246,6 +253,10 @@ templ Usage(model controlmodels.Usage) {
 		@slowestQueries(model)
 	</div>
 }
+
+// serverDBLabels are each of the server's own DBs' labels, by name
+var serverDBLabels = map[string]string{"control": "control.usage.db_control", "logs": "control.usage.db_logs",
+	"jobs": "control.usage.db_jobs", "live": "control.usage.db_live"}
 
 // resourceRangeLabels are each of controlmodels.ResourceRanges' toggle labels
 var resourceRangeLabels = map[string]string{"hour": "control.usage.resources_hour", "day": "control.usage.resources_day",
