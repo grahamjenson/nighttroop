@@ -15,6 +15,10 @@
 1. Performance testing (cost estimate for running full node)
 
 1. Accounts
+    1. P3: Show each app's own icon in the Add Device modal, in place of the tile with its first letter: add the icon
+       files, and check each app's licence allows it
+    1. P3: Start the Add Device modal from a device status or an identity used by more than one app, with that app
+       picked, so a shared identity is one click from its own
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 

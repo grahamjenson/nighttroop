@@ -9,8 +9,10 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE 1 recent
 
 // A new device has no clients until something authenticates with its token
-INPUT #name-createIdentityFormdevicesTable kitchen
-CLICK "Add Device"
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-other)
+INPUT #site--identities--add-device--name kitchen
+CLICK #site--identities--add-device--submit
 ASSERT_STATUS 201
 SAVE_TEXT #site--identities--created--site site_url
 SAVE_TEXT #site--identities--created--ns-token kitchen_token

@@ -2072,15 +2072,24 @@ harder:
     "Sign In Again" remains.
 - Add User starts on the User role. The server refuses an identity with no role.
 - A select keeps its role when you pick that role again. It does not become empty.
-- On a phone, the Add User and Add Device forms wrap in their cards. All inputs and buttons show with no
-  sideways scroll.
+- On a phone, the Add User form wraps in its card. All inputs and buttons show with no sideways scroll.
 - Identity creation is rate limited.
 
 #### Device clients
 
-- Clients: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer and Other.
-- The client comes before the role. AAPS, Trio or Loop sets and locks the role to PWD Phone. The server refuses
-  them with another role.
+- Add Device, at the right of the Devices card, opens a modal with three steps: the app, what it can do, and its name.
+  It says to give each device its own identity.
+- The whole modal shows with no scrolling, on a phone too.
+- Step 1, the app: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer and Other, each a tile with
+  its mark and its name.
+- Step 2, what it can do: Read, Caregiver or PWD Phone, each with a line in plain words. The app picks the role to
+  start with:
+  - AAPS, Trio or Loop: PWD Phone, and the other roles cannot be picked. The server refuses them with another role.
+  - xDrip+ or xDrip4iOS: PWD Phone, as it sends glucose.
+  - T1D Carer: Caregiver.
+  - Nightguard, SugarPixel or Other: Read.
+- Step 3, the name: the app's name (`nightguard`), or with a number when the site has that name (`nightguard-2`).
+  Other starts as `device`. A name that is typed is kept when another app is picked.
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
 - Any client but Nightguard and Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout
