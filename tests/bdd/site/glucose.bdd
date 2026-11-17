@@ -24,6 +24,8 @@ SCREENSHOT glucose_readings
 // The days above the readings are named in words, never as "Last 1 days"
 ASSERT_VISIBLE #site--glucose--days
 ASSERT_NOT_VISIBLE #site--glucose--days h2:text-is("Last 1 days")
+// The words under the title are small and grey, so the title and the data stand out
+ASSERT_VISIBLE #glucose_readings_table h1 + p.text-sm.text-gray-500
 // Adding a reading is the page's main action, beside its title rather than alone in a row above the table
 ASSERT_VISIBLE #glucose_readings_table > div:has(h1) > #site--glucose--add
 // It has a plus icon, and the table is in a white panel on the page's grey canvas
