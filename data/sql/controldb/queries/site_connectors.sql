@@ -82,7 +82,7 @@ WHERE type = ? AND site_id = ?;
 SELECT us.* FROM site_connectors us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
-  AND u.deleted_at IS NULL
+  AND u.deleted_at IS NULL AND u.state <> 'unavailable' -- not while its DB is not here
   AND u.last_seen_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (24 * 60 * 60 * 1000) -- site has been seen in the last day
   AND (
       us.last_attempted_sync IS NULL

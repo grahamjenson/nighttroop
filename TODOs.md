@@ -9,6 +9,10 @@
        every 10 minutes: vacuum only when its free pages are a large part of it
 1. Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
+    1. P1: Set up paging: `page.Page` (`utils/page`) only logs that it would page the admin, as when an unavailable
+       site cannot be restored after its last try
+    1. P3: Tools for an unavailable site's broken DB (`<file>.broken-<time>`): download it, and delete the site, from
+       its control page
     1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up each site
        written to, so its tiles can be checked after a backup, not only before one
 1. e2e bakup_key testing. Control

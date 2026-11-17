@@ -91,6 +91,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - S3 backups or Sentry are not connected;
   - sites reach 90% of `MAX_SITES`, or all of it;
   - a resource is high (see [Resource alerts](#resource-alerts)).
+- A red banner, under it on every control page, lists each unavailable site (see
+  [Unavailable sites](#unavailable-sites)): its ID linked to its page, why, since when, and the tries left with the
+  time of the next. "See all" opens the sites list with only unavailable sites.
 - Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
 - Times in UTC, for example `2026-10-26 12:00:00`, and `-` when not set.
 
@@ -117,9 +120,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Dashboard, archived sites and site details show state and DB size in MB (two decimal places), newest first.
 - Site details also show the DB size limit: 20 MB for a new site.
 - Sort by time since last write (first to archive) or DB size.
+- Show all sites, or only unavailable sites (`?type=unavailable`). The sort keeps the filter.
 - Not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS`: inactive.
-- A site's state is a badge, in the list and on its page: green for Live, amber for Disabled, grey for Archived and
-  Deleted.
+- A site's state is a badge, in the list and on its page: green for Live, amber for Disabled, red for Unavailable,
+  grey for Archived and Deleted.
 - The sites list has an Abuse column: each site's abuse level and score (for example `Good · 0.00`). See
   [Abuse levels](#abuse-levels).
 - The sites list has a Backup Uploaded column: the time since the site was last uploaded to S3, or Never.
@@ -140,7 +144,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - `/sites/{id}` opens on a click, laid out like a site's summary. Back returns to the sites. An API client gets the
   site.
-- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, and disabled, archived or deleted times; Open
+- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, and disabled, archived or deleted times, and since when and why it is unavailable; Open
   Site link (new tab) while live.
 - DB size:
   - measured on disk when the page opens, kept on the site's record;
@@ -171,6 +175,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | Disable | After a confirmation | Not served. Socket.IO connections close. |
 | Archive | After disable. Needs S3. | Uploaded to S3. |
 | Restore | From the archived sites page | Live again. |
+| Retry Restore | Unavailable, after a confirmation. Within the site's download limit. | Restored from its latest backup now: a "Site Restored" toast. Else a "Site still unavailable" toast, and the tries start again. |
 | Truncate | Live or disabled, any size | Truncates all device statuses (as each backup does the newest), deletes old loop settings no record refers to, shrinks the DB. |
 
 - Download DB (`/sites/{id}/db`):
@@ -1818,16 +1823,28 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.
 - `cmd/keysets/decrypt_tar_lz4_enc.go` decrypts and unpacks a backup of either kind, given its object key.
 - A start removes only the staging folders that a stopped restore or archive left beside the DBs and backups.
-- A live site whose DB file is missing:
-  - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
-  - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
-    restore failed).
-- The start stops, with the site named in the error, if a live site:
-  - Cannot be opened or migrated, also after a restore.
-  - Has no DB file and was not restored.
-- The server serves nothing until every live site is open and migrated. Else `update.sh` rolls the release back.
+- A site never stops the start. The server starts with the other sites (see [Unavailable sites](#unavailable-sites)).
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
-- A site DB that cannot be opened keeps its file and backup. A fixed deploy opens it with its data.
+
+#### Unavailable sites
+
+- A live or disabled site is unavailable if, at start, its DB file is missing, or its DB does not open or migrate.
+  - A DB that does not open is kept: it is moved to `<file>.broken-<time in ms>`, with its `-wal` and `-shm` files.
+  - The control DB keeps the state `unavailable`, why (DB missing, DB does not open, S3 not working, not in the
+    backup, restore failed) and since when. A next start keeps why if the file is still missing.
+- An unavailable site is not open and is not served:
+  - Its site, API and Nightscout requests get 503 with `Retry-After: 60`, and JSON
+    `{"status":503,"message":"the site is temporarily unavailable, try again later"}`.
+  - If it was disabled, its requests get the answer for a site that does not exist.
+  - Backups, truncation, connectors, alarms and summaries skip it.
+- The start tries to restore each unavailable site from its latest S3 backup (one download a site, 16 at a time).
+- If a try fails, the server tries again after 1, 2, 4, 8, 16 and 32 minutes, in the background.
+- Each failed try:
+  - logs an error with the site ID and why, which goes to Sentry;
+  - gives the control admin a "Site unavailable" event, with why and the try (0 at start or by an admin).
+- A restored site opens and is live again, or disabled if it was. A "Site available" event gives the try.
+- A restored DB that does not open is moved aside, as at start.
+- After the last try fails, the admin is paged one time. Paging is not set up yet: it logs an error.
 - A site creation that fails part way leaves no site or identities.
 - A DB (control, site, jobs, logs or live) with a failed migration, when next opened:
   1. Goes back to the version before that migration. A warning names the DB and both versions.

@@ -238,7 +238,7 @@ const getConnectorsToRun = `-- name: GetConnectorsToRun :many
 SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.url_host_mac, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.backfill_started_at, us.last_backfill_from, us.last_backfill_to, us.last_backfill_finished_at, us.last_backfill_duration, us.last_backfill_records, us.last_backfill_error, us.total_backfills, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.total_records, us.last_sync_records, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_connectors us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
-  AND u.deleted_at IS NULL
+  AND u.deleted_at IS NULL AND u.state <> 'unavailable' -- not while its DB is not here
   AND u.last_seen_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (24 * 60 * 60 * 1000) -- site has been seen in the last day
   AND (
       us.last_attempted_sync IS NULL
