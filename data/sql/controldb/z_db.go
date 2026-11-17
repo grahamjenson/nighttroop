@@ -201,17 +201,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSitesNotUploadedStmt, err = db.PrepareContext(ctx, getSitesNotUploaded); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesNotUploaded: %w", err)
 	}
-	if q.getSitesToArchiveStmt, err = db.PrepareContext(ctx, getSitesToArchive); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSitesToArchive: %w", err)
-	}
 	if q.getSitesToBackUpStmt, err = db.PrepareContext(ctx, getSitesToBackUp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToBackUp: %w", err)
 	}
 	if q.getSitesToDeleteStmt, err = db.PrepareContext(ctx, getSitesToDelete); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToDelete: %w", err)
-	}
-	if q.getSitesToDisableStmt, err = db.PrepareContext(ctx, getSitesToDisable); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSitesToDisable: %w", err)
 	}
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
@@ -654,11 +648,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSitesNotUploadedStmt: %w", cerr)
 		}
 	}
-	if q.getSitesToArchiveStmt != nil {
-		if cerr := q.getSitesToArchiveStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSitesToArchiveStmt: %w", cerr)
-		}
-	}
 	if q.getSitesToBackUpStmt != nil {
 		if cerr := q.getSitesToBackUpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSitesToBackUpStmt: %w", cerr)
@@ -667,11 +656,6 @@ func (q *Queries) Close() error {
 	if q.getSitesToDeleteStmt != nil {
 		if cerr := q.getSitesToDeleteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSitesToDeleteStmt: %w", cerr)
-		}
-	}
-	if q.getSitesToDisableStmt != nil {
-		if cerr := q.getSitesToDisableStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSitesToDisableStmt: %w", cerr)
 		}
 	}
 	if q.hydrateSiteStmt != nil {
@@ -1007,10 +991,8 @@ type Queries struct {
 	getSiteIdentityPasskeyStmt              *sql.Stmt
 	getSiteInAnyStateStmt                   *sql.Stmt
 	getSitesNotUploadedStmt                 *sql.Stmt
-	getSitesToArchiveStmt                   *sql.Stmt
 	getSitesToBackUpStmt                    *sql.Stmt
 	getSitesToDeleteStmt                    *sql.Stmt
-	getSitesToDisableStmt                   *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
 	learnSiteIdentityUnitsLabelsStmt        *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
@@ -1123,10 +1105,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteIdentityPasskeyStmt:              q.getSiteIdentityPasskeyStmt,
 		getSiteInAnyStateStmt:                   q.getSiteInAnyStateStmt,
 		getSitesNotUploadedStmt:                 q.getSitesNotUploadedStmt,
-		getSitesToArchiveStmt:                   q.getSitesToArchiveStmt,
 		getSitesToBackUpStmt:                    q.getSitesToBackUpStmt,
 		getSitesToDeleteStmt:                    q.getSitesToDeleteStmt,
-		getSitesToDisableStmt:                   q.getSitesToDisableStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
 		learnSiteIdentityUnitsLabelsStmt:        q.learnSiteIdentityUnitsLabelsStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
