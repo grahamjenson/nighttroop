@@ -36,6 +36,16 @@ import (
 )
 
 // inactive is whether a live site has not been written to or seen in the configured days, so it can be disabled
+// unavailable is whether the site's DB is not open, as it was missing or did not open at start
+func unavailable(ctx context.Context, site *controlmodels.Site) bool {
+	controlContext := httputils.GetControlContext(ctx)
+	if controlContext == nil {
+		return false
+	}
+	_, ok := controlContext.ServerStatus.UnavailableSites[site.ID]
+	return ok
+}
+
 func inactive(ctx context.Context, site *controlmodels.Site) bool {
 	controlContext := httputils.GetControlContext(ctx)
 	if site.State != "live" || controlContext == nil || controlContext.ControlDB == nil {
@@ -217,6 +227,11 @@ templ siteRow(site *controlmodels.Site) {
 					{ i18n.T(ctx, "control.sites.inactive") }
 				}
 			}
+			if unavailable(ctx, site) {
+				@badge.Badge(badge.Props{ID: "control--site--" + site.ID + "--unavailable", Variant: badge.VariantError, Class: "ml-2"}) {
+					{ i18n.T(ctx, "control.sites.unavailable") }
+				}
+			}
 		}
 		@table.Cell() {
 			{ display.DateTime(&site.CreatedAt) }
@@ -322,6 +337,11 @@ templ SitePage(page *controlmodels.SitePage) {
 				if inactive(ctx, site) {
 					@badge.Badge(badge.Props{ID: "control--site--inactive", Variant: badge.VariantWarning}) {
 						{ i18n.T(ctx, "control.sites.inactive") }
+					}
+				}
+				if unavailable(ctx, site) {
+					@badge.Badge(badge.Props{ID: "control--site--unavailable", Variant: badge.VariantError}) {
+						{ i18n.T(ctx, "control.sites.unavailable") }
 					}
 				}
 				if site.Oversized() {

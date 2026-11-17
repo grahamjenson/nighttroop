@@ -41,6 +41,9 @@ type ServerStatus struct {
 	// Sites is how many sites the server has, and MaxSites how many MAX_SITES lets the public create
 	Sites    int
 	MaxSites int
+	// UnavailableSites are the sites whose DB is not open, as it was missing or did not open at start, by site ID with
+	// why
+	UnavailableSites map[string]string
 }
 
 // SitesNearLimit is whether the server has 90% or more of the sites MAX_SITES allows

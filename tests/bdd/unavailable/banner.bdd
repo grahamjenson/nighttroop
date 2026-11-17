@@ -1,0 +1,25 @@
+// The control admin signs in to a server with two sites unavailable, as their DBs could not be opened or restored, so
+// every control page names them, with why, each linked to its page
+GOTO {{ .control_url }}/login
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+ASSERT_VISIBLE #control--status-banner--unavailable
+ASSERT_TEXT_VISIBLE 2 sites unavailable, as their DBs could not be opened or restored:
+ASSERT_VISIBLE #control--status-banner--unavailable--amissing
+ASSERT_VISIBLE #control--status-banner--unavailable >> text=/amissing\s*\(DB missing\)/
+ASSERT_VISIBLE #control--status-banner--unavailable >> text=/brokensi\s*\(DB does not open\)/
+
+// The sites list, the dashboard, marks each unavailable site
+ASSERT_PATH /
+ASSERT_VISIBLE #control--site--amissing--unavailable
+ASSERT_VISIBLE #control--site--brokensi--unavailable
+SCREENSHOT dashboard
+
+// A site's name in the banner opens its page
+CLICK #control--status-banner--unavailable--amissing
+ASSERT_PATH /sites/amissing
+ASSERT_VISIBLE #control--status-banner--unavailable
+ASSERT_VISIBLE #control--site--unavailable
+SCREENSHOT site_page

@@ -90,7 +90,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The banner shows when:
   - S3 backups or Sentry are not connected;
   - sites reach 90% of `MAX_SITES`, or all of it;
-  - a resource is high (see [Resource alerts](#resource-alerts)).
+  - a resource is high (see [Resource alerts](#resource-alerts));
+  - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
+    missing, or DB does not open) and a link to its page, then how many more.
+- An unavailable site has a red Unavailable badge in the sites list and on its page.
 - Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
 - Times in UTC, for example `2026-10-26 12:00:00`, and `-` when not set.
 

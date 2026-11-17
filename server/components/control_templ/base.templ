@@ -5,12 +5,15 @@ import (
 	"nighttroop.t1d.nz/server/components/confirm"
 	"context"
 	"fmt"
+	"maps"
+	"slices"
 
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -49,10 +52,10 @@ templ ControlBase() {
 	</html>
 }
 
-// StatusBanner warns control admins about optional services that are not working, resources running high, and sites
-// near or at the limit MAX_SITES sets
+// StatusBanner warns control admins about optional services that are not working, resources running high, sites near
+// or at the limit MAX_SITES sets, and unavailable sites, each linked to its page
 templ StatusBanner(status config.ServerStatus) {
-	if !status.S3Working || !status.SentryWorking || len(status.HighResources) > 0 || status.SitesNearLimit() {
+	if !status.S3Working || !status.SentryWorking || len(status.HighResources) > 0 || status.SitesNearLimit() || len(status.UnavailableSites) > 0 {
 		<div id="control--status-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 text-sm" role="alert">
 			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
 				if !status.S3Working {
@@ -69,9 +72,42 @@ templ StatusBanner(status config.ServerStatus) {
 						<strong>{ sitesTitle(ctx, status) }:</strong> { i18n.T(ctx, "control.status_banner.sites_text", i18n.Data{"SiteCount": status.Sites, "MaxSites": status.MaxSites}) }
 					</p>
 				}
+				if len(status.UnavailableSites) > 0 {
+					<p id="control--status-banner--unavailable" class="text-red-700">
+						<strong>{ i18n.T(ctx, "control.status_banner.unavailable_title", i18n.Data{"SiteCount": len(status.UnavailableSites)}) }</strong>
+						for i, siteID := range shownUnavailable(status) {
+							<a id={ "control--status-banner--unavailable--" + siteID } href={ templ.SafeURL("/sites/" + siteID) } class="underline">{ siteID }</a> ({ i18n.T(ctx, unavailableReasons[status.UnavailableSites[siteID]]) }){ listComma(i, len(shownUnavailable(status))) }
+						}
+						if more := len(status.UnavailableSites) - len(shownUnavailable(status)); more > 0 {
+							{ i18n.T(ctx, "control.status_banner.unavailable_more", i18n.Data{"SiteCount": more}) }
+						}
+					</p>
+				}
 			</div>
 		</div>
 	}
+}
+
+// listComma is the comma after the item at i of a list of n, none after the last
+func listComma(i, n int) string {
+	if i < n-1 {
+		return ","
+	}
+	return ""
+}
+
+// unavailableReasons are the banner's words for why a site is unavailable
+var unavailableReasons = map[string]string{
+	db.UnavailableMissing: "control.status_banner.unavailable_missing", db.UnavailableCannotOpen: "control.status_banner.unavailable_cannot_open",
+}
+
+// maxUnavailableShown is how many unavailable sites the banner names, so it stays short when S3 is down for every site
+const maxUnavailableShown = 10
+
+// shownUnavailable are the unavailable sites the banner names, in order of their IDs
+func shownUnavailable(status config.ServerStatus) []string {
+	siteIDs := slices.Sorted(maps.Keys(status.UnavailableSites))
+	return siteIDs[:min(len(siteIDs), maxUnavailableShown)]
 }
 
 func sitesTitle(ctx context.Context, status config.ServerStatus) string {
