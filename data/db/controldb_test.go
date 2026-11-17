@@ -518,8 +518,8 @@ func TestCreateSiteWhenIdentitiesFail(t *testing.T) {
 	require.ErrorIs(t, err, sql.ErrNoRows, "the site's admin is not kept")
 }
 
-// A live site whose DB file is missing, such as one restored before it was backed up, is left out of the start and
-// of the sites to back up, while the rest are opened
+// A live site whose DB file is missing, such as one restored before it was backed up, is unavailable and left out of the
+// sites to back up, while the rest are opened
 func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development
@@ -540,7 +540,7 @@ func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	_, _, err = controlDB.GetSite(ctx, "keptsite")
 	require.NoError(t, err)
 	_, _, err = controlDB.GetSite(ctx, "kostsite")
-	require.ErrorContains(t, err, "not found in memory")
+	require.ErrorIs(t, err, db.ErrSiteUnavailable)
 
 	sites, err := controlDB.Queries.GetLiveAndDisabledSites(ctx)
 	require.NoError(t, err)
@@ -550,9 +550,10 @@ func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	require.Equal(t, "keptsite", open[0].Subdomain)
 }
 
-// A live site whose DB file is missing at start is restored, with its data, from its own backup; one with no backup
-// stops the start, named in its error, and each is a site_db_missing event the control admin sees
-func TestRestoreMissingSites(t *testing.T) {
+// A live site whose DB file is missing at start is unavailable, then restored, with its data, from its own backup; one
+// with no backup stays unavailable while the server runs without it, and each is a site_db_missing event the control
+// admin sees
+func TestRestoreUnavailableSites(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development
 	cfg.DataDir = t.TempDir()
@@ -591,12 +592,13 @@ func TestRestoreMissingSites(t *testing.T) {
 	}
 
 	controlDB, err = db.NewControlDB(ctx, &cfg)
-	require.NoError(t, err)
+	require.NoError(t, err, "the start goes on without the missing sites")
 	t.Cleanup(func() { controlDB.Close() })
-	err = controlDB.RestoreMissingSites(ctx, download)
-	require.ErrorIs(t, err, db.ErrSitesMissing, "kingsite is not in the backup, so the start stops")
-	require.ErrorContains(t, err, "kingsite")
-	require.NotContains(t, err.Error(), "kostsite")
+	require.Equal(t, map[string]string{"kostsite": db.UnavailableMissing, "kingsite": db.UnavailableMissing}, controlDB.UnavailableSites())
+	_, _, err = controlDB.GetSite(ctx, "kostsite")
+	require.ErrorIs(t, err, db.ErrSiteUnavailable, "until it is restored")
+	controlDB.RestoreUnavailableSites(ctx, download)
+	require.Equal(t, map[string]string{"kingsite": db.UnavailableMissing}, controlDB.UnavailableSites(), "kingsite is not in the backup")
 	require.ElementsMatch(t, []string{sitedb.GetS3SitePath("kostsite", &cfg), sitedb.GetS3SitePath("kingsite", &cfg)}, downloads,
 		"each site is downloaded by itself")
 
@@ -606,7 +608,7 @@ func TestRestoreMissingSites(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, float64(120), reading.Mgdl)
 	_, _, err = controlDB.GetSite(ctx, "kingsite")
-	require.ErrorContains(t, err, "not found in memory")
+	require.ErrorIs(t, err, db.ErrSiteUnavailable)
 	entries, err := os.ReadDir(filepath.Dir(sitedb.GetSitesFolder("k", &cfg)))
 	require.NoError(t, err)
 	for _, entry := range entries {
@@ -625,22 +627,22 @@ func TestRestoreMissingSites(t *testing.T) {
 	}
 }
 
-// A live site whose DB file is missing at start is restored from its backup and the server starts, unless
-// there is no S3 or the restored DB cannot be opened, as when its migration fails, which stops the start, as a site
-// that is there and cannot be opened does, so a release that cannot open it is rolled back. The control admin sees
-// each as a site_db_missing event.
-func TestRestoreMissingSite(t *testing.T) {
+// A live site whose DB file is missing at start is unavailable, then restored from its backup, unless there is no S3
+// or the restored DB cannot be opened, as when its migration fails, when it stays unavailable and the restored DB goes.
+// The control admin sees each as a site_db_missing event.
+func TestRestoreUnavailableSite(t *testing.T) {
 	tests := []struct {
 		name      string
 		s3Working bool
 		// dirty is a backup dirty at a migration it already has, so migrating it again fails, as one that keeps failing does
 		dirty bool
-		err   error
-		event string
+		// restored is whether the site is restored and open
+		restored bool
+		event    string
 	}{
-		{name: "restored, the server starts", s3Working: true, event: `{"restored":true}`},
-		{name: "without S3 the start stops", err: db.ErrSitesMissing, event: `{"restored":false,"reason":"s3_not_working"}`},
-		{name: "restored but cannot be opened, the start stops", s3Working: true, dirty: true, err: db.ErrRestoredSiteCannotOpen,
+		{name: "restored", s3Working: true, restored: true, event: `{"restored":true}`},
+		{name: "without S3 it stays unavailable", event: `{"restored":false,"reason":"s3_not_working"}`},
+		{name: "restored but cannot be opened, it stays unavailable", s3Working: true, dirty: true,
 			event: `{"restored":false,"reason":"restore_failed"}`},
 	}
 	for _, tt := range tests {
@@ -674,15 +676,14 @@ func TestRestoreMissingSite(t *testing.T) {
 			controlDB, err = db.NewControlDB(ctx, &cfg)
 			require.NoError(t, err)
 			t.Cleanup(func() { controlDB.Close() })
-			err = controlDB.RestoreMissingSites(ctx, download)
+			controlDB.RestoreUnavailableSites(ctx, download)
 			_, _, openErr := controlDB.GetSite(ctx, siteID)
-			if tt.err == nil {
-				require.NoError(t, err)
+			if tt.restored {
 				require.NoError(t, openErr, "the site is restored and open")
+				require.Empty(t, controlDB.UnavailableSites())
 			} else {
-				require.ErrorIs(t, err, tt.err)
-				require.ErrorContains(t, err, siteID)
-				require.ErrorContains(t, openErr, "not found in memory")
+				require.ErrorIs(t, openErr, db.ErrSiteUnavailable)
+				require.False(t, utils.FileExists(sitedb.GetPath(siteID, &cfg)), "a restored DB that does not open goes")
 			}
 			found, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_db_missing"), Limit: 10})
 			require.NoError(t, err)

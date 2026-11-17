@@ -46,8 +46,8 @@ type ControlDB struct {
 	Live *livedb.DB
 
 	setup setup
-	// missingSites are the live sites whose DB files were missing at start, for RestoreMissingSites
-	missingSites []string
+	// unavailable are the live and disabled sites whose DB is not open, as it was missing or did not open at start
+	unavailable unavailableSites
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -109,17 +109,19 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(runtime.NumCPU())
 	for _, model := range res {
-		// A site without its DB is restored from its backup by RestoreMissingSites, which stops the start if it
-		// cannot be
+		// A site without its DB, or whose DB does not open, is unavailable, so the start goes on without it, and is
+		// restored from its backup by RestoreUnavailableSites
 		if !utils.FileExists(sitedb.GetPath(model.ID, db.ServerConfig)) {
-			slog.ErrorContext(ctx, "Site DB is missing, so the site is not opened", "site_id", model.ID)
-			db.missingSites = append(db.missingSites, model.ID)
+			slog.ErrorContext(aslog.WithSite(ctx, model.ID), "Site DB is missing, so the site is unavailable", "site_id", model.ID)
+			db.MakeSiteUnavailable(model.ID, UnavailableMissing)
 			continue
 		}
 		g.Go(func() error {
 			siteDB, err := NewSiteDB(ctx, model.ID, db.ServerConfig)
 			if err != nil {
-				return fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
+				slog.ErrorContext(aslog.WithSite(ctx, model.ID), "Site DB does not open, so the site is unavailable", "site_id", model.ID, "error", err)
+				db.MakeSiteUnavailable(model.ID, UnavailableCannotOpen)
+				return nil
 			}
 			db.sites.add(siteDB)
 			return nil
@@ -128,68 +130,48 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 	return g.Wait()
 }
 
-// ErrRestoredSiteCannotOpen is a site restored from its backup whose DB cannot be opened, as when it cannot be
-// migrated, which stops the start as a site that is there and cannot be opened does
-var ErrRestoredSiteCannotOpen = errors.New("a restored site's DB cannot be opened")
-
-// ErrSitesMissing is live sites whose DB files are missing and were not restored from their backups, which
-// stops the start, as a site that cannot be opened does: a server without one of its sites serves nothing, so no data
-// is written that a rollback would lose, and the sites' data is never served half there
-var ErrSitesMissing = errors.New("live sites' DBs are missing and were not restored")
-
-// restoreParallelism is how many missing sites are restored at once, as a new server restores every site
+// restoreParallelism is how many unavailable sites are restored at once, as a new server restores every site
 const restoreParallelism = 16
 
-// RestoreMissingSites restores each live site whose DB file was missing at start from its latest backup, downloaded
-// with download, a few at once, and opens it. Each is recorded as a site_db_missing event, so the control admin sees a
-// site the backup could not bring back. One it could not is ErrSitesMissing, naming the sites, and a restored site
-// that cannot be opened is ErrRestoredSiteCannotOpen: either stops the start, so a release that cannot open every live
-// site is rolled back rather than kept.
-func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.DownloadFunc) error {
-	var mu sync.Mutex
-	var cannotOpen error
-	missing := []string{}
+// RestoreUnavailableSites restores each unavailable site from its latest backup, downloaded with download, a few at
+// once, and opens it. Each is a site_db_missing event, and one not restored is logged as an error, so the control admin
+// sees it. One not restored stays unavailable while the server runs without it.
+func (db *ControlDB) RestoreUnavailableSites(ctx context.Context, download s3utils.DownloadFunc) {
 	g := errgroup.Group{}
 	g.SetLimit(restoreParallelism)
-	for _, siteID := range db.missingSites {
+	for siteID := range db.UnavailableSites() {
 		g.Go(func() error {
-			// Without S3 there is nothing to download, so the start does not wait on a download that cannot work
+			// A server stopping before every site is restored leaves the rest to its next start
+			if ctx.Err() != nil {
+				return nil
+			}
+			siteCtx := aslog.WithSite(ctx, siteID)
+			// Without S3 there is nothing to download, so it does not wait on a download that cannot work
 			reason := ""
 			if !db.ServerConfig.Status.S3Working {
 				reason = "s3_not_working"
-			} else if found, err := db.restoreSite(ctx, siteID, download); err != nil {
-				slog.ErrorContext(ctx, "Cannot restore a missing site DB from its backup", "site_id", siteID, "error", err)
+			} else if found, err := db.restoreSite(siteCtx, siteID, download); err != nil {
+				slog.ErrorContext(siteCtx, "Cannot restore an unavailable site's DB from its backup", "site_id", siteID, "error", err)
 				reason = "restore_failed"
-				if errors.Is(err, ErrRestoredSiteCannotOpen) {
-					mu.Lock()
-					cannotOpen = errors.Join(cannotOpen, err)
-					mu.Unlock()
-				}
 			} else if !found {
 				reason = "not_in_backup"
 			}
 			if reason == "" {
-				slog.InfoContext(ctx, "Missing site DB restored from its backup", "site_id", siteID)
+				db.unavailable.remove(siteID)
+				slog.InfoContext(siteCtx, "Unavailable site's DB restored from its backup", "site_id", siteID)
 			} else {
-				mu.Lock()
-				missing = append(missing, siteID)
-				mu.Unlock()
+				slog.ErrorContext(siteCtx, "Site is unavailable, as its DB could not be restored", "site_id", siteID, "reason", reason)
 			}
-			db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, reason == "", reason)
+			db.Logs.SiteDBMissingEvent(siteCtx, siteID, reason == "", reason)
 			return nil
 		})
 	}
 	_ = g.Wait()
-	db.missingSites = nil
-	if len(missing) > 0 {
-		slices.Sort(missing)
-		return errors.Join(cannotOpen, fmt.Errorf("%w: %s", ErrSitesMissing, strings.Join(missing, ", ")))
-	}
-	return cannotOpen
 }
 
-// restoreSite downloads the site's latest backup beside its folder, moves its DB into place and opens it, and
-// is whether it had a backup
+// restoreSite downloads the site's latest backup beside its folder, puts its DB in place and opens it, and is whether
+// it had a backup. A DB already there, which did not open, is moved aside first, and put back if the restored one does
+// not open either, so a DB a later release can open, as one whose migration failed, is never lost.
 func (db *ControlDB) restoreSite(ctx context.Context, siteID string, download s3utils.DownloadFunc) (bool, error) {
 	path := sitedb.GetPath(siteID, db.ServerConfig)
 	folder := filepath.Dir(path)
@@ -208,13 +190,17 @@ func (db *ControlDB) restoreSite(ctx context.Context, siteID string, download s3
 	if _, found, err := download(ctx, sitedb.GetS3SitePath(siteID, db.ServerConfig), downloaded); err != nil || !found {
 		return false, err
 	}
+	aside := fmt.Sprintf("%s.unopened-%d", path, time.Now().UnixMilli())
+	if err := moveDB(path, aside); err != nil {
+		return false, fmt.Errorf("cannot move the DB that did not open aside: %w", err)
+	}
 	// A rename on the same disk, so the site's DB is there whole or not at all
 	if err := os.Rename(filepath.Join(downloaded, filepath.Base(path)), path); err != nil {
-		return false, fmt.Errorf("the backup has no DB: %w", err)
+		return false, errors.Join(fmt.Errorf("the backup has no DB: %w", err), moveDB(aside, path))
 	}
 	siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
 	if err != nil {
-		return false, fmt.Errorf("%w: %s: %w", ErrRestoredSiteCannotOpen, siteID, err)
+		return false, errors.Join(fmt.Errorf("the restored DB does not open: %w", err), utils.DeleteFiles(dbFiles(path)), moveDB(aside, path))
 	}
 	db.sites.add(siteDB)
 	return true, nil
@@ -799,6 +785,9 @@ func (db *ControlDB) GetSite(ctx context.Context, subdomain string) (*SiteDB, *c
 	}
 
 	siteDB := db.sites.get(subdomain)
+	if siteDB == nil && db.unavailable.has(subdomain) {
+		return nil, nil, ErrSiteUnavailable
+	}
 	if siteDB == nil {
 		return nil, nil, fmt.Errorf("Cannot get SiteDB from memory: %w in memory", ErrSiteNotFound)
 	}
@@ -1124,8 +1113,11 @@ func (db *ControlDB) GetSiteDBsFromModels(models []*controldb.Site) []*SiteDB {
 	sites := []*SiteDB{}
 	for _, model := range models {
 		site := db.sites.get(model.ID)
-		if site == nil {
+		// An unavailable site is left out quietly, as its restore logs why
+		if site == nil && !db.unavailable.has(model.ID) {
 			slog.Error("Site is not open, so it is left out", "site_id", model.ID)
+		}
+		if site == nil {
 			continue
 		}
 		sites = append(sites, site)

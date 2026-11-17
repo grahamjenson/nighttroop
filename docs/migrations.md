@@ -98,8 +98,10 @@ CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);  -- droppi
 
 ## When a migration fails on a deploy
 
-- **A DB that cannot be opened stops the start.** So does a live site's DB that is missing and not restored, or
-  restored and cannot be opened.
+- **A DB that cannot be opened stops the start**: the control, jobs, logs or live DB. A site's DB that cannot be opened,
+  or is missing, does not: the site is unavailable (503) and restored from its backup, and the rest are served. A site
+  whose backup cannot be opened either keeps its DB, so a fixed release opens it. A migration that fails on every site
+  leaves every site unavailable, and `update.sh` does not roll back, as the server is healthy.
   - The server serves nothing, so it writes nothing a rollback would lose. The files are kept.
   - `update.sh` rolls the release back, putting `./data` back from its copy.
   - The error names the DB or the sites.
