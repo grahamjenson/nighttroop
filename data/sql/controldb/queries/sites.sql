@@ -122,6 +122,16 @@ WHERE id = sqlc.arg('ID') AND abuse_score IS NOT sqlc.arg('AbuseScore');
 UPDATE sites SET estimated_db_size_kb = sqlc.arg('EstimatedDbSizeKb')
 WHERE id = sqlc.arg('ID') AND estimated_db_size_kb IS NOT sqlc.arg('EstimatedDbSizeKb');
 
+-- name: UpdateSiteBackedUp :exec
+-- The site's backup copy was made now, at BackupSizeKb on disk
+UPDATE sites SET backed_up_at = CAST(unixepoch('subsec') * 1000 AS INTEGER), backup_size_kb = CAST(sqlc.arg('BackupSizeKb') AS INTEGER)
+WHERE id = sqlc.arg('ID');
+
+-- name: UpdateSitesBackupUploaded :exec
+-- The sites were uploaded to S3 now
+UPDATE sites SET backup_uploaded_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id IN (sqlc.slice('IDs'));
+
 
 -------
 -- DELETE
@@ -159,7 +169,9 @@ SET
     disabled_at = NULL,
     archived_at = NULL,
     last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+    last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    -- Its backup is uploaded again soon
+    backup_uploaded_at = NULL
 WHERE id = ? AND state = 'archived';
 
 -- Pass a list of sites as a string to delete
@@ -177,9 +189,15 @@ RETURNING id;
 --------------------------------
 
 
--- name: GetBatchSitesToUpkeep :many
--- The batch's live and disabled sites, to truncate
+-- name: GetBatchSitesToBackUp :many
+-- Get sites that are live  or diabled
+-- We must backup even empty sites because a rehydrated control will expect them
 SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
+
+
+-- name: GetSitesNotUploaded :many
+-- The live and disabled sites not uploaded yet, e.g. a new or restored site
+SELECT * FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id;
 
 
 -- name: GetSitesToDeleteInBatch :many

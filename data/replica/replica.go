@@ -1,68 +1,58 @@
-// Package replica replicates the control DB and each site's DB to S3 with Litestream, as each one is written, and
-// restores one from its replica
+// Package replica replicates the control DB to S3 with Litestream, as it is written, and restores it from its replica
 package replica
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/benbjohnson/litestream"
 	"github.com/benbjohnson/litestream/s3"
-	"golang.org/x/sync/errgroup"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
 
-// Each site's writes are sent within siteSync, as a site's apps send theirs every 5 minutes or so, so a site sends
-// about one upload a cycle: about 300 a day while it is used and none while it is not. The control DB, which every
-// sign in, site and identity change writes, is sent within controlSync, as often as Litestream does. Compaction keeps
-// what a restore downloads to a daily snapshot, the hours since, and for the control DB the minutes since.
-const (
-	siteSync    = time.Minute
-	controlSync = time.Second
-)
+// The control DB, which every sign in, site and identity change writes, is sent within a second, as often as
+// Litestream does. Compaction keeps what a restore downloads to Litestream's daily snapshot, the hours since, and the
+// minutes since.
+var levels = litestream.CompactionLevels{{Level: 0}, {Level: 1, Interval: time.Minute}, {Level: 2, Interval: time.Hour}}
 
-var (
-	siteLevels    = litestream.CompactionLevels{{Level: 0}, {Level: 1, Interval: time.Hour}}
-	controlLevels = litestream.CompactionLevels{{Level: 0}, {Level: 1, Interval: time.Minute}, {Level: 2, Interval: time.Hour}}
-)
+// Name is the name of the control DB's replica, under the bucket's replica prefix
+const Name = "control"
 
-// Replicas are the replicas of the server's DBs. Nil, as when S3 is off, replicates and restores nothing.
-type Replicas struct {
-	sites, control *litestream.Store
-	// client is the replica client of the DB with name, "control" or "site/<site ID>"
-	client func(name string) litestream.ReplicaClient
+// Replica is the control DB's replica. Nil, as when S3 is off, replicates and restores nothing.
+type Replica struct {
+	client litestream.ReplicaClient
+	store  *litestream.Store
+	path   string
 }
 
-// New are the replicas of the server's DBs in its S3 bucket, or nil when S3 is off. Over HTTPS each is encrypted by
-// S3 with a key of its own (SSE-C); over HTTP, as the development MinIO is, S3 refuses SSE-C, so they are not.
-func New(cfg *config.ServerConfig, bucket *s3utils.S3Client) *Replicas {
+// New is the replica of the control DB in the server's S3 bucket, or nil when S3 is off. Over HTTPS S3 encrypts it
+// with the server's key (SSE-C); over HTTP, as the development MinIO is, S3 refuses SSE-C, so it is not.
+func New(cfg *config.ServerConfig, bucket *s3utils.S3Client) *Replica {
 	if !cfg.Status.S3Working {
 		return nil
 	}
 	encrypted := strings.HasPrefix(bucket.Endpoint, "https://")
 	if !encrypted {
-		slog.Warn("S3_URL is not HTTPS, so the DBs' replicas are not encrypted")
+		slog.Warn("S3_URL is not HTTPS, so the control DB's replica is not encrypted")
 	}
-	return &Replicas{client: func(name string) litestream.ReplicaClient { return Client(cfg, bucket, name, encrypted) }}
+	return &Replica{client: Client(cfg, bucket, encrypted)}
 }
 
-// Client is the Litestream S3 client of the replica of the DB with name, encrypted with its key when encrypted
-func Client(cfg *config.ServerConfig, bucket *s3utils.S3Client, name string, encrypted bool) *s3.ReplicaClient {
+// Client is the Litestream S3 client of the control DB's replica, encrypted with its key when encrypted
+func Client(cfg *config.ServerConfig, bucket *s3utils.S3Client, encrypted bool) *s3.ReplicaClient {
 	client := s3.NewReplicaClient()
 	client.AccessKeyID, client.SecretAccessKey = bucket.AccessKeyID, bucket.SecretAccessKey
 	client.Bucket, client.Region, client.Endpoint, client.ForcePathStyle = bucket.Bucket, bucket.Region, bucket.Endpoint, bucket.ForcePathStyle
-	client.Path = bucket.ReplicaPrefix() + name
+	client.Path = bucket.ReplicaPrefix() + Name
 	if encrypted {
-		key, err := cfg.Security.ReplicaKey(name)
+		key, err := cfg.Security.ReplicaKey(Name)
 		if err != nil {
 			// Not a key, so the client refuses to start rather than replicate unencrypted
-			slog.Error("Cannot make a replica's key", "replica", name, "error", err)
+			slog.Error("Cannot make the replica's key", "error", err)
 			key = "none"
 		}
 		client.SSECustomerAlgorithm, client.SSECustomerKey = "AES256", key
@@ -70,142 +60,40 @@ func Client(cfg *config.ServerConfig, bucket *s3utils.S3Client, name string, enc
 	return client
 }
 
-// SiteName is the name of the site's replica
-func SiteName(siteID string) string {
-	return "site/" + siteID
-}
-
-// Start replicates the control DB at controlPath and the DBs of sites, by path to name
-func (r *Replicas) Start(ctx context.Context, controlPath string, sites map[string]string) error {
+// Start replicates the control DB at path
+func (r *Replica) Start(ctx context.Context, path string) error {
 	if r == nil {
 		return nil
 	}
-	dbs := []*litestream.DB{}
-	for path, name := range sites {
-		dbs = append(dbs, r.db(path, name, siteSync))
-	}
-	r.sites = store(dbs, siteLevels, time.Hour)
-	r.control = store([]*litestream.DB{r.db(controlPath, "control", controlSync)}, controlLevels, time.Minute)
-	return errors.Join(r.control.Open(ctx), r.sites.Open(ctx))
-}
-
-// store keeps dbs, compacted at levels, with Litestream's daily snapshots, its replica's L0 files removed once
-// compacted, checked each l0Check: Litestream's 15 seconds lists two levels of every replica each time
-func store(dbs []*litestream.DB, levels litestream.CompactionLevels, l0Check time.Duration) *litestream.Store {
-	s := litestream.NewStore(dbs, levels)
-	s.L0RetentionCheckInterval = l0Check
-	return s
-}
-
-func (r *Replicas) db(path, name string, sync time.Duration) *litestream.DB {
 	db := litestream.NewDB(path)
-	db.MonitorInterval = sync
-	db.Replica = litestream.NewReplicaWithClient(db, r.client(name))
-	db.Replica.SyncInterval = sync
-	return db
+	db.MonitorInterval = time.Second
+	db.Replica = litestream.NewReplicaWithClient(db, r.client)
+	db.Replica.SyncInterval = time.Second
+	r.path, r.store = path, litestream.NewStore([]*litestream.DB{db}, levels)
+	// Litestream's 15 seconds lists two levels of the replica each time
+	r.store.L0RetentionCheckInterval = time.Minute
+	return r.store.Open(ctx)
 }
 
-// Add replicates the site DB at path to name, sending it at once
-func (r *Replicas) Add(ctx context.Context, path, name string) error {
-	if r == nil {
+// Close sends the control DB's last writes and stops replicating it. It is synced first: Litestream only sends a DB's
+// last writes as it closes it once it has read the DB, which it first does a second after start.
+func (r *Replica) Close(ctx context.Context) error {
+	if r == nil || r.store == nil {
 		return nil
 	}
-	if err := r.sites.RegisterDB(r.db(path, name, siteSync)); err != nil {
-		return err
-	}
-	return r.Sync(ctx, path)
+	_, err := r.store.SyncDB(ctx, r.path, true)
+	return errors.Join(err, r.store.Close(ctx))
 }
 
-// Sync sends the DB at path's writes to its replica now, such as before an archive or after a change to the control
-// DB that a restore must have
-func (r *Replicas) Sync(ctx context.Context, path string) error {
-	if r == nil {
-		return nil
-	}
-	store := r.sites
-	if r.control.FindDB(path) != nil {
-		store = r.control
-	}
-	_, err := store.SyncDB(ctx, path, true)
-	return err
-}
-
-// Remove sends the site DB at path's last writes and stops replicating it, removing what Litestream keeps beside it,
-// as for a site archived or deleted; deleted also deletes its replica, name
-func (r *Replicas) Remove(ctx context.Context, path, name string, deleted bool) error {
-	if r == nil {
-		return nil
-	}
-	db := r.sites.FindDB(path)
-	if db == nil {
-		return fmt.Errorf("the DB is not replicated")
-	}
-	if err := r.sites.UnregisterDB(ctx, path); err != nil {
-		return err
-	}
-	if err := os.RemoveAll(db.MetaPath()); err != nil {
-		return err
-	}
-	if deleted {
-		return db.Replica.Client.DeleteAll(ctx)
-	}
-	return nil
-}
-
-// Checkpoint moves the site DB at path's write-ahead log into it and truncates it, as Vacuum does without
-// replication, once its writes are sent: a checkpoint of its own cannot, while Litestream reads the DB
-func (r *Replicas) Checkpoint(ctx context.Context, path string) error {
-	db := r.sites.FindDB(path)
-	if db == nil {
-		return fmt.Errorf("the DB is not replicated")
-	}
-	return db.Checkpoint(ctx, litestream.CheckpointModeTruncate)
-}
-
-// Replicated is when the site DB at path was last in step with its replica, or nil if it has not been since start
-func (r *Replicas) Replicated(path string) *int64 {
-	if r == nil {
-		return nil
-	}
-	db := r.sites.FindDB(path)
-	if db == nil || db.LastSuccessfulSyncAt().IsZero() {
-		return nil
-	}
-	ms := db.LastSuccessfulSyncAt().UnixMilli()
-	return &ms
-}
-
-// Close sends each DB's last writes and stops replicating them. Each is synced first, a few at once: Litestream only
-// sends a DB's last writes as it closes it once it has read the DB, which it first does a sync interval after start.
-func (r *Replicas) Close(ctx context.Context) error {
-	if r == nil {
-		return nil
-	}
-	g := errgroup.Group{}
-	g.SetLimit(closeParallelism)
-	for _, store := range []*litestream.Store{r.sites, r.control} {
-		for _, db := range store.DBs() {
-			g.Go(func() error {
-				_, err := store.SyncDB(ctx, db.Path(), true)
-				return err
-			})
-		}
-	}
-	return errors.Join(g.Wait(), r.sites.Close(ctx), r.control.Close(ctx))
-}
-
-// closeParallelism is how many DBs Close syncs at once
-const closeParallelism = 16
-
-// Restore restores the DB with name from its replica to path, which must not be there, and is false when it has no
+// Restore restores the control DB from its replica to path, which must not be there, and is false when it has no
 // replica
-func (r *Replicas) Restore(ctx context.Context, name, path string) (bool, error) {
+func (r *Replica) Restore(ctx context.Context, path string) (bool, error) {
 	if r == nil {
 		return false, nil
 	}
 	opt := litestream.NewRestoreOptions()
 	opt.OutputPath = path
-	err := litestream.NewReplicaWithClient(nil, r.client(name)).Restore(ctx, opt)
+	err := litestream.NewReplicaWithClient(nil, r.client).Restore(ctx, opt)
 	if errors.Is(err, litestream.ErrTxNotAvailable) || errors.Is(err, litestream.ErrNoSnapshots) {
 		return false, nil
 	}

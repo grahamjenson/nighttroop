@@ -8,10 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
 
 	_ "modernc.org/sqlite"
@@ -27,14 +29,13 @@ type DB struct {
 	Queries      *Queries
 	InMemory     bool
 
-	Path string
-	// Checkpoint, when set, checkpoints the DB's write-ahead log after Vacuum, in place of SQLite's TRUNCATE
-	// checkpoint, which cannot finish while Litestream reads the DB to replicate it
-	Checkpoint func(context.Context) error
+	Path       string
+	BackupPath string
 }
 
 func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) {
 	path := GetPath(serverConfig)
+	backuppath := GetBackupPath(serverConfig)
 
 	cacheSize := 2000
 
@@ -42,7 +43,8 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 		ServerConfig: serverConfig,
 		InMemory:     serverConfig.IsTest(),
 
-		Path: path,
+		Path:       path,
+		BackupPath: backuppath,
 	}
 
 	var err error
@@ -108,6 +110,15 @@ func (db *DB) TryCloseAndDelete() {
 	}
 
 	utils.DeleteFile(db.Path)
+	utils.DeleteFile(db.BackupPath)
+}
+
+// Backup copies the DB, compressed with LZ4, to its backup path, and deletes the uncompressed copy kept before
+func (db *DB) Backup(ctx context.Context) error {
+	if err := backup.CompressedBackup(ctx, db.SQLiteDB, db.BackupPath); err != nil {
+		return err
+	}
+	return utils.DeleteFile(strings.TrimSuffix(db.BackupPath, ".lz4"))
 }
 
 // Vacuum rebuilds the DB without its free pages, then checkpoints the write-ahead log, so the file shrinks to the data
@@ -115,9 +126,6 @@ func (db *DB) TryCloseAndDelete() {
 func (db *DB) Vacuum(ctx context.Context) error {
 	if _, err := db.SQLiteDB.ExecContext(ctx, "VACUUM"); err != nil {
 		return err
-	}
-	if db.Checkpoint != nil {
-		return db.Checkpoint(ctx)
 	}
 	_, err := db.SQLiteDB.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)")
 	return err
@@ -178,6 +186,10 @@ func Schema(ctx context.Context, db *sql.DB) (string, error) {
 
 func GetPath(serverConfig *config.ServerConfig) string {
 	return fmt.Sprintf("%s/%s.sqlite", serverConfig.DBDir(), "controldb")
+}
+
+func GetBackupPath(serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/%s.sqlite.lz4", serverConfig.BackupDir(), "controldb")
 }
 
 // Migrations are the DB's migrations, in their migrations folder

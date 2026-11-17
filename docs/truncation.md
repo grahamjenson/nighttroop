@@ -156,7 +156,7 @@ A few a day. **Today:** kept forever. **Proposal:** keep as rows forever.
 One every 5 minutes per device: phone battery, pump reservoir and battery, the loop's IOB and COB, and its full status
 (predictions, reason), most of their size.
 
-**Today** (`data/sql/sitedb/queries/truncate.sql`, in each site upkeep, every hour):
+**Today** (`data/sql/sitedb/queries/truncate.sql`, before each backup, every hour):
 
 - The loop status stays as sent for a day. After that, its predictions are removed (Loop's `predicted.values`, openaps'
   `predBGs`).
@@ -218,7 +218,7 @@ announcements. **Today:** kept forever.
 
 Each distinct loop configuration, once, by hash. **Today:** truncating a site (My Account's or control's Truncate)
 deletes sets no device report or profile preset refers to, except each app's last seen, kept forever
-(`docs/loop_settings.md`). The hourly truncate does not. **Proposal:** the nightly compaction deletes them too.
+(`docs/loop_settings.md`). The truncate before each backup does not. **Proposal:** the nightly compaction deletes them too.
 **Lost:** old configurations nothing refers to.
 
 ### Presets (`food_presets`, `profile_presets`)
@@ -268,7 +268,7 @@ A day's summary cannot be rebuilt once its raw rows start to go. So:
   downsample old summaries, delete unreferenced loop settings.
 - Each run records a **`site_compacted` event** (rows deleted or changed per table), shown in Events to the site's
   admins and control.
-- The hourly device report truncation stays as it is.
+- The device report truncation before each backup stays as it is.
 - **Download Data** gets the compacted data, as the DB is all there is. A later PR could add each day's summary as a
   CSV beside the DB in the zip, which is why it is a zip.
 
@@ -277,7 +277,7 @@ A day's summary cannot be rebuilt once its raw rows start to go. So:
 - A site over its limit is compacted with shorter ages (example: half of each), down to a floor: never less than 2
   days of full data.
 - Control's **Truncate** button runs the same compaction now, with those shorter ages, and vacuums the DB.
-- **Today:** the hourly truncate truncates a site over 1.5 times its limit harder. It clears JSON over a day old, deletes
+- **Today:** the truncate before each backup truncates a site over 1.5 times its limit harder. It clears JSON over a day old, deletes
   device reports over 7 days old and, if still over, readings and treatments over 90 days old. See
   `REQUIREMENTS.md`, "Truncation of a site far over its size limit".
 

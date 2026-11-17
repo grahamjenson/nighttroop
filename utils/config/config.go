@@ -201,11 +201,11 @@ type ServerConfig struct {
 	DiskAlertFreeGB       int
 	CPUPeggedAlertSeconds int
 
-	// SiteUpkeepIntervalInSeconds is how often each batch of sites is truncated and its unused sites deleted
-	SiteUpkeepIntervalInSeconds int
-	// SiteBackupRetentionDays is how long S3 keeps a file of a site's replica after it is replaced or deleted
+	// Backup Config
+	BatchBackupIntervalInSeconds int
+	// SiteBackupRetentionDays is how long S3 keeps a site batch backup or archive after a newer upload replaces it
 	SiteBackupRetentionDays int
-	// ControlBackupRetentionDays is the same for the control DB's replica
+	// ControlBackupRetentionDays is how long S3 keeps a control backup after a newer upload replaces it
 	ControlBackupRetentionDays int
 
 	// Connector Config
@@ -432,9 +432,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		CPUPeggedAlertSeconds: configIntSelect(dotenv, "CPU_PEGGED_ALERT_SECONDS", 20),
 
 		// Backup Config
-		SiteUpkeepIntervalInSeconds: configIntSelect(dotenv, "SITE_UPKEEP_INTERVAL_IN_SECONDS", 3600), // 1 hour
-		SiteBackupRetentionDays:     configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
-		ControlBackupRetentionDays:  configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
+		BatchBackupIntervalInSeconds: configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 3600), // 1 hour
+		SiteBackupRetentionDays:      configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
+		ControlBackupRetentionDays:   configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
 
 		// Connector Config
 		BackgroundConnectorWorkers: configIntSelect(dotenv, "BACKGROUND_CONNECTOR_WORKERS", 5),
@@ -783,7 +783,7 @@ func printServerConfig(config ServerConfig) {
 		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
 		"DisableAfterInactivityDays", config.DisableAfterInactivityDays,
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
-		"SiteUpkeepIntervalInSeconds", config.SiteUpkeepIntervalInSeconds,
+		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
 		"SiteBackupRetentionDays", config.SiteBackupRetentionDays,
 		"ControlBackupRetentionDays", config.ControlBackupRetentionDays,
 		"SocketMaxSessionsPerSite", config.SocketMaxSessionsPerSite,

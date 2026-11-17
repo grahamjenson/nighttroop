@@ -23,12 +23,14 @@ type SecurityConfig struct {
 	HTTPS    bool
 	HostName string
 
-	EncryptionKeySet *keyset.Handle
-	JWTKeySet        *keyset.Handle
-	MACKeySet        *keyset.Handle
+	EncryptionKeySet       *keyset.Handle
+	StreamEncryptionKeySet *keyset.Handle // for files
+	JWTKeySet              *keyset.Handle
+	MACKeySet              *keyset.Handle
 
 	mac                 tink.MAC
 	aeadEnc             tink.AEAD
+	streamEnc           tink.StreamingAEAD
 	jwtMac              jwt.MAC
 	jwtControlValidator *jwt.Validator
 	jwtUserValidator    *jwt.Validator

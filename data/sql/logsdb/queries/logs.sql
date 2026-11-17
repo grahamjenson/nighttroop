@@ -6,7 +6,7 @@
 INSERT INTO logs (site_id, level, message, attributes, request_id, job_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 -- name: InsertEvent :exec
-INSERT INTO events (site_id, name, attributes, started_at, finished_at, request_id, job_id) VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at, request_id, job_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: InsertError :exec
 INSERT INTO errors (site_id, message, attributes, request_id, job_id) VALUES (?, ?, ?, ?, ?);
@@ -88,7 +88,8 @@ ORDER BY own.id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchSiteEvents :many
--- Newest first, the site's own events, which is all a site may see, only those named Type when it is set
+-- Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set.
+-- Each half reads its own index newest first and SQLite merges the two, rather than sorting all of the site's events.
 SELECT own.* FROM events own
 WHERE own.site_id = sqlc.arg('SiteID')
 AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
@@ -96,12 +97,18 @@ AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL THEN 0 ELSE CO
 AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR own.name = sqlc.narg('Type'))
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.name), lower(sqlc.narg('Search'))) > 0
   OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
-ORDER BY own.id DESC
+UNION ALL
+-- Search looks only in a batch's names, as its attributes are not shown
+SELECT batched.* FROM events batched
+WHERE batched.site_id IS NULL AND batched.batch = sqlc.arg('Batch')
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR batched.name = sqlc.narg('Type'))
+AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(batched.name), lower(sqlc.narg('Search'))) > 0)
+ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GetSiteEvent :one
 SELECT * FROM events
-WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
+WHERE id = sqlc.arg('ID') AND (site_id = sqlc.arg('SiteID') OR (site_id IS NULL AND batch = sqlc.arg('Batch')));
 
 -- name: GetSiteLog :one
 SELECT * FROM logs WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');

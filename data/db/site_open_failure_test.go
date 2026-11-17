@@ -21,7 +21,8 @@ func TestSiteThatCannotOpenIsKept(t *testing.T) {
 	require.NoError(t, err)
 	site, err := controlDB.CreateSite(t.Context())
 	require.NoError(t, err)
-	path := sitedb.GetPath(site.SiteDB.Subdomain, &cfg)
+	path, backupPath := sitedb.GetPath(site.SiteDB.Subdomain, &cfg), sitedb.GetBackupPath(site.SiteDB.Subdomain, &cfg)
+	require.NoError(t, site.SiteDB.Backup(t.Context()))
 	require.NoError(t, controlDB.Close())
 
 	setDirty := func(dirty bool) {
@@ -38,6 +39,7 @@ func TestSiteThatCannotOpenIsKept(t *testing.T) {
 	_, err = db.NewControlDB(t.Context(), &cfg)
 	require.ErrorContains(t, err, "sitedb migration 1 failed: SQL logic error: table glucose_readings already exists")
 	require.True(t, utils.FileExists(path), "the site's DB is kept")
+	require.True(t, utils.FileExists(backupPath), "and its backup")
 
 	// Fixed, it opens again
 	setDirty(false)

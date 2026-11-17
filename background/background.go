@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/background/check_alarms"
 	"nighttroop.t1d.nz/background/check_resources"
 	"nighttroop.t1d.nz/background/connectors"
@@ -14,9 +15,9 @@ import (
 	"nighttroop.t1d.nz/background/summarise_jobs"
 	"nighttroop.t1d.nz/background/summary_daily"
 	"nighttroop.t1d.nz/background/trim_logs"
-	"nighttroop.t1d.nz/background/upkeep_sites"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
 
 type BackGroundManager struct {
@@ -27,21 +28,23 @@ type BackGroundManager struct {
 
 	consumers []*liteq.ConsumerSupervisor
 
-	SummariseJobManager *summarise_jobs.TruncateJobManager
-	ConnectorJobManager *connectors.ConnectorJobManager
+	BackupSiteJobManager *backup_sites.BackupSiteJobManager
+	SummariseJobManager  *summarise_jobs.TruncateJobManager
+	ConnectorJobManager  *connectors.ConnectorJobManager
 }
 
-func NewBackGroundManager(controlDB *db.ControlDB, config *config.ServerConfig) *BackGroundManager {
+func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, s3c *s3utils.S3Client) *BackGroundManager {
 	queue := liteq.New(controlDB)
 
 	cron := cron.NewCron(controlDB.Jobs)
 
 	consumers := []*liteq.ConsumerSupervisor{}
+	backupSiteJobManager := backup_sites.SetupBackupSiteJob(ctx, controlDB, config, s3c)
 	summariseManager := summarise_jobs.SetupTruncateJobManager(config, controlDB)
 	connectorJobManager := connectors.SetupConnectorJobManager(config, controlDB)
 
-	// Delete each batch's unused sites and truncate its sites
-	upkeep_sites.SetupUpkeepSiteJob(controlDB, config).SetupCron(cron)
+	// Backup Site Jobs, which truncate each batch's sites before backing them up
+	backupSiteJobManager.SetupCron(cron)
 
 	// Summarise Jobs
 	summariseManager.SetupCron(cron)
@@ -65,13 +68,14 @@ func NewBackGroundManager(controlDB *db.ControlDB, config *config.ServerConfig) 
 	consumers = append(consumers, connectorJobManager.GetConsumer(queue))
 
 	return &BackGroundManager{
-		db:                  controlDB,
-		config:              config,
-		cron:                cron,
-		queue:               queue,
-		consumers:           consumers,
-		SummariseJobManager: summariseManager,
-		ConnectorJobManager: connectorJobManager,
+		db:                   controlDB,
+		config:               config,
+		cron:                 cron,
+		queue:                queue,
+		consumers:            consumers,
+		BackupSiteJobManager: backupSiteJobManager,
+		SummariseJobManager:  summariseManager,
+		ConnectorJobManager:  connectorJobManager,
 	}
 }
 

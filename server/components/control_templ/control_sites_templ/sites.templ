@@ -236,8 +236,7 @@ templ siteRow(site *controlmodels.Site) {
 			}
 		}
 		@table.Cell() {
-			{{ replicated := replicatedAt(ctx, site.ID) }}
-			<span id={ "control--site--" + site.ID + "--backup-uploaded" } title={ display.DateTime(replicated) }>{ display.Ago(ctx, replicated, time.Now()) }</span>
+			<span id={ "control--site--" + site.ID + "--backup-uploaded" } title={ display.DateTime(site.BackupUploadedAt) }>{ display.Ago(ctx, site.BackupUploadedAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			@abuseBadge(site, "control--site--"+site.ID+"--abuse")
@@ -298,15 +297,6 @@ func lastError(ctx context.Context, errors []*controlmodels.Error) string {
 	return display.Ago(ctx, &errors[0].CreatedAt, time.Now())
 }
 
-// replicatedAt is when the site's replica in S3 last had all its writes, or nil if not since the server started
-func replicatedAt(ctx context.Context, siteID string) *int64 {
-	controlContext := httputils.GetControlContext(ctx)
-	if controlContext == nil || controlContext.ControlDB == nil {
-		return nil
-	}
-	return controlContext.ControlDB.SiteReplicatedAt(siteID)
-}
-
 // siteURL is the site's own address, to open it
 func siteURL(ctx context.Context, siteID string) string {
 	controlContext := httputils.GetControlContext(ctx)
@@ -318,7 +308,7 @@ func siteURL(ctx context.Context, siteID string) string {
 
 // SitePage is a site's own page, laid out like a site's summary: its state and when it changed, a grid of what can be
 // done to it, its DB size against its limit, tiles of when it was last used, its identities and its last
-// error, a tile of when its replica in S3 last had all its writes, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
+// error, tiles of its backup's size and when it was copied and uploaded, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
 templ SitePage(page *controlmodels.SitePage) {
 	{{ site := page.Site }}
 	@heading.Title(site.ID)
@@ -353,8 +343,10 @@ templ SitePage(page *controlmodels.SitePage) {
 			}
 			@stat.Tile("control--site--last-error", i18n.T(ctx, "control.site.last_error"), lastError(ctx, page.Errors), icon.TriangleAlert)
 		</div>
-		<div id="control--site--backup" class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@stat.Tile("control--site--backup-uploaded", i18n.T(ctx, "control.site.backup_uploaded"), display.Ago(ctx, replicatedAt(ctx, site.ID), time.Now()), icon.CloudUpload)
+		<div id="control--site--backup" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+			@stat.Tile("control--site--backup-size", i18n.T(ctx, "control.site.backup_size"), sizeMB(site.BackupSizeKb), icon.HardDrive)
+			@stat.Tile("control--site--backed-up", i18n.T(ctx, "control.site.backed_up"), display.Ago(ctx, site.BackedUpAt, time.Now()), icon.DatabaseBackup)
+			@stat.Tile("control--site--backup-uploaded", i18n.T(ctx, "control.site.backup_uploaded"), display.Ago(ctx, site.BackupUploadedAt, time.Now()), icon.CloudUpload)
 		</div>
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.site.identities"), Scroll: true}) {
 			@SiteIdentities(site.ID, page.Identities)

@@ -321,6 +321,8 @@ control:
     last_write: "Last write"
     identities: "Identities"
     last_error: "Last error"
+    backup_size: "Backup size (MB)"
+    backed_up: "Backed up"
     backup_uploaded: "Backup uploaded"
     latest_events: "Latest Events"
     latest_errors: "Latest Errors"

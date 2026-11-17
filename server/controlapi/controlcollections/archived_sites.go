@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
 
 // ArchivedSitesCollection lists the archived sites, and lets admins hydrate one, bringing it back live from its archive
@@ -42,8 +43,7 @@ func (s *ArchivedSitesCollection) GetRow(ctx context.Context, id string, control
 	return controlContext.ControlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: id})
 }
 
-// UpdateRow hydrates an archived site, changed to live: it is restored from its replica in S3, so without S3 it is
-// refused
+// UpdateRow hydrates an archived site, changed to live: its archive is downloaded from S3, so without S3 it is refused
 func (s *ArchivedSitesCollection) UpdateRow(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) (*controldb.Site, error) {
 	config := controlContext.ControlDB.ServerConfig
 	switch {
@@ -55,7 +55,7 @@ func (s *ArchivedSitesCollection) UpdateRow(ctx context.Context, controlContext 
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.hydrate_needs_s3"))
 	}
 	started := time.Now()
-	if err := controlContext.ControlDB.HydrateSite(ctx, oldModel.ID); err != nil {
+	if err := controlContext.ControlDB.HydrateSite(ctx, oldModel.ID, s3utils.NewS3Client(config).DownloadFilesFromS3); err != nil {
 		return nil, err
 	}
 	controlContext.ControlDB.Logs.SiteHydratedEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name, started)

@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -40,7 +41,7 @@ func TestNS(t *testing.T) {
 
 	router := server.GetMainHandler(controlDB, config)
 	// Background jobs are run after every request instead of on their timers
-	backgroundJobs := background.NewBackGroundManager(controlDB, config)
+	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
 
 	testutils.DumpOnFailure(t, controlDB, "test_ns")
 	ts := httptest.NewServer(router)

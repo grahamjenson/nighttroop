@@ -207,6 +207,11 @@ func (m *SearchSiteErrorsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetSearch returns the Search value.
 func (m SearchSiteEventsParams) GetSearch() *string {
 	return m.Search
@@ -215,11 +220,6 @@ func (m SearchSiteEventsParams) GetSearch() *string {
 // GetType returns the Type value.
 func (m SearchSiteEventsParams) GetType() *string {
 	return m.Type
-}
-
-// SetLimit sets the Limit value and returns the updated SearchSiteEventsParams.
-func (m *SearchSiteEventsParams) SetLimit(v int64) {
-	m.Limit = v
 }
 
 // GetSearch returns the Search value.

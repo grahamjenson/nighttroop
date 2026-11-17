@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/tests/dsl/flow"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -25,7 +26,7 @@ func TestSocketIO(t *testing.T) {
 	router := server.GetMainHandler(controlDB, config)
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
-	backgroundJobs := background.NewBackGroundManager(controlDB, config)
+	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
 	testutils.DumpOnFailure(t, controlDB, "test_socket")
 
 	err := fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {

@@ -317,7 +317,7 @@ The script:
 1. **Pulls the new image** while the old version runs, so a bad tag or registry problem changes nothing. Stops if that
    image runs already.
 2. **Keeps the running image** as `nighttroop-rollback:<time>`, to start it again.
-3. **Stops Nighttroop,** which sends the last writes of its DBs to S3 (two minutes allowed).
+3. **Stops Nighttroop,** which uploads a last backup to S3 (two minutes allowed).
 4. **Copies `./data`** to `./backups/data-<time>.tar.gz`, while nothing writes to it.
 5. **Starts the new image** and waits up to 3 minutes for its health check, `/health`. This answers when the control
    database does.

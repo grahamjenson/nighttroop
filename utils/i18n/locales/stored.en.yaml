@@ -44,6 +44,7 @@ stored:
     site_hydrated: "Site restored"
     site_truncated: "Site truncated"
     site_db_missing: "Site db missing"
+    site_batch_backed_up: "Site batch backed up"
     site_admin_recovered: "Site admin recovered"
     identity_credentials_changed: "Identity credentials changed"
     connector_turned_off: "Connector turned off"
@@ -66,6 +67,7 @@ stored:
     server: "Server"
     client: "Client"
     connector: "Connector"
+    site_batch_backup: "Site batch backup"
   log_levels:
     debug: "debug"
     info: "info"

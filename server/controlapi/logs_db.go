@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -37,12 +38,13 @@ func LogsDBHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer downloadingLogsDB.Unlock()
 
-	// Copied to the backup folder, on the same disk as the DBs rather than a small temp dir
-	logs, dir := controlContext.ControlDB.Logs, controlContext.ControlDB.ServerConfig.BackupDir()
-	err := utils.MkDirs(dir)
+	// Copied beside the logs DB's backup path, which is otherwise unused, on the same disk as the DBs rather than a
+	// small temp dir
+	logs := controlContext.ControlDB.Logs
+	err := utils.MkParentDirs(logs.BackupPath)
 	var file *os.File
 	if err == nil {
-		file, err = os.CreateTemp(dir, ".logs-download-*.sqlite")
+		file, err = os.CreateTemp(filepath.Dir(logs.BackupPath), ".logs-download-*.sqlite")
 	}
 	if err == nil {
 		defer os.Remove(file.Name())

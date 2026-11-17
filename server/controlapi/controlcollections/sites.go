@@ -20,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
 
 // SitesCollection lets control identities see every site, whatever its state, and admins disable and archive them
@@ -102,8 +103,7 @@ func (s *SitesCollection) disable(ctx context.Context, controlContext *httputils
 	return nil
 }
 
-// archive sends a disabled site's last writes to its replica in S3, kept as its archive, and deletes it here, so
-// without S3 it is refused
+// archive uploads a disabled site's DB to its archive in S3 and deletes it here, so without S3 it is refused
 func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
 	config := controlContext.ControlDB.ServerConfig
 	if oldModel.State != "disabled" {
@@ -113,7 +113,7 @@ func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils
 		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.archive_needs_s3"))
 	}
 	started := time.Now()
-	if err := controlContext.ControlDB.ArchiveSite(ctx, oldModel.ID); err != nil {
+	if err := controlContext.ControlDB.ArchiveSite(ctx, oldModel.ID, s3utils.NewS3Client(config).UploadFilesToS3); err != nil {
 		return err
 	}
 	controlContext.ControlDB.Logs.SiteArchivedEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name, started)

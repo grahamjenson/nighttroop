@@ -6,12 +6,12 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/logsdb"
-	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -177,37 +177,41 @@ func TestEventsArePublishedAndKept(t *testing.T) {
 	require.Equal(t, string(events.SiteDisabled), kept[0].Name)
 }
 
-// TestSiteSeesOnlyItsOwnLogs checks a site sees its own logs, errors and events, but nothing of another site or the
-// server
+// TestSiteSeesOnlyItsOwnLogs checks a site sees its own logs, errors and events, and its batch's events, but nothing
+// of another site, another batch or the server
 func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, logs, q := t.Context(), controlDB.Logs, controlDB.Logs.Queries
-	site, other := "qownsite", "qothersite"
+	site, other, batch, otherBatch := "qownsite", "qothersite", "q", "r"
 
 	logs.SiteDisabledEvent(ctx, site, "admin")
 	logs.SiteDisabledEvent(ctx, other, "admin")
-	logs.ResourceRecoveredEvent(ctx, config.ResourceLevel{})
+	logs.SiteBatchBackedUpEvent(ctx, batch, 2, time.Now(), false)
+	logs.SiteBatchBackedUpEvent(ctx, otherBatch, 3, time.Now(), false)
 	logs.ConnectorError(ctx, other, consts.ConnectorTypeDexcom, errors.New("other failed"))
+	logs.SiteBatchBackupError(ctx, batch, errors.New("batch failed"))
 	logs.Log(ctx, &other, db.LogLevelInfo, "other synced", nil)
 
-	siteEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Limit: 100})
+	siteEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Limit: 100})
 	require.NoError(t, err)
-	require.Len(t, siteEvents, 1)
-	require.Equal(t, site, *siteEvents[0].SiteID)
+	require.Len(t, siteEvents, 2)
+	require.Equal(t, string(events.SiteBatchBackedUp), siteEvents[0].Name)
+	require.Equal(t, batch, *siteEvents[0].Batch)
+	require.Equal(t, site, *siteEvents[1].SiteID)
 
-	// Another site's event, or the server's, cannot be read by its ID either
+	// Another site's or batch's event, or the server's, cannot be read by its ID either
 	allEvents, err := q.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 100})
 	require.NoError(t, err)
-	require.Len(t, allEvents, 3)
 	for _, event := range allEvents {
-		_, err := q.GetSiteEvent(ctx, logsdb.GetSiteEventParams{ID: event.ID, SiteID: &site})
-		if event.ID == siteEvents[0].ID {
+		_, err := q.GetSiteEvent(ctx, logsdb.GetSiteEventParams{ID: event.ID, SiteID: &site, Batch: &batch})
+		if event.ID == siteEvents[0].ID || event.ID == siteEvents[1].ID {
 			require.NoError(t, err)
 		} else {
 			require.ErrorIs(t, err, sql.ErrNoRows, event.Name)
 		}
 	}
 
+	// A batch's errors can name its other sites, so a site sees only its own
 	siteErrors, err := q.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Limit: 100})
 	require.NoError(t, err)
 	require.Empty(t, siteErrors)
@@ -226,7 +230,7 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 // keeps them all
 func TestLogsDBSearchByType(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs, site := t.Context(), controlDB.Logs, "typedsite"
+	ctx, logs, site, batch := t.Context(), controlDB.Logs, "typedsite", "typedbatch"
 
 	logs.SiteCreatedEvent(ctx, site)
 	logs.SiteDisabledEvent(ctx, site, "admin")
@@ -249,7 +253,7 @@ func TestLogsDBSearchByType(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			events, err := logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &site, Type: tt.typ, Limit: 10})
 			require.NoError(t, err)
-			siteEvents, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Type: tt.typ, Limit: 10})
+			siteEvents, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Type: tt.typ, Limit: 10})
 			require.NoError(t, err)
 			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Type: tt.typ, Limit: 10})
 			require.NoError(t, err)
@@ -271,14 +275,16 @@ func TestLogsDBSearchByType(t *testing.T) {
 	}
 }
 
-// TestLogsDBSearchText checks a search keeps only rows with it in their text or attributes, ignoring case
+// TestLogsDBSearchText checks a search keeps only rows with it in their text or attributes, ignoring case, and that
+// a site cannot search the attributes of its batch's events, which it is not shown
 func TestLogsDBSearchText(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs, site := t.Context(), controlDB.Logs, "searchsite"
+	ctx, logs, site, batch := t.Context(), controlDB.Logs, "searchsite", "searchbatch"
 
 	logs.Log(ctx, &site, db.LogLevelInfo, "Synced readings", map[string]any{"source": "dexcom"})
 	logs.Log(ctx, &site, db.LogLevelInfo, "Something else", nil)
 	logs.SiteDisabledEvent(ctx, site, "admin")
+	logs.SiteBatchBackedUpEvent(ctx, batch, 3, time.Now(), false)
 	logs.ConnectorError(ctx, site, consts.ConnectorTypeNightscout, errors.New("Nightscout refused"))
 
 	str := func(s string) *string { return &s }
@@ -289,11 +295,12 @@ func TestLogsDBSearchText(t *testing.T) {
 		siteEvents int
 		errors     int
 	}{
-		{"no search", nil, 2, 1, 1},
+		{"no search", nil, 2, 2, 1},
 		{"message, ignoring case", str("synced READINGS"), 1, 0, 0},
 		{"attributes", str("dexcom"), 1, 0, 0},
 		{"event name", str("disabled"), 0, 1, 0},
 		{"own event attributes", str("admin"), 0, 1, 0},
+		{"batch event attributes are not searched", str("site_count"), 0, 0, 0},
 		{"error message", str("refused"), 0, 0, 1},
 		{"nothing matches", str("nope"), 0, 0, 0},
 	}
@@ -302,7 +309,7 @@ func TestLogsDBSearchText(t *testing.T) {
 			found, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &site, Search: tt.search, Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, found, tt.logs)
-			events, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Search: tt.search, Limit: 10})
+			events, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Search: tt.search, Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, events, tt.siteEvents)
 			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Search: tt.search, Limit: 10})

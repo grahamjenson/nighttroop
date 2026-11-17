@@ -46,7 +46,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - `MODE=staging` is never in setup, and otherwise runs as production (site admins get random credentials).
   - Its control admin `admin` comes from `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET` (required), and
     is made again when its data is wiped.
-- A staging deploy wipes every DB and its local backups if one DB cannot be migrated and prepared, or has a schema different
+- A staging deploy wipes every DB and its backups if one DB cannot be migrated and prepared, or has a schema different
   from a new DB's (for example, after a migration's `CHECK` was edited). Otherwise it keeps them.
 
 ### Country limits
@@ -88,7 +88,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The header stays at the top of the window while the page scrolls. It is as tall as the site's header.
 - The header marks the link of the page shown, or of the page it is under: a site's page is under Sites.
 - The banner shows when:
-  - S3 replicas or Sentry are not connected;
+  - S3 backups or Sentry are not connected;
   - sites reach 90% of `MAX_SITES`, or all of it;
   - a resource is high (see [Resource alerts](#resource-alerts)).
 - Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
@@ -122,8 +122,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   Deleted.
 - The sites list has an Abuse column: each site's abuse level and score (for example `Good · 0.00`). See
   [Abuse levels](#abuse-levels).
-- The sites list has a Backup Uploaded column: the time since the site's replica in S3 was last in step with its DB,
-  or Never if not since the server started.
+- The sites list has a Backup Uploaded column: the time since the site was last uploaded to S3, or Never.
   Hover shows the time.
 - On a phone: no wider than the window. Sort buttons and both cards wrap. The table scrolls sideways.
 
@@ -154,8 +153,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - table sizes as last measured (at creation, by the 5-minute site measurement after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
-- Backup tile: the time since the site's replica in S3 was last in step with its DB, or Never if not since the server
-  started.
+- Backup tiles: backup size in MB (`-` if no backup), time since the last backup copy, and time since the last upload
+  to S3. A time that did not occur is Never.
 - Identities, and the latest 10 events and 10 errors (no site column). Each opens its details. A link shows all for
   the site.
 - On a phone: no wider than the window, all identity actions tappable. Role, TOTP and last seen are a line under the
@@ -170,9 +169,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | --- | --- | --- |
 | Download DB | Live or disabled (DB here) | See below. |
 | Disable | After a confirmation | Not served. Socket.IO connections close. |
-| Archive | After disable. Needs S3. | Its last writes are sent to its replica in S3, which is kept. Its files here are deleted. |
-| Restore | From the archived sites page | Restored from its replica, live again and replicated. |
-| Truncate | Live or disabled, any size | Truncates all device statuses (as each upkeep does the newest), deletes old loop settings no record refers to, shrinks the DB. |
+| Archive | After disable. Needs S3. | Uploaded to S3. |
+| Restore | From the archived sites page | Live again. |
+| Truncate | Live or disabled, any size | Truncates all device statuses (as each backup does the newest), deletes old loop settings no record refers to, shrinks the DB. |
 
 - Download DB (`/sites/{id}/db`):
   - the same zip and code as a site admin's Download Data: `<site>-<date>.zip` holding `<site>-<date>.sqlite`, a
@@ -289,7 +288,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Logs DB download
 
 - Download Logs DB (`GET /logs-db`), on the events, errors and logs pages: the whole logs DB as `logs-<time>.sqlite`.
-  - A consistent copy while logs are written, made in `DATA_DIR/backup`, deleted after it is sent.
+  - A consistent copy while logs are written, made beside the backups in `DATA_DIR`, deleted after it is sent.
   - Not cut off by the 30 second request timeout, at any size.
 - Refused: Read only control identity (403, no button), signed out (401), a second download at once (429).
 
@@ -1032,8 +1031,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - Connector credentials are encrypted at rest.
 - Bound to their kind and site: connector credentials, TOTP secrets, push secrets and tokens, Nightscout tokens, the
-  welcome's passkey cookie.
-- Not decrypted: a secret copied in as another site's or kind, or one encrypted unbound.
+  welcome's passkey cookie. Backups: bound to their object key, without its host.
+- Not decrypted: a secret copied in as another site's or kind, a backup as another batch's, or one encrypted unbound.
+- Backups copied to a bucket for another host still restore.
 
 #### Nightscout connector
 
@@ -1102,10 +1102,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Events, errors and logs
 
-- Admins see events (for example created, alarms, recoveries, credential changes), errors and logs, filtered by type
-  and searched.
+- Admins see events (for example created, alarms, recoveries, credential changes), errors, logs and batch backups,
+  filtered by type and searched.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
-- Each event, error and log shows its request or background job run.
+- Each event, error and log shows its request or background job run. Batch events do not.
 - A search, or a filter by error kind, reads only the newest 10,000 of each. Paging without one reaches all rows.
 
 #### Error toasts
@@ -1714,7 +1714,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
 - One IP (an IPv6 /64): maximum 10 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
   next gets 429.
-- When the server stops, every socket closes before the last writes are sent. No socket write gets to a site DB after.
+- When the server stops, every socket closes before the last backup. No socket write gets to a site DB after it.
 
 #### Authorize
 
@@ -1774,46 +1774,63 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### S3
 
-- Without `S3_URL`: no restore on start and no replicas.
+- Without `S3_URL`: no restore on start and no backups.
 - With `S3_URL`:
   - The server does not start if no test upload works for about 30 seconds.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
-  - Production and staging need an `https://` `S3_URL` to start.
+  - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
+    tries again.
 
-#### Replicas
+#### Control DB replica
 
-- With S3, [Litestream](https://litestream.io) replicates the control DB and each live or disabled site DB to S3.
-- Each DB has its own replica: `<host>/litestream/control` and `<host>/litestream/site/<site>`.
-- Over HTTPS, S3 encrypts each replica with a key of its own (SSE-C). The key is an HMAC of the replica's name with
-  the MAC key of `KEY_SETS`. A replica does not restore with another DB's key.
-- Over HTTP (the development MinIO), the replicas are not encrypted, and the server logs a warning.
-- The control DB is sent within 1 second of a write. A site DB is sent within 1 minute.
-- They are sent at once:
-  - a new or restored site, and the control DB with its row;
-  - a site before it is archived, and the control DB after an archive or a delete;
-  - every DB when the server stops, 16 at a time.
-- A replica keeps a daily snapshot and the changes since: hourly files, and for the control DB, files of each minute.
-- S3 keeps replaced or deleted replica files for a retention period (`SITE_BACKUP_RETENTION_DAYS`,
-  `CONTROL_BACKUP_RETENTION_DAYS`).
-- A deleted site's replica is deleted. An archived site's replica is kept as its archive.
-- The control DB records no backup times. The sites list and site page show when the site's replica was last in step
-  with its DB.
-- Without S3, nothing is replicated.
+- With S3, [Litestream](https://litestream.io) replicates the control DB to `<host>/litestream/control`, within 1
+  second of a write. It sends the last writes when the server stops.
+- Over HTTPS, S3 encrypts the replica with a key from the MAC key of `KEY_SETS` (SSE-C).
+- Over HTTP (the development MinIO), the replica is not encrypted, and the server logs a warning.
+- Production and staging need an `https://` `S3_URL` to start.
+- S3 keeps replaced or deleted replica files for `CONTROL_BACKUP_RETENTION_DAYS`.
+
+#### Site backups
+
+- Each site DB goes to S3 by itself, as `<host>/sites/<site>.tar.enc`. S3 keeps old versions for a retention period.
+- Each batch of sites (the same first letter) has its turn every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), one batch
+  each tick (the interval / 26). Every site is also backed up when the server stops.
+- A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
+  `data/backup/site/<batch>/<site>.sqlite.lz4`.
+  - A copy cut short does not replace the last copy.
+  - The backup deletes the uncompressed `.sqlite` copy kept there before.
+- An upload is a tar of the compressed copy, encrypted, and not compressed again. An archived site's is
+  `<host>/archive/site/<batch>/<site>.tar.enc`.
+- A site with no write since its last backup is not copied again, and its DB is not opened. A copy already uploaded is
+  not uploaded again.
+- In the next round, a write made during a copy is copied, and a failed upload is tried again.
+- A live site that is not open is left out. The rest of its batch is backed up.
+- A site not uploaded yet, such as a new or restored site, uploads at the next tick. It does not wait for its batch's
+  turn.
+- A site deleted as unused has its backup deleted from S3.
+- The control DB records on each site:
+  - when the site was last copied, and the size of the copy on disk;
+  - when it was last uploaded. If S3 is not connected or the upload fails, this time does not change.
 
 #### Restore and start
 
-- A missing control DB is restored from its replica on start. A failed restore stops the start, and leaves nothing.
-- A live site whose DB file is missing is restored from its replica, 16 at a time, and opened.
-  - It gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
+- A missing control DB is restored from its replica on start. A failed restore stops the start.
+- A restore decompresses each `.lz4` copy to its `.sqlite` DB.
+- A restore of an archived site without a backup at its `.tar.enc` key uses the old backup at the same key with
+  `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.
+- `cmd/keysets/decrypt_tar_lz4_enc.go` decrypts and unpacks a site's backup, given its object key.
+- `cmd/keysets/restore_replica.go` restores the control DB from its replica, with the server's config.
+- A start removes only the staging folders that a stopped restore or archive left beside the DBs and backups.
+- A live site whose DB file is missing:
+  - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
+  - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
     restore failed).
-- `cmd/keysets/restore_replica.go` restores the control DB or a site from its replica, with the server's config.
 - The start stops, with the site named in the error, if a live site:
   - Cannot be opened or migrated, also after a restore.
   - Has no DB file and was not restored.
 - The server serves nothing until every live site is open and migrated. Else `update.sh` rolls the release back.
-- After the start, the server replicates the control DB and every open site DB.
-- If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with the last writes sent, then gives the error.
-- A site DB that cannot be opened keeps its file. A fixed deploy opens it with its data.
+- If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
+- A site DB that cannot be opened keeps its file and backup. A fixed deploy opens it with its data.
 - A site creation that fails part way leaves no site or identities.
 - A DB (control, site, jobs, logs or live) with a failed migration, when next opened:
   1. Goes back to the version before that migration. A warning names the DB and both versions.
@@ -1828,7 +1845,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Device status truncation
 
-Every hour, in each site's upkeep, the server truncates it:
+Before it backs up a site, every hour, the server truncates it:
 
 - Loop status (`openaps` or `loop`): kept as sent for 1 day. Followers (e.g. LoopFollow) read a day of statuses.
   - If a status is more than 1 day older than now and its device's newest status, the predictions are removed.
@@ -1850,7 +1867,7 @@ Every hour, in each site's upkeep, the server truncates it:
 
 #### Truncation of a site far over its size limit
 
-If a site's DB is over 1.5 times its DB size limit (30 MB at the 20 MB default), the upkeep also truncates it
+If a site's DB is over 1.5 times its DB size limit (30 MB at the 20 MB default), the backup also truncates it
 harder:
 
 1. Step 1:

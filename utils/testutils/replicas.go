@@ -16,7 +16,8 @@ import (
 	"nighttroop.t1d.nz/utils/s3utils"
 )
 
-// FakeS3 is the client of an S3 in memory, which cfg is changed to use, and working
+// FakeS3 is the client of an S3 in memory, which cfg is changed to use, and working. It takes no SSE-C, as it is
+// HTTP, so the control DB's replica is not encrypted.
 func FakeS3(t testing.TB, cfg *config.ServerConfig) *s3utils.S3Client {
 	t.Helper()
 	// Litestream's S3 client cannot start with a CA bundle, as a sandbox's proxy may set
@@ -28,7 +29,7 @@ func FakeS3(t testing.TB, cfg *config.ServerConfig) *s3utils.S3Client {
 }
 
 // ReplicatedConfig is the test config with its DBs in files in a folder of the test's, and S3 in memory, for tests that
-// replicate DBs, as a server with S3 does
+// back up and replicate DBs, as a server with S3 does
 func ReplicatedConfig(t testing.TB) (*config.ServerConfig, *s3utils.S3Client) {
 	t.Helper()
 	cfg := *GetTestServerConfig()
@@ -36,8 +37,8 @@ func ReplicatedConfig(t testing.TB) (*config.ServerConfig, *s3utils.S3Client) {
 	return &cfg, FakeS3(t, &cfg)
 }
 
-// OpenReplicated opens the control DB of cfg and replicates it and its sites to s3, as a server's start does, closing
-// it at the test's end
+// OpenReplicated opens the control DB of cfg, restores its missing sites from s3 and replicates it, as a server's
+// start does, closing it at the test's end
 func OpenReplicated(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client) (*db.ControlDB, error) {
 	t.Helper()
 	controlDB, err := db.NewControlDB(t.Context(), cfg)
@@ -45,13 +46,16 @@ func OpenReplicated(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client
 		return nil, err
 	}
 	t.Cleanup(func() { controlDB.Close() })
+	if err := controlDB.RestoreMissingSites(t.Context(), s3.DownloadFilesFromS3); err != nil {
+		return controlDB, err
+	}
 	return controlDB, controlDB.Replicate(t.Context(), replica.New(cfg, s3))
 }
 
-// ReplicaFiles are the files of the replica with name, by level and TXIDs, read as the server reads them
-func ReplicaFiles(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client, name string) []string {
+// ControlReplicaFiles are the files of the control DB's replica, by level and TXIDs, read as the server reads them
+func ControlReplicaFiles(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client) []string {
 	t.Helper()
-	client := replica.Client(cfg, s3, name, false)
+	client := replica.Client(cfg, s3, false)
 	files := []string{}
 	for level := range litestream.SnapshotLevel + 1 {
 		found, err := litestream.FindLTXFiles(t.Context(), client, level, false, func(*ltx.FileInfo) (bool, error) { return true, nil })
@@ -63,19 +67,4 @@ func ReplicaFiles(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client, 
 		}
 	}
 	return files
-}
-
-// NewReplicatedControlDB is a new control DB with a site, replicated to S3 in memory
-func NewReplicatedControlDB(t testing.TB) (*config.ServerConfig, *db.ControlDB, *db.SiteCreateResult) {
-	t.Helper()
-	cfg, s3 := ReplicatedConfig(t)
-	controlDB, err := OpenReplicated(t, cfg, s3)
-	if err != nil {
-		t.Fatalf("cannot replicate the control db: %v", err)
-	}
-	site, err := controlDB.CreateSite(t.Context())
-	if err != nil {
-		t.Fatalf("cannot create site db: %v", err)
-	}
-	return cfg, controlDB, site
 }

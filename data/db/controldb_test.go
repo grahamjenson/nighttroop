@@ -5,19 +5,21 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/pierrec/lz4/v4"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -73,137 +75,130 @@ func TestCreateSiteWhenSiteDBFails(t *testing.T) {
 }
 
 func TestArchiveSite(t *testing.T) {
-	cfg, controlDB, site := testutils.NewReplicatedControlDB(t)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
-	addReading(t, site.SiteDB, "kept")
 	_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
 
-	// Its last writes are sent to its replica, which is kept as its archive, then it is archived and its files here go
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID))
+	// An upload that fails keeps the site
+	require.Error(t, controlDB.ArchiveSite(ctx, siteID, func(context.Context, string, s3utils.Retention, []string) error { return errors.New("S3 is down") }))
 	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.Equal(t, "disabled", row.State)
+
+	// The site's backup is uploaded to its archive path, then it is archived and closed here
+	var uploadedKey string
+	var uploadedRetention s3utils.Retention
+	var uploadedPaths []string
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, key string, retention s3utils.Retention, paths []string) error {
+		uploadedKey, uploadedRetention, uploadedPaths = key, retention, paths
+		return nil
+	}))
+	require.Equal(t, sitedb.GetS3ArchivePath(siteID, cfg), uploadedKey)
+	require.Equal(t, s3utils.SiteRetention, uploadedRetention)
+	require.Len(t, uploadedPaths, 1)
+	require.Equal(t, filepath.Base(site.SiteDB.BackupPath), filepath.Base(uploadedPaths[0]))
+	row, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "archived", row.State)
 	require.NotNil(t, row.ArchivedAt)
-	require.NoFileExists(t, site.SiteDB.Path)
-	require.NoDirExists(t, filepath.Join(filepath.Dir(site.SiteDB.Path), "."+siteID+".sqlite-litestream"))
-	require.NotEmpty(t, replicaKeys(t, cfg, siteID))
+	require.NoFileExists(t, site.SiteDB.BackupPath)
 
 	// It is no longer open, so it cannot be archived again
-	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID), "is not open")
+	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(context.Context, string, s3utils.Retention, []string) error { return nil }), "is not open")
 }
 
-// Without S3 a site is not replicated, so it has no archive to keep and is not archived
-func TestArchiveSiteWithoutS3(t *testing.T) {
+// A batch backup rewriting the site's backup file while it is archived does not change the archive uploaded
+func TestArchiveSiteDuringBatchBackup(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
 
-	require.ErrorIs(t, controlDB.ArchiveSite(ctx, siteID), db.ErrNotReplicated)
-	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
-	require.NoError(t, err)
-	require.Equal(t, "disabled", row.State)
-	require.ErrorIs(t, controlDB.HydrateSite(ctx, "noreplic"), db.ErrNotReplicated)
+	var uploaded string
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, _ string, _ s3utils.Retention, paths []string) error {
+		require.NoError(t, utils.MkParentDirs(site.SiteDB.BackupPath))
+		require.NoError(t, os.WriteFile(site.SiteDB.BackupPath, []byte("half written"), 0o600))
+		file, err := os.Open(paths[0])
+		require.NoError(t, err)
+		defer file.Close()
+		data, err := io.ReadAll(lz4.NewReader(file))
+		require.NoError(t, err)
+		uploaded = paths[0]
+		require.True(t, strings.HasPrefix(string(data), "SQLite format 3\x00"), "the archive is a whole DB, compressed")
+		return nil
+	}))
+	// Named as the site's DB so it hydrates, and removed once uploaded
+	require.Equal(t, filepath.Base(site.SiteDB.BackupPath), filepath.Base(uploaded))
+	require.NoFileExists(t, uploaded)
 }
 
-// addReading writes a glucose reading with id to the site
-func addReading(t *testing.T, site *db.SiteDB, id string) {
-	t.Helper()
-	_, err := site.Queries().CreateGlucoseReading(t.Context(), sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
-	require.NoError(t, err)
-}
-
-// replicaKeys are the files of the site's replica in S3
-func replicaKeys(t *testing.T, cfg *config.ServerConfig, siteID string) []string {
-	t.Helper()
-	return testutils.ReplicaFiles(t, cfg, s3utils.NewS3Client(cfg), replica.SiteName(siteID))
-}
-
-// requireReading checks the open site has the reading with id
-func requireReading(t *testing.T, controlDB *db.ControlDB, siteID, id string) {
-	t.Helper()
-	site, _, err := controlDB.GetSite(t.Context(), siteID)
-	require.NoError(t, err, "the site is open")
-	reading, err := site.Queries().GetGlucoseReading(t.Context(), sitedb.GetGlucoseReadingParams{ID: id})
-	require.NoError(t, err)
-	require.Equal(t, 120.0, reading.Mgdl)
-}
-
-// An archived site hydrates from its replica with its data, live again, open and replicated, and only an archived one
-// does
+// An archived site hydrates from its archive with its data, live again and open, and only an archived one does
 func TestHydrateSite(t *testing.T) {
-	_, controlDB, site := testutils.NewReplicatedControlDB(t)
-	ctx, siteID := t.Context(), site.SiteDB.Subdomain
-	addReading(t, site.SiteDB, "kept")
+	cfg, controlDB := testutils.NewControlDB(t)
+	// Site DBs in files, so the archive holds the site's data
+	fileCfg := *cfg
+	fileCfg.Mode = consts.Development
+	fileCfg.DataDir = t.TempDir()
+	controlDB.ServerConfig = &fileCfg
+	ctx := t.Context()
+	site, err := controlDB.CreateSite(ctx)
+	require.NoError(t, err)
+	siteID := site.SiteDB.Subdomain
+	_, err = site.SiteDB.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+
+	// A stand in for S3, holding the archive's compressed file, and decompressing it as a download does
+	archive := filepath.Join(t.TempDir(), siteID+".sqlite.lz4")
+	download := func(_ context.Context, key string, outpath string) (int64, bool, error) {
+		require.Equal(t, sitedb.GetS3ArchivePath(siteID, &fileCfg), key)
+		file, err := os.Open(archive)
+		if errors.Is(err, os.ErrNotExist) {
+			return 0, false, nil
+		}
+		require.NoError(t, err)
+		defer file.Close()
+		data, err := io.ReadAll(lz4.NewReader(file))
+		require.NoError(t, err)
+		return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, siteID+".sqlite"), data, 0o600)
+	}
 
 	// A live site, open here, is not hydrated
-	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID), "already open")
+	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID, download), "already open")
 
-	_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	require.NoError(t, controlDB.Queries.UpdateSitesBackupUploaded(ctx, controldb.UpdateSitesBackupUploadedParams{IDs: []string{siteID}}))
+	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID))
-	require.Nil(t, controlDB.SiteReplicatedAt(siteID))
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, _ string, _ s3utils.Retention, paths []string) error {
+		data, err := os.ReadFile(paths[0])
+		require.NoError(t, err)
+		return os.WriteFile(archive, data, 0o600)
+	}))
+	require.NoFileExists(t, sitedb.GetPath(siteID, &fileCfg))
 
-	// A site without a replica has no archive, and stays archived
-	_, err = controlDB.Queries.CreateSite(ctx, controldb.CreateSiteParams{ID: "noreplic", BackupKeyHash: "hash"})
-	require.NoError(t, err)
-	_, err = controlDB.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: `["noreplic"]`})
-	require.NoError(t, err)
-	require.ErrorContains(t, controlDB.HydrateSite(ctx, "noreplic"), "has no archive")
-	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: "noreplic"})
+	// A download that fails, or finds no archive, leaves it archived
+	require.Error(t, controlDB.HydrateSite(ctx, siteID, func(context.Context, string, string) (int64, bool, error) { return 0, false, errors.New("S3 is down") }))
+	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID, func(context.Context, string, string) (int64, bool, error) { return 0, false, nil }), "has no archive")
+	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "archived", row.State)
 
-	// Hydrated, it is live and open with its data, as if just used so it is not disabled again straight away, and is
-	// replicated again
-	require.NoError(t, controlDB.HydrateSite(ctx, siteID))
+	// Hydrated, it is live and open with its data, as if just used so it is not disabled again straight away
+	require.NoError(t, controlDB.HydrateSite(ctx, siteID, download))
 	row, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "live", row.State)
 	require.Nil(t, row.ArchivedAt)
+	// Its batch's backup left it out while it was archived, so the batch is to be uploaded again soon
+	require.Nil(t, row.BackupUploadedAt)
 	require.Nil(t, row.DisabledAt)
 	require.NotNil(t, row.LastSeenAt)
 	require.InDelta(t, time.Now().UnixMilli(), *row.LastSeenAt, 60_000)
-	requireReading(t, controlDB, siteID, "kept")
-	require.NotNil(t, controlDB.SiteReplicatedAt(siteID))
-}
-
-// A replicated site is truncated, its DB shrunk and its write-ahead log checkpointed by Litestream, and what it keeps
-// is still sent to its replica
-func TestTruncateReplicatedSite(t *testing.T) {
-	cfg, controlDB, site := testutils.NewReplicatedControlDB(t)
-	ctx, siteID := t.Context(), site.SiteDB.Subdomain
-	for i := range 200 {
-		addReading(t, site.SiteDB, fmt.Sprint("reading-", i))
-	}
-	start := time.Now()
-	_, err := controlDB.TruncateSite(ctx, siteID)
+	siteDB, _, err := controlDB.GetSite(ctx, siteID)
 	require.NoError(t, err)
-	require.Less(t, time.Since(start), 4*time.Second, "it does not wait for Litestream's read to end")
-	wal, err := os.Stat(site.SiteDB.Path + "-wal")
+	reading, err := siteDB.Queries().GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "kept"})
 	require.NoError(t, err)
-	require.Less(t, wal.Size(), int64(16<<10), "the write-ahead log is truncated, but for the frame Litestream writes after")
-	addReading(t, site.SiteDB, "after the truncate")
-	require.NoError(t, controlDB.Close())
-
-	require.NoError(t, os.Remove(site.SiteDB.Path))
-	require.NoError(t, os.RemoveAll(filepath.Join(filepath.Dir(site.SiteDB.Path), "."+siteID+".sqlite-litestream")))
-	controlDB, err = testutils.OpenReplicated(t, cfg, s3utils.NewS3Client(cfg))
-	require.NoError(t, err)
-	requireReading(t, controlDB, siteID, "after the truncate")
-}
-
-// A deleted site's replica is deleted with it, and so is what Litestream kept beside its DB
-func TestDeleteSitesDeletesTheirReplicas(t *testing.T) {
-	cfg, controlDB, site := testutils.NewReplicatedControlDB(t)
-	siteID := site.SiteDB.Subdomain
-	require.NotEmpty(t, replicaKeys(t, cfg, siteID), "a new site is sent at once")
-
-	require.NoError(t, controlDB.DeleteSites(t.Context(), []string{siteID}))
-	require.Empty(t, replicaKeys(t, cfg, siteID))
-	require.NoFileExists(t, site.SiteDB.Path)
-	require.NoDirExists(t, filepath.Join(filepath.Dir(site.SiteDB.Path), "."+siteID+".sqlite-litestream"))
+	require.Equal(t, 120.0, reading.Mgdl)
 }
 
 // A loop's status is kept whole for a day, as followers read a day of them; then only its predictions are cleared,
@@ -555,38 +550,69 @@ func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	require.Equal(t, "keptsite", batch[0].Subdomain)
 }
 
-// A live site whose DB file is missing at start is restored, with its data, from its replica; one without a replica
-// stops the start, named in its error, and each is a site_db_missing event the control admin sees. The sites restored
-// and kept are replicated again.
-func TestReplicateRestoresMissingSites(t *testing.T) {
-	cfg, s3 := testutils.ReplicatedConfig(t)
+// A live site whose DB file is missing at start is restored, with its data, from its own backup; one with no backup
+// stops the start, named in its error, and each is a site_db_missing event the control admin sees
+func TestRestoreMissingSites(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode = consts.Development
+	cfg.DataDir = t.TempDir()
+	cfg.Status.S3Working = true
 	ctx := t.Context()
-	controlDB, err := db.NewControlDB(ctx, cfg)
+	controlDB, err := db.NewControlDB(ctx, &cfg)
 	require.NoError(t, err)
-	require.NoError(t, controlDB.Replicate(ctx, replica.New(cfg, s3)))
 	for _, siteID := range []string{"keptsite", "kostsite", "kingsite"} {
 		_, err := controlDB.CreateSiteWithID(ctx, siteID)
 		require.NoError(t, err)
 	}
 	site, _, err := controlDB.GetSite(ctx, "kostsite")
 	require.NoError(t, err)
-	addReading(t, site, "kept")
+	_, err = site.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
 	require.NoError(t, controlDB.Close())
 
-	// kostsite's files are lost, but its replica has it; kingsite has neither
-	for _, siteID := range []string{"kostsite", "kingsite"} {
-		require.NoError(t, os.Remove(sitedb.GetPath(siteID, cfg)))
-		require.NoError(t, os.RemoveAll(filepath.Join(filepath.Dir(sitedb.GetPath(siteID, cfg)), "."+siteID+".sqlite-litestream")))
+	// A stand in for S3 has kostsite's backup but not kingsite's
+	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
+	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
+	require.NoError(t, os.Remove(sitedb.GetPath("kingsite", &cfg)))
+	downloads := []string{}
+	// Like s3utils.DownloadFilesFromS3 it makes its staging folder beside outpath, and it leaves it there, as a start
+	// killed part way through the download does
+	download := func(_ context.Context, key string, outpath string) (int64, bool, error) {
+		downloads = append(downloads, key)
+		if key != sitedb.GetS3SitePath("kostsite", &cfg) {
+			return 0, false, nil
+		}
+		_, err := os.MkdirTemp(filepath.Dir(outpath), "."+filepath.Base(outpath)+"-restore-")
+		require.NoError(t, err)
+		require.NoError(t, os.MkdirAll(outpath, 0o755))
+		data, err := os.ReadFile(backup)
+		require.NoError(t, err)
+		return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, "kostsite.sqlite"), data, 0o600)
 	}
-	require.NoError(t, replica.Client(cfg, s3, replica.SiteName("kingsite"), false).DeleteAll(ctx))
 
-	controlDB, err = testutils.OpenReplicated(t, cfg, s3)
-	require.ErrorIs(t, err, db.ErrSitesMissing, "kingsite has no replica, so the start stops")
+	controlDB, err = db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	err = controlDB.RestoreMissingSites(ctx, download)
+	require.ErrorIs(t, err, db.ErrSitesMissing, "kingsite is not in the backup, so the start stops")
 	require.ErrorContains(t, err, "kingsite")
 	require.NotContains(t, err.Error(), "kostsite")
-	requireReading(t, controlDB, "kostsite", "kept")
+	require.ElementsMatch(t, []string{sitedb.GetS3SitePath("kostsite", &cfg), sitedb.GetS3SitePath("kingsite", &cfg)}, downloads,
+		"each site is downloaded by itself")
+
+	site, _, err = controlDB.GetSite(ctx, "kostsite")
+	require.NoError(t, err, "the site is restored and open")
+	reading, err := site.Queries().GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "kept"})
+	require.NoError(t, err)
+	require.Equal(t, float64(120), reading.Mgdl)
 	_, _, err = controlDB.GetSite(ctx, "kingsite")
 	require.ErrorContains(t, err, "not found in memory")
+	entries, err := os.ReadDir(filepath.Dir(sitedb.GetBatchFolder("k", &cfg)))
+	require.NoError(t, err)
+	for _, entry := range entries {
+		require.False(t, strings.HasPrefix(entry.Name(), "."), "no staging folder is left behind")
+	}
+
 	for siteID, attributes := range map[string]string{"kostsite": `{"restored":true}`, "kingsite": `{"restored":false,"reason":"not_in_backup"}`, "keptsite": ""} {
 		found, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_db_missing"), Limit: 10})
 		require.NoError(t, err)
@@ -597,82 +623,67 @@ func TestReplicateRestoresMissingSites(t *testing.T) {
 		require.Len(t, found, 1, siteID)
 		require.JSONEq(t, attributes, *found[0].Attributes, siteID)
 	}
-
-	// Once kingsite is gone, the server starts, and the sites restored and kept are replicated again
-	_, err = controlDB.Queries.DeleteSites(ctx, controldb.DeleteSitesParams{JsonEach: `["kingsite"]`})
-	require.NoError(t, err)
-	require.NoError(t, controlDB.Close())
-	controlDB, err = testutils.OpenReplicated(t, cfg, s3)
-	require.NoError(t, err)
-	site, _, err = controlDB.GetSite(ctx, "kostsite")
-	require.NoError(t, err)
-	addReading(t, site, "after the restore")
-	require.NoError(t, controlDB.Close())
-	require.NoError(t, os.Remove(sitedb.GetPath("kostsite", cfg)))
-	require.NoError(t, os.RemoveAll(filepath.Join(filepath.Dir(sitedb.GetPath("kostsite", cfg)), ".kostsite.sqlite-litestream")))
-	controlDB, err = testutils.OpenReplicated(t, cfg, s3)
-	require.NoError(t, err)
-	requireReading(t, controlDB, "kostsite", "after the restore")
 }
 
-// A control DB missing at start is restored from its replica, with its sites
-func TestControlDBRestoresFromItsReplica(t *testing.T) {
-	cfg, s3 := testutils.ReplicatedConfig(t)
-	controlDB, err := testutils.OpenReplicated(t, cfg, s3)
-	require.NoError(t, err)
-	_, err = controlDB.CreateSiteWithID(t.Context(), "kostsite")
-	require.NoError(t, err)
-	require.NoError(t, controlDB.Close())
-	require.NoError(t, os.RemoveAll(cfg.DBDir()))
-
-	found, err := replica.New(cfg, s3).Restore(t.Context(), "control", controldb.GetPath(cfg))
-	require.NoError(t, err)
-	require.True(t, found)
-	controlDB, err = testutils.OpenReplicated(t, cfg, s3)
-	require.NoError(t, err, "the sites are restored too")
-	_, _, err = controlDB.GetSite(t.Context(), "kostsite")
-	require.NoError(t, err)
-}
-
-// A live site whose DB file is missing at start and is not restored stops the start: without S3, or when its restored
-// DB cannot be opened, as when its migration fails, as a site that is there and cannot be opened does, so a release
-// that cannot open it is rolled back. The control admin sees each as a site_db_missing event.
+// A live site whose DB file is missing at start is restored from its batch's backup and the server starts, unless
+// there is no S3 or the restored DB cannot be opened, as when its migration fails, which stops the start, as a site
+// that is there and cannot be opened does, so a release that cannot open it is rolled back. The control admin sees
+// each as a site_db_missing event.
 func TestRestoreMissingSite(t *testing.T) {
 	tests := []struct {
 		name      string
 		s3Working bool
-		// dirty is a site dirty at a migration it already has, so migrating it again fails, as one that keeps failing does
+		// dirty is a backup dirty at a migration it already has, so migrating it again fails, as one that keeps failing does
 		dirty bool
 		err   error
 		event string
 	}{
+		{name: "restored, the server starts", s3Working: true, event: `{"restored":true}`},
 		{name: "without S3 the start stops", err: db.ErrSitesMissing, event: `{"restored":false,"reason":"s3_not_working"}`},
 		{name: "restored but cannot be opened, the start stops", s3Working: true, dirty: true, err: db.ErrRestoredSiteCannotOpen,
 			event: `{"restored":false,"reason":"restore_failed"}`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg, s3 := testutils.ReplicatedConfig(t)
+			cfg := *testutils.GetTestServerConfig()
+			cfg.Mode, cfg.DataDir, cfg.Status.S3Working = consts.Development, t.TempDir(), tt.s3Working
 			ctx, siteID := t.Context(), "kostsite"
-			controlDB, err := testutils.OpenReplicated(t, cfg, s3)
+			controlDB, err := db.NewControlDB(ctx, &cfg)
 			require.NoError(t, err)
 			_, err = controlDB.CreateSiteWithID(ctx, siteID)
 			require.NoError(t, err)
-			if tt.dirty {
-				site, _, err := controlDB.GetSite(ctx, siteID)
-				require.NoError(t, err)
-				_, err = site.SQLiteDB.Exec("UPDATE schema_migrations SET dirty = 1")
-				require.NoError(t, err)
-			}
 			require.NoError(t, controlDB.Close())
-			require.NoError(t, os.Remove(sitedb.GetPath(siteID, cfg)))
 
-			cfg.Status.S3Working = tt.s3Working
-			controlDB, err = testutils.OpenReplicated(t, cfg, s3)
-			require.ErrorIs(t, err, tt.err)
-			require.ErrorContains(t, err, siteID)
+			// The batch's backup, in a stand in for S3, has the site
+			backup := filepath.Join(t.TempDir(), siteID+".sqlite")
+			require.NoError(t, os.Rename(sitedb.GetPath(siteID, &cfg), backup))
+			if tt.dirty {
+				raw, err := sql.Open("sqlite", backup)
+				require.NoError(t, err)
+				_, err = raw.Exec("UPDATE schema_migrations SET dirty = 1")
+				require.NoError(t, err)
+				require.NoError(t, raw.Close())
+			}
+			download := func(_ context.Context, _ string, outpath string) (int64, bool, error) {
+				require.NoError(t, os.MkdirAll(outpath, 0o755))
+				data, err := os.ReadFile(backup)
+				require.NoError(t, err)
+				return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, siteID+".sqlite"), data, 0o600)
+			}
+
+			controlDB, err = db.NewControlDB(ctx, &cfg)
+			require.NoError(t, err)
+			t.Cleanup(func() { controlDB.Close() })
+			err = controlDB.RestoreMissingSites(ctx, download)
 			_, _, openErr := controlDB.GetSite(ctx, siteID)
-			require.ErrorContains(t, openErr, "not found in memory")
+			if tt.err == nil {
+				require.NoError(t, err)
+				require.NoError(t, openErr, "the site is restored and open")
+			} else {
+				require.ErrorIs(t, err, tt.err)
+				require.ErrorContains(t, err, siteID)
+				require.ErrorContains(t, openErr, "not found in memory")
+			}
 			found, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_db_missing"), Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, found, 1)

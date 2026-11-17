@@ -80,7 +80,7 @@ AAPS, Trio) send.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `KEY_SETS` | Empty | Required, except in test mode (fixed keys). The four keys that encrypt secrets in the DBs, sign logins, and make the replicas' S3 encryption keys. |
+| `KEY_SETS` | Empty | Required, except in test mode (fixed keys). The four keys that encrypt secrets in the DBs and backups, and sign logins. |
 
 - The keys in `.env.dev` and `.env.test` are public. Production and staging do not start with them.
 - Make them with `cmd/keysets/create_keysets.go`.
@@ -103,26 +103,26 @@ AAPS, Trio) send.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `S3_URL` | None | The S3-compatible endpoint for the DBs' replicas, which are also the archives (example: `http://localhost:9000`, the docker-compose MinIO). |
+| `S3_URL` | None | The S3-compatible endpoint for backups and archives (example: `http://localhost:9000`, the docker-compose MinIO). |
 | `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on at startup. |
 | `S3_ACCESS_KEY` | `minioadmin` (docker-compose MinIO) | The access key ID. |
 | `S3_SECRET_KEY` | `minioadmin` (docker-compose MinIO) | The secret key. |
+| `BATCH_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How often each batch of sites (the same first letter) has its turn: each changed site in it is uploaded by itself. |
 | `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after it is replaced or deleted. |
-| `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site's replica. |
+| `SITE_BACKUP_RETENTION_DAYS` | `30` | How long S3 keeps a site's backup or archive after a newer upload replaces it. |
 
-- `S3_URL` unset or empty: S3 is off. No restore on start, no replication, and sites cannot be deleted.
+- `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted.
 - `S3_URL` set:
   - The server tests an upload at startup, and again over about half a minute. If it never works, the server stops.
-  - [Litestream](https://litestream.io) replicates the control DB within 1 second of a write, and each site DB within
-    1 minute, to `<HOST_NAME>/litestream/` in the bucket.
-  - Over HTTPS, S3 encrypts each replica with a key of its own (SSE-C), made from the MAC key of `KEY_SETS`.
-    - These stores take SSE-C: AWS S3, Cloudflare R2, Backblaze B2. Other stores are not tested.
-    - **Warning:** Do not change the primary MAC key. If it changes, the replicas made before cannot be read.
-  - Over HTTP (the docker-compose MinIO), S3 refuses SSE-C, so the replicas are not encrypted. The server logs a
-    warning. Production and staging do not start with an `http://` `S3_URL`.
-  - Each replica keeps a daily snapshot and the changes since: hourly files, and for the control DB files of each
-    minute.
   - Production and staging require both keys, and do not start with `minioadmin`.
+  - [Litestream](https://litestream.io) replicates the control DB within 1 second of a write, to
+    `<HOST_NAME>/litestream/control`.
+    - Over HTTPS, S3 encrypts the replica with a key from the MAC key of `KEY_SETS` (SSE-C). These stores take SSE-C:
+      AWS S3, Cloudflare R2, Backblaze B2. Other stores are not tested.
+    - **Warning:** Do not change the primary MAC key. If it changes, the replica made before cannot be read.
+    - Over HTTP (the docker-compose MinIO), S3 refuses SSE-C, so the replica is not encrypted, and the server logs a
+      warning. Production and staging do not start with an `http://` `S3_URL`.
+  - Each site is backed up by itself to `<HOST_NAME>/sites/<site>.tar.enc`, encrypted with `KEY_SETS`.
 
 ## Sites and connectors
 
@@ -131,7 +131,6 @@ AAPS, Trio) send.
 | `MAX_SITES` | `10000` | The most sites the public can create from the home page. A control admin can create more. |
 | `MAX_IDENTITIES_PER_USER` | `100` | The most identities on one site. Rate limiters are kept for 20 a site, so more costs no more memory. |
 | `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a never used site is kept before deletion. |
-| `SITE_UPKEEP_INTERVAL_IN_SECONDS` | `3600` | How often each batch of sites (sites with the same first letter) is truncated and its unused sites deleted. |
 | `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site is not written or seen before control can disable it. |
 | `BACKGROUND_CONNECTOR_WORKERS` | `5` | Syncs that run at once. |
 | `CONNECTOR_INTERVAL_IN_SECONDS` | `5` | How often due syncs are queued. |

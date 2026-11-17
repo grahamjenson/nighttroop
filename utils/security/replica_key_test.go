@@ -16,7 +16,7 @@ import (
 func TestReplicaKey(t *testing.T) {
 	sec := testutils.GetTestServerConfig().Security
 	keysets := bytes.Buffer{}
-	for _, handle := range []*keyset.Handle{sec.EncryptionKeySet, sec.JWTKeySet, sec.MACKeySet} {
+	for _, handle := range []*keyset.Handle{sec.EncryptionKeySet, sec.StreamEncryptionKeySet, sec.JWTKeySet, sec.MACKeySet} {
 		require.NoError(t, insecurecleartextkeyset.Write(handle, keyset.NewBinaryWriter(&keysets)))
 	}
 	keys := map[string]bool{}

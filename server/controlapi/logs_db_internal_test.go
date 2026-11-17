@@ -57,8 +57,8 @@ func TestLogsDBDownload(t *testing.T) {
 	require.Len(t, logs, 1)
 	require.Contains(t, *logs[0].Attributes, `"status":200`)
 
-	// The copy made for it, in the backup folder, is deleted once sent
-	copies, err := filepath.Glob(filepath.Join(controlDB.ServerConfig.BackupDir(), ".logs-download-*"))
+	// The copy made for it, beside the logs DB's backup path, is deleted once sent
+	copies, err := filepath.Glob(filepath.Join(filepath.Dir(controlDB.Logs.BackupPath), ".logs-download-*"))
 	require.NoError(t, err)
 	require.Empty(t, copies)
 }

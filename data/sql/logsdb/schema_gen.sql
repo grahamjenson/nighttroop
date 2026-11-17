@@ -4,6 +4,8 @@ CREATE INDEX errors_request ON errors (request_id) WHERE request_id IS NOT NULL;
 
 CREATE INDEX errors_site ON errors (site_id, id);
 
+CREATE INDEX events_batch ON events (batch, id);
+
 CREATE INDEX events_job ON events (job_id) WHERE job_id IS NOT NULL;
 
 CREATE INDEX events_request ON events (request_id) WHERE request_id IS NOT NULL;
@@ -29,6 +31,7 @@ CREATE TABLE errors (
 CREATE TABLE events (
     id INTEGER PRIMARY KEY,
     site_id TEXT CHECK(length(site_id) <= 32),
+    batch TEXT CHECK(length(batch) <= 32),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     attributes TEXT CHECK(length(attributes) <= 4096 AND json_valid(attributes)),
     started_at INTEGER NOT NULL,

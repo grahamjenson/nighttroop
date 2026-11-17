@@ -23,14 +23,15 @@ import (
 type ErrorKind string
 
 const (
-	ErrorKindServer    ErrorKind = "server"
-	ErrorKindClient    ErrorKind = "client"
-	ErrorKindConnector ErrorKind = "connector"
+	ErrorKindServer          ErrorKind = "server"
+	ErrorKindClient          ErrorKind = "client"
+	ErrorKindConnector       ErrorKind = "connector"
+	ErrorKindSiteBatchBackup ErrorKind = "site_batch_backup"
 )
 
 // ErrorKinds are every error's kind, to pick from
 var ErrorKinds = []string{
-	string(ErrorKindServer), string(ErrorKindClient), string(ErrorKindConnector),
+	string(ErrorKindServer), string(ErrorKindClient), string(ErrorKindConnector), string(ErrorKindSiteBatchBackup),
 }
 
 // LogLevel is how much a log matters
@@ -129,12 +130,12 @@ type SiteArchivedAttributes struct {
 
 // SiteArchivedEvent records a control identity archiving a site, which started at started
 func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string, started time.Time) {
-	l.finishedEvent(ctx, siteID, events.SiteArchived, started, SiteArchivedAttributes{By: by})
+	l.finishedEvent(ctx, siteID, "", events.SiteArchived, started, SiteArchivedAttributes{By: by})
 }
 
 // SiteHydratedEvent records a control identity bringing an archived site back, which started at started
 func (l *LogsDB) SiteHydratedEvent(ctx context.Context, siteID string, by string, started time.Time) {
-	l.finishedEvent(ctx, siteID, events.SiteHydrated, started, SiteArchivedAttributes{By: by})
+	l.finishedEvent(ctx, siteID, "", events.SiteHydrated, started, SiteArchivedAttributes{By: by})
 }
 
 type SiteTimezoneChangedAttributes struct {
@@ -167,7 +168,7 @@ type SiteTruncatedAttributes struct {
 // SiteTruncatedEvent records by, a control identity, a site admin or the size limit, truncating a site's DB, which
 // started at started, and its size before and after
 func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by string, started time.Time, beforeSizeKB *int64, afterSizeKB *int64) {
-	l.finishedEvent(ctx, siteID, events.SiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
+	l.finishedEvent(ctx, siteID, "", events.SiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
 }
 
 type SiteDeletedAttributes struct {
@@ -184,10 +185,22 @@ type SiteDBMissingAttributes struct {
 	Reason string `json:"reason,omitempty"`
 }
 
-// SiteDBMissingEvent records a live site's DB file missing at start, and whether it was restored from its replica, so
-// the control admin can see a site left out
+// SiteDBMissingEvent records a live site's DB file missing at start, and whether it was restored from its batch's
+// backup, so the control admin can see a site left out
 func (l *LogsDB) SiteDBMissingEvent(ctx context.Context, siteID string, restored bool, reason string) {
 	l.event(ctx, siteID, events.SiteDBMissing, SiteDBMissingAttributes{Restored: restored, Reason: reason})
+}
+
+type SiteBatchBackedUpAttributes struct {
+	Batch     string `json:"batch"`
+	SiteCount int    `json:"site_count"`
+	Uploaded  bool   `json:"uploaded"`
+}
+
+// SiteBatchBackedUpEvent records the sites whose IDs start with batch being backed up from started, and uploaded when
+// S3 works
+func (l *LogsDB) SiteBatchBackedUpEvent(ctx context.Context, batch string, siteCount int, started time.Time, uploaded bool) {
+	l.finishedEvent(ctx, "", batch, events.SiteBatchBackedUp, started, SiteBatchBackedUpAttributes{Batch: batch, SiteCount: siteCount, Uploaded: uploaded})
 }
 
 type ConnectorTurnedOffAttributes struct {
@@ -215,7 +228,7 @@ func (l *LogsDB) ConnectorBackfilledEvent(ctx context.Context, siteID string, co
 		message := truncate(err.Error())
 		attributes.Error = &message
 	}
-	l.finishedEvent(ctx, siteID, events.ConnectorBackfilled, started, attributes)
+	l.finishedEvent(ctx, siteID, "", events.ConnectorBackfilled, started, attributes)
 }
 
 type ConnectorRecordsAddedAttributes struct {
@@ -342,4 +355,13 @@ func RecordJSON(record any) any {
 		return json.RawMessage(raw)
 	}
 	return map[string]any{"text": strings.ToValidUTF8(string(raw[:min(len(raw), connectorRecordBytes)]), ""), "truncated": len(raw) > connectorRecordBytes}
+}
+
+type SiteBatchBackupErrorAttributes struct {
+	Kind  ErrorKind `json:"kind"`
+	Batch string    `json:"batch"`
+}
+
+func (l *LogsDB) SiteBatchBackupError(ctx context.Context, batch string, err error) {
+	l.error(ctx, nil, err, SiteBatchBackupErrorAttributes{Kind: ErrorKindSiteBatchBackup, Batch: batch})
 }

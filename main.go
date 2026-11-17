@@ -30,6 +30,7 @@ import (
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -41,9 +42,8 @@ func main() {
 	}
 }
 
-// run starts the server: from its config, it restores its missing DBs from their replicas in S3, opens the control DB
-// and replicates it and every site's, then runs the background jobs and serves HTTP until it is told to stop, when it
-// shuts down
+// run starts the server: from its config, it restores its DBs from S3, opens the control DB and replicates it, then
+// runs the background jobs and serves HTTP until it is told to stop, when it shuts down
 func run() error {
 	// Make all envars and config in one struct
 	serverConfig, err := config.NewServerConfig()
@@ -73,18 +73,16 @@ func run() error {
 		return fmt.Errorf("server validation failed: %w", err)
 	}
 
-	replicas := replica.New(serverConfig, s3Client)
-	if !utils.FileExists(controldb.GetPath(serverConfig)) {
-		if _, err := replicas.Restore(ctx, "control", controldb.GetPath(serverConfig)); err != nil {
-			return fmt.Errorf("cannot restore the control DB: %w", err)
-		}
+	control := replica.New(serverConfig, s3Client)
+	if err := restoreFromS3(ctx, serverConfig, control); err != nil {
+		return err
 	}
-	controlDB, err := openControlDB(ctx, serverConfig, replicas)
+	controlDB, err := openControlDB(ctx, serverConfig, s3Client, control)
 	if err != nil {
 		return err
 	}
 
-	backgroundManager := background.NewBackGroundManager(controlDB, serverConfig)
+	backgroundManager := background.NewBackGroundManager(context.Background(), controlDB, serverConfig, s3Client)
 	backgroundManager.Start()
 	defer backgroundManager.Stop()
 
@@ -104,16 +102,33 @@ func run() error {
 	}
 }
 
-// openControlDB opens the control DB and every site's, restoring a live site's missing DB from its replica, and
-// replicates them, with an admin to log in with in development and staging, and prints the setup code of a server not
-// yet set up
-func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, replicas *replica.Replicas) (*db.ControlDB, error) {
+// restoreFromS3 restores the control DB from its replica in S3 when it is missing
+func restoreFromS3(ctx context.Context, serverConfig *config.ServerConfig, control *replica.Replica) error {
+	// Before any restore runs, so none of the staging folders it removes is in use
+	restore.RemoveStaging(serverConfig)
+	if utils.FileExists(controldb.GetPath(serverConfig)) {
+		return nil
+	}
+	if _, err := control.Restore(ctx, controldb.GetPath(serverConfig)); err != nil {
+		return fmt.Errorf("Failed to restore the control DB: %w", err)
+	}
+	return nil
+}
+
+// openControlDB opens the control DB and every site's, restoring a live site's missing DB from its backup, and
+// replicates the control DB, with an admin to log in with in development and staging, and prints the setup code of a
+// server not yet set up
+func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Client *s3utils.S3Client, control *replica.Replica) (*db.ControlDB, error) {
 	controlDB, err := db.NewControlDB(context.Background(), serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
-	if err := controlDB.Replicate(ctx, replicas); err != nil {
+	// A live site whose DB file is missing is restored from its backup
+	if err := controlDB.RestoreMissingSites(ctx, s3Client.DownloadFilesFromS3); err != nil {
 		return nil, fmt.Errorf("cannot open restored sites: %w", err)
+	}
+	if err := controlDB.Replicate(ctx, control); err != nil {
+		return nil, fmt.Errorf("cannot replicate the control db: %w", err)
 	}
 	// Development has an admin to log in with, and staging its configured one; anywhere else a new server is set up
 	// with the code it prints
@@ -133,8 +148,8 @@ func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, repli
 	return controlDB, nil
 }
 
-// shutdown stops serving HTTP, within 5 seconds, then the background jobs, then sends each DB's last writes to its
-// replica as it closes the DBs
+// shutdown stops serving HTTP, within 5 seconds, then the background jobs, backs the sites up to S3 a last time, and
+// closes the DBs, sending the control DB's last writes to its replica
 func shutdown(httpServer *http.Server, backgroundManager *background.BackGroundManager, controlDB *db.ControlDB) {
 	slog.Info("Received shutdown signal, shutting down gracefully...")
 
@@ -150,7 +165,12 @@ func shutdown(httpServer *http.Server, backgroundManager *background.BackGroundM
 	backgroundManager.Stop()
 	slog.Info("Stopped background jobs complete")
 
-	slog.Info("Closing Database connections, sending their last writes to S3")
+	slog.Info("Performing final backup to S3...")
+	finalBackup := aslog.NewJob(context.Background(), "FinalBackup")
+	backgroundManager.BackupSiteJobManager.BackupToS3(finalBackup)
+	slog.Info("Final backup complete")
+
+	slog.Info("Closing Database connections")
 	controlDB.Close()
 	slog.Info("Server shutdown complete")
 }

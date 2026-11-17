@@ -15,19 +15,23 @@ the same.
 
 ## Data and backups
 
-| Data | On the server | Replicated to S3 | If missing |
+| Data | On the server | Backed up to S3 | If missing |
 | --- | --- | --- | --- |
-| Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Within 1 second of a write, and on stop | Every site: the server starts new, in setup |
-| Site DBs: readings, treatments and settings of each site | `data/db/site/<batch>/<site>.sqlite`, a batch for each first letter | Within 1 minute of a write, at once when made, and on stop | The start stops until restored ([5.6](#56-restore-missing-sites)) |
+| Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Replicated by Litestream within 1 second of a write, and on stop | Every site: the server starts new, in setup |
+| Site DBs: readings, treatments and settings of each site | `data/db/site/<batch>/<site>.sqlite`, a batch for each first letter | Each changed site every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), by itself, and on stop | The start stops until restored ([5.7](#57-restore-missing-sites)) |
 | Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history |
 | Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history |
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |
-| Litestream's changes of each replicated DB, not yet compacted in S3 | `.<file>-litestream/` next to each DB | They are uploaded, to `<host>/litestream/control` and `<host>/litestream/site/<site>` | The next start sends the whole DB again |
+| Local backups of the site DBs, each compressed with LZ4 (`.sqlite.lz4`) | `data/backup/` | They are uploaded, as `<host>/sites/<site>.tar.enc` | Nothing, while the DBs are there |
+| Litestream's changes of the control DB, not yet in S3 | `data/db/.controldb.sqlite-litestream/` | They are uploaded, to `<host>/litestream/control` | Nothing |
 | `update.sh` copies of `./data` | `backups/data-<time>.tar.gz`, the newest 5 | No | The way back to before a release |
-| `KEY_SETS` | `nighttroop.env` | No. Keep it in a password manager. | Every encrypted credential and S3 replica |
+| `KEY_SETS` | `nighttroop.env` | No. Keep it in a password manager. | Every encrypted credential and S3 backup |
 
-The MAC key of `KEY_SETS` makes each replica's S3 encryption key (SSE-C). With bucket versioning, S3 keeps replaced or deleted replica files 90 days
-(control) or 30 days (sites).
+`KEY_SETS` encrypts the site backups, and its MAC key makes the control replica's S3 encryption key (SSE-C). With
+bucket versioning, S3 keeps replaced files 90 days (control) or 30 days (sites).
+
+On Fly.io, the volume's daily snapshots are a second, coarse copy of all the DBs (`fly volumes snapshots list`).
+Nighttroop does not make or read them.
 
 ## Production update
 
@@ -72,17 +76,17 @@ The script tags the running image `nighttroop-rollback:<time>`, to start it agai
 `docker compose stop` sends `SIGTERM`, and kills the server after `stop_grace_period` (2 minutes). The server:
 
 1. Stops HTTP requests and closes every Socket.IO connection. Requests in progress get 5 seconds.
-2. Stops background jobs (syncs, alarms, truncates). Running jobs get up to 1 minute.
-3. Sends the last writes of the control DB and each site DB to its replica in S3, 16 at a time.
-4. Closes every DB.
+2. Stops background jobs (syncs, alarms, backups). Running jobs get up to 1 minute.
+3. Backs up and uploads each site DB with changes since its last upload.
+4. Closes every DB, and sends the control DB's last writes to its replica.
 
 **Note:** Nighttroop is down from here until it is healthy in [step 6](#step-6-wait-for-a-healthy-server), usually
 less than 1 minute. Caddy answers with a `502`.
 
 | Problem | Result | Fix |
 | --- | --- | --- |
-| S3 is unreachable | The last uploads fail (logged). The DBs on disk are whole. | None for this server. Do not move to a new VPS until the new version replicates to S3. |
-| A job or the uploads take more than 2 minutes | Docker kills the server. The SQLite write-ahead log keeps the DBs whole. | As above. If frequent, increase `stop_grace_period`. The next start sends what is left. |
+| S3 is unreachable | The last uploads fail (logged). The DBs on disk are whole. | None for this server. Do not move to a new VPS until the new version backs up to S3. |
+| A job or the uploads take more than 2 minutes | Docker kills the server. The SQLite write-ahead log keeps the DBs whole. | As above. If frequent, increase `stop_grace_period`. **Gap:** No record of an unfinished last backup. |
 | A phone or app uploads during the stop | The upload fails | Loop, AAPS, Trio and xDrip+ send it again later. **Gap:** Not documented or tested: which apps retry, how far back Dexcom, Libre and Nightscout syncs fetch. |
 
 ### Step 4: Copy `./data`
@@ -95,7 +99,7 @@ With nothing writing, the script copies `./data` to `./backups/data-<time>.tar.g
 
 ### Step 5: Start the new version
 
-The script writes the new image into `.env` and runs `docker compose up -d`. The server does 5.1 to 5.9 in order.
+The script writes the new image into `.env` and runs `docker compose up -d`. The server does 5.1 to 5.10 in order.
 
 - A failed step ends the process with its error. Docker starts it again (`restart: unless-stopped`).
 - A start that always fails restarts until `update.sh` stops waiting ([step 6](#step-6-wait-for-a-healthy-server))
@@ -119,13 +123,17 @@ If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4,
   way, so `update.sh` exits with 2. When S3 works, run `docker compose up -d`.
 - Without `S3_URL`, S3 is off: no restore, no backups. The control plane shows this.
 
-#### 5.3 Restore the control DB if missing
+#### 5.3 Remove leftovers
 
-Only if `data/db/controldb.sqlite` is not there, the server restores it from its replica in S3.
+The server removes staging folders that a killed restore or archive left next to the DBs. This never stops the start.
+
+#### 5.4 Restore the control DB if missing
+
+Only if `data/db/controldb.sqlite` is not there, the server restores it from its Litestream replica in S3.
 
 - **Failure:** The restore fails. The start stops.
 - **Warning:** Stop a server that starts in setup with site files on disk. It knows none of its sites.
-  - Cause: the file is missing, and **there is no replica, or S3 is off**.
+  - Cause: the file is missing, and **there is no backup, or S3 is off**.
   - It starts as a **new server, in setup**, with the site files still in `data/db`.
   - Its health check passes, so `update.sh` keeps it.
 - **Fix:**
@@ -135,7 +143,7 @@ Only if `data/db/controldb.sqlite` is not there, the server restores it from its
   3. Start it again. Do not run setup.
 - **Gap:** Nothing stops a start with site DBs and an empty control DB.
 
-#### 5.4 Open the control, jobs, logs and live DBs
+#### 5.5 Open the control, jobs, logs and live DBs
 
 The server opens each and runs its new migrations.
 
@@ -145,10 +153,10 @@ The server opens each and runs its new migrations.
 - **Fix:** `update.sh` rolls back, with the DB from the [step 4](#step-4-copy-data) copy. Fix the migration and
   release again.
 
-#### 5.5 Open every site
+#### 5.6 Open every site
 
 The server opens each live and disabled site DB, on all cores together, and runs new migrations. It records sites with
-a missing file for 5.6. Time: about 2 ms a site.
+a missing file for 5.7. Time: about 2 ms a site.
 
 - **Failure:** `cannot fill sites`. One bad site stops the full start, intentionally: no site is served half migrated,
   and nothing is written that a rollback would lose.
@@ -157,25 +165,25 @@ a missing file for 5.6. Time: about 2 ms a site.
 - **Gap:** Without a shell and `sqlite3`, you cannot see why one site fails, try a fix on a copy, or remove one site
   from the start (disable it, restore it from a backup, force its migration back).
 
-#### 5.6 Restore missing sites
+#### 5.7 Restore missing sites
 
-The server restores each live site with a missing file from its replica in S3, 16 at a time, and opens it. Each is a
-`site_db_missing` event. Then it replicates the control DB and every open site DB.
+The server restores each live site with a missing file from its latest S3 backup, 16 at a time, and opens it. Each is a
+`site_db_missing` event.
 
-- **Failure:** `live sites' DBs are missing and were not restored`, with the sites. S3 is off, the site has no
-  replica, the restore fails, or a restored site does not open.
+- **Failure:** `live sites' DBs are missing and were not restored`, with the sites. S3 is off, the backup does not
+  have the site, the download fails, or a restored site does not open.
 - **Fix:** Get the site file from a copy in `./backups`. Or decide the site is gone, and delete it in the control DB.
 - **Gap:** The delete needs the server to run, and it cannot.
 
-#### 5.7 Make the admin
+#### 5.8 Make the admin
 
 Development and staging make their admin. A server with no admin prints a setup code and serves only the setup page.
 
-#### 5.8 Start the background jobs
+#### 5.9 Start the background jobs
 
 Syncs, backups, alarms and other jobs start before requests. From here, a sync can write to a site DB.
 
-#### 5.9 Accept requests
+#### 5.10 Accept requests
 
 The server listens on port 3000. `/health` answers `ok` when the control DB answers.
 
@@ -211,7 +219,7 @@ A rollback loses nothing: a version that is never healthy took no requests. Dele
 | Problem | Result | Fix |
 | --- | --- | --- |
 | The previous version is not healthy (exit 2) | Nighttroop is down | Not the release: S3, a setting, the disk, the VPS. Read `docker compose logs nighttroop`, fix it, and `docker compose up -d`. |
-| The new version replicated before it failed | The replicas have DBs in the new format | The previous version sends each DB again as it starts. Do not restore a new VPS from S3 before it is healthy. |
+| The new version uploaded backups before it failed | S3 has backups in the new format | The previous version replaces each site's backup when the site next changes. Do not restore a new VPS from S3 before then. |
 
 ### After a version serves: fix forward
 
@@ -226,12 +234,12 @@ again.
 
 | Problem | Result | Fix |
 | --- | --- | --- |
-| `KEY_SETS` is changed, cut short or lost | Encrypted credentials (Dexcom, Nightscout) and S3 replicas cannot be decrypted | Put back the old value from the password manager. **Gap:** No way to move to new keys yet (TODOs: *Testing deploy with rolling to a new keyset*). |
+| `KEY_SETS` is changed, cut short or lost | Encrypted credentials (Dexcom, Nightscout), S3 backups and the control replica cannot be decrypted | Put back the old value from the password manager. **Gap:** No way to move to new keys yet (TODOs: *Testing deploy with rolling to a new keyset*). |
 | A migration on `main` was edited, not added, after the first production deploy | DBs past it never get the change. Old and new DBs differ. | CI refuses it when `data/sql/MIGRATIONS_FROZEN` exists. **Gap:** It does not exist yet (TODOs P0). |
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |
-| Two servers use one bucket (such as a new VPS while the old one runs) | Both write the same replicas, which then do not restore | Stop the old server, with its last uploads, before you start the new one. **Gap:** Nothing stops a second server. |
-| A new VPS restores from S3 | If the old server stopped before its last uploads: control DB up to 1 second old, sites up to 1 minute. Jobs, logs and live DBs start empty. | Expected. If a site is in the control DB but has no replica, the start stops ([5.6](#56-restore-missing-sites)). |
+| Two servers use one bucket (such as a new VPS while the old one runs) | Each overwrites the other's backups, and both write the control replica, which then does not restore | Stop the old server, with its last uploads, before you start the new one. **Gap:** Nothing stops a second server. |
+| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 1 second old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-missing-sites)). |
 
 ## Staging deploy
 
@@ -260,9 +268,9 @@ push.
 Failures with no fix except a shell on the server, or none. Choose the tools from this list. Details are in each step.
 
 1. **A site stops the start**: no tools to inspect, fix or remove it
-   ([5.5](#55-open-every-site), [5.6](#56-restore-missing-sites)).
+   ([5.6](#56-open-every-site), [5.7](#57-restore-missing-sites)).
 2. **A missing control DB starts a new server** that passes its health check
-   ([5.3](#53-restore-the-control-db-if-missing)).
+   ([5.4](#54-restore-the-control-db-if-missing)).
 3. **No check after a deploy except `/health`** ([step 6](#step-6-wait-for-a-healthy-server)).
 4. **A failed copy leaves Nighttroop stopped**, with no space check first ([step 4](#step-4-copy-data)).
 5. **Client behaviour during the stop**: which apps send again, how far back syncs fetch
@@ -273,5 +281,5 @@ Failures with no fix except a shell on the server, or none. Choose the tools fro
 8. **No way to move to a new `KEY_SETS`.**
 9. **A slow start rolls back**: the Docker start period is fixed ([step 6](#step-6-wait-for-a-healthy-server)).
 10. **Background jobs start before requests**, so a failed start can have written data
-    ([5.8](#58-start-the-background-jobs)).
+    ([5.9](#59-start-the-background-jobs)).
 11. **Fly behaviour when a staging deploy fails its health check** ([staging](#staging-deploy)).

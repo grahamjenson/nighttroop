@@ -89,6 +89,9 @@ type Site struct {
 	LastSeenAt                       *int64
 	LastWriteAt                      *int64
 	SummariesCheckedAt               *int64
+	BackedUpAt                       *int64
+	BackupSizeKb                     *int64
+	BackupUploadedAt                 *int64
 	State                            string
 	DisabledAt                       *int64
 	ArchivedAt                       *int64

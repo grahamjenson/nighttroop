@@ -2733,6 +2733,16 @@ func (m *UpdateSiteAbuseScoreParams) SetID(v string) {
 }
 
 // GetID returns the ID value.
+func (m UpdateSiteBackedUpParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteBackedUpParams.
+func (m *UpdateSiteBackedUpParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m UpdateSiteDBSizeParams) GetID() string {
 	return m.ID
 }

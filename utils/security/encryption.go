@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log/slog"
 
 	"strings"
@@ -15,14 +16,13 @@ import (
 	"github.com/tink-crypto/tink-go/v2/insecurecleartextkeyset"
 	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/tink-crypto/tink-go/v2/mac"
+	"github.com/tink-crypto/tink-go/v2/streamingaead"
 )
 
 // There are three key sets that we need to manage:
-//  1. Encryption key set (AEAD) - for encrypting sensitive data in the database (e.g., user secrets)
-//  2. File encryption key set (StreamingAEAD) - unused since the DBs' replicas are encrypted by S3 (SSE-C), kept as
-//     KEY_SETS has four
-//  3. JWT key set - for signing and verifying JWT tokens
-//
+// 1. Encryption key set (AEAD) - for encrypting sensitive data in the database (e.g., user secrets)
+// 2. File encryption key set (StreamingAEAD) - for encrypting large files (e.g., backups)
+// 3. JWT key set - for signing and verifying JWT tokens
 // They are base64 encoded and comma separated in KEY_SETS env
 func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) error {
 	if keySetsRaw == "" {
@@ -43,7 +43,8 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 		return fmt.Errorf("failed to read encryption key set: %w", err)
 	}
 
-	if _, err := readKeySetFromBase64(fileEncKeyRaw); err != nil {
+	fileEncKeySet, err := readKeySetFromBase64(fileEncKeyRaw)
+	if err != nil {
 		return fmt.Errorf("failed to read file encryption key set: %w", err)
 	}
 
@@ -65,6 +66,11 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 		return fmt.Errorf("failed to create AEAD primitive: %w", err)
 	}
 
+	streamEnc, err := streamingaead.New(fileEncKeySet)
+	if err != nil {
+		return fmt.Errorf("failed to create StreamingAEAD primitive: %w", err)
+	}
+
 	macEnc, err := mac.New(macKeySet)
 	if err != nil {
 		return fmt.Errorf("failed to create MAC primitive: %w", err)
@@ -72,11 +78,13 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 
 	// Store KeySets
 	config.EncryptionKeySet = encKetSet
+	config.StreamEncryptionKeySet = fileEncKeySet // for files
 	config.JWTKeySet = jwtKeySet
 	config.MACKeySet = macKeySet
 
 	// Store primitives
 	config.aeadEnc = aeadTink
+	config.streamEnc = streamEnc
 	config.mac = macEnc
 
 	return nil
@@ -182,10 +190,9 @@ func (config *SecurityConfig) DecryptFor(purpose Purpose, siteID, ciphertext str
 	return string(plaintext), nil
 }
 
-// ReplicaKey is the base64 SSE-C key of the replica of the DB with name, such as "control" or "site/<site ID>": an
-// HMAC-SHA256 of its name with the MAC key set, so each DB's replica has its own key and a leaked key exposes one DB.
-// It is sent to S3 with each request, so it is never a key that encrypts anything here. A new primary MAC key makes
-// new keys, and the replicas made with the old ones cannot be read.
+// ReplicaKey is the base64 SSE-C key of the replica of the DB with name, such as "control": an HMAC-SHA256 of its
+// name with the MAC key set. It is sent to S3 with each request, so it is never a key that encrypts anything here.
+// A new primary MAC key makes a new key, and the replica made with the old one cannot be read.
 func (config *SecurityConfig) ReplicaKey(name string) (string, error) {
 	tag, err := config.mac.ComputeMAC([]byte("nighttroop litestream sse-c v1:" + name))
 	if err != nil {
@@ -201,4 +208,21 @@ func (config *SecurityConfig) ReplicaKey(name string) (string, error) {
 		}
 	}
 	return base64.StdEncoding.EncodeToString(tag), nil
+}
+
+// backupAssociatedData binds a backup to its object key without its host name, so a bucket copied to another host
+// still restores, but one site batch's archive cannot be put at another's key
+func backupAssociatedData(objectKey string) []byte {
+	_, path, _ := strings.Cut(objectKey, "/")
+	return []byte("backup|" + path)
+}
+
+// EncryptingWriterFor encrypts a backup to be kept at the object key
+func (config *SecurityConfig) EncryptingWriterFor(writer io.Writer, objectKey string) (io.WriteCloser, error) {
+	return config.streamEnc.NewEncryptingWriter(writer, backupAssociatedData(objectKey))
+}
+
+// DecryptingReaderFor decrypts a backup kept at the object key, and no other
+func (config *SecurityConfig) DecryptingReaderFor(reader io.Reader, objectKey string) (io.Reader, error) {
+	return config.streamEnc.NewDecryptingReader(reader, backupAssociatedData(objectKey))
 }

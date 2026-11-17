@@ -14,11 +14,6 @@ INPUT #control--login--name admin
 INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #controlSitesTable
-// The new site is truncated, an event that takes time, so there is a duration to see
-CLICK #controlSitesTable tbody tr >> nth=0
-CLICK #control--site--truncate
-ASSERT_TEXT_VISIBLE Site Truncated
-GOTO {{ .control_url }}/
 
 // The menu is two columns, as the site's is: security and users on the left, and jobs, logs and logout on the right,
 // so every page in it shows without scrolling it

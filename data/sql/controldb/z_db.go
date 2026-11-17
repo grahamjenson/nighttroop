@@ -144,8 +144,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAnySitePushRegistrationStmt, err = db.PrepareContext(ctx, getAnySitePushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAnySitePushRegistration: %w", err)
 	}
-	if q.getBatchSitesToUpkeepStmt, err = db.PrepareContext(ctx, getBatchSitesToUpkeep); err != nil {
-		return nil, fmt.Errorf("error preparing query GetBatchSitesToUpkeep: %w", err)
+	if q.getBatchSitesToBackUpStmt, err = db.PrepareContext(ctx, getBatchSitesToBackUp); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBatchSitesToBackUp: %w", err)
 	}
 	if q.getConnectorStmt, err = db.PrepareContext(ctx, getConnector); err != nil {
 		return nil, fmt.Errorf("error preparing query GetConnector: %w", err)
@@ -200,6 +200,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getSiteInAnyStateStmt, err = db.PrepareContext(ctx, getSiteInAnyState); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteInAnyState: %w", err)
+	}
+	if q.getSitesNotUploadedStmt, err = db.PrepareContext(ctx, getSitesNotUploaded); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesNotUploaded: %w", err)
 	}
 	if q.getSitesToArchiveStmt, err = db.PrepareContext(ctx, getSitesToArchive); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToArchive: %w", err)
@@ -309,6 +312,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteAbuseScoreStmt, err = db.PrepareContext(ctx, updateSiteAbuseScore); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteAbuseScore: %w", err)
 	}
+	if q.updateSiteBackedUpStmt, err = db.PrepareContext(ctx, updateSiteBackedUp); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteBackedUp: %w", err)
+	}
 	if q.updateSiteDBSizeStmt, err = db.PrepareContext(ctx, updateSiteDBSize); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDBSize: %w", err)
 	}
@@ -338,6 +344,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateSiteTableSizesStmt, err = db.PrepareContext(ctx, updateSiteTableSizes); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteTableSizes: %w", err)
+	}
+	if q.updateSitesBackupUploadedStmt, err = db.PrepareContext(ctx, updateSitesBackupUploaded); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSitesBackupUploaded: %w", err)
 	}
 	if q.updateSitesSettingsStmt, err = db.PrepareContext(ctx, updateSitesSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSitesSettings: %w", err)
@@ -550,9 +559,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAnySitePushRegistrationStmt: %w", cerr)
 		}
 	}
-	if q.getBatchSitesToUpkeepStmt != nil {
-		if cerr := q.getBatchSitesToUpkeepStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getBatchSitesToUpkeepStmt: %w", cerr)
+	if q.getBatchSitesToBackUpStmt != nil {
+		if cerr := q.getBatchSitesToBackUpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBatchSitesToBackUpStmt: %w", cerr)
 		}
 	}
 	if q.getConnectorStmt != nil {
@@ -643,6 +652,11 @@ func (q *Queries) Close() error {
 	if q.getSiteInAnyStateStmt != nil {
 		if cerr := q.getSiteInAnyStateStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteInAnyStateStmt: %w", cerr)
+		}
+	}
+	if q.getSitesNotUploadedStmt != nil {
+		if cerr := q.getSitesNotUploadedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesNotUploadedStmt: %w", cerr)
 		}
 	}
 	if q.getSitesToArchiveStmt != nil {
@@ -825,6 +839,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteAbuseScoreStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteBackedUpStmt != nil {
+		if cerr := q.updateSiteBackedUpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteBackedUpStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteDBSizeStmt != nil {
 		if cerr := q.updateSiteDBSizeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteDBSizeStmt: %w", cerr)
@@ -873,6 +892,11 @@ func (q *Queries) Close() error {
 	if q.updateSiteTableSizesStmt != nil {
 		if cerr := q.updateSiteTableSizesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteTableSizesStmt: %w", cerr)
+		}
+	}
+	if q.updateSitesBackupUploadedStmt != nil {
+		if cerr := q.updateSitesBackupUploadedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSitesBackupUploadedStmt: %w", cerr)
 		}
 	}
 	if q.updateSitesSettingsStmt != nil {
@@ -964,7 +988,7 @@ type Queries struct {
 	getAllSitesStmt                         *sql.Stmt
 	getAnyPushCredentialStmt                *sql.Stmt
 	getAnySitePushRegistrationStmt          *sql.Stmt
-	getBatchSitesToUpkeepStmt               *sql.Stmt
+	getBatchSitesToBackUpStmt               *sql.Stmt
 	getConnectorStmt                        *sql.Stmt
 	getConnectorsToRunStmt                  *sql.Stmt
 	getControlIdentityStmt                  *sql.Stmt
@@ -983,6 +1007,7 @@ type Queries struct {
 	getSiteIdentityByTokenDigestStmt        *sql.Stmt
 	getSiteIdentityPasskeyStmt              *sql.Stmt
 	getSiteInAnyStateStmt                   *sql.Stmt
+	getSitesNotUploadedStmt                 *sql.Stmt
 	getSitesToArchiveStmt                   *sql.Stmt
 	getSitesToDeleteInBatchStmt             *sql.Stmt
 	getSitesToDisableStmt                   *sql.Stmt
@@ -1019,6 +1044,7 @@ type Queries struct {
 	updatePublicSiteCreationStmt            *sql.Stmt
 	updateRateLimitsStmt                    *sql.Stmt
 	updateSiteAbuseScoreStmt                *sql.Stmt
+	updateSiteBackedUpStmt                  *sql.Stmt
 	updateSiteDBSizeStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
 	updateSiteIdentityDateFlagsStmt         *sql.Stmt
@@ -1029,6 +1055,7 @@ type Queries struct {
 	updateSiteIdentityTOTPStmt              *sql.Stmt
 	updateSiteSummariesCheckedAtStmt        *sql.Stmt
 	updateSiteTableSizesStmt                *sql.Stmt
+	updateSitesBackupUploadedStmt           *sql.Stmt
 	updateSitesSettingsStmt                 *sql.Stmt
 	upsertPushRegistrationStmt              *sql.Stmt
 }
@@ -1077,7 +1104,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAllSitesStmt:                         q.getAllSitesStmt,
 		getAnyPushCredentialStmt:                q.getAnyPushCredentialStmt,
 		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
-		getBatchSitesToUpkeepStmt:               q.getBatchSitesToUpkeepStmt,
+		getBatchSitesToBackUpStmt:               q.getBatchSitesToBackUpStmt,
 		getConnectorStmt:                        q.getConnectorStmt,
 		getConnectorsToRunStmt:                  q.getConnectorsToRunStmt,
 		getControlIdentityStmt:                  q.getControlIdentityStmt,
@@ -1096,6 +1123,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteIdentityByTokenDigestStmt:        q.getSiteIdentityByTokenDigestStmt,
 		getSiteIdentityPasskeyStmt:              q.getSiteIdentityPasskeyStmt,
 		getSiteInAnyStateStmt:                   q.getSiteInAnyStateStmt,
+		getSitesNotUploadedStmt:                 q.getSitesNotUploadedStmt,
 		getSitesToArchiveStmt:                   q.getSitesToArchiveStmt,
 		getSitesToDeleteInBatchStmt:             q.getSitesToDeleteInBatchStmt,
 		getSitesToDisableStmt:                   q.getSitesToDisableStmt,
@@ -1132,6 +1160,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
 		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
 		updateSiteAbuseScoreStmt:                q.updateSiteAbuseScoreStmt,
+		updateSiteBackedUpStmt:                  q.updateSiteBackedUpStmt,
 		updateSiteDBSizeStmt:                    q.updateSiteDBSizeStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:         q.updateSiteIdentityDateFlagsStmt,
@@ -1142,6 +1171,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteIdentityTOTPStmt:              q.updateSiteIdentityTOTPStmt,
 		updateSiteSummariesCheckedAtStmt:        q.updateSiteSummariesCheckedAtStmt,
 		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
+		updateSitesBackupUploadedStmt:           q.updateSitesBackupUploadedStmt,
 		updateSitesSettingsStmt:                 q.updateSitesSettingsStmt,
 		upsertPushRegistrationStmt:              q.upsertPushRegistrationStmt,
 	}
