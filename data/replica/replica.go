@@ -128,9 +128,11 @@ func (r *Replicas) Remove(ctx context.Context, path, name string, deleted bool) 
 	if db == nil {
 		return fmt.Errorf("the DB is not replicated")
 	}
-	// Synced first, as Close does
-	if _, err := r.sites.SyncDB(ctx, path, true); err != nil {
-		return err
+	// An archived one is synced first, as Close does
+	if !deleted {
+		if _, err := r.sites.SyncDB(ctx, path, true); err != nil {
+			return err
+		}
 	}
 	if err := r.sites.UnregisterDB(ctx, path); err != nil {
 		return err

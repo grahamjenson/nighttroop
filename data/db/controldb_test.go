@@ -176,6 +176,31 @@ func TestHydrateSite(t *testing.T) {
 	require.NotNil(t, controlDB.SiteReplicatedAt(siteID))
 }
 
+// A replicated site is truncated, its DB shrunk and its write-ahead log checkpointed by Litestream, and what it keeps
+// is still sent to its replica
+func TestTruncateReplicatedSite(t *testing.T) {
+	cfg, controlDB, site := testutils.NewReplicatedControlDB(t)
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
+	for i := range 200 {
+		addReading(t, site.SiteDB, fmt.Sprint("reading-", i))
+	}
+	start := time.Now()
+	_, err := controlDB.TruncateSite(ctx, siteID)
+	require.NoError(t, err)
+	require.Less(t, time.Since(start), 4*time.Second, "it does not wait for Litestream's read to end")
+	wal, err := os.Stat(site.SiteDB.Path + "-wal")
+	require.NoError(t, err)
+	require.Less(t, wal.Size(), int64(16<<10), "the write-ahead log is truncated, but for the frame Litestream writes after")
+	addReading(t, site.SiteDB, "after the truncate")
+	require.NoError(t, controlDB.Close())
+
+	require.NoError(t, os.Remove(site.SiteDB.Path))
+	require.NoError(t, os.RemoveAll(filepath.Join(filepath.Dir(site.SiteDB.Path), "."+siteID+".sqlite-litestream")))
+	controlDB, err = testutils.OpenReplicated(t, cfg, s3utils.NewS3Client(cfg))
+	require.NoError(t, err)
+	requireReading(t, controlDB, siteID, "after the truncate")
+}
+
 // A deleted site's replica is deleted with it, and so is what Litestream kept beside its DB
 func TestDeleteSitesDeletesTheirReplicas(t *testing.T) {
 	cfg, controlDB, site := testutils.NewReplicatedControlDB(t)
