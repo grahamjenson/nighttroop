@@ -481,6 +481,8 @@ var headerLinks = []struct {
 	{"events", "control.menu.events", icon.Activity}, {"errors", "control.menu.errors", icon.TriangleAlert},
 }
 
+// Header stays at the top of the window as the page scrolls, as tall as the site's, so its links and menu are always
+// one click away
 func Header() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -498,14 +500,14 @@ func Header() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<nav class=\"bg-brand-night border-b border-white/10 shadow-sm\"><div class=\"mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\"><div class=\"flex h-16 items-center justify-between\"><!-- Brand --><a href=\"/\" class=\"flex items-center gap-2 text-white font-bold tracking-wide uppercase\"><img id=\"control--nav--logo\" src=\"/logo.svg\" alt=\"\" class=\"size-8\"> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<nav id=\"control--nav\" class=\"sticky top-0 z-40 border-b border-white/10 bg-brand-night\"><div class=\"mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\"><div class=\"flex h-14 items-center justify-between\"><!-- Brand --><a href=\"/\" class=\"flex items-center gap-2 text-white font-bold tracking-wide uppercase\"><img id=\"control--nav--logo\" src=\"/logo.svg\" alt=\"\" class=\"size-8\"> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.base.title"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 144, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 146, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -539,7 +541,7 @@ func Header() templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, link.label))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 151, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 153, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -587,7 +589,7 @@ func Header() templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.menu.open"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 160, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 162, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -646,7 +648,7 @@ func Header() templ.Component {
 					var templ_7745c5c3_Var29 string
 					templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.menu.security"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 173, Col: 48}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 175, Col: 48}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 					if templ_7745c5c3_Err != nil {
@@ -703,7 +705,7 @@ func Header() templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.menu.users"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 181, Col: 45}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 183, Col: 45}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
@@ -784,7 +786,7 @@ func Header() templ.Component {
 					var templ_7745c5c3_Var35 string
 					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.menu.jobs"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 196, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 198, Col: 44}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 					if templ_7745c5c3_Err != nil {
@@ -841,7 +843,7 @@ func Header() templ.Component {
 					var templ_7745c5c3_Var38 string
 					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.menu.logs"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 204, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 206, Col: 44}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 					if templ_7745c5c3_Err != nil {
@@ -908,7 +910,7 @@ func Header() templ.Component {
 						var templ_7745c5c3_Var41 string
 						templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.menu.logout"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 222, Col: 48}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 224, Col: 48}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 						if templ_7745c5c3_Err != nil {

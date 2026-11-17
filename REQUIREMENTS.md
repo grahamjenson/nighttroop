@@ -85,6 +85,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - The header (with menu) and status banner show only after sign in.
 - In a wide window, the header links Sites, Usage, Jobs, Events and Errors, each with an icon. The menu has every page.
+- The header stays at the top of the window while the page scrolls. It is as tall as the site's header.
 - The banner shows when:
   - S3 backups or Sentry are not connected;
   - sites reach 90% of `MAX_SITES`, or all of it;
