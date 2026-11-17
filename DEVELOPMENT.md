@@ -15,6 +15,9 @@ The primary generators are:
 3. go migrate
 4. custom scripts like `getters` which live in `gen` folders
 
+`getters` writes a `Get` or `Set` method of a DB model only if the hand-written code names it. To use one that is not
+in `z_getters.go` yet, write the call, then run `go generate ./...`.
+
 # Submitting changes
 
 - Open pull requests against `main`, one per feature or fix, and keep each change small (see `AGENTS.md`).

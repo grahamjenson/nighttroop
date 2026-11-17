@@ -212,11 +212,6 @@ var (
 	ErrJWTInvalidResponse = errors.New("invalid JWT response")
 )
 
-// Verify checks the URL and token work by requesting a JWT.
-func (c *Client) Verify() error {
-	return c.refreshJWT()
-}
-
 func (c *Client) refreshJWT() error {
 	if testing.Testing() {
 		if c.baseURL != TestValidURL {

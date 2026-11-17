@@ -78,19 +78,13 @@ var ScriptURL = func(path string) string {
 // In the import workflow this stays "/templui/js". The CLI rewrites it to the user's local jsPublicPath.
 var componentScriptBasePath = ""
 
-// UseUnminifiedScripts switches component script loading to the unminified files.
-// Leave this false in normal use and set it to true during app startup for debugging.
-var UseUnminifiedScripts = false
-
 // ComponentScript renders a deferred script tag for a component JavaScript file.
 // Example: ComponentScript("datepicker") → <script defer src="/templui/js/datepicker.min.js?..."></script>
 func ComponentScript(component string) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
 		nonce := templ.GetNonce(ctx)
+		// Only the minified files are in server/assets/static
 		fileName := component + ".min.js"
-		if UseUnminifiedScripts {
-			fileName = component + ".js"
-		}
 		src := ScriptURL(componentScriptBasePath + "/" + fileName)
 
 		if _, err := io.WriteString(w, `<script type="module"`); err != nil {
