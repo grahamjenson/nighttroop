@@ -2,12 +2,14 @@ package s3utils
 
 import (
 	"archive/tar"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -306,6 +308,18 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, retention R
 ////
 
 func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath string) (int64, bool, error) {
+	return c.downloadVersion(ctx, key, "", outpath)
+}
+
+// VersionDownload downloads the version of an object with the ID S3 gave it, as DownloadFilesFromS3 downloads its latest
+func (c *S3Client) VersionDownload(versionID string) DownloadFunc {
+	return func(ctx context.Context, key string, outpath string) (int64, bool, error) {
+		return c.downloadVersion(ctx, key, versionID, outpath)
+	}
+}
+
+// downloadVersion downloads the version of the object at key with versionID, or its latest when versionID is ""
+func (c *S3Client) downloadVersion(ctx context.Context, key string, versionID string, outpath string) (int64, bool, error) {
 	if !c.ServerConfig.Status.S3Working {
 		return 0, false, nil
 	}
@@ -315,9 +329,13 @@ func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath 
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), transferTimeout)
 	defer cancel()
 	var noSuchKeyError *types.NoSuchKey
-	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
+	input := &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)}
+	if versionID != "" {
+		input.VersionId = aws.String(versionID)
+	}
+	out, err := c.s3.GetObject(ctx, input)
 	// Until the first backup in the new format replaces it, the backup is the one kept before, at its legacy key
-	if errors.As(err, &noSuchKeyError) && LegacyKey(key) != key {
+	if errors.As(err, &noSuchKeyError) && LegacyKey(key) != key && versionID == "" {
 		key = LegacyKey(key)
 		out, err = c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
 	}
@@ -535,4 +553,39 @@ func (c *S3Client) ExtractTar(reader io.Reader, outputDir string, objectKey stri
 	}
 
 	return nil
+}
+
+// BackupVersion is a version S3 keeps of a backup: its latest, or one a later upload replaced, kept for its retention
+type BackupVersion struct {
+	ID string `json:"id"`
+	// At is when it was uploaded, in milliseconds
+	At        int64 `json:"at"`
+	SizeBytes int64 `json:"size_bytes"`
+	Latest    bool  `json:"latest"`
+}
+
+// maxVersionsListed is the most versions of a backup listed, about four days of hourly uploads
+const maxVersionsListed = 100
+
+// ListVersions are the versions S3 keeps of the object at key, newest first, at most maxVersionsListed, and none
+// when S3 is off
+func (c *S3Client) ListVersions(ctx context.Context, key string) ([]BackupVersion, error) {
+	if !c.ServerConfig.Status.S3Working {
+		return nil, nil
+	}
+	out, err := c.s3.ListObjectVersions(ctx, &s3.ListObjectVersionsInput{Bucket: aws.String(c.Bucket), Prefix: aws.String(key), MaxKeys: aws.Int32(maxVersionsListed)})
+	if err != nil {
+		return nil, fmt.Errorf("cannot list the versions of %s: %w", key, err)
+	}
+	versions := []BackupVersion{}
+	for _, version := range out.Versions {
+		// The prefix also matches longer keys, such as another site's whose ID starts with this one's
+		if aws.ToString(version.Key) != key {
+			continue
+		}
+		versions = append(versions, BackupVersion{ID: aws.ToString(version.VersionId), At: aws.ToTime(version.LastModified).UnixMilli(),
+			SizeBytes: aws.ToInt64(version.Size), Latest: aws.ToBool(version.IsLatest)})
+	}
+	slices.SortFunc(versions, func(a, b BackupVersion) int { return cmp.Compare(b.At, a.At) })
+	return versions, nil
 }

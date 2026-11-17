@@ -101,6 +101,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - counts the site as written, so its new DB is backed up;
   - records a "Site DB made empty" event with who made it and why the site was unavailable.
 - New Empty DB is refused for a site that is not unavailable, or whose DB is being restored at that moment.
+- An unavailable site's page lists the backups S3 keeps of it (up to 100), newest first: when each was uploaded, its
+  size, and which is the latest. A control admin can restore any of them, after a confirm:
+  - as a restore at start does, a DB there that did not open is kept, and put back if the restored one does not open;
+  - once restored, the site is served again, and a "Site restored from a backup" event records who and which backup;
+  - one that is not there or does not open says so, and the site stays unavailable.
 - Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
 - Times in UTC, for example `2026-10-26 12:00:00`, and `-` when not set.
 

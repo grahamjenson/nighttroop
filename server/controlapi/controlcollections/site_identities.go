@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
 
 // IdentitiesHandler is a site's identities, newest first
@@ -72,6 +73,15 @@ func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
 		for _, table := range tables {
 			page.Tables = append(page.Tables, &controlmodels.SiteTable{Name: table.Name, Bytes: table.Bytes, Records: table.Records})
 		}
+	}
+	// An unavailable site's backups in S3 are listed, so an older one can be restored when the latest does not
+	if _, unavailable := controlContext.ControlDB.UnavailableSites()[chi.URLParam(r, "id")]; herr == nil && unavailable {
+		cfg := controlContext.ControlDB.ServerConfig
+		versions, err := s3utils.NewS3Client(cfg).ListVersions(r.Context(), sitedb.GetS3SitePath(site.ID, cfg))
+		if err != nil {
+			slog.ErrorContext(r.Context(), "Cannot list a site's backups", "site_id", site.ID, "error", err)
+		}
+		page.BackupVersions = versions
 	}
 	if herr != nil {
 		herr.Write(acceptType, w)

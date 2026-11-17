@@ -43,6 +43,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		admin.Post("/settings", (&controlcollections.SitesCollection{}).SettingsHandler)
 		admin.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)
 		admin.Post("/sites/{id}/new-empty-db", (&controlcollections.SitesCollection{}).NewEmptyDBHandler)
+		admin.Post("/sites/{id}/restore-version", (&controlcollections.SitesCollection{}).RestoreVersionHandler)
 		admin.Get("/sites/{id}/db", (&controlcollections.SitesCollection{}).DownloadDBHandler)
 		r.Get("/sites/{id}/identities", (&controlcollections.SitesCollection{}).IdentitiesHandler)
 		admin.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)

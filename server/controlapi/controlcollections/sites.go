@@ -208,6 +208,39 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 
 // TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks
 // its DB, while its DB is here. Only admins can.
+// RestoreVersionHandler restores an unavailable site from the version of its backup in S3 a control admin picked, such
+// as an older one when the latest does not open
+func (s *SitesCollection) RestoreVersionHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
+	if herr == nil && site == nil {
+		herr = apiutils.ErrNotFound
+	}
+	// An S3 version ID is at most 1024 characters
+	versionID := r.FormValue("version_id")
+	if herr == nil && (versionID == "" || len(versionID) > 1024) {
+		herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.restore_version"))
+	}
+	if herr == nil {
+		cfg := controlContext.ControlDB.ServerConfig
+		restored, err := controlContext.ControlDB.RestoreUnavailableSite(r.Context(), site.ID, s3utils.NewS3Client(cfg).VersionDownload(versionID))
+		if errors.Is(err, db.ErrSiteNotUnavailable) {
+			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.new_empty_db"))
+		} else if err != nil || !restored {
+			slog.ErrorContext(r.Context(), "Cannot restore a site from a version of its backup", "site_id", site.ID, "version_id", versionID, "error", err)
+			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.restore_version_failed"))
+		} else {
+			controlContext.ControlDB.Logs.SiteVersionRestoredEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, versionID)
+			site, herr = get(r.Context(), s, site.ID, controlContext)
+		}
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteVersionRestored(site))
+}
+
 // NewEmptyDBHandler makes an unavailable site's DB again, empty, so the site is served again without its data, as for one
 // created just before a crash, which has no backup
 func (s *SitesCollection) NewEmptyDBHandler(w http.ResponseWriter, r *http.Request) {

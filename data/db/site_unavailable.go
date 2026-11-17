@@ -208,3 +208,19 @@ func (db *ControlDB) NewEmptySiteDB(ctx context.Context, siteID string) error {
 	now := time.Now().UnixMilli()
 	return db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{LastWriteAt: &now, ID: siteID})
 }
+
+// RestoreUnavailableSite restores the unavailable site from its backup, downloaded with download, such as an older
+// version of it a control admin picked, and is whether it is served again. A DB there that did not open is kept, as in
+// RestoreUnavailableSites. A site that is not unavailable, or is being restored now, is ErrSiteNotUnavailable.
+func (db *ControlDB) RestoreUnavailableSite(ctx context.Context, siteID string, download s3utils.DownloadFunc) (bool, error) {
+	if !db.unavailable.claim(siteID) {
+		return false, ErrSiteNotUnavailable
+	}
+	defer db.unavailable.release(siteID)
+	found, err := db.restoreSite(ctx, siteID, download)
+	if err != nil || !found {
+		return false, err
+	}
+	db.unavailable.remove(siteID)
+	return true, nil
+}

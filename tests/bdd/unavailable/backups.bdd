@@ -1,0 +1,24 @@
+// An unavailable site's page lists the backups S3 keeps of it, newest first, the latest marked, so an admin can restore
+// an older one when the latest does not open
+GOTO {{ .control_url }}/login
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+GOTO {{ .control_url }}/sites/bkupsite
+ASSERT_VISIBLE #control--site--unavailable
+ASSERT_VISIBLE #control--site--backups
+ASSERT_TEXT_VISIBLE Backups in S3
+ASSERT_VISIBLE #control--site--backups--table tr:nth-child(1) >> text=2026-11-17 10:00:00
+ASSERT_VISIBLE #control--site--backups--table tr:nth-child(1) #control--site--backup-latest
+ASSERT_VISIBLE #control--site--backups--table tr:nth-child(2) >> text=2026-11-17 09:00:00
+ASSERT_VISIBLE #control--site--restore-version-1
+// Back at the top, so the screenshot shows the page as it opens
+SCROLL -3000
+SCREENSHOT backups
+
+// Restoring one asks first (the test accepts). This S3 does not have it, so it says it could not be restored, and the
+// site is still unavailable
+CLICK #control--site--restore-version-1
+ASSERT_TEXT_VISIBLE the backup could not be restored
+ASSERT_VISIBLE #control--site--unavailable
