@@ -80,20 +80,6 @@ SELECT id FROM sites WHERE state = 'live' AND (
 SELECT * FROM sites WHERE state IN ('live', 'disabled');
 
 
--- name: GetSitesToDisable :many
--- @param last_seen_at INT
--- @param last_write_at INT
--- Inactive Sites are sites that were once active but have stopped, so the assumption is they have data 
-SELECT * FROM sites 
-WHERE state = 'live' AND (last_seen_at < datetime('now', '-' || CAST(@last_seen_at AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(@last_write_at AS REAL) || ' minutes'));
-
--- name: GetSitesToArchive :many
--- @param last_seen_at INT
--- @param last_write_at INT
--- Inactive Sites are sites that were once active but have stopped, so the assumption is they have data 
-SELECT * FROM sites 
-WHERE state = 'disabled' AND (last_seen_at < datetime('now', '-' || CAST(@last_seen_at AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(@last_write_at AS REAL) || ' minutes'));
-
 -------
 -- UPDATE
 --------
