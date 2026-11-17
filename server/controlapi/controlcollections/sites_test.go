@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -163,12 +164,42 @@ func TestDownloadDBHandler(t *testing.T) {
 	require.Equal(t, name+".sqlite", archive.File[0].Name)
 	entry, err := archive.File[0].Open()
 	require.NoError(t, err)
-	db, err := io.ReadAll(entry)
+	copied, err := io.ReadAll(entry)
 	require.NoError(t, err)
-	require.True(t, strings.HasPrefix(string(db), "SQLite format 3\x00"), "the zip holds a SQLite DB")
+	require.True(t, strings.HasPrefix(string(copied), "SQLite format 3\x00"), "the zip holds a SQLite DB")
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "site_db_downloaded_by_control", events[0].Name)
 	require.Equal(t, `{"by":"admin"}`, *events[0].Attributes)
+
+	// An unavailable site with no DB here has none to download
+	controlDB.MakeSiteUnavailable(siteID, db.UnavailableMissing)
+	require.Equal(t, http.StatusNotFound, download(consts.ControlRoleAdmin, siteID).Code)
+}
+
+// An admin downloads the DB here of a site unavailable as its migration failed, as it is, to fix it
+func TestDownloadDBHandlerOfAnUnavailableSite(t *testing.T) {
+	cfg := testutils.GetTestServerConfig()
+	cfg.Mode, cfg.DataDir = consts.Development, t.TempDir()
+	controlDB, err := db.NewControlDB(t.Context(), cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	_, err = controlDB.CreateSiteWithID(t.Context(), "migrfail")
+	require.NoError(t, err)
+	controlDB.MakeSiteUnavailable("migrfail", db.UnavailableMigrationFailed)
+
+	router := chi.NewRouter()
+	router.Get("/sites/{id}/db", (&SitesCollection{}).DownloadDBHandler)
+	r := httptest.NewRequest(http.MethodGet, "/sites/migrfail/db", nil)
+	rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionRead)
+	rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}, config.ServerStatus{})
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, r.WithContext(rctx))
+
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	archive, err := zip.NewReader(bytes.NewReader(w.Body.Bytes()), int64(w.Body.Len()))
+	require.NoError(t, err)
+	require.Len(t, archive.File, 1)
+	require.Contains(t, controlDB.UnavailableSites(), "migrfail", "it stays unavailable")
 }

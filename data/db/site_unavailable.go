@@ -14,7 +14,9 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -223,4 +225,26 @@ func (db *ControlDB) RestoreUnavailableSite(ctx context.Context, siteID string, 
 	}
 	db.unavailable.remove(siteID)
 	return true, nil
+}
+
+// ErrNoSiteDBHere is an unavailable site with no DB here to download, as one whose DB was missing
+var ErrNoSiteDBHere = errors.New("the unavailable site has no DB here")
+
+// SnapshotUnavailableSite copies the DB here of an unavailable site, such as one whose migration failed, as it is, for
+// a control admin to download and fix. It is opened read only and not migrated, and not while it is being restored.
+func (db *ControlDB) SnapshotUnavailableSite(ctx context.Context, siteID string) (*backup.SiteDownload, error) {
+	if !db.unavailable.claim(siteID) {
+		return nil, ErrSiteNotUnavailable
+	}
+	defer db.unavailable.release(siteID)
+	path := sitedb.GetPath(siteID, db.ServerConfig)
+	if !utils.FileExists(path) {
+		return nil, ErrNoSiteDBHere
+	}
+	unopened, err := sqltiming.Open("sitedb", "file:"+path+"?mode=ro")
+	if err != nil {
+		return nil, err
+	}
+	defer unopened.Close()
+	return backup.SnapshotSite(ctx, unopened, siteID)
 }
