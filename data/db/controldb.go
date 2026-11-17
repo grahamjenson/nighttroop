@@ -20,6 +20,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
@@ -123,7 +124,7 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 			siteDB, err := NewSiteDB(ctx, model.ID, db.ServerConfig)
 			if err != nil {
 				slog.ErrorContext(aslog.WithSite(ctx, model.ID), "Site DB does not open, so the site is unavailable", "site_id", model.ID, "error", err)
-				db.MakeSiteUnavailable(model.ID, UnavailableCannotOpen)
+				db.MakeSiteUnavailableFor(model.ID, err)
 				return nil
 			}
 			db.sites.add(siteDB)
@@ -161,6 +162,11 @@ func (db *ControlDB) RestoreUnavailableSites(ctx context.Context, download s3uti
 			} else if found, err := db.restoreSite(siteCtx, siteID, download); err != nil {
 				slog.ErrorContext(siteCtx, "Cannot restore an unavailable site's DB from its backup", "site_id", siteID, "error", err)
 				reason = "restore_failed"
+				// A backup from before a migration that fails on it, as one from long ago, says so
+				if errors.As(err, new(*migrateup.FailedError)) {
+					reason = UnavailableMigrationFailed
+					db.MakeSiteUnavailableFor(siteID, err)
+				}
 			} else if !found {
 				reason = "not_in_backup"
 			}

@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
@@ -34,8 +35,8 @@ func (s *SitesCollection) IdentitiesHandler(w http.ResponseWriter, r *http.Reque
 // sitePageLatest is how many of a site's latest events, and of its errors, its page shows
 const sitePageLatest = 10
 
-// PageHandler is a site's own page: its details, its DB's size measured now and kept on its record, what an admin can
-// do to it, every one of its identities, newest first, which an admin can reset or sign in to the site as, and its
+// PageHandler is a site's own page: its details, its DB's size measured now and kept on its record, the migration its
+// DB is at, what an admin can do to it, every one of its identities, newest first, which an admin can reset or sign in to the site as, and its
 // latest events and errors. An API client gets the site.
 func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
@@ -46,6 +47,13 @@ func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	site, identities, herr := s.siteIdentities(r)
 	page := &controlmodels.SitePage{Site: site, Identities: identities}
+	if version, failed, ok := controlContext.ControlDB.SiteMigration(chi.URLParam(r, "id")); ok {
+		latest, err := migrateup.Latest(sitedb.Migrations)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "Cannot read the latest site migration", "error", err)
+		}
+		page.Migration = &controlmodels.SiteMigration{Version: version, Latest: latest, Failed: failed}
+	}
 	latest := &apiutils.Query{Limit: sitePageLatest}
 	if herr == nil {
 		latest.SiteID = &site.ID

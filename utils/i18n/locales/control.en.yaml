@@ -22,6 +22,7 @@ control:
     unavailable_title: "Sites unavailable, as their DBs could not be opened or restored ({{.SiteCount}}):"
     unavailable_missing: "DB missing"
     unavailable_cannot_open: "DB does not open"
+    unavailable_migration_failed: "migration failed"
     unavailable_more: "and {{.SiteCount}} more."
   menu:
     open: "Open user menu"
@@ -331,6 +332,10 @@ control:
     backup_size: "Backup size (MB)"
     backed_up: "Backed up"
     backup_uploaded: "Backup uploaded"
+    migration: "Migration"
+    migration_at: "{{.Version}} of {{.Latest}}"
+    migration_failed: "{{.Version}} failed, of {{.Latest}}"
+    migration_unknown: "Unknown"
     latest_events: "Latest Events"
     latest_errors: "Latest Errors"
     see_all: "See all"

@@ -102,6 +102,7 @@ func listComma(i, n int) string {
 // unavailableReasons are the banner's words for why a site is unavailable
 var unavailableReasons = map[string]string{
 	db.UnavailableMissing: "control.status_banner.unavailable_missing", db.UnavailableCannotOpen: "control.status_banner.unavailable_cannot_open",
+	db.UnavailableMigrationFailed: "control.status_banner.unavailable_migration_failed",
 }
 
 // maxUnavailableShown is how many unavailable sites the banner names, so it stays short when S3 is down for every site

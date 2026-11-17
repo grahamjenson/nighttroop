@@ -36,6 +36,19 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
+// migration is the migration the site's DB is at of the latest, or the one that failed on it, or unknown for a DB not
+// open
+func migration(ctx context.Context, m *controlmodels.SiteMigration) string {
+	if m == nil {
+		return i18n.T(ctx, "control.site.migration_unknown")
+	}
+	data := i18n.Data{"Version": m.Version, "Latest": m.Latest}
+	if m.Failed {
+		return i18n.T(ctx, "control.site.migration_failed", data)
+	}
+	return i18n.T(ctx, "control.site.migration_at", data)
+}
+
 // inactive is whether a live site has not been written to or seen in the configured days, so it can be disabled
 // unavailable is whether the site's DB is not open, as it was missing or did not open at start
 func unavailable(ctx context.Context, site *controlmodels.Site) bool {
@@ -324,7 +337,7 @@ func siteURL(ctx context.Context, siteID string) string {
 
 // SitePage is a site's own page, laid out like a site's summary: its state and when it changed, a grid of what can be
 // done to it, its DB size against its limit, tiles of when it was last used, its identities and its last
-// error, tiles of its backup's size and when it was copied and uploaded, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
+// error, tiles of its backup's size, when it was copied and uploaded, and the migration its DB is at, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
 templ SitePage(page *controlmodels.SitePage) {
 	{{ site := page.Site }}
 	@heading.Title(site.ID)
@@ -367,10 +380,11 @@ templ SitePage(page *controlmodels.SitePage) {
 			}
 			@stat.Tile("control--site--last-error", i18n.T(ctx, "control.site.last_error"), lastError(ctx, page.Errors), icon.TriangleAlert)
 		</div>
-		<div id="control--site--backup" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+		<div id="control--site--backup" class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			@stat.Tile("control--site--backup-size", i18n.T(ctx, "control.site.backup_size"), sizeMB(site.BackupSizeKb), icon.HardDrive)
 			@stat.Tile("control--site--backed-up", i18n.T(ctx, "control.site.backed_up"), display.Ago(ctx, site.BackedUpAt, time.Now()), icon.DatabaseBackup)
 			@stat.Tile("control--site--backup-uploaded", i18n.T(ctx, "control.site.backup_uploaded"), display.Ago(ctx, site.BackupUploadedAt, time.Now()), icon.CloudUpload)
+			@stat.Tile("control--site--migration", i18n.T(ctx, "control.site.migration"), migration(ctx, page.Migration), icon.Layers)
 		</div>
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.site.identities"), Scroll: true}) {
 			@SiteIdentities(site.ID, page.Identities)

@@ -642,8 +642,8 @@ func TestRestoreUnavailableSite(t *testing.T) {
 	}{
 		{name: "restored", s3Working: true, restored: true, event: `{"restored":true}`},
 		{name: "without S3 it stays unavailable", event: `{"restored":false,"reason":"s3_not_working"}`},
-		{name: "restored but cannot be opened, it stays unavailable", s3Working: true, dirty: true,
-			event: `{"restored":false,"reason":"restore_failed"}`},
+		{name: "restored but its migration fails, it stays unavailable, as its migration failed", s3Working: true, dirty: true,
+			event: `{"restored":false,"reason":"migration_failed"}`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -684,6 +684,9 @@ func TestRestoreUnavailableSite(t *testing.T) {
 			} else {
 				require.ErrorIs(t, openErr, db.ErrSiteUnavailable)
 				require.False(t, utils.FileExists(sitedb.GetPath(siteID, &cfg)), "a restored DB that does not open goes")
+				if tt.dirty {
+					require.Equal(t, map[string]string{siteID: db.UnavailableMigrationFailed}, controlDB.UnavailableSites())
+				}
 			}
 			found, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_db_missing"), Limit: 10})
 			require.NoError(t, err)
