@@ -10,6 +10,7 @@ CLICK #site--identities--add-device-button
 ASSERT_TEXT_VISIBLE Give each device its own identity
 // Each app has its icon and its name, and each role says in plain words what it can do
 ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-aaps) img[src^="/logos/aaps.png?v="]
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-t1dcarer) img[src^="/logos/t1dcarer.png?v="]
 ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-nightguard) >> text=Nightguard
 ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read) >> text=Sees everything. Changes nothing.
 ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read_write) >> text=Cannot change readings.
