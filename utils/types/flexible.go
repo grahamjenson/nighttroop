@@ -15,6 +15,14 @@ func typeError(data []byte, kept reflect.Type) error {
 	return &json.UnmarshalTypeError{Value: string(data[:min(len(data), 64)]), Type: kept}
 }
 
+// orNil is v as a T, or nil when v is nil, as a field that was not sent
+func orNil[V, T any](v *V, as func(*V) T) *T {
+	if v == nil {
+		return nil
+	}
+	return new(as(v))
+}
+
 // //////
 // FlexibleFloat64
 // ///////
@@ -55,13 +63,7 @@ func (f FlexibleFloat64) Float64() float64 {
 	return float64(f)
 }
 
-func (f *FlexibleFloat64) Float64p() *float64 {
-	if f == nil {
-		return nil
-	}
-	v := float64(*f)
-	return &v
-}
+func (f *FlexibleFloat64) Float64p() *float64 { return orNil(f, (*FlexibleFloat64).Float64) }
 
 // //////
 // FlexibleInt64
@@ -102,13 +104,7 @@ func (i *FlexibleInt64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *FlexibleInt64) Int64p() *int64 {
-	if i == nil {
-		return nil
-	}
-	v := int64(*i)
-	return &v
-}
+func (i *FlexibleInt64) Int64p() *int64 { return orNil(i, (*FlexibleInt64).Int64) }
 
 func (i *FlexibleInt64) Int64() int64 {
 	if i == nil {
@@ -154,13 +150,7 @@ func (b *FlexibleBool) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (b *FlexibleBool) Boolp() *bool {
-	if b == nil {
-		return nil
-	}
-	v := bool(*b)
-	return &v
-}
+func (b *FlexibleBool) Boolp() *bool { return orNil(b, (*FlexibleBool).Bool) }
 
 func (b *FlexibleBool) Bool() bool {
 	if b == nil {
