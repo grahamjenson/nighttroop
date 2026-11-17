@@ -17,8 +17,8 @@
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
        of Custom Type One: its tile in the Add Device modal shows its first letter
-    1. P3: Start the Add Device modal from a device status or an identity used by more than one app, with that app
-       picked, so a shared identity is one click from its own
+    1. P4: Open the Add Device modal from a shared identity with the app of one of its clients picked, read from
+       the client's user agent
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 

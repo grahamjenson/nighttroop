@@ -38,3 +38,7 @@ ASSERT_VISIBLE #site--identities--kitchen--clients li >> nth=0 >> text=xDrip+/20
 ASSERT_VISIBLE #site--identities--kitchen--clients li >> nth=1 >> text=SugarPixel/1.2 (ESP32)
 ASSERT_TEXT_VISIBLE Give each device its own identity
 SCREENSHOT identity_clients_shared
+// From there, one click opens the modal that adds a device its own identity
+CLICK #site--identities--kitchen--clients--add
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-xdrip)
+CLICK #site--identities--add-device--close

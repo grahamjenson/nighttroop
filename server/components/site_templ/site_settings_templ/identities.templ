@@ -263,8 +263,14 @@ templ recentClients(identity *sitemodels.UserIdentity) {
 					{ i18n.T(ctx, "site.settings.identities.clients_recent", i18n.Data{"Count": len(identity.RecentClients)}) }
 				}
 			</summary>
+			// A shared device is one click from the modal that adds a device its own identity
 			if shared {
-				<p class="mt-1 text-xs text-amber-800">{ i18n.T(ctx, "site.settings.identities.clients_shared_help") }</p>
+				<p class="mt-1 text-xs text-amber-800">
+					{ i18n.T(ctx, "site.settings.identities.clients_shared_help") }
+					<button id={ id + "--add" } type="button" class="cursor-pointer font-medium underline" hx-get="/settings/identities/new" hx-target="#modal-container" hx-swap="innerHTML">
+						{ i18n.T(ctx, "site.settings.identities.clients_shared_add") }
+					</button>
+				</p>
 			}
 			<ul class="mt-1 space-y-1 text-xs text-gray-600">
 				for _, client := range identity.RecentClients {
