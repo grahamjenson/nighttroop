@@ -221,208 +221,15 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				return nil, fmt.Errorf("%s:%d: WAIT_VISIBLE needs 1 to 60 seconds and a locator", path, lineNumber)
 			}
 			current = &WaitVisible{TestPath: path, TestLine: lineNumber, Seconds: seconds, Locator: parts[1]}
-		// Adding screenshot action
-		case "SCREENSHOT":
-			if current == nil {
-				return nil, fmt.Errorf("screenshot before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-
-			assertable.AddAssert(&Screenshot{
-				TestPath: path,
-				TestLine: lineNumber,
-				Name:     second,
-			})
-		case "ASSERT_STATUS":
-			if current == nil {
-				return nil, fmt.Errorf("assert_status before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			statusCode, err := strconv.Atoi(second)
-			if err != nil {
-				return nil, fmt.Errorf("invalid assert_status: %q", second)
-			}
-			assertable.AddAssert(&BrowserAssertStatus{
-				TestPath: path,
-				TestLine: lineNumber,
-				Code:     statusCode,
-			})
-
-		case "ASSERT_VISIBLE", "ASSERT_DRAWN", "ASSERT_CONTAINED":
-			if current == nil {
-				return nil, fmt.Errorf("assert_visible before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			assertable.AddAssert(&AssertVisible{
-				Locator:   second,
-				Drawn:     first == "ASSERT_DRAWN",
-				Contained: first == "ASSERT_CONTAINED",
-				TestPath:  path,
-				TestLine:  lineNumber,
-			})
-		case "ASSERT_NOT_VISIBLE":
-			if current == nil {
-				return nil, fmt.Errorf("assert_not_visible before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			assertable.AddAssert(&AssertNotVisible{
-				Locator:  second,
-				TestPath: path,
-				TestLine: lineNumber,
-			})
-		case "ASSERT_TEXT_VISIBLE":
-			if current == nil {
-				return nil, fmt.Errorf("assert_text_visible before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			assertable.AddAssert(&AssertTextVisible{
-				Text:     second,
-				TestPath: path,
-				TestLine: lineNumber,
-			})
-		case "ASSERT_TEXT_EQUALS":
-			if current == nil {
-				return nil, fmt.Errorf("assert_text_equals before action")
-			}
-
-			parts := strings.SplitN(second, " ", 2)
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("expected exactly two values")
-			}
-
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-
-			assertable.AddAssert(&AssertTextEquals{
-				Locator:  parts[0],
-				Text:     parts[1],
-				TestPath: path,
-				TestLine: lineNumber,
-			})
-		case "ASSERT_NEW_PAGE":
-			if current == nil {
-				return nil, fmt.Errorf("assert_new_page before action")
-			}
-
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-
-			assertable.AddAssert(&AssertNewPage{
-				TestPath: path,
-				TestLine: lineNumber,
-			})
-		case "ASSERT_NEW_URL":
-			if current == nil {
-				return nil, fmt.Errorf("assert_new_url before action")
-			}
-
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-
-			assertable.AddAssert(&AssertNewURL{
-				TestPath: path,
-				TestLine: lineNumber,
-			})
-		case "ASSERT_PATH":
-			if current == nil {
-				return nil, fmt.Errorf("assert_path before action")
-			}
-
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-
-			assertable.AddAssert(&AssertPath{
-				URLPath:  second,
-				TestPath: path,
-				TestLine: lineNumber,
-			})
-		case "ASSERT_HELD":
-			// ASSERT_HELD <path> waits for the page to send a request to the path HOLD holds
-			if current == nil {
-				return nil, fmt.Errorf("assert_held before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			assertable.AddAssert(&AssertHeld{Path: second, TestPath: path, TestLine: lineNumber})
-		case "ASSERT_NO_PAGE_ERRORS":
-			// ASSERT_NO_PAGE_ERRORS is the page having thrown no uncaught error, nor htmx logged one, since the flow went to it
-			if current == nil {
-				return nil, fmt.Errorf("assert_no_page_errors before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			assertable.AddAssert(&AssertNoPageErrors{TestPath: path, TestLine: lineNumber})
-		case "ASSERT_FITS":
-			// ASSERT_FITS is the whole page fitting in the window, so nothing on it needs scrolling to see
-			if current == nil {
-				return nil, fmt.Errorf("assert_fits before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			assertable.AddAssert(&AssertFits{TestPath: path, TestLine: lineNumber})
-		case "ASSERT_COUNT":
-			// ASSERT_COUNT is how many elements the locator finds are visible, counted at once, as for toasts that
-			// time out, which a wait would let go
-			if current == nil {
-				return nil, fmt.Errorf("assert_count before action")
-			}
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-			// The number is the last word, so the locator can have spaces, as one inside a table does
-			split := strings.LastIndex(second, " ")
-			count, err := strconv.Atoi(second[split+1:])
-			if split <= 0 || err != nil {
-				return nil, fmt.Errorf("%s:%d: ASSERT_COUNT needs a locator and a number: %q", path, lineNumber, second)
-			}
-			assertable.AddAssert(&AssertCount{Locator: second[:split], Count: count, TestPath: path, TestLine: lineNumber})
-		case "ASSERT_TITLE":
-			if current == nil {
-				return nil, fmt.Errorf("assert_title before action")
-			}
-
-			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
-			if !ok {
-				return nil, fmt.Errorf("current action does not support asserts")
-			}
-
-			assertable.AddAssert(&AssertTitle{
-				Title:    second,
-				TestPath: path,
-				TestLine: lineNumber,
-			})
 		default:
-			return nil, fmt.Errorf("unknown line: %q", l.Text)
+			// Any other line is an assert, checking the page the action before it left
+			assert, err := parseBrowserAssert(l)
+			if err != nil {
+				return nil, err
+			}
+			if err := addAssert(current, first, assert); err != nil {
+				return nil, err
+			}
 		}
 
 	}
@@ -430,4 +237,117 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 	flush()
 
 	return actions, nil
+}
+
+// assertable is an action that takes the asserts after it
+type assertable interface{ AddAssert(BrowserAssert) }
+
+// addAssert gives an assert to the action before it, which must take asserts
+func addAssert(current Action, first string, assert BrowserAssert) error {
+	if current == nil {
+		return fmt.Errorf("%s before action", strings.ToLower(first))
+	}
+	action, ok := current.(assertable)
+	if !ok {
+		return fmt.Errorf("current action does not support asserts")
+	}
+	action.AddAssert(assert)
+	return nil
+}
+
+// parseBrowserAssert is the assert a line makes, or an error if the line is not one
+func parseBrowserAssert(l Line) (BrowserAssert, error) {
+	first, second, lineNumber, path := l.First, l.Rest, l.Number, l.Path
+	switch first {
+	case "SCREENSHOT":
+		return &Screenshot{
+			TestPath: path,
+			TestLine: lineNumber,
+			Name:     second,
+		}, nil
+	case "ASSERT_STATUS":
+		statusCode, err := strconv.Atoi(second)
+		if err != nil {
+			return nil, fmt.Errorf("invalid assert_status: %q", second)
+		}
+		return &BrowserAssertStatus{
+			TestPath: path,
+			TestLine: lineNumber,
+			Code:     statusCode,
+		}, nil
+	case "ASSERT_VISIBLE", "ASSERT_DRAWN", "ASSERT_CONTAINED":
+		return &AssertVisible{
+			Locator:   second,
+			Drawn:     first == "ASSERT_DRAWN",
+			Contained: first == "ASSERT_CONTAINED",
+			TestPath:  path,
+			TestLine:  lineNumber,
+		}, nil
+	case "ASSERT_NOT_VISIBLE":
+		return &AssertNotVisible{
+			Locator:  second,
+			TestPath: path,
+			TestLine: lineNumber,
+		}, nil
+	case "ASSERT_TEXT_VISIBLE":
+		return &AssertTextVisible{
+			Text:     second,
+			TestPath: path,
+			TestLine: lineNumber,
+		}, nil
+	case "ASSERT_TEXT_EQUALS":
+		parts := strings.SplitN(second, " ", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("expected exactly two values")
+		}
+		return &AssertTextEquals{
+			Locator:  parts[0],
+			Text:     parts[1],
+			TestPath: path,
+			TestLine: lineNumber,
+		}, nil
+	case "ASSERT_NEW_PAGE":
+		return &AssertNewPage{
+			TestPath: path,
+			TestLine: lineNumber,
+		}, nil
+	case "ASSERT_NEW_URL":
+		return &AssertNewURL{
+			TestPath: path,
+			TestLine: lineNumber,
+		}, nil
+	case "ASSERT_PATH":
+		return &AssertPath{
+			URLPath:  second,
+			TestPath: path,
+			TestLine: lineNumber,
+		}, nil
+	case "ASSERT_HELD":
+		// ASSERT_HELD <path> waits for the page to send a request to the path HOLD holds
+		return &AssertHeld{Path: second, TestPath: path, TestLine: lineNumber}, nil
+	case "ASSERT_NO_PAGE_ERRORS":
+		// ASSERT_NO_PAGE_ERRORS is the page having thrown no uncaught error, nor htmx logged one, since the flow went to it
+		return &AssertNoPageErrors{TestPath: path, TestLine: lineNumber}, nil
+	case "ASSERT_FITS":
+		// ASSERT_FITS is the whole page fitting in the window, so nothing on it needs scrolling to see
+		return &AssertFits{TestPath: path, TestLine: lineNumber}, nil
+	case "ASSERT_COUNT":
+		// ASSERT_COUNT is how many elements the locator finds are visible, counted at once, as for toasts that
+		// time out, which a wait would let go
+		// The number is the last word, so the locator can have spaces, as one inside a table does
+		split := strings.LastIndex(second, " ")
+		count, err := strconv.Atoi(second[split+1:])
+		if split <= 0 || err != nil {
+			return nil, fmt.Errorf("%s:%d: ASSERT_COUNT needs a locator and a number: %q", path, lineNumber, second)
+		}
+		return &AssertCount{Locator: second[:split], Count: count, TestPath: path, TestLine: lineNumber}, nil
+	case "ASSERT_TITLE":
+		return &AssertTitle{
+			Title:    second,
+			TestPath: path,
+			TestLine: lineNumber,
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown line: %q", l.Text)
+	}
 }
