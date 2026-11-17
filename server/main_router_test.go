@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -108,5 +109,27 @@ func TestNightscoutOneSlash(t *testing.T) {
 		require.Equal(t, tt.want, seen.URL.Path, "%s %s", tt.host, tt.path)
 		require.Equal(t, tt.longLived, httputils.LongLived(seen), "%s %s", tt.host, tt.path)
 		require.Equal(t, tt.path, r.URL.RequestURI(), "the request sent is not changed")
+	}
+}
+
+// Only a site DB uploaded to the control site can be larger than MAX_REQUEST_BODY_BYTES
+func TestBodyLimit(t *testing.T) {
+	cfg := &config.ServerConfig{MaxRequestBodyBytes: 4000000}
+	tests := []struct {
+		target RouteTarget
+		method string
+		path   string
+		limit  int64
+	}{
+		{RouteTargetControl, http.MethodPost, "/sites/abcdefgh/db", maxUploadedSiteDBBytes},
+		{RouteTargetControl, http.MethodGet, "/sites/abcdefgh/db", 4000000},
+		{RouteTargetControl, http.MethodPost, "/sites/abcdefgh/truncate", 4000000},
+		{RouteTargetControl, http.MethodPost, "/sites/abcdefgh/db/more", 4000000},
+		{RouteTargetSite, http.MethodPost, "/sites/abcdefgh/db", 4000000},
+		{RouteTargetNightscout, http.MethodPost, "/sites/abcdefgh/db", 4000000},
+	}
+	for _, tt := range tests {
+		r := httptest.NewRequest(tt.method, tt.path, nil)
+		require.Equal(t, tt.limit, bodyLimit(cfg, tt.target, r), "%d %s %s", tt.target, tt.method, tt.path)
 	}
 }

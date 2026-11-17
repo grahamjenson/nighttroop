@@ -90,7 +90,7 @@ AAPS, Trio) send.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body, above an uploader's largest batch (Juggluco: 5000 readings). Larger gets 413. |
+| `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body, above an uploader's largest batch (Juggluco: 5000 readings). Larger gets 413. A site DB uploaded to the control site can be up to 512 MB. |
 | `REQUESTS_IN_FLIGHT_PER_CPU` | `16` | Requests each CPU works on at once. |
 | `REQUESTS_BACKLOG_PER_CPU` | `64` | Requests for each CPU that wait, up to 5 seconds, for one in flight to finish. |
 

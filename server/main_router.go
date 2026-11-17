@@ -59,10 +59,6 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			slog.InfoContext(r.Context(), "Global IP rate limit exceeded", "ip", ipAddress)
 			return
 		}
-		if !httputils.LimitRequestBody(w, r, config.MaxRequestBodyBytes) {
-			slog.InfoContext(r.Context(), "Request body too large", "ip", ipAddress, "bytes", r.ContentLength)
-			return
-		}
 		host, _, err := net.SplitHostPort(r.Host)
 		if err != nil {
 			host = r.Host
@@ -71,6 +67,10 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		if err != nil {
 			slog.InfoContext(r.Context(), "Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)
+			return
+		}
+		if !httputils.LimitRequestBody(w, r, bodyLimit(config, routeTarget, r)) {
+			slog.InfoContext(r.Context(), "Request body too large", "ip", ipAddress, "bytes", r.ContentLength)
 			return
 		}
 
@@ -103,6 +103,19 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		}
 	})))))
 
+}
+
+// siteDBUpload is the control site's path a control admin uploads a site's DB to, of at most maxUploadedSiteDBBytes,
+// far over a site's DB size limit (20 MB by default). Only an admin's upload is read, as the control router signs in.
+var siteDBUpload, maxUploadedSiteDBBytes = regexp.MustCompile(`^/sites/[^/]+/db$`), int64(512 << 20)
+
+// bodyLimit is the largest request body read: MAX_REQUEST_BODY_BYTES, or for a site DB uploaded to the control site,
+// maxUploadedSiteDBBytes
+func bodyLimit(config *config.ServerConfig, routeTarget RouteTarget, r *http.Request) int64 {
+	if routeTarget == RouteTargetControl && r.Method == http.MethodPost && siteDBUpload.MatchString(r.URL.Path) {
+		return maxUploadedSiteDBBytes
+	}
+	return config.MaxRequestBodyBytes
 }
 
 // nightscoutWrite is whether a request writes through a site's Nightscout API, as a device uploading its readings does
