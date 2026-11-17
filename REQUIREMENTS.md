@@ -116,6 +116,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Site details also show the DB size limit: 20 MB for a new site.
 - Sort by time since last write (first to archive) or DB size.
 - Not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS`: inactive.
+- A site's state is a badge, in the list and on its page: green for Live, amber for Disabled, grey for Archived and
+  Deleted.
 - The sites list has an Abuse column: each site's abuse level and score (for example `Good · 0.00`). See
   [Abuse levels](#abuse-levels).
 - The sites list has a Backup Uploaded column: the time since the site's batch was last uploaded to S3, or Never.

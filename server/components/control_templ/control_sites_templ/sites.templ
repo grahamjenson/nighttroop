@@ -209,7 +209,9 @@ templ siteRow(site *controlmodels.Site) {
 			{ site.ID }
 		}
 		@table.Cell() {
-			{ i18n.Stored(ctx, "site_states", site.State) }
+			@badge.Badge(badge.Props{ID: "control--site--" + site.ID + "--state", Variant: stateVariants[site.State]}) {
+				{ i18n.Stored(ctx, "site_states", site.State) }
+			}
 			if inactive(ctx, site) {
 				@badge.Badge(badge.Props{ID: "control--site--" + site.ID + "--inactive", Variant: badge.VariantWarning, Class: "ml-2"}) {
 					{ i18n.T(ctx, "control.sites.inactive") }
@@ -257,8 +259,9 @@ templ abuseBadge(site *controlmodels.Site, id string) {
 	}
 }
 
-// stateVariants colour a site's state badge: live in the theme's colour, disabled as a warning, and gone neutral grey
-var stateVariants = map[string]badge.Variant{"live": badge.VariantPrimary, "disabled": badge.VariantWarning}
+// stateVariants colour a site's state badge, in the list and on its page: live green, disabled as a warning, and gone
+// neutral grey
+var stateVariants = map[string]badge.Variant{"live": badge.VariantSuccess, "disabled": badge.VariantWarning}
 
 // lifecycle is when the site was made, its batch, and when it was disabled, archived or deleted, if it was
 func lifecycle(ctx context.Context, site *controlmodels.Site) string {
