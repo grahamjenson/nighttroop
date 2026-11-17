@@ -3,12 +3,16 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"sync"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -30,6 +34,28 @@ var ErrSiteUnavailable = errors.New("site unavailable")
 type unavailableSites struct {
 	mu      sync.RWMutex
 	reasons map[string]string
+	// busy are the unavailable sites whose DB is being restored or made again now, so two never work on one at once
+	busy map[string]bool
+}
+
+// claim marks the unavailable site busy, and is false if it is not unavailable or is already busy
+func (u *unavailableSites) claim(siteID string) bool {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	if _, ok := u.reasons[siteID]; !ok || u.busy[siteID] {
+		return false
+	}
+	if u.busy == nil {
+		u.busy = map[string]bool{}
+	}
+	u.busy[siteID] = true
+	return true
+}
+
+func (u *unavailableSites) release(siteID string) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	delete(u.busy, siteID)
 }
 
 func (u *unavailableSites) set(siteID, reason string) {
@@ -115,4 +141,32 @@ func (db *ControlDB) KeepRestoringUnavailableSites(ctx context.Context, download
 	if unavailable := slices.Sorted(maps.Keys(db.UnavailableSites())); len(unavailable) > 0 && ctx.Err() == nil {
 		page(ctx, "Sites are unavailable, as their DBs could not be restored", "site_ids", unavailable, "tries", len(retries)+1)
 	}
+}
+
+// ErrSiteNotUnavailable is a site whose DB is not unavailable, or is being restored now, so it is not made again
+var ErrSiteNotUnavailable = errors.New("the site is not unavailable, or its DB is being restored")
+
+// NewEmptySiteDB makes an unavailable site's DB again, empty, and opens it, so the site is served again without its
+// data, as for one created just before a crash, which has no backup. Its identities, in the control DB, are kept, and
+// a DB there that did not open is moved aside and kept. The site counts as written, so its new DB is backed up.
+func (db *ControlDB) NewEmptySiteDB(ctx context.Context, siteID string) error {
+	if !db.unavailable.claim(siteID) {
+		return ErrSiteNotUnavailable
+	}
+	defer db.unavailable.release(siteID)
+	path := sitedb.GetPath(siteID, db.ServerConfig)
+	if err := utils.MkDirs(filepath.Dir(path)); err != nil {
+		return err
+	}
+	if err := moveDB(path, fmt.Sprintf("%s.unopened-%d", path, time.Now().UnixMilli())); err != nil {
+		return fmt.Errorf("cannot move the DB that did not open aside: %w", err)
+	}
+	siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
+	if err != nil {
+		return fmt.Errorf("cannot make a new DB: %w", err)
+	}
+	db.sites.add(siteDB)
+	db.unavailable.remove(siteID)
+	now := time.Now().UnixMilli()
+	return db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{LastWriteAt: &now, ID: siteID})
 }

@@ -109,3 +109,43 @@ func TestKeepRestoringStopsWithTheServer(t *testing.T) {
 	require.Equal(t, 1, tries)
 	require.Empty(t, paged.messages)
 }
+
+// A control admin makes an unavailable site's DB again, empty, so it is served again, and counts as written, so its new
+// DB is backed up. A site that is not unavailable, or whose DB is being restored now, is not made again.
+func TestNewEmptySiteDB(t *testing.T) {
+	controlDB, siteID, _ := missingSite(t)
+	ctx := t.Context()
+
+	// While its restore is downloading, the site is not made again
+	controlDB.RestoreUnavailableSites(ctx, func(context.Context, string, string) (int64, bool, error) {
+		require.ErrorIs(t, controlDB.NewEmptySiteDB(ctx, siteID), db.ErrSiteNotUnavailable)
+		return 0, false, nil
+	})
+
+	require.NoError(t, controlDB.NewEmptySiteDB(ctx, siteID))
+	site, model, err := controlDB.GetSite(ctx, siteID)
+	require.NoError(t, err, "it is served again")
+	require.Empty(t, controlDB.UnavailableSites())
+	require.NotNil(t, model.LastWriteAt, "it counts as written, so it is backed up")
+	readings, err := site.Queries().SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, readings, "its DB is empty")
+
+	require.ErrorIs(t, controlDB.NewEmptySiteDB(ctx, siteID), db.ErrSiteNotUnavailable, "an available site is not made again")
+}
+
+// A site whose DB did not open keeps that DB beside its new, empty one
+func TestNewEmptySiteDBKeepsTheDBThatDidNotOpen(t *testing.T) {
+	controlDB, siteID, _ := missingSite(t)
+	path := sitedb.GetPath(siteID, controlDB.ServerConfig)
+	require.NoError(t, os.WriteFile(path, []byte("not a DB"), 0o600))
+	controlDB.MakeSiteUnavailable(siteID, db.UnavailableCannotOpen)
+
+	require.NoError(t, controlDB.NewEmptySiteDB(t.Context(), siteID))
+	kept, err := filepath.Glob(path + ".unopened-*")
+	require.NoError(t, err)
+	require.Len(t, kept, 1)
+	data, err := os.ReadFile(kept[0])
+	require.NoError(t, err)
+	require.Equal(t, "not a DB", string(data))
+}

@@ -145,6 +145,11 @@ func (db *ControlDB) RestoreUnavailableSites(ctx context.Context, download s3uti
 			if ctx.Err() != nil {
 				return nil
 			}
+			// One whose DB is being made again now, or was already, is left to that
+			if !db.unavailable.claim(siteID) {
+				return nil
+			}
+			defer db.unavailable.release(siteID)
 			siteCtx := aslog.WithSite(ctx, siteID)
 			// Without S3 there is nothing to download, so it does not wait on a download that cannot work
 			reason := ""

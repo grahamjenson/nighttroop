@@ -186,6 +186,16 @@ type SiteDBMissingAttributes struct {
 	Reason string `json:"reason,omitempty"`
 }
 
+type SiteDBMadeEmptyAttributes struct {
+	By     string `json:"by"`
+	Reason string `json:"reason"`
+}
+
+// SiteDBMadeEmptyEvent records by, a control identity, making a site's DB again, empty, as it was unavailable for reason
+func (l *LogsDB) SiteDBMadeEmptyEvent(ctx context.Context, siteID string, by string, reason string) {
+	l.event(ctx, siteID, events.SiteDBMadeEmpty, SiteDBMadeEmptyAttributes{By: by, Reason: reason})
+}
+
 // SiteDBMissingEvent records a live site's DB file missing at start, and whether it was restored from its backup, so the control admin can see a site left out
 func (l *LogsDB) SiteDBMissingEvent(ctx context.Context, siteID string, restored bool, reason string) {
 	l.event(ctx, siteID, events.SiteDBMissing, SiteDBMissingAttributes{Restored: restored, Reason: reason})

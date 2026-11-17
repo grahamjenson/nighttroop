@@ -420,6 +420,11 @@ templ siteActions(site *controlmodels.Site) {
 					unless(site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Scissors) {
 					@siteActionForm("/sites/"+site.ID+"/truncate", "", i18n.T(ctx, "control.site.truncate_confirm"), "control--site--truncate", i18n.T(ctx, "control.site.truncate"))
 				}
+				if unavailable(ctx, site) {
+					@actionCard("control--site--action-new-empty-db", i18n.T(ctx, "control.site.new_empty_db"), i18n.T(ctx, "control.site.new_empty_db_intro"), "", icon.DatabaseBackup) {
+						@siteActionForm("/sites/"+site.ID+"/new-empty-db", "", i18n.T(ctx, "control.site.new_empty_db_confirm"), "control--site--new-empty-db", i18n.T(ctx, "control.site.new_empty_db"))
+					}
+				}
 				@actionCard("control--site--action-archive", i18n.T(ctx, "control.site.archive"), i18n.T(ctx, "control.site.archive_intro"), unless(site.State == "disabled", i18n.T(ctx, "control.site.archive_unavailable")), icon.Archive) {
 					@siteActionForm("/sites/"+site.ID, "archived", i18n.T(ctx, "control.site.archive_confirm"), "control--site--archive", i18n.T(ctx, "control.site.archive"))
 				}
@@ -509,6 +514,10 @@ var updatedToasts = map[string]string{"disabled": "control.site.disabled_toast",
 // SiteUpdated shows the site's page again, with a toast saying it is disabled or archived
 templ SiteUpdated(site *controlmodels.Site) {
 	@siteChanged(site, i18n.T(ctx, updatedToasts[site.State]))
+}
+
+templ SiteNewEmptyDB(site *controlmodels.Site) {
+	@siteChanged(site, i18n.T(ctx, "control.site.new_empty_db_toast"))
 }
 
 templ SiteTruncated(site *controlmodels.Site) {

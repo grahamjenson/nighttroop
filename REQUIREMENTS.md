@@ -94,6 +94,13 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
     missing, or DB does not open) and a link to its page, then how many more.
 - An unavailable site has a red Unavailable badge in the sites list and on its page.
+- An unavailable site's page offers a control admin New Empty DB, as for a site created just before a crash, which has
+  no backup. It asks first, then:
+  - makes the site's DB again, empty, so the site is served again; its identities are kept, its data is not;
+  - keeps a DB there that did not open beside the new one;
+  - counts the site as written, so its new DB is backed up;
+  - records a "Site DB made empty" event with who made it and why the site was unavailable.
+- New Empty DB is refused for a site that is not unavailable, or whose DB is being restored at that moment.
 - Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
 - Times in UTC, for example `2026-10-26 12:00:00`, and `-` when not set.
 

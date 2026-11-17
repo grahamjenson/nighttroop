@@ -22,6 +22,8 @@ const (
 	SiteArchived       Name = "site_archived"
 	SiteHydrated       Name = "site_hydrated"
 	SiteTruncated      Name = "site_truncated"
+	// SiteDBMadeEmpty is a control admin making an unavailable site's DB again, empty
+	SiteDBMadeEmpty Name = "site_db_made_empty"
 	SitesBackedUp      Name = "sites_backed_up"
 	ControlBackedUp    Name = "control_backed_up"
 	ConnectorTurnedOff Name = "connector_turned_off"
@@ -60,7 +62,7 @@ const (
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
-var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMissing, SitesBackedUp, ControlBackedUp,
+var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMadeEmpty, SiteDBMissing, SitesBackedUp, ControlBackedUp,
 	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
