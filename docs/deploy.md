@@ -18,7 +18,7 @@ the same.
 | Data | On the server | Backed up to S3 | If missing |
 | --- | --- | --- | --- |
 | Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Every 30 seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`), and on stop | Every site: the server starts new, in setup |
-| Site DBs: readings, treatments and settings of each site | `data/db/site/<letter>/<site>.sqlite`, a folder for each first letter of the site ID | Each site written to, an hour after its last backup (`SITE_BACKUP_INTERVAL_IN_SECONDS`), by itself, and on stop | The start stops until restored ([5.7](#57-restore-missing-sites)) |
+| Site DBs: readings, treatments and settings of each site | `data/db/site/<letter>/<site>.sqlite`, a folder for each first letter of the site ID | Each site written to, an hour after its last backup (`SITE_BACKUP_INTERVAL_IN_SECONDS`), by itself, and on stop | The start stops until restored ([5.7](#57-restore-unavailable-sites)) |
 | Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history |
 | Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history |
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |
@@ -151,25 +151,24 @@ The server opens each and runs its new migrations.
 
 #### 5.6 Open every site
 
-The server opens each live and disabled site DB, on all cores together, and runs new migrations. It records sites with
-a missing file for 5.7. Time: about 2 ms a site.
+The server opens each live and disabled site DB, on all cores together, and runs new migrations. A site whose file is
+missing, or does not open or migrate, is unavailable: the start goes on, and 5.7 restores it. Time: about 2 ms a site.
 
-- **Failure:** `cannot fill sites`. One bad site stops the full start, intentionally: no site is served half migrated,
-  and nothing is written that a rollback would lose.
-- **Fix:** `update.sh` rolls back. To find the site and cause, read the failed version logs (`update.sh` prints them),
-  and the site file in `data-failed-<time>`.
-- **Gap:** Without a shell and `sqlite3`, you cannot see why one site fails, try a fix on a copy, or remove one site
-  from the start (disable it, restore it from a backup, force its migration back).
+- **Failure:** A site is unavailable, its requests get 503, and its error is logged with the site. A migration that
+  fails on every site leaves every site unavailable, and the server is still healthy, so `update.sh` keeps it.
+- **Fix:** Release a fixed migration. A site DB that does not open is kept, so the next start opens it.
+- **Gap:** Without a shell and `sqlite3`, you cannot see why one site fails, or try a fix on a copy.
 
-#### 5.7 Restore missing sites
+#### 5.7 Restore unavailable sites
 
-The server restores each live site with a missing file from its latest S3 backup, 16 at a time, and opens it. Each is a
-`site_db_missing` event.
+After the start, in the background, the server restores each unavailable site from its latest S3 backup, 16 at a time,
+and opens it. Each is a `site_db_missing` event. A site DB that did not open is moved aside first, and put back if the
+restored one does not open either.
 
-- **Failure:** `live sites' DBs are missing and were not restored`, with the sites. S3 is off, the backup does not
-  have the site, the download fails, or a restored site does not open.
-- **Fix:** Get the site file from a copy in `./backups`. Or decide the site is gone, and delete it in the control DB.
-- **Gap:** The delete needs the server to run, and it cannot.
+- **Failure:** The site stays unavailable, with an error logged: S3 is off, the backup does not have the site, the
+  download fails, or the restored DB does not open.
+- **Fix:** Get the site file from a copy in `./backups`, and restart. Or decide the site is gone, and delete it.
+- **Gap:** A site not restored is not tried again until the next start, and no one is paged.
 
 #### 5.8 Make the admin
 
@@ -235,7 +234,7 @@ again.
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |
 | Two servers use one bucket (such as a new VPS while the old one runs) | Each overwrites the other's backups | Stop the old server, with its last uploads, before you start the new one. |
-| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 30 seconds old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-missing-sites)). |
+| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 30 seconds old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-unavailable-sites)). |
 
 ## Staging deploy
 
@@ -263,8 +262,8 @@ push.
 
 Failures with no fix except a shell on the server, or none. Choose the tools from this list. Details are in each step.
 
-1. **A site stops the start**: no tools to inspect, fix or remove it
-   ([5.6](#56-open-every-site), [5.7](#57-restore-missing-sites)).
+1. **An unavailable site is not restored again until the next start**, and no one is paged: no tools to inspect, fix
+   or remove it ([5.6](#56-open-every-site), [5.7](#57-restore-unavailable-sites)).
 2. **A missing control DB starts a new server** that passes its health check
    ([5.4](#54-restore-the-control-db-if-missing)).
 3. **No check after a deploy except `/health`** ([step 6](#step-6-wait-for-a-healthy-server)).

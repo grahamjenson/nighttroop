@@ -63,8 +63,10 @@
 
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
-       fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,
-       forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
+       fixes it, starting with an unavailable site (seeing why, trying a fix on a copy, and restoring, forcing back,
+       disabling or deleting it) and a missing control DB starting a new server in setup
+    1. P1: Retry an unavailable site's restore with backoff, page the admin when it keeps failing, and show unavailable
+       sites on the control front page
 
 
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):

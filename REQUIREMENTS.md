@@ -1818,14 +1818,16 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.
 - `cmd/keysets/decrypt_tar_lz4_enc.go` decrypts and unpacks a backup of either kind, given its object key.
 - A start removes only the staging folders that a stopped restore or archive left beside the DBs and backups.
-- A live site whose DB file is missing:
+- A live or disabled site whose DB file is missing, or cannot be opened or migrated, is unavailable. The start goes on
+  without it, and serves every other site.
+- An unavailable site's requests get 503 with `Retry-After`, as a busy server's do, so its uploaders try again. The
+  jobs leave it out.
+- After the start, in the background, each unavailable site:
   - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
-    restore failed).
-- The start stops, with the site named in the error, if a live site:
-  - Cannot be opened or migrated, also after a restore.
-  - Has no DB file and was not restored.
-- The server serves nothing until every live site is open and migrated. Else `update.sh` rolls the release back.
+    restore failed). One not restored is also logged as an error, and stays unavailable while the server runs.
+- A site DB that cannot be opened is moved aside while its backup is restored, and put back if the restored DB cannot
+  be opened either.
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
 - A site DB that cannot be opened keeps its file and backup. A fixed deploy opens it with its data.
 - A site creation that fails part way leaves no site or identities.

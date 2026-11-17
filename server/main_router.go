@@ -171,6 +171,8 @@ func serveSite(ctx context.Context, w http.ResponseWriter, r *http.Request, rout
 		apiutils.WriteJSON(w, missingStatus, map[string]any{"status": missingStatus, "message": "site does not exist"})
 		return
 	}
+	// A site whose DB is being restored, or could not be, is refused for now, as one too busy is, so its uploaders try
+	// again rather than take it as gone
 	if err != nil {
 		httputils.RefuseBusy(w, r.WithContext(ctx), "cannot look up the site: "+err.Error())
 		return
