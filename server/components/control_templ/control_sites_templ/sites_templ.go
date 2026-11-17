@@ -1050,9 +1050,9 @@ func abuseBadge(site *controlmodels.Site, id string) templ.Component {
 // neutral grey
 var stateVariants = map[string]badge.Variant{"live": badge.VariantSuccess, "disabled": badge.VariantWarning}
 
-// lifecycle is when the site was made, its batch, and when it was disabled, archived or deleted, if it was
+// lifecycle is when the site was made, and when it was disabled, archived or deleted, if it was
 func lifecycle(ctx context.Context, site *controlmodels.Site) string {
-	text := i18n.T(ctx, "control.site.lifecycle_created", i18n.Data{"CreatedAt": display.DateTime(&site.CreatedAt), "BatchName": site.Batch})
+	text := i18n.T(ctx, "control.site.lifecycle_created", i18n.Data{"CreatedAt": display.DateTime(&site.CreatedAt)})
 	for _, at := range []struct {
 		what string
 		ms   *int64

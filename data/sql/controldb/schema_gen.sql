@@ -271,7 +271,6 @@ CREATE TABLE site_identities (
 
 CREATE TABLE sites (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    batch TEXT GENERATED ALWAYS AS (SUBSTR(id, 1, 1)) VIRTUAL NOT NULL,
     
     backup_key_hash TEXT NOT NULL CHECK(length(backup_key_hash) <= 64), 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -294,7 +293,7 @@ CREATE TABLE sites (
     -- when the site's backup copy was last made, and that copy's size on disk
     backed_up_at INTEGER,
     backup_size_kb INTEGER,
-    -- when a batch with the site in it was last uploaded to S3
+    -- when the site's backup was last uploaded to S3
     backup_uploaded_at INTEGER,
 
     -- States

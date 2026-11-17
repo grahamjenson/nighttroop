@@ -181,7 +181,6 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 	},
 	"sites": {
 		"ID":                               {Column: "id", Required: true, MaxLength: 32},
-		"Batch":                            {Column: "batch", Required: true},
 		"BackupKeyHash":                    {Column: "backup_key_hash", Required: true, MaxLength: 64},
 		"CreatedAt":                        {Column: "created_at", Required: true},
 		"MaxDbSizeKbLimit":                 {Column: "max_db_size_kb_limit"},

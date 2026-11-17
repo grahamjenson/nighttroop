@@ -9,7 +9,6 @@ import (
 // Site is what the control API shows of a site: its state and activity, not its settings or data
 type Site struct {
 	ID                string `json:"id"`
-	Batch             string `json:"batch"`
 	State             string `json:"state"`
 	MaxDbSizeKbLimit  *int64 `json:"max_db_size_kb_limit"`
 	EstimatedDbSizeKb *int64 `json:"estimated_db_size_kb"`
@@ -23,7 +22,7 @@ type Site struct {
 	DeletedAt         *int64 `json:"deleted_at"`
 
 	// BackedUpAt is when the site's backup copy was last made, BackupSizeKb that copy's size on disk, and
-	// BackupUploadedAt when a batch with the site in it was last uploaded to S3
+	// BackupUploadedAt when it was last uploaded to S3
 	BackedUpAt       *int64 `json:"backed_up_at"`
 	BackupSizeKb     *int64 `json:"backup_size_kb"`
 	BackupUploadedAt *int64 `json:"backup_uploaded_at"`

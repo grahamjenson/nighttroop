@@ -34,11 +34,11 @@ func TestListenQueuesAJobForEachMatchingSite(t *testing.T) {
 	// Matching events run the job once a site, however many there were before it ran
 	bus.Publish("site-a", events.Event{Name: events.SiteTimezoneChanged, SiteID: "site-a"})
 	bus.Publish("site-a", events.Event{Name: events.SiteTimezoneChanged, SiteID: "site-a"})
-	bus.Publish("site-b", events.Event{Name: events.SiteTimezoneChanged, SiteID: "site-b", Batch: "b"})
+	bus.Publish("site-b", events.Event{Name: events.SiteTimezoneChanged, SiteID: "site-b"})
 	require.NoError(t, consumers[0].RunQueued(ctx))
 	require.ElementsMatch(t, []onevent.Fired{
 		{Name: events.SiteTimezoneChanged, SiteID: "site-a"},
-		{Name: events.SiteTimezoneChanged, SiteID: "site-b", Batch: "b"},
+		{Name: events.SiteTimezoneChanged, SiteID: "site-b"},
 	}, ran)
 
 	// Once it has run, the next matching event runs it again

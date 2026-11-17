@@ -185,13 +185,8 @@ RETURNING id;
 
 
 --------------------------------
--- BATCH (by first letter of id)
+-- BACKUP
 --------------------------------
-
-
--- name: GetBatchSitesToTruncate :many
--- The live and disabled sites of a batch, the sites with the same first letter, for the site job to truncate
-SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
 
 
 -- name: GetSitesToBackUp :many
@@ -212,7 +207,7 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 SELECT * FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id;
 
 
--- name: GetSitesToDeleteInBatch :many
+-- name: GetSitesToDelete :many
 -- finds deleted_at is null sites where 
 --    last_seen_at is null and created_at is more than minutes ago and 
 --    OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
@@ -220,7 +215,6 @@ SELECT * FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at I
 --  2. Delete if never written and last_seen_at was X mins ago
 SELECT * FROM sites WHERE 
     state IN ('live', 'disabled') AND -- must be live or disabled
-    batch = @batch AND -- within this batch
     last_write_at IS NULL AND -- must not have been written anything (this is important)
     (
         (last_seen_at IS NULL     AND created_at < (unixepoch('subsec') * 1000 - CAST(@last_seen_at AS REAL) * 60 * 1000) )

@@ -108,8 +108,8 @@ func TestArchiveSite(t *testing.T) {
 	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(context.Context, string, s3utils.Retention, []string) error { return nil }), "is not open")
 }
 
-// A batch backup rewriting the site's backup file while it is archived does not change the archive uploaded
-func TestArchiveSiteDuringBatchBackup(t *testing.T) {
+// A backup rewriting the site's backup file while it is archived does not change the archive uploaded
+func TestArchiveSiteDuringBackup(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
@@ -189,7 +189,7 @@ func TestHydrateSite(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "live", row.State)
 	require.Nil(t, row.ArchivedAt)
-	// Its batch's backup left it out while it was archived, so the batch is to be uploaded again soon
+	// Its backup left it out while it was archived, so it is to be uploaded again soon
 	require.Nil(t, row.BackupUploadedAt)
 	require.Nil(t, row.DisabledAt)
 	require.NotNil(t, row.LastSeenAt)
@@ -238,7 +238,7 @@ func TestTruncateClearsOldLoopStatuses(t *testing.T) {
 	}
 	updatedAt := report("aaps-old").UpdatedAt
 
-	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
+	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
 	for device, status := range statuses {
 		require.JSONEq(t, status[1], *report(device + "-old").LoopStatusJson, "%s's status over a day old has no predictions", device)
 		require.Equal(t, new(1.2), report(device+"-old").LoopIob, "%s's IOB extracted from it is kept", device)
@@ -295,7 +295,7 @@ func TestTruncateClearsOldPumps(t *testing.T) {
 		return report
 	}
 
-	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
+	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
 	require.Nil(t, report("old").PumpJson, "an older pump is cleared")
 	require.Equal(t, new(60.0), report("old").PumpBatteryPercent, "its battery extracted from it is kept")
 	require.JSONEq(t, pump, *report("newest").PumpJson, "the newest with a pump is kept")
@@ -337,7 +337,7 @@ func TestTruncateDeletesUnreferencedLoopSettings(t *testing.T) {
 		return true
 	}
 
-	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
+	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
 	require.True(t, kept("unreferenced") && kept("deleted-profile"), "the job every 10 minutes keeps them")
 	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
@@ -431,7 +431,7 @@ func TestTruncateThinsOldDeviceReports(t *testing.T) {
 	f.delete(fmt.Sprintf("aaps-%d", (14*day+time.Hour)/time.Minute+2))
 	f.delete(fmt.Sprintf("aaps-%d", (30*day+time.Hour)/time.Minute+2))
 
-	require.NoError(t, controlDB.TruncateSites(t.Context(), controlDB.AllSites()))
+	require.NoError(t, controlDB.TruncateSites(t.Context(), controlDB.AllSites(), nil))
 	remaining := f.remaining()
 	removed := 0
 	for id, report := range f.reports {
@@ -518,8 +518,8 @@ func TestCreateSiteWhenIdentitiesFail(t *testing.T) {
 	require.ErrorIs(t, err, sql.ErrNoRows, "the site's admin is not kept")
 }
 
-// A live site whose DB file is missing, such as one restored before its batch was backed up, is left out of the start
-// and of its batch, while the rest of its batch is opened
+// A live site whose DB file is missing, such as one restored before it was backed up, is left out of the start and
+// of the sites to back up, while the rest are opened
 func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development
@@ -545,9 +545,9 @@ func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	sites, err := controlDB.Queries.GetLiveAndDisabledSites(ctx)
 	require.NoError(t, err)
 	require.Len(t, sites, 2)
-	batch := controlDB.GetSiteDBsFromModels(sites)
-	require.Len(t, batch, 1)
-	require.Equal(t, "keptsite", batch[0].Subdomain)
+	open := controlDB.GetSiteDBsFromModels(sites)
+	require.Len(t, open, 1)
+	require.Equal(t, "keptsite", open[0].Subdomain)
 }
 
 // A live site whose DB file is missing at start is restored, with its data, from its own backup; one with no backup
@@ -607,7 +607,7 @@ func TestRestoreMissingSites(t *testing.T) {
 	require.Equal(t, float64(120), reading.Mgdl)
 	_, _, err = controlDB.GetSite(ctx, "kingsite")
 	require.ErrorContains(t, err, "not found in memory")
-	entries, err := os.ReadDir(filepath.Dir(sitedb.GetBatchFolder("k", &cfg)))
+	entries, err := os.ReadDir(filepath.Dir(sitedb.GetSitesFolder("k", &cfg)))
 	require.NoError(t, err)
 	for _, entry := range entries {
 		require.False(t, strings.HasPrefix(entry.Name(), "."), "no staging folder is left behind")
@@ -625,7 +625,7 @@ func TestRestoreMissingSites(t *testing.T) {
 	}
 }
 
-// A live site whose DB file is missing at start is restored from its batch's backup and the server starts, unless
+// A live site whose DB file is missing at start is restored from its backup and the server starts, unless
 // there is no S3 or the restored DB cannot be opened, as when its migration fails, which stops the start, as a site
 // that is there and cannot be opened does, so a release that cannot open it is rolled back. The control admin sees
 // each as a site_db_missing event.
@@ -654,7 +654,7 @@ func TestRestoreMissingSite(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, controlDB.Close())
 
-			// The batch's backup, in a stand in for S3, has the site
+			// The site's backup, in a stand in for S3
 			backup := filepath.Join(t.TempDir(), siteID+".sqlite")
 			require.NoError(t, os.Rename(sitedb.GetPath(siteID, &cfg), backup))
 			if tt.dirty {

@@ -90,7 +90,7 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 				measured++
 				return new(test.sizesKB[min(measured, len(test.sizesKB))-1])
 			})
-			require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
+			require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
 
 			gone := func(err error) bool {
 				if errors.Is(err, sql.ErrNoRows) {
@@ -171,7 +171,7 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 
 			// A run that changes nothing more logs nothing
 			measured = 0
-			require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites()))
+			require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
 			truncated, err = controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_truncated"), Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, truncated, 1)

@@ -20,11 +20,11 @@ import (
 // `.<folder>-restore-*` staging folder (see s3utils.DownloadFilesFromS3) and an archive's `.archive-*` folder (see
 // ControlDB.ArchiveSite). It is run before any restore or archive, so none of them is still in use.
 func RemoveStaging(serverConfig *config.ServerConfig) {
-	// The control DB downloads to its DB folder, and each batch to its folder; an archive is beside its backup
+	// The control DB downloads to its DB folder, and each site to its letter's folder; an archive is beside its backup
 	restored := []string{serverConfig.DBDir()}
 	patterns := []string{}
 	for _, char := range utils.SITE_CHAR_SET {
-		restored = append(restored, sitedb.GetBatchFolder(string(char), serverConfig))
+		restored = append(restored, sitedb.GetSitesFolder(string(char), serverConfig))
 		patterns = append(patterns, filepath.Join(filepath.Dir(sitedb.GetBackupPath(string(char), serverConfig)), ".archive-*"))
 	}
 	for _, outpath := range restored {

@@ -20,7 +20,7 @@ import (
 func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, logs, q := context.TODO(), controlDB.Logs, controlDB.Logs.Queries
-	site, other, batch := "searchsite", "searchother", "searchbatch"
+	site, other := "searchsite", "searchother"
 
 	for i := range 3 {
 		for _, s := range []string{site, other} {
@@ -31,8 +31,8 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 			logs.SiteCreatedEvent(ctx, s)
 		}
 		logs.Log(ctx, nil, db.LogLevelWarn, "server wide synced", nil)
-		logs.SiteBatchBackedUpEvent(ctx, batch, 2, time.Now(), false)
-		logs.SiteBatchBackupError(ctx, batch, errors.New("batch failed"))
+		logs.SitesBackedUpEvent(ctx, 2, time.Now(), false)
+		logs.SiteBackupError(ctx, errors.New("backup failed"))
 	}
 	allEvents, err := q.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 1000})
 	require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 		{"searched in attributes", nil, str("readings"), 0, 100},
 		{"searched for nothing there", nil, str("nope"), 0, 100},
 		{"an error kind or event name", str("connector"), nil, 0, 100},
-		{"an event name", str("site_batch_backed_up"), nil, 0, 100},
+		{"an event name", str("site_disabled"), nil, 0, 100},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -68,19 +68,18 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, wantErrors, gotErrors)
 
-			// The site's events and its batch's, though only the names of the batch's are searched
+			// Only the site's own events, not those of many sites
 			wantEvents := []*logsdb.Event{}
 			for _, event := range allEvents {
 				own := event.SiteID != nil && *event.SiteID == site
-				batched := event.SiteID == nil && event.Batch != nil && *event.Batch == batch
-				searched := tt.search == nil || containsFold(event.Name, *tt.search) || (own && event.Attributes != nil && containsFold(*event.Attributes, *tt.search))
-				if (own || batched) && (tt.typ == nil || event.Name == *tt.typ) && searched {
+				searched := tt.search == nil || containsFold(event.Name, *tt.search) || (event.Attributes != nil && containsFold(*event.Attributes, *tt.search))
+				if own && (tt.typ == nil || event.Name == *tt.typ) && searched {
 					wantEvents = append(wantEvents, event)
 				}
 			}
 			wantEvents = wantEvents[min(tt.skip, int64(len(wantEvents))):]
 			wantEvents = wantEvents[:min(tt.limit, int64(len(wantEvents)))]
-			gotEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Type: tt.typ, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
+			gotEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Type: tt.typ, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
 			require.NoError(t, err)
 			if len(wantEvents) == 0 {
 				require.Empty(t, gotEvents)
