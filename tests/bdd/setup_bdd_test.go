@@ -58,8 +58,8 @@ var ownServers = []ownServer{
 	}},
 	// A server with a feedback link, on its home page and every footer
 	{"feedback/links.bdd", "192.0.2.14", func(c *config.ServerConfig) { c.FeedbackURL = "https://github.com/grahamjenson/nighttroop/issues" }, seedDevAdmin},
-	// A server with three sites unavailable: amissing, whose DB was missing, brokensi, whose DB did not open, and
-	// migrfail, whose migration 1 failed
+	// A server with four sites unavailable: amissing, whose DB was missing, brokensi, whose DB did not open, migrfail,
+	// whose migration 1 failed, and schemadf, whose schema is not the migrations'
 	{"unavailable/banner.bdd", "192.0.2.16", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
 		seedDevAdmin(t, controlDB)
 		for siteID, reason := range map[string]string{"amissing": db.UnavailableMissing, "brokensi": db.UnavailableCannotOpen} {
@@ -70,6 +70,9 @@ var ownServers = []ownServer{
 		_, err := controlDB.CreateSiteWithID(t.Context(), "migrfail")
 		require.NoError(t, err)
 		controlDB.MakeSiteUnavailableFor("migrfail", &migrateup.FailedError{DB: "sitedb", Migration: 1, Err: errors.New("no such table")})
+		_, err = controlDB.CreateSiteWithID(t.Context(), "schemadf")
+		require.NoError(t, err)
+		controlDB.MakeSiteUnavailableFor("schemadf", &migrateup.SchemaError{DB: "sitedb", Difference: "it has no a table"})
 		return nil
 	}},
 	// A server whose S3 lists two backups of bkupsite, an unavailable site, and has neither to download

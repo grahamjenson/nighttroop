@@ -20,7 +20,6 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
-	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
@@ -162,9 +161,9 @@ func (db *ControlDB) RestoreUnavailableSites(ctx context.Context, download s3uti
 			} else if found, err := db.restoreSite(siteCtx, siteID, download); err != nil {
 				slog.ErrorContext(siteCtx, "Cannot restore an unavailable site's DB from its backup", "site_id", siteID, "error", err)
 				reason = "restore_failed"
-				// A backup from before a migration that fails on it, as one from long ago, says so
-				if errors.As(err, new(*migrateup.FailedError)) {
-					reason = UnavailableMigrationFailed
+				// A backup that cannot be migrated, as one from long ago, or whose schema is not the migrations', says so
+				if why := unavailableReason(err); why != UnavailableCannotOpen {
+					reason = why
 					db.MakeSiteUnavailableFor(siteID, err)
 				}
 			} else if !found {

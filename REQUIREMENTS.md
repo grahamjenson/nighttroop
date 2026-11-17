@@ -92,7 +92,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - sites reach 90% of `MAX_SITES`, or all of it;
   - a resource is high (see [Resource alerts](#resource-alerts));
   - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
-    missing, DB does not open, or migration failed) and a link to its page, then how many more.
+    missing, DB does not open, migration failed, or schema differs) and a link to its page, then how many more.
 - An unavailable site has a red Unavailable badge in the sites list and on its page.
 - An unavailable site's page offers a control admin New Empty DB, as for a site created just before a crash, which has
   no backup. It asks first, then:
@@ -1843,6 +1843,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A site DB that cannot be migrated to the latest migration, as one whose migration fails or one from a later release,
   is unavailable as "migration failed", keeping the migration it failed at. So is one whose restored backup cannot be
   migrated, and its "Site DB missing" event says migration failed.
+- A site DB at the latest migration whose tables, indexes or triggers are not the ones the migrations make on a new DB,
+  as one made before a migration was edited, is unavailable as "schema differs". The error names a statement that
+  differs. So is one whose restored backup differs, and its "Site DB missing" event says schema differs.
 - An unavailable site's requests get 503 with `Retry-After`, as a busy server's do, so its uploaders try again. The
   jobs leave it out.
 - After the start, in the background, each unavailable site:

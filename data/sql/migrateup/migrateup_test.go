@@ -134,3 +134,27 @@ func TestVersionAndLatest(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint(3), latest)
 }
+
+// CheckSchema names a statement a DB's schema has and the migrations' does not, or the other way, or nil when the same
+func TestCheckSchema(t *testing.T) {
+	newSchema := "CREATE TABLE a (id INTEGER);\nCREATE TABLE b (id INTEGER);\n"
+	tests := []struct {
+		name, schema, err string
+	}{
+		{"the same", newSchema, ""},
+		{"a statement more", newSchema + "CREATE TABLE c (id INTEGER);\n", `testdb schema is not the one its migrations make: it has "CREATE TABLE c (id INTEGER);\n"`},
+		{"a statement less", "CREATE TABLE a (id INTEGER);\n", `testdb schema is not the one its migrations make: it has no "CREATE TABLE b (id INTEGER);\n"`},
+		{"another order", "CREATE TABLE b (id INTEGER);\nCREATE TABLE a (id INTEGER);\n", "testdb schema is not the one its migrations make: its statements are in another order"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := CheckSchema("testdb", tt.schema, newSchema)
+			if tt.err == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.EqualError(t, err, tt.err)
+			require.ErrorAs(t, err, new(*SchemaError))
+		})
+	}
+}
