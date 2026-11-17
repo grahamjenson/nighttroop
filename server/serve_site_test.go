@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -19,6 +20,8 @@ import (
 // but 410 on its Nightscout API, so an uploader can tell a site gone from a wrong path, and one whose site cannot be
 // looked up, here as its request has ended, is 503, so an uploader tries again rather than take its URL as wrong.
 // A site disabled, archived or deleted is answered just as one that never was, so the answer tells nothing about it.
+// A live site whose DB is not here or does not open is 503, temporarily unavailable, with when to try again; one
+// disabled before it was is not there.
 func TestServeSite(t *testing.T) {
 	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
@@ -33,16 +36,20 @@ func TestServeSite(t *testing.T) {
 		require.NoError(t, err)
 		return created.SiteDB.Subdomain
 	}
-	disabled, archived, deleted := newSite(), newSite(), newSite()
-	for _, id := range []string{disabled, archived} {
+	disabled, archived, deleted, unavailable, disabledUnavailable := newSite(), newSite(), newSite(), newSite(), newSite()
+	for _, id := range []string{disabled, archived, disabledUnavailable} {
 		_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: id})
 		require.NoError(t, err)
 	}
 	require.NoError(t, controlDB.ArchiveSite(ctx, archived, func(context.Context, string, s3utils.Retention, []string) error { return nil }))
 	require.NoError(t, controlDB.DeleteSites(ctx, []string{deleted}))
+	for _, id := range []string{unavailable, disabledUnavailable} {
+		require.NoError(t, controlDB.MakeSiteUnavailable(ctx, id, db.UnavailableCannotOpen))
+	}
 
 	notFound := "{\"message\":\"site does not exist\",\"status\":404}\n"
 	gone := "{\"message\":\"site does not exist\",\"status\":410}\n"
+	unavailableBody := "{\"message\":\"the site is temporarily unavailable, try again later\",\"status\":503}\n"
 	tests := []struct {
 		name          string
 		ctx           context.Context
@@ -59,6 +66,9 @@ func TestServeSite(t *testing.T) {
 		{"an archived site's Nightscout API", ctx, archived, http.StatusGone, http.StatusGone, gone},
 		{"a deleted site's Nightscout API", ctx, deleted, http.StatusGone, http.StatusGone, gone},
 		{"a deleted site", ctx, deleted, http.StatusNotFound, http.StatusNotFound, notFound},
+		{"an unavailable site", ctx, unavailable, http.StatusNotFound, http.StatusServiceUnavailable, unavailableBody},
+		{"an unavailable site's Nightscout API", ctx, unavailable, http.StatusGone, http.StatusServiceUnavailable, unavailableBody},
+		{"a disabled site unavailable", ctx, disabledUnavailable, http.StatusGone, http.StatusGone, gone},
 		{"cannot look up", ended, siteID, http.StatusGone, http.StatusServiceUnavailable, "Server busy, try again shortly\n"},
 	}
 	for _, tt := range tests {
@@ -66,5 +76,6 @@ func TestServeSite(t *testing.T) {
 		serveSite(tt.ctx, w, httptest.NewRequest(http.MethodGet, "/", nil), router, config, controlDB, tt.subdomain, "192.0.2.1", tt.missingStatus)
 		assert.Equal(t, tt.status, w.Code, tt.name)
 		assert.Equal(t, tt.body, w.Body.String(), tt.name)
+		assert.Equal(t, tt.status == http.StatusServiceUnavailable, w.Header().Get("Retry-After") != "", tt.name)
 	}
 }

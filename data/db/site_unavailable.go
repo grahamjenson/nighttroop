@@ -210,17 +210,18 @@ func (db *ControlDB) tryRestore(ctx context.Context, siteID string, download s3u
 		return false, ErrSiteRestoring
 	}
 	defer site.restoring.Unlock()
-	ctx = aslog.WithSite(ctx, siteID)
+	// Recorded even once restoring it has stopped its tries, whose context this can be
+	ctx = aslog.WithSite(context.WithoutCancel(ctx), siteID)
 	reason, err := UnavailableS3NotWorking, error(nil)
 	if db.ServerConfig.Status.S3Working {
 		reason, err = db.restoreSite(ctx, siteID, download)
 	}
 	if reason == "" {
-		slog.InfoContext(ctx, "Unavailable site restored from its backup", "site_id", siteID, "try", try)
+		slog.InfoContext(ctx, "Unavailable site restored from its backup", "try", try)
 		db.Logs.SiteAvailableEvent(ctx, siteID, try)
 		return true, nil
 	}
-	slog.ErrorContext(ctx, "Cannot restore an unavailable site from its backup", "site_id", siteID, "reason", reason, "try", try, "error", err)
+	slog.ErrorContext(ctx, "Cannot restore an unavailable site from its backup", "reason", reason, "try", try, "error", err)
 	db.Logs.SiteUnavailableEvent(ctx, siteID, reason, try)
 	if err := db.MakeSiteUnavailable(ctx, siteID, reason); err != nil {
 		slog.ErrorContext(ctx, "Cannot record why a site is unavailable", "error", err)

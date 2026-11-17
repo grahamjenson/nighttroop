@@ -126,12 +126,16 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 		path := sitedb.GetPath(model.ID, db.ServerConfig)
 		if !utils.FileExists(path) {
 			unavailable[model.ID] = UnavailableMissing
+			// One unavailable already keeps why
+			if model.UnavailableReason != nil {
+				unavailable[model.ID] = *model.UnavailableReason
+			}
 			continue
 		}
 		g.Go(func() error {
 			siteDB, err := NewSiteDB(ctx, model.ID, db.ServerConfig)
 			if err != nil {
-				slog.ErrorContext(ctx, "Site DB does not open, so it is moved aside", "site_id", model.ID, "error", errors.Join(err, moveAside(path)))
+				slog.ErrorContext(aslog.WithSite(ctx, model.ID), "Site DB does not open, so it is moved aside", "error", errors.Join(err, moveAside(path)))
 				mu.Lock()
 				unavailable[model.ID] = UnavailableCannotOpen
 				mu.Unlock()
@@ -147,7 +151,7 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 		return err
 	}
 	for siteID, reason := range unavailable {
-		slog.ErrorContext(aslog.WithSite(ctx, siteID), "Site DB is not here, so the site is unavailable", "site_id", siteID, "reason", reason)
+		slog.ErrorContext(aslog.WithSite(ctx, siteID), "Site DB is not here, so the site is unavailable", "reason", reason)
 		if err := db.MakeSiteUnavailable(ctx, siteID, reason); err != nil {
 			return err
 		}
