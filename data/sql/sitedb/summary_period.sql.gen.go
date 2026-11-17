@@ -218,21 +218,21 @@ func (q *Queries) StaleSummaryDays(ctx context.Context) ([]int64, error) {
 const summaryDataWrittenSince = `-- name: SummaryDataWrittenSince :many
 SELECT DISTINCT CAST(written.occurred_at / 900000 * 900000 AS INTEGER) AS occurred_at FROM (
     SELECT glucose_readings.occurred_at FROM glucose_readings
-        WHERE glucose_readings.updated_at > ?1 AND glucose_readings.occurred_at < ?2
+        WHERE glucose_readings.updated_at > ?1 AND +glucose_readings.occurred_at < ?2
     UNION ALL SELECT insulin_doses.occurred_at FROM insulin_doses
-        WHERE insulin_doses.updated_at > ?1 AND insulin_doses.occurred_at < ?2
+        WHERE insulin_doses.updated_at > ?1 AND +insulin_doses.occurred_at < ?2
     UNION ALL SELECT food_intakes.occurred_at FROM food_intakes
-        WHERE food_intakes.updated_at > ?1 AND food_intakes.occurred_at < ?2
+        WHERE food_intakes.updated_at > ?1 AND +food_intakes.occurred_at < ?2
     UNION ALL SELECT temp_basals.occurred_at FROM temp_basals
-        WHERE temp_basals.updated_at > ?1 AND temp_basals.occurred_at < ?2
+        WHERE temp_basals.updated_at > ?1 AND +temp_basals.occurred_at < ?2
     UNION ALL SELECT temp_targets.occurred_at FROM temp_targets
-        WHERE temp_targets.updated_at > ?1 AND temp_targets.occurred_at < ?2
+        WHERE temp_targets.updated_at > ?1 AND +temp_targets.occurred_at < ?2
     UNION ALL SELECT profile_switches.occurred_at FROM profile_switches
-        WHERE profile_switches.updated_at > ?1 AND profile_switches.occurred_at < ?2
+        WHERE profile_switches.updated_at > ?1 AND +profile_switches.occurred_at < ?2
     UNION ALL SELECT event_groups.occurred_at FROM event_groups
-        WHERE event_groups.updated_at > ?1 AND event_groups.occurred_at < ?2
+        WHERE event_groups.updated_at > ?1 AND +event_groups.occurred_at < ?2
     UNION ALL SELECT device_reports.occurred_at FROM device_reports
-        WHERE device_reports.updated_at > ?1 AND device_reports.occurred_at < ?2
+        WHERE device_reports.updated_at > ?1 AND +device_reports.occurred_at < ?2
 ) AS written
 `
 
@@ -242,7 +242,8 @@ type SummaryDataWrittenSinceParams struct {
 }
 
 // When the data a day's summary is built from that was written, changed or deleted after Since, and happened before
-// Before, happened, by the 15 minutes each is in, as every timezone's midnight starts one
+// Before, happened, by the 15 minutes each is in, as every timezone's midnight starts one. The + keeps SQLite on
+// updated_at's index, as few rows are written since, while nearly all happened before
 func (q *Queries) SummaryDataWrittenSince(ctx context.Context, arg SummaryDataWrittenSinceParams) ([]int64, error) {
 	rows, err := q.query(ctx, q.summaryDataWrittenSinceStmt, summaryDataWrittenSince, arg.Since, arg.Before)
 	if err != nil {

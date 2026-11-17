@@ -1,8 +1,8 @@
-CREATE INDEX activities_occurred_at_idx ON activities(occurred_at);
+CREATE INDEX activities_occurred_at_idx ON activities(occurred_at, deleted_at);
 
 CREATE INDEX activities_updated_at_idx ON activities(updated_at);
 
-CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
+CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at, deleted_at);
 
 CREATE INDEX device_reports_occurred_at_idx ON device_reports(occurred_at);
 
@@ -20,7 +20,7 @@ CREATE UNIQUE INDEX event_groups_insulin_dose_id_idx ON event_groups(insulin_dos
 
 CREATE UNIQUE INDEX event_groups_notification_event_id_idx ON event_groups(notification_event_id) WHERE notification_event_id IS NOT NULL;
 
-CREATE INDEX event_groups_occurred_at_idx ON event_groups(occurred_at);
+CREATE INDEX event_groups_occurred_at_idx ON event_groups(occurred_at, deleted_at);
 
 CREATE UNIQUE INDEX event_groups_profile_switch_id_idx ON event_groups(profile_switch_id) WHERE profile_switch_id IS NOT NULL;
 
@@ -30,7 +30,7 @@ CREATE UNIQUE INDEX event_groups_temp_target_id_idx ON event_groups(temp_target_
 
 CREATE INDEX event_groups_updated_at_idx ON event_groups(updated_at);
 
-CREATE INDEX food_intakes_occurred_at_idx ON food_intakes(occurred_at);
+CREATE INDEX food_intakes_occurred_at_idx ON food_intakes(occurred_at, deleted_at);
 
 CREATE INDEX food_intakes_updated_at_idx ON food_intakes(updated_at);
 
@@ -40,19 +40,19 @@ CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
 
 CREATE INDEX general_settings_updated_at_idx ON general_settings(updated_at);
 
-CREATE INDEX glucose_readings_occurred_at_idx ON glucose_readings(occurred_at);
+CREATE INDEX glucose_readings_occurred_at_idx ON glucose_readings(occurred_at, deleted_at);
 
 CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(reading_type, occurred_at);
 
 CREATE INDEX glucose_readings_updated_at_idx ON glucose_readings(updated_at);
 
-CREATE INDEX insulin_doses_occurred_at_idx ON insulin_doses(occurred_at);
+CREATE INDEX insulin_doses_occurred_at_idx ON insulin_doses(occurred_at, deleted_at);
 
 CREATE INDEX insulin_doses_updated_at_idx ON insulin_doses(updated_at);
 
 CREATE INDEX loop_settings_app_last_seen_at_idx ON loop_settings(app, last_seen_at);
 
-CREATE INDEX notification_events_occurred_at_idx ON notification_events(occurred_at);
+CREATE INDEX notification_events_occurred_at_idx ON notification_events(occurred_at, deleted_at);
 
 CREATE INDEX profile_presets_occurred_at_idx ON profile_presets(occurred_at);
 
@@ -60,7 +60,7 @@ CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_sto
 
 CREATE INDEX profile_presets_updated_at_idx ON profile_presets(updated_at);
 
-CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at);
+CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at, deleted_at);
 
 CREATE INDEX profile_switches_updated_at_idx ON profile_switches(updated_at);
 
@@ -68,11 +68,11 @@ CREATE INDEX summary_period_end_at_idx ON summary_period(end_at);
 
 CREATE INDEX summary_period_stale_idx ON summary_period(period, start_at) WHERE stale_at IS NOT NULL;
 
-CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);
+CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at, deleted_at);
 
 CREATE INDEX temp_basals_updated_at_idx ON temp_basals(updated_at);
 
-CREATE INDEX temp_targets_occurred_at_idx ON temp_targets(occurred_at);
+CREATE INDEX temp_targets_occurred_at_idx ON temp_targets(occurred_at, deleted_at);
 
 CREATE INDEX temp_targets_updated_at_idx ON temp_targets(updated_at);
 
