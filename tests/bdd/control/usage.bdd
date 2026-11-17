@@ -110,3 +110,17 @@ PRESS Escape
 // Back at the top for the screenshot, as a screenshot of a scrolled page draws the header where the window was
 SCROLL -600
 SCREENSHOT header
+
+// The header marks the link of the page shown, as the pages open, and of a page under it, as a site is under Sites
+CLICK #control--nav--usage
+ASSERT_PATH /usage
+ASSERT_VISIBLE #control--nav--usage[aria-current="page"]
+ASSERT_COUNT #control--nav--links [aria-current="page"] 1
+CLICK #control--nav--jobs
+ASSERT_PATH /jobs
+ASSERT_VISIBLE #control--nav--jobs[aria-current="page"]
+ASSERT_COUNT #control--nav--links [aria-current="page"] 1
+GOTO {{ .control_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--nav--sites[aria-current="page"]
+SCREENSHOT header_current
