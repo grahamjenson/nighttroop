@@ -109,7 +109,7 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(runtime.NumCPU())
 	for _, model := range res {
-		// A site without its DB is restored from its batch's backup by RestoreMissingSites, which stops the start if it
+		// A site without its DB is restored from its backup by RestoreMissingSites, which stops the start if it
 		// cannot be
 		if !utils.FileExists(sitedb.GetPath(model.ID, db.ServerConfig)) {
 			slog.ErrorContext(ctx, "Site DB is missing, so the site is not opened", "site_id", model.ID)
@@ -128,53 +128,59 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 	return g.Wait()
 }
 
-// ErrRestoredSiteCannotOpen is a site restored from its batch's backup whose DB cannot be opened, as when it cannot be
+// ErrRestoredSiteCannotOpen is a site restored from its backup whose DB cannot be opened, as when it cannot be
 // migrated, which stops the start as a site that is there and cannot be opened does
 var ErrRestoredSiteCannotOpen = errors.New("a restored site's DB cannot be opened")
 
-// ErrSitesMissing is live sites whose DB files are missing and were not restored from their batch's backup, which
+// ErrSitesMissing is live sites whose DB files are missing and were not restored from their backups, which
 // stops the start, as a site that cannot be opened does: a server without one of its sites serves nothing, so no data
 // is written that a rollback would lose, and the sites' data is never served half there
 var ErrSitesMissing = errors.New("live sites' DBs are missing and were not restored")
 
-// RestoreMissingSites restores each live site whose DB file was missing at start from its batch's latest backup,
-// downloaded once per batch with download, and opens it. Each is recorded as a site_db_missing event, so the control
-// admin sees a site the backup could not bring back. One it could not is ErrSitesMissing, naming the sites, and a
-// restored site that cannot be opened is ErrRestoredSiteCannotOpen: either stops the start, so a release that cannot
-// open every live site is rolled back rather than kept.
+// restoreParallelism is how many missing sites are restored at once, as a new server restores every site
+const restoreParallelism = 16
+
+// RestoreMissingSites restores each live site whose DB file was missing at start from its latest backup, downloaded
+// with download, a few at once, and opens it. Each is recorded as a site_db_missing event, so the control admin sees a
+// site the backup could not bring back. One it could not is ErrSitesMissing, naming the sites, and a restored site
+// that cannot be opened is ErrRestoredSiteCannotOpen: either stops the start, so a release that cannot open every live
+// site is rolled back rather than kept.
 func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.DownloadFunc) error {
+	var mu sync.Mutex
 	var cannotOpen error
 	missing := []string{}
-	byBatch := map[string][]string{}
+	g := errgroup.Group{}
+	g.SetLimit(restoreParallelism)
 	for _, siteID := range db.missingSites {
-		byBatch[siteID[:1]] = append(byBatch[siteID[:1]], siteID)
-	}
-	db.missingSites = nil
-	for batch, siteIDs := range byBatch {
-		// Without S3 there is nothing to download, so the start does not wait on a download that cannot work
-		var restored map[string]bool
-		reason := "not_in_backup"
-		if !db.ServerConfig.Status.S3Working {
-			reason = "s3_not_working"
-		} else if got, err := db.restoreFromBatch(ctx, batch, siteIDs, download); err != nil {
-			slog.ErrorContext(ctx, "Cannot restore missing site DBs from their batch's backup", "batch", batch, "error", err)
-			restored, reason = got, "restore_failed"
-			if errors.Is(err, ErrRestoredSiteCannotOpen) {
-				cannotOpen = errors.Join(cannotOpen, err)
+		g.Go(func() error {
+			// Without S3 there is nothing to download, so the start does not wait on a download that cannot work
+			reason := ""
+			if !db.ServerConfig.Status.S3Working {
+				reason = "s3_not_working"
+			} else if found, err := db.restoreSite(ctx, siteID, download); err != nil {
+				slog.ErrorContext(ctx, "Cannot restore a missing site DB from its backup", "site_id", siteID, "error", err)
+				reason = "restore_failed"
+				if errors.Is(err, ErrRestoredSiteCannotOpen) {
+					mu.Lock()
+					cannotOpen = errors.Join(cannotOpen, err)
+					mu.Unlock()
+				}
+			} else if !found {
+				reason = "not_in_backup"
 			}
-		} else {
-			restored = got
-		}
-		for _, siteID := range siteIDs {
-			if restored[siteID] {
-				slog.InfoContext(ctx, "Missing site DB restored from its batch's backup", "site_id", siteID)
-				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, true, "")
+			if reason == "" {
+				slog.InfoContext(ctx, "Missing site DB restored from its backup", "site_id", siteID)
 			} else {
+				mu.Lock()
 				missing = append(missing, siteID)
-				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, false, reason)
+				mu.Unlock()
 			}
-		}
+			db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, reason == "", reason)
+			return nil
+		})
 	}
+	_ = g.Wait()
+	db.missingSites = nil
 	if len(missing) > 0 {
 		slices.Sort(missing)
 		return errors.Join(cannotOpen, fmt.Errorf("%w: %s", ErrSitesMissing, strings.Join(missing, ", ")))
@@ -182,40 +188,36 @@ func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.D
 	return cannotOpen
 }
 
-// restoreFromBatch downloads batch's latest backup beside its folder, moves into place each of siteIDs' DBs it has,
-// and opens them, and is the sites it restored
-func (db *ControlDB) restoreFromBatch(ctx context.Context, batch string, siteIDs []string, download s3utils.DownloadFunc) (map[string]bool, error) {
-	folder := sitedb.GetBatchFolder(batch, db.ServerConfig)
+// restoreSite downloads the site's latest backup beside its batch's folder, moves its DB into place and opens it, and
+// is whether it had a backup
+func (db *ControlDB) restoreSite(ctx context.Context, siteID string, download s3utils.DownloadFunc) (bool, error) {
+	path := sitedb.GetPath(siteID, db.ServerConfig)
+	folder := filepath.Dir(path)
 	if err := utils.MkDirs(folder); err != nil {
-		return nil, err
+		return false, err
 	}
 	// Named like a restore's staging folder, so one left by a start killed part way is cleaned up like those
-	dir, err := os.MkdirTemp(filepath.Dir(folder), "."+batch+"-restore-")
+	dir, err := os.MkdirTemp(filepath.Dir(folder), "."+filepath.Base(folder)+"-restore-")
 	if err != nil {
-		return nil, fmt.Errorf("cannot create staging dir: %w", err)
+		return false, fmt.Errorf("cannot create staging dir: %w", err)
 	}
 	defer os.RemoveAll(dir)
 	// Downloaded to a path in dir that is not there yet, so the download's own staging folder, made beside it, is in
 	// dir too and removed with it
-	downloaded := filepath.Join(dir, "batch")
-	if _, found, err := download(ctx, sitedb.GetS3BatchPath(batch, db.ServerConfig), downloaded); err != nil || !found {
-		return nil, err
+	downloaded := filepath.Join(dir, "site")
+	if _, found, err := download(ctx, sitedb.GetS3SitePath(siteID, db.ServerConfig), downloaded); err != nil || !found {
+		return false, err
 	}
-	restored := map[string]bool{}
-	for _, siteID := range siteIDs {
-		path := sitedb.GetPath(siteID, db.ServerConfig)
-		// A rename on the same disk, so the site's DB is there whole or not at all
-		if err := os.Rename(filepath.Join(downloaded, filepath.Base(path)), path); err != nil {
-			continue
-		}
-		siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
-		if err != nil {
-			return restored, fmt.Errorf("%w: %s: %w", ErrRestoredSiteCannotOpen, siteID, err)
-		}
-		db.sites.add(siteDB)
-		restored[siteID] = true
+	// A rename on the same disk, so the site's DB is there whole or not at all
+	if err := os.Rename(filepath.Join(downloaded, filepath.Base(path)), path); err != nil {
+		return false, fmt.Errorf("the backup has no DB: %w", err)
 	}
-	return restored, nil
+	siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
+	if err != nil {
+		return false, fmt.Errorf("%w: %s: %w", ErrRestoredSiteCannotOpen, siteID, err)
+	}
+	db.sites.add(siteDB)
+	return true, nil
 }
 
 ///

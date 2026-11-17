@@ -108,9 +108,9 @@ AAPS, Trio) send.
 | `S3_ACCESS_KEY` | `minioadmin` (docker-compose MinIO) | The access key ID. |
 | `S3_SECRET_KEY` | `minioadmin` (docker-compose MinIO) | The secret key. |
 | `CONTROL_BACKUP_INTERVAL_IN_SECONDS` | `30` | How often the control DB is backed up. |
-| `BATCH_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How often each batch of site DBs is backed up. |
+| `BATCH_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How often each batch of sites (the same first letter) has its turn: each changed site in it is uploaded by itself. |
 | `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a control backup after a newer upload replaces it. |
-| `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site batch backup or archive. |
+| `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site backup or archive. |
 
 - `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted.
 - `S3_URL` set:

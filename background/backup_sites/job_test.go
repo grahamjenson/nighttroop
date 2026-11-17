@@ -50,21 +50,29 @@ func backupTime(t *testing.T, site *db.SiteDB) time.Time {
 	return info.ModTime()
 }
 
-// uploadJobs is the backup jobs for controlDB, with the paths of each batch upload kept in uploads, failing while fail
-// is set
+// uploadJobs is the backup jobs for controlDB, with S3 on, with the key and path of each site's upload kept in
+// uploads, failing while fail is set
 func uploadJobs(t *testing.T, controlDB *db.ControlDB, uploads *[][]string, fail *bool) *backup_sites.BackupSiteJobManager {
-	cfg := controlDB.ServerConfig
-	jobs := backup_sites.SetupBackupSiteJob(t.Context(), controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
-	jobs.Upload = func(_ context.Context, _ string, _ s3utils.Retention, paths []string) error {
+	// A copy, as the config is shared by the package's tests
+	cfg := *controlDB.ServerConfig
+	cfg.Status.S3Working = true
+	jobs := backup_sites.SetupBackupSiteJob(t.Context(), controlDB, &cfg, &s3utils.S3Client{ServerConfig: &cfg})
+	jobs.Upload = func(_ context.Context, key string, _ s3utils.Retention, paths []string) error {
 		if *fail {
 			return errors.New("S3 is down")
 		}
-		*uploads = append(*uploads, paths)
+		*uploads = append(*uploads, append([]string{key}, paths...))
 		return nil
 	}
 	return jobs
 }
 
+// upload is the key and path of the site's upload
+func upload(site *db.SiteDB) []string {
+	return []string{sitedb.GetS3SitePath(site.Subdomain, site.ServerConfig), site.BackupPath}
+}
+
+// Each site of a batch is uploaded by itself, and only once it changed
 func TestBackupSiteBatchCopiesAndUploadsOnlyWhatChanged(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, uploads, fail := t.Context(), [][]string{}, false
@@ -72,21 +80,21 @@ func TestBackupSiteBatchCopiesAndUploadsOnlyWhatChanged(t *testing.T) {
 	written, unwritten := fileSite(t, controlDB, "qaaaaaaa"), fileSite(t, controlDB, "qbbbbbbb")
 
 	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 1)
+	require.ElementsMatch(t, [][]string{upload(written), upload(unwritten)}, uploads)
 	writtenAt, unwrittenAt := backupTime(t, written), backupTime(t, unwritten)
 
-	// Nothing was written, so neither site is copied, opening its DB, and the batch is not uploaded again
+	// Nothing was written, so neither site is copied, opening its DB, or uploaded again
 	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 1)
+	require.Len(t, uploads, 2)
 	require.Equal(t, writtenAt, backupTime(t, written))
 	require.Equal(t, unwrittenAt, backupTime(t, unwritten))
 
-	// Only the site written to is copied again, and the batch is uploaded with both sites
+	// Only the site written to is copied and uploaded again
 	_, err := written.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "new", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 2)
-	require.ElementsMatch(t, []string{written.BackupPath, unwritten.BackupPath}, uploads[1])
+	require.Len(t, uploads, 3)
+	require.Equal(t, upload(written), uploads[2])
 	require.NotEqual(t, writtenAt, backupTime(t, written))
 	require.Equal(t, unwrittenAt, backupTime(t, unwritten))
 }
@@ -131,71 +139,24 @@ func TestBackupSiteBatchSkipsASiteOnlyRead(t *testing.T) {
 	require.Len(t, uploads, 1)
 }
 
-func TestBackupSiteBatchUploadsAgainWhenItsSitesChange(t *testing.T) {
+// A new site is uploaded on the next tick, not only on its batch's turn, so a VPS restored from S3 has it
+func TestBackupSitesNotUploadedUploadsOnlyNewSites(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, uploads, fail := t.Context(), [][]string{}, false
 	jobs := uploadJobs(t, controlDB, &uploads, &fail)
-	first := fileSite(t, controlDB, "qaaaaaaa")
-	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 1)
-
-	// A site added to the batch is uploaded with it
-	added := fileSite(t, controlDB, "qbbbbbbb")
-	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 2)
-	require.ElementsMatch(t, []string{first.BackupPath, added.BackupPath}, uploads[1])
-
-	// A site taken out of the batch is too, though no other site is copied
-	require.NoError(t, controlDB.DeleteSites(ctx, []string{added.Subdomain}))
-	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 3)
-	require.Equal(t, []string{first.BackupPath}, uploads[2])
-}
-
-// A batch whose last site is deleted or archived is uploaded empty, so S3's latest backup of it no longer has the
-// site's data, while a batch that never had a site is not uploaded
-func TestBackupSiteBatchUploadsEmptyOnceItsLastSiteGoes(t *testing.T) {
-	_, controlDB := testutils.NewControlDB(t)
-	ctx, uploads, fail := t.Context(), [][]string{}, false
-	jobs := uploadJobs(t, controlDB, &uploads, &fail)
-	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Empty(t, uploads)
-
-	site := fileSite(t, controlDB, "qaaaaaaa")
-	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 1)
-
-	require.NoError(t, controlDB.DeleteSites(ctx, []string{site.Subdomain}))
-	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 2)
-	require.Empty(t, uploads[1])
-
-	// The empty batch is not uploaded again
-	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
-	require.Len(t, uploads, 2)
-}
-
-// A new site's batch is uploaded on the next tick, not only on its batch's turn, so a VPS restored from S3 has it
-func TestBackupBatchesNotUploadedUploadsOnlyBatchesWithANewSite(t *testing.T) {
-	_, controlDB := testutils.NewControlDB(t)
-	ctx, uploads, fail := t.Context(), [][]string{}, false
-	jobs := uploadJobs(t, controlDB, &uploads, &fail)
-	// A copy, as the config is shared by the package's tests
-	cfg := *controlDB.ServerConfig
-	cfg.Status.S3Working, jobs.ServerConfig = true, &cfg
 	uploaded := fileSite(t, controlDB, "qaaaaaaa")
 	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
 	require.Len(t, uploads, 1)
 
 	added := fileSite(t, controlDB, "raaaaaaa")
-	jobs.BackupBatchesNotUploaded(ctx)
-	require.Equal(t, [][]string{{uploaded.BackupPath}, {added.BackupPath}}, uploads)
+	jobs.BackupSitesNotUploaded(ctx)
+	require.Equal(t, [][]string{upload(uploaded), upload(added)}, uploads)
 	stored, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: added.Subdomain})
 	require.NoError(t, err)
 	require.NotNil(t, stored.BackupUploadedAt)
 
-	// Every site is in an upload of its batch, so nothing is uploaded
-	jobs.BackupBatchesNotUploaded(ctx)
+	// Every site is uploaded, so nothing is uploaded
+	jobs.BackupSitesNotUploaded(ctx)
 	require.Len(t, uploads, 2)
 }
 
@@ -207,22 +168,21 @@ func TestBackupSiteBatchUploadsAgainAfterAFailedUpload(t *testing.T) {
 	require.Error(t, jobs.BackupSiteBatch(ctx, "q"))
 	copiedAt := backupTime(t, site)
 
-	// The site's copy is current, but the batch was never uploaded, so it is uploaded now
+	// The site's copy is current, but it was never uploaded, so it is uploaded now
 	fail = false
 	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
 	require.Len(t, uploads, 1)
 	require.Equal(t, copiedAt, backupTime(t, site))
 }
 
-// A site records when its backup was copied and the copy's size, and when its batch was uploaded: only once S3 has it,
+// A site records when its backup was copied and the copy's size, and when it was uploaded: only once S3 has it,
 // not while S3 is off, as the upload then sends nothing, nor when the upload fails
 func TestBackupSiteBatchRecordsTheBackupOnTheSite(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, uploads, fail := t.Context(), [][]string{}, false
 	jobs := uploadJobs(t, controlDB, &uploads, &fail)
-	// A copy, as the config is shared by the package's tests
-	cfg := *controlDB.ServerConfig
-	cfg.Status.S3Working, jobs.ServerConfig = false, &cfg
+	cfg := jobs.ServerConfig
+	cfg.Status.S3Working = false
 	site := fileSite(t, controlDB, "qaaaaaaa")
 	stored := func() *controldb.Site {
 		stored, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
@@ -270,7 +230,7 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	// One log lists the sites backed up, and as nothing went wrong, nothing else is logged
 	lines := strings.Split(strings.TrimSpace(logs.String()), "\n")
 	require.Len(t, lines, 1, logs.String())
-	require.Contains(t, lines[0], `msg="Backing up site DBs" sites=[`+site.SiteDB.Subdomain+`]`)
+	require.Contains(t, lines[0], `msg="Backed up site DBs" sites=[`+site.SiteDB.Subdomain+`]`)
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 10})
 	require.NoError(t, err)
@@ -304,15 +264,15 @@ func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	require.Equal(t, `{"reason":"unused"}`, *events[0].Attributes)
 }
 
-// A batch is not uploaded without a live site that is not open, as S3's latest backup of it would then lack that site
-func TestBackupSiteBatchNotUploadedWithoutALiveSiteNotOpen(t *testing.T) {
+// A live site that is not open is left out of its batch's backups, while the rest of the batch is backed up
+func TestBackupSiteBatchBacksUpTheRestWithoutALiveSiteNotOpen(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, uploads, fail := t.Context(), [][]string{}, false
 	jobs := uploadJobs(t, controlDB, &uploads, &fail)
-	fileSite(t, controlDB, "qaaaaaaa")
+	site := fileSite(t, controlDB, "qaaaaaaa")
 	_, err := controlDB.Queries.CreateSite(ctx, controldb.CreateSiteParams{ID: "qbbbbbbb", BackupKeyHash: "hash"})
 	require.NoError(t, err)
 
 	require.ErrorIs(t, jobs.BackupSiteBatch(ctx, "q"), backup_sites.ErrSiteNotOpen)
-	require.Empty(t, uploads)
+	require.Equal(t, [][]string{upload(site)}, uploads)
 }

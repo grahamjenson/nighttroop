@@ -122,7 +122,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   Deleted.
 - The sites list has an Abuse column: each site's abuse level and score (for example `Good · 0.00`). See
   [Abuse levels](#abuse-levels).
-- The sites list has a Backup Uploaded column: the time since the site's batch was last uploaded to S3, or Never.
+- The sites list has a Backup Uploaded column: the time since the site was last uploaded to S3, or Never.
   Hover shows the time.
 - On a phone: no wider than the window. Sort buttons and both cards wrap. The table scrolls sideways.
 
@@ -1783,42 +1783,42 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Backups
 
-- Site DBs go to S3 in batches, and the control DB separately. S3 keeps old versions for a retention period.
-- Each batch of site DBs is backed up every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), and the control DB every 30
-  seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the server stops.
+- Each site DB goes to S3 by itself, and the control DB separately. S3 keeps old versions for a retention period.
+- Each batch of sites (the same first letter) has its turn every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), and the
+  control DB is backed up every 30 seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the
+  server stops.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<batch>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`.
   - A copy cut short does not replace the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
-- An upload is a tar of the compressed copies, encrypted, and not compressed again: `<host>/backup/<batch>.tar.enc`,
+- An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
   `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<batch>/<site>.tar.enc`.
 - A site with no write since its last backup is not copied again, and its DB is not opened.
-- A batch with the same sites, none copied again, is not uploaded again until the server restarts.
+- A site whose copy is already uploaded is not uploaded again.
 - In the next round, a write made during a copy is copied, and a failed upload is tried again.
-- A batch whose last site is deleted or archived is uploaded empty. A restore then gives an empty batch.
-- A batch that never had a site is not uploaded.
-- If a live site is not in an upload of its batch, such as a new or restored site, its batch uploads at the next tick
-  of the batch backups (`BATCH_BACKUP_INTERVAL_IN_SECONDS` / 26). It does not wait for its batch's turn.
+- A live site that is not open is left out. The rest of its batch is backed up.
+- If a live site is not uploaded yet, such as a new or restored site, it uploads at the next tick of the batch backups
+  (`BATCH_BACKUP_INTERVAL_IN_SECONDS` / 26). It does not wait for its batch's turn.
 - The control DB records on each site:
   - when the site was last copied, and the size of the copy on disk;
-  - when its batch was last uploaded. If S3 is not connected or the upload fails, this time does not change.
+  - when it was last uploaded. If S3 is not connected or the upload fails, this time does not change.
 
 #### Restore and start
 
-- A missing control DB or site batch folder is restored from S3 on start. A failed or cut download leaves nothing,
-  and the next start tries again.
+- A missing control DB is restored from S3 on start. A failed or cut download leaves nothing, and the next start
+  tries again.
 - A restore decompresses each `.lz4` copy to its `.sqlite` DB.
 - A restore (on start, or of an archived site) without a backup at its `.tar.enc` key uses the old backup at the same
   key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.
 - `cmd/keysets/decrypt_tar_lz4_enc.go` decrypts and unpacks a backup of either kind, given its object key.
 - A start removes only the staging folders that a stopped restore or archive left beside the DBs and backups.
-- A live site whose DB file is missing, but whose batch folder is there:
-  - Is restored from its batch's latest S3 backup (one download a batch) and opened.
+- A live site whose DB file is missing:
+  - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
     restore failed).
 - The start stops, with the site named in the error, if a live site:
   - Cannot be opened or migrated, also after a restore.
-  - Has no DB file and was not restored. Its batch is not uploaded without it.
+  - Has no DB file and was not restored.
 - The server serves nothing until every live site is open and migrated. Else `update.sh` rolls the release back.
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
 - A site DB that cannot be opened keeps its file and backup. A fixed deploy opens it with its data.

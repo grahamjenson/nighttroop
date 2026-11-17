@@ -49,22 +49,6 @@ func (q *Queries) ArchiveSites(ctx context.Context, arg ArchiveSitesParams) ([]s
 	return items, nil
 }
 
-const batchHadSites = `-- name: BatchHadSites :one
-SELECT CAST(EXISTS(SELECT 1 FROM sites WHERE batch = ?) AS BOOLEAN)
-`
-
-type BatchHadSitesParams struct {
-	Batch string
-}
-
-// Whether any site, in any state, was ever in the batch, so the batch may have a backup with sites in it
-func (q *Queries) BatchHadSites(ctx context.Context, arg BatchHadSitesParams) (bool, error) {
-	row := q.queryRow(ctx, q.batchHadSitesStmt, batchHadSites, arg.Batch)
-	var column_1 bool
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
 const countActiveSites = `-- name: CountActiveSites :one
 SELECT COUNT(*) FROM sites WHERE state = 'live' AND last_seen_at >= ?1
 `
@@ -506,34 +490,6 @@ func (q *Queries) GetBatchSitesToBackUp(ctx context.Context, arg GetBatchSitesTo
 	return items, nil
 }
 
-const getBatchesNotUploaded = `-- name: GetBatchesNotUploaded :many
-SELECT DISTINCT batch FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY batch
-`
-
-// The batches with a live or disabled site that is not in an upload of its batch yet, e.g. a new or restored site
-func (q *Queries) GetBatchesNotUploaded(ctx context.Context) ([]string, error) {
-	rows, err := q.query(ctx, q.getBatchesNotUploadedStmt, getBatchesNotUploaded)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []string
-	for rows.Next() {
-		var batch string
-		if err := rows.Scan(&batch); err != nil {
-			return nil, err
-		}
-		items = append(items, batch)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getLiveAndDisabledSites = `-- name: GetLiveAndDisabledSites :many
 SELECT id, batch, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE state IN ('live', 'disabled')
 `
@@ -857,6 +813,100 @@ func (q *Queries) GetSiteInAnyState(ctx context.Context, arg GetSiteInAnyStatePa
 		&i.NotificationsEnabled,
 	)
 	return &i, err
+}
+
+const getSitesNotUploaded = `-- name: GetSitesNotUploaded :many
+SELECT id, batch, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id
+`
+
+// The live and disabled sites not uploaded yet, e.g. a new or restored site
+func (q *Queries) GetSitesNotUploaded(ctx context.Context) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getSitesNotUploadedStmt, getSitesNotUploaded)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Site
+	for rows.Next() {
+		var i Site
+		if err := rows.Scan(
+			&i.ID,
+			&i.Batch,
+			&i.BackupKeyHash,
+			&i.CreatedAt,
+			&i.MaxDbSizeKbLimit,
+			&i.EstimatedDbSizeKb,
+			&i.AbuseScore,
+			&i.TableSizesJson,
+			&i.LastSeenAt,
+			&i.LastWriteAt,
+			&i.SummariesCheckedAt,
+			&i.BackedUpAt,
+			&i.BackupSizeKb,
+			&i.BackupUploadedAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.Units,
+			&i.UnitsMgdlLabel,
+			&i.UnitsMmolLabel,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.NumberFormat,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
+			&i.AlarmUrgentLowEnabled,
+			&i.RangeUrgentLowMgdl,
+			&i.AlarmLowEnabled,
+			&i.RangeLowMgdl,
+			&i.AlarmLowMinutes,
+			&i.AlarmLowPredictionEnabled,
+			&i.AlarmLowPredictionMinutes,
+			&i.AlarmHighEnabled,
+			&i.RangeHighMgdl,
+			&i.AlarmHighMinutes,
+			&i.AlarmUrgentHighEnabled,
+			&i.RangeUrgentHighMgdl,
+			&i.AlarmFastRiseEnabled,
+			&i.AlarmFastRiseMgdl,
+			&i.AlarmFastRiseMinutes,
+			&i.AlarmFastDropEnabled,
+			&i.AlarmFastDropMgdl,
+			&i.AlarmFastDropMinutes,
+			&i.AlarmNoDataEnabled,
+			&i.AlarmNoDataMinutes,
+			&i.AlarmDeviceBatteryLowEnabled,
+			&i.AlarmDeviceBatteryLowPercent,
+			&i.AlarmDeviceBatteryLowMinutes,
+			&i.AlarmDeviceBatteryLowDevicesJson,
+			&i.AlarmLowReservoirEnabled,
+			&i.AlarmLowReservoirUnits,
+			&i.NotificationsEnabled,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getSitesToArchive = `-- name: GetSitesToArchive :many
@@ -1184,7 +1234,7 @@ SET
     archived_at = NULL,
     last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    -- Its batch's backup left it out while it was archived, so the batch is uploaded again soon
+    -- Its backup is uploaded again soon
     backup_uploaded_at = NULL
 WHERE id = ? AND state = 'archived'
 `
@@ -1753,7 +1803,7 @@ type UpdateSitesBackupUploadedParams struct {
 	IDs []string
 }
 
-// The sites were uploaded to S3 now, in one batch
+// The sites were uploaded to S3 now
 func (q *Queries) UpdateSitesBackupUploaded(ctx context.Context, arg UpdateSitesBackupUploadedParams) error {
 	query := updateSitesBackupUploaded
 	var queryParams []interface{}

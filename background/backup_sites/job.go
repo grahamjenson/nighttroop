@@ -7,9 +7,6 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
-	"slices"
-	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -33,12 +30,8 @@ type BackupSiteJobManager struct {
 	controlDB    *db.ControlDB
 	ctx          context.Context
 	ServerConfig *config.ServerConfig
-	// Upload uploads a batch's backups, the S3 client's UploadFilesToS3, which tests can stand in for
+	// Upload uploads a site's backup, the S3 client's UploadFilesToS3, which tests can stand in for
 	Upload s3utils.UploadFunc
-
-	// uploaded is each batch's sorted, comma joined site IDs, kept once its upload succeeds and dropped as soon as one
-	// of its sites' backups is copied again, so while it is kept S3 has the batch as its backups are now
-	uploaded sync.Map
 
 	DeleteAfterInactivity time.Duration
 
@@ -89,24 +82,27 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 			}
 		}
 
-		b.BackupBatchesNotUploaded(ctx)
+		b.BackupSitesNotUploaded(ctx)
 		return b.BackupSiteBatch(ctx, batch)
 	})
 }
 
-// BackupBatchesNotUploaded backs up each batch with a live site that is not in an upload of its batch yet, such as a
-// new or restored site, so it is in S3 within a tick and not only on its batch's turn, up to an interval later. Until
-// then, a new VPS restored from S3 has the site in its control DB but not in its batch, and cannot start. It runs in
-// the backup cron's function, so never at the same time as that batch's turn.
-func (b *BackupSiteJobManager) BackupBatchesNotUploaded(ctx context.Context) {
-	batches, err := b.controlDB.Queries.GetBatchesNotUploaded(ctx)
-	if err != nil {
-		slog.ErrorContext(ctx, "Cannot get the batches with sites not uploaded", "error", err)
+// BackupSitesNotUploaded backs up each live site not uploaded yet, such as a new or restored site, so it is in S3
+// within a tick and not only on its batch's turn, up to an interval later. Until then, a new VPS restored from S3 has
+// the site in its control DB but not its backup, and cannot start. It runs in the backup cron's function, so never at
+// the same time as a batch's turn.
+func (b *BackupSiteJobManager) BackupSitesNotUploaded(ctx context.Context) {
+	if !b.ServerConfig.Status.S3Working {
 		return
 	}
-	for _, batch := range batches {
-		if err := b.BackupSiteBatch(ctx, batch); err != nil {
-			slog.ErrorContext(ctx, "Error backing up site batch", "error", err, "batch", batch)
+	res, err := b.controlDB.Queries.GetSitesNotUploaded(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Cannot get the sites not uploaded", "error", err)
+		return
+	}
+	for _, site := range b.controlDB.GetSiteDBsFromModels(res) {
+		if err := b.backupSite(aslog.WithSite(ctx, site.Subdomain), site); err != nil {
+			slog.ErrorContext(ctx, "Error backing up a site not uploaded", "error", err, "site_id", site.Subdomain)
 		}
 	}
 }
@@ -177,10 +173,10 @@ func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
 // Site Backup
 // ///
 
-// BackupSiteBatch backs up the sites whose IDs start with char, recording the backup as an event in the logs DB and
-// a failure as an error. It logs the sites it backs up once, then only what goes wrong. A site whose backup is
-// current is not copied again, so its DB is not opened and left with an idle connection, and a batch with the same
-// sites, none copied again, since this process last uploaded it is not uploaded or recorded again.
+// BackupSiteBatch backs up the sites whose IDs start with char, each uploaded by itself, recording the round as an
+// event in the logs DB and a failure as an error. It logs the sites it backs up once, then only what goes wrong. A
+// site whose backup is current is not copied again, so its DB is not opened and left with an idle connection, and one
+// whose copy is already uploaded is not uploaded again.
 func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string) (err error) {
 	ctx = aslog.With(ctx, slog.String("batch", char))
 	started := time.Now()
@@ -191,8 +187,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 	}()
 
 	sites, err := GetSiteBatch(ctx, b.controlDB, char)
-
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrSiteNotOpen) {
 		return fmt.Errorf("cannot get site batch: %w", err)
 	}
 	// Truncated first, so the backup has none of what truncating clears, and a site it changed is copied now. One that
@@ -201,52 +196,55 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 		slog.ErrorContext(ctx, "Cannot truncate the batch's sites", "error", err)
 	}
 
-	siteIDs, paths := []string{}, []string{}
+	backedUp := []string{}
+	var failed error
 	for _, backupSite := range sites {
-		if backupSite.Subdomain == "" {
-			continue
+		if done, err := b.backupSiteIfChanged(aslog.WithSite(ctx, backupSite.Subdomain), backupSite); err != nil {
+			failed = errors.Join(failed, fmt.Errorf("cannot backup site db %s: %w", backupSite.Subdomain, err))
+		} else if done {
+			backedUp = append(backedUp, backupSite.Subdomain)
 		}
-		// Have to add it anyway because we need all paths
-		siteIDs = append(siteIDs, backupSite.Subdomain)
-		paths = append(paths, backupSite.BackupPath)
-		if backupIsCurrent(backupSite) {
-			continue
-		}
-		// Dropped before copying, so a round that fails after this still uploads the batch the next time
-		b.uploaded.Delete(char)
-		if err := copyBackup(aslog.WithSite(ctx, backupSite.Subdomain), backupSite); err != nil {
-			return fmt.Errorf("cannot backup site db %s: %w", backupSite.Subdomain, err)
-		}
-		b.recordBackup(aslog.WithSite(ctx, backupSite.Subdomain), backupSite)
 	}
+	if len(backedUp) > 0 {
+		slog.InfoContext(ctx, "Backed up site DBs", "sites", backedUp)
+		b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(backedUp), started, b.ServerConfig.Status.S3Working)
+	}
+	// A live site that is not open is not backed up, but the rest of its batch is
+	return errors.Join(err, failed)
+}
 
-	batchSites := strings.Join(slices.Sorted(slices.Values(siteIDs)), ",")
-	if last, ok := b.uploaded.Load(char); ok && last == batchSites {
-		return nil
+// backupSiteIfChanged backs up the site when its DB changed since its last copy, or its copy is not uploaded yet, and
+// is whether it did
+func (b *BackupSiteJobManager) backupSiteIfChanged(ctx context.Context, site *db.SiteDB) (bool, error) {
+	model, err := b.controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
+	if err != nil {
+		return false, err
 	}
-	// A batch whose last site was deleted or archived is uploaded empty, or S3's latest backup of it keeps that site's
-	// data for good; one that never had a site has no backup to replace
-	if len(siteIDs) == 0 {
-		if had, err := b.controlDB.Queries.BatchHadSites(ctx, controldb.BatchHadSitesParams{Batch: char}); err != nil || !had {
+	// The copy was uploaded after it was made, or S3 is off, so there is nothing to send
+	uploaded := model.BackupUploadedAt != nil && model.BackedUpAt != nil && *model.BackupUploadedAt >= *model.BackedUpAt
+	if backupIsCurrent(site) && (uploaded || !b.ServerConfig.Status.S3Working) {
+		return false, nil
+	}
+	return true, b.backupSite(ctx, site)
+}
+
+// backupSite copies the site's DB to its backup, when it changed since, and uploads it by itself to S3 when S3 is on
+func (b *BackupSiteJobManager) backupSite(ctx context.Context, site *db.SiteDB) error {
+	if !backupIsCurrent(site) {
+		if err := copyBackup(ctx, site); err != nil {
 			return err
 		}
+		b.recordBackup(ctx, site)
 	}
-	slog.InfoContext(ctx, "Backing up site DBs", "sites", siteIDs)
-
-	err = b.Upload(ctx, sitedb.GetS3BatchPath(char, b.ServerConfig), s3utils.SiteRetention, paths)
-	if err != nil {
-		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
+	if !b.ServerConfig.Status.S3Working {
+		return nil
 	}
-	b.uploaded.Store(char, batchSites)
-	// Upload sends nothing while S3 is off
-	if b.ServerConfig.Status.S3Working {
-		if err := b.controlDB.Queries.UpdateSitesBackupUploaded(ctx, controldb.UpdateSitesBackupUploadedParams{IDs: siteIDs}); err != nil {
-			slog.ErrorContext(ctx, "Cannot record the batch's upload on its sites", "error", err)
-		}
+	if err := b.Upload(ctx, sitedb.GetS3SitePath(site.Subdomain, b.ServerConfig), s3utils.SiteRetention, []string{site.BackupPath}); err != nil {
+		return fmt.Errorf("cannot upload site %s: %w", site.Subdomain, err)
 	}
-	b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(paths), started, b.ServerConfig.Status.S3Working)
-
-	// Copy the control db to the backup location
+	if err := b.controlDB.Queries.UpdateSitesBackupUploaded(ctx, controldb.UpdateSitesBackupUploadedParams{IDs: []string{site.Subdomain}}); err != nil {
+		slog.ErrorContext(ctx, "Cannot record the site's upload", "error", err)
+	}
 	return nil
 }
 
@@ -308,11 +306,10 @@ func backupIsCurrent(site *db.SiteDB) bool {
 // DB queries
 // ////
 
-// ErrSiteNotOpen is a live site left out of its batch because its DB is not open. Uploading the batch without it would
-// make S3's latest backup of the batch lack a live site, so the batch is not uploaded.
+// ErrSiteNotOpen is a live site left out of its batch's backups because its DB is not open
 var ErrSiteNotOpen = errors.New("a live site is not open")
 
-// GetSiteBatch is the open DBs of the live and disabled sites in batch char, or ErrSiteNotOpen if any is not open
+// GetSiteBatch is the open DBs of the live and disabled sites in batch char, with ErrSiteNotOpen if any is not open
 func GetSiteBatch(ctx context.Context, controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
 
 	sites := []*db.SiteDB{}
