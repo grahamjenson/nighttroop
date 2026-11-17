@@ -161,7 +161,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Site actions
 
-- Actions grid: Open Site, and for an admin the actions below. Each says what it does, and has its button or says when
+- Actions list, one action a row with its button at its right (under its words on a phone): Open Site, and for an admin the actions below. Each says what it does, and has its button or says when
   it is offered. The page shows the change.
 
 | Action | When | Result |
