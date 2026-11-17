@@ -24,7 +24,6 @@ ASSERT_EQUALS "admin" "@result.items.0.attributes.identity_name"
 ASSERT_EXISTS "@result.items.0.attributes.from"
 ASSERT_EQUALS "site_created" "@result.items.1.name"
 ASSERT_EXISTS "@result.items.1.started_at"
-ASSERT_EQUALS null "@result.items.1.batch"
 SET event_id {{ dig "list_events.result.items.1.id" }}
 
 // A refused sign in is an event too, without the name it tried

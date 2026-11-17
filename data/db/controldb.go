@@ -188,7 +188,7 @@ func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.D
 	return cannotOpen
 }
 
-// restoreSite downloads the site's latest backup beside its batch's folder, moves its DB into place and opens it, and
+// restoreSite downloads the site's latest backup beside its folder, moves its DB into place and opens it, and
 // is whether it had a backup
 func (db *ControlDB) restoreSite(ctx context.Context, siteID string, download s3utils.DownloadFunc) (bool, error) {
 	path := sitedb.GetPath(siteID, db.ServerConfig)
@@ -375,7 +375,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 	if site == nil {
 		return fmt.Errorf("site %s is not open", subdomain)
 	}
-	// Backed up to a folder of its own beside the site's backup file, on the same disk, as a batch backup can be
+	// Backed up to a folder of its own beside the site's backup file, on the same disk, as the backup job can be
 	// rewriting that file at the same time
 	if err := utils.MkParentDirs(site.BackupPath); err != nil {
 		return fmt.Errorf("cannot make a folder to archive site %s: %w", subdomain, err)
@@ -467,10 +467,11 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	return sizeKB, db.RecordSiteTableSizes(ctx, []*SiteDB{site})
 }
 
-// TruncateSites truncates sites, as each batch's backup does before copying them, without shrinking their DBs, as
-// SQLite uses the space again for what comes next. It truncates harder a site far over its DB size limit. It goes on
-// past a site it cannot truncate, returning each one's error.
-func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB) error {
+// TruncateSites truncates sites, as the backup job does before copying each, without shrinking their DBs, as SQLite
+// uses the space again for what comes next. It looks back truncateLooksBack, or to when a site was last truncated in
+// truncatedAt when that is longer ago, 0 for all of it. It truncates harder a site far over its DB size limit. It goes
+// on past a site it cannot truncate, returning each one's error.
+func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB, truncatedAt map[string]int64) error {
 	limits, err := db.Queries.GetSiteDBSizeLimits(ctx)
 	errs := []error{err}
 	limitsKB := map[string]int64{}
@@ -479,7 +480,11 @@ func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB) error {
 	}
 	for _, site := range sites {
 		siteCtx := aslog.WithSite(ctx, site.Subdomain)
-		err := truncateSite(siteCtx, site, time.Now().Add(-truncateLooksBack).UnixMilli())
+		since := time.Now().Add(-truncateLooksBack).UnixMilli()
+		if at, ok := truncatedAt[site.Subdomain]; ok {
+			since = min(since, at)
+		}
+		err := truncateSite(siteCtx, site, since)
 		if limitKB, ok := limitsKB[site.Subdomain]; ok && err == nil {
 			err = db.hardTruncateSite(siteCtx, site, limitKB)
 		}
@@ -1110,21 +1115,17 @@ func lastAdminKept(result sql.Result, err error) error {
 ////
 
 ////
-// Batch Operations
-////
-
-////
 // Utils
 ////
 
 // GetSiteDBsFromModels is the open DB of each site, leaving out, and logging, any site not open, so one site without its
-// DB does not stop the rest of its batch
+// DB does not stop the rest
 func (db *ControlDB) GetSiteDBsFromModels(models []*controldb.Site) []*SiteDB {
 	sites := []*SiteDB{}
 	for _, model := range models {
 		site := db.sites.get(model.ID)
 		if site == nil {
-			slog.Error("Site is not open, so it is left out of its batch", "site_id", model.ID)
+			slog.Error("Site is not open, so it is left out", "site_id", model.ID)
 			continue
 		}
 		sites = append(sites, site)

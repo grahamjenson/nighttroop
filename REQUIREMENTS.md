@@ -140,7 +140,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - `/sites/{id}` opens on a click, laid out like a site's summary. Back returns to the sites. An API client gets the
   site.
-- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, batch, and disabled, archived or deleted times; Open
+- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, and disabled, archived or deleted times; Open
   Site link (new tab) while live.
 - DB size:
   - measured on disk when the page opens, kept on the site's record;
@@ -1032,7 +1032,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Connector credentials are encrypted at rest.
 - Bound to their kind and site: connector credentials, TOTP secrets, push secrets and tokens, Nightscout tokens, the
   welcome's passkey cookie. Backups: bound to their object key, without its host.
-- Not decrypted: a secret copied in as another site's or kind, a backup as another batch's, or one encrypted unbound.
+- Not decrypted: a secret copied in as another site's or kind, a backup as another site's, or one encrypted unbound.
 - Backups copied to a bucket for another host still restore.
 
 #### Nightscout connector
@@ -1102,10 +1102,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Events, errors and logs
 
-- Admins see events (for example created, alarms, recoveries, credential changes), errors, logs and batch backups,
-  filtered by type and searched.
+- Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
+  only, filtered by type and searched. They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
-- Each event, error and log shows its request or background job run. Batch events do not.
+- Each event, error and log shows its request or background job run.
 - A search, or a filter by error kind, reads only the newest 10,000 of each. Paging without one reaches all rows.
 
 #### Error toasts
@@ -1792,16 +1792,18 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
-  `data/backup/site/<batch>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`.
+  `data/backup/site/<letter>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`. `<letter>` is the first letter
+  of the site ID.
   - A copy cut short does not replace the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
-  `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<batch>/<site>.tar.enc`.
+  `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A site whose copy is already uploaded is not uploaded again.
 - A failed upload is tried again at the next tick.
 - A live site that is not open is left out. The other sites are backed up.
-- Each tick also truncates one batch of sites (the same first letter), so every site is truncated each interval.
+- Each tick deletes the sites never used, then truncates each site just before its backup copy. A site with no write
+  is not truncated, as it does not grow.
 - If a live site is not uploaded yet, such as a new or restored site, it uploads at the next tick, written or not.
 - The control DB records on each site:
   - when the site was last copied, and the size of the copy on disk;
@@ -1840,7 +1842,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Device status truncation
 
-Before it backs up a site, every hour, the server truncates it:
+Before it backs up a site written to, at most every hour, the server truncates it:
 
 - Loop status (`openaps` or `loop`): kept as sent for 1 day. Followers (e.g. LoopFollow) read a day of statuses.
   - If a status is more than 1 day older than now and its device's newest status, the predictions are removed.
@@ -1855,8 +1857,8 @@ Before it backs up a site, every hour, the server truncates it:
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
   - All statuses over 30 days old are deleted, also newest and deleted ones.
-- The job reads statuses of the last day, and statuses that became 1 day old in that day. It thins again those that
-  became 1 or 2 weeks old in that day.
+- The job reads statuses written since the last backup of the site, or in the last day if that is longer. It also
+  reads statuses that became 1 day old in that time, and thins again those that became 1 or 2 weeks old.
 - A site truncate reads all statuses. It also clears those older than a day (e.g. a device's newest from before it
   stopped reports for a day).
 

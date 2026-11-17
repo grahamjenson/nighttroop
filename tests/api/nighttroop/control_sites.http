@@ -57,7 +57,6 @@ H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "live" "@result.state"
-ASSERT_EXISTS "@result.batch"
 // A new site's DB may grow to 20 MB, in KB
 ASSERT_EQUALS 20480 "@result.max_db_size_kb_limit"
 

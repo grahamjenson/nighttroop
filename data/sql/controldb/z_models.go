@@ -79,7 +79,6 @@ type ServerSetting struct {
 
 type Site struct {
 	ID                               string
-	Batch                            string
 	BackupKeyHash                    string
 	CreatedAt                        int64
 	MaxDbSizeKbLimit                 *int64

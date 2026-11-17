@@ -144,9 +144,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAnySitePushRegistrationStmt, err = db.PrepareContext(ctx, getAnySitePushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAnySitePushRegistration: %w", err)
 	}
-	if q.getBatchSitesToTruncateStmt, err = db.PrepareContext(ctx, getBatchSitesToTruncate); err != nil {
-		return nil, fmt.Errorf("error preparing query GetBatchSitesToTruncate: %w", err)
-	}
 	if q.getConnectorStmt, err = db.PrepareContext(ctx, getConnector); err != nil {
 		return nil, fmt.Errorf("error preparing query GetConnector: %w", err)
 	}
@@ -207,8 +204,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSitesToBackUpStmt, err = db.PrepareContext(ctx, getSitesToBackUp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToBackUp: %w", err)
 	}
-	if q.getSitesToDeleteInBatchStmt, err = db.PrepareContext(ctx, getSitesToDeleteInBatch); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSitesToDeleteInBatch: %w", err)
+	if q.getSitesToDeleteStmt, err = db.PrepareContext(ctx, getSitesToDelete); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesToDelete: %w", err)
 	}
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
@@ -556,11 +553,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAnySitePushRegistrationStmt: %w", cerr)
 		}
 	}
-	if q.getBatchSitesToTruncateStmt != nil {
-		if cerr := q.getBatchSitesToTruncateStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getBatchSitesToTruncateStmt: %w", cerr)
-		}
-	}
 	if q.getConnectorStmt != nil {
 		if cerr := q.getConnectorStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getConnectorStmt: %w", cerr)
@@ -661,9 +653,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSitesToBackUpStmt: %w", cerr)
 		}
 	}
-	if q.getSitesToDeleteInBatchStmt != nil {
-		if cerr := q.getSitesToDeleteInBatchStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSitesToDeleteInBatchStmt: %w", cerr)
+	if q.getSitesToDeleteStmt != nil {
+		if cerr := q.getSitesToDeleteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesToDeleteStmt: %w", cerr)
 		}
 	}
 	if q.hydrateSiteStmt != nil {
@@ -980,7 +972,6 @@ type Queries struct {
 	getAllSitesStmt                         *sql.Stmt
 	getAnyPushCredentialStmt                *sql.Stmt
 	getAnySitePushRegistrationStmt          *sql.Stmt
-	getBatchSitesToTruncateStmt             *sql.Stmt
 	getConnectorStmt                        *sql.Stmt
 	getConnectorsToRunStmt                  *sql.Stmt
 	getControlIdentityStmt                  *sql.Stmt
@@ -1001,7 +992,7 @@ type Queries struct {
 	getSiteInAnyStateStmt                   *sql.Stmt
 	getSitesNotUploadedStmt                 *sql.Stmt
 	getSitesToBackUpStmt                    *sql.Stmt
-	getSitesToDeleteInBatchStmt             *sql.Stmt
+	getSitesToDeleteStmt                    *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
 	learnSiteIdentityUnitsLabelsStmt        *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
@@ -1095,7 +1086,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAllSitesStmt:                         q.getAllSitesStmt,
 		getAnyPushCredentialStmt:                q.getAnyPushCredentialStmt,
 		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
-		getBatchSitesToTruncateStmt:             q.getBatchSitesToTruncateStmt,
 		getConnectorStmt:                        q.getConnectorStmt,
 		getConnectorsToRunStmt:                  q.getConnectorsToRunStmt,
 		getControlIdentityStmt:                  q.getControlIdentityStmt,
@@ -1116,7 +1106,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteInAnyStateStmt:                   q.getSiteInAnyStateStmt,
 		getSitesNotUploadedStmt:                 q.getSitesNotUploadedStmt,
 		getSitesToBackUpStmt:                    q.getSitesToBackUpStmt,
-		getSitesToDeleteInBatchStmt:             q.getSitesToDeleteInBatchStmt,
+		getSitesToDeleteStmt:                    q.getSitesToDeleteStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
 		learnSiteIdentityUnitsLabelsStmt:        q.learnSiteIdentityUnitsLabelsStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,

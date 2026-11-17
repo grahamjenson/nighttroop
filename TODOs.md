@@ -9,8 +9,8 @@
        every 10 minutes: vacuum only when its free pages are a large part of it
 1. Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
-    1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up one batch
-       each run, so a new site's batch may not be backed up, and its tiles are checked only before a backup
+    1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up each site
+       written to, so its tiles can be checked after a backup, not only before one
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
 
@@ -118,8 +118,8 @@
 
 1. Database:
     1. P3: CAST the bare values that a column equals in the other DBs' queries, as the site DB's are (data/sql/README.md),
-       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities`, `GetBatchSitesToBackUp` and its
-       push queries, `jobsdb`'s `MarkJobsForConsumer`, `livedb`'s `IdentityAlarms`, and `logsdb`'s site and connector
+       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities` and its push
+       queries, `jobsdb`'s `MarkJobsForConsumer`, `livedb`'s `IdentityAlarms`, and `logsdb`'s site and connector
        searches
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field

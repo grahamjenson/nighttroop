@@ -20,11 +20,10 @@ CREATE INDEX logs_request ON logs (request_id) WHERE request_id IS NOT NULL;
 CREATE INDEX logs_job ON logs (job_id) WHERE job_id IS NOT NULL;
 
 -- An event started at started_at, and took until finished_at when it has one, so how long it took is known. An
--- event for a batch of sites, rather than one site, has the batch, so each site in it can see the event.
+-- event about many sites, rather than one site, has no site_id, so only control admins see it.
 CREATE TABLE events (
     id INTEGER PRIMARY KEY,
     site_id TEXT CHECK(length(site_id) <= 32),
-    batch TEXT CHECK(length(batch) <= 32),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     attributes TEXT CHECK(length(attributes) <= 4096 AND json_valid(attributes)),
     started_at INTEGER NOT NULL,
@@ -34,7 +33,6 @@ CREATE TABLE events (
 ) STRICT;
 
 CREATE INDEX events_site ON events (site_id, id);
-CREATE INDEX events_batch ON events (batch, id);
 CREATE INDEX events_request ON events (request_id) WHERE request_id IS NOT NULL;
 CREATE INDEX events_job ON events (job_id) WHERE job_id IS NOT NULL;
 

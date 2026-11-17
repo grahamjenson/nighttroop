@@ -306,7 +306,7 @@ control:
     abuse_abusive: "Abusive"
     abuse_blocked: "Blocked"
   site:
-    lifecycle_created: "Created {{.CreatedAt}} · Batch {{.BatchName}}"
+    lifecycle_created: "Created {{.CreatedAt}}"
     lifecycle_disabled: "Disabled {{.ChangedAt}}"
     lifecycle_archived: "Archived {{.ChangedAt}}"
     lifecycle_deleted: "Deleted {{.ChangedAt}}"
