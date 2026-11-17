@@ -29,12 +29,11 @@ func TestSiteThatCannotOpenIsKept(t *testing.T) {
 	require.NoError(t, site.SiteDB.Backup(t.Context()))
 	require.NoError(t, controlDB.Close())
 
-	// At the first migration, whose CREATEs fail when run again, while the later ones run again on it
 	setDirty := func(dirty bool) {
 		raw, err := sql.Open("sqlite", path)
 		require.NoError(t, err)
 		defer raw.Close()
-		_, err = raw.Exec("UPDATE schema_migrations SET version = 1, dirty = ?", dirty)
+		_, err = raw.Exec("UPDATE schema_migrations SET dirty = ?", dirty)
 		require.NoError(t, err)
 	}
 

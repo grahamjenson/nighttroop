@@ -662,8 +662,7 @@ func TestRestoreUnavailableSite(t *testing.T) {
 			if tt.dirty {
 				raw, err := sql.Open("sqlite", backup)
 				require.NoError(t, err)
-				// Dirty at the first migration, whose CREATEs fail when run again
-				_, err = raw.Exec("UPDATE schema_migrations SET version = 1, dirty = 1")
+				_, err = raw.Exec("UPDATE schema_migrations SET dirty = 1")
 				require.NoError(t, err)
 				require.NoError(t, raw.Close())
 			}
