@@ -104,8 +104,8 @@
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
 
 1. Backups:
-    1. P2: Back up a site only when it is dirty, written since its last upload, and keep a dated daily copy of it
-       (`<host>/sites/<site>/daily/<date>`), so the hourly versions can be kept a day or two
+    1. P2: Keep a dated daily copy of each written site (`<host>/sites/<site>/daily/<date>`), so the hourly versions
+       of its backup can be kept a day or two
     1. P3: Delete a deleted site's backup (`<host>/sites/<site>.tar.enc`) from S3; only never used sites are deleted now
     1. P3: Delete the old batch backups (`<host>/backup/<batch>.tar.enc`) from the bucket by hand, once every site has a
        backup of its own; the server no longer reads them

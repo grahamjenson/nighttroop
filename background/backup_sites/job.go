@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"log/slog"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
@@ -66,9 +67,9 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 
 	var index atomic.Int64
 
-	// The goal here is to smooth out resource usage, if you looped over all baches at once, we would use a ton of CPU and that will slow down responses
-	// This nice thing about this method of backing up is that because the cron task cannot run concurrently for the same batch,
-	// we avoid using too many resources, instead it will just delay the backup by tick time
+	// Each tick truncates one batch, so the batches are truncated over the interval rather than all at once, and backs
+	// up the sites written since their last backup an interval ago
+	b.recordWrites()
 	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", tick), func(ctx context.Context) error {
 		i := int(index.Add(1)-1) % count
 		batch := string(utils.SITE_CHAR_SET[i])
@@ -82,9 +83,45 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 			}
 		}
 
+		b.truncateBatch(ctx, batch)
 		b.BackupSitesNotUploaded(ctx)
-		return b.BackupSiteBatch(ctx, batch)
+		return b.BackupWrittenSites(ctx, time.Now().Add(-time.Duration(b.BatchBackupIntervalInSeconds)*time.Second))
 	})
+}
+
+// recordWrites records each site written by a model change, such as a connector's sync or a live update, which no
+// request records, as written to, at most every 10 minutes, as its requests record their writes
+func (b *BackupSiteJobManager) recordWrites() {
+	var mu sync.Mutex
+	recorded := map[string]int64{}
+	b.ServerConfig.Events.SubscribeAll(func(event events.Event) {
+		now := time.Now().UnixMilli()
+		mu.Lock()
+		due := event.Action != "" && now > recorded[event.SiteID]+(10*time.Minute).Milliseconds()
+		if due {
+			recorded[event.SiteID] = now
+		}
+		mu.Unlock()
+		// Publishing waits for each handler, so the write is not waited for
+		if due {
+			go func() {
+				if err := b.controlDB.Queries.UpdateSiteDateFlags(context.Background(), controldb.UpdateSiteDateFlagsParams{LastWriteAt: &now, ID: event.SiteID}); err != nil {
+					slog.Error("Cannot record a site's write", "site_id", event.SiteID, "error", err)
+				}
+			}()
+		}
+	})
+}
+
+// truncateBatch truncates the open live and disabled sites whose IDs start with batch
+func (b *BackupSiteJobManager) truncateBatch(ctx context.Context, batch string) {
+	res, err := b.controlDB.Queries.GetBatchSitesToBackUp(ctx, controldb.GetBatchSitesToBackUpParams{Batch: batch})
+	if err == nil {
+		err = b.controlDB.TruncateSites(ctx, b.controlDB.GetSiteDBsFromModels(res))
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "Cannot truncate the batch's sites", "error", err, "batch", batch)
+	}
 }
 
 // BackupSitesNotUploaded backs up each live site not uploaded yet, such as a new or restored site, so it is in S3
@@ -153,89 +190,52 @@ func (b *BackupSiteJobManager) findSitesToDelete(ctx context.Context, batch stri
 	return deleteSites, nil
 }
 
-// BackupToS3 This is the last method called to backup both control and site dbs
+// BackupToS3 backs up every site written since its last backup, as the server stops
 func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
-	for _, char := range utils.SITE_CHAR_SET {
-		err := b.BackupSiteBatch(ctx, string(char))
-
-		if err != nil {
-			slog.ErrorContext(ctx, "Error backing up site batch", "error", err, "char", string(char))
-			continue
-		}
+	if err := b.BackupWrittenSites(ctx, time.Now()); err != nil {
+		slog.ErrorContext(ctx, "Error backing up the sites", "error", err)
 	}
 }
 
-// //
-// Control Backup
-// //
+// maxSitesEachTick is the most sites one tick backs up, so a burst of writes to many sites is backed up over a few
+// ticks rather than copying thousands of DBs at once
+const maxSitesEachTick = 500
 
-// ///
-// Site Backup
-// ///
-
-// BackupSiteBatch backs up the sites whose IDs start with char, each uploaded by itself, recording the round as an
-// event in the logs DB and a failure as an error. It logs the sites it backs up once, then only what goes wrong. A
-// site whose backup is current is not copied again, so its DB is not opened and left with an idle connection, and one
-// whose copy is already uploaded is not uploaded again.
-func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string) (err error) {
-	ctx = aslog.With(ctx, slog.String("batch", char))
+// BackupWrittenSites backs up the sites written since their last backup, copied before backedUpBefore, and those whose
+// last copy is not uploaded, the longest waiting first, recording the round as an event in the logs DB and a failure as
+// an error. It logs the sites it backs up once, then only what goes wrong.
+func (b *BackupSiteJobManager) BackupWrittenSites(ctx context.Context, backedUpBefore time.Time) (err error) {
 	started := time.Now()
 	defer func() {
 		if err != nil {
-			b.controlDB.Logs.SiteBatchBackupError(ctx, char, err)
+			b.controlDB.Logs.SiteBatchBackupError(ctx, "", err)
 		}
 	}()
-
-	sites, err := GetSiteBatch(ctx, b.controlDB, char)
-	if err != nil && !errors.Is(err, ErrSiteNotOpen) {
-		return fmt.Errorf("cannot get site batch: %w", err)
+	res, err := b.controlDB.Queries.GetSitesToBackUp(ctx, controldb.GetSitesToBackUpParams{BackedUpBefore: backedUpBefore.UnixMilli(), Limit: maxSitesEachTick})
+	if err != nil {
+		return fmt.Errorf("cannot get the sites to back up: %w", err)
 	}
-	// Truncated first, so the backup has none of what truncating clears, and a site it changed is copied now. One that
-	// cannot be truncated is still backed up.
-	if err := b.controlDB.TruncateSites(ctx, sites); err != nil {
-		slog.ErrorContext(ctx, "Cannot truncate the batch's sites", "error", err)
-	}
-
 	backedUp := []string{}
-	var failed error
-	for _, backupSite := range sites {
-		if done, err := b.backupSiteIfChanged(aslog.WithSite(ctx, backupSite.Subdomain), backupSite); err != nil {
-			failed = errors.Join(failed, fmt.Errorf("cannot backup site db %s: %w", backupSite.Subdomain, err))
-		} else if done {
-			backedUp = append(backedUp, backupSite.Subdomain)
+	for _, site := range b.controlDB.GetSiteDBsFromModels(res) {
+		if failed := b.backupSite(aslog.WithSite(ctx, site.Subdomain), site); failed != nil {
+			err = errors.Join(err, fmt.Errorf("cannot backup site db %s: %w", site.Subdomain, failed))
+		} else {
+			backedUp = append(backedUp, site.Subdomain)
 		}
 	}
 	if len(backedUp) > 0 {
 		slog.InfoContext(ctx, "Backed up site DBs", "sites", backedUp)
-		b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(backedUp), started, b.ServerConfig.Status.S3Working)
+		b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, "", len(backedUp), started, b.ServerConfig.Status.S3Working)
 	}
-	// A live site that is not open is not backed up, but the rest of its batch is
-	return errors.Join(err, failed)
+	return err
 }
 
-// backupSiteIfChanged backs up the site when its DB changed since its last copy, or its copy is not uploaded yet, and
-// is whether it did
-func (b *BackupSiteJobManager) backupSiteIfChanged(ctx context.Context, site *db.SiteDB) (bool, error) {
-	model, err := b.controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
-	if err != nil {
-		return false, err
-	}
-	// The copy was uploaded after it was made, or S3 is off, so there is nothing to send
-	uploaded := model.BackupUploadedAt != nil && model.BackedUpAt != nil && *model.BackupUploadedAt >= *model.BackedUpAt
-	if backupIsCurrent(site) && (uploaded || !b.ServerConfig.Status.S3Working) {
-		return false, nil
-	}
-	return true, b.backupSite(ctx, site)
-}
-
-// backupSite copies the site's DB to its backup, when it changed since, and uploads it by itself to S3 when S3 is on
+// backupSite copies the site's DB to its backup, and uploads it by itself to S3 when S3 is on
 func (b *BackupSiteJobManager) backupSite(ctx context.Context, site *db.SiteDB) error {
-	if !backupIsCurrent(site) {
-		if err := copyBackup(ctx, site); err != nil {
-			return err
-		}
-		b.recordBackup(ctx, site)
+	if err := copyBackup(ctx, site); err != nil {
+		return err
 	}
+	b.recordBackup(ctx, site)
 	if !b.ServerConfig.Status.S3Working {
 		return nil
 	}
@@ -248,21 +248,10 @@ func (b *BackupSiteJobManager) backupSite(ctx context.Context, site *db.SiteDB) 
 	return nil
 }
 
-// copySlack is how long before a copy starts its backup is dated, covering file systems that keep times to the second
-// and the kernel's coarse clock, which sets a file's time, lagging behind time.Now
-const copySlack = 5 * time.Second
-
-// copyBackup copies site's DB to its backup, dated a little before the copy started rather than when it finished. A
-// write the copy may have missed is made after the copy started, and making it sets the DB file's or its write-ahead
-// log's time to then, newer than the backup, so the next round copies the site again: no write is left out for good.
+// copyBackup copies site's DB to its backup. A copy that failed part way goes.
 func copyBackup(ctx context.Context, site *db.SiteDB) error {
-	dated := time.Now().Add(-copySlack)
 	err := site.Backup(ctx)
-	if err == nil {
-		err = os.Chtimes(site.BackupPath, dated, dated)
-	}
 	if err != nil {
-		// A copy that failed part way, or is dated when it finished, could pass for a current one, so it goes
 		_ = utils.DeleteFile(site.BackupPath)
 	}
 	return err
@@ -278,53 +267,6 @@ func (b *BackupSiteJobManager) recordBackup(ctx context.Context, site *db.SiteDB
 	if err != nil {
 		slog.ErrorContext(ctx, "Cannot record the site's backup", "error", err)
 	}
-}
-
-// backupIsCurrent is whether site's backup is dated after its DB file and write-ahead log were last written, so a
-// copy would change nothing. A time equal to the backup's could be a write it missed, so is copied again. It reads
-// only the files' times, opening no connection to the DB.
-func backupIsCurrent(site *db.SiteDB) bool {
-	backup, err := os.Stat(site.BackupPath)
-	if site.InMemory || err != nil {
-		return false
-	}
-	for _, path := range []string{site.Path, site.Path + "-wal"} {
-		info, err := os.Stat(path)
-		// The write-ahead log is removed when the DB's last connection closes, once what it held is in the DB file, and is
-		// empty, though dated when it was opened, while a connection that has written nothing is open, as one that read
-		if path != site.Path && (errors.Is(err, fs.ErrNotExist) || (err == nil && info.Size() == 0)) {
-			continue
-		}
-		if err != nil || !info.ModTime().Before(backup.ModTime()) {
-			return false
-		}
-	}
-	return true
-}
-
-// ///
-// DB queries
-// ////
-
-// ErrSiteNotOpen is a live site left out of its batch's backups because its DB is not open
-var ErrSiteNotOpen = errors.New("a live site is not open")
-
-// GetSiteBatch is the open DBs of the live and disabled sites in batch char, with ErrSiteNotOpen if any is not open
-func GetSiteBatch(ctx context.Context, controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
-
-	sites := []*db.SiteDB{}
-	res, err := controlDB.Queries.GetBatchSitesToBackUp(ctx, controldb.GetBatchSitesToBackUpParams{
-		Batch: char,
-	})
-	if err != nil {
-		return sites, fmt.Errorf("cannot query sites: %w", err)
-	}
-
-	open := controlDB.GetSiteDBsFromModels(res)
-	if len(open) != len(res) {
-		return open, fmt.Errorf("%w: %d of %d sites in batch %s", ErrSiteNotOpen, len(res)-len(open), len(res), char)
-	}
-	return open, nil
 }
 
 // GetNeverUsedSites retrieves sites that have never been logged into

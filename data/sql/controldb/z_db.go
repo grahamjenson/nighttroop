@@ -207,6 +207,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSitesToArchiveStmt, err = db.PrepareContext(ctx, getSitesToArchive); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToArchive: %w", err)
 	}
+	if q.getSitesToBackUpStmt, err = db.PrepareContext(ctx, getSitesToBackUp); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesToBackUp: %w", err)
+	}
 	if q.getSitesToDeleteInBatchStmt, err = db.PrepareContext(ctx, getSitesToDeleteInBatch); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToDeleteInBatch: %w", err)
 	}
@@ -664,6 +667,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSitesToArchiveStmt: %w", cerr)
 		}
 	}
+	if q.getSitesToBackUpStmt != nil {
+		if cerr := q.getSitesToBackUpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesToBackUpStmt: %w", cerr)
+		}
+	}
 	if q.getSitesToDeleteInBatchStmt != nil {
 		if cerr := q.getSitesToDeleteInBatchStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSitesToDeleteInBatchStmt: %w", cerr)
@@ -1009,6 +1017,7 @@ type Queries struct {
 	getSiteInAnyStateStmt                   *sql.Stmt
 	getSitesNotUploadedStmt                 *sql.Stmt
 	getSitesToArchiveStmt                   *sql.Stmt
+	getSitesToBackUpStmt                    *sql.Stmt
 	getSitesToDeleteInBatchStmt             *sql.Stmt
 	getSitesToDisableStmt                   *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
@@ -1125,6 +1134,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteInAnyStateStmt:                   q.getSiteInAnyStateStmt,
 		getSitesNotUploadedStmt:                 q.getSitesNotUploadedStmt,
 		getSitesToArchiveStmt:                   q.getSitesToArchiveStmt,
+		getSitesToBackUpStmt:                    q.getSitesToBackUpStmt,
 		getSitesToDeleteInBatchStmt:             q.getSitesToDeleteInBatchStmt,
 		getSitesToDisableStmt:                   q.getSitesToDisableStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,

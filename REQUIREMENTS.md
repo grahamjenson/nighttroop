@@ -1784,9 +1784,13 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 #### Backups
 
 - Each site DB goes to S3 by itself, and the control DB separately. S3 keeps old versions for a retention period.
-- Each batch of sites (the same first letter) has its turn every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), and the
-  control DB is backed up every 30 seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the
-  server stops.
+- A site written to since its last backup is backed up once that backup is an hour old
+  (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26). The control DB is backed up every 30
+  seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the server stops.
+- A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
+  live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
+  recorded one counts as since it.
+- One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<batch>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`.
   - A copy cut short does not replace the last copy.
@@ -1795,10 +1799,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<batch>/<site>.tar.enc`.
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A site whose copy is already uploaded is not uploaded again.
-- In the next round, a write made during a copy is copied, and a failed upload is tried again.
-- A live site that is not open is left out. The rest of its batch is backed up.
-- If a live site is not uploaded yet, such as a new or restored site, it uploads at the next tick of the batch backups
-  (`BATCH_BACKUP_INTERVAL_IN_SECONDS` / 26). It does not wait for its batch's turn.
+- A failed upload is tried again at the next tick.
+- A live site that is not open is left out. The other sites are backed up.
+- Each tick also truncates one batch of sites (the same first letter), so every site is truncated each interval.
+- If a live site is not uploaded yet, such as a new or restored site, it uploads at the next tick, written or not.
 - The control DB records on each site:
   - when the site was last copied, and the size of the copy on disk;
   - when it was last uploaded. If S3 is not connected or the upload fails, this time does not change.

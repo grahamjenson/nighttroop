@@ -1011,6 +1011,113 @@ func (q *Queries) GetSitesToArchive(ctx context.Context, arg GetSitesToArchivePa
 	return items, nil
 }
 
+const getSitesToBackUp = `-- name: GetSitesToBackUp :many
+SELECT id, batch, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+WHERE state IN ('live', 'disabled') AND (
+    (last_write_at IS NOT NULL AND (backed_up_at IS NULL OR (last_write_at + 600000 > backed_up_at
+        AND backed_up_at < CAST(?1 AS INTEGER))))
+    OR backup_uploaded_at < backed_up_at)
+ORDER BY COALESCE(backed_up_at, 0), id
+LIMIT CAST(?2 AS INTEGER)
+`
+
+type GetSitesToBackUpParams struct {
+	BackedUpBefore int64
+	Limit          int64
+}
+
+// The live and disabled sites to back up, the longest waiting first: those written since their last backup, copied
+// before BackedUpBefore, and those whose last copy is not uploaded. A site's last write is recorded at most every 10
+// minutes, so one written in the 10 minutes after its last copy, its last write before it, is written since too.
+func (q *Queries) GetSitesToBackUp(ctx context.Context, arg GetSitesToBackUpParams) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getSitesToBackUpStmt, getSitesToBackUp, arg.BackedUpBefore, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Site
+	for rows.Next() {
+		var i Site
+		if err := rows.Scan(
+			&i.ID,
+			&i.Batch,
+			&i.BackupKeyHash,
+			&i.CreatedAt,
+			&i.MaxDbSizeKbLimit,
+			&i.EstimatedDbSizeKb,
+			&i.AbuseScore,
+			&i.TableSizesJson,
+			&i.LastSeenAt,
+			&i.LastWriteAt,
+			&i.SummariesCheckedAt,
+			&i.BackedUpAt,
+			&i.BackupSizeKb,
+			&i.BackupUploadedAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.Units,
+			&i.UnitsMgdlLabel,
+			&i.UnitsMmolLabel,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.NumberFormat,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
+			&i.AlarmUrgentLowEnabled,
+			&i.RangeUrgentLowMgdl,
+			&i.AlarmLowEnabled,
+			&i.RangeLowMgdl,
+			&i.AlarmLowMinutes,
+			&i.AlarmLowPredictionEnabled,
+			&i.AlarmLowPredictionMinutes,
+			&i.AlarmHighEnabled,
+			&i.RangeHighMgdl,
+			&i.AlarmHighMinutes,
+			&i.AlarmUrgentHighEnabled,
+			&i.RangeUrgentHighMgdl,
+			&i.AlarmFastRiseEnabled,
+			&i.AlarmFastRiseMgdl,
+			&i.AlarmFastRiseMinutes,
+			&i.AlarmFastDropEnabled,
+			&i.AlarmFastDropMgdl,
+			&i.AlarmFastDropMinutes,
+			&i.AlarmNoDataEnabled,
+			&i.AlarmNoDataMinutes,
+			&i.AlarmDeviceBatteryLowEnabled,
+			&i.AlarmDeviceBatteryLowPercent,
+			&i.AlarmDeviceBatteryLowMinutes,
+			&i.AlarmDeviceBatteryLowDevicesJson,
+			&i.AlarmLowReservoirEnabled,
+			&i.AlarmLowReservoirUnits,
+			&i.NotificationsEnabled,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSitesToDeleteInBatch = `-- name: GetSitesToDeleteInBatch :many
 SELECT id, batch, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE 
     state IN ('live', 'disabled') AND -- must be live or disabled
