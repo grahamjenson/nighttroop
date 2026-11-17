@@ -550,9 +550,8 @@ func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	require.Equal(t, "keptsite", batch[0].Subdomain)
 }
 
-// A live site whose DB file is missing at start is restored, with its data, from its batch's backup, downloaded once
-// for the batch; one the backup does not have stops the start, named in its error, and each is a site_db_missing event
-// the control admin sees
+// A live site whose DB file is missing at start is restored, with its data, from its own backup; one with no backup
+// stops the start, named in its error, and each is a site_db_missing event the control admin sees
 func TestRestoreMissingSites(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development
@@ -571,16 +570,18 @@ func TestRestoreMissingSites(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, controlDB.Close())
 
-	// The batch's backup, in a stand in for S3, has kostsite but not kingsite
+	// A stand in for S3 has kostsite's backup but not kingsite's
 	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
 	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
 	require.NoError(t, os.Remove(sitedb.GetPath("kingsite", &cfg)))
-	downloads := 0
+	downloads := []string{}
 	// Like s3utils.DownloadFilesFromS3 it makes its staging folder beside outpath, and it leaves it there, as a start
 	// killed part way through the download does
 	download := func(_ context.Context, key string, outpath string) (int64, bool, error) {
-		downloads++
-		require.Equal(t, sitedb.GetS3BatchPath("k", &cfg), key)
+		downloads = append(downloads, key)
+		if key != sitedb.GetS3SitePath("kostsite", &cfg) {
+			return 0, false, nil
+		}
 		_, err := os.MkdirTemp(filepath.Dir(outpath), "."+filepath.Base(outpath)+"-restore-")
 		require.NoError(t, err)
 		require.NoError(t, os.MkdirAll(outpath, 0o755))
@@ -596,7 +597,8 @@ func TestRestoreMissingSites(t *testing.T) {
 	require.ErrorIs(t, err, db.ErrSitesMissing, "kingsite is not in the backup, so the start stops")
 	require.ErrorContains(t, err, "kingsite")
 	require.NotContains(t, err.Error(), "kostsite")
-	require.Equal(t, 1, downloads, "the batch is downloaded once")
+	require.ElementsMatch(t, []string{sitedb.GetS3SitePath("kostsite", &cfg), sitedb.GetS3SitePath("kingsite", &cfg)}, downloads,
+		"each site is downloaded by itself")
 
 	site, _, err = controlDB.GetSite(ctx, "kostsite")
 	require.NoError(t, err, "the site is restored and open")

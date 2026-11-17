@@ -18,11 +18,11 @@ the same.
 | Data | On the server | Backed up to S3 | If missing |
 | --- | --- | --- | --- |
 | Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Every 30 seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`), and on stop | Every site: the server starts new, in setup |
-| Site DBs: readings, treatments and settings of each site | `data/db/site/<batch>/<site>.sqlite`, a batch for each first letter | Each batch every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), and on stop | The start stops until restored ([5.8](#58-restore-missing-sites)) |
+| Site DBs: readings, treatments and settings of each site | `data/db/site/<batch>/<site>.sqlite`, a batch for each first letter | Each changed site every hour (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), by itself, and on stop | The start stops until restored ([5.7](#57-restore-missing-sites)) |
 | Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history |
 | Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history |
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |
-| Local backups of the control and site DBs, each compressed with LZ4 (`.sqlite.lz4`) | `data/backup/` | They are uploaded, as `<host>/backup/<batch or controldb>.tar.enc` | Nothing, while the DBs are there |
+| Local backups of the control and site DBs, each compressed with LZ4 (`.sqlite.lz4`) | `data/backup/` | They are uploaded, as `<host>/sites/<site>.tar.enc` and `<host>/backup/controldb.tar.enc` | Nothing, while the DBs are there |
 | `update.sh` copies of `./data` | `backups/data-<time>.tar.gz`, the newest 5 | No | The way back to before a release |
 | `KEY_SETS` | `nighttroop.env` | No. Keep it in a password manager. | Every encrypted credential and S3 backup |
 
@@ -73,7 +73,7 @@ The script tags the running image `nighttroop-rollback:<time>`, to start it agai
 1. Stops HTTP requests and closes every Socket.IO connection. Requests in progress get 5 seconds.
 2. Stops background jobs (syncs, alarms, backups). Running jobs get up to 1 minute.
 3. Backs up the control DB locally and uploads it to S3.
-4. Backs up and uploads each batch of site DBs with changes since its last upload.
+4. Backs up and uploads each site DB with changes since its last upload.
 5. Closes every DB.
 
 **Note:** Nighttroop is down from here until it is healthy in [step 6](#step-6-wait-for-a-healthy-server), usually
@@ -95,7 +95,7 @@ With nothing writing, the script copies `./data` to `./backups/data-<time>.tar.g
 
 ### Step 5: Start the new version
 
-The script writes the new image into `.env` and runs `docker compose up -d`. The server does 5.1 to 5.11 in order.
+The script writes the new image into `.env` and runs `docker compose up -d`. The server does 5.1 to 5.10 in order.
 
 - A failed step ends the process with its error. Docker starts it again (`restart: unless-stopped`).
 - A start that always fails restarts until `update.sh` stops waiting ([step 6](#step-6-wait-for-a-healthy-server))
@@ -139,14 +139,7 @@ Only if `data/db/controldb.sqlite` is not there, the server downloads the latest
   3. Start it again. Do not run setup.
 - **Gap:** Nothing stops a start with site DBs and an empty control DB.
 
-#### 5.5 Restore missing batches
-
-For each missing batch folder, the server downloads the latest batch backup. It never downloads over a folder.
-
-- **Failure:** A download fails. The batch has no folder, so the next start tries again.
-- **Fix:** As for [5.2](#52-start-s3).
-
-#### 5.6 Open the control, jobs, logs and live DBs
+#### 5.5 Open the control, jobs, logs and live DBs
 
 The server opens each and runs its new migrations.
 
@@ -156,10 +149,10 @@ The server opens each and runs its new migrations.
 - **Fix:** `update.sh` rolls back, with the DB from the [step 4](#step-4-copy-data) copy. Fix the migration and
   release again.
 
-#### 5.7 Open every site
+#### 5.6 Open every site
 
 The server opens each live and disabled site DB, on all cores together, and runs new migrations. It records sites with
-a missing file for 5.8. Time: about 2 ms a site.
+a missing file for 5.7. Time: about 2 ms a site.
 
 - **Failure:** `cannot fill sites`. One bad site stops the full start, intentionally: no site is served half migrated,
   and nothing is written that a rollback would lose.
@@ -168,9 +161,9 @@ a missing file for 5.8. Time: about 2 ms a site.
 - **Gap:** Without a shell and `sqlite3`, you cannot see why one site fails, try a fix on a copy, or remove one site
   from the start (disable it, restore it from a backup, force its migration back).
 
-#### 5.8 Restore missing sites
+#### 5.7 Restore missing sites
 
-The server restores each live site with a missing file from its latest S3 batch backup, and opens it. Each is a
+The server restores each live site with a missing file from its latest S3 backup, 16 at a time, and opens it. Each is a
 `site_db_missing` event.
 
 - **Failure:** `live sites' DBs are missing and were not restored`, with the sites. S3 is off, the backup does not
@@ -178,15 +171,15 @@ The server restores each live site with a missing file from its latest S3 batch 
 - **Fix:** Get the site file from a copy in `./backups`. Or decide the site is gone, and delete it in the control DB.
 - **Gap:** The delete needs the server to run, and it cannot.
 
-#### 5.9 Make the admin
+#### 5.8 Make the admin
 
 Development and staging make their admin. A server with no admin prints a setup code and serves only the setup page.
 
-#### 5.10 Start the background jobs
+#### 5.9 Start the background jobs
 
 Syncs, backups, alarms and other jobs start before requests. From here, a sync can write to a site DB.
 
-#### 5.11 Accept requests
+#### 5.10 Accept requests
 
 The server listens on port 3000. `/health` answers `ok` when the control DB answers.
 
@@ -222,7 +215,7 @@ A rollback loses nothing: a version that is never healthy took no requests. Dele
 | Problem | Result | Fix |
 | --- | --- | --- |
 | The previous version is not healthy (exit 2) | Nighttroop is down | Not the release: S3, a setting, the disk, the VPS. Read `docker compose logs nighttroop`, fix it, and `docker compose up -d`. |
-| The new version uploaded backups before it failed | S3 has backups in the new format | The previous version replaces them in one batch backup interval (1 hour). Do not restore a new VPS from S3 before then. |
+| The new version uploaded backups before it failed | S3 has backups in the new format | The previous version replaces each site's backup when the site next changes. Do not restore a new VPS from S3 before then. |
 
 ### After a version serves: fix forward
 
@@ -242,7 +235,7 @@ again.
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |
 | Two servers use one bucket (such as a new VPS while the old one runs) | Each overwrites the other's backups | Stop the old server, with its last uploads, before you start the new one. |
-| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 30 seconds old, batches up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but not a batch, the start stops ([5.8](#58-restore-missing-sites)). |
+| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 30 seconds old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-missing-sites)). |
 
 ## Staging deploy
 
@@ -271,7 +264,7 @@ push.
 Failures with no fix except a shell on the server, or none. Choose the tools from this list. Details are in each step.
 
 1. **A site stops the start**: no tools to inspect, fix or remove it
-   ([5.7](#57-open-every-site), [5.8](#58-restore-missing-sites)).
+   ([5.6](#56-open-every-site), [5.7](#57-restore-missing-sites)).
 2. **A missing control DB starts a new server** that passes its health check
    ([5.4](#54-restore-the-control-db-if-missing)).
 3. **No check after a deploy except `/health`** ([step 6](#step-6-wait-for-a-healthy-server)).
@@ -284,5 +277,5 @@ Failures with no fix except a shell on the server, or none. Choose the tools fro
 8. **No way to move to a new `KEY_SETS`.**
 9. **A slow start rolls back**: the Docker start period is fixed ([step 6](#step-6-wait-for-a-healthy-server)).
 10. **Background jobs start before requests**, so a failed start can have written data
-    ([5.10](#510-start-the-background-jobs)).
+    ([5.9](#59-start-the-background-jobs)).
 11. **Fly behaviour when a staging deploy fails its health check** ([staging](#staging-deploy)).

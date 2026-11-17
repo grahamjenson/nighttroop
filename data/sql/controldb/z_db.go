@@ -33,9 +33,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.archiveSitesStmt, err = db.PrepareContext(ctx, archiveSites); err != nil {
 		return nil, fmt.Errorf("error preparing query ArchiveSites: %w", err)
 	}
-	if q.batchHadSitesStmt, err = db.PrepareContext(ctx, batchHadSites); err != nil {
-		return nil, fmt.Errorf("error preparing query BatchHadSites: %w", err)
-	}
 	if q.countActiveIdentitiesStmt, err = db.PrepareContext(ctx, countActiveIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query CountActiveIdentities: %w", err)
 	}
@@ -150,9 +147,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getBatchSitesToBackUpStmt, err = db.PrepareContext(ctx, getBatchSitesToBackUp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetBatchSitesToBackUp: %w", err)
 	}
-	if q.getBatchesNotUploadedStmt, err = db.PrepareContext(ctx, getBatchesNotUploaded); err != nil {
-		return nil, fmt.Errorf("error preparing query GetBatchesNotUploaded: %w", err)
-	}
 	if q.getConnectorStmt, err = db.PrepareContext(ctx, getConnector); err != nil {
 		return nil, fmt.Errorf("error preparing query GetConnector: %w", err)
 	}
@@ -206,6 +200,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getSiteInAnyStateStmt, err = db.PrepareContext(ctx, getSiteInAnyState); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteInAnyState: %w", err)
+	}
+	if q.getSitesNotUploadedStmt, err = db.PrepareContext(ctx, getSitesNotUploaded); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesNotUploaded: %w", err)
 	}
 	if q.getSitesToArchiveStmt, err = db.PrepareContext(ctx, getSitesToArchive); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToArchive: %w", err)
@@ -375,11 +372,6 @@ func (q *Queries) Close() error {
 	if q.archiveSitesStmt != nil {
 		if cerr := q.archiveSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing archiveSitesStmt: %w", cerr)
-		}
-	}
-	if q.batchHadSitesStmt != nil {
-		if cerr := q.batchHadSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing batchHadSitesStmt: %w", cerr)
 		}
 	}
 	if q.countActiveIdentitiesStmt != nil {
@@ -572,11 +564,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getBatchSitesToBackUpStmt: %w", cerr)
 		}
 	}
-	if q.getBatchesNotUploadedStmt != nil {
-		if cerr := q.getBatchesNotUploadedStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getBatchesNotUploadedStmt: %w", cerr)
-		}
-	}
 	if q.getConnectorStmt != nil {
 		if cerr := q.getConnectorStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getConnectorStmt: %w", cerr)
@@ -665,6 +652,11 @@ func (q *Queries) Close() error {
 	if q.getSiteInAnyStateStmt != nil {
 		if cerr := q.getSiteInAnyStateStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteInAnyStateStmt: %w", cerr)
+		}
+	}
+	if q.getSitesNotUploadedStmt != nil {
+		if cerr := q.getSitesNotUploadedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesNotUploadedStmt: %w", cerr)
 		}
 	}
 	if q.getSitesToArchiveStmt != nil {
@@ -959,7 +951,6 @@ type Queries struct {
 	allControlIdentitiesStmt                *sql.Stmt
 	allSiteIdentitiesStmt                   *sql.Stmt
 	archiveSitesStmt                        *sql.Stmt
-	batchHadSitesStmt                       *sql.Stmt
 	countActiveIdentitiesStmt               *sql.Stmt
 	countActiveSitesStmt                    *sql.Stmt
 	countControlAdminsStmt                  *sql.Stmt
@@ -998,7 +989,6 @@ type Queries struct {
 	getAnyPushCredentialStmt                *sql.Stmt
 	getAnySitePushRegistrationStmt          *sql.Stmt
 	getBatchSitesToBackUpStmt               *sql.Stmt
-	getBatchesNotUploadedStmt               *sql.Stmt
 	getConnectorStmt                        *sql.Stmt
 	getConnectorsToRunStmt                  *sql.Stmt
 	getControlIdentityStmt                  *sql.Stmt
@@ -1017,6 +1007,7 @@ type Queries struct {
 	getSiteIdentityByTokenDigestStmt        *sql.Stmt
 	getSiteIdentityPasskeyStmt              *sql.Stmt
 	getSiteInAnyStateStmt                   *sql.Stmt
+	getSitesNotUploadedStmt                 *sql.Stmt
 	getSitesToArchiveStmt                   *sql.Stmt
 	getSitesToDeleteInBatchStmt             *sql.Stmt
 	getSitesToDisableStmt                   *sql.Stmt
@@ -1076,7 +1067,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allControlIdentitiesStmt:                q.allControlIdentitiesStmt,
 		allSiteIdentitiesStmt:                   q.allSiteIdentitiesStmt,
 		archiveSitesStmt:                        q.archiveSitesStmt,
-		batchHadSitesStmt:                       q.batchHadSitesStmt,
 		countActiveIdentitiesStmt:               q.countActiveIdentitiesStmt,
 		countActiveSitesStmt:                    q.countActiveSitesStmt,
 		countControlAdminsStmt:                  q.countControlAdminsStmt,
@@ -1115,7 +1105,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAnyPushCredentialStmt:                q.getAnyPushCredentialStmt,
 		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
 		getBatchSitesToBackUpStmt:               q.getBatchSitesToBackUpStmt,
-		getBatchesNotUploadedStmt:               q.getBatchesNotUploadedStmt,
 		getConnectorStmt:                        q.getConnectorStmt,
 		getConnectorsToRunStmt:                  q.getConnectorsToRunStmt,
 		getControlIdentityStmt:                  q.getControlIdentityStmt,
@@ -1134,6 +1123,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteIdentityByTokenDigestStmt:        q.getSiteIdentityByTokenDigestStmt,
 		getSiteIdentityPasskeyStmt:              q.getSiteIdentityPasskeyStmt,
 		getSiteInAnyStateStmt:                   q.getSiteInAnyStateStmt,
+		getSitesNotUploadedStmt:                 q.getSitesNotUploadedStmt,
 		getSitesToArchiveStmt:                   q.getSitesToArchiveStmt,
 		getSitesToDeleteInBatchStmt:             q.getSitesToDeleteInBatchStmt,
 		getSitesToDisableStmt:                   q.getSitesToDisableStmt,

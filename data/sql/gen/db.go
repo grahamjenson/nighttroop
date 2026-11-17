@@ -257,8 +257,9 @@ func GetBackupPath(subdomain string, serverConfig *config.ServerConfig) string {
 	return fmt.Sprintf("%s/site/%s/%s.sqlite.lz4", serverConfig.BackupDir(), string(batch), subdomain)
 }
 
-func GetS3BatchPath(batch string, serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/backup/%s.tar.enc", serverConfig.HostName, batch)
+// GetS3SitePath is where the site's latest backup is kept in S3, by itself
+func GetS3SitePath(subdomain string, serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/sites/%s.tar.enc", serverConfig.HostName, subdomain)
 }
 
 func GetS3ArchivePath(subdomain string, serverConfig *config.ServerConfig) string {

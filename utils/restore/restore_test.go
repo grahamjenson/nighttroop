@@ -111,49 +111,19 @@ func legacyKey(key string) string {
 	return strings.TrimSuffix(key, ".tar.enc") + ".tar.lz4.enc"
 }
 
-// A control DB and a site batch are restored from their backups, each DB in them compressed by itself
-func TestRestoreDecompressesEachDB(t *testing.T) {
+// A control DB is restored from its backup, decompressed
+func TestRestoreDecompressesTheControlDB(t *testing.T) {
 	c, fake := newClient(t)
 	controlKey, controlPath := controldb.GetS3Path(c.ServerConfig), controldb.GetPath(c.ServerConfig)
 	controlArchive, controlContent := backup(t, c, controlKey, filepath.Base(controlPath), false)
 	fake.set(controlKey, controlArchive)
-	batchKey, folder := sitedb.GetS3BatchPath("a", c.ServerConfig), sitedb.GetBatchFolder("a", c.ServerConfig)
-	batchArchive, siteContent := backup(t, c, batchKey, "abcdef.sqlite", false)
-	fake.set(batchKey, batchArchive)
 
 	require.NoError(t, restore.TryDownloadExtractControlDbs(c))
-	require.NoError(t, restore.TryRestoreAllFiles(c))
 
 	got, err := os.ReadFile(controlPath)
 	require.NoError(t, err)
 	require.Equal(t, controlContent, got)
-	got, err = os.ReadFile(filepath.Join(folder, "abcdef.sqlite"))
-	require.NoError(t, err)
-	require.Equal(t, siteContent, got)
-	require.NoFileExists(t, filepath.Join(folder, "abcdef.sqlite.lz4"))
-}
-
-// A backup kept as backups were before, at the key they were kept at, is restored while there is no backup at the new
-// key, and the new key's backup is restored once there is one
-func TestRestoreReadsLegacyBackups(t *testing.T) {
-	c, fake := newClient(t)
-	key, folder := sitedb.GetS3BatchPath("a", c.ServerConfig), sitedb.GetBatchFolder("a", c.ServerConfig)
-	require.NotEqual(t, key, legacyKey(key))
-	legacy, legacyContent := backup(t, c, legacyKey(key), "abcdef.sqlite", true)
-	fake.set(legacyKey(key), legacy)
-
-	require.NoError(t, restore.TryRestoreAllFiles(c))
-	got, err := os.ReadFile(filepath.Join(folder, "abcdef.sqlite"))
-	require.NoError(t, err)
-	require.Equal(t, legacyContent, got)
-
-	require.NoError(t, os.RemoveAll(folder))
-	current, content := backup(t, c, key, "abcdef.sqlite", false)
-	fake.set(key, current)
-	require.NoError(t, restore.TryRestoreAllFiles(c))
-	got, err = os.ReadFile(filepath.Join(folder, "abcdef.sqlite"))
-	require.NoError(t, err)
-	require.Equal(t, content, got)
+	require.NoFileExists(t, controlPath+".lz4")
 }
 
 // A control DB download that is cut off leaves no control DB, so the next start downloads it again
@@ -178,25 +148,6 @@ func TestCutOffControlDownloadLeavesNoControlDB(t *testing.T) {
 	for _, entry := range entries {
 		require.False(t, strings.HasPrefix(entry.Name(), "."), entry.Name())
 	}
-}
-
-// A site batch whose download fails has no folder, so the next restore downloads it again
-func TestFailedBatchDownloadIsRetried(t *testing.T) {
-	c, fake := newClient(t)
-	key, folder := sitedb.GetS3BatchPath("a", c.ServerConfig), sitedb.GetBatchFolder("a", c.ServerConfig)
-	archive, content := backup(t, c, key, "abcdef.sqlite", false)
-
-	fake.set(key, archive[:len(archive)/2])
-	require.Error(t, restore.TryRestoreAllFiles(c))
-	require.NoDirExists(t, folder)
-
-	fake.set(key, archive)
-	require.NoError(t, restore.TryRestoreAllFiles(c))
-	got, err := os.ReadFile(filepath.Join(folder, "abcdef.sqlite"))
-	require.NoError(t, err)
-	require.Equal(t, content, got)
-	// Batches with no backup get an empty folder
-	require.DirExists(t, sitedb.GetBatchFolder("z", c.ServerConfig))
 }
 
 // A start removes the staging folders a restore or archive killed part way left beside the DBs, and nothing else

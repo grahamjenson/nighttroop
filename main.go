@@ -98,27 +98,25 @@ func run() error {
 	}
 }
 
-// restoreFromS3 downloads the control DB and every site's files from their backups in S3, where there are any
+// restoreFromS3 downloads the control DB from its backup in S3, where there is one. A missing site is restored from
+// its own backup once the control DB is open (RestoreMissingSites).
 func restoreFromS3(serverConfig *config.ServerConfig, s3Client *s3utils.S3Client) error {
 	// Before any restore runs, so none of the staging folders it removes is in use
 	restore.RemoveStaging(serverConfig)
 	if err := restore.TryRestoreControlDB(s3Client); err != nil {
 		return fmt.Errorf("Failed to restore backups: %w", err)
 	}
-	if err := restore.TryRestoreAllFiles(s3Client); err != nil {
-		return fmt.Errorf("Failed to restore backups: %w", err)
-	}
 	return nil
 }
 
-// openControlDB opens the control DB and every site's, restoring a live site's missing DB from its batch's backup,
+// openControlDB opens the control DB and every site's, restoring a live site's missing DB from its backup,
 // with an admin to log in with in development and staging, and prints the setup code of a server not yet set up
 func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Client *s3utils.S3Client) (*db.ControlDB, error) {
 	controlDB, err := db.NewControlDB(context.Background(), serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
-	// A live site whose DB file is missing, though its batch's folder is there, is restored from its batch's backup
+	// A live site whose DB file is missing is restored from its backup
 	if err := controlDB.RestoreMissingSites(ctx, s3Client.DownloadFilesFromS3); err != nil {
 		return nil, fmt.Errorf("cannot open restored sites: %w", err)
 	}
