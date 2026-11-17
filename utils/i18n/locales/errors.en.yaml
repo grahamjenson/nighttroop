@@ -83,6 +83,8 @@ errors:
     site_id: "a site ID is {{.Length}} lowercase letters, a to z"
     truncate: "only a live or disabled site, whose DB is here, can be truncated"
     new_empty_db: "only an unavailable site, whose DB is not being restored now, can have a new empty DB"
+    restore_version: "pick a backup to restore"
+    restore_version_failed: "the backup could not be restored: it is not there, or its DB does not open"
     server_push_credential: "a credential for every site cannot be added until the server uses it only for tokens its app registered itself, with its bundle IDs, within a limit across the server"
     no_live_site: "there is no live site with that ID"
     rate_numbers: "{{.Name}} needs a number for its rate and a whole number for its burst"

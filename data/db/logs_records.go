@@ -196,6 +196,16 @@ func (l *LogsDB) SiteDBMadeEmptyEvent(ctx context.Context, siteID string, by str
 	l.event(ctx, siteID, events.SiteDBMadeEmpty, SiteDBMadeEmptyAttributes{By: by, Reason: reason})
 }
 
+type SiteVersionRestoredAttributes struct {
+	By        string `json:"by"`
+	VersionID string `json:"version_id"`
+}
+
+// SiteVersionRestoredEvent records by, a control identity, restoring a site from the version of its backup with versionID
+func (l *LogsDB) SiteVersionRestoredEvent(ctx context.Context, siteID string, by string, versionID string) {
+	l.event(ctx, siteID, events.SiteVersionRestored, SiteVersionRestoredAttributes{By: by, VersionID: versionID})
+}
+
 // SiteDBMissingEvent records a live site's DB file missing at start, and whether it was restored from its backup, so the control admin can see a site left out
 func (l *LogsDB) SiteDBMissingEvent(ctx context.Context, siteID string, restored bool, reason string) {
 	l.event(ctx, siteID, events.SiteDBMissing, SiteDBMissingAttributes{Restored: restored, Reason: reason})

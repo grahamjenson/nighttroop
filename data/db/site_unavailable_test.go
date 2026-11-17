@@ -149,3 +149,30 @@ func TestNewEmptySiteDBKeepsTheDBThatDidNotOpen(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "not a DB", string(data))
 }
+
+// A control admin restores an unavailable site from a backup they picked, which it is served from again. A backup not
+// there leaves it unavailable, and a site that is not unavailable is not restored.
+func TestRestorePickedBackup(t *testing.T) {
+	controlDB, siteID, backup := missingSite(t)
+	ctx := t.Context()
+	notThere := func(context.Context, string, string) (int64, bool, error) { return 0, false, nil }
+	restored, err := controlDB.RestoreUnavailableSite(ctx, siteID, notThere)
+	require.NoError(t, err)
+	require.False(t, restored)
+	_, _, err = controlDB.GetSite(ctx, siteID)
+	require.ErrorIs(t, err, db.ErrSiteUnavailable)
+
+	picked := func(_ context.Context, _ string, outpath string) (int64, bool, error) {
+		require.NoError(t, os.MkdirAll(outpath, 0o755))
+		return int64(len(backup)), true, os.WriteFile(filepath.Join(outpath, siteID+".sqlite"), backup, 0o600)
+	}
+	restored, err = controlDB.RestoreUnavailableSite(ctx, siteID, picked)
+	require.NoError(t, err)
+	require.True(t, restored)
+	_, _, err = controlDB.GetSite(ctx, siteID)
+	require.NoError(t, err, "it is served again")
+	require.Empty(t, controlDB.UnavailableSites())
+
+	_, err = controlDB.RestoreUnavailableSite(ctx, siteID, picked)
+	require.ErrorIs(t, err, db.ErrSiteNotUnavailable)
+}

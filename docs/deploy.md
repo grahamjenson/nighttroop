@@ -167,8 +167,9 @@ restored one does not open either.
 
 - **Failure:** The site stays unavailable, with an error logged: S3 is off, the backup does not have the site, the
   download fails, or the restored DB does not open.
-- **Fix:** Get the site file from a copy in `./backups`, and restart. Or, as for a site created just before a crash,
-  which has no backup, use New Empty DB on its control page: the site is served again, empty, with its identities.
+- **Fix:** On the site's control page, restore an older backup from Backups in S3, when the latest does not open. Or
+  get the site file from a copy in `./backups`, and restart. Or, as for a site created just before a crash, which has
+  no backup, use New Empty DB: the site is served again, empty, with its identities.
 - **Retry:** The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, then the admin is paged.
 - **Gap:** Paging is not set up yet, so the page is only an error in the logs and Sentry. After the last try, a site is
   not tried again until the next start.

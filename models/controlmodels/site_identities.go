@@ -1,6 +1,9 @@
 package controlmodels
 
-import "nighttroop.t1d.nz/utils/consts"
+import (
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/s3utils"
+)
 
 // SiteIdentity is what the control plane shows of one of a site's identities: who it is and when it was used, never
 // its password or TOTP secret
@@ -40,6 +43,8 @@ type SitePage struct {
 	Identities []*SiteIdentity `json:"identities"`
 	Events     []*Event        `json:"events"`
 	Errors     []*Error        `json:"errors"`
+	// BackupVersions are the versions S3 keeps of an unavailable site's backup, newest first, to restore one from
+	BackupVersions []s3utils.BackupVersion `json:"backup_versions"`
 }
 
 // SiteTable is a table of a site's DB and the bytes it takes in the file, its indexes with it

@@ -359,6 +359,12 @@ control:
     new_empty_db_intro: "Its DB is missing or does not open, and its backup could not be restored, as for a site created just before a crash. Makes it a new, empty DB, so the site is served again. Its identities are kept; its readings, treatments and settings are not."
     new_empty_db_confirm: "Make this site a new, empty DB? Its data is not brought back, and its next backup replaces any backup it has. A DB here that did not open is kept beside it."
     new_empty_db_toast: "New Empty DB Made"
+    backups: "Backups in S3"
+    backups_intro: "The backups S3 keeps of this site, newest first. Restore one when the latest does not open; what was written after it is lost."
+    backup_latest: "Latest"
+    restore_version: "Restore"
+    restore_version_confirm: "Restore this site from this backup? What was written after it is lost. A DB here that did not open is kept beside it."
+    version_restored_toast: "Site Restored"
   site_identities:
     name: "Name"
     role: "Role"
