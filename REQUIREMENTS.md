@@ -2122,6 +2122,7 @@ harder:
   apart.
 - Actions that do not apply (e.g. to reset or delete yourself) are greyed out. An identity cannot lock itself out.
 - Each identity lists the clients (browsers and apps) that used it. It shows as shared when several did.
+- A shared device says to give each device its own identity, with a link that opens the Add Device modal.
 - From a row, an admin changes the identity's own settings and alarms. A device's units go to followers in its
   Nightscout status.
 - Another identity's glucose settings are labelled, shown, followed from the site's and typed in its units (else the

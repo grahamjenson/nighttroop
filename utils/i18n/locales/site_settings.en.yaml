@@ -155,6 +155,7 @@ site:
       clients_shared: "Used by more than one app"
       clients_recent: "{{.Count}} recent"
       clients_shared_help: "Give each device its own identity, so its settings and alarms are its own."
+      clients_shared_add: "Add a device for one of them"
       enabled: "Enabled"
       manage: "Manage"
       settings: "Settings"
