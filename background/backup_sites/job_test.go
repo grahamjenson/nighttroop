@@ -45,7 +45,7 @@ func uploadJobs(t *testing.T, controlDB *db.ControlDB, uploads *[][]string, fail
 	// A copy, as the config is shared by the package's tests
 	cfg := *controlDB.ServerConfig
 	cfg.Status.S3Working = true
-	jobs := backup_sites.SetupBackupSiteJob(t.Context(), controlDB, &cfg, &s3utils.S3Client{ServerConfig: &cfg})
+	jobs := backup_sites.SetupBackupSiteJob(controlDB, &cfg, &s3utils.S3Client{ServerConfig: &cfg})
 	jobs.Upload = func(_ context.Context, key string, _ s3utils.Retention, paths []string) error {
 		if *fail {
 			return errors.New("S3 is down")
@@ -146,7 +146,7 @@ func TestModelChangesRecordTheSiteWritten(t *testing.T) {
 	ctx, uploads, fail := t.Context(), [][]string{}, false
 	jobs := uploadJobs(t, controlDB, &uploads, &fail)
 	jobs.ServerConfig.Events = events.NewSiteBus()
-	jobs.SetupCron(scheduler{})
+	controlDB.RecordModelWrites(jobs.ServerConfig.Events)
 	site := fileSite(t, controlDB, "qaaaaaaa")
 	require.Nil(t, stored(t, controlDB, site).LastWriteAt)
 
@@ -205,7 +205,7 @@ func TestBackupWrittenSitesRecordsTheBackupOnTheSite(t *testing.T) {
 func TestBackupWrittenSitesRecordsEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx := t.Context()
-	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
+	jobs := backup_sites.SetupBackupSiteJob(controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 	written(t, controlDB, site.SiteDB, time.Now())
 	var logs bytes.Buffer
 	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
@@ -235,7 +235,7 @@ func TestBackupWrittenSitesRecordsEvent(t *testing.T) {
 func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
-	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
+	jobs := backup_sites.SetupBackupSiteJob(controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 	// The site has never been used, and counts as unused from the moment it was made
 	jobs.DeleteAfterInactivity = -time.Minute
 

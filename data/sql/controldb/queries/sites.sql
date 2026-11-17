@@ -189,9 +189,8 @@ RETURNING id;
 --------------------------------
 
 
--- name: GetBatchSitesToBackUp :many
--- Get sites that are live  or diabled
--- We must backup even empty sites because a rehydrated control will expect them
+-- name: GetBatchSitesToTruncate :many
+-- The live and disabled sites of a batch, the sites with the same first letter, for the site job to truncate
 SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
 
 

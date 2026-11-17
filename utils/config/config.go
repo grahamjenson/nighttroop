@@ -203,8 +203,9 @@ type ServerConfig struct {
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
-	BatchBackupIntervalInSeconds   int
-	// SiteBackupRetentionDays is how long S3 keeps a site batch backup or archive after a newer upload replaces it
+	// SiteBackupIntervalInSeconds is how old a written site's backup is before it is backed up again
+	SiteBackupIntervalInSeconds int
+	// SiteBackupRetentionDays is how long S3 keeps a site backup or archive after a newer upload replaces it
 	SiteBackupRetentionDays int
 	// ControlBackupRetentionDays is how long S3 keeps a control backup after a newer upload replaces it
 	ControlBackupRetentionDays int
@@ -434,7 +435,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),
-		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 3600), // 1 hour
+		SiteBackupIntervalInSeconds:    configIntSelect(dotenv, "SITE_BACKUP_INTERVAL_IN_SECONDS", 3600), // 1 hour
 		SiteBackupRetentionDays:        configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
 		ControlBackupRetentionDays:     configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
 
@@ -782,7 +783,7 @@ func printServerConfig(config ServerConfig) {
 		"DisableAfterInactivityDays", config.DisableAfterInactivityDays,
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
-		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
+		"SiteBackupIntervalInSeconds", config.SiteBackupIntervalInSeconds,
 		"SiteBackupRetentionDays", config.SiteBackupRetentionDays,
 		"ControlBackupRetentionDays", config.ControlBackupRetentionDays,
 		"SocketMaxSessionsPerSite", config.SocketMaxSessionsPerSite,

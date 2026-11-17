@@ -42,14 +42,16 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	consumers := []*liteq.ConsumerSupervisor{}
 	backupControlJobManager := backup_control.SetupBackupControlJob(ctx, controlDB, config, s3c)
-	backupSiteJobManager := backup_sites.SetupBackupSiteJob(ctx, controlDB, config, s3c)
+	backupSiteJobManager := backup_sites.SetupBackupSiteJob(controlDB, config, s3c)
 	summariseManager := summarise_jobs.SetupTruncateJobManager(config, controlDB)
 	connectorJobManager := connectors.SetupConnectorJobManager(config, controlDB)
 
 	// Backup Control Jobs
 	backupControlJobManager.SetupCron(cron, queue)
 
-	// Backup Site Jobs, which truncate each batch's sites before backing them up
+	// Record each site written to by a model change, such as a connector's sync, for the site backup job
+	controlDB.RecordModelWrites(config.Events)
+	// The site job: truncates a batch of sites a tick, and backs up the sites written to
 	backupSiteJobManager.SetupCron(cron)
 
 	// Summarise Jobs

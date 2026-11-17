@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
@@ -21,105 +19,58 @@ import (
 	"nighttroop.t1d.nz/utils/s3utils"
 )
 
-const BACKUP_SITE_JOB = "backup_site_job"
-
-type BackupSiteJobParams struct {
-	Char string
-}
-
 type BackupSiteJobManager struct {
 	controlDB    *db.ControlDB
-	ctx          context.Context
 	ServerConfig *config.ServerConfig
 	// Upload uploads a site's backup, the S3 client's UploadFilesToS3, which tests can stand in for
 	Upload s3utils.UploadFunc
 
 	DeleteAfterInactivity time.Duration
-
-	BatchBackupIntervalInSeconds   int
-	ControlBackupIntervalInSeconds int
-	DeleteUnusedUsersInterval      int
+	// Interval is how old a written site's backup is before it is backed up again
+	Interval time.Duration
 }
 
-// BackupSiteJob
-
-// SetupBackupSiteJob Takes a ControlDB and backs up the db and all user dbs to a file and syncs to S3
-func SetupBackupSiteJob(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, s3Client *s3utils.S3Client) *BackupSiteJobManager {
-
-	jobs := &BackupSiteJobManager{
-		controlDB: controlDB,
-		ctx:       ctx,
-
+// SetupBackupSiteJob backs up each site written to, once its last backup is an interval old, to S3
+func SetupBackupSiteJob(controlDB *db.ControlDB, config *config.ServerConfig, s3Client *s3utils.S3Client) *BackupSiteJobManager {
+	return &BackupSiteJobManager{
+		controlDB:             controlDB,
 		DeleteAfterInactivity: time.Duration(config.DeleteAfterInactivityMins) * time.Minute,
-
-		BatchBackupIntervalInSeconds: config.BatchBackupIntervalInSeconds,
-		Upload:                       s3Client.UploadFilesToS3,
-		ServerConfig:                 config,
+		Interval:              time.Duration(config.SiteBackupIntervalInSeconds) * time.Second,
+		Upload:                s3Client.UploadFilesToS3,
+		ServerConfig:          config,
 	}
-
-	return jobs
 }
 
+// SetupCron runs the site job every tick, the interval / 26. A tick first looks after one batch, the sites with the same
+// first letter, so each site is seen once an interval: it deletes the batch's sites never used and truncates the rest.
+// Then it backs up the sites not uploaded yet, and those written since their last backup an interval ago. The two run
+// one after the other, so a site is never truncated while its backup is copied.
 func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 	count := len(utils.SITE_CHAR_SET)
-
-	tick := max(1, b.BatchBackupIntervalInSeconds/count)
-
 	var index atomic.Int64
-
-	// Each tick truncates one batch, so the batches are truncated over the interval rather than all at once, and backs
-	// up the sites written since their last backup an interval ago
-	b.recordWrites()
-	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", tick), func(ctx context.Context) error {
-		i := int(index.Add(1)-1) % count
-		batch := string(utils.SITE_CHAR_SET[i])
-		if err := b.DeleteUnusedSites(ctx, batch); err != nil {
-			slog.ErrorContext(ctx, "Error deleting unused sites", "error", err, "batch", batch)
-		}
-		// Tests run each job once, so this backs up one batch, but they see every site truncated straight away
-		if b.ServerConfig.IsTest() {
-			if err := b.controlDB.TruncateSites(ctx, b.controlDB.AllSites()); err != nil {
-				slog.ErrorContext(ctx, "Cannot truncate the sites", "error", err)
-			}
-		}
-
-		b.truncateBatch(ctx, batch)
+	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", max(1, int(b.Interval.Seconds())/count)), func(ctx context.Context) error {
+		b.upkeepBatch(ctx, string(utils.SITE_CHAR_SET[int(index.Add(1)-1)%count]))
 		b.BackupSitesNotUploaded(ctx)
-		return b.BackupWrittenSites(ctx, time.Now().Add(-time.Duration(b.BatchBackupIntervalInSeconds)*time.Second))
+		return b.BackupWrittenSites(ctx, time.Now().Add(-b.Interval))
 	})
 }
 
-// recordWrites records each site written by a model change, such as a connector's sync or a live update, which no
-// request records, as written to, at most every 10 minutes, as its requests record their writes
-func (b *BackupSiteJobManager) recordWrites() {
-	var mu sync.Mutex
-	recorded := map[string]int64{}
-	b.ServerConfig.Events.SubscribeAll(func(event events.Event) {
-		now := time.Now().UnixMilli()
-		mu.Lock()
-		due := event.Action != "" && now > recorded[event.SiteID]+(10*time.Minute).Milliseconds()
-		if due {
-			recorded[event.SiteID] = now
-		}
-		mu.Unlock()
-		// Publishing waits for each handler, so the write is not waited for
-		if due {
-			go func() {
-				if err := b.controlDB.Queries.UpdateSiteDateFlags(context.Background(), controldb.UpdateSiteDateFlagsParams{LastWriteAt: &now, ID: event.SiteID}); err != nil {
-					slog.Error("Cannot record a site's write", "site_id", event.SiteID, "error", err)
-				}
-			}()
-		}
-	})
-}
-
-// truncateBatch truncates the open live and disabled sites whose IDs start with batch
-func (b *BackupSiteJobManager) truncateBatch(ctx context.Context, batch string) {
-	res, err := b.controlDB.Queries.GetBatchSitesToBackUp(ctx, controldb.GetBatchSitesToBackUpParams{Batch: batch})
-	if err == nil {
-		err = b.controlDB.TruncateSites(ctx, b.controlDB.GetSiteDBsFromModels(res))
+// upkeepBatch deletes the batch's sites never used, then truncates its open live and disabled sites. Tests run each job
+// once, so there it truncates every site.
+func (b *BackupSiteJobManager) upkeepBatch(ctx context.Context, batch string) {
+	if err := b.DeleteUnusedSites(ctx, batch); err != nil {
+		slog.ErrorContext(ctx, "Error deleting unused sites", "error", err, "batch", batch)
 	}
-	if err != nil {
+	sites := b.controlDB.AllSites()
+	if !b.ServerConfig.IsTest() {
+		res, err := b.controlDB.Queries.GetBatchSitesToTruncate(ctx, controldb.GetBatchSitesToTruncateParams{Batch: batch})
+		if err != nil {
+			slog.ErrorContext(ctx, "Cannot get the batch's sites", "error", err, "batch", batch)
+			return
+		}
+		sites = b.controlDB.GetSiteDBsFromModels(res)
+	}
+	if err := b.controlDB.TruncateSites(ctx, sites); err != nil {
 		slog.ErrorContext(ctx, "Cannot truncate the batch's sites", "error", err, "batch", batch)
 	}
 }
@@ -168,7 +119,7 @@ func (b *BackupSiteJobManager) DeleteUnusedSites(ctx context.Context, batch stri
 	return nil
 }
 
-// The sites we delete without archiving are sites that
+// findSitesToDelete are the batch's sites never used in DeleteAfterInactivity, deleted without archiving
 func (b *BackupSiteJobManager) findSitesToDelete(ctx context.Context, batch string) ([]string, error) {
 	sites, err := GetNeverUsedSites(ctx, b.controlDB, batch, b.DeleteAfterInactivity)
 	if err != nil {
