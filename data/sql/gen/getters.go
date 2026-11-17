@@ -1,8 +1,11 @@
 //go:build ignore
 
-// getters writes z_getters.go in a sqlc folder: a Get and Set method for every field of the
+// getters writes z_getters.go in a sqlc folder: a Get and Set method for the fields of the
 // table models in z_models.go and of the ...Params structs in the query files. It reads the
 // structs sqlc wrote, so each method has the exact type sqlc chose, overrides included.
+//
+// It writes only the methods whose name the hand-written code has, as most fields are only ever
+// read as fields. To use one that is not there yet, write the call and run go generate.
 package main
 
 import (
@@ -15,6 +18,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,6 +44,10 @@ func writeGetters(folder string) error {
 		return err
 	}
 	files := append([]string{filepath.Join(folder, "z_models.go")}, queryFiles...)
+	used, err := usedMethods("../..")
+	if err != nil {
+		return err
+	}
 
 	pkg := ""
 	imports := map[string]string{} // import path to its spec as written
@@ -65,12 +73,14 @@ func writeGetters(folder string) error {
 					continue
 				}
 				for _, field := range structType.Fields.List {
-					if err := addImports(file, field.Type, imports); err != nil {
-						return fmt.Errorf("%s.%s: %w", typeSpec.Name.Name, field.Names, err)
-					}
 					fieldType := types.ExprString(field.Type)
 					for _, name := range field.Names {
-						writeMethods(&body, typeSpec.Name.Name, name.Name, fieldType)
+						if !writeMethods(&body, used, typeSpec.Name.Name, name.Name, fieldType) {
+							continue
+						}
+						if err := addImports(file, field.Type, imports); err != nil {
+							return fmt.Errorf("%s.%s: %w", typeSpec.Name.Name, field.Names, err)
+						}
 					}
 				}
 			}
@@ -123,14 +133,47 @@ func addImports(file *ast.File, expr ast.Expr, imports map[string]string) error 
 	return err
 }
 
-func writeMethods(sb *strings.Builder, structName, fieldName, fieldType string) {
-	fmt.Fprintf(sb, "// Get%s returns the %s value.\n", fieldName, fieldName)
-	fmt.Fprintf(sb, "func (m %s) Get%s() %s {\n", structName, fieldName, fieldType)
-	fmt.Fprintf(sb, "	return m.%s\n", fieldName)
-	sb.WriteString("}\n\n")
+// methodName is a Get or Set method's name wherever it is written: a call, a method value or an interface's method
+var methodName = regexp.MustCompile(`\b[GS]et[A-Z]\w*`)
 
-	fmt.Fprintf(sb, "// Set%s sets the %s value and returns the updated %s.\n", fieldName, fieldName, structName)
-	fmt.Fprintf(sb, "func (m *%s) Set%s(v %s) {\n", structName, fieldName, fieldType)
-	fmt.Fprintf(sb, "	m.%s = v\n", fieldName)
-	sb.WriteString("}\n\n")
+// usedMethods are the names of the Get and Set methods the hand-written Go and templ files under root have. Generated
+// files are left out, so a method only another generated file would name is not kept by it.
+func usedMethods(root string) (map[string]bool, error) {
+	used := map[string]bool{}
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		name := entry.Name()
+		if entry.IsDir() && strings.HasPrefix(name, ".") && path != root {
+			return filepath.SkipDir
+		}
+		generated := strings.HasPrefix(name, "z_") || strings.HasSuffix(name, ".gen.go") || strings.HasSuffix(name, "_templ.go")
+		if entry.IsDir() || generated || (filepath.Ext(name) != ".go" && filepath.Ext(name) != ".templ") {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		for _, match := range methodName.FindAll(content, -1) {
+			used[string(match)] = true
+		}
+		return err
+	})
+	return used, err
+}
+
+// writeMethods writes a field's Get and Set methods, each only if its name is used, and says whether it wrote one
+func writeMethods(sb *strings.Builder, used map[string]bool, structName, fieldName, fieldType string) bool {
+	if used["Get"+fieldName] {
+		fmt.Fprintf(sb, "// Get%s returns the %s value.\n", fieldName, fieldName)
+		fmt.Fprintf(sb, "func (m %s) Get%s() %s {\n", structName, fieldName, fieldType)
+		fmt.Fprintf(sb, "	return m.%s\n", fieldName)
+		sb.WriteString("}\n\n")
+	}
+	if used["Set"+fieldName] {
+		fmt.Fprintf(sb, "// Set%s sets the %s value and returns the updated %s.\n", fieldName, fieldName, structName)
+		fmt.Fprintf(sb, "func (m *%s) Set%s(v %s) {\n", structName, fieldName, fieldType)
+		fmt.Fprintf(sb, "	m.%s = v\n", fieldName)
+		sb.WriteString("}\n\n")
+	}
+	return used["Get"+fieldName] || used["Set"+fieldName]
 }

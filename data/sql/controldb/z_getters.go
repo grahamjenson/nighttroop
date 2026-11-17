@@ -4,7 +4,6 @@ package controldb
 import (
 	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/errors"
 )
 
 
@@ -23,41 +22,6 @@ func (m ControlIdentity) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetName(v string) {
-	m.Name = v
-}
-
-// GetPasswordHash returns the PasswordHash value.
-func (m ControlIdentity) GetPasswordHash() string {
-	return m.PasswordHash
-}
-
-// SetPasswordHash sets the PasswordHash value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetPasswordHash(v string) {
-	m.PasswordHash = v
-}
-
-// GetTotpSecretEnc returns the TotpSecretEnc value.
-func (m ControlIdentity) GetTotpSecretEnc() string {
-	return m.TotpSecretEnc
-}
-
-// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetTotpSecretEnc(v string) {
-	m.TotpSecretEnc = v
-}
-
-// GetRole returns the Role value.
-func (m ControlIdentity) GetRole() consts.ControlRole {
-	return m.Role
-}
-
-// SetRole sets the Role value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetRole(v consts.ControlRole) {
-	m.Role = v
-}
-
 // GetCreatedAt returns the CreatedAt value.
 func (m ControlIdentity) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -66,56 +30,6 @@ func (m ControlIdentity) GetCreatedAt() int64 {
 // SetCreatedAt sets the CreatedAt value and returns the updated ControlIdentity.
 func (m *ControlIdentity) SetCreatedAt(v int64) {
 	m.CreatedAt = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m ControlIdentity) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetLastSeenAt(v *int64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m ControlIdentity) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetLastWriteAt(v *int64) {
-	m.LastWriteAt = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m ControlIdentity) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m ControlIdentity) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m ControlIdentity) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
-}
-
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetCreatedByIdentityID(v int64) {
-	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -143,11 +57,6 @@ func (m ControlIdentity) GetCredentialsChangedAt() int64 {
 	return m.CredentialsChangedAt
 }
 
-// SetCredentialsChangedAt sets the CredentialsChangedAt value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetCredentialsChangedAt(v int64) {
-	m.CredentialsChangedAt = v
-}
-
 // GetID returns the ID value.
 func (m Passkey) GetID() int64 {
 	return m.ID
@@ -158,54 +67,9 @@ func (m *Passkey) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m Passkey) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated Passkey.
-func (m *Passkey) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m Passkey) GetIdentityID() *int64 {
 	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated Passkey.
-func (m *Passkey) SetIdentityID(v *int64) {
-	m.IdentityID = v
-}
-
-// GetControlIdentityID returns the ControlIdentityID value.
-func (m Passkey) GetControlIdentityID() *int64 {
-	return m.ControlIdentityID
-}
-
-// SetControlIdentityID sets the ControlIdentityID value and returns the updated Passkey.
-func (m *Passkey) SetControlIdentityID(v *int64) {
-	m.ControlIdentityID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m Passkey) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated Passkey.
-func (m *Passkey) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m Passkey) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated Passkey.
-func (m *Passkey) SetCredentialJson(v string) {
-	m.CredentialJson = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -218,16 +82,6 @@ func (m *Passkey) SetCreatedAt(v int64) {
 	m.CreatedAt = v
 }
 
-// GetLastUsedAt returns the LastUsedAt value.
-func (m Passkey) GetLastUsedAt() *int64 {
-	return m.LastUsedAt
-}
-
-// SetLastUsedAt sets the LastUsedAt value and returns the updated Passkey.
-func (m *Passkey) SetLastUsedAt(v *int64) {
-	m.LastUsedAt = v
-}
-
 // GetID returns the ID value.
 func (m PushCredential) GetID() int64 {
 	return m.ID
@@ -238,84 +92,9 @@ func (m *PushCredential) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m PushCredential) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated PushCredential.
-func (m *PushCredential) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m PushCredential) GetName() string {
 	return m.Name
-}
-
-// SetName sets the Name value and returns the updated PushCredential.
-func (m *PushCredential) SetName(v string) {
-	m.Name = v
-}
-
-// GetProvider returns the Provider value.
-func (m PushCredential) GetProvider() consts.PushProvider {
-	return m.Provider
-}
-
-// SetProvider sets the Provider value and returns the updated PushCredential.
-func (m *PushCredential) SetProvider(v consts.PushProvider) {
-	m.Provider = v
-}
-
-// GetTeamOrProjectID returns the TeamOrProjectID value.
-func (m PushCredential) GetTeamOrProjectID() string {
-	return m.TeamOrProjectID
-}
-
-// SetTeamOrProjectID sets the TeamOrProjectID value and returns the updated PushCredential.
-func (m *PushCredential) SetTeamOrProjectID(v string) {
-	m.TeamOrProjectID = v
-}
-
-// GetKeyID returns the KeyID value.
-func (m PushCredential) GetKeyID() *string {
-	return m.KeyID
-}
-
-// SetKeyID sets the KeyID value and returns the updated PushCredential.
-func (m *PushCredential) SetKeyID(v *string) {
-	m.KeyID = v
-}
-
-// GetSecretEnc returns the SecretEnc value.
-func (m PushCredential) GetSecretEnc() *string {
-	return m.SecretEnc
-}
-
-// SetSecretEnc sets the SecretEnc value and returns the updated PushCredential.
-func (m *PushCredential) SetSecretEnc(v *string) {
-	m.SecretEnc = v
-}
-
-// GetAppsJson returns the AppsJson value.
-func (m PushCredential) GetAppsJson() string {
-	return m.AppsJson
-}
-
-// SetAppsJson sets the AppsJson value and returns the updated PushCredential.
-func (m *PushCredential) SetAppsJson(v string) {
-	m.AppsJson = v
-}
-
-// GetBundleIdsJson returns the BundleIdsJson value.
-func (m PushCredential) GetBundleIdsJson() *string {
-	return m.BundleIdsJson
-}
-
-// SetBundleIdsJson sets the BundleIdsJson value and returns the updated PushCredential.
-func (m *PushCredential) SetBundleIdsJson(v *string) {
-	m.BundleIdsJson = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -358,84 +137,14 @@ func (m *PushRegistration) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m PushRegistration) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated PushRegistration.
-func (m *PushRegistration) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m PushRegistration) GetIdentityID() int64 {
 	return m.IdentityID
 }
 
-// SetIdentityID sets the IdentityID value and returns the updated PushRegistration.
-func (m *PushRegistration) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
 // GetApp returns the App value.
 func (m PushRegistration) GetApp() consts.PushApp {
 	return m.App
-}
-
-// SetApp sets the App value and returns the updated PushRegistration.
-func (m *PushRegistration) SetApp(v consts.PushApp) {
-	m.App = v
-}
-
-// GetProvider returns the Provider value.
-func (m PushRegistration) GetProvider() consts.PushProvider {
-	return m.Provider
-}
-
-// SetProvider sets the Provider value and returns the updated PushRegistration.
-func (m *PushRegistration) SetProvider(v consts.PushProvider) {
-	m.Provider = v
-}
-
-// GetBundleID returns the BundleID value.
-func (m PushRegistration) GetBundleID() string {
-	return m.BundleID
-}
-
-// SetBundleID sets the BundleID value and returns the updated PushRegistration.
-func (m *PushRegistration) SetBundleID(v string) {
-	m.BundleID = v
-}
-
-// GetProduction returns the Production value.
-func (m PushRegistration) GetProduction() bool {
-	return m.Production
-}
-
-// SetProduction sets the Production value and returns the updated PushRegistration.
-func (m *PushRegistration) SetProduction(v bool) {
-	m.Production = v
-}
-
-// GetTokenEnc returns the TokenEnc value.
-func (m PushRegistration) GetTokenEnc() string {
-	return m.TokenEnc
-}
-
-// SetTokenEnc sets the TokenEnc value and returns the updated PushRegistration.
-func (m *PushRegistration) SetTokenEnc(v string) {
-	m.TokenEnc = v
-}
-
-// GetTokenHash returns the TokenHash value.
-func (m PushRegistration) GetTokenHash() string {
-	return m.TokenHash
-}
-
-// SetTokenHash sets the TokenHash value and returns the updated PushRegistration.
-func (m *PushRegistration) SetTokenHash(v string) {
-	m.TokenHash = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -458,26 +167,6 @@ func (m *PushRegistration) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
-// GetLastPushedAt returns the LastPushedAt value.
-func (m PushRegistration) GetLastPushedAt() *int64 {
-	return m.LastPushedAt
-}
-
-// SetLastPushedAt sets the LastPushedAt value and returns the updated PushRegistration.
-func (m *PushRegistration) SetLastPushedAt(v *int64) {
-	m.LastPushedAt = v
-}
-
-// GetLastError returns the LastError value.
-func (m PushRegistration) GetLastError() *string {
-	return m.LastError
-}
-
-// SetLastError sets the LastError value and returns the updated PushRegistration.
-func (m *PushRegistration) SetLastError(v *string) {
-	m.LastError = v
-}
-
 // GetID returns the ID value.
 func (m ServerSetting) GetID() int64 {
 	return m.ID
@@ -486,26 +175,6 @@ func (m ServerSetting) GetID() int64 {
 // SetID sets the ID value and returns the updated ServerSetting.
 func (m *ServerSetting) SetID(v int64) {
 	m.ID = v
-}
-
-// GetPublicSiteCreation returns the PublicSiteCreation value.
-func (m ServerSetting) GetPublicSiteCreation() bool {
-	return m.PublicSiteCreation
-}
-
-// SetPublicSiteCreation sets the PublicSiteCreation value and returns the updated ServerSetting.
-func (m *ServerSetting) SetPublicSiteCreation(v bool) {
-	m.PublicSiteCreation = v
-}
-
-// GetRateLimitsJson returns the RateLimitsJson value.
-func (m ServerSetting) GetRateLimitsJson() string {
-	return m.RateLimitsJson
-}
-
-// SetRateLimitsJson sets the RateLimitsJson value and returns the updated ServerSetting.
-func (m *ServerSetting) SetRateLimitsJson(v string) {
-	m.RateLimitsJson = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -518,16 +187,6 @@ func (m *ServerSetting) SetUpdatedAt(v *int64) {
 	m.UpdatedAt = v
 }
 
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m ServerSetting) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ServerSetting.
-func (m *ServerSetting) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
 // GetID returns the ID value.
 func (m Site) GetID() string {
 	return m.ID
@@ -538,26 +197,6 @@ func (m *Site) SetID(v string) {
 	m.ID = v
 }
 
-// GetBatch returns the Batch value.
-func (m Site) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated Site.
-func (m *Site) SetBatch(v string) {
-	m.Batch = v
-}
-
-// GetBackupKeyHash returns the BackupKeyHash value.
-func (m Site) GetBackupKeyHash() string {
-	return m.BackupKeyHash
-}
-
-// SetBackupKeyHash sets the BackupKeyHash value and returns the updated Site.
-func (m *Site) SetBackupKeyHash(v string) {
-	m.BackupKeyHash = v
-}
-
 // GetCreatedAt returns the CreatedAt value.
 func (m Site) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -566,136 +205,6 @@ func (m Site) GetCreatedAt() int64 {
 // SetCreatedAt sets the CreatedAt value and returns the updated Site.
 func (m *Site) SetCreatedAt(v int64) {
 	m.CreatedAt = v
-}
-
-// GetMaxDbSizeKbLimit returns the MaxDbSizeKbLimit value.
-func (m Site) GetMaxDbSizeKbLimit() *int64 {
-	return m.MaxDbSizeKbLimit
-}
-
-// SetMaxDbSizeKbLimit sets the MaxDbSizeKbLimit value and returns the updated Site.
-func (m *Site) SetMaxDbSizeKbLimit(v *int64) {
-	m.MaxDbSizeKbLimit = v
-}
-
-// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
-func (m Site) GetEstimatedDbSizeKb() *int64 {
-	return m.EstimatedDbSizeKb
-}
-
-// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated Site.
-func (m *Site) SetEstimatedDbSizeKb(v *int64) {
-	m.EstimatedDbSizeKb = v
-}
-
-// GetAbuseScore returns the AbuseScore value.
-func (m Site) GetAbuseScore() float64 {
-	return m.AbuseScore
-}
-
-// SetAbuseScore sets the AbuseScore value and returns the updated Site.
-func (m *Site) SetAbuseScore(v float64) {
-	m.AbuseScore = v
-}
-
-// GetTableSizesJson returns the TableSizesJson value.
-func (m Site) GetTableSizesJson() types.TableSizes {
-	return m.TableSizesJson
-}
-
-// SetTableSizesJson sets the TableSizesJson value and returns the updated Site.
-func (m *Site) SetTableSizesJson(v types.TableSizes) {
-	m.TableSizesJson = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m Site) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated Site.
-func (m *Site) SetLastSeenAt(v *int64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m Site) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated Site.
-func (m *Site) SetLastWriteAt(v *int64) {
-	m.LastWriteAt = v
-}
-
-// GetSummariesCheckedAt returns the SummariesCheckedAt value.
-func (m Site) GetSummariesCheckedAt() *int64 {
-	return m.SummariesCheckedAt
-}
-
-// SetSummariesCheckedAt sets the SummariesCheckedAt value and returns the updated Site.
-func (m *Site) SetSummariesCheckedAt(v *int64) {
-	m.SummariesCheckedAt = v
-}
-
-// GetBackedUpAt returns the BackedUpAt value.
-func (m Site) GetBackedUpAt() *int64 {
-	return m.BackedUpAt
-}
-
-// SetBackedUpAt sets the BackedUpAt value and returns the updated Site.
-func (m *Site) SetBackedUpAt(v *int64) {
-	m.BackedUpAt = v
-}
-
-// GetBackupSizeKb returns the BackupSizeKb value.
-func (m Site) GetBackupSizeKb() *int64 {
-	return m.BackupSizeKb
-}
-
-// SetBackupSizeKb sets the BackupSizeKb value and returns the updated Site.
-func (m *Site) SetBackupSizeKb(v *int64) {
-	m.BackupSizeKb = v
-}
-
-// GetBackupUploadedAt returns the BackupUploadedAt value.
-func (m Site) GetBackupUploadedAt() *int64 {
-	return m.BackupUploadedAt
-}
-
-// SetBackupUploadedAt sets the BackupUploadedAt value and returns the updated Site.
-func (m *Site) SetBackupUploadedAt(v *int64) {
-	m.BackupUploadedAt = v
-}
-
-// GetState returns the State value.
-func (m Site) GetState() string {
-	return m.State
-}
-
-// SetState sets the State value and returns the updated Site.
-func (m *Site) SetState(v string) {
-	m.State = v
-}
-
-// GetDisabledAt returns the DisabledAt value.
-func (m Site) GetDisabledAt() *int64 {
-	return m.DisabledAt
-}
-
-// SetDisabledAt sets the DisabledAt value and returns the updated Site.
-func (m *Site) SetDisabledAt(v *int64) {
-	m.DisabledAt = v
-}
-
-// GetArchivedAt returns the ArchivedAt value.
-func (m Site) GetArchivedAt() *int64 {
-	return m.ArchivedAt
-}
-
-// SetArchivedAt sets the ArchivedAt value and returns the updated Site.
-func (m *Site) SetArchivedAt(v *int64) {
-	m.ArchivedAt = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -1178,64 +687,9 @@ func (m *Site) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m SiteConnector) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SiteConnector.
-func (m *SiteConnector) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetType returns the Type value.
 func (m SiteConnector) GetType() consts.ConnectorType {
 	return m.Type
-}
-
-// SetType sets the Type value and returns the updated SiteConnector.
-func (m *SiteConnector) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
-func (m SiteConnector) GetUrlOrUsernameEnc() *string {
-	return m.UrlOrUsernameEnc
-}
-
-// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated SiteConnector.
-func (m *SiteConnector) SetUrlOrUsernameEnc(v *string) {
-	m.UrlOrUsernameEnc = v
-}
-
-// GetPasswordEnc returns the PasswordEnc value.
-func (m SiteConnector) GetPasswordEnc() *string {
-	return m.PasswordEnc
-}
-
-// SetPasswordEnc sets the PasswordEnc value and returns the updated SiteConnector.
-func (m *SiteConnector) SetPasswordEnc(v *string) {
-	m.PasswordEnc = v
-}
-
-// GetUrlHostMac returns the UrlHostMac value.
-func (m SiteConnector) GetUrlHostMac() *string {
-	return m.UrlHostMac
-}
-
-// SetUrlHostMac sets the UrlHostMac value and returns the updated SiteConnector.
-func (m *SiteConnector) SetUrlHostMac(v *string) {
-	m.UrlHostMac = v
-}
-
-// GetRegion returns the Region value.
-func (m SiteConnector) GetRegion() *string {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated SiteConnector.
-func (m *SiteConnector) SetRegion(v *string) {
-	m.Region = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -1258,276 +712,6 @@ func (m *SiteConnector) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
-// GetEnabled returns the Enabled value.
-func (m SiteConnector) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated SiteConnector.
-func (m *SiteConnector) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetFirstSuccessfulSyncTime returns the FirstSuccessfulSyncTime value.
-func (m SiteConnector) GetFirstSuccessfulSyncTime() *int64 {
-	return m.FirstSuccessfulSyncTime
-}
-
-// SetFirstSuccessfulSyncTime sets the FirstSuccessfulSyncTime value and returns the updated SiteConnector.
-func (m *SiteConnector) SetFirstSuccessfulSyncTime(v *int64) {
-	m.FirstSuccessfulSyncTime = v
-}
-
-// GetBackfillStartedAt returns the BackfillStartedAt value.
-func (m SiteConnector) GetBackfillStartedAt() *int64 {
-	return m.BackfillStartedAt
-}
-
-// SetBackfillStartedAt sets the BackfillStartedAt value and returns the updated SiteConnector.
-func (m *SiteConnector) SetBackfillStartedAt(v *int64) {
-	m.BackfillStartedAt = v
-}
-
-// GetLastBackfillFrom returns the LastBackfillFrom value.
-func (m SiteConnector) GetLastBackfillFrom() *int64 {
-	return m.LastBackfillFrom
-}
-
-// SetLastBackfillFrom sets the LastBackfillFrom value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastBackfillFrom(v *int64) {
-	m.LastBackfillFrom = v
-}
-
-// GetLastBackfillTo returns the LastBackfillTo value.
-func (m SiteConnector) GetLastBackfillTo() *int64 {
-	return m.LastBackfillTo
-}
-
-// SetLastBackfillTo sets the LastBackfillTo value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastBackfillTo(v *int64) {
-	m.LastBackfillTo = v
-}
-
-// GetLastBackfillFinishedAt returns the LastBackfillFinishedAt value.
-func (m SiteConnector) GetLastBackfillFinishedAt() *int64 {
-	return m.LastBackfillFinishedAt
-}
-
-// SetLastBackfillFinishedAt sets the LastBackfillFinishedAt value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastBackfillFinishedAt(v *int64) {
-	m.LastBackfillFinishedAt = v
-}
-
-// GetLastBackfillDuration returns the LastBackfillDuration value.
-func (m SiteConnector) GetLastBackfillDuration() *int64 {
-	return m.LastBackfillDuration
-}
-
-// SetLastBackfillDuration sets the LastBackfillDuration value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastBackfillDuration(v *int64) {
-	m.LastBackfillDuration = v
-}
-
-// GetLastBackfillRecords returns the LastBackfillRecords value.
-func (m SiteConnector) GetLastBackfillRecords() *int64 {
-	return m.LastBackfillRecords
-}
-
-// SetLastBackfillRecords sets the LastBackfillRecords value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastBackfillRecords(v *int64) {
-	m.LastBackfillRecords = v
-}
-
-// GetLastBackfillError returns the LastBackfillError value.
-func (m SiteConnector) GetLastBackfillError() *string {
-	return m.LastBackfillError
-}
-
-// SetLastBackfillError sets the LastBackfillError value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastBackfillError(v *string) {
-	m.LastBackfillError = v
-}
-
-// GetTotalBackfills returns the TotalBackfills value.
-func (m SiteConnector) GetTotalBackfills() int64 {
-	return m.TotalBackfills
-}
-
-// SetTotalBackfills sets the TotalBackfills value and returns the updated SiteConnector.
-func (m *SiteConnector) SetTotalBackfills(v int64) {
-	m.TotalBackfills = v
-}
-
-// GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
-func (m SiteConnector) GetSyncIntervalSecondsReason() string {
-	return m.SyncIntervalSecondsReason
-}
-
-// SetSyncIntervalSecondsReason sets the SyncIntervalSecondsReason value and returns the updated SiteConnector.
-func (m *SiteConnector) SetSyncIntervalSecondsReason(v string) {
-	m.SyncIntervalSecondsReason = v
-}
-
-// GetSyncIntervalSeconds returns the SyncIntervalSeconds value.
-func (m SiteConnector) GetSyncIntervalSeconds() int64 {
-	return m.SyncIntervalSeconds
-}
-
-// SetSyncIntervalSeconds sets the SyncIntervalSeconds value and returns the updated SiteConnector.
-func (m *SiteConnector) SetSyncIntervalSeconds(v int64) {
-	m.SyncIntervalSeconds = v
-}
-
-// GetLastAttemptedSync returns the LastAttemptedSync value.
-func (m SiteConnector) GetLastAttemptedSync() *int64 {
-	return m.LastAttemptedSync
-}
-
-// SetLastAttemptedSync sets the LastAttemptedSync value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastAttemptedSync(v *int64) {
-	m.LastAttemptedSync = v
-}
-
-// GetLastSuccessfulSync returns the LastSuccessfulSync value.
-func (m SiteConnector) GetLastSuccessfulSync() *int64 {
-	return m.LastSuccessfulSync
-}
-
-// SetLastSuccessfulSync sets the LastSuccessfulSync value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastSuccessfulSync(v *int64) {
-	m.LastSuccessfulSync = v
-}
-
-// GetLastFailedSync returns the LastFailedSync value.
-func (m SiteConnector) GetLastFailedSync() *int64 {
-	return m.LastFailedSync
-}
-
-// SetLastFailedSync sets the LastFailedSync value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastFailedSync(v *int64) {
-	m.LastFailedSync = v
-}
-
-// GetTotalSyncs returns the TotalSyncs value.
-func (m SiteConnector) GetTotalSyncs() *int64 {
-	return m.TotalSyncs
-}
-
-// SetTotalSyncs sets the TotalSyncs value and returns the updated SiteConnector.
-func (m *SiteConnector) SetTotalSyncs(v *int64) {
-	m.TotalSyncs = v
-}
-
-// GetTotalSuccessfulSyncs returns the TotalSuccessfulSyncs value.
-func (m SiteConnector) GetTotalSuccessfulSyncs() *int64 {
-	return m.TotalSuccessfulSyncs
-}
-
-// SetTotalSuccessfulSyncs sets the TotalSuccessfulSyncs value and returns the updated SiteConnector.
-func (m *SiteConnector) SetTotalSuccessfulSyncs(v *int64) {
-	m.TotalSuccessfulSyncs = v
-}
-
-// GetTotalFailedSyncs returns the TotalFailedSyncs value.
-func (m SiteConnector) GetTotalFailedSyncs() *int64 {
-	return m.TotalFailedSyncs
-}
-
-// SetTotalFailedSyncs sets the TotalFailedSyncs value and returns the updated SiteConnector.
-func (m *SiteConnector) SetTotalFailedSyncs(v *int64) {
-	m.TotalFailedSyncs = v
-}
-
-// GetTotalRecords returns the TotalRecords value.
-func (m SiteConnector) GetTotalRecords() int64 {
-	return m.TotalRecords
-}
-
-// SetTotalRecords sets the TotalRecords value and returns the updated SiteConnector.
-func (m *SiteConnector) SetTotalRecords(v int64) {
-	m.TotalRecords = v
-}
-
-// GetLastSyncRecords returns the LastSyncRecords value.
-func (m SiteConnector) GetLastSyncRecords() *int64 {
-	return m.LastSyncRecords
-}
-
-// SetLastSyncRecords sets the LastSyncRecords value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastSyncRecords(v *int64) {
-	m.LastSyncRecords = v
-}
-
-// GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
-func (m SiteConnector) GetConsecutiveSuccessfulSyncs() *int64 {
-	return m.ConsecutiveSuccessfulSyncs
-}
-
-// SetConsecutiveSuccessfulSyncs sets the ConsecutiveSuccessfulSyncs value and returns the updated SiteConnector.
-func (m *SiteConnector) SetConsecutiveSuccessfulSyncs(v *int64) {
-	m.ConsecutiveSuccessfulSyncs = v
-}
-
-// GetConsecutiveFailedSyncs returns the ConsecutiveFailedSyncs value.
-func (m SiteConnector) GetConsecutiveFailedSyncs() *int64 {
-	return m.ConsecutiveFailedSyncs
-}
-
-// SetConsecutiveFailedSyncs sets the ConsecutiveFailedSyncs value and returns the updated SiteConnector.
-func (m *SiteConnector) SetConsecutiveFailedSyncs(v *int64) {
-	m.ConsecutiveFailedSyncs = v
-}
-
-// GetPreviousSyncErrors returns the PreviousSyncErrors value.
-func (m SiteConnector) GetPreviousSyncErrors() errors.ErrorList {
-	return m.PreviousSyncErrors
-}
-
-// SetPreviousSyncErrors sets the PreviousSyncErrors value and returns the updated SiteConnector.
-func (m *SiteConnector) SetPreviousSyncErrors(v errors.ErrorList) {
-	m.PreviousSyncErrors = v
-}
-
-// GetTotalEma returns the TotalEma value.
-func (m SiteConnector) GetTotalEma() *float64 {
-	return m.TotalEma
-}
-
-// SetTotalEma sets the TotalEma value and returns the updated SiteConnector.
-func (m *SiteConnector) SetTotalEma(v *float64) {
-	m.TotalEma = v
-}
-
-// GetSuccessEma returns the SuccessEma value.
-func (m SiteConnector) GetSuccessEma() *float64 {
-	return m.SuccessEma
-}
-
-// SetSuccessEma sets the SuccessEma value and returns the updated SiteConnector.
-func (m *SiteConnector) SetSuccessEma(v *float64) {
-	m.SuccessEma = v
-}
-
-// GetFailureEma returns the FailureEma value.
-func (m SiteConnector) GetFailureEma() *float64 {
-	return m.FailureEma
-}
-
-// SetFailureEma sets the FailureEma value and returns the updated SiteConnector.
-func (m *SiteConnector) SetFailureEma(v *float64) {
-	m.FailureEma = v
-}
-
-// GetLastSyncDuration returns the LastSyncDuration value.
-func (m SiteConnector) GetLastSyncDuration() *int64 {
-	return m.LastSyncDuration
-}
-
-// SetLastSyncDuration sets the LastSyncDuration value and returns the updated SiteConnector.
-func (m *SiteConnector) SetLastSyncDuration(v *int64) {
-	m.LastSyncDuration = v
-}
-
 // GetID returns the ID value.
 func (m SiteIdentity) GetID() int64 {
 	return m.ID
@@ -1538,64 +722,9 @@ func (m *SiteIdentity) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m SiteIdentity) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m SiteIdentity) GetName() string {
 	return m.Name
-}
-
-// SetName sets the Name value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetName(v string) {
-	m.Name = v
-}
-
-// GetPasswordHash returns the PasswordHash value.
-func (m SiteIdentity) GetPasswordHash() string {
-	return m.PasswordHash
-}
-
-// SetPasswordHash sets the PasswordHash value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetPasswordHash(v string) {
-	m.PasswordHash = v
-}
-
-// GetTotpSecretEnc returns the TotpSecretEnc value.
-func (m SiteIdentity) GetTotpSecretEnc() string {
-	return m.TotpSecretEnc
-}
-
-// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetTotpSecretEnc(v string) {
-	m.TotpSecretEnc = v
-}
-
-// GetRole returns the Role value.
-func (m SiteIdentity) GetRole() consts.IdentityRole {
-	return m.Role
-}
-
-// SetRole sets the Role value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetRole(v consts.IdentityRole) {
-	m.Role = v
-}
-
-// GetClient returns the Client value.
-func (m SiteIdentity) GetClient() *string {
-	return m.Client
-}
-
-// SetClient sets the Client value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetClient(v *string) {
-	m.Client = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -1608,56 +737,6 @@ func (m *SiteIdentity) SetCreatedAt(v int64) {
 	m.CreatedAt = v
 }
 
-// GetLastSeenAt returns the LastSeenAt value.
-func (m SiteIdentity) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetLastSeenAt(v *int64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m SiteIdentity) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetLastWriteAt(v *int64) {
-	m.LastWriteAt = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m SiteIdentity) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m SiteIdentity) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m SiteIdentity) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
-}
-
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetCreatedByIdentityID(v int64) {
-	m.CreatedByIdentityID = v
-}
-
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m SiteIdentity) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
@@ -1668,34 +747,9 @@ func (m *SiteIdentity) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
-// GetEnabled returns the Enabled value.
-func (m SiteIdentity) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
 // GetCredentialsChangedAt returns the CredentialsChangedAt value.
 func (m SiteIdentity) GetCredentialsChangedAt() int64 {
 	return m.CredentialsChangedAt
-}
-
-// SetCredentialsChangedAt sets the CredentialsChangedAt value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetCredentialsChangedAt(v int64) {
-	m.CredentialsChangedAt = v
-}
-
-// GetNightscoutTokenDigest returns the NightscoutTokenDigest value.
-func (m SiteIdentity) GetNightscoutTokenDigest() *string {
-	return m.NightscoutTokenDigest
-}
-
-// SetNightscoutTokenDigest sets the NightscoutTokenDigest value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetNightscoutTokenDigest(v *string) {
-	m.NightscoutTokenDigest = v
 }
 
 // GetUnits returns the Units value.
@@ -2173,69 +1227,9 @@ func (m SqliteSequence) GetName() interface{} {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated SqliteSequence.
-func (m *SqliteSequence) SetName(v interface{}) {
-	m.Name = v
-}
-
-// GetSeq returns the Seq value.
-func (m SqliteSequence) GetSeq() interface{} {
-	return m.Seq
-}
-
-// SetSeq sets the Seq value and returns the updated SqliteSequence.
-func (m *SqliteSequence) SetSeq(v interface{}) {
-	m.Seq = v
-}
-
 // GetName returns the Name value.
 func (m CreateControlIdentityParams) GetName() string {
 	return m.Name
-}
-
-// SetName sets the Name value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetPasswordHash returns the PasswordHash value.
-func (m CreateControlIdentityParams) GetPasswordHash() string {
-	return m.PasswordHash
-}
-
-// SetPasswordHash sets the PasswordHash value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetPasswordHash(v string) {
-	m.PasswordHash = v
-}
-
-// GetTotpSecretEnc returns the TotpSecretEnc value.
-func (m CreateControlIdentityParams) GetTotpSecretEnc() string {
-	return m.TotpSecretEnc
-}
-
-// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetTotpSecretEnc(v string) {
-	m.TotpSecretEnc = v
-}
-
-// GetRole returns the Role value.
-func (m CreateControlIdentityParams) GetRole() consts.ControlRole {
-	return m.Role
-}
-
-// SetRole sets the Role value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetRole(v consts.ControlRole) {
-	m.Role = v
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m CreateControlIdentityParams) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
-}
-
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetCreatedByIdentityID(v int64) {
-	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -2263,11 +1257,6 @@ func (m GetControlIdentityParams) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated GetControlIdentityParams.
-func (m *GetControlIdentityParams) SetName(v string) {
-	m.Name = v
-}
-
 // GetID returns the ID value.
 func (m GetControlIdentityByIDParams) GetID() int64 {
 	return m.ID
@@ -2276,36 +1265,6 @@ func (m GetControlIdentityByIDParams) GetID() int64 {
 // SetID sets the ID value and returns the updated GetControlIdentityByIDParams.
 func (m *GetControlIdentityByIDParams) SetID(v int64) {
 	m.ID = v
-}
-
-// GetPasswordHash returns the PasswordHash value.
-func (m UpdateControlIdentityPasswordParams) GetPasswordHash() string {
-	return m.PasswordHash
-}
-
-// SetPasswordHash sets the PasswordHash value and returns the updated UpdateControlIdentityPasswordParams.
-func (m *UpdateControlIdentityPasswordParams) SetPasswordHash(v string) {
-	m.PasswordHash = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m UpdateControlIdentityPasswordParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateControlIdentityPasswordParams.
-func (m *UpdateControlIdentityPasswordParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateControlIdentityPasswordParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateControlIdentityPasswordParams.
-func (m *UpdateControlIdentityPasswordParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -2318,36 +1277,6 @@ func (m *UpdateControlIdentityPasswordParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetRole returns the Role value.
-func (m UpdateControlIdentityRoleParams) GetRole() consts.ControlRole {
-	return m.Role
-}
-
-// SetRole sets the Role value and returns the updated UpdateControlIdentityRoleParams.
-func (m *UpdateControlIdentityRoleParams) SetRole(v consts.ControlRole) {
-	m.Role = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m UpdateControlIdentityRoleParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateControlIdentityRoleParams.
-func (m *UpdateControlIdentityRoleParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateControlIdentityRoleParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateControlIdentityRoleParams.
-func (m *UpdateControlIdentityRoleParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
 // GetID returns the ID value.
 func (m UpdateControlIdentityRoleParams) GetID() int64 {
 	return m.ID
@@ -2356,36 +1285,6 @@ func (m UpdateControlIdentityRoleParams) GetID() int64 {
 // SetID sets the ID value and returns the updated UpdateControlIdentityRoleParams.
 func (m *UpdateControlIdentityRoleParams) SetID(v int64) {
 	m.ID = v
-}
-
-// GetTotpSecretEnc returns the TotpSecretEnc value.
-func (m UpdateControlIdentityTOTPParams) GetTotpSecretEnc() string {
-	return m.TotpSecretEnc
-}
-
-// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated UpdateControlIdentityTOTPParams.
-func (m *UpdateControlIdentityTOTPParams) SetTotpSecretEnc(v string) {
-	m.TotpSecretEnc = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m UpdateControlIdentityTOTPParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateControlIdentityTOTPParams.
-func (m *UpdateControlIdentityTOTPParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateControlIdentityTOTPParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateControlIdentityTOTPParams.
-func (m *UpdateControlIdentityTOTPParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -2398,94 +1297,9 @@ func (m *UpdateControlIdentityTOTPParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetControlIdentityID returns the ControlIdentityID value.
-func (m CreateControlPasskeyParams) GetControlIdentityID() int64 {
-	return m.ControlIdentityID
-}
-
-// SetControlIdentityID sets the ControlIdentityID value and returns the updated CreateControlPasskeyParams.
-func (m *CreateControlPasskeyParams) SetControlIdentityID(v int64) {
-	m.ControlIdentityID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m CreateControlPasskeyParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated CreateControlPasskeyParams.
-func (m *CreateControlPasskeyParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m CreateControlPasskeyParams) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated CreateControlPasskeyParams.
-func (m *CreateControlPasskeyParams) SetCredentialJson(v string) {
-	m.CredentialJson = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CreateSiteIdentityPasskeyParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m CreateSiteIdentityPasskeyParams) GetIdentityID() int64 {
 	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m CreateSiteIdentityPasskeyParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m CreateSiteIdentityPasskeyParams) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetCredentialJson(v string) {
-	m.CredentialJson = v
-}
-
-// GetControlIdentityID returns the ControlIdentityID value.
-func (m DeleteControlIdentityPasskeysParams) GetControlIdentityID() int64 {
-	return m.ControlIdentityID
-}
-
-// SetControlIdentityID sets the ControlIdentityID value and returns the updated DeleteControlIdentityPasskeysParams.
-func (m *DeleteControlIdentityPasskeysParams) SetControlIdentityID(v int64) {
-	m.ControlIdentityID = v
-}
-
-// GetControlIdentityID returns the ControlIdentityID value.
-func (m DeleteControlPasskeyParams) GetControlIdentityID() int64 {
-	return m.ControlIdentityID
-}
-
-// SetControlIdentityID sets the ControlIdentityID value and returns the updated DeleteControlPasskeyParams.
-func (m *DeleteControlPasskeyParams) SetControlIdentityID(v int64) {
-	m.ControlIdentityID = v
 }
 
 // GetID returns the ID value.
@@ -2498,44 +1312,14 @@ func (m *DeleteControlPasskeyParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m DeleteSiteAdminPasskeysParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSiteAdminPasskeysParams.
-func (m *DeleteSiteAdminPasskeysParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m DeleteSiteAdminPasskeysParams) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated DeleteSiteAdminPasskeysParams.
-func (m *DeleteSiteAdminPasskeysParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteSiteIdentityPasskeyParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityPasskeyParams.
-func (m *DeleteSiteIdentityPasskeyParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m DeleteSiteIdentityPasskeyParams) GetIdentityID() int64 {
 	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated DeleteSiteIdentityPasskeyParams.
-func (m *DeleteSiteIdentityPasskeyParams) SetIdentityID(v int64) {
-	m.IdentityID = v
 }
 
 // GetID returns the ID value.
@@ -2548,74 +1332,9 @@ func (m *DeleteSiteIdentityPasskeyParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m DeleteSiteIdentityPasskeysParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityPasskeysParams.
-func (m *DeleteSiteIdentityPasskeysParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m DeleteSiteIdentityPasskeysParams) GetIdentityID() int64 {
 	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated DeleteSiteIdentityPasskeysParams.
-func (m *DeleteSiteIdentityPasskeysParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m GetControlPasskeyParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated GetControlPasskeyParams.
-func (m *GetControlPasskeyParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSiteIdentityPasskeyParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityPasskeyParams.
-func (m *GetSiteIdentityPasskeyParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m GetSiteIdentityPasskeyParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated GetSiteIdentityPasskeyParams.
-func (m *GetSiteIdentityPasskeyParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetControlIdentityID returns the ControlIdentityID value.
-func (m ListControlPasskeysParams) GetControlIdentityID() int64 {
-	return m.ControlIdentityID
-}
-
-// SetControlIdentityID sets the ControlIdentityID value and returns the updated ListControlPasskeysParams.
-func (m *ListControlPasskeysParams) SetControlIdentityID(v int64) {
-	m.ControlIdentityID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m ListSiteIdentityPasskeysParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated ListSiteIdentityPasskeysParams.
-func (m *ListSiteIdentityPasskeysParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetIdentityID returns the IdentityID value.
@@ -2623,179 +1342,14 @@ func (m ListSiteIdentityPasskeysParams) GetIdentityID() int64 {
 	return m.IdentityID
 }
 
-// SetIdentityID sets the IdentityID value and returns the updated ListSiteIdentityPasskeysParams.
-func (m *ListSiteIdentityPasskeysParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m UpdateControlPasskeyUsedParams) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated UpdateControlPasskeyUsedParams.
-func (m *UpdateControlPasskeyUsedParams) SetCredentialJson(v string) {
-	m.CredentialJson = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m UpdateControlPasskeyUsedParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated UpdateControlPasskeyUsedParams.
-func (m *UpdateControlPasskeyUsedParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m UpdateSiteIdentityPasskeyUsedParams) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
-func (m *UpdateSiteIdentityPasskeyUsedParams) SetCredentialJson(v string) {
-	m.CredentialJson = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSiteIdentityPasskeyUsedParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
-func (m *UpdateSiteIdentityPasskeyUsedParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m UpdateSiteIdentityPasskeyUsedParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
-func (m *UpdateSiteIdentityPasskeyUsedParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CountPushCredentialsParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CountPushCredentialsParams.
-func (m *CountPushCredentialsParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CountPushRegistrationsParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CountPushRegistrationsParams.
-func (m *CountPushRegistrationsParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m CountPushRegistrationsParams) GetIdentityID() int64 {
 	return m.IdentityID
 }
 
-// SetIdentityID sets the IdentityID value and returns the updated CountPushRegistrationsParams.
-func (m *CountPushRegistrationsParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetTokenHash returns the TokenHash value.
-func (m CountPushRegistrationsParams) GetTokenHash() string {
-	return m.TokenHash
-}
-
-// SetTokenHash sets the TokenHash value and returns the updated CountPushRegistrationsParams.
-func (m *CountPushRegistrationsParams) SetTokenHash(v string) {
-	m.TokenHash = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CreatePushCredentialParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m CreatePushCredentialParams) GetName() string {
 	return m.Name
-}
-
-// SetName sets the Name value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetProvider returns the Provider value.
-func (m CreatePushCredentialParams) GetProvider() consts.PushProvider {
-	return m.Provider
-}
-
-// SetProvider sets the Provider value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetProvider(v consts.PushProvider) {
-	m.Provider = v
-}
-
-// GetTeamOrProjectID returns the TeamOrProjectID value.
-func (m CreatePushCredentialParams) GetTeamOrProjectID() string {
-	return m.TeamOrProjectID
-}
-
-// SetTeamOrProjectID sets the TeamOrProjectID value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetTeamOrProjectID(v string) {
-	m.TeamOrProjectID = v
-}
-
-// GetKeyID returns the KeyID value.
-func (m CreatePushCredentialParams) GetKeyID() *string {
-	return m.KeyID
-}
-
-// SetKeyID sets the KeyID value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetKeyID(v *string) {
-	m.KeyID = v
-}
-
-// GetSecretEnc returns the SecretEnc value.
-func (m CreatePushCredentialParams) GetSecretEnc() *string {
-	return m.SecretEnc
-}
-
-// SetSecretEnc sets the SecretEnc value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetSecretEnc(v *string) {
-	m.SecretEnc = v
-}
-
-// GetAppsJson returns the AppsJson value.
-func (m CreatePushCredentialParams) GetAppsJson() string {
-	return m.AppsJson
-}
-
-// SetAppsJson sets the AppsJson value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetAppsJson(v string) {
-	m.AppsJson = v
-}
-
-// GetBundleIdsJson returns the BundleIdsJson value.
-func (m CreatePushCredentialParams) GetBundleIdsJson() *string {
-	return m.BundleIdsJson
-}
-
-// SetBundleIdsJson sets the BundleIdsJson value and returns the updated CreatePushCredentialParams.
-func (m *CreatePushCredentialParams) SetBundleIdsJson(v *string) {
-	m.BundleIdsJson = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -2818,16 +1372,6 @@ func (m *DeletePushCredentialParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m DeletePushCredentialParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeletePushCredentialParams.
-func (m *DeletePushCredentialParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
 // GetID returns the ID value.
 func (m DeletePushRegistrationParams) GetID() int64 {
 	return m.ID
@@ -2838,54 +1382,9 @@ func (m *DeletePushRegistrationParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m DeletePushRegistrationParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeletePushRegistrationParams.
-func (m *DeletePushRegistrationParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m DeletePushRegistrationParams) GetIdentityID() *int64 {
 	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated DeletePushRegistrationParams.
-func (m *DeletePushRegistrationParams) SetIdentityID(v *int64) {
-	m.IdentityID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeletePushRegistrationByTokenHashParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeletePushRegistrationByTokenHashParams.
-func (m *DeletePushRegistrationByTokenHashParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetTokenHash returns the TokenHash value.
-func (m DeletePushRegistrationByTokenHashParams) GetTokenHash() string {
-	return m.TokenHash
-}
-
-// SetTokenHash sets the TokenHash value and returns the updated DeletePushRegistrationByTokenHashParams.
-func (m *DeletePushRegistrationByTokenHashParams) SetTokenHash(v string) {
-	m.TokenHash = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteSitePushCredentialsParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSitePushCredentialsParams.
-func (m *DeleteSitePushCredentialsParams) SetSiteID(v *string) {
-	m.SiteID = v
 }
 
 // GetID returns the ID value.
@@ -2918,16 +1417,6 @@ func (m *GetPushCredentialParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m GetPushCredentialParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetPushCredentialParams.
-func (m *GetPushCredentialParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
 // GetID returns the ID value.
 func (m GetPushRegistrationParams) GetID() int64 {
 	return m.ID
@@ -2938,34 +1427,9 @@ func (m *GetPushRegistrationParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m GetPushRegistrationParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetPushRegistrationParams.
-func (m *GetPushRegistrationParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetIdentityID returns the IdentityID value.
 func (m GetPushRegistrationParams) GetIdentityID() *int64 {
 	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated GetPushRegistrationParams.
-func (m *GetPushRegistrationParams) SetIdentityID(v *int64) {
-	m.IdentityID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m NewestPushRegistrationForAppParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated NewestPushRegistrationForAppParams.
-func (m *NewestPushRegistrationForAppParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetApp returns the App value.
@@ -2973,69 +1437,9 @@ func (m NewestPushRegistrationForAppParams) GetApp() consts.PushApp {
 	return m.App
 }
 
-// SetApp sets the App value and returns the updated NewestPushRegistrationForAppParams.
-func (m *NewestPushRegistrationForAppParams) SetApp(v consts.PushApp) {
-	m.App = v
-}
-
-// GetRoles returns the Roles value.
-func (m NewestPushRegistrationForAppParams) GetRoles() []consts.IdentityRole {
-	return m.Roles
-}
-
-// SetRoles sets the Roles value and returns the updated NewestPushRegistrationForAppParams.
-func (m *NewestPushRegistrationForAppParams) SetRoles(v []consts.IdentityRole) {
-	m.Roles = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m PushCredentialForParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated PushCredentialForParams.
-func (m *PushCredentialForParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
-// GetProvider returns the Provider value.
-func (m PushCredentialForParams) GetProvider() consts.PushProvider {
-	return m.Provider
-}
-
-// SetProvider sets the Provider value and returns the updated PushCredentialForParams.
-func (m *PushCredentialForParams) SetProvider(v consts.PushProvider) {
-	m.Provider = v
-}
-
 // GetApp returns the App value.
 func (m PushCredentialForParams) GetApp() string {
 	return m.App
-}
-
-// SetApp sets the App value and returns the updated PushCredentialForParams.
-func (m *PushCredentialForParams) SetApp(v string) {
-	m.App = v
-}
-
-// GetBundleID returns the BundleID value.
-func (m PushCredentialForParams) GetBundleID() string {
-	return m.BundleID
-}
-
-// SetBundleID sets the BundleID value and returns the updated PushCredentialForParams.
-func (m *PushCredentialForParams) SetBundleID(v string) {
-	m.BundleID = v
-}
-
-// GetLastError returns the LastError value.
-func (m RecordPushParams) GetLastError() *string {
-	return m.LastError
-}
-
-// SetLastError sets the LastError value and returns the updated RecordPushParams.
-func (m *RecordPushParams) SetLastError(v *string) {
-	m.LastError = v
 }
 
 // GetID returns the ID value.
@@ -3048,59 +1452,9 @@ func (m *RecordPushParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m RecordPushParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated RecordPushParams.
-func (m *RecordPushParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetTokenHash returns the TokenHash value.
-func (m RecordPushParams) GetTokenHash() string {
-	return m.TokenHash
-}
-
-// SetTokenHash sets the TokenHash value and returns the updated RecordPushParams.
-func (m *RecordPushParams) SetTokenHash(v string) {
-	m.TokenHash = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchAllPushCredentialsParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchAllPushCredentialsParams.
-func (m *SearchAllPushCredentialsParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchAllPushCredentialsParams) GetLimit() int64 {
-	return m.Limit
-}
-
 // SetLimit sets the Limit value and returns the updated SearchAllPushCredentialsParams.
 func (m *SearchAllPushCredentialsParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m SearchAllPushRegistrationsParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SearchAllPushRegistrationsParams.
-func (m *SearchAllPushRegistrationsParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchAllPushRegistrationsParams) GetLimit() int64 {
-	return m.Limit
 }
 
 // SetLimit sets the Limit value and returns the updated SearchAllPushRegistrationsParams.
@@ -3108,44 +1462,9 @@ func (m *SearchAllPushRegistrationsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m SearchPushCredentialsParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SearchPushCredentialsParams.
-func (m *SearchPushCredentialsParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchPushCredentialsParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchPushCredentialsParams.
-func (m *SearchPushCredentialsParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchPushCredentialsParams) GetLimit() int64 {
-	return m.Limit
-}
-
 // SetLimit sets the Limit value and returns the updated SearchPushCredentialsParams.
 func (m *SearchPushCredentialsParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m SearchPushRegistrationsParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SearchPushRegistrationsParams.
-func (m *SearchPushRegistrationsParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetIdentityID returns the IdentityID value.
@@ -3153,39 +1472,9 @@ func (m SearchPushRegistrationsParams) GetIdentityID() *int64 {
 	return m.IdentityID
 }
 
-// SetIdentityID sets the IdentityID value and returns the updated SearchPushRegistrationsParams.
-func (m *SearchPushRegistrationsParams) SetIdentityID(v *int64) {
-	m.IdentityID = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchPushRegistrationsParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchPushRegistrationsParams.
-func (m *SearchPushRegistrationsParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchPushRegistrationsParams) GetLimit() int64 {
-	return m.Limit
-}
-
 // SetLimit sets the Limit value and returns the updated SearchPushRegistrationsParams.
 func (m *SearchPushRegistrationsParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m SearchPushRegistrationsWithIdentityParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SearchPushRegistrationsWithIdentityParams.
-func (m *SearchPushRegistrationsWithIdentityParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetIdentityID returns the IdentityID value.
@@ -3193,29 +1482,9 @@ func (m SearchPushRegistrationsWithIdentityParams) GetIdentityID() *int64 {
 	return m.IdentityID
 }
 
-// SetIdentityID sets the IdentityID value and returns the updated SearchPushRegistrationsWithIdentityParams.
-func (m *SearchPushRegistrationsWithIdentityParams) SetIdentityID(v *int64) {
-	m.IdentityID = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchPushRegistrationsWithIdentityParams) GetLimit() int64 {
-	return m.Limit
-}
-
 // SetLimit sets the Limit value and returns the updated SearchPushRegistrationsWithIdentityParams.
 func (m *SearchPushRegistrationsWithIdentityParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpsertPushRegistrationParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetIdentityID returns the IdentityID value.
@@ -3223,109 +1492,9 @@ func (m UpsertPushRegistrationParams) GetIdentityID() int64 {
 	return m.IdentityID
 }
 
-// SetIdentityID sets the IdentityID value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
 // GetApp returns the App value.
 func (m UpsertPushRegistrationParams) GetApp() consts.PushApp {
 	return m.App
-}
-
-// SetApp sets the App value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetApp(v consts.PushApp) {
-	m.App = v
-}
-
-// GetProvider returns the Provider value.
-func (m UpsertPushRegistrationParams) GetProvider() consts.PushProvider {
-	return m.Provider
-}
-
-// SetProvider sets the Provider value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetProvider(v consts.PushProvider) {
-	m.Provider = v
-}
-
-// GetBundleID returns the BundleID value.
-func (m UpsertPushRegistrationParams) GetBundleID() string {
-	return m.BundleID
-}
-
-// SetBundleID sets the BundleID value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetBundleID(v string) {
-	m.BundleID = v
-}
-
-// GetProduction returns the Production value.
-func (m UpsertPushRegistrationParams) GetProduction() bool {
-	return m.Production
-}
-
-// SetProduction sets the Production value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetProduction(v bool) {
-	m.Production = v
-}
-
-// GetTokenEnc returns the TokenEnc value.
-func (m UpsertPushRegistrationParams) GetTokenEnc() string {
-	return m.TokenEnc
-}
-
-// SetTokenEnc sets the TokenEnc value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetTokenEnc(v string) {
-	m.TokenEnc = v
-}
-
-// GetTokenHash returns the TokenHash value.
-func (m UpsertPushRegistrationParams) GetTokenHash() string {
-	return m.TokenHash
-}
-
-// SetTokenHash sets the TokenHash value and returns the updated UpsertPushRegistrationParams.
-func (m *UpsertPushRegistrationParams) SetTokenHash(v string) {
-	m.TokenHash = v
-}
-
-// GetPublicSiteCreation returns the PublicSiteCreation value.
-func (m UpdatePublicSiteCreationParams) GetPublicSiteCreation() bool {
-	return m.PublicSiteCreation
-}
-
-// SetPublicSiteCreation sets the PublicSiteCreation value and returns the updated UpdatePublicSiteCreationParams.
-func (m *UpdatePublicSiteCreationParams) SetPublicSiteCreation(v bool) {
-	m.PublicSiteCreation = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdatePublicSiteCreationParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdatePublicSiteCreationParams.
-func (m *UpdatePublicSiteCreationParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetRateLimitsJson returns the RateLimitsJson value.
-func (m UpdateRateLimitsParams) GetRateLimitsJson() string {
-	return m.RateLimitsJson
-}
-
-// SetRateLimitsJson sets the RateLimitsJson value and returns the updated UpdateRateLimitsParams.
-func (m *UpdateRateLimitsParams) SetRateLimitsJson(v string) {
-	m.RateLimitsJson = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateRateLimitsParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateRateLimitsParams.
-func (m *UpdateRateLimitsParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
 }
 
 // GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
@@ -3346,16 +1515,6 @@ func (m LearnSiteIdentityUnitsLabelsParams) GetUnitsMmolLabel() *string {
 // SetUnitsMmolLabel sets the UnitsMmolLabel value and returns the updated LearnSiteIdentityUnitsLabelsParams.
 func (m *LearnSiteIdentityUnitsLabelsParams) SetUnitsMmolLabel(v *string) {
 	m.UnitsMmolLabel = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m LearnSiteIdentityUnitsLabelsParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated LearnSiteIdentityUnitsLabelsParams.
-func (m *LearnSiteIdentityUnitsLabelsParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetID returns the ID value.
@@ -3848,16 +2007,6 @@ func (m *UpdateSiteIdentitySettingsParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m UpdateSiteIdentitySettingsParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetUnits returns the Units value.
 func (m UpdateSitesSettingsParams) GetUnits() *consts.Units {
 	return m.Units
@@ -4338,74 +2487,9 @@ func (m *UpdateSitesSettingsParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m CreateConnectorParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CreateConnectorParams.
-func (m *CreateConnectorParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetType returns the Type value.
 func (m CreateConnectorParams) GetType() consts.ConnectorType {
 	return m.Type
-}
-
-// SetType sets the Type value and returns the updated CreateConnectorParams.
-func (m *CreateConnectorParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
-func (m CreateConnectorParams) GetUrlOrUsernameEnc() *string {
-	return m.UrlOrUsernameEnc
-}
-
-// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated CreateConnectorParams.
-func (m *CreateConnectorParams) SetUrlOrUsernameEnc(v *string) {
-	m.UrlOrUsernameEnc = v
-}
-
-// GetPasswordEnc returns the PasswordEnc value.
-func (m CreateConnectorParams) GetPasswordEnc() *string {
-	return m.PasswordEnc
-}
-
-// SetPasswordEnc sets the PasswordEnc value and returns the updated CreateConnectorParams.
-func (m *CreateConnectorParams) SetPasswordEnc(v *string) {
-	m.PasswordEnc = v
-}
-
-// GetRegion returns the Region value.
-func (m CreateConnectorParams) GetRegion() *string {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated CreateConnectorParams.
-func (m *CreateConnectorParams) SetRegion(v *string) {
-	m.Region = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m CreateConnectorParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated CreateConnectorParams.
-func (m *CreateConnectorParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetUrlHostMac returns the UrlHostMac value.
-func (m CreateConnectorParams) GetUrlHostMac() *string {
-	return m.UrlHostMac
-}
-
-// SetUrlHostMac sets the UrlHostMac value and returns the updated CreateConnectorParams.
-func (m *CreateConnectorParams) SetUrlHostMac(v *string) {
-	m.UrlHostMac = v
 }
 
 // GetType returns the Type value.
@@ -4413,49 +2497,9 @@ func (m DeleteConnectorParams) GetType() consts.ConnectorType {
 	return m.Type
 }
 
-// SetType sets the Type value and returns the updated DeleteConnectorParams.
-func (m *DeleteConnectorParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteConnectorParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteConnectorParams.
-func (m *DeleteConnectorParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetDurationMs returns the DurationMs value.
-func (m FinishConnectorBackfillParams) GetDurationMs() *int64 {
-	return m.DurationMs
-}
-
-// SetDurationMs sets the DurationMs value and returns the updated FinishConnectorBackfillParams.
-func (m *FinishConnectorBackfillParams) SetDurationMs(v *int64) {
-	m.DurationMs = v
-}
-
-// GetRecords returns the Records value.
-func (m FinishConnectorBackfillParams) GetRecords() *int64 {
-	return m.Records
-}
-
-// SetRecords sets the Records value and returns the updated FinishConnectorBackfillParams.
-func (m *FinishConnectorBackfillParams) SetRecords(v *int64) {
-	m.Records = v
-}
-
 // GetError returns the Error value.
 func (m FinishConnectorBackfillParams) GetError() *string {
 	return m.Error
-}
-
-// SetError sets the Error value and returns the updated FinishConnectorBackfillParams.
-func (m *FinishConnectorBackfillParams) SetError(v *string) {
-	m.Error = v
 }
 
 // GetType returns the Type value.
@@ -4463,64 +2507,9 @@ func (m FinishConnectorBackfillParams) GetType() consts.ConnectorType {
 	return m.Type
 }
 
-// SetType sets the Type value and returns the updated FinishConnectorBackfillParams.
-func (m *FinishConnectorBackfillParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m FinishConnectorBackfillParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated FinishConnectorBackfillParams.
-func (m *FinishConnectorBackfillParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetAllConnectorsForSiteParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetAllConnectorsForSiteParams.
-func (m *GetAllConnectorsForSiteParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetType returns the Type value.
 func (m GetConnectorParams) GetType() consts.ConnectorType {
 	return m.Type
-}
-
-// SetType sets the Type value and returns the updated GetConnectorParams.
-func (m *GetConnectorParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetConnectorParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetConnectorParams.
-func (m *GetConnectorParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchConnectorsParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchConnectorsParams.
-func (m *SearchConnectorsParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchConnectorsParams) GetLimit() int64 {
-	return m.Limit
 }
 
 // SetLimit sets the Limit value and returns the updated SearchConnectorsParams.
@@ -4528,94 +2517,9 @@ func (m *SearchConnectorsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
-// GetFrom returns the From value.
-func (m StartConnectorBackfillParams) GetFrom() *int64 {
-	return m.From
-}
-
-// SetFrom sets the From value and returns the updated StartConnectorBackfillParams.
-func (m *StartConnectorBackfillParams) SetFrom(v *int64) {
-	m.From = v
-}
-
-// GetTo returns the To value.
-func (m StartConnectorBackfillParams) GetTo() *int64 {
-	return m.To
-}
-
-// SetTo sets the To value and returns the updated StartConnectorBackfillParams.
-func (m *StartConnectorBackfillParams) SetTo(v *int64) {
-	m.To = v
-}
-
 // GetType returns the Type value.
 func (m StartConnectorBackfillParams) GetType() consts.ConnectorType {
 	return m.Type
-}
-
-// SetType sets the Type value and returns the updated StartConnectorBackfillParams.
-func (m *StartConnectorBackfillParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m StartConnectorBackfillParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated StartConnectorBackfillParams.
-func (m *StartConnectorBackfillParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetPasswordEnc returns the PasswordEnc value.
-func (m UpdateConnectorParams) GetPasswordEnc() *string {
-	return m.PasswordEnc
-}
-
-// SetPasswordEnc sets the PasswordEnc value and returns the updated UpdateConnectorParams.
-func (m *UpdateConnectorParams) SetPasswordEnc(v *string) {
-	m.PasswordEnc = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m UpdateConnectorParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated UpdateConnectorParams.
-func (m *UpdateConnectorParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
-func (m UpdateConnectorParams) GetUrlOrUsernameEnc() *string {
-	return m.UrlOrUsernameEnc
-}
-
-// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated UpdateConnectorParams.
-func (m *UpdateConnectorParams) SetUrlOrUsernameEnc(v *string) {
-	m.UrlOrUsernameEnc = v
-}
-
-// GetUrlHostMac returns the UrlHostMac value.
-func (m UpdateConnectorParams) GetUrlHostMac() *string {
-	return m.UrlHostMac
-}
-
-// SetUrlHostMac sets the UrlHostMac value and returns the updated UpdateConnectorParams.
-func (m *UpdateConnectorParams) SetUrlHostMac(v *string) {
-	m.UrlHostMac = v
-}
-
-// GetRegion returns the Region value.
-func (m UpdateConnectorParams) GetRegion() *string {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated UpdateConnectorParams.
-func (m *UpdateConnectorParams) SetRegion(v *string) {
-	m.Region = v
 }
 
 // GetType returns the Type value.
@@ -4623,59 +2527,9 @@ func (m UpdateConnectorParams) GetType() consts.ConnectorType {
 	return m.Type
 }
 
-// SetType sets the Type value and returns the updated UpdateConnectorParams.
-func (m *UpdateConnectorParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateConnectorParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateConnectorParams.
-func (m *UpdateConnectorParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetType returns the Type value.
 func (m UpdateConnectorAttemptParams) GetType() consts.ConnectorType {
 	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateConnectorAttemptParams.
-func (m *UpdateConnectorAttemptParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateConnectorAttemptParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateConnectorAttemptParams.
-func (m *UpdateConnectorAttemptParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetErrorMessages returns the ErrorMessages value.
-func (m UpdateConnectorReportsFailureParams) GetErrorMessages() errors.ErrorList {
-	return m.ErrorMessages
-}
-
-// SetErrorMessages sets the ErrorMessages value and returns the updated UpdateConnectorReportsFailureParams.
-func (m *UpdateConnectorReportsFailureParams) SetErrorMessages(v errors.ErrorList) {
-	m.ErrorMessages = v
-}
-
-// GetElapsedMs returns the ElapsedMs value.
-func (m UpdateConnectorReportsFailureParams) GetElapsedMs() *int64 {
-	return m.ElapsedMs
-}
-
-// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateConnectorReportsFailureParams.
-func (m *UpdateConnectorReportsFailureParams) SetElapsedMs(v *int64) {
-	m.ElapsedMs = v
 }
 
 // GetType returns the Type value.
@@ -4683,159 +2537,14 @@ func (m UpdateConnectorReportsFailureParams) GetType() consts.ConnectorType {
 	return m.Type
 }
 
-// SetType sets the Type value and returns the updated UpdateConnectorReportsFailureParams.
-func (m *UpdateConnectorReportsFailureParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateConnectorReportsFailureParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateConnectorReportsFailureParams.
-func (m *UpdateConnectorReportsFailureParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetRecords returns the Records value.
-func (m UpdateConnectorReportsSuccessParams) GetRecords() *int64 {
-	return m.Records
-}
-
-// SetRecords sets the Records value and returns the updated UpdateConnectorReportsSuccessParams.
-func (m *UpdateConnectorReportsSuccessParams) SetRecords(v *int64) {
-	m.Records = v
-}
-
-// GetElapsedMs returns the ElapsedMs value.
-func (m UpdateConnectorReportsSuccessParams) GetElapsedMs() *int64 {
-	return m.ElapsedMs
-}
-
-// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateConnectorReportsSuccessParams.
-func (m *UpdateConnectorReportsSuccessParams) SetElapsedMs(v *int64) {
-	m.ElapsedMs = v
-}
-
 // GetType returns the Type value.
 func (m UpdateConnectorReportsSuccessParams) GetType() consts.ConnectorType {
 	return m.Type
 }
 
-// SetType sets the Type value and returns the updated UpdateConnectorReportsSuccessParams.
-func (m *UpdateConnectorReportsSuccessParams) SetType(v consts.ConnectorType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateConnectorReportsSuccessParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateConnectorReportsSuccessParams.
-func (m *UpdateConnectorReportsSuccessParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m AllSiteIdentitiesParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated AllSiteIdentitiesParams.
-func (m *AllSiteIdentitiesParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSince returns the Since value.
-func (m CountActiveIdentitiesParams) GetSince() *int64 {
-	return m.Since
-}
-
-// SetSince sets the Since value and returns the updated CountActiveIdentitiesParams.
-func (m *CountActiveIdentitiesParams) SetSince(v *int64) {
-	m.Since = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CountSiteIdentitiesParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CountSiteIdentitiesParams.
-func (m *CountSiteIdentitiesParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CreateSiteIdentityParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m CreateSiteIdentityParams) GetName() string {
 	return m.Name
-}
-
-// SetName sets the Name value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetPasswordHash returns the PasswordHash value.
-func (m CreateSiteIdentityParams) GetPasswordHash() string {
-	return m.PasswordHash
-}
-
-// SetPasswordHash sets the PasswordHash value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetPasswordHash(v string) {
-	m.PasswordHash = v
-}
-
-// GetTotpSecretEnc returns the TotpSecretEnc value.
-func (m CreateSiteIdentityParams) GetTotpSecretEnc() string {
-	return m.TotpSecretEnc
-}
-
-// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetTotpSecretEnc(v string) {
-	m.TotpSecretEnc = v
-}
-
-// GetRole returns the Role value.
-func (m CreateSiteIdentityParams) GetRole() consts.IdentityRole {
-	return m.Role
-}
-
-// SetRole sets the Role value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetRole(v consts.IdentityRole) {
-	m.Role = v
-}
-
-// GetClient returns the Client value.
-func (m CreateSiteIdentityParams) GetClient() *string {
-	return m.Client
-}
-
-// SetClient sets the Client value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetClient(v *string) {
-	m.Client = v
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m CreateSiteIdentityParams) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
-}
-
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetCreatedByIdentityID(v int64) {
-	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -4848,36 +2557,6 @@ func (m *CreateSiteIdentityParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
-// GetNightscoutTokenDigest returns the NightscoutTokenDigest value.
-func (m CreateSiteIdentityParams) GetNightscoutTokenDigest() *string {
-	return m.NightscoutTokenDigest
-}
-
-// SetNightscoutTokenDigest sets the NightscoutTokenDigest value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetNightscoutTokenDigest(v *string) {
-	m.NightscoutTokenDigest = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteAllSiteIdentitiesParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteAllSiteIdentitiesParams.
-func (m *DeleteAllSiteIdentitiesParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteSiteIdentityParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityParams.
-func (m *DeleteSiteIdentityParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetID returns the ID value.
 func (m DeleteSiteIdentityParams) GetID() int64 {
 	return m.ID
@@ -4888,54 +2567,14 @@ func (m *DeleteSiteIdentityParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m DisableOtherSiteAdminsParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DisableOtherSiteAdminsParams.
-func (m *DisableOtherSiteAdminsParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m DisableOtherSiteAdminsParams) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated DisableOtherSiteAdminsParams.
-func (m *DisableOtherSiteAdminsParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSiteIdentityParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityParams.
-func (m *GetSiteIdentityParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m GetSiteIdentityParams) GetName() string {
 	return m.Name
-}
-
-// SetName sets the Name value and returns the updated GetSiteIdentityParams.
-func (m *GetSiteIdentityParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSiteIdentityByIDParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityByIDParams.
-func (m *GetSiteIdentityByIDParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetID returns the ID value.
@@ -4948,84 +2587,9 @@ func (m *GetSiteIdentityByIDParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m GetSiteIdentityByTokenDigestParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityByTokenDigestParams.
-func (m *GetSiteIdentityByTokenDigestParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetDigest returns the Digest value.
-func (m GetSiteIdentityByTokenDigestParams) GetDigest() *string {
-	return m.Digest
-}
-
-// SetDigest sets the Digest value and returns the updated GetSiteIdentityByTokenDigestParams.
-func (m *GetSiteIdentityByTokenDigestParams) SetDigest(v *string) {
-	m.Digest = v
-}
-
-// GetPasswordHash returns the PasswordHash value.
-func (m ResetSiteAdminCredentialsParams) GetPasswordHash() string {
-	return m.PasswordHash
-}
-
-// SetPasswordHash sets the PasswordHash value and returns the updated ResetSiteAdminCredentialsParams.
-func (m *ResetSiteAdminCredentialsParams) SetPasswordHash(v string) {
-	m.PasswordHash = v
-}
-
-// GetTotpSecretEnc returns the TotpSecretEnc value.
-func (m ResetSiteAdminCredentialsParams) GetTotpSecretEnc() string {
-	return m.TotpSecretEnc
-}
-
-// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated ResetSiteAdminCredentialsParams.
-func (m *ResetSiteAdminCredentialsParams) SetTotpSecretEnc(v string) {
-	m.TotpSecretEnc = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m ResetSiteAdminCredentialsParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated ResetSiteAdminCredentialsParams.
-func (m *ResetSiteAdminCredentialsParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetName returns the Name value.
 func (m ResetSiteAdminCredentialsParams) GetName() string {
 	return m.Name
-}
-
-// SetName sets the Name value and returns the updated ResetSiteAdminCredentialsParams.
-func (m *ResetSiteAdminCredentialsParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m UpdateSiteIdentityDateFlagsParams) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated UpdateSiteIdentityDateFlagsParams.
-func (m *UpdateSiteIdentityDateFlagsParams) SetLastSeenAt(v *int64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m UpdateSiteIdentityDateFlagsParams) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated UpdateSiteIdentityDateFlagsParams.
-func (m *UpdateSiteIdentityDateFlagsParams) SetLastWriteAt(v *int64) {
-	m.LastWriteAt = v
 }
 
 // GetID returns the ID value.
@@ -5038,46 +2602,6 @@ func (m *UpdateSiteIdentityDateFlagsParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetEnabled returns the Enabled value.
-func (m UpdateSiteIdentityEnabledParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated UpdateSiteIdentityEnabledParams.
-func (m *UpdateSiteIdentityEnabledParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m UpdateSiteIdentityEnabledParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateSiteIdentityEnabledParams.
-func (m *UpdateSiteIdentityEnabledParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateSiteIdentityEnabledParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateSiteIdentityEnabledParams.
-func (m *UpdateSiteIdentityEnabledParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSiteIdentityEnabledParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityEnabledParams.
-func (m *UpdateSiteIdentityEnabledParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetID returns the ID value.
 func (m UpdateSiteIdentityEnabledParams) GetID() int64 {
 	return m.ID
@@ -5086,46 +2610,6 @@ func (m UpdateSiteIdentityEnabledParams) GetID() int64 {
 // SetID sets the ID value and returns the updated UpdateSiteIdentityEnabledParams.
 func (m *UpdateSiteIdentityEnabledParams) SetID(v int64) {
 	m.ID = v
-}
-
-// GetPasswordHash returns the PasswordHash value.
-func (m UpdateSiteIdentityPasswordParams) GetPasswordHash() string {
-	return m.PasswordHash
-}
-
-// SetPasswordHash sets the PasswordHash value and returns the updated UpdateSiteIdentityPasswordParams.
-func (m *UpdateSiteIdentityPasswordParams) SetPasswordHash(v string) {
-	m.PasswordHash = v
-}
-
-// GetNightscoutTokenDigest returns the NightscoutTokenDigest value.
-func (m UpdateSiteIdentityPasswordParams) GetNightscoutTokenDigest() *string {
-	return m.NightscoutTokenDigest
-}
-
-// SetNightscoutTokenDigest sets the NightscoutTokenDigest value and returns the updated UpdateSiteIdentityPasswordParams.
-func (m *UpdateSiteIdentityPasswordParams) SetNightscoutTokenDigest(v *string) {
-	m.NightscoutTokenDigest = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateSiteIdentityPasswordParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateSiteIdentityPasswordParams.
-func (m *UpdateSiteIdentityPasswordParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSiteIdentityPasswordParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityPasswordParams.
-func (m *UpdateSiteIdentityPasswordParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetID returns the ID value.
@@ -5138,36 +2622,6 @@ func (m *UpdateSiteIdentityPasswordParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetTotpSecretEnc returns the TotpSecretEnc value.
-func (m UpdateSiteIdentityTOTPParams) GetTotpSecretEnc() string {
-	return m.TotpSecretEnc
-}
-
-// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated UpdateSiteIdentityTOTPParams.
-func (m *UpdateSiteIdentityTOTPParams) SetTotpSecretEnc(v string) {
-	m.TotpSecretEnc = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateSiteIdentityTOTPParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateSiteIdentityTOTPParams.
-func (m *UpdateSiteIdentityTOTPParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSiteIdentityTOTPParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityTOTPParams.
-func (m *UpdateSiteIdentityTOTPParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetID returns the ID value.
 func (m UpdateSiteIdentityTOTPParams) GetID() int64 {
 	return m.ID
@@ -5176,46 +2630,6 @@ func (m UpdateSiteIdentityTOTPParams) GetID() int64 {
 // SetID sets the ID value and returns the updated UpdateSiteIdentityTOTPParams.
 func (m *UpdateSiteIdentityTOTPParams) SetID(v int64) {
 	m.ID = v
-}
-
-// GetJsonEach returns the JsonEach value.
-func (m ArchiveSitesParams) GetJsonEach() interface{} {
-	return m.JsonEach
-}
-
-// SetJsonEach sets the JsonEach value and returns the updated ArchiveSitesParams.
-func (m *ArchiveSitesParams) SetJsonEach(v interface{}) {
-	m.JsonEach = v
-}
-
-// GetBatch returns the Batch value.
-func (m BatchHadSitesParams) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated BatchHadSitesParams.
-func (m *BatchHadSitesParams) SetBatch(v string) {
-	m.Batch = v
-}
-
-// GetSince returns the Since value.
-func (m CountActiveSitesParams) GetSince() *int64 {
-	return m.Since
-}
-
-// SetSince sets the Since value and returns the updated CountActiveSitesParams.
-func (m *CountActiveSitesParams) SetSince(v *int64) {
-	m.Since = v
-}
-
-// GetSince returns the Since value.
-func (m CountSitesCreatedParams) GetSince() int64 {
-	return m.Since
-}
-
-// SetSince sets the Since value and returns the updated CountSitesCreatedParams.
-func (m *CountSitesCreatedParams) SetSince(v int64) {
-	m.Since = v
 }
 
 // GetID returns the ID value.
@@ -5228,26 +2642,6 @@ func (m *CreateSiteParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetBackupKeyHash returns the BackupKeyHash value.
-func (m CreateSiteParams) GetBackupKeyHash() string {
-	return m.BackupKeyHash
-}
-
-// SetBackupKeyHash sets the BackupKeyHash value and returns the updated CreateSiteParams.
-func (m *CreateSiteParams) SetBackupKeyHash(v string) {
-	m.BackupKeyHash = v
-}
-
-// GetJsonEach returns the JsonEach value.
-func (m DeleteSitesParams) GetJsonEach() interface{} {
-	return m.JsonEach
-}
-
-// SetJsonEach sets the JsonEach value and returns the updated DeleteSitesParams.
-func (m *DeleteSitesParams) SetJsonEach(v interface{}) {
-	m.JsonEach = v
-}
-
 // GetID returns the ID value.
 func (m DisableSiteParams) GetID() string {
 	return m.ID
@@ -5256,26 +2650,6 @@ func (m DisableSiteParams) GetID() string {
 // SetID sets the ID value and returns the updated DisableSiteParams.
 func (m *DisableSiteParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetJsonEach returns the JsonEach value.
-func (m DisableSitesParams) GetJsonEach() interface{} {
-	return m.JsonEach
-}
-
-// SetJsonEach sets the JsonEach value and returns the updated DisableSitesParams.
-func (m *DisableSitesParams) SetJsonEach(v interface{}) {
-	m.JsonEach = v
-}
-
-// GetBatch returns the Batch value.
-func (m GetBatchSitesToBackUpParams) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated GetBatchSitesToBackUpParams.
-func (m *GetBatchSitesToBackUpParams) SetBatch(v string) {
-	m.Batch = v
 }
 
 // GetID returns the ID value.
@@ -5298,66 +2672,6 @@ func (m *GetSiteInAnyStateParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetLastSeenAt returns the LastSeenAt value.
-func (m GetSitesToArchiveParams) GetLastSeenAt() float64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToArchiveParams.
-func (m *GetSitesToArchiveParams) SetLastSeenAt(v float64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m GetSitesToArchiveParams) GetLastWriteAt() float64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToArchiveParams.
-func (m *GetSitesToArchiveParams) SetLastWriteAt(v float64) {
-	m.LastWriteAt = v
-}
-
-// GetBatch returns the Batch value.
-func (m GetSitesToDeleteInBatchParams) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated GetSitesToDeleteInBatchParams.
-func (m *GetSitesToDeleteInBatchParams) SetBatch(v string) {
-	m.Batch = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m GetSitesToDeleteInBatchParams) GetLastSeenAt() float64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDeleteInBatchParams.
-func (m *GetSitesToDeleteInBatchParams) SetLastSeenAt(v float64) {
-	m.LastSeenAt = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m GetSitesToDisableParams) GetLastSeenAt() float64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDisableParams.
-func (m *GetSitesToDisableParams) SetLastSeenAt(v float64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m GetSitesToDisableParams) GetLastWriteAt() float64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToDisableParams.
-func (m *GetSitesToDisableParams) SetLastWriteAt(v float64) {
-	m.LastWriteAt = v
-}
-
 // GetID returns the ID value.
 func (m HydrateSiteParams) GetID() string {
 	return m.ID
@@ -5366,16 +2680,6 @@ func (m HydrateSiteParams) GetID() string {
 // SetID sets the ID value and returns the updated HydrateSiteParams.
 func (m *HydrateSiteParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetNewHash returns the NewHash value.
-func (m RotateSiteBackupKeyParams) GetNewHash() string {
-	return m.NewHash
-}
-
-// SetNewHash sets the NewHash value and returns the updated RotateSiteBackupKeyParams.
-func (m *RotateSiteBackupKeyParams) SetNewHash(v string) {
-	m.NewHash = v
 }
 
 // GetID returns the ID value.
@@ -5388,49 +2692,9 @@ func (m *RotateSiteBackupKeyParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetOldHash returns the OldHash value.
-func (m RotateSiteBackupKeyParams) GetOldHash() string {
-	return m.OldHash
-}
-
-// SetOldHash sets the OldHash value and returns the updated RotateSiteBackupKeyParams.
-func (m *RotateSiteBackupKeyParams) SetOldHash(v string) {
-	m.OldHash = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchArchivedSitesParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchArchivedSitesParams.
-func (m *SearchArchivedSitesParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchArchivedSitesParams) GetLimit() int64 {
-	return m.Limit
-}
-
 // SetLimit sets the Limit value and returns the updated SearchArchivedSitesParams.
 func (m *SearchArchivedSitesParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchSitesParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchSitesParams.
-func (m *SearchSitesParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchSitesParams) GetLimit() int64 {
-	return m.Limit
 }
 
 // SetLimit sets the Limit value and returns the updated SearchSitesParams.
@@ -5438,39 +2702,9 @@ func (m *SearchSitesParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
-// GetSkip returns the Skip value.
-func (m SearchSitesByDBSizeParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchSitesByDBSizeParams.
-func (m *SearchSitesByDBSizeParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchSitesByDBSizeParams) GetLimit() int64 {
-	return m.Limit
-}
-
 // SetLimit sets the Limit value and returns the updated SearchSitesByDBSizeParams.
 func (m *SearchSitesByDBSizeParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchSitesByLastWriteParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchSitesByLastWriteParams.
-func (m *SearchSitesByLastWriteParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchSitesByLastWriteParams) GetLimit() int64 {
-	return m.Limit
 }
 
 // SetLimit sets the Limit value and returns the updated SearchSitesByLastWriteParams.
@@ -5488,16 +2722,6 @@ func (m *SiteExistsParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetAbuseScore returns the AbuseScore value.
-func (m UpdateSiteAbuseScoreParams) GetAbuseScore() float64 {
-	return m.AbuseScore
-}
-
-// SetAbuseScore sets the AbuseScore value and returns the updated UpdateSiteAbuseScoreParams.
-func (m *UpdateSiteAbuseScoreParams) SetAbuseScore(v float64) {
-	m.AbuseScore = v
-}
-
 // GetID returns the ID value.
 func (m UpdateSiteAbuseScoreParams) GetID() string {
 	return m.ID
@@ -5506,16 +2730,6 @@ func (m UpdateSiteAbuseScoreParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateSiteAbuseScoreParams.
 func (m *UpdateSiteAbuseScoreParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetBackupSizeKb returns the BackupSizeKb value.
-func (m UpdateSiteBackedUpParams) GetBackupSizeKb() int64 {
-	return m.BackupSizeKb
-}
-
-// SetBackupSizeKb sets the BackupSizeKb value and returns the updated UpdateSiteBackedUpParams.
-func (m *UpdateSiteBackedUpParams) SetBackupSizeKb(v int64) {
-	m.BackupSizeKb = v
 }
 
 // GetID returns the ID value.
@@ -5528,16 +2742,6 @@ func (m *UpdateSiteBackedUpParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
-func (m UpdateSiteDBSizeParams) GetEstimatedDbSizeKb() *int64 {
-	return m.EstimatedDbSizeKb
-}
-
-// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated UpdateSiteDBSizeParams.
-func (m *UpdateSiteDBSizeParams) SetEstimatedDbSizeKb(v *int64) {
-	m.EstimatedDbSizeKb = v
-}
-
 // GetID returns the ID value.
 func (m UpdateSiteDBSizeParams) GetID() string {
 	return m.ID
@@ -5546,36 +2750,6 @@ func (m UpdateSiteDBSizeParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateSiteDBSizeParams.
 func (m *UpdateSiteDBSizeParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m UpdateSiteDateFlagsParams) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated UpdateSiteDateFlagsParams.
-func (m *UpdateSiteDateFlagsParams) SetLastSeenAt(v *int64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m UpdateSiteDateFlagsParams) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated UpdateSiteDateFlagsParams.
-func (m *UpdateSiteDateFlagsParams) SetLastWriteAt(v *int64) {
-	m.LastWriteAt = v
-}
-
-// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
-func (m UpdateSiteDateFlagsParams) GetEstimatedDbSizeKb() *int64 {
-	return m.EstimatedDbSizeKb
-}
-
-// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated UpdateSiteDateFlagsParams.
-func (m *UpdateSiteDateFlagsParams) SetEstimatedDbSizeKb(v *int64) {
-	m.EstimatedDbSizeKb = v
 }
 
 // GetID returns the ID value.
@@ -5588,16 +2762,6 @@ func (m *UpdateSiteDateFlagsParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetSummariesCheckedAt returns the SummariesCheckedAt value.
-func (m UpdateSiteSummariesCheckedAtParams) GetSummariesCheckedAt() *int64 {
-	return m.SummariesCheckedAt
-}
-
-// SetSummariesCheckedAt sets the SummariesCheckedAt value and returns the updated UpdateSiteSummariesCheckedAtParams.
-func (m *UpdateSiteSummariesCheckedAtParams) SetSummariesCheckedAt(v *int64) {
-	m.SummariesCheckedAt = v
-}
-
 // GetID returns the ID value.
 func (m UpdateSiteSummariesCheckedAtParams) GetID() string {
 	return m.ID
@@ -5608,16 +2772,6 @@ func (m *UpdateSiteSummariesCheckedAtParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetTableSizesJson returns the TableSizesJson value.
-func (m UpdateSiteTableSizesParams) GetTableSizesJson() types.TableSizes {
-	return m.TableSizesJson
-}
-
-// SetTableSizesJson sets the TableSizesJson value and returns the updated UpdateSiteTableSizesParams.
-func (m *UpdateSiteTableSizesParams) SetTableSizesJson(v types.TableSizes) {
-	m.TableSizesJson = v
-}
-
 // GetID returns the ID value.
 func (m UpdateSiteTableSizesParams) GetID() string {
 	return m.ID
@@ -5626,15 +2780,5 @@ func (m UpdateSiteTableSizesParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateSiteTableSizesParams.
 func (m *UpdateSiteTableSizesParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetIDs returns the IDs value.
-func (m UpdateSitesBackupUploadedParams) GetIDs() []string {
-	return m.IDs
-}
-
-// SetIDs sets the IDs value and returns the updated UpdateSitesBackupUploadedParams.
-func (m *UpdateSitesBackupUploadedParams) SetIDs(v []string) {
-	m.IDs = v
 }
 
