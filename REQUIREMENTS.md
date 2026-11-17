@@ -318,6 +318,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - pushes sent and failed today and this week (from midnight and Monday UTC), in memory since start;
   - memory: the server's total as htop's RES, with SQLite's (not in Go's figures), and the Go heap part;
   - CPU: the last 5 seconds as htop shows it, 100% for each core (up to 400% on 4 cores);
+  - the control DB's size, and its 5 largest tables with their records, size and share, as on a site's page. The
+    resource check measures the tables every 5 minutes, if the size changed;
   - the 25 slowest DB queries by total time, of the `QUERY_SAMPLE_PERCENT` (10%) sampled since start: DB, name, runs,
     and mean, 95th percentile, longest and total ms.
 - Go's profiles at `/debug/pprof/` (heap, CPU, goroutines and more) and runtime stats at `/debug/vars`, for a control

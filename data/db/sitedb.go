@@ -51,11 +51,16 @@ func (db *SiteDB) EstimatedSizeKB() *int64 {
 	if db.sizeKB != nil {
 		return db.sizeKB()
 	}
-	if db.InMemory {
+	return diskSizeKB(db.Path, db.InMemory)
+}
+
+// diskSizeKB is a DB's size on disk in KB, its file and write-ahead log, or nil for one in memory
+func diskSizeKB(path string, inMemory bool) *int64 {
+	if inMemory {
 		return nil
 	}
 	var size int64
-	for _, path := range []string{db.Path, db.Path + "-wal"} {
+	for _, path := range []string{path, path + "-wal"} {
 		if info, err := os.Stat(path); err == nil {
 			size += info.Size()
 		}

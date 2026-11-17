@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -48,6 +49,14 @@ type ControlDB struct {
 	setup setup
 	// missingSites are the live sites whose DB files were missing at start, for RestoreMissingSites
 	missingSites []string
+	// tables are the control DB's own tables as last measured, kept in memory as it has no row of its own to keep them in
+	tables atomic.Pointer[controlTables]
+}
+
+// controlTables are the control DB's tables, largest first, and its size on disk when they were measured
+type controlTables struct {
+	sizeKB *int64
+	tables []controldb.TableSize
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -753,6 +762,31 @@ func (db *ControlDB) recordSiteTableSizes(ctx context.Context, site *SiteDB) err
 		tables[size.Name] = types.TableSize{Bytes: size.Bytes, Records: size.Records}
 	}
 	return db.Queries.UpdateSiteTableSizes(ctx, controldb.UpdateSiteTableSizesParams{TableSizesJson: tables, ID: site.Subdomain})
+}
+
+// RecordControlTableSizes measures each table of the control DB from SQLite's dbstat, as RecordSiteTableSizes does a
+// site's, and only when its size changed since, or each time for one in memory, as dbstat reads every page of the DB
+func (db *ControlDB) RecordControlTableSizes(ctx context.Context) error {
+	sizeKB := diskSizeKB(db.Path, db.InMemory)
+	if last := db.tables.Load(); last != nil && sizeKB != nil && last.sizeKB != nil && *last.sizeKB == *sizeKB {
+		return nil
+	}
+	tables, err := db.TableSizes(ctx)
+	if err != nil {
+		return fmt.Errorf("cannot measure the control DB's tables: %w", err)
+	}
+	db.tables.Store(&controlTables{sizeKB: sizeKB, tables: tables})
+	return nil
+}
+
+// ControlDBSize is the control DB's size on disk in KB now, or nil in memory, and its tables, largest first, as last
+// measured, or none before they have been
+func (db *ControlDB) ControlDBSize() (*int64, []controldb.TableSize) {
+	var tables []controldb.TableSize
+	if last := db.tables.Load(); last != nil {
+		tables = last.tables
+	}
+	return diskSizeKB(db.Path, db.InMemory), tables
 }
 
 // SiteTableSizes are the bytes each table of the site's DB takes, its indexes with it, and its records, largest first,

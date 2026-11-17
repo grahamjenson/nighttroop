@@ -39,6 +39,11 @@ type Usage struct {
 	// QuerySamplePercent kept
 	SlowestQueries     []sqltiming.QueryStat `json:"slowest_queries"`
 	QuerySamplePercent int                   `json:"query_sample_percent"`
+
+	// ControlDBSizeKB is the control DB's size on disk now, unset in memory, and ControlDBTables its tables, largest
+	// first, as the resource check last measured them, as a site's are
+	ControlDBSizeKB *int64       `json:"control_db_size_kb"`
+	ControlDBTables []*SiteTable `json:"control_db_tables"`
 }
 
 // ResourceReading is a check of the server's resources: its mean CPU since the check before and the longest it was at

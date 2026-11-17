@@ -10,6 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/dbsize"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/stat"
@@ -203,6 +204,9 @@ templ Usage(model controlmodels.Usage) {
 					@resourceGraph(model, "disk", i18n.T(ctx, "control.usage.db_disk_used"), diskPercent, percent, model.DiskAlertPercent, 100)
 				</div>
 			}
+		}
+		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.control_db")}) {
+			@dbsize.Panel("control--usage--control", model.ControlDBSizeKB, nil, model.ControlDBTables)
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.routes")}) {
 			@table.Table(table.Props{ID: "control--usage--routes"}) {

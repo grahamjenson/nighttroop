@@ -433,6 +433,7 @@ control:
     disk_free: "{{.FreeBytes}} free on disk"
     uptime: "Uptime"
     resources: "Resources, checked every 30 seconds"
+    control_db: "Control DB, its tables measured every 5 minutes"
     resources_empty: "Not checked yet since the server started."
     resources_hour: "Last hour"
     resources_day: "Last day"
