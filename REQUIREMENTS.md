@@ -2043,6 +2043,8 @@ harder:
 - Passkey sign ins are rate limited for each IP, and for each site from all IPs at a much higher rate.
 - Each passkey sign in or add, on a site or control, finishes once. Its challenge is kept 5 minutes, then removed.
   A repeated finish is refused.
+- A passkey sign in or add finishes only from the IP that started it. Each IP keeps its 5 newest unfinished ones.
+- If one IP starts many passkey sign ins, it removes only its own oldest. Other IPs' sign ins still finish.
 
 #### Refused sign ins
 

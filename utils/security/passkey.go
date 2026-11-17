@@ -1,10 +1,13 @@
 package security
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
@@ -16,33 +19,60 @@ const PASSKEY_SESSION_COOKIE = "passkey_session"
 // passkeySessionFor is how long a passkey ceremony has to finish
 const passkeySessionFor = 5 * time.Minute
 
-// newPasskeySessions keeps passkey ceremonies' sessions, with their challenges, in memory only, by a random ID only the
-// browser that began each has. At most 10,000 are kept, many more than are begun in passkeySessionFor; one dropped
-// early is refused, never finished twice.
-func newPasskeySessions() *expirable.LRU[string, []byte] {
-	return expirable.NewLRU[string, []byte](10_000, nil, passkeySessionFor)
+// passkeySessionsPerIP is how many ceremonies one IP keeps begun and not finished, more than the people behind one
+// address begin at once; past it, the IP's oldest is dropped, never another IP's
+const passkeySessionsPerIP = 5
+
+// passkeyCeremony is one ceremony's session, by a random ID only the browser that began it has
+type passkeyCeremony struct {
+	id      string
+	session []byte
+	until   time.Time
 }
 
-// SetPasskeySessionCookie keeps a passkey ceremony's session, for the passkeySessionFor it has to finish
-func (cfg *SecurityConfig) SetPasskeySessionCookie(w http.ResponseWriter, session []byte) {
-	id := SecureRandomString(32, API_KEY_CHAR_SET)
-	cfg.passkeySessions.Add(id, session)
-	cfg.setCookie(w, PASSKEY_SESSION_COOKIE, id, time.Now().Add(passkeySessionFor))
+// passkeySessions keeps passkey ceremonies' sessions, with their challenges, in memory only, for the 10,000 IPs that
+// began one last, so many begun from one IP push out only its own. One dropped early is refused, never finished twice.
+type passkeySessions struct {
+	mu   sync.Mutex
+	byIP *expirable.LRU[string, []passkeyCeremony]
 }
 
-// PasskeySession is the session SetPasskeySessionCookie kept, which is then removed, so each challenge is finished once
-// only, whether or not the finish succeeds: sending the same cookie again, as a replay would, is refused
-func (cfg *SecurityConfig) PasskeySession(w http.ResponseWriter, r *http.Request) ([]byte, error) {
+func newPasskeySessions() *passkeySessions {
+	return &passkeySessions{byIP: expirable.NewLRU[string, []passkeyCeremony](10_000, nil, passkeySessionFor)}
+}
+
+// SetPasskeySessionCookie keeps a passkey ceremony's session begun from ip, for the passkeySessionFor it has to finish
+func (cfg *SecurityConfig) SetPasskeySessionCookie(w http.ResponseWriter, ip string, session []byte) {
+	s, id, until := cfg.passkeySessions, SecureRandomString(32, API_KEY_CHAR_SET), time.Now().Add(passkeySessionFor)
+	s.mu.Lock()
+	ceremonies, _ := s.byIP.Peek(ip)
+	ceremonies = append(ceremonies, passkeyCeremony{id: id, session: session, until: until})
+	s.byIP.Add(ip, ceremonies[max(0, len(ceremonies)-passkeySessionsPerIP):])
+	s.mu.Unlock()
+	cfg.setCookie(w, PASSKEY_SESSION_COOKIE, id, until)
+}
+
+// PasskeySession is the session SetPasskeySessionCookie kept for ip, which is then removed, so each challenge is
+// finished once only, whether or not the finish succeeds: sending the same cookie again, as a replay would, is refused
+func (cfg *SecurityConfig) PasskeySession(w http.ResponseWriter, r *http.Request, ip string) ([]byte, error) {
 	id, err := cookieValue(r, PASSKEY_SESSION_COOKIE)
 	if err != nil {
 		return nil, err
 	}
 	cfg.clearCookie(w, PASSKEY_SESSION_COOKIE)
-	session, ok := cfg.passkeySessions.Peek(id)
-	if !ok || !cfg.passkeySessions.Remove(id) {
-		return nil, fmt.Errorf("the passkey session has expired or was already finished")
+	s := cfg.passkeySessions
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ceremonies, _ := s.byIP.Peek(ip)
+	for i, ceremony := range ceremonies {
+		if subtle.ConstantTimeCompare([]byte(ceremony.id), []byte(id)) == 1 {
+			s.byIP.Add(ip, slices.Delete(slices.Clone(ceremonies), i, i+1))
+			if time.Now().Before(ceremony.until) {
+				return ceremony.session, nil
+			}
+		}
 	}
-	return session, nil
+	return nil, fmt.Errorf("the passkey session has expired or was already finished")
 }
 
 // WELCOME_PASSKEY_COOKIE lets the browser a new site's credentials were shown to add its admin a passkey

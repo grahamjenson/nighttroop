@@ -50,7 +50,7 @@ type SecurityConfig struct {
 	totpMu        sync.Mutex
 
 	// passkeySessions are the passkey ceremonies begun and not finished yet
-	passkeySessions *expirable.LRU[string, []byte]
+	passkeySessions *passkeySessions
 
 	/////
 	// Dangerous Dev Only Configs
