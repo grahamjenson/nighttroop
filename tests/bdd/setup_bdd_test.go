@@ -3,6 +3,7 @@ package bdd_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
@@ -63,6 +64,16 @@ var ownServers = []ownServer{
 			require.NoError(t, err)
 			controlDB.MakeSiteUnavailable(siteID, reason)
 		}
+		return nil
+	}},
+	// A server whose S3 lists two backups of bkupsite, an unavailable site, and has neither to download
+	{"unavailable/backups.bdd", "192.0.2.17", func(c *config.ServerConfig) {
+		c.S3URL, c.Status.S3Working = backupsS3(), true
+	}, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		_, err := controlDB.CreateSiteWithID(t.Context(), "bkupsite")
+		require.NoError(t, err)
+		controlDB.MakeSiteUnavailable("bkupsite", db.UnavailableCannotOpen)
 		return nil
 	}},
 	// A server run by another operator, with its own support email
@@ -128,4 +139,22 @@ func runOnOwnServer(t *testing.T, browser playwright.Browser, root string, own o
 	}
 	RunTheActionFileAsATest(t, root, own.path, ts, browserContext, backgroundJobs, actionContext)
 	browserContext.Close()
+}
+
+// backupsS3 is a stand in for S3 that lists two versions of whatever backup it is asked for, and has no object to
+// download, so a restore of either fails
+func backupsS3() string {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := r.URL.Query()["versions"]; ok {
+			key := r.URL.Query().Get("prefix")
+			_, _ = fmt.Fprintf(w, `<?xml version="1.0" encoding="UTF-8"?>
+<ListVersionsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>bucket</Name><IsTruncated>false</IsTruncated>
+<Version><Key>%[1]s</Key><VersionId>newest</VersionId><IsLatest>true</IsLatest><LastModified>2026-11-17T10:00:00.000Z</LastModified><Size>1536000</Size></Version>
+<Version><Key>%[1]s</Key><VersionId>older</VersionId><IsLatest>false</IsLatest><LastModified>2026-11-17T09:00:00.000Z</LastModified><Size>1484000</Size></Version>
+</ListVersionsResult>`, key)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><Message>no</Message></Error>`))
+	})).URL
 }

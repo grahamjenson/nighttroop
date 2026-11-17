@@ -32,6 +32,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -354,6 +355,9 @@ templ SitePage(page *controlmodels.SitePage) {
 			<p id="control--site--lifecycle" class="mt-1 text-sm text-gray-500">{ lifecycle(ctx, site) }</p>
 		</div>
 		@siteActions(site)
+		if len(page.BackupVersions) > 0 {
+			@backupVersions(site, page.BackupVersions)
+		}
 		@dbSize(site, page.Tables)
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			@stat.Tile("control--site--last-seen", i18n.T(ctx, "control.site.last_seen"), display.Ago(ctx, site.LastSeenAt, time.Now()), icon.Eye)
@@ -514,6 +518,52 @@ var updatedToasts = map[string]string{"disabled": "control.site.disabled_toast",
 // SiteUpdated shows the site's page again, with a toast saying it is disabled or archived
 templ SiteUpdated(site *controlmodels.Site) {
 	@siteChanged(site, i18n.T(ctx, updatedToasts[site.State]))
+}
+
+// backupVersions are the backups S3 keeps of an unavailable site, newest first, each of which an admin can restore
+templ backupVersions(site *controlmodels.Site, versions []s3utils.BackupVersion) {
+	@card.Card(card.Props{ID: "control--site--backups", Title: i18n.T(ctx, "control.site.backups"), Note: i18n.T(ctx, "control.site.backups_intro"), Scroll: true}) {
+		@table.Table(table.Props{ID: "control--site--backups--table"}) {
+			@table.Body() {
+				for i, version := range versions {
+					@table.Row() {
+						@table.Cell() {
+							{ display.DateTime(&version.At) }
+							if version.Latest {
+								@badge.Badge(badge.Props{ID: "control--site--backup-latest", Variant: badge.VariantNeutral, Class: "ml-2"}) {
+									{ i18n.T(ctx, "control.site.backup_latest") }
+								}
+							}
+						}
+						@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+							{ display.Bytes(float64(version.SizeBytes)) }
+						}
+						@table.Cell(table.CellProps{Class: "text-right"}) {
+							if httputils.IsControlAdmin(ctx) {
+								<form
+									hx-post={ "/sites/" + site.ID + "/restore-version" }
+									hx-target="#main-content"
+									hx-swap="innerHTML"
+									hx-confirm={ i18n.T(ctx, "control.site.restore_version_confirm") }
+									hx-status:4xx="target:#toaster swap:beforeend"
+									hx-status:5xx="target:#toaster swap:beforeend"
+								>
+									<input type="hidden" name="version_id" value={ version.ID }/>
+									@button.Button(button.Props{ID: fmt.Sprintf("control--site--restore-version-%d", i), Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+										{ i18n.T(ctx, "control.site.restore_version") }
+									}
+								</form>
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+templ SiteVersionRestored(site *controlmodels.Site) {
+	@siteChanged(site, i18n.T(ctx, "control.site.version_restored_toast"))
 }
 
 templ SiteNewEmptyDB(site *controlmodels.Site) {
