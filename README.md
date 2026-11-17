@@ -94,7 +94,7 @@ This repository, or its server image, contains these items. Each has its own lic
 | What | Where | Licence |
 | ---- | ----- | ------- |
 | [htmx](https://htmx.org) and its SSE extension | `server/assets/static/htmx.js`, `htmx_sse.js` | [0BSD](https://github.com/bigskysoftware/htmx/blob/master/LICENSE) |
-| [Floating UI](https://floating-ui.com) core and dom 1.7.0 | `server/assets/static/floating_ui_core.js`, `floating_ui_dom.js` | [MIT](https://github.com/floating-ui/floating-ui/blob/master/LICENSE) |
+| [Floating UI](https://floating-ui.com) core and dom 1.7.0 | in `server/assets/static/popover.min.js` | [MIT](https://github.com/floating-ui/floating-ui/blob/master/LICENSE) |
 | [QRCode.js](https://github.com/davidshimjs/qrcodejs) | `server/assets/static/qrcode.js` | [MIT](https://github.com/davidshimjs/qrcodejs/blob/master/LICENSE) |
 | [Apache ECharts](https://echarts.apache.org) 5.6.0 | `server/assets/static/echarts.min.js` | [Apache-2.0](https://github.com/apache/echarts/blob/master/LICENSE), with its [NOTICE](https://github.com/apache/echarts/blob/master/NOTICE) |
 | [Redoc](https://github.com/Redocly/redoc) 2.5.4 | `server/assets/static/redoc.standalone.js` | [MIT](https://github.com/Redocly/redoc/blob/main/LICENSE); `redoc.standalone.js.LICENSE.txt` lists the libraries it bundles |
