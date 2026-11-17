@@ -107,6 +107,9 @@ ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 // but one no one has used can be disabled, and one whose DB is here, however small, can be truncated
 ASSERT_VISIBLE #control--site--action-truncate >> text=then shrinks its DB.
 ASSERT_VISIBLE #control--site--truncate
+// Each action is a row, and its button is as wide as its words, not the page
+ASSERT_COUNT #control--site--actions .w-full 0
+ASSERT_VISIBLE #control--site--actions .divide-y > #control--site--action-truncate
 ASSERT_NOT_VISIBLE #control--site--archive
 ASSERT_VISIBLE #control--site--action-archive >> text=Offered once it is disabled.
 ASSERT_VISIBLE #control--site--action-disable >> text=Stops serving the site. Its data is kept.
