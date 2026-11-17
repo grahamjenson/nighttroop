@@ -46,8 +46,9 @@ func Up(name string, db *sql.DB, fsys fs.FS) error {
 	if errors.As(err, &dbErr) && dbErr.OrigErr != nil {
 		err = dbErr.OrigErr
 	}
-	if version, dirty, verr := m.Version(); verr == nil && dirty {
-		return fmt.Errorf("%s migration %d failed: %w", name, version, err)
+	// Dirty at the migration that failed, or not dirty at one this release does not have, as a DB from a later release
+	if version, _, verr := m.Version(); verr == nil {
+		return &FailedError{DB: name, Migration: version, Err: err}
 	}
 	return fmt.Errorf("%s cannot migrate: %w", name, err)
 }
@@ -66,11 +67,65 @@ func forceBackIfDirty(name string, m *migrate.Migrate, src source.Driver) error 
 	if first, err := src.First(); err != nil || first != version {
 		p, err := src.Prev(version)
 		if err != nil {
-			return fmt.Errorf("%s is dirty at migration %d, which is not one of its migrations: %w", name, version, err)
+			return &FailedError{DB: name, Migration: version, Err: fmt.Errorf("dirty at a migration this release does not have: %w", err)}
 		}
 		prev = int(p)
 	}
 	slog.Warn("A DB a migration failed on is forced back to the version before it, to migrate again",
 		"db", name, "failed_migration", version, "forced_to_version", prev)
 	return m.Force(prev)
+}
+
+// FailedError is a DB that could not be migrated to the latest migration: the DB's name, the migration it failed at
+// and why
+type FailedError struct {
+	DB        string
+	Migration uint
+	Err       error
+}
+
+func (e *FailedError) Error() string {
+	return fmt.Sprintf("%s migration %d failed: %v", e.DB, e.Migration, e.Err)
+}
+
+func (e *FailedError) Unwrap() error {
+	return e.Err
+}
+
+// Version is the migration db is at, 0 before its first, and whether a migration failed there
+func Version(db *sql.DB, fsys fs.FS) (uint, bool, error) {
+	src, err := iofs.New(fsys, "migrations")
+	if err != nil {
+		return 0, false, err
+	}
+	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
+	if err != nil {
+		return 0, false, err
+	}
+	m, err := migrate.NewWithInstance("iofs", src, "sqlite", driver)
+	if err != nil {
+		return 0, false, err
+	}
+	version, dirty, err := m.Version()
+	if errors.Is(err, migrate.ErrNilVersion) {
+		return 0, false, nil
+	}
+	return version, dirty, err
+}
+
+// Latest is the last of the migrations in fsys's migrations folder
+func Latest(fsys fs.FS) (uint, error) {
+	src, err := iofs.New(fsys, "migrations")
+	if err != nil {
+		return 0, err
+	}
+	latest, err := src.First()
+	for err == nil {
+		next, nextErr := src.Next(latest)
+		if nextErr != nil {
+			break
+		}
+		latest = next
+	}
+	return latest, err
 }

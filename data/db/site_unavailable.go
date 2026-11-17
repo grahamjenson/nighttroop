@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/page"
@@ -22,8 +23,11 @@ import (
 const (
 	// UnavailableMissing is a site whose DB file was not there at start
 	UnavailableMissing = "missing"
-	// UnavailableCannotOpen is a site whose DB file was there at start but did not open, as when its migration fails
+	// UnavailableCannotOpen is a site whose DB file was there at start but did not open
 	UnavailableCannotOpen = "cannot_open"
+	// UnavailableMigrationFailed is a site whose DB opened but could not be migrated to the latest migration, as one
+	// restored from long ago whose migration fails
+	UnavailableMigrationFailed = "migration_failed"
 )
 
 // ErrSiteUnavailable is a live or disabled site whose DB is not open, as it was missing or did not open at start, so its
@@ -36,6 +40,8 @@ type unavailableSites struct {
 	reasons map[string]string
 	// busy are the unavailable sites whose DB is being restored or made again now, so two never work on one at once
 	busy map[string]bool
+	// failedMigrations are the migrations that failed on the sites unavailable as UnavailableMigrationFailed
+	failedMigrations map[string]uint
 }
 
 // claim marks the unavailable site busy, and is false if it is not unavailable or is already busy
@@ -71,6 +77,7 @@ func (u *unavailableSites) remove(siteID string) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	delete(u.reasons, siteID)
+	delete(u.failedMigrations, siteID)
 }
 
 func (u *unavailableSites) has(siteID string) bool {
@@ -98,6 +105,37 @@ func (db *ControlDB) MakeSiteUnavailable(siteID, reason string) {
 	if site := db.sites.remove(siteID); site != nil {
 		site.Close()
 	}
+}
+
+// MakeSiteUnavailableFor makes the site unavailable for why its DB did not open: UnavailableMigrationFailed, keeping
+// the migration that failed, when it could not be migrated, or UnavailableCannotOpen otherwise
+func (db *ControlDB) MakeSiteUnavailableFor(siteID string, err error) {
+	var failed *migrateup.FailedError
+	if !errors.As(err, &failed) {
+		db.MakeSiteUnavailable(siteID, UnavailableCannotOpen)
+		return
+	}
+	db.unavailable.mu.Lock()
+	if db.unavailable.failedMigrations == nil {
+		db.unavailable.failedMigrations = map[string]uint{}
+	}
+	db.unavailable.failedMigrations[siteID] = failed.Migration
+	db.unavailable.mu.Unlock()
+	db.MakeSiteUnavailable(siteID, UnavailableMigrationFailed)
+}
+
+// SiteMigration is the migration the site's DB is at, or for one unavailable as its migration failed, the migration
+// that failed, with failed true. It is false for a site whose DB is not open for another reason.
+func (db *ControlDB) SiteMigration(siteID string) (version uint, failed bool, ok bool) {
+	db.unavailable.mu.RLock()
+	version, failed = db.unavailable.failedMigrations[siteID]
+	db.unavailable.mu.RUnlock()
+	site := db.sites.get(siteID)
+	if failed || site == nil {
+		return version, failed, failed
+	}
+	version, dirty, err := migrateup.Version(site.SQLiteDB, sitedb.Migrations)
+	return version, dirty, err == nil
 }
 
 // dbFiles are a SQLite DB's files: the DB and its write-ahead log and shared memory

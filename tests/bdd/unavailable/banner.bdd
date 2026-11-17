@@ -1,4 +1,4 @@
-// The control admin signs in to a server with two sites unavailable, as their DBs could not be opened or restored, so
+// The control admin signs in to a server with three sites unavailable, as their DBs could not be opened or restored, so
 // every control page names them, with why, each linked to its page
 GOTO {{ .control_url }}/login
 INPUT #control--login--name admin
@@ -6,15 +6,17 @@ INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 ASSERT_VISIBLE #control--status-banner--unavailable
-ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (2):
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (3):
 ASSERT_VISIBLE #control--status-banner--unavailable--amissing
 ASSERT_VISIBLE #control--status-banner--unavailable >> text=/amissing\s*\(DB missing\)/
 ASSERT_VISIBLE #control--status-banner--unavailable >> text=/brokensi\s*\(DB does not open\)/
+ASSERT_VISIBLE #control--status-banner--unavailable >> text=/migrfail\s*\(migration failed\)/
 
 // The sites list, the dashboard, marks each unavailable site
 ASSERT_PATH /
 ASSERT_VISIBLE #control--site--amissing--unavailable
 ASSERT_VISIBLE #control--site--brokensi--unavailable
+ASSERT_VISIBLE #control--site--migrfail--unavailable
 SCREENSHOT dashboard
 
 // A site's name in the banner opens its page
@@ -22,6 +24,7 @@ CLICK #control--status-banner--unavailable--amissing
 ASSERT_PATH /sites/amissing
 ASSERT_VISIBLE #control--status-banner--unavailable
 ASSERT_VISIBLE #control--site--unavailable
+ASSERT_VISIBLE #control--site--migration >> text=Unknown
 SCREENSHOT site_page
 
 // Its page offers to make it a new, empty DB, as for a site created just before a crash, which has no backup. Making it
@@ -31,8 +34,17 @@ CLICK #control--site--new-empty-db
 ASSERT_TEXT_VISIBLE New Empty DB Made
 ASSERT_NOT_VISIBLE #control--site--unavailable
 ASSERT_VISIBLE #control--site--events--table td >> text=Site DB made empty
-// The banner, on every page, names only the other site
+// Its new DB is at the latest migration
 GOTO {{ .control_url }}/sites/amissing
-ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (1):
+ASSERT_VISIBLE #control--site--migration >> text=/^1 of 1$/
+// The banner, on every page, names only the other sites
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (2):
 ASSERT_NOT_VISIBLE #control--status-banner--unavailable--amissing
 SCREENSHOT new_empty_db
+
+// A site whose migration failed shows, on its page, the migration that failed of the latest
+GOTO {{ .control_url }}/sites/migrfail
+ASSERT_VISIBLE #control--site--unavailable
+ASSERT_VISIBLE #control--site--migration >> text=/^1 failed, of 1$/
+SCROLL -3000
+SCREENSHOT migration_failed

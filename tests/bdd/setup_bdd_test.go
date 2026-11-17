@@ -2,6 +2,7 @@ package bdd_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/config"
@@ -56,7 +58,8 @@ var ownServers = []ownServer{
 	}},
 	// A server with a feedback link, on its home page and every footer
 	{"feedback/links.bdd", "192.0.2.14", func(c *config.ServerConfig) { c.FeedbackURL = "https://github.com/grahamjenson/nighttroop/issues" }, seedDevAdmin},
-	// A server with two sites unavailable: amissing, whose DB was missing, and brokensi, whose DB did not open
+	// A server with three sites unavailable: amissing, whose DB was missing, brokensi, whose DB did not open, and
+	// migrfail, whose migration 1 failed
 	{"unavailable/banner.bdd", "192.0.2.16", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
 		seedDevAdmin(t, controlDB)
 		for siteID, reason := range map[string]string{"amissing": db.UnavailableMissing, "brokensi": db.UnavailableCannotOpen} {
@@ -64,6 +67,9 @@ var ownServers = []ownServer{
 			require.NoError(t, err)
 			controlDB.MakeSiteUnavailable(siteID, reason)
 		}
+		_, err := controlDB.CreateSiteWithID(t.Context(), "migrfail")
+		require.NoError(t, err)
+		controlDB.MakeSiteUnavailableFor("migrfail", &migrateup.FailedError{DB: "sitedb", Migration: 1, Err: errors.New("no such table")})
 		return nil
 	}},
 	// A server whose S3 lists two backups of bkupsite, an unavailable site, and has neither to download
