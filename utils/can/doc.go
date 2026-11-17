@@ -24,9 +24,9 @@
 // The files group the rules by context:
 //   - login.go: who signs in to the website, and who must use TOTP.
 //   - site_stores.go: who may search, get, create, update and delete each store of the site API.
-//   - site_admin.go: what only a site admin may do outside the stores.
+//   - site_admin.go: what only a site admin may do outside the stores, and the role a device for a loop must have.
 //   - site_report.go: the clinician, who sees only the printable report.
-//   - nightscout.go: Nightscout tokens, Nightscout permissions and AAPS device pairing.
+//   - nightscout.go: Nightscout tokens, Nightscout permissions, what a permission grants, and AAPS device pairing.
 //   - device_tokens.go: who gets the device tokens of Loop and Trio.
 //   - control.go: what a control admin may do that a control reader may not.
 //

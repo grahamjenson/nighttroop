@@ -1,11 +1,12 @@
 package can
 
 // nightscout.go: the Nightscout API. Who has a Nightscout token and may sign in with one, the Nightscout permissions of
-// each role, and who pairs AAPS clients as Nightscout subjects.
+// each role and what they grant, and who pairs AAPS clients as Nightscout subjects.
 
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -42,6 +43,32 @@ func NightscoutPermissions(role consts.IdentityRole, client *string) ([]string, 
 		permissions = slices.Clone(aapsClientNightscoutPermissions)
 	}
 	return permissions, nil
+}
+
+// NightscoutPermitted is whether the granted Nightscout permissions include the wanted one, e.g. "api:treatments:create".
+// A granted "*" part matches any part, as Nightscout's Shiro permissions do.
+func NightscoutPermitted(granted []string, wanted string) bool {
+	return slices.ContainsFunc(granted, func(permission string) bool { return nightscoutPermissionMatch(permission, wanted) })
+}
+
+func nightscoutPermissionMatch(granted, wanted string) bool {
+	if granted == "*" || granted == "api:*:*" {
+		return true
+	}
+	gotParts := strings.Split(granted, ":")
+	wantParts := strings.Split(wanted, ":")
+	if len(gotParts) != len(wantParts) {
+		return granted == wanted
+	}
+	for i := range gotParts {
+		if gotParts[i] == "*" || gotParts[i] == "all" {
+			continue
+		}
+		if gotParts[i] != wantParts[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // IdentityHaveNightscoutToken is whether the role is given a Nightscout token: a user, a read only user and each device,

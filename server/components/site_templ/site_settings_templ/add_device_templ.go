@@ -12,13 +12,13 @@ import (
 	"slices"
 	"strings"
 
-	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -241,7 +241,7 @@ func AddDeviceModal() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if sitemodels.ClientRoles[client.Value] != "" {
+				if can.ClientRoles[client.Value] != "" {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " data-forced")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
