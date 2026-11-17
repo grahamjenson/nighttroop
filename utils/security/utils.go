@@ -5,7 +5,6 @@ import (
 	"log"
 	"log/slog"
 	"math/big"
-	badrand "math/rand"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,16 +19,6 @@ const (
 // //
 const API_KEY_CHAR_SET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const API_KEY_CHAR_SET_LENGTH = len(API_KEY_CHAR_SET)
-
-func InsecureRandomString(length int, charset string) string {
-	bytes := make([]byte, length)
-	for i := 0; i < length; i++ {
-		num := badrand.Intn(len(charset))
-		bytes[i] = charset[num]
-	}
-
-	return string(bytes)
-}
 
 func SecureRandomString(length int, charset string) string {
 	bytes := make([]byte, length)
