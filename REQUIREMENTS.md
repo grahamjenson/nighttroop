@@ -1825,7 +1825,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - After the start, in the background, each unavailable site:
   - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
-    restore failed). One not restored is also logged as an error, and stays unavailable while the server runs.
+    restore failed). One not restored is also logged as an error, and stays unavailable.
+- The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, each try logged the same way.
+  After the last, the admin is paged once, with the sites. Paging is not set up yet, so a page is logged as an error.
 - A site DB that cannot be opened is moved aside while its backup is restored, and put back if the restored DB cannot
   be opened either.
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
