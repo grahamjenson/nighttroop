@@ -1,19 +1,19 @@
 package control_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/head"
+	"nighttroop.t1d.nz/server/components/confirm"
 	"context"
 	"fmt"
 	"maps"
-	"nighttroop.t1d.nz/server/components/confirm"
-	"nighttroop.t1d.nz/server/components/head"
 	"slices"
 
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -139,7 +139,7 @@ func resourceWarning(ctx context.Context, level config.ResourceLevel) string {
 		free := *level.Total * (100 - level.Value) / 100
 		return i18n.T(ctx, "control.status_banner.disk_warning", i18n.Data{"FreeBytes": display.Bytes(free), "TotalBytes": display.Bytes(*level.Total)})
 	}
-	return i18n.T(ctx, "control.status_banner.memory_warning", i18n.Data{"UsedBytes": display.Bytes(*level.Total * level.Value / 100), "TotalBytes": display.Bytes(*level.Total)})
+	return i18n.T(ctx, "control.status_banner.memory_warning", i18n.Data{"UsedBytes": display.Bytes(*level.Total*level.Value/100), "TotalBytes": display.Bytes(*level.Total)})
 }
 
 templ FullPage(content templ.Component) {
@@ -150,8 +150,8 @@ templ FullPage(content templ.Component) {
 
 templ menuItem(id string, path string, label string, itemIcon func(...icon.Props) templ.Component) {
 	@dropdown.Item(dropdown.ItemProps{
-		ID:         id,
-		Href:       "#",
+		ID:   id,
+		Href: "#",
 		Attributes: nav.Attributes(path),
 	}) {
 		<span class="flex items-center">
@@ -176,20 +176,15 @@ var headerLinks = []struct {
 templ currentLinkScript() {
 	<script>
 		(() => {
-			const mark = () =>
-				document.querySelectorAll("#control--nav--links a").forEach((link) => {
-					const path = location.pathname === "/" ? "/sites" : location.pathname;
-					link.toggleAttribute(
-						"aria-current",
-						path === link.pathname || path.startsWith(link.pathname + "/"),
-					);
-					if (link.hasAttribute("aria-current"))
-						link.setAttribute("aria-current", "page");
-				});
-			document.addEventListener("DOMContentLoaded", mark);
-			document.addEventListener("htmx:after:settle", () => setTimeout(mark));
-			window.addEventListener("popstate", () => setTimeout(mark));
-		})();
+			const mark = () => document.querySelectorAll("#control--nav--links a").forEach((link) => {
+				const path = location.pathname === "/" ? "/sites" : location.pathname
+				link.toggleAttribute("aria-current", path === link.pathname || path.startsWith(link.pathname + "/"))
+				if (link.hasAttribute("aria-current")) link.setAttribute("aria-current", "page")
+			})
+			document.addEventListener("DOMContentLoaded", mark)
+			document.addEventListener("htmx:after:settle", () => setTimeout(mark))
+			window.addEventListener("popstate", () => setTimeout(mark))
+		})()
 	</script>
 }
 
