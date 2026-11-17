@@ -8,9 +8,6 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/stretchr/testify/require"
 
 	_ "modernc.org/sqlite"
@@ -36,13 +33,7 @@ func migrations(ups ...string) fstest.MapFS {
 
 // version is the version db is at and whether it is dirty
 func version(t *testing.T, db *sql.DB, fsys fstest.MapFS) (uint, bool) {
-	src, err := iofs.New(fsys, "migrations")
-	require.NoError(t, err)
-	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
-	require.NoError(t, err)
-	m, err := migrate.NewWithInstance("iofs", src, "sqlite", driver)
-	require.NoError(t, err)
-	v, dirty, err := m.Version()
+	v, dirty, err := Version(db, fsys)
 	require.NoError(t, err)
 	return v, dirty
 }
@@ -106,6 +97,40 @@ func TestUpRefusesADBDirtyAtAMigrationItDoesNotHave(t *testing.T) {
 	require.Error(t, Up("testdb", db, migrations(createA, createB, failing)))
 
 	err := Up("testdb", db, migrations(createA, createB))
-	require.EqualError(t, err, "testdb is dirty at migration 3, which is not one of its migrations: "+
+	require.EqualError(t, err, "testdb migration 3 failed: dirty at a migration this release does not have: "+
 		"prev for version 3 migrations: file does not exist")
+	var failed *FailedError
+	require.ErrorAs(t, err, &failed)
+	require.Equal(t, uint(3), failed.Migration)
+}
+
+// A DB from a later release, at a migration this one does not have, cannot be migrated, and says where it is
+func TestUpRefusesADBAtAMigrationItDoesNotHave(t *testing.T) {
+	db := openDB(t)
+	require.NoError(t, Up("testdb", db, migrations(createA, createB)))
+
+	err := Up("testdb", db, migrations(createA))
+	var failed *FailedError
+	require.ErrorAs(t, err, &failed)
+	require.Equal(t, &FailedError{DB: "testdb", Migration: 2, Err: failed.Err}, failed)
+	require.Regexp(t, `^testdb migration 2 failed: .*no migration found for version 2`, err.Error())
+}
+
+// Version is the migration a DB is at, 0 before its first, and Latest the last of the migrations
+func TestVersionAndLatest(t *testing.T) {
+	db, fsys := openDB(t), migrations(createA, createB, failing)
+	v, dirty, err := Version(db, fsys)
+	require.NoError(t, err)
+	require.Equal(t, uint(0), v)
+	require.False(t, dirty)
+
+	require.Error(t, Up("testdb", db, fsys))
+	v, dirty, err = Version(db, fsys)
+	require.NoError(t, err)
+	require.Equal(t, uint(3), v)
+	require.True(t, dirty)
+
+	latest, err := Latest(fsys)
+	require.NoError(t, err)
+	require.Equal(t, uint(3), latest)
 }

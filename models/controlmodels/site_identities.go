@@ -32,14 +32,23 @@ type SiteIdentityAssume struct {
 	URL  string `json:"url"`
 }
 
-// SitePage is a site's own page in control: its details, the bytes its DB's tables take, its identities, and its
-// latest events and errors
+// SitePage is a site's own page in control: its details, the bytes its DB's tables take, the migration its DB is at,
+// its identities, and its latest events and errors
 type SitePage struct {
 	Site       *Site           `json:"site"`
+	Migration  *SiteMigration  `json:"migration"`
 	Tables     []*SiteTable    `json:"tables"`
 	Identities []*SiteIdentity `json:"identities"`
 	Events     []*Event        `json:"events"`
 	Errors     []*Error        `json:"errors"`
+}
+
+// SiteMigration is the migration a site's DB is at, or for one whose migration failed, the migration that failed, and
+// the latest migration, which every DB opened is migrated to
+type SiteMigration struct {
+	Version uint `json:"version"`
+	Latest  uint `json:"latest"`
+	Failed  bool `json:"failed"`
 }
 
 // SiteTable is a table of a site's DB and the bytes it takes in the file, its indexes with it
