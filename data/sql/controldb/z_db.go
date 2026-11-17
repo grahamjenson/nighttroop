@@ -144,8 +144,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAnySitePushRegistrationStmt, err = db.PrepareContext(ctx, getAnySitePushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAnySitePushRegistration: %w", err)
 	}
-	if q.getBatchSitesToBackUpStmt, err = db.PrepareContext(ctx, getBatchSitesToBackUp); err != nil {
-		return nil, fmt.Errorf("error preparing query GetBatchSitesToBackUp: %w", err)
+	if q.getBatchSitesToTruncateStmt, err = db.PrepareContext(ctx, getBatchSitesToTruncate); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBatchSitesToTruncate: %w", err)
 	}
 	if q.getConnectorStmt, err = db.PrepareContext(ctx, getConnector); err != nil {
 		return nil, fmt.Errorf("error preparing query GetConnector: %w", err)
@@ -562,9 +562,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAnySitePushRegistrationStmt: %w", cerr)
 		}
 	}
-	if q.getBatchSitesToBackUpStmt != nil {
-		if cerr := q.getBatchSitesToBackUpStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getBatchSitesToBackUpStmt: %w", cerr)
+	if q.getBatchSitesToTruncateStmt != nil {
+		if cerr := q.getBatchSitesToTruncateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBatchSitesToTruncateStmt: %w", cerr)
 		}
 	}
 	if q.getConnectorStmt != nil {
@@ -996,7 +996,7 @@ type Queries struct {
 	getAllSitesStmt                         *sql.Stmt
 	getAnyPushCredentialStmt                *sql.Stmt
 	getAnySitePushRegistrationStmt          *sql.Stmt
-	getBatchSitesToBackUpStmt               *sql.Stmt
+	getBatchSitesToTruncateStmt             *sql.Stmt
 	getConnectorStmt                        *sql.Stmt
 	getConnectorsToRunStmt                  *sql.Stmt
 	getControlIdentityStmt                  *sql.Stmt
@@ -1113,7 +1113,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAllSitesStmt:                         q.getAllSitesStmt,
 		getAnyPushCredentialStmt:                q.getAnyPushCredentialStmt,
 		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
-		getBatchSitesToBackUpStmt:               q.getBatchSitesToBackUpStmt,
+		getBatchSitesToTruncateStmt:             q.getBatchSitesToTruncateStmt,
 		getConnectorStmt:                        q.getConnectorStmt,
 		getConnectorsToRunStmt:                  q.getConnectorsToRunStmt,
 		getControlIdentityStmt:                  q.getControlIdentityStmt,

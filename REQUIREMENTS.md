@@ -1785,7 +1785,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - Each site DB goes to S3 by itself, and the control DB separately. S3 keeps old versions for a retention period.
 - A site written to since its last backup is backed up once that backup is an hour old
-  (`BATCH_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26). The control DB is backed up every 30
+  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26). The control DB is backed up every 30
   seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the server stops.
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
