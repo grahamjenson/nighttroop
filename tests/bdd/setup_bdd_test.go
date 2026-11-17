@@ -59,6 +59,17 @@ var ownServers = []ownServer{
 	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
 		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"
 	}, seedDevAdmin},
+	// A server with a site whose DB does not open, and no S3 to restore it from, which it tries again later
+	{"unavailable/sites.bdd", "192.0.2.16", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		_, err := controlDB.CreateSite(t.Context())
+		require.NoError(t, err)
+		_, err = controlDB.CreateSiteWithID(t.Context(), "brokensi")
+		require.NoError(t, err)
+		require.NoError(t, controlDB.MakeSiteUnavailable(t.Context(), "brokensi", db.UnavailableCannotOpen))
+		controlDB.RestoreUnavailableSites(t.Context(), s3utils.NewS3Client(controlDB.ServerConfig).DownloadFilesFromS3)
+		return nil
+	}},
 }
 
 func seedDevAdmin(t *testing.T, controlDB *db.ControlDB) map[string]any {

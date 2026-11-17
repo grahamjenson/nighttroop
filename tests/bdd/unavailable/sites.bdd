@@ -1,0 +1,41 @@
+// The control admin signs in to a server with a site whose DB does not open, and no S3 to restore it from
+GOTO {{ .control_url }}/login
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// The dashboard, as every control page, names the unavailable site, why, since when, and when it is tried again
+ASSERT_PATH /
+ASSERT_VISIBLE #control--unavailable-banner
+ASSERT_TEXT_VISIBLE 1 site unavailable:
+ASSERT_VISIBLE #control--unavailable-banner--brokensi >> text=S3 not working since
+ASSERT_VISIBLE #control--unavailable-banner--brokensi >> text=6 tries left
+SCREENSHOT dashboard
+
+// The sites list keeps to the unavailable sites, each a red Unavailable badge
+CLICK #control--unavailable-banner--all
+ASSERT_PATH /sites
+ASSERT_VISIBLE #control--sites--state-unavailable
+ASSERT_COUNT #controlSitesTable tbody tr 1
+ASSERT_VISIBLE #control--site--brokensi--state.bg-red-100:text-is("Unavailable")
+SCREENSHOT unavailable_sites
+// All the sites are a click away
+CLICK #control--sites--state-all
+ASSERT_COUNT #controlSitesTable tbody tr 2
+
+// Its page says since when and why, and an admin can try to restore it now
+CLICK #control--unavailable-banner--brokensi a
+ASSERT_PATH /sites/brokensi
+ASSERT_TEXT_EQUALS #control--site--state Unavailable
+ASSERT_VISIBLE #control--site--lifecycle >> text=/Unavailable .*: S3 not working$/
+ASSERT_VISIBLE #control--site--restore
+ASSERT_VISIBLE #control--site--action-truncate >> text=Offered while its DB is here
+SCREENSHOT site_page
+
+// Without S3 it is still unavailable, and the try is in its events, after the one at start
+CLICK #control--site--restore
+ASSERT_TEXT_VISIBLE Site still unavailable
+ASSERT_COUNT #control--site--events--table td:text-matches("Site unavailable", "i") 2
+ASSERT_VISIBLE #control--unavailable-banner--brokensi >> text=6 tries left
+SCREENSHOT retried
