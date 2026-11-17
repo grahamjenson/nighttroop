@@ -453,6 +453,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The control site's order buttons are after a sort icon.
 - The public pages' boxes (credentials, recover form, notes) are the same panels.
 - Each Add button beside a page title has a plus icon.
+- The words under a page title, which say what the page shows, are small and grey, in lines of a width that is easy
+  to read.
 
 #### Static files
 
