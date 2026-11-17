@@ -89,7 +89,8 @@ func pushDevicesDescription(ctx context.Context, admin bool) string {
 	return i18n.T(ctx, "site.settings.push_devices.about")
 }
 
-// PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it
+// PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it. Test is
+// disabled while its push is sent, as Apple or Firebase can take a while, so one click sends one push.
 func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -135,7 +136,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(registration.IdentityName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 53, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 54, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -162,7 +163,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(string(registration.App))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 56, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 57, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -175,7 +176,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(PushProviders[string(registration.Provider)])
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 57, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 58, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -206,7 +207,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(registration.BundleID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 60, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 61, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -224,7 +225,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 					var templ_7745c5c3_Var12 string
 					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_devices.development_build"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 62, Col: 107}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 63, Col: 107}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -256,7 +257,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(formatIdentityDate(ctx, &registration.CreatedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 66, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 67, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -303,7 +304,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.push_devices.test"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 83, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 85, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -317,6 +318,7 @@ func PushDeviceRow(registration *sitemodels.PushRegistration) templ.Component {
 					Size:    button.SizeSm,
 					Attributes: templ.Attributes{
 						"hx-post":       "/settings/push-registrations/" + strconv.FormatInt(registration.ID, 10) + "/test",
+						"hx-disable":    "this",
 						"hx-target":     "#" + id + "--status",
 						"hx-swap":       "outerHTML",
 						"hx-status:4xx": "target:#toaster swap:beforeend",
@@ -384,7 +386,7 @@ func pushDeviceStatus(registration *sitemodels.PushRegistration) templ.Component
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(formatIdentityDate(ctx, registration.LastPushedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 95, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 97, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -402,7 +404,7 @@ func pushDeviceStatus(registration *sitemodels.PushRegistration) templ.Component
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(*registration.LastError)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 97, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/push_devices.templ`, Line: 99, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {

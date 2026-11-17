@@ -992,6 +992,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### Connector form
 
 - Before a save: only Save. After, without a reload: also Backfill, and Delete (red outline, apart from Save).
+- While a backfill request is sent, the Backfill button is disabled.
 - Enable Connector: ticked by typing a new Dexcom, LibreLinkUp or Nightscout source's details. A click on it, before
   or after, is kept. Never changed on a saved source.
 - Save does not check details. A failed first sync turns syncing off and tells why.
@@ -2042,6 +2043,8 @@ harder:
 - Passkey sign ins are rate limited for each IP, and for each site from all IPs at a much higher rate.
 - Each passkey sign in or add, on a site or control, finishes once. Its challenge is kept 5 minutes, then removed.
   A repeated finish is refused.
+- A passkey sign in or add finishes only from the IP that started it. Each IP keeps its 5 newest unfinished ones.
+- If one IP starts many passkey sign ins, it removes only its own oldest. Other IPs' sign ins still finish.
 
 #### Refused sign ins
 
@@ -2080,9 +2083,13 @@ harder:
     keeps it open.
   - Escape or a click beside it shows that warning, and does not close it. After a reset signed you out, only
     "Sign In Again" remains.
-- Add User starts on the User role. The server refuses an identity with no role.
-- A select keeps its role when you pick that role again. It does not become empty.
-- On a phone, the Add User form wraps in its card. All inputs and buttons show with no sideways scroll.
+- Add User, at the right of the Admins & Users card, opens a modal with two steps: what the person can do, and their
+  name. It says to give each person their own sign in.
+  - Step 1: User, Read-only user, Clinician or Admin, each with a line in plain words. User is picked to start with.
+  - Step 2: the name. Its hint says to use who they are, such as mum or nurse, and not an email address.
+  - The whole modal shows with no scrolling, on a phone too.
+- If the server refuses the person or the device, such as for a name the site has, the modal stays open to fix it.
+- The server refuses an identity with no role.
 - Identity creation is rate limited.
 
 #### Device clients
@@ -2191,6 +2198,7 @@ harder:
   development build or not, when registered, and last push and error. Never the token.
 - An admin sees all of the site's. Others see their own, and get 404 for another's.
 - "Test" sends a test push, then shows the new last push, or a toast with why it failed.
+- While a test push is sent, its "Test" button is disabled, so one click sends one push.
 - "Delete", after a confirmation, removes the row with a "Push Device Deleted" toast, and shows an empty table after
   the last. Pushes stop until its app registers again.
 

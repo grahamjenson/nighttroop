@@ -3,6 +3,7 @@ package flow
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"strings"
 	"sync"
 	"testing"
@@ -719,9 +720,14 @@ func (r *Hold) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (
 	}
 	h := &held{}
 	ctx[heldKey(r.Path)] = h
+	// A * in the path matches one part of it, such as an ID the flow does not know
 	matches := func(raw string) bool {
 		u, err := url.Parse(raw)
-		return err == nil && u.Path == r.Path
+		if err != nil {
+			return false
+		}
+		matched, err := path.Match(r.Path, u.Path)
+		return err == nil && matched
 	}
 	return page, page.Route(matches, func(route playwright.Route) {
 		h.Lock()

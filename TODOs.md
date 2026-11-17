@@ -42,8 +42,6 @@
         1. P2: Delete a site's old records (truncate step 2) only while it is also over its size limit, as deleting does
            not help a site whose level comes from refusals or connectors
         1. P3: Record an event when a site's level changes, and sort the control sites list by abuse score
-    1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
-       begun at once push out others' before they finish
 
 ## Before Prod Deployment
 
@@ -78,6 +76,7 @@
        until then
     1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
        identities that can change the site's data are given them back, and push registrations keep them encrypted
+    1. P5: Disable the control site's Push Devices "Test" button while its push is sent, as the site's is
 
 
 1. Nightscout API:

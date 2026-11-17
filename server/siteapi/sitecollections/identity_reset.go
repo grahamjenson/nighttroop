@@ -16,6 +16,19 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
+// IdentityNewHandler is the modal an admin adds an identity in: a person's for ?kind=user, and a device's otherwise
+func IdentityNewHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := SiteContextFor(w, r, "identities", can.ActionCreate)
+	if siteContext == nil {
+		return
+	}
+	modal := site_settings_templ.AddDeviceModal()
+	if r.URL.Query().Get("kind") == "user" {
+		modal = site_settings_templ.AddUserModal()
+	}
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, modal, true)
+}
+
 // ResetIdentityPasswordHandler gives one of the site's identities a new random password, and a device the Nightscout
 // token made from it, shown once. An admin can reset any of the site's identities, and anyone their own.
 func ResetIdentityPasswordHandler(w http.ResponseWriter, r *http.Request) {

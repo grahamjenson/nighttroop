@@ -8,8 +8,7 @@ CLICK #site--nav--menu--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
-ASSERT_VISIBLE #name-createIdentityFormusersTable
-ASSERT_VISIBLE #select-form-createIdentityFormusersTable
+ASSERT_VISIBLE #site--identities--add-user-button
 ASSERT_VISIBLE #site--identities--add-device-button
 ASSERT_FITS
 SCREENSHOT identities_phone
