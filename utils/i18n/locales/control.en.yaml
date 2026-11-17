@@ -7,6 +7,8 @@ control:
     s3_text: "backups are not being stored."
     sentry_title: "Sentry not connected:"
     sentry_text: "errors are not being reported."
+    pagerduty_title: "PagerDuty not connected:"
+    pagerduty_text: "the admin is not paged."
     memory_high: "Memory high"
     disk_high: "Disk high"
     cpu_high: "CPU high"

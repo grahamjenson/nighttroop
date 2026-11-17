@@ -88,7 +88,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The header stays at the top of the window while the page scrolls. It is as tall as the site's header.
 - The header marks the link of the page shown, or of the page it is under: a site's page is under Sites.
 - The banner shows when:
-  - S3 backups or Sentry are not connected;
+  - S3 backups, Sentry or PagerDuty are not connected;
   - sites reach 90% of `MAX_SITES`, or all of it;
   - a resource is high (see [Resource alerts](#resource-alerts));
   - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
@@ -299,6 +299,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   path).
 - User: `<site>/<id>` or `control/<id>`, named by the identity's name. Transaction: method and route.
 - The stack trace ends at the logging code, with no slog frames.
+
+#### Paging
+
+- If `PAGERDUTY_ROUTING_KEY` is set, a page goes to PagerDuty's Events API as a trigger. Each page is also logged as an
+  error.
+- A page has a level: Email, SMS or Call. PagerDuty gets it as severity `warning`, `error` or `critical`.
+- Its summary and dedup key are its message. Its source is `HOST_NAME`. Its details are what it is about.
+- If PagerDuty does not take a page, the server logs the error and continues.
+- If sites stay unavailable after their last restore try, the admin is paged with a Call.
 
 #### Logs DB download
 

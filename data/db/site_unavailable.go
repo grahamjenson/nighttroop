@@ -14,7 +14,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/page"
+	pager "nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
 
@@ -125,7 +125,7 @@ var RestoreRetries = []time.Duration{time.Minute, 2 * time.Minute, 4 * time.Minu
 // KeepRestoringUnavailableSites restores the unavailable sites, then tries those still unavailable again after each of
 // retries, and pages the admin with page if any are still unavailable after the last. Each failed try is logged as an
 // error and a site_db_missing event. It stops when ctx ends, as the server stops.
-func (db *ControlDB) KeepRestoringUnavailableSites(ctx context.Context, download s3utils.DownloadFunc, retries []time.Duration, page page.Func) {
+func (db *ControlDB) KeepRestoringUnavailableSites(ctx context.Context, download s3utils.DownloadFunc, retries []time.Duration, page pager.Func) {
 	db.RestoreUnavailableSites(ctx, download)
 	for _, wait := range retries {
 		if len(db.UnavailableSites()) == 0 {
@@ -139,7 +139,7 @@ func (db *ControlDB) KeepRestoringUnavailableSites(ctx context.Context, download
 		db.RestoreUnavailableSites(ctx, download)
 	}
 	if unavailable := slices.Sorted(maps.Keys(db.UnavailableSites())); len(unavailable) > 0 && ctx.Err() == nil {
-		page(ctx, "Sites are unavailable, as their DBs could not be restored", "site_ids", unavailable, "tries", len(retries)+1)
+		page(ctx, pager.Call, "Sites are unavailable, as their DBs could not be restored", "site_ids", unavailable, "tries", len(retries)+1)
 	}
 }
 
