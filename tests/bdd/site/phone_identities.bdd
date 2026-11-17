@@ -1,7 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 
-// On a phone the Add User and Add Device forms wrap in their cards, so every input can be seen and tapped, and the
-// page is no wider than the window. The window is tall enough for the whole page, so fitting it checks only its width.
+// On a phone the Add User form wraps in its card, and Add Device is in its card, so every input can be seen and
+// tapped, and the page is no wider than the window. The window is tall enough for the whole page, so fitting it checks only its width.
 WINDOW 390x1800
 CLICK #site--settings-menu
 CLICK #site--nav--menu--settings
@@ -10,18 +10,20 @@ ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
 ASSERT_VISIBLE #name-createIdentityFormusersTable
 ASSERT_VISIBLE #select-form-createIdentityFormusersTable
-ASSERT_VISIBLE #name-createIdentityFormdevicesTable
-ASSERT_VISIBLE #client-createIdentityFormdevicesTable
-ASSERT_VISIBLE #select-form-createIdentityFormdevicesTable
-ASSERT_VISIBLE #createIdentityFormdevicesTable button[type=submit]
+ASSERT_VISIBLE #site--identities--add-device-button
 ASSERT_FITS
 SCREENSHOT identities_phone
 
-// A device is added from the wrapped form. In a short window its credentials fill the window, scrolling, over the
-// header, so their top can be read
+// A device is added from the modal, which shows whole in the window with no scrolling. In a short window its
+// credentials fill the window, scrolling, over the header, so their top can be read
 WINDOW 390x640
-INPUT #name-createIdentityFormdevicesTable kitchen
-CLICK "Add Device"
+CLICK #site--identities--add-device-button
+ASSERT_CONTAINED #site--identities--add-device--submit
+ASSERT_VISIBLE #site--identities--add-device--name
+SCREENSHOT add_device_phone
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-other)
+INPUT #site--identities--add-device--name kitchen
+CLICK #site--identities--add-device--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE I Have Saved These
 ASSERT_VISIBLE "Save this information in a secure place"

@@ -1,8 +1,8 @@
 package site_settings_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"context"
-	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -51,19 +51,23 @@ type deviceClient struct {
 	Steps        []string
 	// MGDL is whether it needs glucose in mg/dL, so the device's own units are set to mg/dL
 	MGDL bool
+	// Role is the role the add modal picks for it to start with, and Name what it names a device for it to start with
+	Role consts.IdentityRole
+	Name string
 }
 
-// deviceClients are the clients a device can be added for, Other first as the one chosen to start with
+// deviceClients are the clients a device can be added for, in the order the add modal lists them: the loops, the apps
+// that send glucose, the followers, then any other
 var deviceClients = []deviceClient{
-	{"other", "", []string{"site.settings.identities.clients.other_client.step_1", "site.settings.identities.clients.other_client.step_2"}, false},
-	{"aaps", "AAPS", []string{"site.settings.identities.clients.aaps.step_1", "site.settings.identities.clients.aaps.step_2", "site.settings.identities.clients.aaps.step_3"}, true},
-	{"trio", "Trio", []string{"site.settings.identities.clients.trio.step_1", "site.settings.identities.clients.trio.step_2", "site.settings.identities.clients.trio.step_3", "site.settings.identities.clients.trio.step_4"}, true},
-	{"loop", "Loop", []string{"site.settings.identities.clients.loop.step_1", "site.settings.identities.clients.loop.step_2", "site.settings.identities.clients.loop.step_3"}, true},
-	{"xdrip", "xDrip+", []string{"site.settings.identities.clients.xdrip.step_1", "site.settings.identities.clients.xdrip.step_2"}, true},
-	{"xdrip4ios", "xDrip4iOS", []string{"site.settings.identities.clients.xdrip4ios.step_1", "site.settings.identities.clients.xdrip4ios.step_2", "site.settings.identities.clients.xdrip4ios.step_3"}, true},
-	{"nightguard", "Nightguard", []string{"site.settings.identities.clients.nightguard.step_1"}, false},
-	{"sugarpixel", "SugarPixel", []string{"site.settings.identities.clients.sugarpixel.step_1", "site.settings.identities.clients.sugarpixel.step_2", "site.settings.identities.clients.sugarpixel.step_3"}, true},
-	{"t1dcarer", "T1D Carer", []string{"site.settings.identities.clients.t1dcarer.step_1", "site.settings.identities.clients.t1dcarer.step_2", "site.settings.identities.clients.t1dcarer.step_3"}, true},
+	{"aaps", "AAPS", []string{"site.settings.identities.clients.aaps.step_1", "site.settings.identities.clients.aaps.step_2", "site.settings.identities.clients.aaps.step_3"}, true, consts.IdentityRoleDevicePWDPhone, "aaps"},
+	{"trio", "Trio", []string{"site.settings.identities.clients.trio.step_1", "site.settings.identities.clients.trio.step_2", "site.settings.identities.clients.trio.step_3", "site.settings.identities.clients.trio.step_4"}, true, consts.IdentityRoleDevicePWDPhone, "trio"},
+	{"loop", "Loop", []string{"site.settings.identities.clients.loop.step_1", "site.settings.identities.clients.loop.step_2", "site.settings.identities.clients.loop.step_3"}, true, consts.IdentityRoleDevicePWDPhone, "loop"},
+	{"xdrip", "xDrip+", []string{"site.settings.identities.clients.xdrip.step_1", "site.settings.identities.clients.xdrip.step_2"}, true, consts.IdentityRoleDevicePWDPhone, "xdrip"},
+	{"xdrip4ios", "xDrip4iOS", []string{"site.settings.identities.clients.xdrip4ios.step_1", "site.settings.identities.clients.xdrip4ios.step_2", "site.settings.identities.clients.xdrip4ios.step_3"}, true, consts.IdentityRoleDevicePWDPhone, "xdrip4ios"},
+	{"nightguard", "Nightguard", []string{"site.settings.identities.clients.nightguard.step_1"}, false, consts.IdentityRoleDeviceRead, "nightguard"},
+	{"sugarpixel", "SugarPixel", []string{"site.settings.identities.clients.sugarpixel.step_1", "site.settings.identities.clients.sugarpixel.step_2", "site.settings.identities.clients.sugarpixel.step_3"}, true, consts.IdentityRoleDeviceRead, "sugarpixel"},
+	{"t1dcarer", "T1D Carer", []string{"site.settings.identities.clients.t1dcarer.step_1", "site.settings.identities.clients.t1dcarer.step_2", "site.settings.identities.clients.t1dcarer.step_3"}, true, consts.IdentityRoleDeviceReadWrite, "t1dcarer"},
+	{"other", "", []string{"site.settings.identities.clients.other_client.step_1", "site.settings.identities.clients.other_client.step_2"}, false, consts.IdentityRoleDeviceRead, "device"},
 }
 
 // clientLabel is what the client is called: its name, or Other
@@ -130,15 +134,6 @@ func clientSteps(ctx context.Context, identity *sitemodels.UserIdentity) (device
 	return deviceClients[index], steps
 }
 
-// forceClientRole is the client select's change handler: a client that must have a role sets the role select to it
-// and stops it being changed, as the server refuses any other
-func forceClientRole(formID string) string {
-	roles, _ := json.Marshal(sitemodels.ClientRoles)
-	return `const role = ` + string(roles) + `[event.target.value], trigger = document.getElementById("select-form-` + formID + `");
-		if (role) { trigger.querySelector("input[type=hidden]").value = role }
-		trigger.disabled = !!role`
-}
-
 // RoleLabel is how a site identity's role is named, in the context's language, or the role as it is when it has no name
 func RoleLabel(ctx context.Context, role string) string {
 	if label, ok := roleLabels[consts.IdentityRole(role)]; ok {
@@ -167,11 +162,11 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.identities.users")}) {
 			@buildIdentityTable("usersTable", users)
 			// The first role is picked to start with, so a user added without choosing one is a User, not an Admin
-			@formCreateIdentity("usersTable", false, roleOptions(ctx, consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleClinician, consts.IdentityRoleAdmin))
+			@formCreateIdentity("usersTable", roleOptions(ctx, consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleClinician, consts.IdentityRoleAdmin))
 		}
-		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.identities.devices")}) {
+		// A device is added in a modal, which starts from the app it is for
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.identities.devices"), Action: addmodal.Open("site--identities--add-device-button", "/settings/identities/new", i18n.T(ctx, "site.settings.identities.add_device"))}) {
 			@buildIdentityTable("devicesTable", devices)
-			@formCreateIdentity("devicesTable", true, roleOptions(ctx, consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite, consts.IdentityRoleDevicePWDPhone))
 		}
 		<div id="modal-container"></div>
 	</div>
@@ -220,8 +215,9 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 	}
 }
 
+// IdentityRow has the identity's name on it, for the add modal to name a new device apart from it
 templ IdentityRow(identity *sitemodels.UserIdentity) {
-	@table.Row() {
+	@table.Row(table.RowProps{Attributes: templ.Attributes{"data-identity-name": identity.Name}}) {
 		@table.Cell() {
 			{ identity.Name }
 			if identity.CurrentIdentity {
@@ -384,7 +380,8 @@ func roleOptions(ctx context.Context, roles ...consts.IdentityRole) []sitemodels
 	return options
 }
 
-templ formCreateIdentity(tableid string, device bool, roles []sitemodels.RoleOption) {
+// formCreateIdentity adds a user with a name and a role
+templ formCreateIdentity(tableid string, roles []sitemodels.RoleOption) {
 	{{ formID := "createIdentityForm" + tableid }}
 	<div class="flex justify-end items-end mt-4">
 		<form
@@ -404,27 +401,6 @@ templ formCreateIdentity(tableid string, device bool, roles []sitemodels.RoleOpt
 						Placeholder: i18n.T(ctx, "site.settings.identities.heads.name"),
 						Required:    true,
 					})
-				}
-				// The client is picked first, as some decide the role
-				if device {
-					@field.Field("client-"+formID, i18n.T(ctx, "site.settings.identities.client"), "w-36") {
-						<div onchange={ templ.JSUnsafeFuncCall(forceClientRole(formID)) }>
-							@selectbox.SelectBox() {
-								@selectbox.Trigger(selectbox.TriggerProps{ID: "client-" + formID, Name: "client", Form: formID}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: i18n.T(ctx, "site.settings.identities.client")})
-								}
-								@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
-									@selectbox.Group() {
-										for i, client := range deviceClients {
-											@selectbox.Item(selectbox.ItemProps{Value: client.Value, Selected: i == 0}) {
-												{ clientLabel(ctx, client) }
-											}
-										}
-									}
-								}
-							}
-						</div>
-					}
 				}
 				if (len(roles) == 1) {
 					<input type="hidden" name="role" value={ string(roles[0].Value) }/>
@@ -462,11 +438,7 @@ templ formCreateIdentity(tableid string, device bool, roles []sitemodels.RoleOpt
 						Type: "submit",
 					}) {
 						@icon.Plus()
-						if device {
-							{ i18n.T(ctx, "site.settings.identities.add_device") }
-						} else {
-							{ i18n.T(ctx, "site.settings.identities.add_user") }
-						}
+						{ i18n.T(ctx, "site.settings.identities.add_user") }
 					}
 				}
 			</div>

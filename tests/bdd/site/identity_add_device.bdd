@@ -1,0 +1,50 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Add Device, at the right of the Devices card, opens a modal that starts from the app the device is for
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+CLICK #site--identities--add-device-button
+ASSERT_TEXT_VISIBLE Give each device its own identity
+// Each app has its icon and its name, and each role says in plain words what it can do
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-aaps) img[src^="/logos/aaps.png?v="]
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-nightguard) >> text=Nightguard
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read) >> text=Sees everything. Changes nothing.
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read_write) >> text=Cannot change readings.
+// The whole modal shows with no scrolling: its last step and its button are in view as it opens
+ASSERT_VISIBLE #site--identities--add-device--name
+ASSERT_VISIBLE #site--identities--add-device--submit
+
+// A follower's app starts with the role that only reads, and the device is named for the app
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-nightguard)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read:checked)
+SCREENSHOT add_device
+CLICK #site--identities--add-device--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Setting up Nightguard
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_VISIBLE #devicesTable tr:has(td:text-is("nightguard")) >> text=Read
+
+// A second device for the same app has its own identity, named apart from the first
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-nightguard)
+CLICK #site--identities--add-device--submit
+ASSERT_STATUS 201
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_VISIBLE #devicesTable tr:has(td:text-is("nightguard-2")) >> text=Read
+
+// A carer's app starts as a Caregiver, and a name that is typed is kept when another app is picked
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-t1dcarer)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read_write:checked)
+INPUT #site--identities--add-device--name carer-mum
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-sugarpixel)
+CLICK #site--identities--add-device--submit
+ASSERT_STATUS 201
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_VISIBLE #devicesTable tr:has(td:text-is("carer-mum")) >> text=Read

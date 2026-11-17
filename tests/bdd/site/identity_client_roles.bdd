@@ -6,22 +6,22 @@ CLICK #site--settings-menu
 CLICK #site--nav--menu--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
-INPUT #name-createIdentityFormdevicesTable trio
-CLICK #client-createIdentityFormdevicesTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="trio"]
-ASSERT_DRAWN #select-form-createIdentityFormdevicesTable:disabled >> text=PWD Phone
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-trio)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_pwd_phone:checked)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read:disabled)
 SCREENSHOT client_role_forced
 
 // Another client leaves the role to be picked
-CLICK #client-createIdentityFormdevicesTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="nightguard"]
-ASSERT_VISIBLE #select-form-createIdentityFormdevicesTable:enabled
-CLICK #client-createIdentityFormdevicesTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="trio"]
-ASSERT_DRAWN #select-form-createIdentityFormdevicesTable:disabled >> text=PWD Phone
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-nightguard)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read:enabled)
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-trio)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_pwd_phone:checked)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read:disabled)
 
 // The device is made a PWD phone
-CLICK "Add Device"
+INPUT #site--identities--add-device--name trio
+CLICK #site--identities--add-device--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Setting up Trio
 CLICK "I Have Saved These"
@@ -30,13 +30,12 @@ ASSERT_VISIBLE #devicesTable tr:has(td:text-is("trio")) >> text=PWD Phone
 
 // A caregiver's app, such as Nightguard, is a Caregiver device: its card says it cannot change readings
 ASSERT_TEXT_VISIBLE but cannot change readings, profiles or device statuses
-INPUT #name-createIdentityFormdevicesTable watch
-CLICK #client-createIdentityFormdevicesTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="nightguard"]
-CLICK #select-form-createIdentityFormdevicesTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="device_read_write"]
-ASSERT_DRAWN #select-form-createIdentityFormdevicesTable >> text=Caregiver
-CLICK "Add Device"
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-nightguard)
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read_write)
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read_write:checked)
+INPUT #site--identities--add-device--name watch
+CLICK #site--identities--add-device--submit
 ASSERT_STATUS 201
 CLICK "I Have Saved These"
 CLICK #site--identities--close
