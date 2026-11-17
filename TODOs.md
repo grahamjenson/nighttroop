@@ -105,7 +105,7 @@
 
 1. Replicas (Litestream):
     1. P1: Each replicated DB keeps Litestream's own connections open, one with a read transaction, each with its
-       parsed schema, and 5 goroutines, so every site costs about 1.4 MB more while idle (100 sites: 60 MB on main,
+       parsed schema, and about 4 goroutines, so every site costs about 1.4 MB more while idle (100 sites: 60 MB on main,
        about 200 MB). Closing Litestream's idle connections after 5 s saves only about 0.27 MB a site. Stop
        replicating a site that is idle for long, and start it again on its next write
     1. P2: A start sends every site DB whole again (and the day's snapshot), as the WAL is checkpointed when the DBs
