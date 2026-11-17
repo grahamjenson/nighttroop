@@ -114,17 +114,10 @@ func addReading(t *testing.T, site *db.SiteDB, id string) {
 	require.NoError(t, err)
 }
 
-// replicaKeys are the keys of the files of the site's replica in S3
+// replicaKeys are the files of the site's replica in S3
 func replicaKeys(t *testing.T, cfg *config.ServerConfig, siteID string) []string {
 	t.Helper()
-	s3 := s3utils.NewS3Client(cfg)
-	objects, err := s3.List(t.Context(), s3.ReplicaPrefix()+replica.SiteName(siteID)+"/")
-	require.NoError(t, err)
-	keys := []string{}
-	for _, object := range objects {
-		keys = append(keys, *object.Key)
-	}
-	return keys
+	return testutils.ReplicaFiles(t, cfg, s3utils.NewS3Client(cfg), replica.SiteName(siteID))
 }
 
 // requireReading checks the open site has the reading with id
@@ -585,7 +578,7 @@ func TestReplicateRestoresMissingSites(t *testing.T) {
 		require.NoError(t, os.Remove(sitedb.GetPath(siteID, cfg)))
 		require.NoError(t, os.RemoveAll(filepath.Join(filepath.Dir(sitedb.GetPath(siteID, cfg)), "."+siteID+".sqlite-litestream")))
 	}
-	require.NoError(t, s3.Delete(ctx, replicaKeys(t, cfg, "kingsite")))
+	require.NoError(t, replica.Client(cfg, s3, replica.SiteName("kingsite"), false).DeleteAll(ctx))
 
 	controlDB, err = testutils.OpenReplicated(t, cfg, s3)
 	require.ErrorIs(t, err, db.ErrSitesMissing, "kingsite has no replica, so the start stops")

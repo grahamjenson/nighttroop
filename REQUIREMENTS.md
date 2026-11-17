@@ -1031,10 +1031,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - Connector credentials are encrypted at rest.
 - Bound to their kind and site: connector credentials, TOTP secrets, push secrets and tokens, Nightscout tokens, the
-  welcome's passkey cookie. Replica files: bound to their object key, without its host.
-- Not decrypted: a secret copied in as another site's or kind, a replica file as another site's, or one encrypted
-  unbound.
-- Replicas copied to a bucket for another host still restore.
+  welcome's passkey cookie.
+- Not decrypted: a secret copied in as another site's or kind, or one encrypted unbound.
 
 #### Nightscout connector
 
@@ -1779,14 +1777,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - With `S3_URL`:
   - The server does not start if no test upload works for about 30 seconds.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
-  - If S3 stops answering during a request, the request fails after 30 minutes. Litestream tries again.
+  - Production and staging need an `https://` `S3_URL` to start.
 
 #### Replicas
 
 - With S3, [Litestream](https://litestream.io) replicates the control DB and each live or disabled site DB to S3.
 - Each DB has its own replica: `<host>/litestream/control` and `<host>/litestream/site/<site>`.
-- Each replica file is encrypted, bound to its key without its host. A file copied to another site's key does not
-  restore.
+- Over HTTPS, S3 encrypts each replica with a key of its own (SSE-C). The key is an HMAC of the replica's name with
+  the MAC key of `KEY_SETS`. A replica does not restore with another DB's key.
+- Over HTTP (the development MinIO), the replicas are not encrypted, and the server logs a warning.
 - The control DB is sent within 1 second of a write. A site DB is sent within 1 minute.
 - They are sent at once:
   - a new or restored site, and the control DB with its row;

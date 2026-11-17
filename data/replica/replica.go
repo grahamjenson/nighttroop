@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/benbjohnson/litestream"
+	"github.com/benbjohnson/litestream/s3"
 	"golang.org/x/sync/errgroup"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -24,7 +25,6 @@ import (
 const (
 	siteSync    = time.Minute
 	controlSync = time.Second
-	snapshots   = 24 * time.Hour
 )
 
 var (
@@ -39,19 +39,35 @@ type Replicas struct {
 	client func(name string) litestream.ReplicaClient
 }
 
-// New are the replicas of the server's DBs in its S3 bucket, or nil when S3 is off
-func New(cfg *config.ServerConfig, s3 *s3utils.S3Client) *Replicas {
+// New are the replicas of the server's DBs in its S3 bucket, or nil when S3 is off. Over HTTPS each is encrypted by
+// S3 with a key of its own (SSE-C); over HTTP, as the development MinIO is, S3 refuses SSE-C, so they are not.
+func New(cfg *config.ServerConfig, bucket *s3utils.S3Client) *Replicas {
 	if !cfg.Status.S3Working {
 		return nil
 	}
-	return NewWithClients(func(name string) litestream.ReplicaClient {
-		return &client{s3: s3, security: cfg.Security, prefix: s3.ReplicaPrefix() + name}
-	})
+	encrypted := strings.HasPrefix(bucket.Endpoint, "https://")
+	if !encrypted {
+		slog.Warn("S3_URL is not HTTPS, so the DBs' replicas are not encrypted")
+	}
+	return &Replicas{client: func(name string) litestream.ReplicaClient { return Client(cfg, bucket, name, encrypted) }}
 }
 
-// NewWithClients are replicas kept with client, such as a test's in a folder
-func NewWithClients(client func(name string) litestream.ReplicaClient) *Replicas {
-	return &Replicas{client: client}
+// Client is the Litestream S3 client of the replica of the DB with name, encrypted with its key when encrypted
+func Client(cfg *config.ServerConfig, bucket *s3utils.S3Client, name string, encrypted bool) *s3.ReplicaClient {
+	client := s3.NewReplicaClient()
+	client.AccessKeyID, client.SecretAccessKey = bucket.AccessKeyID, bucket.SecretAccessKey
+	client.Bucket, client.Region, client.Endpoint, client.ForcePathStyle = bucket.Bucket, bucket.Region, bucket.Endpoint, bucket.ForcePathStyle
+	client.Path = bucket.ReplicaPrefix() + name
+	if encrypted {
+		key, err := cfg.Security.ReplicaKey(name)
+		if err != nil {
+			// Not a key, so the client refuses to start rather than replicate unencrypted
+			slog.Error("Cannot make a replica's key", "replica", name, "error", err)
+			key = "none"
+		}
+		client.SSECustomerAlgorithm, client.SSECustomerKey = "AES256", key
+	}
+	return client
 }
 
 // SiteName is the name of the site's replica
@@ -73,15 +89,11 @@ func (r *Replicas) Start(ctx context.Context, controlPath string, sites map[stri
 	return errors.Join(r.control.Open(ctx), r.sites.Open(ctx))
 }
 
-// store keeps dbs, compacted at levels, with snapshots kept a day and the replica's L0 files removed once compacted,
-// checked each l0Check
+// store keeps dbs, compacted at levels, with Litestream's daily snapshots, its replica's L0 files removed once
+// compacted, checked each l0Check: Litestream's 15 seconds lists two levels of every replica each time
 func store(dbs []*litestream.DB, levels litestream.CompactionLevels, l0Check time.Duration) *litestream.Store {
 	s := litestream.NewStore(dbs, levels)
-	s.SnapshotInterval, s.SnapshotRetention, s.L0RetentionCheckInterval = snapshots, snapshots, l0Check
-	s.Logger = slog.New(warnings{slog.Default().Handler()})
-	for _, db := range dbs {
-		db.SetLogger(s.Logger.With(litestream.LogKeyDB, filepath.Base(db.Path())))
-	}
+	s.L0RetentionCheckInterval = l0Check
 	return s
 }
 
@@ -127,12 +139,6 @@ func (r *Replicas) Remove(ctx context.Context, path, name string, deleted bool) 
 	db := r.sites.FindDB(path)
 	if db == nil {
 		return fmt.Errorf("the DB is not replicated")
-	}
-	// An archived one is synced first, as Close does
-	if !deleted {
-		if _, err := r.sites.SyncDB(ctx, path, true); err != nil {
-			return err
-		}
 	}
 	if err := r.sites.UnregisterDB(ctx, path); err != nil {
 		return err
@@ -205,15 +211,3 @@ func (r *Replicas) Restore(ctx context.Context, name, path string) (bool, error)
 	}
 	return err == nil, err
 }
-
-// warnings logs Litestream's warnings and errors, each with its DB, but not its routine syncs and compactions, which
-// for thousands of sites would be most of the logs
-type warnings struct{ slog.Handler }
-
-func (w warnings) Enabled(ctx context.Context, level slog.Level) bool {
-	return level >= slog.LevelWarn && w.Handler.Enabled(ctx, level)
-}
-func (w warnings) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return warnings{w.Handler.WithAttrs(attrs)}
-}
-func (w warnings) WithGroup(name string) slog.Handler { return warnings{w.Handler.WithGroup(name)} }

@@ -24,9 +24,9 @@ the same.
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |
 | Litestream's changes of each replicated DB, not yet compacted in S3 | `.<file>-litestream/` next to each DB | They are uploaded, to `<host>/litestream/control` and `<host>/litestream/site/<site>` | The next start sends the whole DB again |
 | `update.sh` copies of `./data` | `backups/data-<time>.tar.gz`, the newest 5 | No | The way back to before a release |
-| `KEY_SETS` | `nighttroop.env` | No. Keep it in a password manager. | Every encrypted credential and S3 backup |
+| `KEY_SETS` | `nighttroop.env` | No. Keep it in a password manager. | Every encrypted credential and S3 replica |
 
-`KEY_SETS` encrypts each replica file. With bucket versioning, S3 keeps replaced or deleted replica files 90 days
+The MAC key of `KEY_SETS` makes each replica's S3 encryption key (SSE-C). With bucket versioning, S3 keeps replaced or deleted replica files 90 days
 (control) or 30 days (sites).
 
 ## Production update
@@ -226,7 +226,7 @@ again.
 
 | Problem | Result | Fix |
 | --- | --- | --- |
-| `KEY_SETS` is changed, cut short or lost | Encrypted credentials (Dexcom, Nightscout) and S3 backups cannot be decrypted | Put back the old value from the password manager. **Gap:** No way to move to new keys yet (TODOs: *Testing deploy with rolling to a new keyset*). |
+| `KEY_SETS` is changed, cut short or lost | Encrypted credentials (Dexcom, Nightscout) and S3 replicas cannot be decrypted | Put back the old value from the password manager. **Gap:** No way to move to new keys yet (TODOs: *Testing deploy with rolling to a new keyset*). |
 | A migration on `main` was edited, not added, after the first production deploy | DBs past it never get the change. Old and new DBs differ. | CI refuses it when `data/sql/MIGRATIONS_FROZEN` exists. **Gap:** It does not exist yet (TODOs P0). |
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |

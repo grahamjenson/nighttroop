@@ -63,6 +63,7 @@ func TestValidateSecrets(t *testing.T) {
 		{"staging with S3 and minioadmin", consts.Staging, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "minioadmin", "S3_SECRET_KEY": "minioadmin"}, "S3_ACCESS_KEY"},
 		{"production with S3 and a minioadmin secret", consts.Production, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "an access key", "S3_SECRET_KEY": "minioadmin"}, "S3_SECRET_KEY"},
 		{"production with S3 and an empty access key", consts.Production, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "", "S3_SECRET_KEY": "a secret key"}, "S3_ACCESS_KEY"},
+		{"production with S3 over HTTP", consts.Production, map[string]string{"S3_URL": "http://s3.example.com", "S3_ACCESS_KEY": "an access key", "S3_SECRET_KEY": "a secret key"}, "HTTPS"},
 		{"development with S3 and the minioadmin defaults", consts.Development, map[string]string{"S3_URL": "http://localhost:9000"}, ""},
 		{"test with S3 and the minioadmin defaults", consts.Test, map[string]string{"S3_URL": "http://localhost:9000"}, ""},
 	}

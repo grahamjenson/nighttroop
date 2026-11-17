@@ -115,6 +115,12 @@
     1. P3: Delete the old batch backups (`<host>/backup/*.tar.enc`, `<host>/archive/`) from the bucket by hand, once
        every site has a replica; the server no longer reads them
     1. P3: Show the replica's size and errors on the site page, as the backup tiles did
+    1. P2: A new primary MAC key makes new SSE-C keys, so the replicas made before cannot be read. Put the key's
+       version in the replica's path (`<host>/litestream/v1/...`), and keep the old keys to restore old replicas
+    1. P2: Litestream logs each site's hourly compaction and daily snapshot at Info: about 240,000 logs a day for
+       10,000 sites, more than the logs DB keeps (`LOGS_DB_MAX_ROWS_PER_TABLE`). Log only its warnings
+    1. P4: The second key of `KEY_SETS` (streaming AEAD) is unused since the replicas use SSE-C; drop it from the format
+    1. P4: Litestream's S3 client does not start when `AWS_CA_BUNDLE` is set ("unable to add custom RootCAs")
 
 1. Database:
     1. P3: CAST the bare values that a column equals in the other DBs' queries, as the site DB's are (data/sql/README.md),

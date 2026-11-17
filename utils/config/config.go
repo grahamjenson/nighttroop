@@ -585,6 +585,10 @@ func validateSecrets(keySets, s3URL, s3AccessKey, s3SecretKey string) error {
 	if s3SecretKey == "" || s3SecretKey == "minioadmin" {
 		return fmt.Errorf("S3_URL is set, so S3_SECRET_KEY must be set, and not to the development MinIO's minioadmin")
 	}
+	// Each DB's replica is encrypted by S3 with its own key (SSE-C), which S3 takes only over HTTPS
+	if !strings.HasPrefix(s3URL, "https://") {
+		return fmt.Errorf("S3_URL must be HTTPS, so S3 encrypts the DBs' replicas")
+	}
 	return nil
 }
 

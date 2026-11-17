@@ -3,9 +3,6 @@ package s3utils
 import (
 	"context"
 	"errors"
-	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -51,25 +48,4 @@ func TestStart(t *testing.T) {
 			require.Equal(t, test.endpoint != "", c.ServerConfig.Status.S3Working)
 		})
 	}
-}
-
-// An S3 that takes a request and never answers fails an upload and a download once transferTimeout is up, instead of
-// holding the DB's replication until a restart
-func TestTransfersTimeOut(t *testing.T) {
-	defer func(old time.Duration) { transferTimeout = old }(transferTimeout)
-	transferTimeout = 200 * time.Millisecond
-	stop := make(chan struct{})
-	stalled := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { <-stop }))
-	defer stalled.Close()
-	defer close(stop)
-	c := NewS3Client(&config.ServerConfig{S3URL: stalled.URL, S3Bucket: "bucket"})
-
-	start := time.Now()
-	_, err := c.Put(context.Background(), "site.ltx", strings.NewReader("data"))
-	require.Error(t, err)
-	_, err = c.Get(context.Background(), "site.ltx")
-	require.Error(t, err)
-	_, err = c.List(context.Background(), "site")
-	require.Error(t, err)
-	require.Less(t, time.Since(start), 20*time.Second)
 }

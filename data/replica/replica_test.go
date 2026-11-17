@@ -1,9 +1,8 @@
 package replica_test
 
 import (
-	"bytes"
 	"context"
-	"io"
+	"encoding/base64"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,8 +15,8 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// replicated is a site's DB and the control DB, in files, replicated to S3 in memory
-func replicated(t *testing.T, siteID string) (*replica.Replicas, *sitedb.DB, *s3utils.S3Client) {
+// replicated is a site's DB and the control DB, in files, replicated to S3 in memory, and the site's replica's files
+func replicated(t *testing.T, siteID string) (*replica.Replicas, *sitedb.DB, func() []string) {
 	cfg, s3 := testutils.ReplicatedConfig(t)
 	control, err := controldb.NewDB(t.Context(), cfg)
 	require.NoError(t, err)
@@ -28,22 +27,7 @@ func replicated(t *testing.T, siteID string) (*replica.Replicas, *sitedb.DB, *s3
 	replicas := replica.New(cfg, s3)
 	require.NoError(t, replicas.Start(t.Context(), control.Path, map[string]string{site.Path: replica.SiteName(siteID)}))
 	t.Cleanup(func() { replicas.Close(context.Background()) })
-	return replicas, site, s3
-}
-
-// objects are the keys and contents of the site's replica in S3
-func objects(t *testing.T, s3 *s3utils.S3Client, siteID string) map[string][]byte {
-	found, err := s3.List(t.Context(), s3.ReplicaPrefix()+replica.SiteName(siteID)+"/")
-	require.NoError(t, err)
-	contents := map[string][]byte{}
-	for _, object := range found {
-		body, err := s3.Get(t.Context(), *object.Key)
-		require.NoError(t, err)
-		contents[*object.Key], err = io.ReadAll(body)
-		require.NoError(t, err)
-		require.NoError(t, body.Close())
-	}
-	return contents
+	return replicas, site, func() []string { return testutils.ReplicaFiles(t, cfg, s3, replica.SiteName(siteID)) }
 }
 
 func addReading(t *testing.T, site *sitedb.DB, id string) {
@@ -51,18 +35,13 @@ func addReading(t *testing.T, site *sitedb.DB, id string) {
 	require.NoError(t, err)
 }
 
-// A site's writes, once synced, are in its replica in S3, encrypted, and restore to a DB with them
-func TestSiteWritesReachItsReplicaEncrypted(t *testing.T) {
-	replicas, site, s3 := replicated(t, "repsitea")
+// A site's writes, once synced, are in its replica in S3, and restore to a DB with them
+func TestSiteWritesReachItsReplica(t *testing.T) {
+	replicas, site, files := replicated(t, "repsitea")
 	addReading(t, site, "reading-in-the-replica")
 	require.NoError(t, replicas.Sync(t.Context(), site.Path))
 
-	sent := objects(t, s3, "repsitea")
-	require.NotEmpty(t, sent)
-	for key, content := range sent {
-		require.NotContains(t, string(content), "reading-in-the-replica", key)
-		require.NotContains(t, string(content), "CREATE TABLE", key)
-	}
+	require.NotEmpty(t, files())
 	require.NotNil(t, replicas.Replicated(site.Path))
 
 	restored := filepath.Join(t.TempDir(), "restored.sqlite")
@@ -99,24 +78,34 @@ func TestCloseSendsTheLastWrites(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// A file of one site's replica does not decrypt as another's, so a replica cannot be passed off as another site's
-func TestReplicaFilesAreBoundToTheirSite(t *testing.T) {
-	replicas, site, s3 := replicated(t, "repsiteb")
-	addReading(t, site, "kept")
-	require.NoError(t, replicas.Sync(t.Context(), site.Path))
-	for key, content := range objects(t, s3, "repsiteb") {
-		other := bytes.Replace([]byte(key), []byte("site/repsiteb/"), []byte("site/repsitec/"), 1)
-		_, err := s3.Put(t.Context(), string(other), bytes.NewReader(content))
+// Over HTTPS each DB's replica is encrypted by S3 with a key of its own (SSE-C), and over HTTP, as the development
+// MinIO is, not at all, as S3 refuses SSE-C over HTTP
+func TestReplicasAreEncryptedOverHTTPS(t *testing.T) {
+	t.Setenv("AWS_CA_BUNDLE", "")
+	cfg := *testutils.GetTestServerConfig()
+	cfg.S3URL = "https://s3.example.com"
+	bucket := s3utils.NewS3Client(&cfg)
+	keys := map[string]bool{}
+	for _, name := range []string{"control", replica.SiteName("repsitef"), replica.SiteName("repsiteg")} {
+		client := replica.Client(&cfg, bucket, name, true)
+		require.Equal(t, "AES256", client.SSECustomerAlgorithm)
+		key, err := base64.StdEncoding.DecodeString(client.SSECustomerKey)
 		require.NoError(t, err)
+		require.Len(t, key, 32)
+		require.Equal(t, "localhost/litestream/"+name, client.Path)
+		keys[client.SSECustomerKey] = true
+		require.NoError(t, client.Init(t.Context()), "the client takes the key")
 	}
-	_, err := replicas.Restore(t.Context(), replica.SiteName("repsitec"), filepath.Join(t.TempDir(), "other.sqlite"))
-	require.Error(t, err)
+	require.Len(t, keys, 3, "each DB has its own key")
+
+	client := replica.Client(&cfg, bucket, "control", false)
+	require.Empty(t, client.SSECustomerKey)
 }
 
 // A site archived stops replicating, keeping its replica, and one deleted deletes it, each removing what Litestream kept
 // beside its DB
 func TestRemoveStopsReplicating(t *testing.T) {
-	replicas, site, s3 := replicated(t, "repsited")
+	replicas, site, files := replicated(t, "repsited")
 	addReading(t, site, "first")
 	require.NoError(t, replicas.Sync(t.Context(), site.Path))
 	meta := filepath.Join(filepath.Dir(site.Path), ".repsited.sqlite-litestream")
@@ -124,16 +113,16 @@ func TestRemoveStopsReplicating(t *testing.T) {
 
 	require.NoError(t, replicas.Remove(t.Context(), site.Path, replica.SiteName("repsited"), false))
 	require.NoDirExists(t, meta)
-	kept := objects(t, s3, "repsited")
+	kept := files()
 	require.NotEmpty(t, kept)
 	require.Nil(t, replicas.Replicated(site.Path))
 	require.Error(t, replicas.Sync(t.Context(), site.Path), "it is no longer replicated")
 	addReading(t, site, "after")
-	require.Equal(t, kept, objects(t, s3, "repsited"), "nothing more is sent")
+	require.Equal(t, kept, files(), "nothing more is sent")
 
 	require.NoError(t, replicas.Add(t.Context(), site.Path, replica.SiteName("repsited")))
 	require.NoError(t, replicas.Remove(t.Context(), site.Path, replica.SiteName("repsited"), true))
-	require.Empty(t, objects(t, s3, "repsited"))
+	require.Empty(t, files())
 }
 
 // Without S3 nothing is replicated or restored, and nothing is kept beside a DB

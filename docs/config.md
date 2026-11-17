@@ -80,7 +80,7 @@ AAPS, Trio) send.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `KEY_SETS` | Empty | Required, except in test mode (fixed keys). The four keys that encrypt secrets in the DBs and backups, and sign logins. |
+| `KEY_SETS` | Empty | Required, except in test mode (fixed keys). The four keys that encrypt secrets in the DBs, sign logins, and make the replicas' S3 encryption keys. |
 
 - The keys in `.env.dev` and `.env.test` are public. Production and staging do not start with them.
 - Make them with `cmd/keysets/create_keysets.go`.
@@ -114,7 +114,12 @@ AAPS, Trio) send.
 - `S3_URL` set:
   - The server tests an upload at startup, and again over about half a minute. If it never works, the server stops.
   - [Litestream](https://litestream.io) replicates the control DB within 1 second of a write, and each site DB within
-    1 minute, to `<HOST_NAME>/litestream/` in the bucket. Each file is encrypted with `KEY_SETS`.
+    1 minute, to `<HOST_NAME>/litestream/` in the bucket.
+  - Over HTTPS, S3 encrypts each replica with a key of its own (SSE-C), made from the MAC key of `KEY_SETS`.
+    - These stores take SSE-C: AWS S3, Cloudflare R2, Backblaze B2. Other stores are not tested.
+    - **Warning:** Do not change the primary MAC key. If it changes, the replicas made before cannot be read.
+  - Over HTTP (the docker-compose MinIO), S3 refuses SSE-C, so the replicas are not encrypted. The server logs a
+    warning. Production and staging do not start with an `http://` `S3_URL`.
   - Each replica keeps a daily snapshot and the changes since: hourly files, and for the control DB files of each
     minute.
   - Production and staging require both keys, and do not start with `minioadmin`.

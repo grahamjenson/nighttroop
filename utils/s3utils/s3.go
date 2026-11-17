@@ -1,20 +1,16 @@
 package s3utils
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
@@ -26,8 +22,6 @@ import (
 type S3Client struct {
 	s3           *s3.Client // s3 service
 	ServerConfig *config.ServerConfig
-
-	uploader *manager.Uploader
 
 	// AWS authentication keys.
 	AccessKeyID     string
@@ -78,7 +72,6 @@ func NewS3Client(config *config.ServerConfig) *S3Client {
 		o.Credentials = credentials.NewStaticCredentialsProvider(c.AccessKeyID, c.SecretAccessKey, "")
 		o.UsePathStyle = c.ForcePathStyle
 	})
-	c.uploader = manager.NewUploader(c.s3)
 
 	return c
 }
@@ -222,94 +215,3 @@ func (c *S3Client) TestObjectPath() string {
 ////
 // END OF PATHS
 ////
-
-////
-// OBJECT METHODS
-////
-
-// transferTimeout is the longest a request to S3 takes: an S3 that stops answering mid transfer would otherwise hold
-// the DB's replication until a restart
-var transferTimeout = 30 * time.Minute
-
-// singlePutBytes is the largest object Put sends in one request, as a DB's changes nearly always are, so most uploads
-// hold no more than it; a larger one, such as a DB's snapshot, is sent in parts by the uploader
-const singlePutBytes = 1 << 20
-
-// Put uploads body to key, and is how many bytes it sent
-func (c *S3Client) Put(ctx context.Context, key string, body io.Reader) (int64, error) {
-	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
-	defer cancel()
-	head, err := io.ReadAll(io.LimitReader(body, singlePutBytes))
-	if err != nil {
-		return 0, err
-	}
-	if len(head) < singlePutBytes {
-		_, err = c.s3.PutObject(ctx, &s3.PutObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key), Body: bytes.NewReader(head)})
-		return int64(len(head)), err
-	}
-	cr := &utils.CountingReader{R: io.MultiReader(bytes.NewReader(head), body)}
-	_, err = c.uploader.Upload(ctx, &s3.PutObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key), Body: cr})
-	return cr.Bytes, err
-}
-
-// Get is key's object, which the caller closes, or os.ErrNotExist when there is none
-func (c *S3Client) Get(ctx context.Context, key string) (io.ReadCloser, error) {
-	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
-	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
-	var noSuchKey *types.NoSuchKey
-	if errors.As(err, &noSuchKey) {
-		err = os.ErrNotExist
-	}
-	if err != nil {
-		cancel()
-		return nil, err
-	}
-	return &body{ReadCloser: out.Body, cancel: cancel}, nil
-}
-
-// body is an object's body, whose request's timeout is cancelled once it is closed
-type body struct {
-	io.ReadCloser
-	cancel context.CancelFunc
-}
-
-func (b *body) Close() error {
-	defer b.cancel()
-	return b.ReadCloser.Close()
-}
-
-// List is the objects under prefix
-func (c *S3Client) List(ctx context.Context, prefix string) ([]types.Object, error) {
-	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
-	defer cancel()
-	objects := []types.Object{}
-	pages := s3.NewListObjectsV2Paginator(c.s3, &s3.ListObjectsV2Input{Bucket: aws.String(c.Bucket), Prefix: aws.String(prefix)})
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		objects = append(objects, page.Contents...)
-	}
-	return objects, nil
-}
-
-// Delete deletes the objects at keys, MaxKeys a request
-func (c *S3Client) Delete(ctx context.Context, keys []string) error {
-	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
-	defer cancel()
-	for chunk := range slices.Chunk(keys, MaxKeys) {
-		ids := make([]types.ObjectIdentifier, len(chunk))
-		for i, key := range chunk {
-			ids[i] = types.ObjectIdentifier{Key: aws.String(key)}
-		}
-		out, err := c.s3.DeleteObjects(ctx, &s3.DeleteObjectsInput{Bucket: aws.String(c.Bucket), Delete: &types.Delete{Objects: ids, Quiet: aws.Bool(true)}})
-		if err == nil && len(out.Errors) > 0 {
-			err = fmt.Errorf("cannot delete %s: %s", aws.ToString(out.Errors[0].Key), aws.ToString(out.Errors[0].Message))
-		}
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}

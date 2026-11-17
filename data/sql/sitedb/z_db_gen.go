@@ -174,10 +174,9 @@ func (db *DB) TableSizes(ctx context.Context) ([]TableSize, error) {
 }
 
 // Schema is the SQL that made each of db's tables, indexes and triggers, so DBs made by the same migrations have the
-// same one, without the tables Litestream adds to a DB it replicates. sqlc cannot generate a query of sqlite_master,
-// so it is read here, with the rest of the DB's upkeep.
+// same one. sqlc cannot generate a query of sqlite_master, so it is read here, with the rest of the DB's upkeep.
 func Schema(ctx context.Context, db *sql.DB) (string, error) {
-	rows, err := db.QueryContext(ctx, "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT GLOB '_litestream_*' ORDER BY type, name")
+	rows, err := db.QueryContext(ctx, "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type, name")
 	if err != nil {
 		return "", err
 	}

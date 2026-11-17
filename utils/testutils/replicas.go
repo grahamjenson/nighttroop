@@ -1,11 +1,14 @@
 package testutils
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/benbjohnson/litestream"
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
+	"github.com/superfly/ltx"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/utils/config"
@@ -16,6 +19,8 @@ import (
 // FakeS3 is the client of an S3 in memory, which cfg is changed to use, and working
 func FakeS3(t testing.TB, cfg *config.ServerConfig) *s3utils.S3Client {
 	t.Helper()
+	// Litestream's S3 client cannot start with a CA bundle, as a sandbox's proxy may set
+	t.Setenv("AWS_CA_BUNDLE", "")
 	server := httptest.NewServer(gofakes3.New(s3mem.New(), gofakes3.WithAutoBucket(true)).Server())
 	t.Cleanup(server.Close)
 	cfg.S3URL, cfg.Status.S3Working = server.URL, true
@@ -41,6 +46,23 @@ func OpenReplicated(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client
 	}
 	t.Cleanup(func() { controlDB.Close() })
 	return controlDB, controlDB.Replicate(t.Context(), replica.New(cfg, s3))
+}
+
+// ReplicaFiles are the files of the replica with name, by level and TXIDs, read as the server reads them
+func ReplicaFiles(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client, name string) []string {
+	t.Helper()
+	client := replica.Client(cfg, s3, name, false)
+	files := []string{}
+	for level := range litestream.SnapshotLevel + 1 {
+		found, err := litestream.FindLTXFiles(t.Context(), client, level, false, func(*ltx.FileInfo) (bool, error) { return true, nil })
+		if err != nil {
+			t.Fatalf("cannot list the replica's files: %v", err)
+		}
+		for _, info := range found {
+			files = append(files, fmt.Sprintf("%d/%s", level, ltx.FormatFilename(info.MinTXID, info.MaxTXID)))
+		}
+	}
+	return files
 }
 
 // NewReplicatedControlDB is a new control DB with a site, replicated to S3 in memory
