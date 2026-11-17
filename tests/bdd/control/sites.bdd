@@ -34,6 +34,8 @@ ASSERT_TEXT_VISIBLE DB Size (MB)
 ASSERT_TEXT_VISIBLE Never
 // States are capitalised like the rest of the table
 ASSERT_VISIBLE #controlSitesTable td >> text=/^Live/ >> nth=0
+// A live site's state is a green badge
+ASSERT_VISIBLE #controlSitesTable [id$="--state"].bg-green-50:text-is("Live") >> nth=0
 ASSERT_NOT_VISIBLE #controlSitesTable td >> text=/^live/
 SCREENSHOT sites
 // The order buttons are one joined control after a sort icon
@@ -69,6 +71,7 @@ CLICK #controlSitesTable tbody tr >> nth=0
 ASSERT_PATH /sites/{{ .new_site }}
 ASSERT_VISIBLE #control--site--page
 ASSERT_TEXT_EQUALS #control--site--state Live
+ASSERT_VISIBLE #control--site--state.bg-green-50
 ASSERT_VISIBLE #control--site--inactive
 ASSERT_TEXT_EQUALS #control--site--abuse Good · 0.00
 ASSERT_VISIBLE #control--site--lifecycle >> text=/^Created .* · Batch [a-z]$/
