@@ -99,6 +99,10 @@ This repository, or its server image, contains these items. Each has its own lic
 | [Apache ECharts](https://echarts.apache.org) 5.6.0 | `server/assets/static/echarts.min.js` | [Apache-2.0](https://github.com/apache/echarts/blob/master/LICENSE), with its [NOTICE](https://github.com/apache/echarts/blob/master/NOTICE) |
 | [Redoc](https://github.com/Redocly/redoc) 2.5.4 | `server/assets/static/redoc.standalone.js` | [MIT](https://github.com/Redocly/redoc/blob/main/LICENSE); `redoc.standalone.js.LICENSE.txt` lists the libraries it bundles |
 | [templUI](https://templui.io) 1.11.2 components | `server/components/ui`, `utils/templui`, and their scripts in `server/assets/static` | [MIT](https://github.com/templui/templui/blob/main/LICENSE) |
+| App icons of [AAPS](https://github.com/nightscout/AndroidAPS), [Nightguard](https://github.com/nightscout/nightguard) | `server/assets/static/logos/aaps.png`, `nightguard.png` | [AGPL-3.0](https://github.com/nightscout/AndroidAPS/blob/master/LICENSE) |
+| App icons of [xDrip+](https://github.com/NightscoutFoundation/xDrip), [xDrip4iOS](https://github.com/JohanDegraeve/xdripswift) | `server/assets/static/logos/xdrip.png`, `xdrip4ios.png` | [GPL-3.0](https://github.com/NightscoutFoundation/xDrip/blob/master/LICENSE) |
+| App icons of [Trio](https://github.com/nightscout/Trio), [Loop](https://github.com/LoopKit/Loop) | `server/assets/static/logos/trio.png`, `loop.png` | [MIT](https://github.com/nightscout/Trio/blob/main/LICENSE.md) |
+| App icon of [T1D Carer](https://github.com/grahamjenson/carer) | `server/assets/static/logos/t1dcarer.png` | Its author's, who is Nighttroop's |
 | [Lucide](https://lucide.dev) icons | `server/components/ui/icon/icon_data.go` | [ISC](https://github.com/lucide-icons/lucide/blob/main/LICENSE) |
 | [DB-IP](https://db-ip.com) IP to Country Lite | `utils/geoip/dbip-country-lite.mmdb` | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [DB-IP](https://db-ip.com) IP to City Lite | The `Dockerfile` downloads it into the server image | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |

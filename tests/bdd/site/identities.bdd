@@ -11,19 +11,26 @@ ASSERT_TEXT_VISIBLE PWD Phone
 // Column names are in title case like the others
 ASSERT_NOT_VISIBLE #main-content >> text=Created at
 ASSERT_VISIBLE #main-content th >> text=Created >> nth=0
-// The forms to add a user or a device label what each input takes, like the data pages
-ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormusersTable"]:has-text("Name")
-ASSERT_VISIBLE #identities_table label[for="select-form-createIdentityFormusersTable"]:has-text("Role")
-ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormdevicesTable"]:has-text("Name")
-// The role cards are neutral, as red, blue and green are for errors, information and success
-ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Admin")
-ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Device")
+// Add User and Add Device are each at the right of their card
+ASSERT_VISIBLE #site--identities--add-user-button
+ASSERT_VISIBLE #site--identities--add-device-button
+// A table says what each role can do, whether it signs in to the site, and its permissions on the Nightscout API
+ASSERT_TEXT_VISIBLE What each role can do
+ASSERT_VISIBLE #site--identities--role--admin >> text=Manages the site
+ASSERT_VISIBLE #site--identities--role--admin td >> text=None
+ASSERT_VISIBLE #site--identities--role--clinician >> text=Signs in to see the printable report only.
+ASSERT_VISIBLE #site--identities--role--device_read td >> text=api:*:read
+ASSERT_VISIBLE #site--identities--role--device_pwd_phone td >> text=api:*:*
+ASSERT_VISIBLE #site--identities--role--device_read_write td >> text=api:treatments:create
+ASSERT_VISIBLE #site--identities--role--user_readonly td:text-is("No")
+ASSERT_VISIBLE #site--identities--role--user td:text-is("Yes")
 ASSERT_NOT_VISIBLE #identities_table .bg-red-50
 SCREENSHOT identities
 
 // A name longer than the database keeps is refused in its own words, which the toast leaves to the Errors page
-INPUT #name-createIdentityFormusersTable {{ repeat "a" 40 }}
-CLICK "Add User"
+CLICK #site--identities--add-user-button
+INPUT #site--identities--add-user--name {{ repeat "a" 40 }}
+CLICK #site--identities--add-user--submit
 ASSERT_STATUS 400
 ASSERT_TEXT_VISIBLE Something went wrong.
 ASSERT_VISIBLE #toaster >> text=Errors page
@@ -37,9 +44,10 @@ GOTO /settings/identities
 ASSERT_STATUS 200
 
 // Adding a user without choosing a role makes a User, not an Admin
-ASSERT_TEXT_EQUALS #select-form-createIdentityFormusersTable User
-INPUT #name-createIdentityFormusersTable nurse
-CLICK "Add User"
+CLICK #site--identities--add-user-button
+ASSERT_VISIBLE #site--identities--add-user--form label:has(#site--identities--add-user--role-user:checked)
+INPUT #site--identities--add-user--name nurse
+CLICK #site--identities--add-user--submit
 ASSERT_STATUS 201
 CLICK "I Have Saved These"
 CLICK #site--identities--close
@@ -47,8 +55,10 @@ ASSERT_TEXT_EQUALS #usersTable>tbody>tr:has-text("nurse")>td:nth-child(2) User
 SCREENSHOT identities_user_created
 
 // Adding a device shows its credentials once
-INPUT #name-createIdentityFormdevicesTable kitchen
-CLICK "Add Device"
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-other)
+INPUT #site--identities--add-device--name kitchen
+CLICK #site--identities--add-device--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE I Have Saved These
 SCREENSHOT identities_device_created
@@ -107,11 +117,15 @@ ASSERT_TEXT_VISIBLE kitchen enabled
 SCREENSHOT identities_actions
 
 // A user that cannot be added says why, beside the toasts already shown rather than in place of them
-INPUT #name-createIdentityFormusersTable nurse
-CLICK "Add User"
+CLICK #site--identities--add-user-button
+INPUT #site--identities--add-user--name nurse
+CLICK #site--identities--add-user--submit
 ASSERT_STATUS 409
 ASSERT_TEXT_VISIBLE kitchen enabled
 ASSERT_COUNT #toaster > * 3
+// The modal stays open with the name typed, to fix it, until it is closed
+ASSERT_VISIBLE #site--identities--add-user--name
+CLICK #site--identities--add-user--close
 
 // Deleting asks first (the test accepts), then removes the row
 CLICK #site--identities--kitchen--manage

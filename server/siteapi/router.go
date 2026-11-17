@@ -109,6 +109,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/settings/account/passkeys/finish", sitelogin.POSTAccountPasskeyFinish(controlDB, config))
 		r.Delete("/settings/account/passkeys/{id}", sitelogin.DELETEAccountPasskey(controlDB))
 		r.Post("/settings/push-registrations/{id}/test", sitecollections.PushTestHandler)
+		r.Get("/settings/identities/new", sitecollections.IdentityNewHandler)
 		r.Post("/settings/identities/{id}/password", sitecollections.ResetIdentityPasswordHandler)
 		r.Post("/settings/identities/{id}/totp", sitecollections.ResetIdentityTOTPHandler)
 		r.Get("/usage", sitecollections.UsageHandler)

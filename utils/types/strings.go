@@ -16,21 +16,31 @@ import (
 // kept in, limits how long it may be
 type ShortString string
 
-func (s *ShortString) UnmarshalJSON(data []byte) error {
+// sentText is a value sent as a string, a number or a bool, as text; what names it in the error when it is not JSON
+func sentText(data []byte, what string) (string, error) {
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected notes string, got %s", data)
+		return "", fmt.Errorf("expected %s string, got %s", what, data)
 	}
-	var str string
 	switch v := v.(type) {
 	case string:
-		str = v
+		return v, nil
 	case float64:
-		str = strconv.FormatFloat(v, 'f', -1, 64)
-	case bool:
-		str = strconv.FormatBool(v)
+		return strconv.FormatFloat(v, 'f', -1, 64), nil
 	default:
-		str = fmt.Sprintf("%v", v)
+		return fmt.Sprintf("%v", v), nil
+	}
+}
+
+// text is s as a plain string
+func text[S ~string](s *S) string {
+	return string(*s)
+}
+
+func (s *ShortString) UnmarshalJSON(data []byte) error {
+	str, err := sentText(data, "notes")
+	if err != nil {
+		return err
 	}
 
 	*s = ShortString(str)
@@ -41,13 +51,7 @@ func (s *ShortString) String() string {
 	return string(*s)
 }
 
-func (s *ShortString) Stringp() *string {
-	if s == nil {
-		return nil
-	}
-	str := string(*s)
-	return &str
-}
+func (s *ShortString) Stringp() *string { return orNil(s, text[ShortString]) }
 
 type SanitizedString string
 
@@ -55,13 +59,7 @@ func (s *SanitizedString) String() string {
 	return string(*s)
 }
 
-func (s *SanitizedString) Stringp() *string {
-	if s == nil {
-		return nil
-	}
-	str := string(*s)
-	return &str
-}
+func (s *SanitizedString) Stringp() *string { return orNil(s, text[SanitizedString]) }
 
 // StripAllTags is the text of HTML, without its tags or the contents of a script or style, and with its entities
 // decoded
@@ -99,20 +97,9 @@ const maxNotesLength = 1024
 // without its tags (sitemodels.StripTags), escaped. A note longer than its column is cut at a character, and one only
 // of white space is none.
 func (n *SanitizedString) UnmarshalJSON(data []byte) error {
-	var v any
-	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected notes string, got %s", data)
-	}
-	var str string
-	switch v := v.(type) {
-	case string:
-		str = v
-	case float64:
-		str = strconv.FormatFloat(v, 'f', -1, 64)
-	case bool:
-		str = strconv.FormatBool(v)
-	default:
-		str = fmt.Sprintf("%v", v)
+	str, err := sentText(data, "notes")
+	if err != nil {
+		return err
 	}
 
 	if runes := []rune(str); len(runes) > maxNotesLength {
@@ -132,13 +119,7 @@ func (s *LongJSONString) String() string {
 	return string(*s)
 }
 
-func (s *LongJSONString) Stringp() *string {
-	if s == nil {
-		return nil
-	}
-	str := string(*s)
-	return &str
-}
+func (s *LongJSONString) Stringp() *string { return orNil(s, text[LongJSONString]) }
 
 func (n *LongJSONString) UnmarshalJSON(data []byte) error {
 	// We are going to sanitize notes here, no html allowed, trim white space, convert to string
@@ -170,13 +151,7 @@ const MaxJSONTextLength = 4096
 // that is not JSON or is longer than MaxJSONTextLength is empty, which is not stored, rather than refuse the upload
 type JSONTextString string
 
-func (s *JSONTextString) Stringp() *string {
-	if s == nil {
-		return nil
-	}
-	str := string(*s)
-	return &str
-}
+func (s *JSONTextString) Stringp() *string { return orNil(s, text[JSONTextString]) }
 
 func (s *JSONTextString) UnmarshalJSON(data []byte) error {
 	var v string
@@ -199,32 +174,13 @@ func (i *IdentifierString) String() string {
 	return string(*i)
 }
 
-func (i *IdentifierString) Stringp() *string {
-	if i == nil {
-		return nil
-	}
-	str := string(*i)
-	return &str
-}
+func (i *IdentifierString) Stringp() *string { return orNil(i, text[IdentifierString]) }
 
 func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 	// limit in possible characters and length, convert everything to a string
-	var v any
-	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected identifier string, got %s", data)
-	}
-
-	str := ""
-
-	switch v := v.(type) {
-	case string:
-		str = v
-	case float64:
-		str = strconv.FormatFloat(v, 'f', -1, 64)
-	case json.Number:
-		str = v.String()
-	default:
-		str = fmt.Sprintf("%v", v)
+	str, err := sentText(data, "identifier")
+	if err != nil {
+		return err
 	}
 
 	if len(str) == 0 {

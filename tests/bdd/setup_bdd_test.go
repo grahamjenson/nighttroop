@@ -55,6 +55,16 @@ var ownServers = []ownServer{
 	}},
 	// A server with a feedback link, on its home page and every footer
 	{"feedback/links.bdd", "192.0.2.14", func(c *config.ServerConfig) { c.FeedbackURL = "https://github.com/grahamjenson/nighttroop/issues" }, seedDevAdmin},
+	// A server with two sites unavailable: amissing, whose DB was missing, and brokensi, whose DB did not open
+	{"unavailable/banner.bdd", "192.0.2.16", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		for siteID, reason := range map[string]string{"amissing": db.UnavailableMissing, "brokensi": db.UnavailableCannotOpen} {
+			_, err := controlDB.CreateSiteWithID(t.Context(), siteID)
+			require.NoError(t, err)
+			controlDB.MakeSiteUnavailable(siteID, reason)
+		}
+		return nil
+	}},
 	// A server run by another operator, with its own support email
 	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
 		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"

@@ -27,6 +27,7 @@ import (
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/security"
@@ -98,8 +99,8 @@ func run() error {
 	}
 }
 
-// restoreFromS3 downloads the control DB from its backup in S3, where there is one. A missing site is restored from
-// its own backup once the control DB is open (RestoreMissingSites).
+// restoreFromS3 downloads the control DB from its backup in S3, where there is one. A site whose DB is missing or does
+// not open is restored from its own backup once the control DB is open (KeepRestoringUnavailableSites).
 func restoreFromS3(serverConfig *config.ServerConfig, s3Client *s3utils.S3Client) error {
 	// Before any restore runs, so none of the staging folders it removes is in use
 	restore.RemoveStaging(serverConfig)
@@ -109,17 +110,17 @@ func restoreFromS3(serverConfig *config.ServerConfig, s3Client *s3utils.S3Client
 	return nil
 }
 
-// openControlDB opens the control DB and every site's, restoring a live site's missing DB from its backup,
-// with an admin to log in with in development and staging, and prints the setup code of a server not yet set up
+// openControlDB opens the control DB and every site's, and restores, in the background, each site whose DB is missing
+// or does not open from its backup, with an admin to log in with in development and staging, and prints the setup code
+// of a server not yet set up
 func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Client *s3utils.S3Client) (*db.ControlDB, error) {
 	controlDB, err := db.NewControlDB(context.Background(), serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
-	// A live site whose DB file is missing is restored from its backup
-	if err := controlDB.RestoreMissingSites(ctx, s3Client.DownloadFilesFromS3); err != nil {
-		return nil, fmt.Errorf("cannot open restored sites: %w", err)
-	}
+	// A site whose DB is missing or does not open is unavailable, so the server starts without it and serves the rest
+	// while it is restored from its backup, tried again for about an hour, then the admin is paged
+	go controlDB.KeepRestoringUnavailableSites(ctx, s3Client.DownloadFilesFromS3, db.RestoreRetries, page.Admin)
 	// Development has an admin to log in with, and staging its configured one; anywhere else a new server is set up
 	// with the code it prints
 	if serverConfig.IsDev() {

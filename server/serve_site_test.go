@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -18,7 +19,8 @@ import (
 // A request for a site is served with its context, one for a site there is not is 404 saying so on its pages and API,
 // but 410 on its Nightscout API, so an uploader can tell a site gone from a wrong path, and one whose site cannot be
 // looked up, here as its request has ended, is 503, so an uploader tries again rather than take its URL as wrong.
-// A site disabled, archived or deleted is answered just as one that never was, so the answer tells nothing about it.
+// A site disabled, archived or deleted is answered just as one that never was, so the answer tells nothing about it. An
+// unavailable site, whose DB is being restored, is 503 too, so its uploaders try again rather than take it as gone.
 func TestServeSite(t *testing.T) {
 	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
@@ -33,7 +35,8 @@ func TestServeSite(t *testing.T) {
 		require.NoError(t, err)
 		return created.SiteDB.Subdomain
 	}
-	disabled, archived, deleted := newSite(), newSite(), newSite()
+	disabled, archived, deleted, unavailable := newSite(), newSite(), newSite(), newSite()
+	controlDB.MakeSiteUnavailable(unavailable, db.UnavailableMissing)
 	for _, id := range []string{disabled, archived} {
 		_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: id})
 		require.NoError(t, err)
@@ -60,6 +63,8 @@ func TestServeSite(t *testing.T) {
 		{"a deleted site's Nightscout API", ctx, deleted, http.StatusGone, http.StatusGone, gone},
 		{"a deleted site", ctx, deleted, http.StatusNotFound, http.StatusNotFound, notFound},
 		{"cannot look up", ended, siteID, http.StatusGone, http.StatusServiceUnavailable, "Server busy, try again shortly\n"},
+		{"an unavailable site", ctx, unavailable, http.StatusNotFound, http.StatusServiceUnavailable, "Server busy, try again shortly\n"},
+		{"an unavailable site's Nightscout API", ctx, unavailable, http.StatusGone, http.StatusServiceUnavailable, "Server busy, try again shortly\n"},
 	}
 	for _, tt := range tests {
 		w := httptest.NewRecorder()

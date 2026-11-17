@@ -81,13 +81,7 @@ func (d *DateInt) Int64() int64 {
 	return int64(*d)
 }
 
-func (d *DateInt) Int64p() *int64 {
-	if d == nil {
-		return nil
-	}
-	v := int64(*d)
-	return &v
-}
+func (d *DateInt) Int64p() *int64 { return orNil(d, (*DateInt).Int64) }
 
 // StringToTime tries the date layouts clients send until one parses
 func StringToTime(value string) (time.Time, error) {
@@ -242,13 +236,7 @@ func LocationFromUTCOffsetMinutes(offsetMin int) *time.Location {
 
 type Timezone string
 
-func (t *Timezone) Stringp() *string {
-	if t == nil {
-		return nil
-	}
-	str := string(*t)
-	return &str
-}
+func (t *Timezone) Stringp() *string { return orNil(t, text[Timezone]) }
 
 func (t *Timezone) UnmarshalJSON(data []byte) error {
 	var s string

@@ -204,18 +204,17 @@ func Schema(ctx context.Context, db *sql.DB) (string, error) {
 // File paths
 /////
 
-func GetBatchFolder(batch string, serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/site/%s", serverConfig.DBDir(), string(batch))
+// GetSitesFolder is the folder of the DBs of the sites whose IDs start with letter, so no folder holds them all
+func GetSitesFolder(letter string, serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/site/%s", serverConfig.DBDir(), letter)
 }
 
 func GetPath(subdomain string, serverConfig *config.ServerConfig) string {
-	batch := subdomain[0:1]
-	return fmt.Sprintf("%s/site/%s/%s.sqlite", serverConfig.DBDir(), string(batch), subdomain)
+	return fmt.Sprintf("%s/%s.sqlite", GetSitesFolder(subdomain[0:1], serverConfig), subdomain)
 }
 
 func GetBackupPath(subdomain string, serverConfig *config.ServerConfig) string {
-	batch := subdomain[0:1]
-	return fmt.Sprintf("%s/site/%s/%s.sqlite.lz4", serverConfig.BackupDir(), string(batch), subdomain)
+	return fmt.Sprintf("%s/site/%s/%s.sqlite.lz4", serverConfig.BackupDir(), subdomain[0:1], subdomain)
 }
 
 // GetS3SitePath is where the site's latest backup is kept in S3, by itself
@@ -224,8 +223,7 @@ func GetS3SitePath(subdomain string, serverConfig *config.ServerConfig) string {
 }
 
 func GetS3ArchivePath(subdomain string, serverConfig *config.ServerConfig) string {
-	batch := subdomain[0:1]
-	return fmt.Sprintf("%s/archive/site/%s/%s.tar.enc", serverConfig.HostName, batch, subdomain)
+	return fmt.Sprintf("%s/archive/site/%s/%s.tar.enc", serverConfig.HostName, subdomain[0:1], subdomain)
 }
 
 // Migrations are the DB's migrations, in their migrations folder

@@ -74,7 +74,8 @@ ASSERT_TEXT_EQUALS #control--site--state Live
 ASSERT_VISIBLE #control--site--state.bg-green-50
 ASSERT_VISIBLE #control--site--inactive
 ASSERT_TEXT_EQUALS #control--site--abuse Good · 0.00
-ASSERT_VISIBLE #control--site--lifecycle >> text=/^Created .* · Batch [a-z]$/
+// A live site's lifecycle is only when it was made
+ASSERT_VISIBLE #control--site--lifecycle >> text=/^Created [^·]+$/
 ASSERT_VISIBLE #control--site--open[target="_blank"]
 // A new site's DB is measured by its tables before the resource check runs, against its limit. The bar is split into
 // its largest tables, and a key under it names each one, with its records in thousands, and the rest of them together

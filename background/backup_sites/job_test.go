@@ -163,24 +163,26 @@ func (s scheduler) AddFunc(name, _ string, job func(context.Context) error)     
 func (s scheduler) AddQueueFunc(string, string, *liteq.JobQueue, func(context.Context) error)     {}
 func (s scheduler) AddFuncSoon(string, time.Duration, time.Duration, func(context.Context) error) {}
 
-// Each tick truncates a batch's sites, here every site as tests run each job once, as a device report from long ago is
-// deleted
-func TestBackupSiteJobTruncatesTheSites(t *testing.T) {
-	_, controlDB := testutils.NewControlDB(t)
-	ctx, uploads, fail := t.Context(), [][]string{}, false
-	jobs := uploadJobs(t, controlDB, &uploads, &fail)
-	jobs.ServerConfig.Events = events.NewSiteBus()
-	cron := scheduler{}
-	jobs.SetupCron(cron)
-	site, device := fileSite(t, controlDB, "taaaaaaa"), "phone"
-	old := time.Now().AddDate(0, 0, -40).UnixMilli()
-	_, err := site.Queries().CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "old", OccurredAt: old, CreatedByDeviceName: &device, CreatedByIdentityName: "phone"})
-	require.NoError(t, err)
+// A tick truncates each site written just before its backup, as a device report from long ago is deleted from it, and
+// leaves a site not written as it is, as it does not grow
+func TestBackupSiteJobTruncatesOnlyWrittenSites(t *testing.T) {
+	cfg, controlDB := testutils.NewControlDB(t)
+	ctx, cron := t.Context(), scheduler{}
+	backup_sites.SetupBackupSiteJob(controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg}).SetupCron(cron)
+	device, old := "phone", time.Now().AddDate(0, 0, -40).UnixMilli()
+	writtenSite, notWritten := fileSite(t, controlDB, "taaaaaaa"), fileSite(t, controlDB, "uaaaaaaa")
+	for _, site := range []*db.SiteDB{writtenSite, notWritten} {
+		_, err := site.Queries().CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "old", OccurredAt: old, CreatedByDeviceName: &device, CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	written(t, controlDB, writtenSite, time.Now())
 
 	require.NoError(t, cron["BackupSiteJob"](ctx))
-	_, err = site.Queries().GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
+	_, err := writtenSite.Queries().GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
 	require.ErrorIs(t, err, sql.ErrNoRows)
-	require.Equal(t, [][]string{upload(site)}, uploads, "a new site is uploaded")
+	require.NotNil(t, stored(t, controlDB, writtenSite).BackedUpAt)
+	_, err = notWritten.Queries().GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
+	require.NoError(t, err, "a site not written is not truncated")
 }
 
 // A site records when its backup was copied and when it was uploaded: only once S3 has it, not while S3 is off
@@ -220,9 +222,8 @@ func TestBackupWrittenSitesRecordsEvent(t *testing.T) {
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 10})
 	require.NoError(t, err)
-	require.Equal(t, "site_batch_backed_up", events[0].Name)
-	require.Nil(t, events[0].SiteID)
-	require.Nil(t, events[0].Batch, "it is of sites of any batch, so only the control admin sees it")
+	require.Equal(t, "sites_backed_up", events[0].Name)
+	require.Nil(t, events[0].SiteID, "it is of many sites, so only the control admin sees it")
 	var attributes map[string]any
 	require.NoError(t, json.Unmarshal([]byte(*events[0].Attributes), &attributes))
 	require.Equal(t, float64(1), attributes["site_count"])
@@ -239,7 +240,7 @@ func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	// The site has never been used, and counts as unused from the moment it was made
 	jobs.DeleteAfterInactivity = -time.Minute
 
-	require.NoError(t, jobs.DeleteUnusedSites(ctx, siteID[:1]))
+	require.NoError(t, jobs.DeleteUnusedSites(ctx))
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)

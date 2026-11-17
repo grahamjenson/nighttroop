@@ -305,7 +305,7 @@ func PasskeyBegin(w http.ResponseWriter, r *http.Request, cfg *config.ServerConf
 		PasskeyError(w, r, http.StatusInternalServerError, i18n.T(r.Context(), "common.passkey.not_asked"), err)
 		return
 	}
-	cfg.Security.SetPasskeySessionCookie(w, sessionJSON)
+	cfg.Security.SetPasskeySessionCookie(w, passkeyIP(r), sessionJSON)
 	apiutils.WriteJSON(w, http.StatusOK, options)
 }
 
@@ -316,11 +316,16 @@ func PasskeySession(w http.ResponseWriter, r *http.Request, cfg *config.ServerCo
 	if err != nil {
 		return nil, session, err
 	}
-	sessionJSON, err := cfg.Security.PasskeySession(w, r)
+	sessionJSON, err := cfg.Security.PasskeySession(w, r, passkeyIP(r))
 	if err == nil {
 		err = json.Unmarshal(sessionJSON, &session)
 	}
 	return rp, session, err
+}
+
+// passkeyIP is the request's IP, as the rate limiters count it, which keeps its passkey ceremonies apart from others'
+func passkeyIP(r *http.Request) string {
+	return config.IPKey(httputils.GetIPFromHTTPContext(r.Context()))
 }
 
 // PasskeyJSON is what is kept of a passkey, never the authenticator's model or attestation

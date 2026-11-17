@@ -9,12 +9,16 @@
        every 10 minutes: vacuum only when its free pages are a large part of it
 1. Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
-    1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up one batch
-       each run, so a new site's batch may not be backed up, and its tiles are checked only before a backup
+    1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up each site
+       written to, so its tiles can be checked after a backup, not only before one
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
 
 1. Accounts
+    1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
+       of Custom Type One: its tile in the Add Device modal shows its first letter
+    1. P4: Open the Add Device modal from a shared identity with the app of one of its clients picked, read from
+       the client's user agent
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 
@@ -38,8 +42,6 @@
         1. P2: Delete a site's old records (truncate step 2) only while it is also over its size limit, as deleting does
            not help a site whose level comes from refusals or connectors
         1. P3: Record an event when a site's level changes, and sort the control sites list by abuse score
-    1. P4: Keep passkey ceremonies' sessions per site or IP, as the server keeps at most 10,000 for all sites, and many
-       begun at once push out others' before they finish
 
 ## Before Prod Deployment
 
@@ -59,8 +61,9 @@
 
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
-       fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,
-       forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
+       fixes it, starting with an unavailable site (seeing why, trying a fix on a copy, and restoring, forcing back,
+       disabling or deleting it) and a missing control DB starting a new server in setup
+    1. P1: Set up paging the admin (`utils/page`), which only logs a page as an error
 
 
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
@@ -72,6 +75,7 @@
        until then
     1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
        identities that can change the site's data are given them back, and push registrations keep them encrypted
+    1. P5: Disable the control site's Push Devices "Test" button while its push is sent, as the site's is
 
 
 1. Nightscout API:
@@ -118,8 +122,8 @@
 
 1. Database:
     1. P3: CAST the bare values that a column equals in the other DBs' queries, as the site DB's are (data/sql/README.md),
-       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities`, `GetBatchSitesToBackUp` and its
-       push queries, `jobsdb`'s `MarkJobsForConsumer`, `livedb`'s `IdentityAlarms`, and `logsdb`'s site and connector
+       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities` and its push
+       queries, `jobsdb`'s `MarkJobsForConsumer`, `livedb`'s `IdentityAlarms`, and `logsdb`'s site and connector
        searches
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field

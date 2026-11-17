@@ -57,6 +57,7 @@ func (s *IdentitiesCollection) GetRoute() string {
 // ////
 // CREATE
 // ////
+
 func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
 	// A device for a client that must have a role has it, and cannot be made with another
 	if forced, ok := sitemodels.ClientRoles[model.Client]; ok {

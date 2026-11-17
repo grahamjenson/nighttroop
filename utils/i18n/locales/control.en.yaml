@@ -17,6 +17,10 @@ control:
     sites_at_limit: "Sites at their limit"
     sites_near_limit: "Sites near their limit"
     sites_text: "{{.SiteCount}} of the {{.MaxSites}} sites MAX_SITES allows."
+    unavailable_title: "{{.SiteCount}} sites unavailable, as their DBs could not be opened or restored:"
+    unavailable_missing: "DB missing"
+    unavailable_cannot_open: "DB does not open"
+    unavailable_more: "and {{.SiteCount}} more."
   menu:
     open: "Open user menu"
     security: "Security"
@@ -298,6 +302,7 @@ control:
     created_title: "Site Created"
     not_created: "Site Not Created"
     inactive: "Inactive"
+    unavailable: "Unavailable"
     over_limit: "Over limit"
     abuse: "Abuse"
     abuse_good: "Good"
@@ -306,7 +311,7 @@ control:
     abuse_abusive: "Abusive"
     abuse_blocked: "Blocked"
   site:
-    lifecycle_created: "Created {{.CreatedAt}} · Batch {{.BatchName}}"
+    lifecycle_created: "Created {{.CreatedAt}}"
     lifecycle_disabled: "Disabled {{.ChangedAt}}"
     lifecycle_archived: "Archived {{.ChangedAt}}"
     lifecycle_deleted: "Deleted {{.ChangedAt}}"

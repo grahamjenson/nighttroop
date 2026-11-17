@@ -45,7 +45,8 @@ func pushDevicesDescription(ctx context.Context, admin bool) string {
 	return i18n.T(ctx, "site.settings.push_devices.about")
 }
 
-// PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it
+// PushDeviceRow is a registration, without its token, and buttons to send it a test push and to delete it. Test is
+// disabled while its push is sent, as Apple or Firebase can take a while, so one click sends one push.
 templ PushDeviceRow(registration *sitemodels.PushRegistration) {
 	{{ id := "site--push-device--" + strconv.FormatInt(registration.ID, 10) }}
 	@table.Row(table.RowProps{ID: id}) {
@@ -74,6 +75,7 @@ templ PushDeviceRow(registration *sitemodels.PushRegistration) {
 					Size:    button.SizeSm,
 					Attributes: templ.Attributes{
 						"hx-post":       "/settings/push-registrations/" + strconv.FormatInt(registration.ID, 10) + "/test",
+						"hx-disable":    "this",
 						"hx-target":     "#" + id + "--status",
 						"hx-swap":       "outerHTML",
 						"hx-status:4xx": "target:#toaster swap:beforeend",

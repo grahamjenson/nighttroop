@@ -337,7 +337,6 @@ func SiteFromDB(source *controldb.Site) *Site {
 	if source != nil {
 		var controlmodelsSite Site
 		controlmodelsSite.ID = (*source).ID
-		controlmodelsSite.Batch = (*source).Batch
 		controlmodelsSite.State = (*source).State
 		if (*source).MaxDbSizeKbLimit != nil {
 			xint64 := *(*source).MaxDbSizeKbLimit

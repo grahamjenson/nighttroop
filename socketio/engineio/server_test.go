@@ -445,39 +445,8 @@ func upgrade(t *testing.T, base string, version int, sid string) *WebSocket {
 	return ws
 }
 
-func TestUpgradeEndsTheWaitingPoll(t *testing.T) {
-	_, ts, _ := echoServer(t, Config{})
-	sid := handshake(t, ts.URL, "4")
-	url := ts.URL + "/?EIO=4&transport=polling&sid=" + sid
-
-	polled := make(chan string)
-	go func() {
-		_, body := get(t, url)
-		polled <- body
-	}()
-	time.Sleep(50 * time.Millisecond)
-	start := time.Now()
-	ws := upgrade(t, ts.URL, V4, sid)
-	// The waiting poll gets a noop at once, not after pingInterval
-	require.Equal(t, "6", <-polled)
-	require.Less(t, time.Since(start), time.Second)
-
-	// The websocket carries the messages, and once it has, polling is over. The waiting poll ends at the probe, before
-	// the upgrade is read, so only a message round trip says the session is upgraded
-	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "hello"}))
-	p, err := ws.ReadPacket()
-	require.NoError(t, err)
-	require.Equal(t, Packet{Type: Message, Data: "hello"}, p)
-	status, _ := get(t, url)
-	require.Equal(t, http.StatusBadRequest, status)
-
-	// A session upgrades once
-	_, err = DialWebSocket(context.Background(), ts.URL, V4, sid)
-	require.ErrorContains(t, err, "400")
-}
-
 // The JavaScript client, as AAPS's and Nightscout's pages use, pauses polling after the probe and sends upgrade only
-// once its waiting poll ends, so the probe ends the waiting poll with a noop at once
+// once its waiting poll ends, so the probe ends the waiting poll with a noop at once, not after pingInterval
 func TestProbeEndsTheWaitingPoll(t *testing.T) {
 	_, ts, _ := echoServer(t, Config{})
 	sid := handshake(t, ts.URL, "4")
@@ -504,12 +473,19 @@ func TestProbeEndsTheWaitingPoll(t *testing.T) {
 		t.Fatal("the waiting poll was not ended by the probe")
 	}
 
-	// Then the upgrade completes, and the websocket carries the messages
+	// Then the upgrade completes, and the websocket carries the messages, and once it has, polling is over. The waiting
+	// poll ends at the probe, before the upgrade is read, so only a message round trip says the session is upgraded
 	require.NoError(t, ws.WritePacket(Packet{Type: Upgrade}))
 	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "hello"}))
 	p, err = ws.ReadPacket()
 	require.NoError(t, err)
 	require.Equal(t, Packet{Type: Message, Data: "hello"}, p)
+	status, _ := get(t, url)
+	require.Equal(t, http.StatusBadRequest, status)
+
+	// A session upgrades once
+	_, err = DialWebSocket(context.Background(), ts.URL, V4, sid)
+	require.ErrorContains(t, err, "400")
 }
 
 // After an upgrade a POST over polling is refused, so its packets are not handled alongside the websocket's

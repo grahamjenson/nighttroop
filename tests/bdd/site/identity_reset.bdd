@@ -29,10 +29,10 @@ ASSERT_NOT_VISIBLE #site--identities--created--password
 ASSERT_VISIBLE #site--identities--pwd_phone--manage
 
 // Add a user, to sign in as later
-INPUT #name-createIdentityFormusersTable carer
-CLICK #select-form-createIdentityFormusersTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="user"]
-CLICK "Add User"
+CLICK #site--identities--add-user-button
+CLICK #site--identities--add-user--form label:has(#site--identities--add-user--role-user)
+INPUT #site--identities--add-user--name carer
+CLICK #site--identities--add-user--submit
 ASSERT_STATUS 201
 SAVE_TEXT #site--identities--created--site site_url
 SAVE_TEXT #site--identities--created--password carer_password

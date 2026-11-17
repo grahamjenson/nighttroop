@@ -159,7 +159,7 @@ func TestRemoveStagingRemovesOnlyStagingFolders(t *testing.T) {
 		require.NoError(t, os.WriteFile(path, []byte("x"), 0o600))
 		return path
 	}
-	dbDir, batch := cfg.DBDir(), sitedb.GetBatchFolder("a", cfg)
+	dbDir, batch := cfg.DBDir(), sitedb.GetSitesFolder("a", cfg)
 	backupBatch := filepath.Dir(sitedb.GetBackupPath("abcdef", cfg))
 
 	// Made as the download and the archive make them, so the names are theirs

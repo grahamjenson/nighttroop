@@ -9,8 +9,10 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE 1 recent
 
 // A new device has no clients until something authenticates with its token
-INPUT #name-createIdentityFormdevicesTable kitchen
-CLICK "Add Device"
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-other)
+INPUT #site--identities--add-device--name kitchen
+CLICK #site--identities--add-device--submit
 ASSERT_STATUS 201
 SAVE_TEXT #site--identities--created--site site_url
 SAVE_TEXT #site--identities--created--ns-token kitchen_token
@@ -36,3 +38,7 @@ ASSERT_VISIBLE #site--identities--kitchen--clients li >> nth=0 >> text=xDrip+/20
 ASSERT_VISIBLE #site--identities--kitchen--clients li >> nth=1 >> text=SugarPixel/1.2 (ESP32)
 ASSERT_TEXT_VISIBLE Give each device its own identity
 SCREENSHOT identity_clients_shared
+// From there, one click opens the modal that adds a device its own identity
+CLICK #site--identities--kitchen--clients--add
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-xdrip)
+CLICK #site--identities--add-device--close

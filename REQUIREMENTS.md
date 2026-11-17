@@ -90,7 +90,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The banner shows when:
   - S3 backups or Sentry are not connected;
   - sites reach 90% of `MAX_SITES`, or all of it;
-  - a resource is high (see [Resource alerts](#resource-alerts)).
+  - a resource is high (see [Resource alerts](#resource-alerts));
+  - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
+    missing, or DB does not open) and a link to its page, then how many more.
+- An unavailable site has a red Unavailable badge in the sites list and on its page.
 - Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
 - Times in UTC, for example `2026-10-26 12:00:00`, and `-` when not set.
 
@@ -140,7 +143,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - `/sites/{id}` opens on a click, laid out like a site's summary. Back returns to the sites. An API client gets the
   site.
-- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, batch, and disabled, archived or deleted times; Open
+- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, and disabled, archived or deleted times; Open
   Site link (new tab) while live.
 - DB size:
   - measured on disk when the page opens, kept on the site's record;
@@ -994,6 +997,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### Connector form
 
 - Before a save: only Save. After, without a reload: also Backfill, and Delete (red outline, apart from Save).
+- While a backfill request is sent, the Backfill button is disabled.
 - Enable Connector: ticked by typing a new Dexcom, LibreLinkUp or Nightscout source's details. A click on it, before
   or after, is kept. Never changed on a saved source.
 - Save does not check details. A failed first sync turns syncing off and tells why.
@@ -1034,7 +1038,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Connector credentials are encrypted at rest.
 - Bound to their kind and site: connector credentials, TOTP secrets, push secrets and tokens, Nightscout tokens, the
   welcome's passkey cookie. Backups: bound to their object key, without its host.
-- Not decrypted: a secret copied in as another site's or kind, a backup as another batch's, or one encrypted unbound.
+- Not decrypted: a secret copied in as another site's or kind, a backup as another site's, or one encrypted unbound.
 - Backups copied to a bucket for another host still restore.
 
 #### Nightscout connector
@@ -1104,10 +1108,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Events, errors and logs
 
-- Admins see events (for example created, alarms, recoveries, credential changes), errors, logs and batch backups,
-  filtered by type and searched.
+- Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
+  only, filtered by type and searched. They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
-- Each event, error and log shows its request or background job run. Batch events do not.
+- Each event, error and log shows its request or background job run.
 - A search, or a filter by error kind, reads only the newest 10,000 of each. Paging without one reaches all rows.
 
 #### Error toasts
@@ -1794,16 +1798,18 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
-  `data/backup/site/<batch>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`.
+  `data/backup/site/<letter>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`. `<letter>` is the first letter
+  of the site ID.
   - A copy cut short does not replace the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
-  `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<batch>/<site>.tar.enc`.
+  `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A site whose copy is already uploaded is not uploaded again.
 - A failed upload is tried again at the next tick.
 - A live site that is not open is left out. The other sites are backed up.
-- Each tick also truncates one batch of sites (the same first letter), so every site is truncated each interval.
+- Each tick deletes the sites never used, then truncates each site just before its backup copy. A site with no write
+  is not truncated, as it does not grow.
 - If a live site is not uploaded yet, such as a new or restored site, it uploads at the next tick, written or not.
 - The control DB records on each site:
   - when the site was last copied, and the size of the copy on disk;
@@ -1818,14 +1824,18 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.
 - `cmd/keysets/decrypt_tar_lz4_enc.go` decrypts and unpacks a backup of either kind, given its object key.
 - A start removes only the staging folders that a stopped restore or archive left beside the DBs and backups.
-- A live site whose DB file is missing:
+- A live or disabled site whose DB file is missing, or cannot be opened or migrated, is unavailable. The start goes on
+  without it, and serves every other site.
+- An unavailable site's requests get 503 with `Retry-After`, as a busy server's do, so its uploaders try again. The
+  jobs leave it out.
+- After the start, in the background, each unavailable site:
   - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
-    restore failed).
-- The start stops, with the site named in the error, if a live site:
-  - Cannot be opened or migrated, also after a restore.
-  - Has no DB file and was not restored.
-- The server serves nothing until every live site is open and migrated. Else `update.sh` rolls the release back.
+    restore failed). One not restored is also logged as an error, and stays unavailable.
+- The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, each try logged the same way.
+  After the last, the admin is paged once, with the sites. Paging is not set up yet, so a page is logged as an error.
+- A site DB that cannot be opened is moved aside while its backup is restored, and put back if the restored DB cannot
+  be opened either.
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
 - A site DB that cannot be opened keeps its file and backup. A fixed deploy opens it with its data.
 - A site creation that fails part way leaves no site or identities.
@@ -1842,7 +1852,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Device status truncation
 
-Before it backs up a site, every hour, the server truncates it:
+Before it backs up a site written to, at most every hour, the server truncates it:
 
 - Loop status (`openaps` or `loop`): kept as sent for 1 day. Followers (e.g. LoopFollow) read a day of statuses.
   - If a status is more than 1 day older than now and its device's newest status, the predictions are removed.
@@ -1857,8 +1867,8 @@ Before it backs up a site, every hour, the server truncates it:
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
   - All statuses over 30 days old are deleted, also newest and deleted ones.
-- The job reads statuses of the last day, and statuses that became 1 day old in that day. It thins again those that
-  became 1 or 2 weeks old in that day.
+- The job reads statuses written since the last backup of the site, or in the last day if that is longer. It also
+  reads statuses that became 1 day old in that time, and thins again those that became 1 or 2 weeks old.
 - A site truncate reads all statuses. It also clears those older than a day (e.g. a device's newest from before it
   stopped reports for a day).
 
@@ -2002,7 +2012,11 @@ harder:
     notifications.
   - Cannot add, change or delete glucose readings, device statuses, profiles, food presets or loop settings: 403.
   - Changes its own settings, alarms and push registrations.
-- The Users & Devices page names it "Caregiver". The Device card says what it can and cannot change.
+- The Users & Devices page names it "Caregiver".
+- The Users & Devices page has a table, "What each role can do", with a row for each role:
+  - what it can do, in plain words;
+  - whether it signs in to the site;
+  - its permissions on the Nightscout API, as the server gives them (for example `api:*:read`), or None.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
@@ -2034,6 +2048,8 @@ harder:
 - Passkey sign ins are rate limited for each IP, and for each site from all IPs at a much higher rate.
 - Each passkey sign in or add, on a site or control, finishes once. Its challenge is kept 5 minutes, then removed.
   A repeated finish is refused.
+- A passkey sign in or add finishes only from the IP that started it. Each IP keeps its 5 newest unfinished ones.
+- If one IP starts many passkey sign ins, it removes only its own oldest. Other IPs' sign ins still finish.
 
 #### Refused sign ins
 
@@ -2072,17 +2088,30 @@ harder:
     keeps it open.
   - Escape or a click beside it shows that warning, and does not close it. After a reset signed you out, only
     "Sign In Again" remains.
-- Add User starts on the User role. The server refuses an identity with no role.
-- A select keeps its role when you pick that role again. It does not become empty.
-- On a phone, the Add User and Add Device forms wrap in their cards. All inputs and buttons show with no
-  sideways scroll.
+- Add User, at the right of the Admins & Users card, opens a modal with two steps: what the person can do, and their
+  name. It says to give each person their own sign in.
+  - Step 1: User, Read-only user, Clinician or Admin, each with a line in plain words. User is picked to start with.
+  - Step 2: the name. Its hint says to use who they are, such as mum or nurse, and not an email address.
+  - The whole modal shows with no scrolling, on a phone too.
+- If the server refuses the person or the device, such as for a name the site has, the modal stays open to fix it.
+- The server refuses an identity with no role.
 - Identity creation is rate limited.
 
 #### Device clients
 
-- Clients: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer and Other.
-- The client comes before the role. AAPS, Trio or Loop sets and locks the role to PWD Phone. The server refuses
-  them with another role.
+- Add Device, at the right of the Devices card, opens a modal with three steps: the app, what it can do, and its name.
+  It says to give each device its own identity.
+- The whole modal shows with no scrolling, on a phone too.
+- Step 1, the app: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer and Other, each a tile with
+  its icon and its name. SugarPixel and Other have their first letter in place of an icon.
+- Step 2, what it can do: Read, Caregiver or PWD Phone, each with a line in plain words. The app picks the role to
+  start with:
+  - AAPS, Trio or Loop: PWD Phone, and the other roles cannot be picked. The server refuses them with another role.
+  - xDrip+ or xDrip4iOS: PWD Phone, as it sends glucose.
+  - T1D Carer: Caregiver.
+  - Nightguard, SugarPixel or Other: Read.
+- Step 3, the name: the app's name (`nightguard`), or with a number when the site has that name (`nightguard-2`).
+  Other starts as `device`. A name that is typed is kept when another app is picked.
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
 - Any client but Nightguard and Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout
@@ -2098,6 +2127,7 @@ harder:
   apart.
 - Actions that do not apply (e.g. to reset or delete yourself) are greyed out. An identity cannot lock itself out.
 - Each identity lists the clients (browsers and apps) that used it. It shows as shared when several did.
+- A shared device says to give each device its own identity, with a link that opens the Add Device modal.
 - From a row, an admin changes the identity's own settings and alarms. A device's units go to followers in its
   Nightscout status.
 - Another identity's glucose settings are labelled, shown, followed from the site's and typed in its units (else the
@@ -2173,6 +2203,7 @@ harder:
   development build or not, when registered, and last push and error. Never the token.
 - An admin sees all of the site's. Others see their own, and get 404 for another's.
 - "Test" sends a test push, then shows the new last push, or a toast with why it failed.
+- While a test push is sent, its "Test" button is disabled, so one click sends one push.
 - "Delete", after a confirmation, removes the row with a "Push Device Deleted" toast, and shows an empty table after
   the last. Pushes stop until its app registers again.
 
