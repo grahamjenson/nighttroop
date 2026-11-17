@@ -51,16 +51,27 @@ var siteOrders = []struct{ order, label string }{
 	{"db_size", "control.sites.order_db_size"},
 }
 
+// siteStates are the states the sites can be kept to, by their type query value, with their labels' ids
+var siteStates = []struct{ state, label string }{{"", "control.sites.all_states"}, {"unavailable", "control.sites.unavailable"}}
+
+// sitesPath is the sites list in order, only those in state when it is set
+func sitesPath(order, state string) string {
+	if state == "" {
+		return "/sites?order=" + order
+	}
+	return "/sites?order=" + order + "&type=" + state
+}
+
 // SitesTable shows one page of sites in order, newest first by default, with buttons to reorder them and to the
 // pages either side
-templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order string) {
+templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order, state string) {
 	@listpage.Page(listpage.Props{
 		ID:          "sites_table",
 		Title:       i18n.T(ctx, "control.sites.title"),
 		Description: i18n.T(ctx, "control.sites.intro"),
 		Above:       siteForms(),
 		SectionID:   "control--sites--list",
-		Toolbar:     siteOrderToggles(order, limit),
+		Toolbar:     siteOrderToggles(order, state, limit),
 		Modal:       true,
 		Table: listpage.TableProps{
 			ID:     "controlSitesTable",
@@ -73,7 +84,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 				{Label: i18n.T(ctx, "control.sites.backup_uploaded")}, {Label: i18n.T(ctx, "control.sites.abuse")},
 			},
 		},
-		Pager: &pager.Props{ID: "control--sites", Path: "/sites?order=" + order, Count: len(sites), Skip: skip, Limit: limit},
+		Pager: &pager.Props{ID: "control--sites", Path: sitesPath(order, state), Count: len(sites), Skip: skip, Limit: limit},
 	}) {
 		for _, site := range sites {
 			@siteRow(site)
@@ -91,16 +102,33 @@ templ siteForms() {
 	}
 }
 
-// siteOrderToggles reorder the sites, from their first page
-templ siteOrderToggles(order string, limit int64) {
-	<div id="control--sites--order" class="segmented mb-3 ml-auto flex w-fit">
-		@icon.ArrowUpDown(icon.Props{Class: "mx-1.5 size-4 text-gray-500"})
-		for _, siteOrder := range siteOrders {
-			@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL("/sites?order="+siteOrder.order, 0, limit), button.SizeSm, siteOrder.order == order) {
-				{ i18n.T(ctx, siteOrder.label) }
+// siteOrderToggles keep the sites to a state and reorder them, from their first page
+templ siteOrderToggles(order, state string, limit int64) {
+	<div class="mb-3 flex flex-wrap justify-end gap-2">
+		<div id="control--sites--state" class="segmented flex w-fit">
+			for _, siteState := range siteStates {
+				@nav.Toggle("control--sites--state-"+orAll(siteState.state), pager.PageURL(sitesPath(order, siteState.state), 0, limit), button.SizeSm, siteState.state == state) {
+					{ i18n.T(ctx, siteState.label) }
+				}
 			}
-		}
+		</div>
+		<div id="control--sites--order" class="segmented flex w-fit">
+			@icon.ArrowUpDown(icon.Props{Class: "mx-1.5 size-4 text-gray-500"})
+			for _, siteOrder := range siteOrders {
+				@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL(sitesPath(siteOrder.order, state), 0, limit), button.SizeSm, siteOrder.order == order) {
+					{ i18n.T(ctx, siteOrder.label) }
+				}
+			}
+		</div>
 	</div>
+}
+
+// orAll names the filter of every state, which has no type query value
+func orAll(state string) string {
+	if state == "" {
+		return "all"
+	}
+	return state
 }
 
 // orDefault names the default order, which has no order query value
@@ -261,11 +289,16 @@ templ abuseBadge(site *controlmodels.Site, id string) {
 
 // stateVariants colour a site's state badge, in the list and on its page: live green, disabled as a warning, and gone
 // neutral grey
-var stateVariants = map[string]badge.Variant{"live": badge.VariantSuccess, "disabled": badge.VariantWarning}
+var stateVariants = map[string]badge.Variant{"live": badge.VariantSuccess, "disabled": badge.VariantWarning, "unavailable": badge.VariantError}
 
-// lifecycle is when the site was made, and when it was disabled, archived or deleted, if it was
+// lifecycle is when the site was made, and when it was disabled, archived or deleted, if it was, and since when and
+// why it is unavailable
 func lifecycle(ctx context.Context, site *controlmodels.Site) string {
 	text := i18n.T(ctx, "control.site.lifecycle_created", i18n.Data{"CreatedAt": display.DateTime(&site.CreatedAt)})
+	if site.UnavailableAt != nil && site.UnavailableReason != nil {
+		text += " · " + i18n.T(ctx, "control.site.lifecycle_unavailable", i18n.Data{"ChangedAt": display.DateTime(site.UnavailableAt),
+			"Reason": i18n.Stored(ctx, "unavailable_reasons", *site.UnavailableReason)})
+	}
 	for _, at := range []struct {
 		what string
 		ms   *int64
@@ -400,6 +433,10 @@ templ siteActions(site *controlmodels.Site) {
 					unless(site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Scissors) {
 					@siteActionForm("/sites/"+site.ID+"/truncate", "", i18n.T(ctx, "control.site.truncate_confirm"), "control--site--truncate", i18n.T(ctx, "control.site.truncate"))
 				}
+				@actionCard("control--site--action-restore", i18n.T(ctx, "control.site.restore"), i18n.T(ctx, "control.site.restore_intro"),
+					unless(site.State == "unavailable", i18n.T(ctx, "control.site.restore_unavailable_only")), icon.DatabaseBackup) {
+					@siteActionForm("/sites/"+site.ID+"/restore", "", i18n.T(ctx, "control.site.restore_confirm"), "control--site--restore", i18n.T(ctx, "control.site.restore"))
+				}
 				@actionCard("control--site--action-archive", i18n.T(ctx, "control.site.archive"), i18n.T(ctx, "control.site.archive_intro"), unless(site.State == "disabled", i18n.T(ctx, "control.site.archive_unavailable")), icon.Archive) {
 					@siteActionForm("/sites/"+site.ID, "archived", i18n.T(ctx, "control.site.archive_confirm"), "control--site--archive", i18n.T(ctx, "control.site.archive"))
 				}
@@ -493,6 +530,15 @@ templ SiteUpdated(site *controlmodels.Site) {
 
 templ SiteTruncated(site *controlmodels.Site) {
 	@siteChanged(site, i18n.T(ctx, "control.site.truncated_toast"))
+}
+
+// SiteRestoreTried shows the site's page again, with a toast saying whether it was restored or is tried again later
+templ SiteRestoreTried(site *controlmodels.Site) {
+	if site.State == "unavailable" {
+		@siteChanged(site, i18n.T(ctx, "control.site.not_restored_toast"))
+	} else {
+		@siteChanged(site, i18n.T(ctx, "control.site.restored_toast"))
+	}
 }
 
 // siteChanged loads the site's page again, as it changed, with a toast saying how

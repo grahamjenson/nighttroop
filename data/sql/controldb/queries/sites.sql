@@ -27,18 +27,21 @@ SELECT id, max_db_size_kb_limit FROM sites WHERE max_db_size_kb_limit IS NOT NUL
 
 -- name: SearchSites :many
 SELECT * FROM sites
+WHERE CAST(sqlc.narg('Type') AS TEXT) IS NULL OR state = sqlc.narg('Type')
 ORDER BY created_at DESC, id
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchSitesByLastWrite :many
 -- The longest since written to first, the first to archive; a site never written to counts from when it was made
 SELECT * FROM sites
+WHERE CAST(sqlc.narg('Type') AS TEXT) IS NULL OR state = sqlc.narg('Type')
 ORDER BY COALESCE(last_write_at, created_at) ASC, id
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchSitesByDBSize :many
 -- The largest site DB first, the first to truncate; a site not yet measured is last
 SELECT * FROM sites
+WHERE CAST(sqlc.narg('Type') AS TEXT) IS NULL OR state = sqlc.narg('Type')
 ORDER BY estimated_db_size_kb IS NULL, estimated_db_size_kb DESC, created_at DESC, id
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
@@ -76,8 +79,28 @@ SELECT id FROM sites WHERE state = 'live' AND (
     )
 );
 
--- name: GetLiveAndDisabledSites :many
-SELECT * FROM sites WHERE state IN ('live', 'disabled');
+-- name: GetSitesToOpen :many
+-- The sites whose DBs are opened at start: live, disabled, and unavailable, to try again
+SELECT * FROM sites WHERE state IN ('live', 'disabled', 'unavailable');
+
+-- name: MarkSiteUnavailable :one
+-- Takes a live, disabled or unavailable site out of service for Reason, keeping when it first became unavailable
+UPDATE sites
+SET
+    state = 'unavailable',
+    unavailable_reason = sqlc.arg('Reason'),
+    unavailable_at = CASE WHEN state = 'unavailable' THEN unavailable_at ELSE CAST(unixepoch('subsec') * 1000 AS INTEGER) END
+WHERE id = sqlc.arg('ID') AND state IN ('live', 'disabled', 'unavailable')
+RETURNING *;
+
+-- name: MarkSiteAvailable :execresult
+-- Brings an unavailable site back: live, or disabled when it was disabled before
+UPDATE sites
+SET
+    state = CASE WHEN disabled_at IS NULL THEN 'live' ELSE 'disabled' END,
+    unavailable_reason = NULL,
+    unavailable_at = NULL
+WHERE id = ? AND state = 'unavailable';
 
 
 -------

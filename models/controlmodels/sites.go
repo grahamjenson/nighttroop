@@ -13,13 +13,16 @@ type Site struct {
 	MaxDbSizeKbLimit  *int64 `json:"max_db_size_kb_limit"`
 	EstimatedDbSizeKb *int64 `json:"estimated_db_size_kb"`
 	// AbuseScore is how much the site may abuse the server, from 0 to 1, as the resource check last scored it
-	AbuseScore float64 `json:"abuse_score"`
-	CreatedAt         int64  `json:"created_at"`
-	LastSeenAt        *int64 `json:"last_seen_at"`
-	LastWriteAt       *int64 `json:"last_write_at"`
-	DisabledAt        *int64 `json:"disabled_at"`
-	ArchivedAt        *int64 `json:"archived_at"`
-	DeletedAt         *int64 `json:"deleted_at"`
+	AbuseScore  float64 `json:"abuse_score"`
+	CreatedAt   int64   `json:"created_at"`
+	LastSeenAt  *int64  `json:"last_seen_at"`
+	LastWriteAt *int64  `json:"last_write_at"`
+	DisabledAt  *int64  `json:"disabled_at"`
+	ArchivedAt  *int64  `json:"archived_at"`
+	DeletedAt   *int64  `json:"deleted_at"`
+	// UnavailableReason is why an unavailable site's DB is not here or does not open, since UnavailableAt
+	UnavailableReason *string `json:"unavailable_reason"`
+	UnavailableAt     *int64  `json:"unavailable_at"`
 
 	// BackedUpAt is when the site's backup copy was last made, BackupSizeKb that copy's size on disk, and
 	// BackupUploadedAt when it was last uploaded to S3

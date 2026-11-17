@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -163,12 +164,18 @@ func globalWithinRateLimit(config *config.ServerConfig, routeTarget RouteTarget,
 // wrong. The missing site's answer says, in JSON as Nightscout's errors are, that the site does not exist, so an app can
 // tell its user rather than take it for a wrong path: the Nightscout API's is 410 Gone, so an uploader can tell it from
 // a route there is not. A disabled, archived or deleted site is answered just as one that never was, so the answer
-// tells nothing about it.
+// tells nothing about it. A live site whose DB is not here or does not open is 503, temporarily unavailable.
 func serveSite(ctx context.Context, w http.ResponseWriter, r *http.Request, router http.Handler, config *config.ServerConfig, controlDB *db.ControlDB, subdomain string, ipAddress string, missingStatus int) {
 	siteDB, siteModel, err := controlDB.GetSite(ctx, subdomain)
 	if errors.Is(err, db.ErrSiteNotFound) {
 		slog.InfoContext(ctx, "Main router site does not exist", "subdomain", subdomain, "status", missingStatus, "error", err)
 		apiutils.WriteJSON(w, missingStatus, map[string]any{"status": missingStatus, "message": "site does not exist"})
+		return
+	}
+	// A live site whose DB is not here or does not open is restored, so its apps try again later
+	if errors.Is(err, db.ErrSiteUnavailable) {
+		w.Header().Set("Retry-After", strconv.Itoa(int(db.RestoreBackoff[0].Seconds())))
+		apiutils.WriteJSON(w, http.StatusServiceUnavailable, map[string]any{"status": http.StatusServiceUnavailable, "message": i18n.T(ctx, "errors.site.unavailable")})
 		return
 	}
 	if err != nil {

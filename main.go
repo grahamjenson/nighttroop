@@ -99,7 +99,7 @@ func run() error {
 }
 
 // restoreFromS3 downloads the control DB from its backup in S3, where there is one. A missing site is restored from
-// its own backup once the control DB is open (RestoreMissingSites).
+// its own backup once the control DB is open (RestoreUnavailableSites).
 func restoreFromS3(serverConfig *config.ServerConfig, s3Client *s3utils.S3Client) error {
 	// Before any restore runs, so none of the staging folders it removes is in use
 	restore.RemoveStaging(serverConfig)
@@ -116,10 +116,9 @@ func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Cli
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
-	// A live site whose DB file is missing is restored from its backup
-	if err := controlDB.RestoreMissingSites(ctx, s3Client.DownloadFilesFromS3); err != nil {
-		return nil, fmt.Errorf("cannot open restored sites: %w", err)
-	}
+	// A site whose DB file is missing or does not open is restored from its backup, or is unavailable while it is
+	// tried again, so the start goes on without it
+	controlDB.RestoreUnavailableSites(ctx, s3Client.DownloadFilesFromS3)
 	// Development has an admin to log in with, and staging its configured one; anywhere else a new server is set up
 	// with the code it prints
 	if serverConfig.IsDev() {

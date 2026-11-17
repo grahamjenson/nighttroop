@@ -2688,6 +2688,36 @@ func (m *HydrateSiteParams) SetID(v string) {
 }
 
 // GetID returns the ID value.
+func (m MarkSiteAvailableParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated MarkSiteAvailableParams.
+func (m *MarkSiteAvailableParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetReason returns the Reason value.
+func (m MarkSiteUnavailableParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated MarkSiteUnavailableParams.
+func (m *MarkSiteUnavailableParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetID returns the ID value.
+func (m MarkSiteUnavailableParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated MarkSiteUnavailableParams.
+func (m *MarkSiteUnavailableParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m RotateSiteBackupKeyParams) GetID() string {
 	return m.ID
 }
@@ -2702,14 +2732,29 @@ func (m *SearchArchivedSitesParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetType returns the Type value.
+func (m SearchSitesParams) GetType() *string {
+	return m.Type
+}
+
 // SetLimit sets the Limit value and returns the updated SearchSitesParams.
 func (m *SearchSitesParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetType returns the Type value.
+func (m SearchSitesByDBSizeParams) GetType() *string {
+	return m.Type
+}
+
 // SetLimit sets the Limit value and returns the updated SearchSitesByDBSizeParams.
 func (m *SearchSitesByDBSizeParams) SetLimit(v int64) {
 	m.Limit = v
+}
+
+// GetType returns the Type value.
+func (m SearchSitesByLastWriteParams) GetType() *string {
+	return m.Type
 }
 
 // SetLimit sets the Limit value and returns the updated SearchSitesByLastWriteParams.

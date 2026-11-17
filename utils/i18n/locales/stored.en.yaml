@@ -43,7 +43,8 @@ stored:
     site_archived: "Site archived"
     site_hydrated: "Site restored"
     site_truncated: "Site truncated"
-    site_db_missing: "Site db missing"
+    site_unavailable: "Site unavailable"
+    site_available: "Site available"
     sites_backed_up: "Sites backed up"
     control_backed_up: "Control backed up"
     site_admin_recovered: "Site admin recovered"
@@ -75,9 +76,17 @@ stored:
     info: "info"
     warn: "warn"
     error: "error"
+  # Why a site is unavailable
+  unavailable_reasons:
+    missing: "DB missing"
+    cannot_open: "DB does not open"
+    s3_not_working: "S3 not working"
+    not_in_backup: "Not in the backup"
+    restore_failed: "Restore failed"
   site_states:
     live: "Live"
     disabled: "Disabled"
+    unavailable: "Unavailable"
     archived: "Archived"
     deleted: "Deleted"
   job_statuses:

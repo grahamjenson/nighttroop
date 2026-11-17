@@ -47,9 +47,13 @@ CREATE TABLE sites (
     backup_uploaded_at INTEGER,
 
     -- States
-    state TEXT NOT NULL CHECK (state IN ('live', 'disabled', 'archived', 'deleted')) DEFAULT 'live',
+    state TEXT NOT NULL CHECK (state IN ('live', 'disabled', 'unavailable', 'archived', 'deleted')) DEFAULT 'live',
     -- live is all good, disabled no-login DB still accessible, archived means remove copy available, deleted means no rehydration available
+    -- unavailable means its DB is not here or does not open, so it is not served until a restore brings it back
     disabled_at INTEGER,
+    -- why a site is unavailable, and since when
+    unavailable_reason TEXT CHECK (unavailable_reason IN ('missing', 'cannot_open', 's3_not_working', 'not_in_backup', 'restore_failed')),
+    unavailable_at INTEGER,
     archived_at INTEGER,
     deleted_at INTEGER,
 

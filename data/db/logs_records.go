@@ -23,11 +23,11 @@ import (
 type ErrorKind string
 
 const (
-	ErrorKindServer          ErrorKind = "server"
-	ErrorKindClient          ErrorKind = "client"
-	ErrorKindConnector       ErrorKind = "connector"
-	ErrorKindSiteBackup      ErrorKind = "site_backup"
-	ErrorKindControlBackup   ErrorKind = "control_backup"
+	ErrorKindServer        ErrorKind = "server"
+	ErrorKindClient        ErrorKind = "client"
+	ErrorKindConnector     ErrorKind = "connector"
+	ErrorKindSiteBackup    ErrorKind = "site_backup"
+	ErrorKindControlBackup ErrorKind = "control_backup"
 )
 
 // ErrorKinds are every error's kind, to pick from
@@ -180,15 +180,21 @@ func (l *LogsDB) SiteDeletedEvent(ctx context.Context, siteID string, reason str
 	l.event(ctx, siteID, events.SiteDeleted, SiteDeletedAttributes{Reason: reason})
 }
 
-type SiteDBMissingAttributes struct {
-	Restored bool `json:"restored"`
-	// Reason is why a site that was not restored was not: s3_not_working, not_in_backup or restore_failed
+type SiteRestoreAttributes struct {
+	// Reason is why a site was not restored, as UnavailableSite's
 	Reason string `json:"reason,omitempty"`
+	// Try is which try it was: 0 at start or for an admin, then each retry's
+	Try int `json:"try"`
 }
 
-// SiteDBMissingEvent records a live site's DB file missing at start, and whether it was restored from its backup, so the control admin can see a site left out
-func (l *LogsDB) SiteDBMissingEvent(ctx context.Context, siteID string, restored bool, reason string) {
-	l.event(ctx, siteID, events.SiteDBMissing, SiteDBMissingAttributes{Restored: restored, Reason: reason})
+// SiteUnavailableEvent records a try to restore an unavailable site failing for reason, so the control admin sees it
+func (l *LogsDB) SiteUnavailableEvent(ctx context.Context, siteID, reason string, try int) {
+	l.event(ctx, siteID, events.SiteUnavailable, SiteRestoreAttributes{Reason: reason, Try: try})
+}
+
+// SiteAvailableEvent records an unavailable site restored, at its try'th try
+func (l *LogsDB) SiteAvailableEvent(ctx context.Context, siteID string, try int) {
+	l.event(ctx, siteID, events.SiteAvailable, SiteRestoreAttributes{Try: try})
 }
 
 type SitesBackedUpAttributes struct {

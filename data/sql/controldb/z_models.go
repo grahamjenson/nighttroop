@@ -93,6 +93,8 @@ type Site struct {
 	BackupUploadedAt                 *int64
 	State                            string
 	DisabledAt                       *int64
+	UnavailableReason                *string
+	UnavailableAt                    *int64
 	ArchivedAt                       *int64
 	DeletedAt                        *int64
 	Units                            *consts.Units

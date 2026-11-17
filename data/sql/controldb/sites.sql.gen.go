@@ -116,7 +116,7 @@ func (q *Queries) CountSitesCreated(ctx context.Context, arg CountSitesCreatedPa
 const createSite = `-- name: CreateSite :one
 
 INSERT INTO sites (id, backup_key_hash)
-VALUES (?, ?) RETURNING id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled
+VALUES (?, ?) RETURNING id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled
 `
 
 type CreateSiteParams struct {
@@ -146,6 +146,8 @@ func (q *Queries) CreateSite(ctx context.Context, arg CreateSiteParams) (*Site, 
 		&i.BackupUploadedAt,
 		&i.State,
 		&i.DisabledAt,
+		&i.UnavailableReason,
+		&i.UnavailableAt,
 		&i.ArchivedAt,
 		&i.DeletedAt,
 		&i.Units,
@@ -293,7 +295,7 @@ func (q *Queries) DisableSites(ctx context.Context, arg DisableSitesParams) ([]s
 }
 
 const getAllSites = `-- name: GetAllSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
 `
 
 func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
@@ -321,98 +323,8 @@ func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
-			&i.ArchivedAt,
-			&i.DeletedAt,
-			&i.Units,
-			&i.UnitsMgdlLabel,
-			&i.UnitsMmolLabel,
-			&i.Timezone,
-			&i.Language,
-			&i.DateFormat,
-			&i.TimeFormat,
-			&i.WeekStartDay,
-			&i.NumberFormat,
-			&i.BolusDiaHours,
-			&i.BolusOnsetMinutes,
-			&i.BolusPeakMinutes,
-			&i.BasalDiaHours,
-			&i.BasalOnsetMinutes,
-			&i.BasalPeakMinutes,
-			&i.DefaultInsulinSensitivity,
-			&i.DefaultCarbRatio,
-			&i.DefaultBasalRate,
-			&i.CarbMaxAbsorptionHours,
-			&i.CarbMin5mImpact,
-			&i.AlarmUrgentLowEnabled,
-			&i.RangeUrgentLowMgdl,
-			&i.AlarmLowEnabled,
-			&i.RangeLowMgdl,
-			&i.AlarmLowMinutes,
-			&i.AlarmLowPredictionEnabled,
-			&i.AlarmLowPredictionMinutes,
-			&i.AlarmHighEnabled,
-			&i.RangeHighMgdl,
-			&i.AlarmHighMinutes,
-			&i.AlarmUrgentHighEnabled,
-			&i.RangeUrgentHighMgdl,
-			&i.AlarmFastRiseEnabled,
-			&i.AlarmFastRiseMgdl,
-			&i.AlarmFastRiseMinutes,
-			&i.AlarmFastDropEnabled,
-			&i.AlarmFastDropMgdl,
-			&i.AlarmFastDropMinutes,
-			&i.AlarmNoDataEnabled,
-			&i.AlarmNoDataMinutes,
-			&i.AlarmDeviceBatteryLowEnabled,
-			&i.AlarmDeviceBatteryLowPercent,
-			&i.AlarmDeviceBatteryLowMinutes,
-			&i.AlarmDeviceBatteryLowDevicesJson,
-			&i.AlarmLowReservoirEnabled,
-			&i.AlarmLowReservoirUnits,
-			&i.NotificationsEnabled,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getLiveAndDisabledSites = `-- name: GetLiveAndDisabledSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE state IN ('live', 'disabled')
-`
-
-func (q *Queries) GetLiveAndDisabledSites(ctx context.Context) ([]*Site, error) {
-	rows, err := q.query(ctx, q.getLiveAndDisabledSitesStmt, getLiveAndDisabledSites)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*Site
-	for rows.Next() {
-		var i Site
-		if err := rows.Scan(
-			&i.ID,
-			&i.BackupKeyHash,
-			&i.CreatedAt,
-			&i.MaxDbSizeKbLimit,
-			&i.EstimatedDbSizeKb,
-			&i.AbuseScore,
-			&i.TableSizesJson,
-			&i.LastSeenAt,
-			&i.LastWriteAt,
-			&i.SummariesCheckedAt,
-			&i.BackedUpAt,
-			&i.BackupSizeKb,
-			&i.BackupUploadedAt,
-			&i.State,
-			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
@@ -477,7 +389,7 @@ func (q *Queries) GetLiveAndDisabledSites(ctx context.Context) ([]*Site, error) 
 }
 
 const getSite = `-- name: GetSite :one
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE id = ? AND state = 'live'
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE id = ? AND state = 'live'
 `
 
 type GetSiteParams struct {
@@ -503,6 +415,8 @@ func (q *Queries) GetSite(ctx context.Context, arg GetSiteParams) (*Site, error)
 		&i.BackupUploadedAt,
 		&i.State,
 		&i.DisabledAt,
+		&i.UnavailableReason,
+		&i.UnavailableAt,
 		&i.ArchivedAt,
 		&i.DeletedAt,
 		&i.Units,
@@ -627,7 +541,7 @@ func (q *Queries) GetSiteIDsWithAlarms(ctx context.Context) ([]string, error) {
 }
 
 const getSiteInAnyState = `-- name: GetSiteInAnyState :one
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE id = ?
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE id = ?
 `
 
 type GetSiteInAnyStateParams struct {
@@ -653,6 +567,8 @@ func (q *Queries) GetSiteInAnyState(ctx context.Context, arg GetSiteInAnyStatePa
 		&i.BackupUploadedAt,
 		&i.State,
 		&i.DisabledAt,
+		&i.UnavailableReason,
+		&i.UnavailableAt,
 		&i.ArchivedAt,
 		&i.DeletedAt,
 		&i.Units,
@@ -707,7 +623,7 @@ func (q *Queries) GetSiteInAnyState(ctx context.Context, arg GetSiteInAnyStatePa
 }
 
 const getSitesNotUploaded = `-- name: GetSitesNotUploaded :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id
 `
 
 // The live and disabled sites not uploaded yet, e.g. a new or restored site
@@ -736,6 +652,8 @@ func (q *Queries) GetSitesNotUploaded(ctx context.Context) ([]*Site, error) {
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
@@ -802,7 +720,7 @@ func (q *Queries) GetSitesNotUploaded(ctx context.Context) ([]*Site, error) {
 const getSitesToBackUp = `-- name: GetSitesToBackUp :many
 
 
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
 WHERE state IN ('live', 'disabled') AND (
     (last_write_at IS NOT NULL AND (backed_up_at IS NULL OR (last_write_at + 600000 > backed_up_at
         AND backed_up_at < CAST(?1 AS INTEGER))))
@@ -847,6 +765,8 @@ func (q *Queries) GetSitesToBackUp(ctx context.Context, arg GetSitesToBackUpPara
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
@@ -911,7 +831,7 @@ func (q *Queries) GetSitesToBackUp(ctx context.Context, arg GetSitesToBackUpPara
 }
 
 const getSitesToDelete = `-- name: GetSitesToDelete :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE 
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE 
     state IN ('live', 'disabled') AND -- must be live or disabled
     last_write_at IS NULL AND -- must not have been written anything (this is important)
     (
@@ -957,6 +877,103 @@ func (q *Queries) GetSitesToDelete(ctx context.Context, arg GetSitesToDeletePara
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.Units,
+			&i.UnitsMgdlLabel,
+			&i.UnitsMmolLabel,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.NumberFormat,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
+			&i.AlarmUrgentLowEnabled,
+			&i.RangeUrgentLowMgdl,
+			&i.AlarmLowEnabled,
+			&i.RangeLowMgdl,
+			&i.AlarmLowMinutes,
+			&i.AlarmLowPredictionEnabled,
+			&i.AlarmLowPredictionMinutes,
+			&i.AlarmHighEnabled,
+			&i.RangeHighMgdl,
+			&i.AlarmHighMinutes,
+			&i.AlarmUrgentHighEnabled,
+			&i.RangeUrgentHighMgdl,
+			&i.AlarmFastRiseEnabled,
+			&i.AlarmFastRiseMgdl,
+			&i.AlarmFastRiseMinutes,
+			&i.AlarmFastDropEnabled,
+			&i.AlarmFastDropMgdl,
+			&i.AlarmFastDropMinutes,
+			&i.AlarmNoDataEnabled,
+			&i.AlarmNoDataMinutes,
+			&i.AlarmDeviceBatteryLowEnabled,
+			&i.AlarmDeviceBatteryLowPercent,
+			&i.AlarmDeviceBatteryLowMinutes,
+			&i.AlarmDeviceBatteryLowDevicesJson,
+			&i.AlarmLowReservoirEnabled,
+			&i.AlarmLowReservoirUnits,
+			&i.NotificationsEnabled,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSitesToOpen = `-- name: GetSitesToOpen :many
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE state IN ('live', 'disabled', 'unavailable')
+`
+
+// The sites whose DBs are opened at start: live, disabled, and unavailable, to try again
+func (q *Queries) GetSitesToOpen(ctx context.Context) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getSitesToOpenStmt, getSitesToOpen)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Site
+	for rows.Next() {
+		var i Site
+		if err := rows.Scan(
+			&i.ID,
+			&i.BackupKeyHash,
+			&i.CreatedAt,
+			&i.MaxDbSizeKbLimit,
+			&i.EstimatedDbSizeKb,
+			&i.AbuseScore,
+			&i.TableSizesJson,
+			&i.LastSeenAt,
+			&i.LastWriteAt,
+			&i.SummariesCheckedAt,
+			&i.BackedUpAt,
+			&i.BackupSizeKb,
+			&i.BackupUploadedAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
@@ -1042,6 +1059,114 @@ func (q *Queries) HydrateSite(ctx context.Context, arg HydrateSiteParams) (sql.R
 	return q.exec(ctx, q.hydrateSiteStmt, hydrateSite, arg.ID)
 }
 
+const markSiteAvailable = `-- name: MarkSiteAvailable :execresult
+UPDATE sites
+SET
+    state = CASE WHEN disabled_at IS NULL THEN 'live' ELSE 'disabled' END,
+    unavailable_reason = NULL,
+    unavailable_at = NULL
+WHERE id = ? AND state = 'unavailable'
+`
+
+type MarkSiteAvailableParams struct {
+	ID string
+}
+
+// Brings an unavailable site back: live, or disabled when it was disabled before
+func (q *Queries) MarkSiteAvailable(ctx context.Context, arg MarkSiteAvailableParams) (sql.Result, error) {
+	return q.exec(ctx, q.markSiteAvailableStmt, markSiteAvailable, arg.ID)
+}
+
+const markSiteUnavailable = `-- name: MarkSiteUnavailable :one
+UPDATE sites
+SET
+    state = 'unavailable',
+    unavailable_reason = ?1,
+    unavailable_at = CASE WHEN state = 'unavailable' THEN unavailable_at ELSE CAST(unixepoch('subsec') * 1000 AS INTEGER) END
+WHERE id = ?2 AND state IN ('live', 'disabled', 'unavailable')
+RETURNING id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled
+`
+
+type MarkSiteUnavailableParams struct {
+	Reason *string
+	ID     string
+}
+
+// Takes a live, disabled or unavailable site out of service for Reason, keeping when it first became unavailable
+func (q *Queries) MarkSiteUnavailable(ctx context.Context, arg MarkSiteUnavailableParams) (*Site, error) {
+	row := q.queryRow(ctx, q.markSiteUnavailableStmt, markSiteUnavailable, arg.Reason, arg.ID)
+	var i Site
+	err := row.Scan(
+		&i.ID,
+		&i.BackupKeyHash,
+		&i.CreatedAt,
+		&i.MaxDbSizeKbLimit,
+		&i.EstimatedDbSizeKb,
+		&i.AbuseScore,
+		&i.TableSizesJson,
+		&i.LastSeenAt,
+		&i.LastWriteAt,
+		&i.SummariesCheckedAt,
+		&i.BackedUpAt,
+		&i.BackupSizeKb,
+		&i.BackupUploadedAt,
+		&i.State,
+		&i.DisabledAt,
+		&i.UnavailableReason,
+		&i.UnavailableAt,
+		&i.ArchivedAt,
+		&i.DeletedAt,
+		&i.Units,
+		&i.UnitsMgdlLabel,
+		&i.UnitsMmolLabel,
+		&i.Timezone,
+		&i.Language,
+		&i.DateFormat,
+		&i.TimeFormat,
+		&i.WeekStartDay,
+		&i.NumberFormat,
+		&i.BolusDiaHours,
+		&i.BolusOnsetMinutes,
+		&i.BolusPeakMinutes,
+		&i.BasalDiaHours,
+		&i.BasalOnsetMinutes,
+		&i.BasalPeakMinutes,
+		&i.DefaultInsulinSensitivity,
+		&i.DefaultCarbRatio,
+		&i.DefaultBasalRate,
+		&i.CarbMaxAbsorptionHours,
+		&i.CarbMin5mImpact,
+		&i.AlarmUrgentLowEnabled,
+		&i.RangeUrgentLowMgdl,
+		&i.AlarmLowEnabled,
+		&i.RangeLowMgdl,
+		&i.AlarmLowMinutes,
+		&i.AlarmLowPredictionEnabled,
+		&i.AlarmLowPredictionMinutes,
+		&i.AlarmHighEnabled,
+		&i.RangeHighMgdl,
+		&i.AlarmHighMinutes,
+		&i.AlarmUrgentHighEnabled,
+		&i.RangeUrgentHighMgdl,
+		&i.AlarmFastRiseEnabled,
+		&i.AlarmFastRiseMgdl,
+		&i.AlarmFastRiseMinutes,
+		&i.AlarmFastDropEnabled,
+		&i.AlarmFastDropMgdl,
+		&i.AlarmFastDropMinutes,
+		&i.AlarmNoDataEnabled,
+		&i.AlarmNoDataMinutes,
+		&i.AlarmDeviceBatteryLowEnabled,
+		&i.AlarmDeviceBatteryLowPercent,
+		&i.AlarmDeviceBatteryLowMinutes,
+		&i.AlarmDeviceBatteryLowDevicesJson,
+		&i.AlarmLowReservoirEnabled,
+		&i.AlarmLowReservoirUnits,
+		&i.NotificationsEnabled,
+	)
+	return &i, err
+}
+
 const rotateSiteBackupKey = `-- name: RotateSiteBackupKey :execresult
 
 UPDATE sites SET backup_key_hash = ?1
@@ -1064,7 +1189,7 @@ func (q *Queries) RotateSiteBackupKey(ctx context.Context, arg RotateSiteBackupK
 }
 
 const searchArchivedSites = `-- name: SearchArchivedSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
 WHERE state = 'archived'
 ORDER BY archived_at DESC, id
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
@@ -1101,6 +1226,8 @@ func (q *Queries) SearchArchivedSites(ctx context.Context, arg SearchArchivedSit
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
@@ -1165,18 +1292,20 @@ func (q *Queries) SearchArchivedSites(ctx context.Context, arg SearchArchivedSit
 }
 
 const searchSites = `-- name: SearchSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+WHERE CAST(?1 AS TEXT) IS NULL OR state = ?1
 ORDER BY created_at DESC, id
-LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type SearchSitesParams struct {
+	Type  *string
 	Skip  int64
 	Limit int64
 }
 
 func (q *Queries) SearchSites(ctx context.Context, arg SearchSitesParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.searchSitesStmt, searchSites, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.searchSitesStmt, searchSites, arg.Type, arg.Skip, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -1200,6 +1329,8 @@ func (q *Queries) SearchSites(ctx context.Context, arg SearchSitesParams) ([]*Si
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
@@ -1264,19 +1395,21 @@ func (q *Queries) SearchSites(ctx context.Context, arg SearchSitesParams) ([]*Si
 }
 
 const searchSitesByDBSize = `-- name: SearchSitesByDBSize :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+WHERE CAST(?1 AS TEXT) IS NULL OR state = ?1
 ORDER BY estimated_db_size_kb IS NULL, estimated_db_size_kb DESC, created_at DESC, id
-LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type SearchSitesByDBSizeParams struct {
+	Type  *string
 	Skip  int64
 	Limit int64
 }
 
 // The largest site DB first, the first to truncate; a site not yet measured is last
 func (q *Queries) SearchSitesByDBSize(ctx context.Context, arg SearchSitesByDBSizeParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.searchSitesByDBSizeStmt, searchSitesByDBSize, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.searchSitesByDBSizeStmt, searchSitesByDBSize, arg.Type, arg.Skip, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -1300,6 +1433,8 @@ func (q *Queries) SearchSitesByDBSize(ctx context.Context, arg SearchSitesByDBSi
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
@@ -1364,19 +1499,21 @@ func (q *Queries) SearchSitesByDBSize(ctx context.Context, arg SearchSitesByDBSi
 }
 
 const searchSitesByLastWrite = `-- name: SearchSitesByLastWrite :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, unavailable_reason, unavailable_at, archived_at, deleted_at, units, units_mgdl_label, units_mmol_label, timezone, language, date_format, time_format, week_start_day, number_format, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
+WHERE CAST(?1 AS TEXT) IS NULL OR state = ?1
 ORDER BY COALESCE(last_write_at, created_at) ASC, id
-LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type SearchSitesByLastWriteParams struct {
+	Type  *string
 	Skip  int64
 	Limit int64
 }
 
 // The longest since written to first, the first to archive; a site never written to counts from when it was made
 func (q *Queries) SearchSitesByLastWrite(ctx context.Context, arg SearchSitesByLastWriteParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.searchSitesByLastWriteStmt, searchSitesByLastWrite, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.searchSitesByLastWriteStmt, searchSitesByLastWrite, arg.Type, arg.Skip, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -1400,6 +1537,8 @@ func (q *Queries) SearchSitesByLastWrite(ctx context.Context, arg SearchSitesByL
 			&i.BackupUploadedAt,
 			&i.State,
 			&i.DisabledAt,
+			&i.UnavailableReason,
+			&i.UnavailableAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,

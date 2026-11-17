@@ -30,6 +30,7 @@ errors:
     backfill_off: "turn on and save this connector before backfilling it"
     no_push_credential: "there is no push credential for the app {{.App}}: add one in Push Credentials"
     max_push_credentials: "a site can have at most {{.Max}} push credentials"
+    unavailable: "the site is temporarily unavailable, try again later"
   settings:
     number: "{{.Name}} must be a number"
     range: "must be between {{.Min}} and {{.Max}}"
@@ -82,6 +83,7 @@ errors:
     archive_needs_s3: "a site can only be archived when S3 is connected"
     site_id: "a site ID is {{.Length}} lowercase letters, a to z"
     truncate: "only a live or disabled site, whose DB is here, can be truncated"
+    restore_unavailable_only: "only an unavailable site can be restored from its backup"
     server_push_credential: "a credential for every site cannot be added until the server uses it only for tokens its app registered itself, with its bundle IDs, within a limit across the server"
     no_live_site: "there is no live site with that ID"
     rate_numbers: "{{.Name}} needs a number for its rate and a whole number for its burst"

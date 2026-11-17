@@ -327,6 +327,10 @@ func QueryToSearchLogs(source *apiquery.Query) logsdb.SearchLogsParams {
 func QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams {
 	var controldbSearchSitesParams controldb.SearchSitesParams
 	if source != nil {
+		if (*source).Type != nil {
+			xstring := *(*source).Type
+			controldbSearchSitesParams.Type = &xstring
+		}
 		controldbSearchSitesParams.Skip = (*source).Skip
 		controldbSearchSitesParams.Limit = (*source).Limit
 	}
@@ -368,17 +372,25 @@ func SiteFromDB(source *controldb.Site) *Site {
 			xint647 := *(*source).DeletedAt
 			controlmodelsSite.DeletedAt = &xint647
 		}
+		if (*source).UnavailableReason != nil {
+			xstring := *(*source).UnavailableReason
+			controlmodelsSite.UnavailableReason = &xstring
+		}
+		if (*source).UnavailableAt != nil {
+			xint648 := *(*source).UnavailableAt
+			controlmodelsSite.UnavailableAt = &xint648
+		}
 		if (*source).BackedUpAt != nil {
-			xint648 := *(*source).BackedUpAt
-			controlmodelsSite.BackedUpAt = &xint648
+			xint649 := *(*source).BackedUpAt
+			controlmodelsSite.BackedUpAt = &xint649
 		}
 		if (*source).BackupSizeKb != nil {
-			xint649 := *(*source).BackupSizeKb
-			controlmodelsSite.BackupSizeKb = &xint649
+			xint6410 := *(*source).BackupSizeKb
+			controlmodelsSite.BackupSizeKb = &xint6410
 		}
 		if (*source).BackupUploadedAt != nil {
-			xint6410 := *(*source).BackupUploadedAt
-			controlmodelsSite.BackupUploadedAt = &xint6410
+			xint6411 := *(*source).BackupUploadedAt
+			controlmodelsSite.BackupUploadedAt = &xint6411
 		}
 		pControlmodelsSite = &controlmodelsSite
 	}

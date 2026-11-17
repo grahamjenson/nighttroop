@@ -55,7 +55,11 @@ func (s *SitesCollection) SearchRows(ctx context.Context, query *apiutils.Query,
 }
 
 func (s *SitesCollection) SearchHTMXResponse(models []*controlmodels.Site, query *apiutils.Query) templ.Component {
-	return control_sites_templ.SitesTable(models, query.Skip, query.Limit, orderOf(query))
+	state := ""
+	if query.Type != nil {
+		state = *query.Type
+	}
+	return control_sites_templ.SitesTable(models, query.Skip, query.Limit, orderOf(query), state)
 }
 
 // orderOf is what a query orders by, or empty for the default
@@ -204,6 +208,30 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 	if err := download.Send(w); err != nil {
 		slog.ErrorContext(r.Context(), "failed to send a site's DB to a control admin", "error", err)
 	}
+}
+
+// RestoreHandler tries to restore an unavailable site from its backup now, and when it cannot, tries it again later as
+// after a start. Only admins can, and it shares the site's few downloads a minute.
+func (s *SitesCollection) RestoreHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	controlDB, siteID := controlContext.ControlDB, chi.URLParam(r, "id")
+	var herr *apiutils.HTTPError
+	if allowed, wait := httputils.WithinRateLimitAll(controlDB.ServerConfig.RateLimiters.SiteDownloadLimiter(siteID)); !allowed {
+		herr = apiutils.ErrRateLimitExceeded(wait)
+	} else if _, err := controlDB.RetryRestore(r.Context(), siteID, s3utils.NewS3Client(controlDB.ServerConfig).DownloadFilesFromS3); errors.Is(err, db.ErrSiteNotFound) {
+		herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.restore_unavailable_only"))
+	} else if err != nil {
+		herr = &apiutils.HTTPError{Status: http.StatusConflict, Message: err.Error()}
+	}
+	var site *controlmodels.Site
+	if herr == nil {
+		site, herr = get(r.Context(), s, siteID, controlContext)
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteRestoreTried(site))
 }
 
 // TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks

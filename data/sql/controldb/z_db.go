@@ -159,9 +159,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getControlPasskeyStmt, err = db.PrepareContext(ctx, getControlPasskey); err != nil {
 		return nil, fmt.Errorf("error preparing query GetControlPasskey: %w", err)
 	}
-	if q.getLiveAndDisabledSitesStmt, err = db.PrepareContext(ctx, getLiveAndDisabledSites); err != nil {
-		return nil, fmt.Errorf("error preparing query GetLiveAndDisabledSites: %w", err)
-	}
 	if q.getPushCredentialStmt, err = db.PrepareContext(ctx, getPushCredential); err != nil {
 		return nil, fmt.Errorf("error preparing query GetPushCredential: %w", err)
 	}
@@ -207,6 +204,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSitesToDeleteStmt, err = db.PrepareContext(ctx, getSitesToDelete); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToDelete: %w", err)
 	}
+	if q.getSitesToOpenStmt, err = db.PrepareContext(ctx, getSitesToOpen); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesToOpen: %w", err)
+	}
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
@@ -218,6 +218,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.listSiteIdentityPasskeysStmt, err = db.PrepareContext(ctx, listSiteIdentityPasskeys); err != nil {
 		return nil, fmt.Errorf("error preparing query ListSiteIdentityPasskeys: %w", err)
+	}
+	if q.markSiteAvailableStmt, err = db.PrepareContext(ctx, markSiteAvailable); err != nil {
+		return nil, fmt.Errorf("error preparing query MarkSiteAvailable: %w", err)
+	}
+	if q.markSiteUnavailableStmt, err = db.PrepareContext(ctx, markSiteUnavailable); err != nil {
+		return nil, fmt.Errorf("error preparing query MarkSiteUnavailable: %w", err)
 	}
 	if q.newestPushRegistrationForAppStmt, err = db.PrepareContext(ctx, newestPushRegistrationForApp); err != nil {
 		return nil, fmt.Errorf("error preparing query NewestPushRegistrationForApp: %w", err)
@@ -578,11 +584,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getControlPasskeyStmt: %w", cerr)
 		}
 	}
-	if q.getLiveAndDisabledSitesStmt != nil {
-		if cerr := q.getLiveAndDisabledSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getLiveAndDisabledSitesStmt: %w", cerr)
-		}
-	}
 	if q.getPushCredentialStmt != nil {
 		if cerr := q.getPushCredentialStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getPushCredentialStmt: %w", cerr)
@@ -658,6 +659,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSitesToDeleteStmt: %w", cerr)
 		}
 	}
+	if q.getSitesToOpenStmt != nil {
+		if cerr := q.getSitesToOpenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesToOpenStmt: %w", cerr)
+		}
+	}
 	if q.hydrateSiteStmt != nil {
 		if cerr := q.hydrateSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
@@ -676,6 +682,16 @@ func (q *Queries) Close() error {
 	if q.listSiteIdentityPasskeysStmt != nil {
 		if cerr := q.listSiteIdentityPasskeysStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listSiteIdentityPasskeysStmt: %w", cerr)
+		}
+	}
+	if q.markSiteAvailableStmt != nil {
+		if cerr := q.markSiteAvailableStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing markSiteAvailableStmt: %w", cerr)
+		}
+	}
+	if q.markSiteUnavailableStmt != nil {
+		if cerr := q.markSiteUnavailableStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing markSiteUnavailableStmt: %w", cerr)
 		}
 	}
 	if q.newestPushRegistrationForAppStmt != nil {
@@ -977,7 +993,6 @@ type Queries struct {
 	getControlIdentityStmt                  *sql.Stmt
 	getControlIdentityByIDStmt              *sql.Stmt
 	getControlPasskeyStmt                   *sql.Stmt
-	getLiveAndDisabledSitesStmt             *sql.Stmt
 	getPushCredentialStmt                   *sql.Stmt
 	getPushRegistrationStmt                 *sql.Stmt
 	getServerSettingsStmt                   *sql.Stmt
@@ -993,10 +1008,13 @@ type Queries struct {
 	getSitesNotUploadedStmt                 *sql.Stmt
 	getSitesToBackUpStmt                    *sql.Stmt
 	getSitesToDeleteStmt                    *sql.Stmt
+	getSitesToOpenStmt                      *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
 	learnSiteIdentityUnitsLabelsStmt        *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
+	markSiteAvailableStmt                   *sql.Stmt
+	markSiteUnavailableStmt                 *sql.Stmt
 	newestPushRegistrationForAppStmt        *sql.Stmt
 	pushCredentialForStmt                   *sql.Stmt
 	recordPushStmt                          *sql.Stmt
@@ -1091,7 +1109,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getControlIdentityStmt:                  q.getControlIdentityStmt,
 		getControlIdentityByIDStmt:              q.getControlIdentityByIDStmt,
 		getControlPasskeyStmt:                   q.getControlPasskeyStmt,
-		getLiveAndDisabledSitesStmt:             q.getLiveAndDisabledSitesStmt,
 		getPushCredentialStmt:                   q.getPushCredentialStmt,
 		getPushRegistrationStmt:                 q.getPushRegistrationStmt,
 		getServerSettingsStmt:                   q.getServerSettingsStmt,
@@ -1107,10 +1124,13 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSitesNotUploadedStmt:                 q.getSitesNotUploadedStmt,
 		getSitesToBackUpStmt:                    q.getSitesToBackUpStmt,
 		getSitesToDeleteStmt:                    q.getSitesToDeleteStmt,
+		getSitesToOpenStmt:                      q.getSitesToOpenStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
 		learnSiteIdentityUnitsLabelsStmt:        q.learnSiteIdentityUnitsLabelsStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,
+		markSiteAvailableStmt:                   q.markSiteAvailableStmt,
+		markSiteUnavailableStmt:                 q.markSiteUnavailableStmt,
 		newestPushRegistrationForAppStmt:        q.newestPushRegistrationForAppStmt,
 		pushCredentialForStmt:                   q.pushCredentialForStmt,
 		recordPushStmt:                          q.recordPushStmt,

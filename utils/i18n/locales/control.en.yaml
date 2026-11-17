@@ -17,6 +17,17 @@ control:
     sites_at_limit: "Sites at their limit"
     sites_near_limit: "Sites near their limit"
     sites_text: "{{.SiteCount}} of the {{.MaxSites}} sites MAX_SITES allows."
+  unavailable_banner:
+    title:
+      one: "{{.Count}} site unavailable:"
+      other: "{{.Count}} sites unavailable:"
+    text: "their DBs are not here or do not open, so they are not served while they are restored from their backups."
+    see_all: "See all"
+    site: "{{.Reason}} since {{.Since}}."
+    tries_left:
+      one: "{{.Count}} try left, next at {{.NextTry}}."
+      other: "{{.Count}} tries left, the next at {{.NextTry}}."
+    no_tries: "No tries left: the admin is paged. Open the site to try again."
   menu:
     open: "Open user menu"
     security: "Security"
@@ -271,6 +282,8 @@ control:
     saved: "Rate limits saved"
   sites:
     order_newest: "Newest"
+    all_states: "All"
+    unavailable: "Unavailable"
     order_last_write: "Longest Since Written"
     order_db_size: "Largest DB"
     title: "Sites"
@@ -310,6 +323,7 @@ control:
     lifecycle_disabled: "Disabled {{.ChangedAt}}"
     lifecycle_archived: "Archived {{.ChangedAt}}"
     lifecycle_deleted: "Deleted {{.ChangedAt}}"
+    lifecycle_unavailable: "Unavailable {{.ChangedAt}}: {{.Reason}}"
     people:
       one: "{{.Count}} person"
       other: "{{.Count}} people"
@@ -350,6 +364,12 @@ control:
     disabled_toast: "Site Disabled"
     archived_toast: "Site Archived"
     truncated_toast: "Site Truncated"
+    restore: "Retry Restore"
+    restore_intro: "Restores its DB from its latest backup now. If that fails, it tries again after 1, 2, 4, 8, 16 and 32 minutes."
+    restore_unavailable_only: "Offered while it is unavailable."
+    restore_confirm: "Restore this site from its latest backup now?"
+    restored_toast: "Site Restored"
+    not_restored_toast: "Site still unavailable: it is tried again later"
   site_identities:
     name: "Name"
     role: "Role"

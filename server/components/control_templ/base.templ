@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/testsite"
@@ -34,6 +35,9 @@ templ ControlBase() {
 			if signedIn {
 				@Header()
 				@StatusBanner(controlContext.ServerStatus)
+				if controlContext.ControlDB != nil {
+					@UnavailableSitesBanner(controlContext.ControlDB.UnavailableSites())
+				}
 			}
 			// Signed out, the login and setup pages fill it, edge to edge
 			<div
@@ -72,6 +76,38 @@ templ StatusBanner(status config.ServerStatus) {
 			</div>
 		</div>
 	}
+}
+
+// UnavailableSitesBanner names each site not served, as its DB is not here or does not open, with why, since when, and
+// when it is tried again, linking to its page, where an admin can try it now
+templ UnavailableSitesBanner(sites []db.UnavailableSite) {
+	if len(sites) > 0 {
+		<div id="control--unavailable-banner" class="border-b border-red-500/20 bg-red-500/10 text-sm text-red-800" role="alert">
+			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
+				<p>
+					<strong>{ i18n.N(ctx, "control.unavailable_banner.title", len(sites)) }</strong> { i18n.T(ctx, "control.unavailable_banner.text") }
+					<a id="control--unavailable-banner--all" href="/sites?type=unavailable" class="underline">{ i18n.T(ctx, "control.unavailable_banner.see_all") }</a>
+				</p>
+				<ul class="mt-1 list-disc pl-5">
+					for _, site := range sites {
+						<li id={ "control--unavailable-banner--" + site.ID }>
+							<a href={ templ.SafeURL("/sites/" + site.ID) } class="font-mono font-semibold underline">{ site.ID }</a>: { unavailableSite(ctx, site) }
+						</li>
+					}
+				</ul>
+			</div>
+		</div>
+	}
+}
+
+// unavailableSite is why the site is unavailable, since when, and how many more times it is tried, the next when
+func unavailableSite(ctx context.Context, site db.UnavailableSite) string {
+	text := i18n.T(ctx, "control.unavailable_banner.site", i18n.Data{"Reason": i18n.Stored(ctx, "unavailable_reasons", site.Reason),
+		"Since": display.DateTime(new(site.Since.UnixMilli()))})
+	if site.NextTry == nil {
+		return text + " " + i18n.T(ctx, "control.unavailable_banner.no_tries")
+	}
+	return text + " " + i18n.N(ctx, "control.unavailable_banner.tries_left", site.TriesLeft, i18n.Data{"NextTry": display.DateTime(new(site.NextTry.UnixMilli()))})
 }
 
 func sitesTitle(ctx context.Context, status config.ServerStatus) string {

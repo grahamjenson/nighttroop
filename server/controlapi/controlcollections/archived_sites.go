@@ -32,7 +32,7 @@ func (s *ArchivedSitesCollection) ToModel(row *controldb.Site) *controlmodels.Si
 
 // SearchRows is the archived sites, the most recently archived first
 func (s *ArchivedSitesCollection) SearchRows(ctx context.Context, query *apiutils.Query, controlContext *httputils.ControlContext) ([]*controldb.Site, error) {
-	return controlContext.ControlDB.Queries.SearchArchivedSites(ctx, controldb.SearchArchivedSitesParams(controlmodels.QueryToSearchSites(query)))
+	return controlContext.ControlDB.Queries.SearchArchivedSites(ctx, controldb.SearchArchivedSitesParams{Skip: query.Skip, Limit: query.Limit})
 }
 
 func (s *ArchivedSitesCollection) SearchHTMXResponse(models []*controlmodels.Site, query *apiutils.Query) templ.Component {

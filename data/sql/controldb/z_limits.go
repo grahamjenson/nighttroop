@@ -195,6 +195,8 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"BackupUploadedAt":                 {Column: "backup_uploaded_at"},
 		"State":                            {Column: "state", Required: true},
 		"DisabledAt":                       {Column: "disabled_at"},
+		"UnavailableReason":                {Column: "unavailable_reason"},
+		"UnavailableAt":                    {Column: "unavailable_at"},
 		"ArchivedAt":                       {Column: "archived_at"},
 		"DeletedAt":                        {Column: "deleted_at"},
 		"Units":                            {Column: "units"},
