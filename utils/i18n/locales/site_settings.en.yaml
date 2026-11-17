@@ -132,15 +132,6 @@ site:
     identities:
       title: "Users & Devices"
       about: "Give each person and device its own credentials, so each can do only what its role allows."
-      admin_card:
-        title: "Admin"
-        about: "Manages users and site settings. Signs in with a password and TOTP, recovers only with the initial backup key, and cannot use the Nightscout API."
-      user_card:
-        title: "User"
-        about: "A person who signs in, views reports and uses Nightscout features."
-      device_card:
-        title: "Device"
-        about: "A phone, SugarPixel or display. Devices use the Nightscout API but cannot sign in. The PWD phone's credentials go into your loop (AAPS, Trio...). A Caregiver device, such as LoopFollow or Nightguard, reads everything and adds, changes and deletes treatments, but cannot change readings, profiles or device statuses."
       users: "Admins & Users"
       devices: "Devices"
       heads:
@@ -188,6 +179,14 @@ site:
         role: "1. What can they do?"
         name: "2. Name them"
         name_help: "Use who they are, such as mum or nurse. Do not use an email address."
+      roles_table:
+        title: "What each role can do"
+        can: "Can"
+        signs_in: "Signs in to the site"
+        nightscout: "Nightscout permissions"
+        none: "None"
+        does: "Yes"
+        does_not: "No"
       role_about:
         admin: "Manages the site: its users, devices, settings and connectors. Sees and changes everything."
         user: "Signs in, sees the reports, and sees and changes everything."

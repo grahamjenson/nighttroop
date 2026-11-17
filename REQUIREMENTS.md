@@ -1825,7 +1825,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - After the start, in the background, each unavailable site:
   - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
-    restore failed). One not restored is also logged as an error, and stays unavailable while the server runs.
+    restore failed). One not restored is also logged as an error, and stays unavailable.
+- The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, each try logged the same way.
+  After the last, the admin is paged once, with the sites. Paging is not set up yet, so a page is logged as an error.
 - A site DB that cannot be opened is moved aside while its backup is restored, and put back if the restored DB cannot
   be opened either.
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
@@ -2004,7 +2006,11 @@ harder:
     notifications.
   - Cannot add, change or delete glucose readings, device statuses, profiles, food presets or loop settings: 403.
   - Changes its own settings, alarms and push registrations.
-- The Users & Devices page names it "Caregiver". The Device card says what it can and cannot change.
+- The Users & Devices page names it "Caregiver".
+- The Users & Devices page has a table, "What each role can do", with a row for each role:
+  - what it can do, in plain words;
+  - whether it signs in to the site;
+  - its permissions on the Nightscout API, as the server gives them (for example `api:*:read`), or None.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
