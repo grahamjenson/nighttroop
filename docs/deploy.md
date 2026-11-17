@@ -168,7 +168,9 @@ restored one does not open either.
 - **Failure:** The site stays unavailable, with an error logged: S3 is off, the backup does not have the site, the
   download fails, or the restored DB does not open.
 - **Fix:** Get the site file from a copy in `./backups`, and restart. Or decide the site is gone, and delete it.
-- **Gap:** A site not restored is not tried again until the next start, and no one is paged.
+- **Retry:** The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, then the admin is paged.
+- **Gap:** Paging is not set up yet, so the page is only an error in the logs and Sentry. After the last try, a site is
+  not tried again until the next start.
 
 #### 5.8 Make the admin
 
@@ -262,8 +264,8 @@ push.
 
 Failures with no fix except a shell on the server, or none. Choose the tools from this list. Details are in each step.
 
-1. **An unavailable site is not restored again until the next start**, and no one is paged: no tools to inspect, fix
-   or remove it ([5.6](#56-open-every-site), [5.7](#57-restore-unavailable-sites)).
+1. **An unavailable site is not tried again after about an hour**, until the next start, and its page is only a logged
+   error: no tools to inspect, fix or remove it ([5.6](#56-open-every-site), [5.7](#57-restore-unavailable-sites)).
 2. **A missing control DB starts a new server** that passes its health check
    ([5.4](#54-restore-the-control-db-if-missing)).
 3. **No check after a deploy except `/health`** ([step 6](#step-6-wait-for-a-healthy-server)).
