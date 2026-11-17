@@ -15,6 +15,10 @@
 1. Performance testing (cost estimate for running full node)
 
 1. Accounts
+    1. P4: Add the icons of SugarPixel and T1D Carer to `server/assets/static/logos`, with their makers' leave, as
+       neither is open source: their tiles in the Add Device modal show their first letter
+    1. P3: Start the Add Device modal from a device status or an identity used by more than one app, with that app
+       picked, so a shared identity is one click from its own
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 

@@ -14,7 +14,7 @@ ASSERT_VISIBLE #main-content th >> text=Created >> nth=0
 // The forms to add a user or a device label what each input takes, like the data pages
 ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormusersTable"]:has-text("Name")
 ASSERT_VISIBLE #identities_table label[for="select-form-createIdentityFormusersTable"]:has-text("Role")
-ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormdevicesTable"]:has-text("Name")
+ASSERT_VISIBLE #site--identities--add-device-button
 // The role cards are neutral, as red, blue and green are for errors, information and success
 ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Admin")
 ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Device")
@@ -47,8 +47,10 @@ ASSERT_TEXT_EQUALS #usersTable>tbody>tr:has-text("nurse")>td:nth-child(2) User
 SCREENSHOT identities_user_created
 
 // Adding a device shows its credentials once
-INPUT #name-createIdentityFormdevicesTable kitchen
-CLICK "Add Device"
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-other)
+INPUT #site--identities--add-device--name kitchen
+CLICK #site--identities--add-device--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE I Have Saved These
 SCREENSHOT identities_device_created

@@ -1,0 +1,107 @@
+package site_settings_templ
+
+import (
+	"context"
+	"slices"
+	"strings"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/assets/static"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/i18n"
+)
+
+// deviceRoles are the roles a device can have, from the one that can do least
+var deviceRoles = []consts.IdentityRole{consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite, consts.IdentityRoleDevicePWDPhone}
+
+// choiceClass is a card to pick one of several: marked when it is the one picked, and greyed when it cannot be
+const choiceClass = "panel flex cursor-pointer p-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
+
+// pickClient runs as an app is picked: it picks the role the app most often has, the only one a loop can have, and
+// names the device for the app, with a number when the site has that name, unless a name was typed
+const pickClient = `const app = event.target; if (app.name !== "client") return;
+for (const role of this.querySelectorAll("[name=role]")) { role.checked = role.value === app.dataset.role; role.disabled = app.hasAttribute("data-forced") && !role.checked }
+const name = this.elements.name; if (name.dataset.typed) return;
+const taken = [...document.querySelectorAll("[data-identity-name]")].map((row) => row.dataset.identityName);
+let free = app.dataset.name, n = 2; while (taken.includes(free)) free = app.dataset.name + "-" + n++;
+name.value = free`
+
+// roleAbouts are the messages saying in plain words what each device role can do
+var roleAbouts = map[consts.IdentityRole]string{
+	consts.IdentityRoleDeviceRead: "site.settings.identities.role_about.device_read", consts.IdentityRoleDeviceReadWrite: "site.settings.identities.role_about.device_read_write",
+	consts.IdentityRoleDevicePWDPhone: "site.settings.identities.role_about.device_pwd_phone",
+}
+
+// clientLogos are the apps whose own icon is in the static logos folder, at /logos/<app>.png. Each is from its
+// open source project, which README.md credits. An app with none has a tile of its first letter.
+var clientLogos = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard"}
+
+// clientMark is the app's first letter, in a tile where its icon would go
+func clientMark(ctx context.Context, client deviceClient) string {
+	return strings.ToUpper(clientLabel(ctx, client)[:1])
+}
+
+// AddDeviceModal adds a device in three steps: the app it is, what it can do, and its name. Each device has its own
+// identity, so the app comes first, and the role and a name follow from it. The new device's credentials replace it.
+templ AddDeviceModal() {
+	{{ id := "site--identities--add-device" }}
+	@modal.Modal(modal.Props{ID: id, Title: i18n.T(ctx, "site.settings.identities.add_device_modal.title"), Subtitle: i18n.T(ctx, "site.settings.identities.add_device_modal.about"), Actions: addDeviceSubmit(id)}) {
+		<form
+			id={ id + "--form" }
+			class="mt-3 space-y-3"
+			hx-post="/settings/identities"
+			hx-target="#devicesTable tbody"
+			hx-swap="beforeend"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+			onchange={ templ.JSUnsafeFuncCall(pickClient) }
+		>
+			<fieldset>
+				<legend class="font-semibold">{ i18n.T(ctx, "site.settings.identities.add_device_modal.app") }</legend>
+				// Five to a row, so the whole modal shows with no scrolling, on a phone too
+				<div class="mt-2 grid grid-cols-5 gap-1.5 sm:gap-2">
+					for _, client := range deviceClients {
+						<label class={ choiceClass, "min-w-0 flex-col items-center gap-0.5 px-0.5 text-center" }>
+							<input type="radio" name="client" value={ client.Value } id={ id + "--client-" + client.Value } class="sr-only" required data-role={ string(client.Role) } data-name={ client.Name } data-forced?={ sitemodels.ClientRoles[client.Value] != "" }/>
+							if slices.Contains(clientLogos, client.Value) {
+								<img src={ static.URL("/logos/" + client.Value + ".png") } alt="" class="size-7 rounded-lg"/>
+							} else {
+								<span aria-hidden="true" class="flex size-7 items-center justify-center rounded-lg bg-brand-night text-sm font-bold text-white">{ clientMark(ctx, client) }</span>
+							}
+							<span class="max-w-full truncate text-[10px] font-medium sm:text-xs">{ clientLabel(ctx, client) }</span>
+						</label>
+					}
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend class="font-semibold">{ i18n.T(ctx, "site.settings.identities.add_device_modal.role") }</legend>
+				// One to a row on a phone, its name then what it can do, so the three stay short
+				<div class="mt-2 grid gap-2 sm:grid-cols-3">
+					for _, role := range deviceRoles {
+						<label class={ choiceClass, "items-baseline gap-2 px-2 sm:flex-col sm:gap-0.5" }>
+							<input type="radio" name="role" value={ string(role) } id={ id + "--role-" + string(role) } class="sr-only" required/>
+							<span class="shrink-0 font-medium">{ RoleLabel(ctx, string(role)) }</span>
+							<span class="text-xs text-gray-500">{ i18n.T(ctx, roleAbouts[role]) }</span>
+						</label>
+					}
+				</div>
+			</fieldset>
+			@field.Field(id+"--name", i18n.T(ctx, "site.settings.identities.add_device_modal.name"), "[&>label]:text-base [&>label]:font-semibold [&>label]:text-inherit") {
+				@input.Input(input.Props{ID: id + "--name", Type: "text", Name: "name", Required: true, Placeholder: "nightguard-mum", Attributes: templ.Attributes{"maxlength": "32", "oninput": templ.JSUnsafeFuncCall("this.dataset.typed = 1")}})
+				<p class="mt-1 hidden text-xs text-gray-500 sm:block">{ i18n.T(ctx, "site.settings.identities.add_device_modal.name_help") }</p>
+			}
+		</form>
+	}
+}
+
+templ addDeviceSubmit(id string) {
+	@button.Button(button.Props{ID: id + "--submit", Type: button.TypeSubmit, Attributes: templ.Attributes{"form": id + "--form"}}) {
+		@icon.Plus()
+		{ i18n.T(ctx, "site.settings.identities.add_device") }
+	}
+}
