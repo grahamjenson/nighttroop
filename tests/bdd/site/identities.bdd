@@ -15,9 +15,16 @@ ASSERT_VISIBLE #main-content th >> text=Created >> nth=0
 ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormusersTable"]:has-text("Name")
 ASSERT_VISIBLE #identities_table label[for="select-form-createIdentityFormusersTable"]:has-text("Role")
 ASSERT_VISIBLE #site--identities--add-device-button
-// The role cards are neutral, as red, blue and green are for errors, information and success
-ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Admin")
-ASSERT_VISIBLE #identities_table .panel>h2.text-brand-night:text-is("Device")
+// A table says what each role can do, whether it signs in to the site, and its permissions on the Nightscout API
+ASSERT_TEXT_VISIBLE What each role can do
+ASSERT_VISIBLE #site--identities--role--admin >> text=Manages the site
+ASSERT_VISIBLE #site--identities--role--admin td >> text=None
+ASSERT_VISIBLE #site--identities--role--clinician >> text=Signs in to see the printable report only.
+ASSERT_VISIBLE #site--identities--role--device_read td >> text=api:*:read
+ASSERT_VISIBLE #site--identities--role--device_pwd_phone td >> text=api:*:*
+ASSERT_VISIBLE #site--identities--role--device_read_write td >> text=api:treatments:create
+ASSERT_VISIBLE #site--identities--role--user_readonly td:text-is("No")
+ASSERT_VISIBLE #site--identities--role--user td:text-is("Yes")
 ASSERT_NOT_VISIBLE #identities_table .bg-red-50
 SCREENSHOT identities
 

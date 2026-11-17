@@ -2002,7 +2002,11 @@ harder:
     notifications.
   - Cannot add, change or delete glucose readings, device statuses, profiles, food presets or loop settings: 403.
   - Changes its own settings, alarms and push registrations.
-- The Users & Devices page names it "Caregiver". The Device card says what it can and cannot change.
+- The Users & Devices page names it "Caregiver".
+- The Users & Devices page has a table, "What each role can do", with a row for each role:
+  - what it can do, in plain words;
+  - whether it signs in to the site;
+  - its permissions on the Nightscout API, as the server gives them (for example `api:*:read`), or None.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
