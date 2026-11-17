@@ -2,9 +2,11 @@ package site_settings_templ
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -35,7 +37,11 @@ var roleAbouts = map[consts.IdentityRole]string{
 	consts.IdentityRoleDevicePWDPhone: "site.settings.identities.role_about.device_pwd_phone",
 }
 
-// clientMark is the app's first letter, in a tile where its icon goes
+// clientLogos are the apps whose own icon is in the static logos folder, at /logos/<app>.png. Each is from its
+// open source project, which README.md credits. An app with none has a tile of its first letter.
+var clientLogos = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard"}
+
+// clientMark is the app's first letter, in a tile where its icon would go
 func clientMark(ctx context.Context, client deviceClient) string {
 	return strings.ToUpper(clientLabel(ctx, client)[:1])
 }
@@ -62,7 +68,11 @@ templ AddDeviceModal() {
 					for _, client := range deviceClients {
 						<label class={ choiceClass, "min-w-0 flex-col items-center gap-0.5 px-0.5 text-center" }>
 							<input type="radio" name="client" value={ client.Value } id={ id + "--client-" + client.Value } class="sr-only" required data-role={ string(client.Role) } data-name={ client.Name } data-forced?={ sitemodels.ClientRoles[client.Value] != "" }/>
-							<span aria-hidden="true" class="flex size-7 items-center justify-center rounded-lg bg-brand-night text-sm font-bold text-white">{ clientMark(ctx, client) }</span>
+							if slices.Contains(clientLogos, client.Value) {
+								<img src={ static.URL("/logos/" + client.Value + ".png") } alt="" class="size-7 rounded-lg"/>
+							} else {
+								<span aria-hidden="true" class="flex size-7 items-center justify-center rounded-lg bg-brand-night text-sm font-bold text-white">{ clientMark(ctx, client) }</span>
+							}
 							<span class="max-w-full truncate text-[10px] font-medium sm:text-xs">{ clientLabel(ctx, client) }</span>
 						</label>
 					}

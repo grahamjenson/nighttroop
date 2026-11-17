@@ -65,6 +65,30 @@ var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
 var StaticLogoSvg []byte
 var StaticLogoSvgETag = generateETag([]byte(StaticLogoSvg))
 
+//go:embed logos/aaps.png
+var StaticAapsPng []byte
+var StaticAapsPngETag = generateETag([]byte(StaticAapsPng))
+
+//go:embed logos/loop.png
+var StaticLoopPng []byte
+var StaticLoopPngETag = generateETag([]byte(StaticLoopPng))
+
+//go:embed logos/nightguard.png
+var StaticNightguardPng []byte
+var StaticNightguardPngETag = generateETag([]byte(StaticNightguardPng))
+
+//go:embed logos/trio.png
+var StaticTrioPng []byte
+var StaticTrioPngETag = generateETag([]byte(StaticTrioPng))
+
+//go:embed logos/xdrip.png
+var StaticXdripPng []byte
+var StaticXdripPngETag = generateETag([]byte(StaticXdripPng))
+
+//go:embed logos/xdrip4ios.png
+var StaticXdrip4iosPng []byte
+var StaticXdrip4iosPngETag = generateETag([]byte(StaticXdrip4iosPng))
+
 //go:embed popover.min.js
 var StaticPopoverMinJs []byte
 var StaticPopoverMinJsETag = generateETag([]byte(StaticPopoverMinJs))
@@ -112,6 +136,12 @@ var versions = map[string]string{
 	"/label.min.js":                    strings.Trim(StaticLabelMinJsETag, "\""),
 	"/logo.png":                        strings.Trim(StaticLogoPngETag, "\""),
 	"/logo.svg":                        strings.Trim(StaticLogoSvgETag, "\""),
+	"/logos/aaps.png":                  strings.Trim(StaticAapsPngETag, "\""),
+	"/logos/loop.png":                  strings.Trim(StaticLoopPngETag, "\""),
+	"/logos/nightguard.png":            strings.Trim(StaticNightguardPngETag, "\""),
+	"/logos/trio.png":                  strings.Trim(StaticTrioPngETag, "\""),
+	"/logos/xdrip.png":                 strings.Trim(StaticXdripPngETag, "\""),
+	"/logos/xdrip4ios.png":             strings.Trim(StaticXdrip4iosPngETag, "\""),
 	"/popover.min.js":                  strings.Trim(StaticPopoverMinJsETag, "\""),
 	"/qrcode.js":                       strings.Trim(StaticQrcodeJsETag, "\""),
 	"/redoc.standalone.js":             strings.Trim(StaticRedocStandaloneJsETag, "\""),
@@ -166,6 +196,24 @@ func AddStaticRoutes(r chi.Router) error {
 	})
 	r.Get("/logo.svg", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "logo.svg", "image/svg+xml", StaticLogoSvgETag, StaticLogoSvg)
+	})
+	r.Get("/logos/aaps.png", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "logos/aaps.png", "image/png", StaticAapsPngETag, StaticAapsPng)
+	})
+	r.Get("/logos/loop.png", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "logos/loop.png", "image/png", StaticLoopPngETag, StaticLoopPng)
+	})
+	r.Get("/logos/nightguard.png", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "logos/nightguard.png", "image/png", StaticNightguardPngETag, StaticNightguardPng)
+	})
+	r.Get("/logos/trio.png", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "logos/trio.png", "image/png", StaticTrioPngETag, StaticTrioPng)
+	})
+	r.Get("/logos/xdrip.png", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "logos/xdrip.png", "image/png", StaticXdripPngETag, StaticXdripPng)
+	})
+	r.Get("/logos/xdrip4ios.png", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "logos/xdrip4ios.png", "image/png", StaticXdrip4iosPngETag, StaticXdrip4iosPng)
 	})
 	r.Get("/popover.min.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "popover.min.js", "text/javascript; charset=utf-8", StaticPopoverMinJsETag, StaticPopoverMinJs)
