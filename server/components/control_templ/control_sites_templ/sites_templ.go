@@ -1424,7 +1424,7 @@ func dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) templ.C
 	})
 }
 
-// siteActions are a grid of what can be done to the site, each saying what it does: open it, and for an admin, download
+// siteActions are a list of what can be done to the site, each saying what it does with its button at its right: open it, and for an admin, download
 // a copy of its DB or truncate it while it is here, disable it once no one has used it for a while, and archive it once
 // it is disabled. One that cannot be done yet says when it can, in place of its button.
 func siteActions(site *controlmodels.Site) templ.Component {
@@ -1456,7 +1456,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<div class=\"grid gap-3 sm:grid-cols-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<div class=\"divide-y divide-gray-200\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1500,7 +1500,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = footer.NewTabLink("control--site--open", url, "inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50").Render(templ.WithChildren(ctx, templ_7745c5c3_Var70), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = footer.NewTabLink("control--site--open", url, "inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50").Render(templ.WithChildren(ctx, templ_7745c5c3_Var70), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1538,7 +1538,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 						var templ_7745c5c3_Var74 string
 						templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.site.download_db"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 394, Col: 47}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 393, Col: 47}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 						if templ_7745c5c3_Err != nil {
@@ -1550,7 +1550,6 @@ func siteActions(site *controlmodels.Site) templ.Component {
 						ID:         "control--site--download-db",
 						Href:       "/sites/" + site.ID + "/db",
 						Variant:    button.VariantOutline,
-						Class:      "w-full",
 						Attributes: templ.Attributes{"download": ""},
 					}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var73), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
@@ -1665,7 +1664,8 @@ func disableWhen(ctx context.Context, site *controlmodels.Site) string {
 	return i18n.T(ctx, "control.site.disable_when", i18n.Data{"InactiveDays": controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays})
 }
 
-// actionCard is one action: its name, what it does, and its button, or when it cannot be done, why not
+// actionCard is one action, a row of the list: its name and what it does, then at its right its button, or when it
+// cannot be done, why not. On a phone the button is under the words.
 func actionCard(id, title, description, unavailable string, ic func(...icon.Props) templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1697,7 +1697,7 @@ func actionCard(id, title, description, unavailable string, ic func(...icon.Prop
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "\" class=\"flex flex-col gap-2 rounded-lg border border-gray-200 p-3\"><div class=\"flex-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "\" class=\"flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3 first:pt-0 last:pb-0\"><div class=\"min-w-64 flex-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1710,14 +1710,14 @@ func actionCard(id, title, description, unavailable string, ic func(...icon.Prop
 			return templ_7745c5c3_Err
 		}
 		if unavailable != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<p class=\"text-xs text-gray-500\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<p class=\"max-w-48 text-xs text-gray-500 sm:text-right\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var80 string
 			templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(unavailable)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 439, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 439, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 			if templ_7745c5c3_Err != nil {
@@ -1901,7 +1901,7 @@ func siteActionForm(path, state, confirm, id, label string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = button.Button(button.Props{ID: id, Type: button.TypeSubmit, Variant: button.VariantDestructive, Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var88), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = button.Button(button.Props{ID: id, Type: button.TypeSubmit, Variant: button.VariantDestructive}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var88), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

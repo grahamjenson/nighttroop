@@ -85,6 +85,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - The header (with menu) and status banner show only after sign in.
 - In a wide window, the header links Sites, Usage, Jobs, Events and Errors, each with an icon. The menu has every page.
+- The header stays at the top of the window while the page scrolls. It is as tall as the site's header.
 - The header marks the link of the page shown, or of the page it is under: a site's page is under Sites.
 - The banner shows when:
   - S3 backups or Sentry are not connected;
@@ -161,7 +162,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Site actions
 
-- Actions grid: Open Site, and for an admin the actions below. Each says what it does, and has its button or says when
+- Actions list, one action a row with its button at its right (under its words on a phone): Open Site, and for an admin the actions below. Each says what it does, and has its button or says when
   it is offered. The page shows the change.
 
 | Action | When | Result |
@@ -456,6 +457,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The control site's order buttons are after a sort icon.
 - The public pages' boxes (credentials, recover form, notes) are the same panels.
 - Each Add button beside a page title has a plus icon.
+- The words under a page title, which say what the page shows, are small and grey, in lines of a width that is easy
+  to read.
 
 #### Static files
 

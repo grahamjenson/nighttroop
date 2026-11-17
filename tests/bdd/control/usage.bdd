@@ -98,6 +98,19 @@ CLICK #control--nav--sites
 ASSERT_PATH /sites
 SCREENSHOT header_links
 
+// Scrolled down a long page, the header is still at the top of the window, with its links and menu working
+CLICK #control--nav--usage
+ASSERT_PATH /usage
+ASSERT_VISIBLE #control--nav.sticky
+SCROLL 600
+ASSERT_VISIBLE #control--nav--sites
+CLICK #control--menu
+ASSERT_VISIBLE #control--jobs-button
+PRESS Escape
+// Back at the top for the screenshot, as a screenshot of a scrolled page draws the header where the window was
+SCROLL -600
+SCREENSHOT header
+
 // The header marks the link of the page shown, as the pages open, and of a page under it, as a site is under Sites
 CLICK #control--nav--usage
 ASSERT_PATH /usage

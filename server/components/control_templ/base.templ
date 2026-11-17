@@ -152,10 +152,12 @@ templ currentLinkScript() {
 	</script>
 }
 
+// Header stays at the top of the window as the page scrolls, as tall as the site's, so its links and menu are always
+// one click away
 templ Header() {
-	<nav class="bg-brand-night border-b border-white/10 shadow-sm">
+	<nav id="control--nav" class="sticky top-0 z-40 border-b border-white/10 bg-brand-night">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<div class="flex h-16 items-center justify-between">
+			<div class="flex h-14 items-center justify-between">
 				<!-- Brand -->
 				<a href="/" class="flex items-center gap-2 text-white font-bold tracking-wide uppercase">
 					<img id="control--nav--logo" src="/logo.svg" alt="" class="size-8"/>
