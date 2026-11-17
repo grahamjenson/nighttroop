@@ -2672,6 +2672,11 @@ func (m *GetSiteInAnyStateParams) SetID(v string) {
 	m.ID = v
 }
 
+// SetLimit sets the Limit value and returns the updated GetSitesToBackUpParams.
+func (m *GetSitesToBackUpParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m HydrateSiteParams) GetID() string {
 	return m.ID

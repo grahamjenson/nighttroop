@@ -195,6 +195,19 @@ RETURNING id;
 SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
 
 
+-- name: GetSitesToBackUp :many
+-- The live and disabled sites to back up, the longest waiting first: those written since their last backup, copied
+-- before BackedUpBefore, and those whose last copy is not uploaded. A site's last write is recorded at most every 10
+-- minutes, so one written in the 10 minutes after its last copy, its last write before it, is written since too.
+SELECT * FROM sites
+WHERE state IN ('live', 'disabled') AND (
+    (last_write_at IS NOT NULL AND (backed_up_at IS NULL OR (last_write_at + 600000 > backed_up_at
+        AND backed_up_at < CAST(sqlc.arg('BackedUpBefore') AS INTEGER))))
+    OR backup_uploaded_at < backed_up_at)
+ORDER BY COALESCE(backed_up_at, 0), id
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
+
 -- name: GetSitesNotUploaded :many
 -- The live and disabled sites not uploaded yet, e.g. a new or restored site
 SELECT * FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id;
