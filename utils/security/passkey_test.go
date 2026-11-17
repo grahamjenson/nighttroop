@@ -53,15 +53,10 @@ func TestWelcomePasskeyCookie(t *testing.T) {
 func TestPasskeySessionFinishedOnce(t *testing.T) {
 	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
 	begin := func(session string) *http.Cookie {
-		w := httptest.NewRecorder()
-		cfg.SetPasskeySessionCookie(w, []byte(session))
-		return w.Result().Cookies()[0]
+		return beginPasskey(cfg, "192.0.2.1", session)
 	}
 	finish := func(cookie *http.Cookie) (string, error) {
-		r := httptest.NewRequest(http.MethodPost, "/login/passkey/finish", nil)
-		r.AddCookie(cookie)
-		session, err := cfg.PasskeySession(httptest.NewRecorder(), r)
-		return string(session), err
+		return finishPasskey(cfg, "192.0.2.1", cookie)
 	}
 	first, second := begin(`{"challenge":"one"}`), begin(`{"challenge":"two"}`)
 
@@ -76,4 +71,44 @@ func TestPasskeySessionFinishedOnce(t *testing.T) {
 	require.Equal(t, `{"challenge":"two"}`, session)
 	_, err = finish(&http.Cookie{Name: security.PASSKEY_SESSION_COOKIE, Value: "made up"})
 	require.Error(t, err)
+}
+
+// beginPasskey begins a passkey ceremony from ip, with its session, giving the browser's cookie
+func beginPasskey(cfg *security.SecurityConfig, ip string, session string) *http.Cookie {
+	w := httptest.NewRecorder()
+	cfg.SetPasskeySessionCookie(w, ip, []byte(session))
+	return w.Result().Cookies()[0]
+}
+
+// finishPasskey is the session of the ceremony the cookie is for, finished from ip
+func finishPasskey(cfg *security.SecurityConfig, ip string, cookie *http.Cookie) (string, error) {
+	r := httptest.NewRequest(http.MethodPost, "/login/passkey/finish", nil)
+	r.AddCookie(cookie)
+	session, err := cfg.PasskeySession(httptest.NewRecorder(), r, ip)
+	return string(session), err
+}
+
+// TestPasskeySessionsKeptPerIP checks many passkey ceremonies begun from one IP, as a flood would, push out only that
+// IP's oldest: another IP's ceremony still finishes, and only from the IP that began it
+func TestPasskeySessionsKeptPerIP(t *testing.T) {
+	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
+	person, flooder := "192.0.2.1", "198.51.100.1"
+	personal := beginPasskey(cfg, person, `{"challenge":"person"}`)
+	first := beginPasskey(cfg, flooder, `{"challenge":"first"}`)
+	for range 10_000 {
+		beginPasskey(cfg, flooder, `{"challenge":"flood"}`)
+	}
+	last := beginPasskey(cfg, flooder, `{"challenge":"last"}`)
+
+	_, err := finishPasskey(cfg, flooder, first)
+	require.Error(t, err)
+	_, err = finishPasskey(cfg, flooder, personal)
+	require.Error(t, err)
+
+	session, err := finishPasskey(cfg, person, personal)
+	require.NoError(t, err)
+	require.Equal(t, `{"challenge":"person"}`, session)
+	session, err = finishPasskey(cfg, flooder, last)
+	require.NoError(t, err)
+	require.Equal(t, `{"challenge":"last"}`, session)
 }
