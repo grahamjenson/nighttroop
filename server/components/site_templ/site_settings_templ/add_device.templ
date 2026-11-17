@@ -16,6 +16,9 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
+// userRoles are the roles a person can have, the one picked to start with first
+var userRoles = []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleClinician, consts.IdentityRoleAdmin}
+
 // deviceRoles are the roles a device can have, from the one that can do least
 var deviceRoles = []consts.IdentityRole{consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite, consts.IdentityRoleDevicePWDPhone}
 
@@ -31,8 +34,10 @@ const taken = [...document.querySelectorAll("[data-identity-name]")].map((row) =
 let free = app.dataset.name, n = 2; while (taken.includes(free)) free = app.dataset.name + "-" + n++;
 name.value = free`
 
-// roleAbouts are the messages saying in plain words what each device role can do
+// roleAbouts are the messages saying in plain words what each role can do
 var roleAbouts = map[consts.IdentityRole]string{
+	consts.IdentityRoleAdmin: "site.settings.identities.role_about.admin", consts.IdentityRoleUser: "site.settings.identities.role_about.user",
+	consts.IdentityRoleUserReadOnly: "site.settings.identities.role_about.user_readonly", consts.IdentityRoleClinician: "site.settings.identities.role_about.clinician",
 	consts.IdentityRoleDeviceRead: "site.settings.identities.role_about.device_read", consts.IdentityRoleDeviceReadWrite: "site.settings.identities.role_about.device_read_write",
 	consts.IdentityRoleDevicePWDPhone: "site.settings.identities.role_about.device_pwd_phone",
 }
@@ -50,7 +55,7 @@ func clientMark(ctx context.Context, client deviceClient) string {
 // identity, so the app comes first, and the role and a name follow from it. The new device's credentials replace it.
 templ AddDeviceModal() {
 	{{ id := "site--identities--add-device" }}
-	@modal.Modal(modal.Props{ID: id, Title: i18n.T(ctx, "site.settings.identities.add_device_modal.title"), Subtitle: i18n.T(ctx, "site.settings.identities.add_device_modal.about"), Actions: addDeviceSubmit(id)}) {
+	@modal.Modal(modal.Props{ID: id, Title: i18n.T(ctx, "site.settings.identities.add_device_modal.title"), Subtitle: i18n.T(ctx, "site.settings.identities.add_device_modal.about"), Actions: addIdentitySubmit(id, i18n.T(ctx, "site.settings.identities.add_device"))}) {
 		<form
 			id={ id + "--form" }
 			class="mt-3 space-y-3"
@@ -78,30 +83,60 @@ templ AddDeviceModal() {
 					}
 				</div>
 			</fieldset>
-			<fieldset>
-				<legend class="font-semibold">{ i18n.T(ctx, "site.settings.identities.add_device_modal.role") }</legend>
-				// One to a row on a phone, its name then what it can do, so the three stay short
-				<div class="mt-2 grid gap-2 sm:grid-cols-3">
-					for _, role := range deviceRoles {
-						<label class={ choiceClass, "items-baseline gap-2 px-2 sm:flex-col sm:gap-0.5" }>
-							<input type="radio" name="role" value={ string(role) } id={ id + "--role-" + string(role) } class="sr-only" required/>
-							<span class="shrink-0 font-medium">{ RoleLabel(ctx, string(role)) }</span>
-							<span class="text-xs text-gray-500">{ i18n.T(ctx, roleAbouts[role]) }</span>
-						</label>
-					}
-				</div>
-			</fieldset>
-			@field.Field(id+"--name", i18n.T(ctx, "site.settings.identities.add_device_modal.name"), "[&>label]:text-base [&>label]:font-semibold [&>label]:text-inherit") {
-				@input.Input(input.Props{ID: id + "--name", Type: "text", Name: "name", Required: true, Placeholder: "nightguard-mum", Attributes: templ.Attributes{"maxlength": "32", "oninput": templ.JSUnsafeFuncCall("this.dataset.typed = 1")}})
-				<p class="mt-1 hidden text-xs text-gray-500 sm:block">{ i18n.T(ctx, "site.settings.identities.add_device_modal.name_help") }</p>
-			}
+			@roleChoices(id, i18n.T(ctx, "site.settings.identities.add_device_modal.role"), deviceRoles, "", "sm:grid-cols-3")
+			@nameStep(id, i18n.T(ctx, "site.settings.identities.add_device_modal.name"), "nightguard-mum", i18n.T(ctx, "site.settings.identities.add_device_modal.name_help"))
 		</form>
 	}
 }
 
-templ addDeviceSubmit(id string) {
+// AddUserModal adds a person in two steps: what they can do, then their name. Their credentials replace it.
+templ AddUserModal() {
+	{{ id := "site--identities--add-user" }}
+	@modal.Modal(modal.Props{ID: id, Title: i18n.T(ctx, "site.settings.identities.add_user_modal.title"), Subtitle: i18n.T(ctx, "site.settings.identities.add_user_modal.about"), Actions: addIdentitySubmit(id, i18n.T(ctx, "site.settings.identities.add_user"))}) {
+		<form
+			id={ id + "--form" }
+			class="mt-3 space-y-3"
+			hx-post="/settings/identities"
+			hx-target="#usersTable tbody"
+			hx-swap="beforeend"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@roleChoices(id, i18n.T(ctx, "site.settings.identities.add_user_modal.role"), userRoles, consts.IdentityRoleUser, "sm:grid-cols-2")
+			@nameStep(id, i18n.T(ctx, "site.settings.identities.add_user_modal.name"), "mum", i18n.T(ctx, "site.settings.identities.add_user_modal.name_help"))
+		</form>
+	}
+}
+
+// roleChoices is the step to pick one of the roles, each with what it can do in plain words: one to a row on a phone,
+// its name then its words, so they stay short, and in columns in a wider window. The role checked is picked to start with.
+templ roleChoices(id, legend string, roles []consts.IdentityRole, checked consts.IdentityRole, columns string) {
+	<fieldset>
+		<legend class="font-semibold">{ legend }</legend>
+		<div class={ "mt-2 grid gap-2", columns }>
+			for _, role := range roles {
+				<label class={ choiceClass, "items-baseline gap-2 px-2 sm:flex-col sm:gap-0.5" }>
+					<input type="radio" name="role" value={ string(role) } id={ id + "--role-" + string(role) } class="sr-only" required checked?={ role == checked }/>
+					<span class="shrink-0 font-medium">{ RoleLabel(ctx, string(role)) }</span>
+					<span class="text-xs text-gray-500">{ i18n.T(ctx, roleAbouts[role]) }</span>
+				</label>
+			}
+		</div>
+	</fieldset>
+}
+
+// nameStep is the step to name the identity, with a name of the kind to use as its placeholder. Typing in it marks it
+// typed, so the device modal keeps the name when another app is picked.
+templ nameStep(id, legend, placeholder, help string) {
+	@field.Field(id+"--name", legend, "[&>label]:text-base [&>label]:font-semibold [&>label]:text-inherit") {
+		@input.Input(input.Props{ID: id + "--name", Type: "text", Name: "name", Required: true, Placeholder: placeholder, Attributes: templ.Attributes{"oninput": templ.JSUnsafeFuncCall("this.dataset.typed = 1")}})
+		<p class="mt-1 hidden text-xs text-gray-500 sm:block">{ help }</p>
+	}
+}
+
+templ addIdentitySubmit(id, label string) {
 	@button.Button(button.Props{ID: id + "--submit", Type: button.TypeSubmit, Attributes: templ.Attributes{"form": id + "--form"}}) {
 		@icon.Plus()
-		{ i18n.T(ctx, "site.settings.identities.add_device") }
+		{ label }
 	}
 }

@@ -2074,9 +2074,13 @@ harder:
     keeps it open.
   - Escape or a click beside it shows that warning, and does not close it. After a reset signed you out, only
     "Sign In Again" remains.
-- Add User starts on the User role. The server refuses an identity with no role.
-- A select keeps its role when you pick that role again. It does not become empty.
-- On a phone, the Add User form wraps in its card. All inputs and buttons show with no sideways scroll.
+- Add User, at the right of the Admins & Users card, opens a modal with two steps: what the person can do, and their
+  name. It says to give each person their own sign in.
+  - Step 1: User, Read-only user, Clinician or Admin, each with a line in plain words. User is picked to start with.
+  - Step 2: the name. Its hint says to use who they are, such as mum or nurse, and not an email address.
+  - The whole modal shows with no scrolling, on a phone too.
+- If the server refuses the person or the device, such as for a name the site has, the modal stays open to fix it.
+- The server refuses an identity with no role.
 - Identity creation is rate limited.
 
 #### Device clients

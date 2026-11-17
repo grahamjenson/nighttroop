@@ -39,7 +39,3 @@ var ClientRoles = map[string]consts.IdentityRole{
 	"aaps": consts.IdentityRoleDevicePWDPhone, "trio": consts.IdentityRoleDevicePWDPhone, "loop": consts.IdentityRoleDevicePWDPhone,
 }
 
-type RoleOption struct {
-	Label string
-	Value consts.IdentityRole
-}

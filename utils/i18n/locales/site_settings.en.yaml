@@ -182,7 +182,17 @@ site:
         role: "2. What can it do?"
         name: "3. Name it"
         name_help: "Use the app and whose it is, such as nightguard-mum."
+      add_user_modal:
+        title: "Add a person"
+        about: "Give each person their own sign in, so you can turn one off and the others stay on."
+        role: "1. What can they do?"
+        name: "2. Name them"
+        name_help: "Use who they are, such as mum or nurse. Do not use an email address."
       role_about:
+        admin: "Manages the site: its users, devices, settings and connectors. Sees and changes everything."
+        user: "Signs in, sees the reports, and sees and changes everything."
+        user_readonly: "Sees everything with its Nightscout token. Changes nothing."
+        clinician: "Signs in to see the printable report only."
         device_read: "Sees everything. Changes nothing."
         device_read_write: "Sees everything. Adds carbs and insulin. Cannot change readings."
         device_pwd_phone: "Sees and changes everything. For the loop's phone."

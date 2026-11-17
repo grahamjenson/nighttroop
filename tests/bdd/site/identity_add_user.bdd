@@ -1,0 +1,32 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Add User, at the right of the Admins & Users card, opens a modal that starts from what the person can do
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+CLICK #site--identities--add-user-button
+ASSERT_TEXT_VISIBLE Give each person their own sign in
+// Each role says in plain words what it can do, and a User is picked to start with, not an Admin
+ASSERT_VISIBLE #site--identities--add-user--form label:has(#site--identities--add-user--role-user:checked) >> text=sees and changes everything
+ASSERT_VISIBLE #site--identities--add-user--form label:has(#site--identities--add-user--role-clinician) >> text=Signs in to see the printable report only.
+ASSERT_VISIBLE #site--identities--add-user--form label:has(#site--identities--add-user--role-admin) >> text=Manages the site
+// The whole modal shows with no scrolling
+ASSERT_VISIBLE #site--identities--add-user--name
+ASSERT_VISIBLE #site--identities--add-user--submit
+SCREENSHOT add_user
+
+// A clinician is added with its role and name, and its credentials show once
+CLICK #site--identities--add-user--form label:has(#site--identities--add-user--role-clinician)
+INPUT #site--identities--add-user--name doctor
+CLICK #site--identities--add-user--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE I Have Saved These
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_VISIBLE #usersTable tr:has(td:text-is("doctor")) >> text=Clinician
+
+// A device's modal still opens from its own button
+CLICK #site--identities--add-device-button
+ASSERT_VISIBLE #site--identities--add-device--form label:has(#site--identities--add-device--client-aaps)

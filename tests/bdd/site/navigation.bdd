@@ -348,10 +348,10 @@ ASSERT_FITS
 WINDOW 1280x720
 GOTO /settings/identities
 ASSERT_STATUS 200
-INPUT #name-createIdentityFormusersTable carer
-CLICK #select-form-createIdentityFormusersTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="user"]
-CLICK "Add User"
+CLICK #site--identities--add-user-button
+CLICK #site--identities--add-user--form label:has(#site--identities--add-user--role-user)
+INPUT #site--identities--add-user--name carer
+CLICK #site--identities--add-user--submit
 ASSERT_STATUS 201
 SAVE_TEXT #site--identities--created--password carer_password
 CLICK "I Have Saved These"
