@@ -7,19 +7,19 @@ TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 ASSERT_VISIBLE #control--status-banner--unavailable
 ASSERT_TEXT_VISIBLE 2 sites unavailable, as their DBs could not be opened or restored:
-ASSERT_VISIBLE #control--status-banner--unavailable--{{ .missing_site }}
-ASSERT_VISIBLE #control--status-banner--unavailable >> text=/{{ .missing_site }}\s*\(DB missing\)/
-ASSERT_VISIBLE #control--status-banner--unavailable >> text=/{{ .broken_site }}\s*\(DB does not open\)/
+ASSERT_VISIBLE #control--status-banner--unavailable--amissing
+ASSERT_VISIBLE #control--status-banner--unavailable >> text=/amissing\s*\(DB missing\)/
+ASSERT_VISIBLE #control--status-banner--unavailable >> text=/brokensi\s*\(DB does not open\)/
 
 // The sites list, the dashboard, marks each unavailable site
 ASSERT_PATH /
-ASSERT_VISIBLE #control--site--{{ .missing_site }}--unavailable
-ASSERT_VISIBLE #control--site--{{ .broken_site }}--unavailable
+ASSERT_VISIBLE #control--site--amissing--unavailable
+ASSERT_VISIBLE #control--site--brokensi--unavailable
 SCREENSHOT dashboard
 
-// A site's name in the banner opens its page, here the first, the missing site
-CLICK #control--status-banner--unavailable a >> nth=0
-ASSERT_PATH /sites/{{ .missing_site }}
+// A site's name in the banner opens its page
+CLICK #control--status-banner--unavailable--amissing
+ASSERT_PATH /sites/amissing
 ASSERT_VISIBLE #control--status-banner--unavailable
 ASSERT_VISIBLE #control--site--unavailable
 SCREENSHOT site_page
