@@ -31,8 +31,10 @@ const taken = [...document.querySelectorAll("[data-identity-name]")].map((row) =
 let free = app.dataset.name, n = 2; while (taken.includes(free)) free = app.dataset.name + "-" + n++;
 name.value = free`
 
-// roleAbouts are the messages saying in plain words what each device role can do
+// roleAbouts are the messages saying in plain words what each role can do
 var roleAbouts = map[consts.IdentityRole]string{
+	consts.IdentityRoleAdmin: "site.settings.identities.role_about.admin", consts.IdentityRoleUser: "site.settings.identities.role_about.user",
+	consts.IdentityRoleUserReadOnly: "site.settings.identities.role_about.user_readonly", consts.IdentityRoleClinician: "site.settings.identities.role_about.clinician",
 	consts.IdentityRoleDeviceRead: "site.settings.identities.role_about.device_read", consts.IdentityRoleDeviceReadWrite: "site.settings.identities.role_about.device_read_write",
 	consts.IdentityRoleDevicePWDPhone: "site.settings.identities.role_about.device_pwd_phone",
 }

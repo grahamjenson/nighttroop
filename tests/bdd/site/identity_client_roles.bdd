@@ -28,8 +28,8 @@ CLICK "I Have Saved These"
 CLICK #site--identities--close
 ASSERT_VISIBLE #devicesTable tr:has(td:text-is("trio")) >> text=PWD Phone
 
-// A caregiver's app, such as Nightguard, is a Caregiver device: its card says it cannot change readings
-ASSERT_TEXT_VISIBLE but cannot change readings, profiles or device statuses
+// A caregiver's app, such as Nightguard, is a Caregiver device: the roles table says it cannot change readings
+ASSERT_VISIBLE #site--identities--role--device_read_write >> text=Cannot change readings.
 CLICK #site--identities--add-device-button
 CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-nightguard)
 CLICK #site--identities--add-device--form label:has(#site--identities--add-device--role-device_read_write)
