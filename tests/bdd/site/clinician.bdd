@@ -13,10 +13,10 @@ RUN_BACKGROUND_JOBS
 CLICK #site--settings-menu
 CLICK #site--nav--menu--settings
 CLICK #site--settings--identities-button
-INPUT #name-createIdentityFormusersTable doctor
-CLICK #select-form-createIdentityFormusersTable
-CLICK #identities_table [role="option"][data-tui-selectbox-value="clinician"]
-CLICK "Add User"
+CLICK #site--identities--add-user-button
+CLICK #site--identities--add-user--form label:has(#site--identities--add-user--role-clinician)
+INPUT #site--identities--add-user--name doctor
+CLICK #site--identities--add-user--submit
 ASSERT_STATUS 201
 ASSERT_VISIBLE #site--identities--created--password
 ASSERT_NOT_VISIBLE #site--identities--created--ns-token
