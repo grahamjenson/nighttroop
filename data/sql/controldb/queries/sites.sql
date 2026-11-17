@@ -122,16 +122,6 @@ WHERE id = sqlc.arg('ID') AND abuse_score IS NOT sqlc.arg('AbuseScore');
 UPDATE sites SET estimated_db_size_kb = sqlc.arg('EstimatedDbSizeKb')
 WHERE id = sqlc.arg('ID') AND estimated_db_size_kb IS NOT sqlc.arg('EstimatedDbSizeKb');
 
--- name: UpdateSiteBackedUp :exec
--- The site's backup copy was made now, at BackupSizeKb on disk
-UPDATE sites SET backed_up_at = CAST(unixepoch('subsec') * 1000 AS INTEGER), backup_size_kb = CAST(sqlc.arg('BackupSizeKb') AS INTEGER)
-WHERE id = sqlc.arg('ID');
-
--- name: UpdateSitesBackupUploaded :exec
--- The sites were uploaded to S3 now, in one batch
-UPDATE sites SET backup_uploaded_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE id IN (sqlc.slice('IDs'));
-
 
 -------
 -- DELETE
@@ -169,9 +159,7 @@ SET
     disabled_at = NULL,
     archived_at = NULL,
     last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    -- Its batch's backup left it out while it was archived, so the batch is uploaded again soon
-    backup_uploaded_at = NULL
+    last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE id = ? AND state = 'archived';
 
 -- Pass a list of sites as a string to delete
@@ -189,20 +177,9 @@ RETURNING id;
 --------------------------------
 
 
--- name: GetBatchSitesToBackUp :many
--- Get sites that are live  or diabled
--- We must backup even empty sites because a rehydrated control will expect them
+-- name: GetBatchSitesToUpkeep :many
+-- The batch's live and disabled sites, to truncate
 SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
-
-
--- name: GetBatchesNotUploaded :many
--- The batches with a live or disabled site that is not in an upload of its batch yet, e.g. a new or restored site
-SELECT DISTINCT batch FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY batch;
-
-
--- name: BatchHadSites :one
--- Whether any site, in any state, was ever in the batch, so the batch may have a backup with sites in it
-SELECT CAST(EXISTS(SELECT 1 FROM sites WHERE batch = ?) AS BOOLEAN);
 
 
 -- name: GetSitesToDeleteInBatch :many

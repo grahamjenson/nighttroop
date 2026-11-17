@@ -13,8 +13,8 @@ import (
 // TestSiteLogsShowNoSiteOrControlLinks checks a site's logs pages never show a Site column or detail, and show request
 // and job IDs as plain text, never linking to control's pages
 func TestSiteLogsShowNoSiteOrControlLinks(t *testing.T) {
-	request, job, batch, finished := "request-1", "job-1", "batch-1", int64(2000)
-	event := &sitemodels.SiteEvent{ID: 1, Name: "site_backup", Batch: &batch, StartedAt: 1000, FinishedAt: &finished, RequestID: &request, JobID: &job}
+	request, job, finished := "request-1", "job-1", int64(2000)
+	event := &sitemodels.SiteEvent{ID: 1, Name: "site_disabled", StartedAt: 1000, FinishedAt: &finished, RequestID: &request, JobID: &job}
 	siteError := &sitemodels.SiteError{ID: 2, Message: "failed", CreatedAt: 1000, RequestID: &request, JobID: &job}
 	log := &sitemodels.SiteLog{ID: 3, Level: "INFO", Message: "logged", CreatedAt: 1000, RequestID: &request, JobID: &job}
 	tests := []struct {

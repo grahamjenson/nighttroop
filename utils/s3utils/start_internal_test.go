@@ -5,8 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -55,7 +54,7 @@ func TestStart(t *testing.T) {
 }
 
 // An S3 that takes a request and never answers fails an upload and a download once transferTimeout is up, instead of
-// holding the backup job until a restart
+// holding the DB's replication until a restart
 func TestTransfersTimeOut(t *testing.T) {
 	defer func(old time.Duration) { transferTimeout = old }(transferTimeout)
 	transferTimeout = 200 * time.Millisecond
@@ -63,19 +62,14 @@ func TestTransfersTimeOut(t *testing.T) {
 	stalled := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { <-stop }))
 	defer stalled.Close()
 	defer close(stop)
-
-	shared, err := testConfig()
-	require.NoError(t, err)
-	serverConfig := *shared
-	serverConfig.S3URL = stalled.URL
-	serverConfig.Status.S3Working = true
-	c := NewS3Client(&serverConfig)
-	file := filepath.Join(t.TempDir(), "site.db")
-	require.NoError(t, os.WriteFile(file, []byte("data"), 0o600))
+	c := NewS3Client(&config.ServerConfig{S3URL: stalled.URL, S3Bucket: "bucket"})
 
 	start := time.Now()
-	require.Error(t, c.UploadFilesToS3(context.Background(), "site.tar.lz4", SiteRetention, []string{file}))
-	_, _, err = c.DownloadFilesFromS3(context.Background(), "site.tar.lz4", filepath.Join(t.TempDir(), "out"))
+	_, err := c.Put(context.Background(), "site.ltx", strings.NewReader("data"))
+	require.Error(t, err)
+	_, err = c.Get(context.Background(), "site.ltx")
+	require.Error(t, err)
+	_, err = c.List(context.Background(), "site")
 	require.Error(t, err)
 	require.Less(t, time.Since(start), 20*time.Second)
 }

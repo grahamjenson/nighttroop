@@ -8,13 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
 
 	_ "modernc.org/sqlite"
@@ -31,15 +29,16 @@ type DB struct {
 	stmts        *stmtCache
 	InMemory     bool
 
-	Path       string
-	BackupPath string
+	Path string
+	// Checkpoint, when set, checkpoints the DB's write-ahead log after Vacuum, in place of SQLite's TRUNCATE
+	// checkpoint, which cannot finish while Litestream reads the DB to replicate it
+	Checkpoint func(context.Context) error
 
 	Subdomain string
 }
 
 func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerConfig) (*DB, error) {
 	path := GetPath(subdomain, serverConfig)
-	backuppath := GetBackupPath(subdomain, serverConfig)
 
 	// A site's page cache is 64 KiB a connection, not SQLite's 2 MB: each of thousands of sites keeps up to
 	// maxIdleConns connections, and a site's few requests read few pages
@@ -50,7 +49,6 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 		InMemory:     serverConfig.IsTest(),
 		Subdomain:    subdomain,
 		Path:         path,
-		BackupPath:   backuppath,
 	}
 
 	var err error
@@ -130,15 +128,6 @@ func (db *DB) TryCloseAndDelete() {
 	}
 
 	utils.DeleteFile(db.Path)
-	utils.DeleteFile(db.BackupPath)
-}
-
-// Backup copies the DB, compressed with LZ4, to its backup path, and deletes the uncompressed copy kept before
-func (db *DB) Backup(ctx context.Context) error {
-	if err := backup.CompressedBackup(ctx, db.SQLiteDB, db.BackupPath); err != nil {
-		return err
-	}
-	return utils.DeleteFile(strings.TrimSuffix(db.BackupPath, ".lz4"))
 }
 
 // Vacuum rebuilds the DB without its free pages, then checkpoints the write-ahead log, so the file shrinks to the data
@@ -146,6 +135,9 @@ func (db *DB) Backup(ctx context.Context) error {
 func (db *DB) Vacuum(ctx context.Context) error {
 	if _, err := db.SQLiteDB.ExecContext(ctx, "VACUUM"); err != nil {
 		return err
+	}
+	if db.Checkpoint != nil {
+		return db.Checkpoint(ctx)
 	}
 	_, err := db.SQLiteDB.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)")
 	return err
@@ -182,9 +174,10 @@ func (db *DB) TableSizes(ctx context.Context) ([]TableSize, error) {
 }
 
 // Schema is the SQL that made each of db's tables, indexes and triggers, so DBs made by the same migrations have the
-// same one. sqlc cannot generate a query of sqlite_master, so it is read here, with the rest of the DB's upkeep.
+// same one, without the tables Litestream adds to a DB it replicates. sqlc cannot generate a query of sqlite_master,
+// so it is read here, with the rest of the DB's upkeep.
 func Schema(ctx context.Context, db *sql.DB) (string, error) {
-	rows, err := db.QueryContext(ctx, "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type, name")
+	rows, err := db.QueryContext(ctx, "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT GLOB '_litestream_*' ORDER BY type, name")
 	if err != nil {
 		return "", err
 	}
@@ -204,27 +197,9 @@ func Schema(ctx context.Context, db *sql.DB) (string, error) {
 // File paths
 /////
 
-func GetBatchFolder(batch string, serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/site/%s", serverConfig.DBDir(), string(batch))
-}
-
 func GetPath(subdomain string, serverConfig *config.ServerConfig) string {
 	batch := subdomain[0:1]
 	return fmt.Sprintf("%s/site/%s/%s.sqlite", serverConfig.DBDir(), string(batch), subdomain)
-}
-
-func GetBackupPath(subdomain string, serverConfig *config.ServerConfig) string {
-	batch := subdomain[0:1]
-	return fmt.Sprintf("%s/site/%s/%s.sqlite.lz4", serverConfig.BackupDir(), string(batch), subdomain)
-}
-
-func GetS3BatchPath(batch string, serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/backup/%s.tar.enc", serverConfig.HostName, batch)
-}
-
-func GetS3ArchivePath(subdomain string, serverConfig *config.ServerConfig) string {
-	batch := subdomain[0:1]
-	return fmt.Sprintf("%s/archive/site/%s/%s.tar.enc", serverConfig.HostName, batch, subdomain)
 }
 
 // Migrations are the DB's migrations, in their migrations folder

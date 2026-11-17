@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
-	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
@@ -18,16 +16,15 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/aslog"
-	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/s3utils"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -46,8 +43,11 @@ type ControlDB struct {
 	Live *livedb.DB
 
 	setup setup
-	// missingSites are the live sites whose DB files were missing at start, for RestoreMissingSites
+	// missingSites are the live sites whose DB files were missing at start, for Replicate to restore
 	missingSites []string
+	// replicas replicate the control DB and every open site's DB once Replicate starts them. Nil, as when S3 is off
+	// or in tests, replicates nothing.
+	replicas *replica.Replicas
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -109,8 +109,7 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(runtime.NumCPU())
 	for _, model := range res {
-		// A site without its DB is restored from its batch's backup by RestoreMissingSites, which stops the start if it
-		// cannot be
+		// A site without its DB is restored from its replica by Replicate, which stops the start if it cannot be
 		if !utils.FileExists(sitedb.GetPath(model.ID, db.ServerConfig)) {
 			slog.ErrorContext(ctx, "Site DB is missing, so the site is not opened", "site_id", model.ID)
 			db.missingSites = append(db.missingSites, model.ID)
@@ -128,94 +127,104 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 	return g.Wait()
 }
 
-// ErrRestoredSiteCannotOpen is a site restored from its batch's backup whose DB cannot be opened, as when it cannot be
+// ErrRestoredSiteCannotOpen is a site restored from its replica whose DB cannot be opened, as when it cannot be
 // migrated, which stops the start as a site that is there and cannot be opened does
 var ErrRestoredSiteCannotOpen = errors.New("a restored site's DB cannot be opened")
 
-// ErrSitesMissing is live sites whose DB files are missing and were not restored from their batch's backup, which
-// stops the start, as a site that cannot be opened does: a server without one of its sites serves nothing, so no data
-// is written that a rollback would lose, and the sites' data is never served half there
+// ErrSitesMissing is live sites whose DB files are missing and were not restored from their replicas, which stops the
+// start, as a site that cannot be opened does: a server without one of its sites serves nothing, so no data is written
+// that a rollback would lose, and the sites' data is never served half there
 var ErrSitesMissing = errors.New("live sites' DBs are missing and were not restored")
 
-// RestoreMissingSites restores each live site whose DB file was missing at start from its batch's latest backup,
-// downloaded once per batch with download, and opens it. Each is recorded as a site_db_missing event, so the control
-// admin sees a site the backup could not bring back. One it could not is ErrSitesMissing, naming the sites, and a
-// restored site that cannot be opened is ErrRestoredSiteCannotOpen: either stops the start, so a release that cannot
-// open every live site is rolled back rather than kept.
-func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.DownloadFunc) error {
+// restoreParallelism is how many missing sites are restored at once, as a new server restores every site
+const restoreParallelism = 16
+
+// Replicate restores each live site whose DB file was missing at start from its replica, and opens it, then
+// replicates the control DB and every open site's DB with replicas. Each missing site is recorded as a site_db_missing
+// event, so the control admin sees a site that could not be brought back. One that could not is ErrSitesMissing,
+// naming the sites, and a restored site that cannot be opened is ErrRestoredSiteCannotOpen: either stops the start, so
+// a release that cannot open every live site is rolled back rather than kept.
+func (db *ControlDB) Replicate(ctx context.Context, replicas *replica.Replicas) error {
+	var mu sync.Mutex
 	var cannotOpen error
 	missing := []string{}
-	byBatch := map[string][]string{}
+	g := errgroup.Group{}
+	g.SetLimit(restoreParallelism)
 	for _, siteID := range db.missingSites {
-		byBatch[siteID[:1]] = append(byBatch[siteID[:1]], siteID)
-	}
-	db.missingSites = nil
-	for batch, siteIDs := range byBatch {
-		// Without S3 there is nothing to download, so the start does not wait on a download that cannot work
-		var restored map[string]bool
-		reason := "not_in_backup"
-		if !db.ServerConfig.Status.S3Working {
-			reason = "s3_not_working"
-		} else if got, err := db.restoreFromBatch(ctx, batch, siteIDs, download); err != nil {
-			slog.ErrorContext(ctx, "Cannot restore missing site DBs from their batch's backup", "batch", batch, "error", err)
-			restored, reason = got, "restore_failed"
-			if errors.Is(err, ErrRestoredSiteCannotOpen) {
-				cannotOpen = errors.Join(cannotOpen, err)
+		g.Go(func() error {
+			reason, err := db.restoreSite(ctx, replicas, siteID)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				slog.ErrorContext(ctx, "Cannot restore a missing site DB from its replica", "site_id", siteID, "error", err)
+				if errors.Is(err, ErrRestoredSiteCannotOpen) {
+					cannotOpen = errors.Join(cannotOpen, err)
+				}
 			}
-		} else {
-			restored = got
-		}
-		for _, siteID := range siteIDs {
-			if restored[siteID] {
-				slog.InfoContext(ctx, "Missing site DB restored from its batch's backup", "site_id", siteID)
-				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, true, "")
-			} else {
+			if reason != "" {
 				missing = append(missing, siteID)
-				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, false, reason)
 			}
-		}
+			db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, reason == "", reason)
+			return nil
+		})
 	}
+	_ = g.Wait()
+	db.missingSites = nil
 	if len(missing) > 0 {
 		slices.Sort(missing)
 		return errors.Join(cannotOpen, fmt.Errorf("%w: %s", ErrSitesMissing, strings.Join(missing, ", ")))
 	}
-	return cannotOpen
+
+	db.replicas = replicas
+	sites := map[string]string{}
+	for _, site := range db.sites.all() {
+		sites[site.Path] = replica.SiteName(site.Subdomain)
+		db.checkpointWithReplica(site)
+	}
+	return replicas.Start(ctx, db.Path, sites)
 }
 
-// restoreFromBatch downloads batch's latest backup beside its folder, moves into place each of siteIDs' DBs it has,
-// and opens them, and is the sites it restored
-func (db *ControlDB) restoreFromBatch(ctx context.Context, batch string, siteIDs []string, download s3utils.DownloadFunc) (map[string]bool, error) {
-	folder := sitedb.GetBatchFolder(batch, db.ServerConfig)
-	if err := utils.MkDirs(folder); err != nil {
-		return nil, err
+// restoreSite restores the site's DB from its replica and opens it, or is why it could not
+func (db *ControlDB) restoreSite(ctx context.Context, replicas *replica.Replicas, siteID string) (string, error) {
+	if replicas == nil {
+		return "s3_not_working", nil
 	}
-	// Named like a restore's staging folder, so one left by a start killed part way is cleaned up like those
-	dir, err := os.MkdirTemp(filepath.Dir(folder), "."+batch+"-restore-")
+	if found, err := replicas.Restore(ctx, replica.SiteName(siteID), sitedb.GetPath(siteID, db.ServerConfig)); err != nil {
+		return "restore_failed", err
+	} else if !found {
+		return "not_in_backup", nil
+	}
+	siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create staging dir: %w", err)
+		return "restore_failed", fmt.Errorf("%w: %s: %w", ErrRestoredSiteCannotOpen, siteID, err)
 	}
-	defer os.RemoveAll(dir)
-	// Downloaded to a path in dir that is not there yet, so the download's own staging folder, made beside it, is in
-	// dir too and removed with it
-	downloaded := filepath.Join(dir, "batch")
-	if _, found, err := download(ctx, sitedb.GetS3BatchPath(batch, db.ServerConfig), downloaded); err != nil || !found {
-		return nil, err
+	db.sites.add(siteDB)
+	slog.InfoContext(ctx, "Missing site DB restored from its replica", "site_id", siteID)
+	return "", nil
+}
+
+// checkpointWithReplica has the site's Vacuum checkpoint with its replica, once it is replicated
+func (db *ControlDB) checkpointWithReplica(site *SiteDB) {
+	if db.replicas != nil {
+		site.Checkpoint = func(ctx context.Context) error { return db.replicas.Checkpoint(ctx, site.Path) }
 	}
-	restored := map[string]bool{}
-	for _, siteID := range siteIDs {
-		path := sitedb.GetPath(siteID, db.ServerConfig)
-		// A rename on the same disk, so the site's DB is there whole or not at all
-		if err := os.Rename(filepath.Join(downloaded, filepath.Base(path)), path); err != nil {
-			continue
-		}
-		siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
-		if err != nil {
-			return restored, fmt.Errorf("%w: %s: %w", ErrRestoredSiteCannotOpen, siteID, err)
-		}
-		db.sites.add(siteDB)
-		restored[siteID] = true
+}
+
+// replicateNew replicates a site just made live, sending it and the control DB's row of it at once, so a restore has
+// both. One not sent is logged, as Litestream sends it again.
+func (db *ControlDB) replicateNew(ctx context.Context, site *SiteDB) {
+	db.checkpointWithReplica(site)
+	if err := db.replicas.Add(ctx, site.Path, replica.SiteName(site.Subdomain)); err != nil {
+		slog.ErrorContext(ctx, "Cannot replicate the site", "site_id", site.Subdomain, "error", err)
 	}
-	return restored, nil
+	db.syncControl(ctx)
+}
+
+// syncControl sends the control DB's writes now, such as a site's row once it is made, archived or deleted
+func (db *ControlDB) syncControl(ctx context.Context) {
+	if err := db.replicas.Sync(ctx, db.Path); err != nil {
+		slog.ErrorContext(ctx, "Cannot send the control DB to its replica", "error", err)
+	}
 }
 
 ///
@@ -241,7 +250,11 @@ type SiteCreateResult struct {
 var ErrSiteIDTaken = fmt.Errorf("that site ID is taken")
 
 func (db *ControlDB) CreateSite(ctx context.Context) (*SiteCreateResult, error) {
-	return db.createSite(ctx, "")
+	result, err := db.createSite(ctx, "")
+	if err == nil {
+		db.replicateNew(ctx, result.SiteDB)
+	}
+	return result, err
 }
 
 // CreateSiteWithID creates a site at a site ID picked for it, such as a vanity one for a special user. It is 8
@@ -250,7 +263,11 @@ func (db *ControlDB) CreateSiteWithID(ctx context.Context, subdomain string) (*S
 	if !utils.SyntacticallyValidateSiteID(subdomain) {
 		return nil, fmt.Errorf("site ID %q is not %d lowercase letters", subdomain, utils.SITE_ID_LENGTH)
 	}
-	return db.createSite(ctx, subdomain)
+	result, err := db.createSite(ctx, subdomain)
+	if err == nil {
+		db.replicateNew(ctx, result.SiteDB)
+	}
+	return result, err
 }
 
 // createSite creates a site at subdomain, or at a random one when it is ""
@@ -281,7 +298,7 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	if err != nil {
 		// Nothing of the new site was kept, so its half made DB file goes too
-		_ = utils.DeleteFiles([]string{sitedb.GetPath(subdomain, db.ServerConfig), sitedb.GetBackupPath(subdomain, db.ServerConfig)})
+		_ = utils.DeleteFile(sitedb.GetPath(subdomain, db.ServerConfig))
 		return nil, fmt.Errorf("Site DB Creation Error: %w", err)
 	}
 
@@ -317,9 +334,9 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 // Delete USER methods
 ////
 
-// DeleteSites marks the sites deleted, then closes and removes each one's DB files. A site missing from the map stops
-// the rest being closed, and a file that cannot be removed is only logged, so a failure part way leaves the sites
-// marked deleted with some files left behind.
+// DeleteSites marks the sites deleted, then deletes each one's replica, and closes and removes its DB files. A site
+// missing from the map stops the rest being closed, and a replica or file that cannot be removed is only logged, so a
+// failure part way leaves the sites marked deleted with some of their data left behind.
 func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
 	if len(subdomains) == 0 {
@@ -347,15 +364,19 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 		}
 	}
 
+	db.syncControl(ctx)
 	// Close the DB and remove from the map
 	for _, subdomain := range deletedSubdomains {
 		site := db.sites.remove(subdomain)
 		if site == nil {
 			return fmt.Errorf("site not found")
 		}
+		if err := db.replicas.Remove(ctx, site.Path, replica.SiteName(subdomain), true); err != nil {
+			slog.ErrorContext(ctx, "Failed to delete the site's replica", "subdomain", subdomain, "error", err)
+		}
 		site.Close()
 
-		err := utils.DeleteFiles([]string{site.Path, site.BackupPath})
+		err := utils.DeleteFile(site.Path)
 		if err != nil {
 			slog.Error("Failed to delete site db files", "subdomain", subdomain, "error", err)
 		} else {
@@ -366,61 +387,63 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 	return nil
 }
 
-// ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
-// deletes its local files, so it is no longer served or backed up but can be restored from the archive
-func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s3utils.UploadFunc) error {
+// ErrNotReplicated is an archive or hydrate without S3, as a site's replica is its archive
+var ErrNotReplicated = errors.New("sites are not replicated, as S3 is off")
+
+// ArchiveSite sends a site's last writes to its replica, which is kept as its archive, then marks the site archived,
+// stops replicating it and deletes its local files, so it is no longer served but can be restored from its replica.
+// Files whose last writes could not be sent are kept.
+func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string) error {
 	site := db.sites.get(subdomain)
 	if site == nil {
 		return fmt.Errorf("site %s is not open", subdomain)
 	}
-	// Backed up to a folder of its own beside the site's backup file, on the same disk, as a batch backup can be
-	// rewriting that file at the same time
-	if err := utils.MkParentDirs(site.BackupPath); err != nil {
-		return fmt.Errorf("cannot make a folder to archive site %s: %w", subdomain, err)
+	if db.replicas == nil {
+		return ErrNotReplicated
 	}
-	dir, err := os.MkdirTemp(filepath.Dir(site.BackupPath), ".archive-*")
-	if err != nil {
-		return fmt.Errorf("cannot make a folder to archive site %s: %w", subdomain, err)
-	}
-	defer os.RemoveAll(dir)
-	path := filepath.Join(dir, filepath.Base(site.BackupPath))
-	if err := backup.CompressedBackup(ctx, site.SQLiteDB, path); err != nil {
-		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
-	}
-	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
-		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
+	if err := db.replicas.Sync(ctx, site.Path); err != nil {
+		return fmt.Errorf("cannot send site %s to its replica: %w", subdomain, err)
 	}
 	bytes, _ := json.Marshal([]string{subdomain})
 	if _, err := db.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: string(bytes)}); err != nil {
 		return fmt.Errorf("cannot archive site %s: %w", subdomain, err)
 	}
+	db.syncControl(ctx)
 
 	db.sites.remove(subdomain)
+	// Its writes since the sync, as by a request that had it before it was removed, are sent as it stops
+	err := db.replicas.Remove(ctx, site.Path, replica.SiteName(subdomain), false)
 	site.Close()
-	if err := utils.DeleteFiles([]string{site.Path, site.BackupPath}); err != nil {
+	if err == nil {
+		err = utils.DeleteFile(site.Path)
+	}
+	if err != nil {
 		slog.ErrorContext(ctx, "Failed to delete archived site db files", "subdomain", subdomain, "error", err)
 	}
 	return nil
 }
 
-// HydrateSite brings an archived site back: it downloads, with download, the site's archive into its DB's folder, opens
-// it and makes the site live again
-func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download s3utils.DownloadFunc) error {
+// HydrateSite brings an archived site back: it restores the site's DB from its replica, opens it, makes the site live
+// again and replicates it again
+func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string) error {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
 	if db.sites.get(subdomain) != nil {
 		return fmt.Errorf("site %s is already open", subdomain)
 	}
+	if db.replicas == nil {
+		return ErrNotReplicated
+	}
 	path := sitedb.GetPath(subdomain, db.ServerConfig)
-	if _, found, err := download(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
-		return fmt.Errorf("cannot download the archive of site %s: %w", subdomain, err)
-	} else if !found || !utils.FileExists(path) {
+	if found, err := db.replicas.Restore(ctx, replica.SiteName(subdomain), path); err != nil {
+		return fmt.Errorf("cannot restore the archive of site %s: %w", subdomain, err)
+	} else if !found {
 		return fmt.Errorf("site %s has no archive", subdomain)
 	}
 	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	if err != nil {
-		// The archive is still in S3, so the copy downloaded from it goes
-		_ = utils.DeleteFiles([]string{path})
+		// The archive is still in S3, so the copy restored from it goes
+		_ = utils.DeleteFile(path)
 		return err
 	}
 	result, err := db.Queries.HydrateSite(ctx, controldb.HydrateSiteParams{ID: subdomain})
@@ -431,11 +454,12 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	}
 	if err != nil {
 		siteDB.Close()
-		_ = utils.DeleteFiles([]string{path})
+		_ = utils.DeleteFile(path)
 		return err
 	}
 
 	db.sites.add(siteDB)
+	db.replicateNew(ctx, siteDB)
 	return nil
 }
 
@@ -802,7 +826,20 @@ func (db *ControlDB) GetSite(ctx context.Context, subdomain string) (*SiteDB, *c
 // End of Get SITE Methods
 ////
 
+// SiteReplicatedAt is when the open site's replica last had all its writes, or nil if not since start
+func (db *ControlDB) SiteReplicatedAt(siteID string) *int64 {
+	site := db.sites.get(siteID)
+	if site == nil {
+		return nil
+	}
+	return db.replicas.Replicated(site.Path)
+}
+
+// Close sends each replicated DB's last writes, then closes the DBs
 func (db *ControlDB) Close() error {
+	if err := db.replicas.Close(context.Background()); err != nil {
+		slog.Error("Failed to send the DBs' last writes to their replicas", "error", err)
+	}
 	for _, site := range db.sites.all() {
 		err := site.Close()
 		if err != nil {

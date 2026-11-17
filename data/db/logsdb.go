@@ -146,7 +146,7 @@ func (l *LogsDB) publish(ctx context.Context, event events.Event) {
 		finished = new(event.FinishedAt.UnixMilli())
 	}
 	requestID, jobID := aslog.IDs(ctx)
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Batch: orNil(event.Batch), Name: string(event.Name), Attributes: attributesJSON(event.Attributes, maxAttributesLength), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished,
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Name: string(event.Name), Attributes: attributesJSON(event.Attributes, maxAttributesLength), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished,
 		RequestID: orNil(requestID), JobID: orNil(jobID)}))
 }
 
@@ -155,11 +155,11 @@ func (l *LogsDB) event(ctx context.Context, siteID string, name events.Name, att
 	l.publish(ctx, events.Event{Name: name, SiteID: siteID, Attributes: attributes, StartedAt: time.Now()})
 }
 
-// finishedEvent publishes an event, about a site or a batch of sites or neither, that started at started and finishes
-// now, so it can be written in a defer
-func (l *LogsDB) finishedEvent(ctx context.Context, siteID string, batch string, name events.Name, started time.Time, attributes any) {
+// finishedEvent publishes an event, about a site or no one site, that started at started and finishes now, so it can
+// be written in a defer
+func (l *LogsDB) finishedEvent(ctx context.Context, siteID string, name events.Name, started time.Time, attributes any) {
 	finished := time.Now()
-	l.publish(ctx, events.Event{Name: name, SiteID: siteID, Batch: batch, Attributes: attributes, StartedAt: started, FinishedAt: &finished})
+	l.publish(ctx, events.Event{Name: name, SiteID: siteID, Attributes: attributes, StartedAt: started, FinishedAt: &finished})
 }
 
 // orNil is nil for "", for a column that is NULL when not set

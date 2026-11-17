@@ -32,7 +32,7 @@ func (s *EventsCollection) ToModel(row *logsdb.Event, _ *httputils.SiteContext) 
 }
 
 func (s *EventsCollection) SearchRows(ctx context.Context, _ *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*logsdb.Event, error) {
-	return siteContext.ControlDB.Logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &siteContext.SiteID, Batch: &siteContext.SiteModel.Batch, Type: query.Type, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
+	return siteContext.ControlDB.Logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &siteContext.SiteID, Type: query.Type, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
 }
 
 func (s *EventsCollection) SearchHTMXResponse(models []*sitemodels.SiteEvent, query *apiutils.Query) templ.Component {
@@ -44,7 +44,7 @@ func (s *EventsCollection) GetRow(ctx context.Context, _ *siteapiutils.Collectio
 	if !ok {
 		return nil, nil
 	}
-	return siteContext.ControlDB.Logs.Queries.GetSiteEvent(ctx, logsdb.GetSiteEventParams{ID: n, SiteID: &siteContext.SiteID, Batch: &siteContext.SiteModel.Batch})
+	return siteContext.ControlDB.Logs.Queries.GetSiteEvent(ctx, logsdb.GetSiteEventParams{ID: n, SiteID: &siteContext.SiteID})
 }
 
 func (s *EventsCollection) GetHTMXResponse(model *sitemodels.SiteEvent) templ.Component {

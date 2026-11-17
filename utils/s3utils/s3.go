@@ -1,17 +1,16 @@
 package s3utils
 
 import (
-	"archive/tar"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"path/filepath"
+	"os"
+	"slices"
 	"strings"
 	"time"
-
-	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -20,16 +19,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
-
-	"github.com/pierrec/lz4/v4"
 )
 
-////
-// Most of this is borrowed from LiteStream
-
-// //
+// S3Client is the server's S3 bucket, for the replicas of its DBs
 type S3Client struct {
 	s3           *s3.Client // s3 service
 	ServerConfig *config.ServerConfig
@@ -57,15 +50,14 @@ const MaxKeys = 1000
 // DefaultRegion is the region used if one is not specified.
 const DefaultRegion = "us-east-1"
 
-// Retention is the tag an upload carries so the bucket's lifecycle rules expire the versions it replaces
-type Retention string
+// retentionRule starts the ID of each lifecycle rule this server owns
+const retentionRule = "nighttroop-retention"
 
-const (
-	SiteRetention    Retention = "site"
-	ControlRetention Retention = "control"
-)
-
-const retentionTag = "nighttroop-retention"
+// ReplicaPrefix is where the replicas of the server's DBs are kept: the control DB's at <prefix>control and each
+// site's at <prefix>site/<site ID>
+func (c *S3Client) ReplicaPrefix() string {
+	return c.HostName + "/litestream/"
+}
 
 func NewS3Client(config *config.ServerConfig) *S3Client {
 	c := &S3Client{
@@ -137,10 +129,9 @@ func (c *S3Client) TestS3Client(ctx context.Context) error {
 	testContent := fmt.Sprintf("This istest object %s", randomGen)
 
 	_, err := c.s3.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:  aws.String(c.Bucket),
-		Key:     aws.String(testKey),
-		Body:    strings.NewReader(testContent),
-		Tagging: aws.String(retentionTag + "=" + string(SiteRetention)),
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(testKey),
+		Body:   strings.NewReader(testContent),
 	})
 
 	// Testing the Raw S3Client
@@ -190,7 +181,7 @@ func (c *S3Client) ConfigureVersioning(ctx context.Context) error {
 	}
 	if existing != nil {
 		for _, rule := range existing.Rules {
-			if !strings.HasPrefix(aws.ToString(rule.ID), retentionTag) {
+			if !strings.HasPrefix(aws.ToString(rule.ID), retentionRule) {
 				rules = append(rules, rule)
 			}
 		}
@@ -206,17 +197,14 @@ func (c *S3Client) ConfigureVersioning(ctx context.Context) error {
 	return nil
 }
 
-// RetentionRules expire the old versions of the objects tagged with each Retention after its days in the config
+// RetentionRules expire the old versions of the control DB's and the sites' replicas after their days in the config
 func (c *S3Client) RetentionRules() []types.LifecycleRule {
 	rules := []types.LifecycleRule{}
-	for retention, days := range map[Retention]int{
-		SiteRetention:    c.ServerConfig.SiteBackupRetentionDays,
-		ControlRetention: c.ServerConfig.ControlBackupRetentionDays,
-	} {
+	for name, days := range map[string]int{"site": c.ServerConfig.SiteBackupRetentionDays, "control": c.ServerConfig.ControlBackupRetentionDays} {
 		rules = append(rules, types.LifecycleRule{
-			ID:                          aws.String(retentionTag + "-" + string(retention)),
+			ID:                          aws.String(retentionRule + "-" + name),
 			Status:                      types.ExpirationStatusEnabled,
-			Filter:                      &types.LifecycleRuleFilter{Tag: &types.Tag{Key: aws.String(retentionTag), Value: aws.String(string(retention))}},
+			Filter:                      &types.LifecycleRuleFilter{Prefix: aws.String(c.ReplicaPrefix() + name)},
 			NoncurrentVersionExpiration: &types.NoncurrentVersionExpiration{NoncurrentDays: aws.Int32(int32(days))},
 		})
 	}
@@ -236,303 +224,92 @@ func (c *S3Client) TestObjectPath() string {
 ////
 
 ////
-// UPLOAD METHODS
+// OBJECT METHODS
 ////
 
-// UploadFunc and DownloadFunc are UploadFilesToS3 and DownloadFilesFromS3, which tests can stand in for
-type UploadFunc func(ctx context.Context, key string, retention Retention, paths []string) error
-type DownloadFunc func(ctx context.Context, key string, outpath string) (int64, bool, error)
-
-// transferTimeout is the longest an upload or download takes: an S3 that stops answering mid transfer would otherwise
-// hold the backup job, and every later backup, until a restart
+// transferTimeout is the longest a request to S3 takes: an S3 that stops answering mid transfer would otherwise hold
+// the DB's replication until a restart
 var transferTimeout = 30 * time.Minute
 
-func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Retention, paths []string) error {
-	if !c.ServerConfig.Status.S3Working {
-		return nil
-	}
-	// The upload finishes even if what asked for it is cancelled, logging with its job, request or site
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), transferTimeout)
+// singlePutBytes is the largest object Put sends in one request, as a DB's changes nearly always are, so most uploads
+// hold no more than it; a larger one, such as a DB's snapshot, is sent in parts by the uploader
+const singlePutBytes = 1 << 20
+
+// Put uploads body to key, and is how many bytes it sent
+func (c *S3Client) Put(ctx context.Context, key string, body io.Reader) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
 	defer cancel()
-
-	// Creating the pipes
-	pr, pw := io.Pipe()
-	defer pr.Close()
-
-	// Create a goroutine to write to the pipe the zip
-	go func() {
-		defer pw.Close()
-		// An upload logs only when it fails, as every backup is one
-		_, err := c.createTar(paths, pw, key)
-		if err != nil {
-			slog.ErrorContext(ctx, "Error creating tar", "key", key, "error", err)
-			// Important: propagate error to the reader side
-			pw.CloseWithError(err)
-		}
-	}()
-
-	err := c.uploadStreamToS3(ctx, key, retention, pr)
+	head, err := io.ReadAll(io.LimitReader(body, singlePutBytes))
 	if err != nil {
-		slog.ErrorContext(ctx, "Error uploading stream to s3", "key", key, "error", err)
-		return fmt.Errorf("cannot upload stream to s3: %w", err)
+		return 0, err
 	}
-
-	//wg.Wait() // Wait for all uploads to finish
-	return nil
+	if len(head) < singlePutBytes {
+		_, err = c.s3.PutObject(ctx, &s3.PutObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key), Body: bytes.NewReader(head)})
+		return int64(len(head)), err
+	}
+	cr := &utils.CountingReader{R: io.MultiReader(bytes.NewReader(head), body)}
+	_, err = c.uploader.Upload(ctx, &s3.PutObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key), Body: cr})
+	return cr.Bytes, err
 }
 
-func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, retention Retention, stream io.Reader) error {
-	_, err := c.uploader.Upload(ctx, &s3.PutObjectInput{
-		Bucket:  aws.String(c.Bucket),
-		Key:     aws.String(key),
-		Body:    stream,
-		Tagging: aws.String(retentionTag + "=" + string(retention)),
-	})
-
-	if err != nil {
-		slog.ErrorContext(ctx, "Failed to upload Stream", "key", key, "error", err)
-		return fmt.Errorf("failed to upload Stream: %w", err)
-	}
-
-	return nil
-}
-
-////
-// END OF UPLOAD METHODS
-////
-
-////
-// DOWNLOAD METHODS
-////
-
-func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath string) (int64, bool, error) {
-	if !c.ServerConfig.Status.S3Working {
-		return 0, false, nil
-	}
-	info := ""
-	defer aslog.TrackTime(ctx, time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
-
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), transferTimeout)
-	defer cancel()
-	var noSuchKeyError *types.NoSuchKey
+// Get is key's object, which the caller closes, or os.ErrNotExist when there is none
+func (c *S3Client) Get(ctx context.Context, key string) (io.ReadCloser, error) {
+	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
-	// Until the first backup in the new format replaces it, the backup is the one kept before, at its legacy key
-	if errors.As(err, &noSuchKeyError) && LegacyKey(key) != key {
-		key = LegacyKey(key)
-		out, err = c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
+	var noSuchKey *types.NoSuchKey
+	if errors.As(err, &noSuchKey) {
+		err = os.ErrNotExist
 	}
 	if err != nil {
-		if errors.As(err, &noSuchKeyError) {
-			info = "Not Found"
-			return 0, false, nil
-		}
-		info = "Error"
-		return 0, false, fmt.Errorf("cannot get object from s3: %w", err)
+		cancel()
+		return nil, err
 	}
-	defer out.Body.Close()
-
-	// Extract beside outpath and move in only once all of it is there, so a cut off download leaves nothing behind
-	outpath = filepath.Clean(outpath)
-	if err := utils.MkParentDirs(outpath); err != nil {
-		return 0, true, err
-	}
-	staging, err := os.MkdirTemp(filepath.Dir(outpath), "."+filepath.Base(outpath)+"-restore-")
-	if err != nil {
-		return 0, true, fmt.Errorf("cannot create staging dir: %w", err)
-	}
-	defer os.RemoveAll(staging)
-
-	cr := &utils.CountingReader{R: out.Body}
-	err = c.ExtractTar(cr, staging, key)
-
-	info = fmt.Sprintf("downloaded and extracted %d bytes of %s", cr.Bytes, key)
-	if err != nil {
-		return cr.Bytes, true, fmt.Errorf("cannot extract tar: %w", err)
-	}
-
-	if err := moveInto(staging, outpath); err != nil {
-		return cr.Bytes, true, fmt.Errorf("cannot move download into place: %w", err)
-	}
-	return cr.Bytes, true, nil
+	return &body{ReadCloser: out.Body, cancel: cancel}, nil
 }
 
-// moveInto renames dir to outpath, or when outpath is already a folder, each of dir's entries into it
-func moveInto(dir string, outpath string) error {
-	if !utils.FileExists(outpath) {
-		return os.Rename(dir, outpath)
-	}
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		if err := os.Rename(filepath.Join(dir, entry.Name()), filepath.Join(outpath, entry.Name())); err != nil {
-			return err
-		}
-	}
-	return nil
+// body is an object's body, whose request's timeout is cancelled once it is closed
+type body struct {
+	io.ReadCloser
+	cancel context.CancelFunc
 }
 
-////
-// END OF DOWNLOAD METHODS
-////
-
-// LegacyKey is where the backup kept at key was kept before each DB in it was compressed by itself: there it is a tar
-// of the DBs, compressed with LZ4 as a whole, then encrypted
-func LegacyKey(key string) string {
-	if base, ok := strings.CutSuffix(key, ".tar.enc"); ok {
-		return base + ".tar.lz4.enc"
-	}
-	return key
+func (b *body) Close() error {
+	defer b.cancel()
+	return b.ReadCloser.Close()
 }
 
-// createTar writes files, each DB already compressed with LZ4 when backed up, to writer as a tar encrypted with the
-// server's keys, and is how many bytes it wrote
-func (c *S3Client) createTar(files []string, writer io.Writer, objectKey string) (int64, error) {
-	cw := &utils.CountingWriter{W: writer}
-	// Wrap all up in encryption
-	encWriter, err := c.ServerConfig.Security.EncryptingWriterFor(cw, objectKey)
-	if err != nil {
-		return 0, fmt.Errorf("cannot create encrypting writer: %w", err)
-	}
-
-	tarWriter := tar.NewWriter(encWriter)
-
-	for _, file := range files {
-		if err := addFileToTar(tarWriter, file); err != nil {
-			tarWriter.Close()
-			encWriter.Close()
-			return cw.Bytes, fmt.Errorf("adding %s to tar: %w", file, err)
-		}
-	}
-
-	if err := tarWriter.Close(); err != nil {
-		return cw.Bytes, fmt.Errorf("closing tar writer: %w", err)
-	}
-	if err := encWriter.Close(); err != nil {
-		return cw.Bytes, fmt.Errorf("closing enc writer: %w", err)
-	}
-
-	return cw.Bytes, nil
-}
-
-func addFileToTar(tw *tar.Writer, filePath string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("opening file: %w", err)
-	}
-	defer file.Close()
-
-	info, err := file.Stat()
-	if err != nil {
-		return fmt.Errorf("stat: %w", err)
-	}
-
-	header, err := tar.FileInfoHeader(info, "")
-	if err != nil {
-		return fmt.Errorf("header: %w", err)
-	}
-
-	header.Name = filepath.Base(filePath)
-	header.ModTime = info.ModTime()
-
-	if err := tw.WriteHeader(header); err != nil {
-		return fmt.Errorf("write header: %w", err)
-	}
-
-	_, err = io.Copy(tw, file)
-	return err
-}
-
-// createFile is os.Create, which tests can stand in for to fail a file's close
-var createFile = func(name string) (io.WriteCloser, error) { return os.Create(name) }
-
-// ExtractTar decrypts and untars the backup kept at the object key from reader into outputDir, decompressing each
-// `.lz4` file in it to its name without `.lz4`, and refusing an entry that would be written outside outputDir. A
-// backup kept at a legacy key, or with none, is decompressed as a whole instead.
-func (c *S3Client) ExtractTar(reader io.Reader, outputDir string, objectKey string) error {
-	decReader, err := c.ServerConfig.Security.DecryptingReaderFor(reader, objectKey)
-	if err != nil {
-		return fmt.Errorf("cannot create decrypting reader: %w", err)
-	}
-	if LegacyKey(objectKey) == objectKey {
-		decReader = lz4.NewReader(decReader)
-	}
-	tarReader := tar.NewReader(decReader)
-
-	for {
-
-		header, err := tarReader.Next()
-
-		if err == io.EOF {
-			break // End of archive
-		}
+// List is the objects under prefix
+func (c *S3Client) List(ctx context.Context, prefix string) ([]types.Object, error) {
+	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
+	defer cancel()
+	objects := []types.Object{}
+	pages := s3.NewListObjectsV2Paginator(c.s3, &s3.ListObjectsV2Input{Bucket: aws.String(c.Bucket), Prefix: aws.String(prefix)})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return fmt.Errorf("reading tar entry: %w", err)
+			return nil, err
 		}
+		objects = append(objects, page.Contents...)
+	}
+	return objects, nil
+}
 
-		////
-		// Security Check: dont let the tar file escape the output directory
-		// e.g. if header.Name is "../../etc/passwd" or "/absolute/path/to/file"
-		////
-		name, compressed := strings.CutSuffix(filepath.Clean(header.Name), ".lz4")
-		if filepath.IsAbs(name) {
-			return fmt.Errorf("archive contains absolute path: %s", header.Name)
+// Delete deletes the objects at keys, MaxKeys a request
+func (c *S3Client) Delete(ctx context.Context, keys []string) error {
+	ctx, cancel := context.WithTimeout(ctx, transferTimeout)
+	defer cancel()
+	for chunk := range slices.Chunk(keys, MaxKeys) {
+		ids := make([]types.ObjectIdentifier, len(chunk))
+		for i, key := range chunk {
+			ids[i] = types.ObjectIdentifier{Key: aws.String(key)}
 		}
-
-		targetPath := filepath.Join(outputDir, name)
-
-		rel, err := filepath.Rel(outputDir, targetPath)
+		out, err := c.s3.DeleteObjects(ctx, &s3.DeleteObjectsInput{Bucket: aws.String(c.Bucket), Delete: &types.Delete{Objects: ids, Quiet: aws.Bool(true)}})
+		if err == nil && len(out.Errors) > 0 {
+			err = fmt.Errorf("cannot delete %s: %s", aws.ToString(out.Errors[0].Key), aws.ToString(out.Errors[0].Message))
+		}
 		if err != nil {
 			return err
 		}
-		if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-			return fmt.Errorf("archive entry escapes destination: %s", header.Name)
-		}
-
-		////
-		switch header.Typeflag {
-		case tar.TypeDir:
-			if err := os.MkdirAll(targetPath, os.FileMode(header.Mode)); err != nil {
-				return fmt.Errorf("creating dir %s: %w", targetPath, err)
-			}
-		case tar.TypeReg:
-			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-				return fmt.Errorf("creating parent dir: %w", err)
-			}
-
-			outFile, err := createFile(targetPath)
-			if err != nil {
-				return fmt.Errorf("creating file: %w", err)
-			}
-
-			var entry io.Reader = tarReader
-			if compressed {
-				entry = lz4.NewReader(tarReader)
-			}
-			// Closed here rather than deferred, as this loops over every file; the write's error is the one returned
-			if _, err := io.Copy(outFile, entry); err != nil {
-				outFile.Close()
-				return fmt.Errorf("writing file: %w", err)
-			}
-
-			// Close can be the first to report a failed write, such as a full disk, leaving the file cut short.
-			// Not logged, as a restore extracts every site's DB; an error is returned instead
-			if err := outFile.Close(); err != nil {
-				return fmt.Errorf("closing file: %w", err)
-			}
-
-			// Restore original file permissions
-			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
-				return fmt.Errorf("chmod: %w", err)
-			}
-			if err := os.Chtimes(targetPath, header.ModTime, header.ModTime); err != nil {
-				return fmt.Errorf("chtimes: %w", err)
-			}
-		default:
-			slog.Warn("Skipping unsupported type", "type", header.Typeflag)
-		}
 	}
-
 	return nil
 }

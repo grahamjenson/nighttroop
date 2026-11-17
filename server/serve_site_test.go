@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/httputils"
-	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -20,7 +19,7 @@ import (
 // looked up, here as its request has ended, is 503, so an uploader tries again rather than take its URL as wrong.
 // A site disabled, archived or deleted is answered just as one that never was, so the answer tells nothing about it.
 func TestServeSite(t *testing.T) {
-	config, controlDB, site := testutils.NewControlDBWithSite(t)
+	config, controlDB, site := testutils.NewReplicatedControlDB(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, httputils.GetSiteContext(r.Context()).SiteID)
@@ -38,7 +37,7 @@ func TestServeSite(t *testing.T) {
 		_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: id})
 		require.NoError(t, err)
 	}
-	require.NoError(t, controlDB.ArchiveSite(ctx, archived, func(context.Context, string, s3utils.Retention, []string) error { return nil }))
+	require.NoError(t, controlDB.ArchiveSite(ctx, archived))
 	require.NoError(t, controlDB.DeleteSites(ctx, []string{deleted}))
 
 	notFound := "{\"message\":\"site does not exist\",\"status\":404}\n"

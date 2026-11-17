@@ -22,10 +22,8 @@ const (
 	SiteArchived       Name = "site_archived"
 	SiteHydrated       Name = "site_hydrated"
 	SiteTruncated      Name = "site_truncated"
-	SiteBatchBackedUp  Name = "site_batch_backed_up"
-	ControlBackedUp    Name = "control_backed_up"
 	ConnectorTurnedOff Name = "connector_turned_off"
-	// SiteDBMissing is a live site's DB file missing at start, restored from its batch's backup or left out
+	// SiteDBMissing is a live site's DB file missing at start, restored from its replica or left out
 	SiteDBMissing Name = "site_db_missing"
 	// SiteAdminRecovered is the site's backup key being used to give its admin new credentials
 	SiteAdminRecovered    Name = "site_admin_recovered"
@@ -60,7 +58,7 @@ const (
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
-var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMissing, SiteBatchBackedUp, ControlBackedUp,
+var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMissing,
 	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
@@ -85,8 +83,6 @@ const (
 type Event struct {
 	Name   Name
 	SiteID string
-	// Batch is the batch of sites an event is about, such as a backup of the sites whose IDs start with it
-	Batch string
 	// Attributes are what else is known about it, kept as JSON when it is persisted
 	Attributes any
 	StartedAt  time.Time

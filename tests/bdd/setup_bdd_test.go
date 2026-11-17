@@ -16,7 +16,6 @@ import (
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -92,7 +91,7 @@ func runOnOwnServer(t *testing.T, browser playwright.Browser, root string, own o
 	controlDB, err := db.NewControlDB(context.Background(), &config)
 	require.NoError(t, err)
 	values := own.prepare(t, controlDB)
-	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, &config, s3utils.NewS3Client(&config))
+	backgroundJobs := background.NewBackGroundManager(controlDB, &config)
 
 	ts := httptest.NewServer(server.WithCrossOriginProtection(server.GetMainHandler(controlDB, &config)))
 	t.Cleanup(ts.Close)

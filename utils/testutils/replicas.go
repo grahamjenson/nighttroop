@@ -1,0 +1,59 @@
+package testutils
+
+import (
+	"net/http/httptest"
+	"testing"
+
+	"github.com/johannesboyne/gofakes3"
+	"github.com/johannesboyne/gofakes3/backend/s3mem"
+	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/replica"
+	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/s3utils"
+)
+
+// FakeS3 is the client of an S3 in memory, which cfg is changed to use, and working
+func FakeS3(t testing.TB, cfg *config.ServerConfig) *s3utils.S3Client {
+	t.Helper()
+	server := httptest.NewServer(gofakes3.New(s3mem.New(), gofakes3.WithAutoBucket(true)).Server())
+	t.Cleanup(server.Close)
+	cfg.S3URL, cfg.Status.S3Working = server.URL, true
+	return s3utils.NewS3Client(cfg)
+}
+
+// ReplicatedConfig is the test config with its DBs in files in a folder of the test's, and S3 in memory, for tests that
+// replicate DBs, as a server with S3 does
+func ReplicatedConfig(t testing.TB) (*config.ServerConfig, *s3utils.S3Client) {
+	t.Helper()
+	cfg := *GetTestServerConfig()
+	cfg.Mode, cfg.DataDir = consts.Development, t.TempDir()
+	return &cfg, FakeS3(t, &cfg)
+}
+
+// OpenReplicated opens the control DB of cfg and replicates it and its sites to s3, as a server's start does, closing
+// it at the test's end
+func OpenReplicated(t testing.TB, cfg *config.ServerConfig, s3 *s3utils.S3Client) (*db.ControlDB, error) {
+	t.Helper()
+	controlDB, err := db.NewControlDB(t.Context(), cfg)
+	if err != nil {
+		return nil, err
+	}
+	t.Cleanup(func() { controlDB.Close() })
+	return controlDB, controlDB.Replicate(t.Context(), replica.New(cfg, s3))
+}
+
+// NewReplicatedControlDB is a new control DB with a site, replicated to S3 in memory
+func NewReplicatedControlDB(t testing.TB) (*config.ServerConfig, *db.ControlDB, *db.SiteCreateResult) {
+	t.Helper()
+	cfg, s3 := ReplicatedConfig(t)
+	controlDB, err := OpenReplicated(t, cfg, s3)
+	if err != nil {
+		t.Fatalf("cannot replicate the control db: %v", err)
+	}
+	site, err := controlDB.CreateSite(t.Context())
+	if err != nil {
+		t.Fatalf("cannot create site db: %v", err)
+	}
+	return cfg, controlDB, site
+}

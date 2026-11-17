@@ -8,8 +8,6 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"context"
-
 	"nighttroop.t1d.nz/data/db"
 	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
@@ -25,25 +23,8 @@ import (
 // never links to control
 var view = logview.View{Prefix: "site", Path: "/logs", Date: site_data_templ.FormatDate}
 
-// eventsView also shows who each event was for, this site or its batch
-func eventsView(ctx context.Context) logview.View {
-	return logview.View{Prefix: "site", Path: "/logs", About: i18n.T(ctx, "site.logs.events.about"), Date: site_data_templ.FormatDate}
-}
-
-// about is who an event was for: this site, or the batch of sites it is backed up with
-func about(ctx context.Context, event *sitemodels.SiteEvent) string {
-	if event.Batch != nil {
-		return i18n.T(ctx, "site.logs.events.batch", i18n.Data{"BatchID": *event.Batch})
-	}
-	return i18n.T(ctx, "site.logs.events.this_site")
-}
-
-// eventRow is how an event is shown, in the context's language
-func eventRow(ctx context.Context) func(*sitemodels.SiteEvent) logview.Row {
-	return func(e *sitemodels.SiteEvent) logview.Row {
-		return logview.Row{ID: e.ID, Name: e.Name, About: about(ctx, e), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID,
-			Attributes: e.Attributes}
-	}
+func eventRow(e *sitemodels.SiteEvent) logview.Row {
+	return logview.Row{ID: e.ID, Name: e.Name, At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
 }
 
 func errorRow(e *sitemodels.SiteError) logview.Row {
@@ -54,7 +35,7 @@ func logRow(l *sitemodels.SiteLog) logview.Row {
 	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
 }
 
-// EventsTable shows one page of the site's events and its batch's, the newest first
+// EventsTable shows one page of the site's events, the newest first
 func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -92,7 +73,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = logview.EventsTable(eventsView(ctx), "siteEventsTable", logview.Rows(events, eventRow(ctx))).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = logview.EventsTable(view, "siteEventsTable", logview.Rows(events, eventRow)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -123,7 +104,7 @@ func EventModal(event *sitemodels.SiteEvent) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = logview.EventModal(eventsView(ctx), eventRow(ctx)(event)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = logview.EventModal(view, eventRow(event)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

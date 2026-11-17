@@ -18,12 +18,10 @@ type SiteLog struct {
 	JobID     *string `json:"job_id"`
 }
 
-// SiteEvent is something that happened to the site, or to its batch of sites when Batch is set, from when it started
-// until it finished when it took time
+// SiteEvent is something that happened to the site, from when it started until it finished when it took time
 type SiteEvent struct {
 	ID         int64           `json:"id"`
 	Name       string          `json:"name"`
-	Batch      *string         `json:"batch"`
 	Attributes json.RawMessage `json:"attributes"`
 	StartedAt  int64           `json:"started_at"`
 	FinishedAt *int64          `json:"finished_at"`
@@ -48,17 +46,10 @@ func SiteLogFromDB(row *logsdb.Log) *SiteLog {
 		RequestID: row.RequestID, JobID: row.JobID}
 }
 
-// SiteEventFromDB is an event for the site. An event for its batch is about the other sites in it too, so the site
-// sees only which batch, what happened and when, never its attributes, request or job.
+// SiteEventFromDB is an event for the site
 func SiteEventFromDB(row *logsdb.Event) *SiteEvent {
-	event := &SiteEvent{ID: row.ID, Name: row.Name, StartedAt: row.StartedAt, FinishedAt: row.FinishedAt}
-	if row.SiteID == nil {
-		event.Batch = row.Batch
-	} else {
-		event.Attributes = attributesJSON(row.Attributes)
-		event.RequestID, event.JobID = row.RequestID, row.JobID
-	}
-	return event
+	return &SiteEvent{ID: row.ID, Name: row.Name, Attributes: attributesJSON(row.Attributes), StartedAt: row.StartedAt, FinishedAt: row.FinishedAt,
+		RequestID: row.RequestID, JobID: row.JobID}
 }
 
 func SiteErrorFromDB(row *logsdb.Error) *SiteError {

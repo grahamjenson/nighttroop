@@ -21,12 +21,6 @@ type Site struct {
 	DisabledAt        *int64 `json:"disabled_at"`
 	ArchivedAt        *int64 `json:"archived_at"`
 	DeletedAt         *int64 `json:"deleted_at"`
-
-	// BackedUpAt is when the site's backup copy was last made, BackupSizeKb that copy's size on disk, and
-	// BackupUploadedAt when a batch with the site in it was last uploaded to S3
-	BackedUpAt       *int64 `json:"backed_up_at"`
-	BackupSizeKb     *int64 `json:"backup_size_kb"`
-	BackupUploadedAt *int64 `json:"backup_uploaded_at"`
 }
 
 // Inactive is whether the site has not been written to, or not been seen, in the days before now; one never written

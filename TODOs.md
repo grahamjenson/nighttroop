@@ -9,8 +9,8 @@
        every 10 minutes: vacuum only when its free pages are a large part of it
 1. Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
-    1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up one batch
-       each run, so a new site's batch may not be backed up, and its tiles are checked only before a backup
+    1. P2: A test of archive, restore and a start's restore against a real S3 (MinIO), as the tests use one in memory
+    1. P4: A BDD test of a site page's backup tile once it is replicated: the browser tests have no S3
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
 
@@ -103,17 +103,21 @@
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
 
-1. Backups:
-    1. P4: Remove the restore's fallback to the old `.tar.lz4.enc` backups (`s3utils.LegacyKey`). Lifecycle rules
-       expire only replaced versions (30 days for sites, 90 for control), and nothing replaces an object at an old
-       key, so it stays. First, once every batch and the control DB has a `.tar.enc` backup, delete their old keys.
-       Then upload each old archive again as `.tar.enc`, or keep the fallback for archives.
-    1. P5: A backup killed while it writes leaves its temp file (`.<site>.sqlite.lz4-*`) in `data/backup`; remove
-       these on start, as the restore staging folders are
+1. Replicas (Litestream):
+    1. P1: Each replicated DB keeps a Litestream connection open, with its read transaction and parsed schema, so
+       every site costs memory while idle (see the PR's measurements). Close it between syncs of an idle site, or
+       sync fewer sites at once
+    1. P2: A start sends every site DB whole again (and the day's snapshot), as the WAL is checkpointed when the DBs
+       close: keep the WAL as Litestream left it, or start Litestream before the app opens the DBs
+    1. P2: Restore a DB, or a site's archive, to a time (Litestream's `-timestamp`), from the control page
+    1. P2: Stop a second server writing to the same replicas (Litestream's leases)
+    1. P3: Delete the old batch backups (`<host>/backup/*.tar.enc`, `<host>/archive/`) from the bucket by hand, once
+       every site has a replica; the server no longer reads them
+    1. P3: Show the replica's size and errors on the site page, as the backup tiles did
 
 1. Database:
     1. P3: CAST the bare values that a column equals in the other DBs' queries, as the site DB's are (data/sql/README.md),
-       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities`, `GetBatchSitesToBackUp` and its
+       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities`, `GetBatchSitesToUpkeep` and its
        push queries, `jobsdb`'s `MarkJobsForConsumer`, `livedb`'s `IdentityAlarms`, and `logsdb`'s site and connector
        searches
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a

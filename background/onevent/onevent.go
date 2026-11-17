@@ -27,7 +27,6 @@ type Job struct {
 type Fired struct {
 	Name   events.Name `json:"name"`
 	SiteID string      `json:"site_id"`
-	Batch  string      `json:"batch"`
 }
 
 // Listen queues each job when an event published on bus matches it, and is the consumers that run them, to start
@@ -40,7 +39,7 @@ func Listen(bus *events.SiteBus, queue *liteq.JobQueue, jobs ...Job) []*liteq.Co
 			if !job.Filter(event) {
 				return
 			}
-			fired, _ := json.Marshal(Fired{Name: event.Name, SiteID: event.SiteID, Batch: event.Batch})
+			fired, _ := json.Marshal(Fired{Name: event.Name, SiteID: event.SiteID})
 			ctx := aslog.WithSite(context.Background(), event.SiteID)
 			if err := queue.QueueJob(ctx, liteq.QueueJobParams{Queue: job.Queue, Job: string(fired),
 				DedupingKey: liteq.ReplaceDuplicate(job.Queue + "-" + event.SiteID)}); err != nil {

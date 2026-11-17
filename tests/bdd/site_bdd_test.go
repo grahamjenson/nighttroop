@@ -23,7 +23,6 @@ import (
 	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -110,7 +109,7 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 	// Wrapped as main.go wraps it, so a form posting from one of the server's hosts to another is refused here too
 	router := server.WithCrossOriginProtection(server.GetMainHandler(controlDB, config))
 	// Background jobs are run after every action instead of on their timers
-	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
+	backgroundJobs := background.NewBackGroundManager(controlDB, config)
 
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)

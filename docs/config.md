@@ -103,18 +103,20 @@ AAPS, Trio) send.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `S3_URL` | None | The S3-compatible endpoint for backups and archives (example: `http://localhost:9000`, the docker-compose MinIO). |
+| `S3_URL` | None | The S3-compatible endpoint for the DBs' replicas, which are also the archives (example: `http://localhost:9000`, the docker-compose MinIO). |
 | `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on at startup. |
 | `S3_ACCESS_KEY` | `minioadmin` (docker-compose MinIO) | The access key ID. |
 | `S3_SECRET_KEY` | `minioadmin` (docker-compose MinIO) | The secret key. |
-| `CONTROL_BACKUP_INTERVAL_IN_SECONDS` | `30` | How often the control DB is backed up. |
-| `BATCH_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How often each batch of site DBs is backed up. |
-| `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a control backup after a newer upload replaces it. |
-| `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site batch backup or archive. |
+| `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after it is replaced or deleted. |
+| `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site's replica. |
 
-- `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted.
+- `S3_URL` unset or empty: S3 is off. No restore on start, no replication, and sites cannot be deleted.
 - `S3_URL` set:
   - The server tests an upload at startup, and again over about half a minute. If it never works, the server stops.
+  - [Litestream](https://litestream.io) replicates the control DB within 1 second of a write, and each site DB within
+    1 minute, to `<HOST_NAME>/litestream/` in the bucket. Each file is encrypted with `KEY_SETS`.
+  - Each replica keeps a daily snapshot and the changes since: hourly files, and for the control DB files of each
+    minute.
   - Production and staging require both keys, and do not start with `minioadmin`.
 
 ## Sites and connectors
@@ -124,6 +126,7 @@ AAPS, Trio) send.
 | `MAX_SITES` | `10000` | The most sites the public can create from the home page. A control admin can create more. |
 | `MAX_IDENTITIES_PER_USER` | `100` | The most identities on one site. Rate limiters are kept for 20 a site, so more costs no more memory. |
 | `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a never used site is kept before deletion. |
+| `SITE_UPKEEP_INTERVAL_IN_SECONDS` | `3600` | How often each batch of sites (sites with the same first letter) is truncated and its unused sites deleted. |
 | `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site is not written or seen before control can disable it. |
 | `BACKGROUND_CONNECTOR_WORKERS` | `5` | Syncs that run at once. |
 | `CONNECTOR_INTERVAL_IN_SECONDS` | `5` | How often due syncs are queued. |

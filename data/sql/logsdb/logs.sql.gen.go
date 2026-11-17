@@ -34,7 +34,7 @@ func (q *Queries) GetError(ctx context.Context, arg GetErrorParams) (*Error, err
 }
 
 const getEvent = `-- name: GetEvent :one
-SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events WHERE id = ?1
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events WHERE id = ?1
 `
 
 type GetEventParams struct {
@@ -47,7 +47,6 @@ func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (*Event, err
 	err := row.Scan(
 		&i.ID,
 		&i.SiteID,
-		&i.Batch,
 		&i.Name,
 		&i.Attributes,
 		&i.StartedAt,
@@ -107,23 +106,21 @@ func (q *Queries) GetSiteError(ctx context.Context, arg GetSiteErrorParams) (*Er
 }
 
 const getSiteEvent = `-- name: GetSiteEvent :one
-SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
-WHERE id = ?1 AND (site_id = ?2 OR (site_id IS NULL AND batch = ?3))
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events
+WHERE id = ?1 AND site_id = ?2
 `
 
 type GetSiteEventParams struct {
 	ID     int64
 	SiteID *string
-	Batch  *string
 }
 
 func (q *Queries) GetSiteEvent(ctx context.Context, arg GetSiteEventParams) (*Event, error) {
-	row := q.queryRow(ctx, q.getSiteEventStmt, getSiteEvent, arg.ID, arg.SiteID, arg.Batch)
+	row := q.queryRow(ctx, q.getSiteEventStmt, getSiteEvent, arg.ID, arg.SiteID)
 	var i Event
 	err := row.Scan(
 		&i.ID,
 		&i.SiteID,
-		&i.Batch,
 		&i.Name,
 		&i.Attributes,
 		&i.StartedAt,
@@ -183,12 +180,11 @@ func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error 
 }
 
 const insertEvent = `-- name: InsertEvent :exec
-INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at, request_id, job_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO events (site_id, name, attributes, started_at, finished_at, request_id, job_id) VALUES (?, ?, ?, ?, ?, ?, ?)
 `
 
 type InsertEventParams struct {
 	SiteID     *string
-	Batch      *string
 	Name       string
 	Attributes *string
 	StartedAt  int64
@@ -200,7 +196,6 @@ type InsertEventParams struct {
 func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error {
 	_, err := q.exec(ctx, q.insertEventStmt, insertEvent,
 		arg.SiteID,
-		arg.Batch,
 		arg.Name,
 		arg.Attributes,
 		arg.StartedAt,
@@ -288,7 +283,7 @@ func (q *Queries) RecentConnectorErrors(ctx context.Context, arg RecentConnector
 }
 
 const recentConnectorEvents = `-- name: RecentConnectorEvents :many
-SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events
 WHERE site_id = ?1 AND json_extract(attributes, '$.connector_type') = ?2
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER)
@@ -313,7 +308,6 @@ func (q *Queries) RecentConnectorEvents(ctx context.Context, arg RecentConnector
 		if err := rows.Scan(
 			&i.ID,
 			&i.SiteID,
-			&i.Batch,
 			&i.Name,
 			&i.Attributes,
 			&i.StartedAt,
@@ -396,7 +390,7 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 }
 
 const searchEvents = `-- name: SearchEvents :many
-SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR name = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(name), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
@@ -437,7 +431,6 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 		if err := rows.Scan(
 			&i.ID,
 			&i.SiteID,
-			&i.Batch,
 			&i.Name,
 			&i.Attributes,
 			&i.StartedAt,
@@ -581,42 +574,33 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 }
 
 const searchSiteEvents = `-- name: SearchSiteEvents :many
-SELECT own.id, own.site_id, own.batch, own.name, own.attributes, own.started_at, own.finished_at, own.request_id, own.job_id FROM events own
-WHERE own.site_id = ?3
-AND own.id >= CASE WHEN CAST(?4 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
-  WHERE newest.site_id = ?3 ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
-AND (CAST(?5 AS TEXT) IS NULL OR own.name = ?5)
-AND (CAST(?4 AS TEXT) IS NULL OR instr(lower(own.name), lower(?4)) > 0
-  OR instr(lower(own.attributes), lower(?4)) > 0)
-UNION ALL
-SELECT batched.id, batched.site_id, batched.batch, batched.name, batched.attributes, batched.started_at, batched.finished_at, batched.request_id, batched.job_id FROM events batched
-WHERE batched.site_id IS NULL AND batched.batch = ?6
-AND (CAST(?5 AS TEXT) IS NULL OR batched.name = ?5)
-AND (CAST(?4 AS TEXT) IS NULL OR instr(lower(batched.name), lower(?4)) > 0)
-ORDER BY id DESC
-LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
+SELECT own.id, own.site_id, own.name, own.attributes, own.started_at, own.finished_at, own.request_id, own.job_id FROM events own
+WHERE own.site_id = ?1
+AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
+  WHERE newest.site_id = ?1 ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+AND (CAST(?3 AS TEXT) IS NULL OR own.name = ?3)
+AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.name), lower(?2)) > 0
+  OR instr(lower(own.attributes), lower(?2)) > 0)
+ORDER BY own.id DESC
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type SearchSiteEventsParams struct {
-	Skip   int64
-	Limit  int64
 	SiteID *string
 	Search *string
 	Type   *string
-	Batch  *string
+	Skip   int64
+	Limit  int64
 }
 
-// Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set.
-// Each half reads its own index newest first and SQLite merges the two, rather than sorting all of the site's events.
-// Search looks only in a batch's names, as its attributes are not shown
+// Newest first, the site's own events, which is all a site may see, only those named Type when it is set
 func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsParams) ([]*Event, error) {
 	rows, err := q.query(ctx, q.searchSiteEventsStmt, searchSiteEvents,
-		arg.Skip,
-		arg.Limit,
 		arg.SiteID,
 		arg.Search,
 		arg.Type,
-		arg.Batch,
+		arg.Skip,
+		arg.Limit,
 	)
 	if err != nil {
 		return nil, err
@@ -628,7 +612,6 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 		if err := rows.Scan(
 			&i.ID,
 			&i.SiteID,
-			&i.Batch,
 			&i.Name,
 			&i.Attributes,
 			&i.StartedAt,

@@ -42,11 +42,6 @@ CREATE TABLE sites (
     last_write_at INTEGER,
     -- the site's data written up to then, by its updated_at, is in its summaries, as the stale rebuild last checked
     summaries_checked_at INTEGER,
-    -- when the site's backup copy was last made, and that copy's size on disk
-    backed_up_at INTEGER,
-    backup_size_kb INTEGER,
-    -- when a batch with the site in it was last uploaded to S3
-    backup_uploaded_at INTEGER,
 
     -- States
     state TEXT NOT NULL CHECK (state IN ('live', 'disabled', 'archived', 'deleted')) DEFAULT 'live',
