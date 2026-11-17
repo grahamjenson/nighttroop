@@ -49,11 +49,12 @@ func Check(ctx context.Context, cfg *config.ServerConfig, controlDB *db.ControlD
 	return controlDB.RecordResources(ctx, reading)
 }
 
-// MeasureSites keeps each site DB's size and the size of each of its tables, and scores each site for abuse. Each
-// site's DB, and its tables, are measured here, as its syncs write to it without a request that would measure it, and
-// measuring its tables reads its whole DB, too slow for a page or a check every 30 seconds.
+// MeasureSites keeps each site DB's size and the size of each of its tables, and scores each site for abuse, and
+// measures the tables of the server's own DBs too. Each site's DB, and its tables, are measured here, as its syncs write to it
+// without a request that would measure it, and measuring tables reads a whole DB, too slow for a page or a check every
+// 30 seconds.
 func MeasureSites(ctx context.Context, controlDB *db.ControlDB) error {
 	sites := controlDB.AllSites()
 	return errors.Join(controlDB.RecordSiteSizes(ctx, sites), controlDB.RecordAbuseScores(ctx, sites),
-		controlDB.RecordSiteTableSizes(ctx, sites))
+		controlDB.RecordSiteTableSizes(ctx, sites), controlDB.RecordServerTableSizes(ctx))
 }

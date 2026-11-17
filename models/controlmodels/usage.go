@@ -39,6 +39,17 @@ type Usage struct {
 	// QuerySamplePercent kept
 	SlowestQueries     []sqltiming.QueryStat `json:"slowest_queries"`
 	QuerySamplePercent int                   `json:"query_sample_percent"`
+
+	// ServerDBs are the server's own DBs, the control DB first, with their sizes and tables, as a site's are
+	ServerDBs []*ServerDB `json:"server_dbs"`
+}
+
+// ServerDB is one of the server's own DBs: its name, its size on disk now, unset for one in memory, and its tables,
+// largest first, as the resource check last measured them
+type ServerDB struct {
+	Name   string       `json:"name"`
+	SizeKB *int64       `json:"size_kb"`
+	Tables []*SiteTable `json:"tables"`
 }
 
 // ResourceReading is a check of the server's resources: its mean CPU since the check before and the longest it was at

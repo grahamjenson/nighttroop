@@ -71,6 +71,18 @@ ASSERT_VISIBLE #control--usage[hx-get="/usage?resources=day"]
 GOTO {{ .control_url }}/usage?resources=week
 ASSERT_VISIBLE #control--usage--resources-range-hour.bg-primary
 
+// Each of the server's own DBs shows its size, as a site's does, with no limit, and its largest tables with their
+// records, size and share, as the resource check last measured them: the control DB, the logs with the events, the
+// jobs, and the live DB, which is in memory, so measured by its tables
+ASSERT_VISIBLE #control--usage--control--db-size >> text=/^\d+\.\d\d$/
+ASSERT_NOT_VISIBLE #control--usage--control--db-limit
+ASSERT_VISIBLE #control--usage--control--db-tables li >> nth=0 >> text=/\d+\.\dk · \d+\.\d\d MB · \d+%$/
+ASSERT_VISIBLE #control--usage--logs--db-tables
+ASSERT_VISIBLE #control--usage--jobs--db-tables
+ASSERT_VISIBLE #control--usage--live--db-size >> text=/^\d+\.\d\d$/
+ASSERT_VISIBLE #control--usage--live >> text=/in memory$/
+SCREENSHOT usage_server_dbs
+
 // At its top, an admin's buttons open Go's profiles (pprof) and runtime stats (vars) in a new tab
 ASSERT_VISIBLE #control--usage--pprof[href="/debug/pprof/"][target="_blank"]
 ASSERT_VISIBLE #control--usage--vars[href="/debug/vars"][target="_blank"]

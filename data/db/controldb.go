@@ -48,6 +48,9 @@ type ControlDB struct {
 	setup setup
 	// unavailable are the live and disabled sites whose DB is not open, as it was missing or did not open at start
 	unavailable unavailableSites
+	// measured are the server's own DBs' tables as last measured, by DB name, to *measuredTables, kept in memory as those
+	// DBs have no row of their own to keep them in
+	measured sync.Map
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -744,6 +747,92 @@ func (db *ControlDB) recordSiteTableSizes(ctx context.Context, site *SiteDB) err
 		tables[size.Name] = types.TableSize{Bytes: size.Bytes, Records: size.Records}
 	}
 	return db.Queries.UpdateSiteTableSizes(ctx, controldb.UpdateSiteTableSizesParams{TableSizesJson: tables, ID: site.Subdomain})
+}
+
+// DBTable is a table of one of the server's own DBs: the bytes it and its indexes take, and its records
+type DBTable struct {
+	Name    string
+	Bytes   int64
+	Records int64
+}
+
+// ServerDB is one of the server's own DBs: its name, its size on disk in KB now, or nil for one in memory, and its
+// tables, largest first, as last measured, or none before they have been
+type ServerDB struct {
+	Name   string
+	SizeKB *int64
+	Tables []DBTable
+}
+
+// measuredTables are a DB's tables, largest first, and its size on disk when they were measured
+type measuredTables struct {
+	sizeKB *int64
+	tables []DBTable
+}
+
+// serverDB is one of the server's own DBs by name, with its file and how to measure its tables
+type serverDB struct {
+	name     string
+	path     string
+	inMemory bool
+	measure  func(context.Context) ([]DBTable, error)
+}
+
+// serverDBs are the server's own DBs, the control DB first, then its logs and events, its jobs, and what it keeps
+// only while it runs
+func (db *ControlDB) serverDBs() []serverDB {
+	return []serverDB{
+		{"control", db.Path, db.InMemory, func(ctx context.Context) ([]DBTable, error) { return dbTables(db.TableSizes(ctx)) }},
+		{"logs", db.Logs.Path, db.Logs.InMemory, func(ctx context.Context) ([]DBTable, error) { return dbTables(db.Logs.TableSizes(ctx)) }},
+		{"jobs", db.Jobs.Path, db.Jobs.InMemory, func(ctx context.Context) ([]DBTable, error) { return dbTables(db.Jobs.TableSizes(ctx)) }},
+		{"live", db.Live.Path, db.Live.InMemory, func(ctx context.Context) ([]DBTable, error) { return dbTables(db.Live.TableSizes(ctx)) }},
+	}
+}
+
+// dbTables are a DB's measured tables as DBTables, as each DB's package has its own TableSize with the same fields
+func dbTables[T ~struct {
+	Name    string
+	Bytes   int64
+	Records int64
+}](sizes []T, err error) ([]DBTable, error) {
+	tables := make([]DBTable, len(sizes))
+	for i, size := range sizes {
+		tables[i] = DBTable(size)
+	}
+	return tables, err
+}
+
+// RecordServerTableSizes measures each table of each of the server's own DBs from SQLite's dbstat, as
+// RecordSiteTableSizes does a site's, and only when the DB's size changed since, or each time for one in memory, as
+// dbstat reads every page of the DB
+func (db *ControlDB) RecordServerTableSizes(ctx context.Context) error {
+	var errs []error
+	for _, server := range db.serverDBs() {
+		sizeKB := diskSizeKB(server.path, server.inMemory)
+		if last, ok := db.measured.Load(server.name); ok && sizeKB != nil && last.(*measuredTables).sizeKB != nil && *last.(*measuredTables).sizeKB == *sizeKB {
+			continue
+		}
+		tables, err := server.measure(ctx)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("cannot measure the %s DB's tables: %w", server.name, err))
+			continue
+		}
+		db.measured.Store(server.name, &measuredTables{sizeKB: sizeKB, tables: tables})
+	}
+	return errors.Join(errs...)
+}
+
+// ServerDBs are the server's own DBs, each with its size now and its tables as last measured
+func (db *ControlDB) ServerDBs() []ServerDB {
+	dbs := []ServerDB{}
+	for _, server := range db.serverDBs() {
+		size := ServerDB{Name: server.name, SizeKB: diskSizeKB(server.path, server.inMemory)}
+		if last, ok := db.measured.Load(server.name); ok {
+			size.Tables = last.(*measuredTables).tables
+		}
+		dbs = append(dbs, size)
+	}
+	return dbs
 }
 
 // SiteTableSizes are the bytes each table of the site's DB takes, its indexes with it, and its records, largest first,
