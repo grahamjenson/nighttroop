@@ -191,7 +191,7 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 			current = &ClearCookie{TestPath: path, TestLine: lineNumber, Name: second}
 		case "HOLD", "RELEASE":
 			// HOLD <path> holds the page's requests to path, unsent, until RELEASE <path> sends them and those after, as
-			// a slow server would, so steps between can act while one is on its way
+			// a slow server would, so steps between can act while one is on its way. A * in it matches one part.
 			flush()
 			if second == "" {
 				return nil, fmt.Errorf("%s:%d: %s needs a path", path, lineNumber, first)

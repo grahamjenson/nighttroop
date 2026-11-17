@@ -992,6 +992,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### Connector form
 
 - Before a save: only Save. After, without a reload: also Backfill, and Delete (red outline, apart from Save).
+- While a backfill request is sent, the Backfill button is disabled.
 - Enable Connector: ticked by typing a new Dexcom, LibreLinkUp or Nightscout source's details. A click on it, before
   or after, is kept. Never changed on a saved source.
 - Save does not check details. A failed first sync turns syncing off and tells why.
@@ -2190,6 +2191,7 @@ harder:
   development build or not, when registered, and last push and error. Never the token.
 - An admin sees all of the site's. Others see their own, and get 404 for another's.
 - "Test" sends a test push, then shows the new last push, or a toast with why it failed.
+- While a test push is sent, its "Test" button is disabled, so one click sends one push.
 - "Delete", after a confirmation, removes the row with a "Push Device Deleted" toast, and shows an empty table after
   the last. Pushes stop until its app registers again.
 

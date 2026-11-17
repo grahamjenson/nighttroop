@@ -33,9 +33,17 @@ ASSERT_NOT_VISIBLE #site--glucose--next
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
+// Backfill is disabled while its request is sent, so it cannot be clicked twice. A click passes through a disabled
+// button, so it is checked as drawn, not as what a click hits.
+HOLD /settings/connectors/virtual/backfill
 CLICK #site--settings--virtual-connector--backfill
+ASSERT_HELD /settings/connectors/virtual/backfill
+ASSERT_DRAWN #site--settings--virtual-connector--backfill:disabled
+SCREENSHOT connector_backfill_sending
+RELEASE /settings/connectors/virtual/backfill
 ASSERT_TEXT_VISIBLE Backfilling Virtual
 ASSERT_TEXT_VISIBLE Fetching records from
+ASSERT_VISIBLE #site--settings--virtual-connector--backfill:enabled
 SCREENSHOT connector_backfill_started
 // The toast goes to the toaster, leaving the button as it was
 ASSERT_TEXT_EQUALS #site--settings--virtual-connector--backfill Backfill
