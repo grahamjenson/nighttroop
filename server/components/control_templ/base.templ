@@ -134,6 +134,24 @@ var headerLinks = []struct {
 	{"events", "control.menu.events", icon.Activity}, {"errors", "control.menu.errors", icon.TriangleAlert},
 }
 
+// currentLinkScript marks the header's link of the page shown, or of the page it is under, as /sites/{id} is under
+// Sites, as the site's header marks its hub. The header is not sent again as htmx opens a page, so the browser marks
+// it: when the page loads, after each page htmx opens, and on back and forward. The sites are also at /.
+templ currentLinkScript() {
+	<script>
+		(() => {
+			const mark = () => document.querySelectorAll("#control--nav--links a").forEach((link) => {
+				const path = location.pathname === "/" ? "/sites" : location.pathname
+				link.toggleAttribute("aria-current", path === link.pathname || path.startsWith(link.pathname + "/"))
+				if (link.hasAttribute("aria-current")) link.setAttribute("aria-current", "page")
+			})
+			document.addEventListener("DOMContentLoaded", mark)
+			document.addEventListener("htmx:after:settle", () => setTimeout(mark))
+			window.addEventListener("popstate", () => setTimeout(mark))
+		})()
+	</script>
+}
+
 // Header stays at the top of the window as the page scrolls, as tall as the site's, so its links and menu are always
 // one click away
 templ Header() {
@@ -148,12 +166,13 @@ templ Header() {
 				// The pages an admin opens most, one click away in a wide window; the menu has every page
 				<div id="control--nav--links" class="ml-6 mr-auto hidden items-center gap-1 md:flex">
 					for _, link := range headerLinks {
-						@nav.Link("control--nav--"+link.slug, "/"+link.slug, "flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-gray-300 transition hover:bg-white/10 hover:text-white") {
+						@nav.Link("control--nav--"+link.slug, "/"+link.slug, "flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-gray-300 transition hover:bg-white/10 hover:text-white aria-[current=page]:bg-white/15 aria-[current=page]:font-semibold aria-[current=page]:text-white") {
 							@link.icon(icon.Props{Class: "size-4"})
 							{ i18n.T(ctx, link.label) }
 						}
 					}
 				</div>
+				@currentLinkScript()
 				<!-- Right side -->
 				<div class="flex items-center gap-4">
 					@dropdown.Dropdown(dropdown.Props{ID: "control--menu"}) {
