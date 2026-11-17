@@ -208,6 +208,32 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 
 // TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks
 // its DB, while its DB is here. Only admins can.
+// NewEmptyDBHandler makes an unavailable site's DB again, empty, so the site is served again without its data, as for one
+// created just before a crash, which has no backup
+func (s *SitesCollection) NewEmptyDBHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
+	if herr == nil && site == nil {
+		herr = apiutils.ErrNotFound
+	}
+	// Why it was unavailable, for its event
+	reason := controlContext.ControlDB.UnavailableSites()[chi.URLParam(r, "id")]
+	if herr == nil {
+		err := controlContext.ControlDB.NewEmptySiteDB(r.Context(), site.ID)
+		if errors.Is(err, db.ErrSiteNotUnavailable) {
+			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.new_empty_db"))
+		} else if herr = apiutils.ErrorFor(err, s.GetName()); herr == nil {
+			controlContext.ControlDB.Logs.SiteDBMadeEmptyEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, reason)
+			site, herr = get(r.Context(), s, site.ID, controlContext)
+		}
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteNewEmptyDB(site))
+}
+
 func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)

@@ -6,7 +6,7 @@ INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 ASSERT_VISIBLE #control--status-banner--unavailable
-ASSERT_TEXT_VISIBLE 2 sites unavailable, as their DBs could not be opened or restored:
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (2):
 ASSERT_VISIBLE #control--status-banner--unavailable--amissing
 ASSERT_VISIBLE #control--status-banner--unavailable >> text=/amissing\s*\(DB missing\)/
 ASSERT_VISIBLE #control--status-banner--unavailable >> text=/brokensi\s*\(DB does not open\)/
@@ -23,3 +23,16 @@ ASSERT_PATH /sites/amissing
 ASSERT_VISIBLE #control--status-banner--unavailable
 ASSERT_VISIBLE #control--site--unavailable
 SCREENSHOT site_page
+
+// Its page offers to make it a new, empty DB, as for a site created just before a crash, which has no backup. Making it
+// asks first (the test accepts), then the site is served again: it is no longer unavailable, and its events say so.
+ASSERT_VISIBLE #control--site--action-new-empty-db >> text=as for a site created just before a crash
+CLICK #control--site--new-empty-db
+ASSERT_TEXT_VISIBLE New Empty DB Made
+ASSERT_NOT_VISIBLE #control--site--unavailable
+ASSERT_VISIBLE #control--site--events--table td >> text=Site DB made empty
+// The banner, on every page, names only the other site
+GOTO {{ .control_url }}/sites/amissing
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (1):
+ASSERT_NOT_VISIBLE #control--status-banner--unavailable--amissing
+SCREENSHOT new_empty_db
