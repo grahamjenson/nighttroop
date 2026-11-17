@@ -1,11 +1,14 @@
 package control_templ
 
 import (
-	"nighttroop.t1d.nz/server/components/head"
-	"nighttroop.t1d.nz/server/components/confirm"
 	"context"
 	"fmt"
+	"maps"
+	"nighttroop.t1d.nz/server/components/confirm"
+	"nighttroop.t1d.nz/server/components/head"
+	"slices"
 
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/testsite"
@@ -49,10 +52,10 @@ templ ControlBase() {
 	</html>
 }
 
-// StatusBanner warns control admins about optional services that are not working, resources running high, and sites
-// near or at the limit MAX_SITES sets
+// StatusBanner warns control admins about optional services that are not working, resources running high, sites near
+// or at the limit MAX_SITES sets, and unavailable sites, each linked to its page
 templ StatusBanner(status config.ServerStatus) {
-	if !status.S3Working || !status.SentryWorking || len(status.HighResources) > 0 || status.SitesNearLimit() {
+	if !status.S3Working || !status.SentryWorking || len(status.HighResources) > 0 || status.SitesNearLimit() || len(status.UnavailableSites) > 0 {
 		<div id="control--status-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 text-sm" role="alert">
 			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
 				if !status.S3Working {
@@ -69,9 +72,42 @@ templ StatusBanner(status config.ServerStatus) {
 						<strong>{ sitesTitle(ctx, status) }:</strong> { i18n.T(ctx, "control.status_banner.sites_text", i18n.Data{"SiteCount": status.Sites, "MaxSites": status.MaxSites}) }
 					</p>
 				}
+				if len(status.UnavailableSites) > 0 {
+					<p id="control--status-banner--unavailable" class="text-red-700">
+						<strong>{ i18n.T(ctx, "control.status_banner.unavailable_title", i18n.Data{"SiteCount": len(status.UnavailableSites)}) }</strong>
+						for i, siteID := range shownUnavailable(status) {
+							<a id={ "control--status-banner--unavailable--" + siteID } href={ templ.SafeURL("/sites/" + siteID) } class="underline">{ siteID }</a> ({ i18n.T(ctx, unavailableReasons[status.UnavailableSites[siteID]]) }){ listComma(i, len(shownUnavailable(status))) }
+						}
+						if more := len(status.UnavailableSites) - len(shownUnavailable(status)); more > 0 {
+							{ i18n.T(ctx, "control.status_banner.unavailable_more", i18n.Data{"SiteCount": more}) }
+						}
+					</p>
+				}
 			</div>
 		</div>
 	}
+}
+
+// listComma is the comma after the item at i of a list of n, none after the last
+func listComma(i, n int) string {
+	if i < n-1 {
+		return ","
+	}
+	return ""
+}
+
+// unavailableReasons are the banner's words for why a site is unavailable
+var unavailableReasons = map[string]string{
+	db.UnavailableMissing: "control.status_banner.unavailable_missing", db.UnavailableCannotOpen: "control.status_banner.unavailable_cannot_open",
+}
+
+// maxUnavailableShown is how many unavailable sites the banner names, so it stays short when S3 is down for every site
+const maxUnavailableShown = 10
+
+// shownUnavailable are the unavailable sites the banner names, in order of their IDs
+func shownUnavailable(status config.ServerStatus) []string {
+	siteIDs := slices.Sorted(maps.Keys(status.UnavailableSites))
+	return siteIDs[:min(len(siteIDs), maxUnavailableShown)]
 }
 
 func sitesTitle(ctx context.Context, status config.ServerStatus) string {
@@ -103,7 +139,7 @@ func resourceWarning(ctx context.Context, level config.ResourceLevel) string {
 		free := *level.Total * (100 - level.Value) / 100
 		return i18n.T(ctx, "control.status_banner.disk_warning", i18n.Data{"FreeBytes": display.Bytes(free), "TotalBytes": display.Bytes(*level.Total)})
 	}
-	return i18n.T(ctx, "control.status_banner.memory_warning", i18n.Data{"UsedBytes": display.Bytes(*level.Total*level.Value/100), "TotalBytes": display.Bytes(*level.Total)})
+	return i18n.T(ctx, "control.status_banner.memory_warning", i18n.Data{"UsedBytes": display.Bytes(*level.Total * level.Value / 100), "TotalBytes": display.Bytes(*level.Total)})
 }
 
 templ FullPage(content templ.Component) {
@@ -114,8 +150,8 @@ templ FullPage(content templ.Component) {
 
 templ menuItem(id string, path string, label string, itemIcon func(...icon.Props) templ.Component) {
 	@dropdown.Item(dropdown.ItemProps{
-		ID:   id,
-		Href: "#",
+		ID:         id,
+		Href:       "#",
 		Attributes: nav.Attributes(path),
 	}) {
 		<span class="flex items-center">
@@ -140,15 +176,20 @@ var headerLinks = []struct {
 templ currentLinkScript() {
 	<script>
 		(() => {
-			const mark = () => document.querySelectorAll("#control--nav--links a").forEach((link) => {
-				const path = location.pathname === "/" ? "/sites" : location.pathname
-				link.toggleAttribute("aria-current", path === link.pathname || path.startsWith(link.pathname + "/"))
-				if (link.hasAttribute("aria-current")) link.setAttribute("aria-current", "page")
-			})
-			document.addEventListener("DOMContentLoaded", mark)
-			document.addEventListener("htmx:after:settle", () => setTimeout(mark))
-			window.addEventListener("popstate", () => setTimeout(mark))
-		})()
+			const mark = () =>
+				document.querySelectorAll("#control--nav--links a").forEach((link) => {
+					const path = location.pathname === "/" ? "/sites" : location.pathname;
+					link.toggleAttribute(
+						"aria-current",
+						path === link.pathname || path.startsWith(link.pathname + "/"),
+					);
+					if (link.hasAttribute("aria-current"))
+						link.setAttribute("aria-current", "page");
+				});
+			document.addEventListener("DOMContentLoaded", mark);
+			document.addEventListener("htmx:after:settle", () => setTimeout(mark));
+			window.addEventListener("popstate", () => setTimeout(mark));
+		})();
 	</script>
 }
 

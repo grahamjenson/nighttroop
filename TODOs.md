@@ -65,7 +65,6 @@
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
        fixes it, starting with an unavailable site (seeing why, trying a fix on a copy, and restoring, forcing back,
        disabling or deleting it) and a missing control DB starting a new server in setup
-    1. P1: Show unavailable sites on the control front page
     1. P1: Set up paging the admin (`utils/page`), which only logs a page as an error
 
 
