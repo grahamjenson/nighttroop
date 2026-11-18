@@ -10,7 +10,17 @@ ASSERT_VISIBLE #site--getting-started--identities
 ASSERT_VISIBLE #site--getting-started--settings
 ASSERT_VISIBLE #site--getting-started--alarms
 ASSERT_NOT_VISIBLE #site--summary--glucose
+// It ends with where things are, each a link to its place
+ASSERT_VISIBLE #site--getting-started--where >> text=Where things are
+ASSERT_VISIBLE #site--getting-started--where >> text=finds any page by name, or by a word on it.
 SCREENSHOT getting_started
+CLICK #site--getting-started--where-reports
+ASSERT_PATH /reports
+CLICK #site--nav--home-icon
+CLICK #site--getting-started--where-data
+ASSERT_PATH /data/glucose
+CLICK #site--nav--home-icon
+ASSERT_VISIBLE #site--getting-started
 
 // The Nightscout URL has a button to copy it, and the phone's device is added from the guide: it opens Users & Devices
 // with the Add Device modal open, which a later visit to the page does not open again
