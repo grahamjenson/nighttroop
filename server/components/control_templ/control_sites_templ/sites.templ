@@ -406,38 +406,16 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 	@dbsize.Panel("control--site", site.EstimatedDbSizeKb, site.MaxDbSizeKbLimit, tables)
 }
 
-// siteActions are a list of what can be done to the site, each saying what it does with its button at its right: open it, and for an admin, download
-// a copy of its DB or truncate it while it is here, upload a fixed DB or make a new empty one while it is unavailable,
-// disable it once no one has used it for a while, and archive it once it is disabled. One that cannot be done yet says when it can, in place of its button.
+// siteActions are a list of what can be done to the site, each saying what it does with its button at its right. For an
+// admin of an unavailable site, what fixes it comes first: upload a fixed DB or make a new empty one. Then open it, and
+// for an admin, download a copy of its DB or truncate it while it is here, disable it once no one has used it for a
+// while, and archive it once it is disabled. One that cannot be done yet says when it can, in place of its button, and
+// one that needs the site's DB, while it is unavailable, says so.
 templ siteActions(site *controlmodels.Site) {
 	@card.Card(card.Props{ID: "control--site--actions", Title: i18n.T(ctx, "control.site.actions")}) {
 		<div class="divide-y divide-gray-200">
 			{{ url := siteURL(ctx, site.ID) }}
-			@actionCard("control--site--action-open", i18n.T(ctx, "control.site.open"), i18n.T(ctx, "control.site.open_intro"), unless(url != "" && site.State == "live", i18n.T(ctx, "control.site.open_unavailable")), icon.ExternalLink) {
-				@footer.NewTabLink("control--site--open", url, "inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50") {
-					{ i18n.T(ctx, "control.site.open") }
-					@icon.ExternalLink(icon.Props{Class: "size-4"})
-				}
-			}
 			if httputils.IsControlAdmin(ctx) {
-				@actionCard("control--site--action-download-db", i18n.T(ctx, "control.site.download_db"), i18n.T(ctx, "control.site.download_db_intro"),
-					unless(site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Download) {
-					@button.Button(button.Props{
-						ID:         "control--site--download-db",
-						Href:       "/sites/" + site.ID + "/db",
-						Variant:    button.VariantOutline,
-						Attributes: templ.Attributes{"download": ""},
-					}) {
-						{ i18n.T(ctx, "control.site.download_db") }
-					}
-				}
-				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
-					@siteActionForm("/sites/"+site.ID, "disabled", i18n.T(ctx, "control.site.disable_confirm"), "control--site--disable", i18n.T(ctx, "control.site.disable"))
-				}
-				@actionCard("control--site--action-truncate", i18n.T(ctx, "control.site.truncate"), i18n.T(ctx, "control.site.truncate_intro"),
-					unless(site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Scissors) {
-					@siteActionForm("/sites/"+site.ID+"/truncate", "", i18n.T(ctx, "control.site.truncate_confirm"), "control--site--truncate", i18n.T(ctx, "control.site.truncate"))
-				}
 				if unavailable(ctx, site) {
 					@actionCard("control--site--action-upload-db", i18n.T(ctx, "control.site.upload_db"), i18n.T(ctx, "control.site.upload_db_intro"), "", icon.CloudUpload) {
 						<form
@@ -460,7 +438,33 @@ templ siteActions(site *controlmodels.Site) {
 						@siteActionForm("/sites/"+site.ID+"/new-empty-db", "", i18n.T(ctx, "control.site.new_empty_db_confirm"), "control--site--new-empty-db", i18n.T(ctx, "control.site.new_empty_db"))
 					}
 				}
-				@actionCard("control--site--action-archive", i18n.T(ctx, "control.site.archive"), i18n.T(ctx, "control.site.archive_intro"), unless(site.State == "disabled", i18n.T(ctx, "control.site.archive_unavailable")), icon.Archive) {
+			}
+			@actionCard("control--site--action-open", i18n.T(ctx, "control.site.open"), i18n.T(ctx, "control.site.open_intro"), needsDB(ctx, site, url != "" && site.State == "live", i18n.T(ctx, "control.site.open_unavailable")), icon.ExternalLink) {
+				@footer.NewTabLink("control--site--open", url, "inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50") {
+					{ i18n.T(ctx, "control.site.open") }
+					@icon.ExternalLink(icon.Props{Class: "size-4"})
+				}
+			}
+			if httputils.IsControlAdmin(ctx) {
+				@actionCard("control--site--action-download-db", i18n.T(ctx, "control.site.download_db"), i18n.T(ctx, "control.site.download_db_intro"),
+					needsDB(ctx, site, site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Download) {
+					@button.Button(button.Props{
+						ID:         "control--site--download-db",
+						Href:       "/sites/" + site.ID + "/db",
+						Variant:    button.VariantOutline,
+						Attributes: templ.Attributes{"download": ""},
+					}) {
+						{ i18n.T(ctx, "control.site.download_db") }
+					}
+				}
+				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
+					@siteActionForm("/sites/"+site.ID, "disabled", i18n.T(ctx, "control.site.disable_confirm"), "control--site--disable", i18n.T(ctx, "control.site.disable"))
+				}
+				@actionCard("control--site--action-truncate", i18n.T(ctx, "control.site.truncate"), i18n.T(ctx, "control.site.truncate_intro"),
+					needsDB(ctx, site, site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Scissors) {
+					@siteActionForm("/sites/"+site.ID+"/truncate", "", i18n.T(ctx, "control.site.truncate_confirm"), "control--site--truncate", i18n.T(ctx, "control.site.truncate"))
+				}
+				@actionCard("control--site--action-archive", i18n.T(ctx, "control.site.archive"), i18n.T(ctx, "control.site.archive_intro"), needsDB(ctx, site, site.State == "disabled", i18n.T(ctx, "control.site.archive_unavailable")), icon.Archive) {
 					@siteActionForm("/sites/"+site.ID, "archived", i18n.T(ctx, "control.site.archive_confirm"), "control--site--archive", i18n.T(ctx, "control.site.archive"))
 				}
 			}
@@ -474,6 +478,15 @@ func unless(can bool, why string) string {
 		return ""
 	}
 	return why
+}
+
+// needsDB is why an action on the site's DB cannot be done: its DB is unavailable, or why not otherwise, or nothing when
+// it can
+func needsDB(ctx context.Context, site *controlmodels.Site, can bool, why string) string {
+	if unavailable(ctx, site) {
+		return i18n.T(ctx, "control.site.needs_db")
+	}
+	return unless(can, why)
 }
 
 // disableWhen is when a site that is not inactive could be disabled

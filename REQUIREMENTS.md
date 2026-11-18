@@ -94,6 +94,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
     missing, DB does not open, migration failed, or schema differs) and a link to its page, then how many more.
 - An unavailable site has a red Unavailable badge in the sites list and on its page.
+- An unavailable site's actions start with what fixes it, Upload DB then New Empty DB. Open Site, Download DB,
+  Truncate and Archive need its DB, so in place of their buttons they say "Its DB is unavailable. Fix it first,
+  above." Disable is still offered as for any site.
 - An unavailable site's page offers a control admin New Empty DB, as for a site created just before a crash, which has
   no backup. It asks first, then:
   - makes the site's DB again, empty, so the site is served again; its identities are kept, its data is not;
