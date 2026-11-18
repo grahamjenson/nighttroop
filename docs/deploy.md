@@ -19,8 +19,8 @@ the same.
 | --- | --- | --- | --- |
 | Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Every 30 seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`), and on stop | Every site: the server starts new, in setup |
 | Site DBs: readings, treatments and settings of each site | `data/db/site/<letter>/<site>.sqlite`, a folder for each first letter of the site ID | Each site written to, an hour after its last backup (`SITE_BACKUP_INTERVAL_IN_SECONDS`), by itself, and on stop | The start stops until restored ([5.7](#57-restore-unavailable-sites)) |
-| Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history |
-| Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history |
+| Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history. If it does not open, the start makes an empty one. |
+| Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history. If it does not open, the start makes an empty one. |
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |
 | Local backups of the control and site DBs, each compressed with LZ4 (`.sqlite.lz4`) | `data/backup/` | They are uploaded, as `<host>/sites/<site>.tar.enc` and `<host>/backup/controldb.tar.enc` | Nothing, while the DBs are there |
 | `update.sh` copies of `./data` | `backups/data-<time>.tar.gz`, the newest 5 | No | The way back to before a release |
