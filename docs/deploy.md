@@ -204,6 +204,9 @@ The server opens each and runs its new migrations.
   ([docs/migrations.md](migrations.md)).
 - **Fix:** `update.sh` rolls back, with the DB from the [step 4](#step-4-copy-data) copy. Fix the migration and
   release again.
+- **Failure:** `data/db/controldb.sqlite` does not open, and it is not a migration that fails (for example, a disk
+  damaged the file). With S3, the server moves it to `controldb.sqlite.unopened-<time>`, restores the control DB from
+  its replica, and pages the admin with an SMS. It does this one time: delete the `unopened` files to permit it again.
 - **Failure:** The control DB's replication cannot start. The server starts with S3 off, and logs `The control DB's
   replication could not start`. The banner shows `S3 is off`, and the admin is paged with an SMS.
 - **Fix:** Read the error, fix its cause (for example an S3 setting), and start the server again.

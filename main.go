@@ -27,6 +27,7 @@ import (
 	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/socketio/engineio"
@@ -112,6 +113,9 @@ func run() (err error) {
 	}
 	if !serverConfig.Status.S3Working {
 		control = nil // as restoreFromS3 turned S3 off
+	}
+	if err := restoreUnopened(ctx, serverConfig, control, admin); err != nil {
+		return err
 	}
 	controlDB, err := openControlDB(ctx, serverConfig, s3Client, control, admin)
 	if err != nil {
@@ -274,6 +278,31 @@ func restoreFromS3(ctx context.Context, serverConfig *config.ServerConfig, contr
 		return nil
 	}
 	slog.Info("Control DB restored from its replica in S3", "path", path)
+	return nil
+}
+
+// restoreUnopened restores the control DB from its replica when the one here does not open, as a file a disk damaged,
+// and pages the admin: the one here is kept beside it. A control DB whose migration fails is left, as that is the
+// release's fault, which update.sh rolls back, and its replica has the same DB.
+func restoreUnopened(ctx context.Context, serverConfig *config.ServerConfig, control *replica.Replica, admin page.Func) error {
+	path := controldb.GetPath(serverConfig)
+	if control == nil || !utils.FileExists(path) {
+		return nil
+	}
+	opened, err := controldb.NewDB(ctx, serverConfig)
+	if err == nil {
+		return opened.Close()
+	}
+	if errors.As(err, new(*migrateup.FailedError)) {
+		return nil
+	}
+	restored, rerr := control.RestoreOver(ctx, path)
+	if rerr != nil {
+		return fmt.Errorf("the control DB does not open (%w), and cannot be restored from its replica: %w", err, rerr)
+	}
+	if restored {
+		admin(ctx, page.SMS, "The control DB did not open, so it was restored from its replica in S3. The one that did not open is kept beside it", "error", err, "path", path)
+	}
 	return nil
 }
 

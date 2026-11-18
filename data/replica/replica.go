@@ -89,16 +89,45 @@ func (r *Replica) Adopt(ctx context.Context, path string, setUp func() (bool, er
 	if keep, err := setUp(); err != nil || keep {
 		return false, errors.Join(err, os.Remove(staged))
 	}
-	aside := fmt.Sprintf("%s.replaced-%d", path, time.Now().UnixMilli())
-	for _, suffix := range []string{"", "-wal", "-shm"} {
-		if err := os.Rename(path+suffix, aside+suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return false, err
-		}
+	if err := moveDB(path, fmt.Sprintf("%s.replaced-%d", path, time.Now().UnixMilli())); err != nil {
+		return false, err
 	}
 	if err := os.Rename(staged, path); err != nil {
 		return false, err
 	}
 	return true, r.own(path)
+}
+
+// moveDB renames the DB at from, with its write-ahead log and shared memory, to to, leaving out any not there
+func moveDB(from, to string) error {
+	for _, suffix := range []string{"", "-wal", "-shm"} {
+		if err := os.Rename(from+suffix, to+suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
+}
+
+// RestoreOver restores the control DB from its replica in place of the one at path, which does not open, as a file a
+// disk damaged. The one that does not open is kept beside it, with its log, as path.unopened-<time>, and put back if
+// there is no replica or the restore fails. It is done once: while a DB is kept from an earlier time, it does nothing,
+// so a server that is started again and again does not fill its disk with copies. It is whether it restored.
+func (r *Replica) RestoreOver(ctx context.Context, path string) (bool, error) {
+	if r == nil {
+		return false, nil
+	}
+	if kept, _ := filepath.Glob(path + ".unopened-*"); len(kept) > 0 {
+		return false, nil
+	}
+	aside := fmt.Sprintf("%s.unopened-%d", path, time.Now().UnixMilli())
+	if err := moveDB(path, aside); err != nil {
+		return false, err
+	}
+	if found, err := r.Restore(ctx, path); err != nil || !found {
+		return false, errors.Join(err, moveDB(aside, path))
+	}
+	// Litestream's own files beside the DB are of the one that did not open
+	return true, os.RemoveAll(litestream.NewDB(path).MetaPath())
 }
 
 // Client is the Litestream S3 client of the control DB's replica, encrypted with its key when encrypted

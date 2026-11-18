@@ -228,3 +228,51 @@ func TestAdoptWithoutAReplica(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, replicate, "without S3 there is nothing to check")
 }
+
+// A control DB that does not open is restored from its replica, once: the one that did not open is kept beside it
+// with its log, and while it is kept a later one that does not open is left as it is
+func TestRestoreOverADBThatDoesNotOpen(t *testing.T) {
+	r, _ := replicated(t)
+	path := another(t)
+	restored, err := r.RestoreOver(t.Context(), path)
+	require.NoError(t, err)
+	require.True(t, restored)
+	db, err := controldb.OpenSqliteDB(path, 0)
+	require.NoError(t, err)
+	_, err = controldb.New(db).GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: "replicat"})
+	require.NoError(t, err, "the replica's DB is in its place")
+	require.NoError(t, db.Close())
+	require.True(t, r.Owns(path))
+	kept, err := filepath.Glob(path + ".unopened-*")
+	require.NoError(t, err)
+	require.Len(t, kept, 2, "the DB that did not open and its log are kept")
+
+	require.NoError(t, os.WriteFile(path, []byte("damaged again"), 0o600))
+	restored, err = r.RestoreOver(t.Context(), path)
+	require.NoError(t, err)
+	require.False(t, restored, "it is restored once, so restarts do not fill the disk with copies")
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "damaged again", string(data))
+}
+
+// With no replica a control DB that does not open is put back as it was, and without S3 nothing is done
+func TestRestoreOverWithoutAReplica(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	path := another(t)
+	restored, err := replica.New(cfg, s3).RestoreOver(t.Context(), path)
+	require.NoError(t, err)
+	require.False(t, restored)
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "another DB", string(data))
+	require.FileExists(t, path+"-wal")
+	kept, err := filepath.Glob(path + ".unopened-*")
+	require.NoError(t, err)
+	require.Empty(t, kept)
+
+	var off *replica.Replica
+	restored, err = off.RestoreOver(t.Context(), path)
+	require.NoError(t, err)
+	require.False(t, restored)
+}
