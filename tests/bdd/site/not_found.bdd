@@ -7,7 +7,15 @@ GOTO /data/nope
 ASSERT_STATUS 404
 ASSERT_VISIBLE #site--not-found
 ASSERT_TEXT_EQUALS #site--not-found--message There is no nope here
+// It says how to find a page, and links to the summary, the data, the reports and the setup guide
+ASSERT_TEXT_EQUALS #site--not-found--help The search at the top of the page finds any page by name. Or go to:
+ASSERT_VISIBLE #site--not-found--home
+ASSERT_VISIBLE #site--not-found--data
+ASSERT_VISIBLE #site--not-found--reports
 SCREENSHOT not_found
+CLICK #site--not-found--guide
+ASSERT_PATH /getting-started
+ASSERT_VISIBLE #site--getting-started
 
 // A collection asked for something it cannot do says so
 GOTO /settings/connectors/virtual

@@ -153,6 +153,7 @@ site:
     errors_page: "Errors page"
     error_recorded_for_admins: "Something went wrong. It has been recorded for the site's admins."
     not_found: "Not found"
+    not_found_help: "The search at the top of the page finds any page by name. Or go to:"
     back_to_summary: "Back to the summary"
   alarms:
     alarm: "Alarm: {{.AlarmName}}"

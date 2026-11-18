@@ -164,7 +164,14 @@ templ NotFound(message string) {
 	<div id="site--not-found" class="mx-auto max-w-xl space-y-4 py-16 text-center">
 		<h1 class="text-2xl font-semibold text-brand-night">{ i18n.T(ctx, "site.base.not_found") }</h1>
 		<p id="site--not-found--message" class="text-gray-600">{ message }</p>
-		<a id="site--not-found--home" href="/" class="text-primary underline">{ i18n.T(ctx, "site.base.back_to_summary") }</a>
+		// Where a person who followed an old link, or typed an address, can go from here
+		<p id="site--not-found--help" class="text-sm text-gray-600">{ i18n.T(ctx, "site.base.not_found_help") }</p>
+		<p class="flex flex-wrap justify-center gap-x-4 gap-y-1">
+			<a id="site--not-found--home" href="/" class="text-primary underline">{ i18n.T(ctx, "site.base.back_to_summary") }</a>
+			<a id="site--not-found--data" href="/data/glucose" class="text-primary underline">{ i18n.T(ctx, "site.nav.hubs.data") }</a>
+			<a id="site--not-found--reports" href="/reports" class="text-primary underline">{ i18n.T(ctx, "site.nav.hubs.reports") }</a>
+			<a id="site--not-found--guide" href="/getting-started" class="text-primary underline">{ i18n.T(ctx, "site.base.getting_started") }</a>
+		</p>
 	</div>
 }
 
