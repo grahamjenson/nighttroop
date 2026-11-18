@@ -1648,7 +1648,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A treatment with a duration always has both `duration` and `durationInMilliseconds`, the missing one calculated.
 - A `duration` with a fraction (e.g. a Loop bolus `1.6666666666666667`, or a suspend) is kept to the ms.
 - API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds` (e.g. a Loop bolus of 1.6667 minutes
-  reads 2, an AAPS temp target ended at 120750 ms reads 2). A quick bolus is not 0 minutes. Trio and xDrip4iOS read
+  reads 2, an AAPS temp target ended at 120750 ms reads 2). A bolus or temp basal of under a minute, also under half
+  a minute (e.g. 12000 ms), reads 1, not 0: followers read a 0 minute temp basal as cancelled. Trio and xDrip4iOS read
   `duration` as a whole number and drop the page with a fraction.
 - API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
   treatment, or a page, with a fractional `duration`).
@@ -1669,6 +1670,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Indefinite override: lasts a week. Has `durationType` `indefinite` while the override as sent is kept.
 - Also indefinite, not ended as it starts: `indefinite` with a `duration` of 0, or a `Temporary Override` of 0
   minutes (the careportal sends one until cancelled).
+- An override with a duration of under a minute (e.g. Loop's `0.28` when it is ended after 17 seconds) has ended. It
+  is not indefinite. Its exact time is in `durationInMilliseconds`.
 - A `Temporary Target` of 0 minutes cancels the running one.
 
 #### Profile switches

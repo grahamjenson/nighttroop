@@ -1,0 +1,58 @@
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+# An override Loop ends within a minute is posted again with its _id and its seconds in minutes, e.g. 0.28. It has
+# ended: it is not indefinite, which only an override sent with a duration of 0, or with durationType indefinite, is.
+# A dose of under half a minute is 1 minute on API v1, not 0, which followers read as one cancelled. The time to the
+# millisecond is in durationInMilliseconds.
+
+NAME loop_start_override
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"_id": "57F0225B-1C2D-4E3F-8A9B-0C1D2E3F4A5B", "created_at": "{{ time 10 }}", "timestamp": "{{ time 10 }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "⚽️ Run & Gym", "duration": 60, "insulinNeedsScaleFactor": 0.8, "correctionRange": [140, 160]}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 60 "@0.duration"
+SET override_at {{ dig "loop_start_override.0.created_at" }}
+
+NAME loop_end_override_soon
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"_id": "57F0225B-1C2D-4E3F-8A9B-0C1D2E3F4A5B", "created_at": "{{ .override_at }}", "timestamp": "{{ .override_at }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "⚽️ Run & Gym", "duration": 0.28416785001754763, "insulinNeedsScaleFactor": 0.8, "correctionRange": [140, 160]}]
+ASSERT_STATUS 200
+
+NAME override_ended_v1
+GET http://{{ site }}/api/v1/treatments?find[eventType]=Temporary+Override&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 1 "@0.duration"
+ASSERT_EQUALS 17050 "@0.durationInMilliseconds"
+ASSERT_EQUALS null "@0.durationType"
+
+NAME override_ended_v3
+GET http://{{ site }}/api/v3/treatments/57F0225B-1C2D-4E3F-8A9B-0C1D2E3F4A5B
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 17050 "@result.durationInMilliseconds"
+ASSERT_EQUALS null "@result.durationType"
+
+# An override sent with a duration of 0 is still until cancelled
+NAME override_until_cancelled
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"_id": "68A1336C-2D3E-4F50-9BAC-1D2E3F4A5B6C", "created_at": "{{ time 5 }}", "enteredBy": "careportal", "eventType": "Temporary Override", "reason": "Sick", "duration": 0, "insulinNeedsScaleFactor": 1.2, "correctionRange": [100, 110]}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 10080 "@0.duration"
+ASSERT_EQUALS "indefinite" "@0.durationType"
+
+# A temp basal ended after 12 seconds, and a bolus of 24 seconds
+NAME loop_short_doses
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"created_at": "{{ time 4 }}", "timestamp": "{{ time 4 }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 1.2, "absolute": 1.2, "duration": 0.2, "automatic": true, "syncIdentifier": "74656d70426173616c20312e3220323032362d31312d31385430343a30303a30305a"},
+   {"created_at": "{{ time 3 }}", "timestamp": "{{ time 3 }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 0.8, "programmed": 0.8, "duration": 0.4, "automatic": false, "syncIdentifier": "626f6c757320302e3820323032362d31312d31385430343a30313a30305a"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@0.duration"
+ASSERT_EQUALS 12000 "@0.durationInMilliseconds"
+ASSERT_EQUALS 1 "@1.duration"
+ASSERT_EQUALS 24000 "@1.durationInMilliseconds"
