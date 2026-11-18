@@ -67,7 +67,7 @@ func TestNewSummaryDaily(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			day := NewSummaryDaily("1970-01-01", "UTC", start, end, 70, 180, tt.readings, tt.doses, tt.food, nil, tt.minutesSince, tt.minutes)
+			day := NewSummaryDaily("1970-01-01", "UTC", start, end, end, 70, 180, tt.readings, tt.doses, tt.food, nil, tt.minutesSince, tt.minutes)
 			if day.Period != "day" || day.Date != "1970-01-01" || day.Timezone != "UTC" || day.StartAt != start || day.EndAt != end {
 				t.Errorf("day is a %s %s in %s from %d to %d", day.Period, day.Date, day.Timezone, day.StartAt, day.EndAt)
 			}
@@ -109,7 +109,7 @@ func TestNewSummaryDailyLoop(t *testing.T) {
 		report(start, new(1.0), new(0.25), new(0.75), new(40.0)),
 		report(start-1, new(9.0), nil, nil, new(9.0)),
 	}
-	day := NewSummaryDaily("1970-01-01", "UTC", start, end, 70, 180, nil, nil, nil, reports, start, nil)
+	day := NewSummaryDaily("1970-01-01", "UTC", start, end, end, 70, 180, nil, nil, nil, reports, start, nil)
 	tail := strings.Repeat(",null", 8) + "]"
 	for name, got := range map[string][2]string{
 		"iob":           {day.LoopIobJson, "[2.35,2.35,0.5,0.5" + tail},
@@ -266,7 +266,7 @@ func TestNewSummaryDailyGlucoseStats(t *testing.T) {
 	}
 	readings := []*glucose.Clean{reading(5*slot, 300, "mbg"), reading(4*slot, 200, "sgv"), reading(3*slot+1, 100, "sgv"),
 		reading(3*slot, 100, "sgv"), reading(1*slot, 60, "sgv"), reading(0, 40, "sgv"), reading(288*slot, 40, "sgv")}
-	day := NewSummaryDaily("1970-01-01", "UTC", 0, 288*slot, 70, 180, readings, nil, nil, nil, 0, nil)
+	day := NewSummaryDaily("1970-01-01", "UTC", 0, 288*slot, 288*slot, 70, 180, readings, nil, nil, nil, 0, nil)
 	got := []any{day.GlucoseReadings, day.MeterReadings, day.CgmSlots, *day.GlucoseMeanMgdl, *day.GlucoseSdMgdl,
 		*day.TimeVeryLow, *day.TimeLow, *day.TimeInRange, *day.TimeHigh, *day.TimeVeryHigh}
 	// 40, 60, 100, 100, 200 and 300 have a mean of 133.3 and a standard deviation of 89.9
@@ -274,7 +274,7 @@ func TestNewSummaryDailyGlucoseStats(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("day's readings, meter readings, CGM slots, mean, SD and times are %v, want %v", got, want)
 	}
-	if empty := NewSummaryDaily("1970-01-01", "UTC", 0, 288*slot, 70, 180, nil, nil, nil, nil, 0, nil); empty.GlucoseMeanMgdl != nil || empty.TimeVeryLow != nil {
+	if empty := NewSummaryDaily("1970-01-01", "UTC", 0, 288*slot, 288*slot, 70, 180, nil, nil, nil, nil, 0, nil); empty.GlucoseMeanMgdl != nil || empty.TimeVeryLow != nil {
 		t.Errorf("a day without readings has a mean of %v and %v very low, want neither", empty.GlucoseMeanMgdl, empty.TimeVeryLow)
 	}
 }
@@ -323,11 +323,32 @@ func TestSummaryBasal(t *testing.T) {
 	for i := range minutes {
 		minutes[i].Basal = &rate
 	}
-	day := NewSummaryDaily("1970-01-01", "UTC", hour, 2*hour, 70, 180, nil, []*sitedb.InsulinDose{{OccurredAt: hour, Dose: 4}}, nil, nil, hour, minutes)
+	day := NewSummaryDaily("1970-01-01", "UTC", hour, 2*hour, 2*hour, 70, 180, nil, []*sitedb.InsulinDose{{OccurredAt: hour, Dose: 4}}, nil, nil, hour, minutes)
 	require.Equal(t, []float64{5.5, 1.5}, []float64{day.TotalDailyDose, day.TotalDailyBasal})
 	week := NewSummaryPeriod("week", "1970-01-01", "UTC", 0, 2, 2, []*sitedb.SummaryPeriod{
 		{Days: 1, TotalDailyDose: 40, TotalDailyBasal: 20, GlucoseMgdlJson: "[]"}, {Days: 1, TotalDailyDose: 30, TotalDailyBasal: 10, GlucoseMgdlJson: "[]"}})
 	require.Equal(t, []float64{35, 15}, []float64{week.TotalDailyDose, week.TotalDailyBasal})
+}
+
+// A day not yet over has a combo bolus's dose given at once and the share of its extended dose given by then
+func TestNewSummaryDailyExtendedSoFar(t *testing.T) {
+	const hour = int64(60 * 60_000)
+	combo := []*sitedb.InsulinDose{{OccurredAt: hour, Dose: 1.2, ExtendedDose: new(1.8), ExtendedDurationMs: new(2 * hour)}}
+	for _, test := range []struct {
+		name  string
+		until int64
+		dose  float64
+	}{
+		{"just given", hour + 1, 1.2},
+		{"half way", 2 * hour, 2.1},
+		{"done", 3 * hour, 3},
+		{"day over", 24 * hour, 3},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			day := NewSummaryDaily("1970-01-01", "UTC", 0, 24*hour, test.until, 70, 180, nil, combo, nil, nil, 0, nil)
+			require.Equal(t, test.dose, day.TotalDailyDose)
+		})
+	}
 }
 
 // A dose's insulin in a day is its dose given at once, when it is in the day, and the share of its extended dose in

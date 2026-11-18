@@ -690,6 +690,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Today, yesterday, last week, last month: time in range, total daily dose, last sensor and site change.
   - No data: "–" for time in range and daily dose, not 0. No insulin: 0 U.
+  - Total daily dose: a combo bolus adds its dose given at once immediately. Its extended dose adds as it is given,
+    by the share of its minutes that are complete.
 - Time in range, on the summary, Summaries page, overviews, AGP reports and readings' glucose days: whole percent,
   "<1%" above 0 that rounds to 0, "–" for none.
 
@@ -830,7 +832,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - ‹ and ›: the 30 days before and after. › disabled for the latest month, ‹ past one year ago. A last day after today,
   or over one year before yesterday, is refused. Back and forward work.
 - Chart: a bar of each day's total daily dose, oldest first, on an axis of every day, a few pixels apart.
-  - A dose's extended part counts in each day by the share of its minutes in that day. Today has the share due today.
+  - A dose's extended part counts in each day by the share of its minutes in that day. Today has only the part given until now.
   - Basal (gold) under boluses, with a legend.
   - No insulin: no bar, not counted.
   - Hover: date and basal or boluses in U.
