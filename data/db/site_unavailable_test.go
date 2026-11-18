@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -40,13 +41,15 @@ func missingSite(t *testing.T) (*db.ControlDB, string, []byte) {
 // pages records each page
 type pages struct {
 	mu       sync.Mutex
+	levels   []page.Level
 	messages []string
 	args     [][]any
 }
 
-func (p *pages) page(_ context.Context, message string, args ...any) {
+func (p *pages) page(_ context.Context, level page.Level, message string, args ...any) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	p.levels = append(p.levels, level)
 	p.messages = append(p.messages, message)
 	p.args = append(p.args, args)
 }
@@ -88,6 +91,7 @@ func TestKeepRestoringUnavailableSites(t *testing.T) {
 			}
 			require.ErrorIs(t, err, db.ErrSiteUnavailable)
 			require.Equal(t, len(retries)+1, tries, "tried once, then after each wait")
+			require.Equal(t, []page.Level{page.Call}, paged.levels, "sites down call the admin")
 			require.Equal(t, []string{"Sites are unavailable, as their DBs could not be restored"}, paged.messages)
 			require.Equal(t, []any{"site_ids", []string{siteID}, "tries", len(retries) + 1}, paged.args[0])
 		})
