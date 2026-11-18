@@ -27,7 +27,7 @@ func TestRetentionRules(t *testing.T) {
 
 	// The site backups, tagged, and the files of the control DB's replica, by prefix, keep replaced versions their days
 	rules := c.RetentionRules()
-	require.Len(t, rules, 2)
+	require.Len(t, rules, 3)
 	for _, rule := range rules {
 		require.Nil(t, rule.Expiration, "the current version must never expire")
 	}
@@ -38,4 +38,8 @@ func TestRetentionRules(t *testing.T) {
 	require.Equal(t, "nighttroop-retention-control", aws.ToString(rules[1].ID))
 	require.Equal(t, "host/litestream/control", aws.ToString(rules[1].Filter.Prefix))
 	require.Equal(t, int32(90), aws.ToInt32(rules[1].NoncurrentVersionExpiration.NoncurrentDays))
+	// The lock is written again every few seconds, so its replaced versions are kept only a day
+	require.Equal(t, "nighttroop-retention-lock", aws.ToString(rules[2].ID))
+	require.Equal(t, "host/server.lock", aws.ToString(rules[2].Filter.Prefix))
+	require.Equal(t, int32(1), aws.ToInt32(rules[2].NoncurrentVersionExpiration.NoncurrentDays))
 }

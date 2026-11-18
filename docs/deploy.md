@@ -76,6 +76,7 @@ The script tags the running image `nighttroop-rollback:<time>`, to start it agai
 2. Stops background jobs (syncs, alarms, backups). Running jobs get up to 1 minute.
 3. Backs up and uploads each site DB with changes since its last upload.
 4. Sends the control DB's last writes to its replica, and closes every DB.
+5. Deletes its lock in S3, so the next server starts immediately.
 
 **Note:** Nighttroop is down from here until it is healthy in [step 6](#step-6-wait-for-a-healthy-server), usually
 less than 1 minute. Caddy answers with a `502`.
@@ -122,6 +123,13 @@ If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4,
 - **Fix:** For an outage, wait. For wrong keys or a removed bucket, fix `nighttroop.env`. The rollback fails the same
   way, so `update.sh` exits with 2. When S3 works, run `docker compose up -d`.
 - Without `S3_URL`, S3 is off: no restore, no backups. The control plane shows this.
+
+Then the server takes the lock `<host>/server.lock` in the bucket, so no other server backs up to the same folder.
+
+- If another server holds the lock, the start waits. It continues when that server stops, or 60 seconds after that
+  server last wrote the lock. A server that Docker killed, or that crashed, leaves its lock, so the next start waits
+  those 60 seconds.
+- If S3 does not refuse a conditional write (`If-None-Match`), there is no lock. The server logs an error and starts.
 
 #### 5.3 Remove leftovers
 
@@ -250,7 +258,7 @@ again.
 | A migration on `main` was edited, not added, after the first production deploy | DBs past it never get the change. Old and new DBs differ. | CI refuses it when `data/sql/MIGRATIONS_FROZEN` exists. **Gap:** It does not exist yet (TODOs P0). |
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` (1800 seconds) and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |
-| Two servers use one bucket (such as a new VPS while the old one runs) | Each overwrites the other's backups | Stop the old server, with its last uploads, before you start the new one. |
+| Two servers use one bucket (such as a new VPS while the old one runs) | The second one waits at "Another server holds the S3 lock", and is not healthy | Stop the old server, with its last uploads. The new one then starts. |
 | A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to about a second old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-unavailable-sites)). |
 
 ## Staging deploy

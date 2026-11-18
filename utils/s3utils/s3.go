@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"os"
@@ -51,6 +52,12 @@ type S3Client struct {
 
 	// Common Config Varaibles Used In Paths
 	HostName string
+
+	// unlock ends keeping the server's lock, lockDone closes once it is released, and lockLost is whether another
+	// server took it, see lock.go
+	unlock   context.CancelFunc
+	lockDone chan struct{}
+	lockLost atomic.Bool
 }
 
 // MaxKeys is the number of keys S3 can operate on per batch.
@@ -98,7 +105,11 @@ var startWaits = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Seco
 // last error when none works, as a server that cannot reach its backups must not start, possibly empty, and upload
 // that over them. Without S3_URL, S3 is off: nothing is tried, restored or backed up.
 func (c *S3Client) Start(ctx context.Context) error {
-	return c.start(ctx, c.TestS3Client, startWaits)
+	if err := c.start(ctx, c.TestS3Client, startWaits); err != nil {
+		return err
+	}
+	// Before anything is restored or backed up, so it is from and to a bucket no other server is writing
+	return c.Lock(ctx)
 }
 
 func (c *S3Client) start(ctx context.Context, test func(context.Context) error, waits []time.Duration) error {
@@ -219,6 +230,8 @@ func (c *S3Client) RetentionRules() []types.LifecycleRule {
 	return []types.LifecycleRule{
 		rule(string(SiteRetention), &types.LifecycleRuleFilter{Tag: &types.Tag{Key: aws.String(retentionTag), Value: aws.String(string(SiteRetention))}}, c.ServerConfig.SiteBackupRetentionDays),
 		rule("control", &types.LifecycleRuleFilter{Prefix: aws.String(c.ReplicaPrefix() + "control")}, c.ServerConfig.ControlBackupRetentionDays),
+		// The lock is written again every lockHeartbeat, so its old versions are kept one day
+		rule("lock", &types.LifecycleRuleFilter{Prefix: aws.String(c.lockKey())}, 1),
 	}
 }
 
@@ -287,6 +300,9 @@ func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Re
 }
 
 func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, retention Retention, stream io.Reader) error {
+	if c.lockLost.Load() {
+		return ErrLockLost
+	}
 	_, err := c.uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket:  aws.String(c.Bucket),
 		Key:     aws.String(key),
