@@ -46,6 +46,8 @@ templ PushDevices(devices []*controlmodels.PushRegistration, admin bool) {
 	}
 }
 
+// pushDeviceRow is a registration, without its token, and for an admin a button to send it a test push. Test is
+// disabled while its push is sent, as Apple or Firebase can take a while, so one click sends one push.
 templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
 	{{ id := "control--push-device--" + strconv.FormatInt(device.ID, 10) }}
 	@table.Row(table.RowProps{ID: id}) {
@@ -78,6 +80,7 @@ templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
 						Size:    button.SizeSm,
 						Attributes: templ.Attributes{
 							"hx-post":       "/push-devices/" + strconv.FormatInt(device.ID, 10) + "/test",
+							"hx-disable":    "this",
 							"hx-target":     "#" + id + "--status",
 							"hx-swap":       "outerHTML",
 							"hx-status:4xx": "target:#toaster swap:beforeend",

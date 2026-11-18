@@ -90,6 +90,8 @@ func PushDevices(devices []*controlmodels.PushRegistration, admin bool) templ.Co
 	})
 }
 
+// pushDeviceRow is a registration, without its token, and for an admin a button to send it a test push. Test is
+// disabled while its push is sent, as Apple or Firebase can take a while, so one click sends one push.
 func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -135,7 +137,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(device.SiteID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 53, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 55, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -162,7 +164,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(device.IdentityName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 56, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 58, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -189,7 +191,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(string(device.App))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 59, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 61, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -202,7 +204,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(string(device.Provider))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 60, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 62, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -233,7 +235,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(device.BundleID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 63, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 65, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -251,7 +253,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 					var templ_7745c5c3_Var14 string
 					templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.push_devices.development"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 65, Col: 95}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 67, Col: 95}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 					if templ_7745c5c3_Err != nil {
@@ -283,7 +285,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(display.DateTime(&device.CreatedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 69, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 71, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -331,7 +333,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 						var templ_7745c5c3_Var19 string
 						templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.push_devices.test"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 87, Col: 48}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 90, Col: 48}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 						if templ_7745c5c3_Err != nil {
@@ -345,6 +347,7 @@ func pushDeviceRow(device *controlmodels.PushRegistration, admin bool) templ.Com
 						Size:    button.SizeSm,
 						Attributes: templ.Attributes{
 							"hx-post":       "/push-devices/" + strconv.FormatInt(device.ID, 10) + "/test",
+							"hx-disable":    "this",
 							"hx-target":     "#" + id + "--status",
 							"hx-swap":       "outerHTML",
 							"hx-status:4xx": "target:#toaster swap:beforeend",
@@ -409,7 +412,7 @@ func pushDeviceStatus(registration *sitemodels.PushRegistration) templ.Component
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "control.push_devices.never"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 99, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 102, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -419,7 +422,7 @@ func pushDeviceStatus(registration *sitemodels.PushRegistration) templ.Component
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(display.DateTime(registration.LastPushedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 101, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 104, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -438,7 +441,7 @@ func pushDeviceStatus(registration *sitemodels.PushRegistration) templ.Component
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(*registration.LastError)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 104, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_push_templ/push.templ`, Line: 107, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {

@@ -268,6 +268,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   the token.
 - Test (`POST /push-devices/{id}/test`), within the site's push limit, shows the new last push or the failure. Read
   only control identities get no button and 403.
+- While a test push is sent, its Test button is disabled, so one click sends one push.
 
 ### Push credentials
 
