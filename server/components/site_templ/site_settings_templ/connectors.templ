@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -55,6 +56,14 @@ templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
 		@heading.PageBeside(i18n.T(ctx, "site.settings.connectors.title"), badge.Live("site--settings--connectors--live", "/settings/connectors/events")) {
 			{ i18n.T(ctx, "site.settings.connectors.about") }
 		}
+		// An app on a phone uploads by itself, so the person who came here for one is sent to where its device is added
+		<p id="site--settings--connectors--phone" class="panel mb-4 mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 text-sm text-gray-700">
+			@icon.Smartphone(icon.Props{Class: "size-4 shrink-0 text-gray-500"})
+			<span>{ i18n.T(ctx, "site.settings.connectors.phone") }</span>
+			@nav.Link("site--settings--connectors--phone-link", "/settings/identities", "font-medium text-brand-night underline") {
+				{ i18n.T(ctx, "site.settings.connectors.phone_link") }
+			}
+		</p>
 		@connectorsLive()
 		@NightscoutConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeNightscout))
 		@DexcomConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeDexcom))
@@ -116,6 +125,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 						<div class="text-sm text-gray-500">
 							{ i18n.T(ctx, "site.settings.connectors.dexcom.about") }
 						</div>
+						<p id="site--settings--connectors--dexcom-needs" class="mt-1 max-w-2xl text-sm text-gray-500">{ i18n.T(ctx, "site.settings.connectors.dexcom.needs") }</p>
 					</div>
 					@form.Item(form.ItemProps{
 						Class: "flex items-start gap-2 justify-center",
@@ -225,6 +235,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 						<div class="text-sm text-gray-500">
 							{ i18n.T(ctx, "site.settings.connectors.libre.about") }
 						</div>
+						<p id="site--settings--connectors--libre-needs" class="mt-1 max-w-2xl text-sm text-gray-500">{ i18n.T(ctx, "site.settings.connectors.libre.needs") }</p>
 					</div>
 					@form.Item(form.ItemProps{
 						Class: "flex items-start gap-2 justify-center",
@@ -333,6 +344,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 						<div class="text-sm text-gray-500">
 							{ i18n.T(ctx, "site.settings.connectors.nightscout.about") }
 						</div>
+						<p id="site--settings--connectors--nightscout-needs" class="mt-1 max-w-2xl text-sm text-gray-500">{ i18n.T(ctx, "site.settings.connectors.nightscout.needs") }</p>
 					</div>
 					@form.Item(form.ItemProps{
 						Class: "flex items-start gap-2 justify-center",
