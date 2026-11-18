@@ -1114,6 +1114,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - for each Dexcom, LibreLinkUp or virtual connector;
   - a sync over the limit sends no request and records nothing, so a later run, a few seconds after, tries again;
   - a backfill is not limited.
+- A Nightscout connector's token is sent as one part of the request path. A `/`, `?` or `#` in it does not change
+  the path or query of the request.
 - Password, API secret, token, username, email and URL are not offered to browsers or password managers. The password
   is a masked text box (not a password box) with an eye to show it.
 
