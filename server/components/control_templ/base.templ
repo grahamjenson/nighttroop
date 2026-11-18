@@ -52,6 +52,13 @@ templ ControlBase() {
 	</html>
 }
 
+// s3OffReasons say, on the banner, why the server turned S3 off at start, by config.ServerStatus.S3Off
+var s3OffReasons = map[string]string{
+	config.S3OffConflict:    "control.status_banner.s3_off_conflict",
+	config.S3OffCheck:       "control.status_banner.s3_off_check",
+	config.S3OffReplication: "control.status_banner.s3_off_replication",
+}
+
 // StatusBanner warns control admins about optional services that are not working, resources running high, sites near
 // or at the limit MAX_SITES sets, and unavailable sites, each linked to its page
 templ StatusBanner(status config.ServerStatus) {
@@ -60,6 +67,8 @@ templ StatusBanner(status config.ServerStatus) {
 			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
 				if status.S3Down {
 					<p id="control--status-banner--s3-down" class="text-red-700"><strong>{ i18n.T(ctx, "control.status_banner.s3_down_title") }</strong> { i18n.T(ctx, "control.status_banner.s3_down_text") }</p>
+				} else if reason, ok := s3OffReasons[status.S3Off]; ok {
+					<p id="control--status-banner--s3-off" class="text-red-700"><strong>{ i18n.T(ctx, "control.status_banner.s3_off_title") }</strong> { i18n.T(ctx, reason) } { i18n.T(ctx, "control.status_banner.s3_off_text") }</p>
 				} else if !status.S3Working {
 					<p id="control--status-banner--s3"><strong>{ i18n.T(ctx, "control.status_banner.s3_title") }</strong> { i18n.T(ctx, "control.status_banner.s3_text") }</p>
 				}
