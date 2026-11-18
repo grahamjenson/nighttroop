@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv3"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nswebsockets"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -68,7 +69,7 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		})
 	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", r.URL.Path)
+		aslog.Refuse(r.Context(), http.StatusNotFound, "", "Nightscout router 404 for path", "path", r.URL.Path)
 		http.Error(w, "Not Found", http.StatusNotFound)
 	})
 	return r

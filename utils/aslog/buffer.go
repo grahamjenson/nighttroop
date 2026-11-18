@@ -92,7 +92,8 @@ type BufferHandler struct {
 	attrs  []slog.Attr
 }
 
-func (h BufferHandler) Enabled(context.Context, slog.Level) bool { return true }
+// Enabled is info and above, so the logs DB keeps no debug logs, which only standard out has
+func (h BufferHandler) Enabled(_ context.Context, l slog.Level) bool { return l >= slog.LevelInfo }
 
 func (h BufferHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	h.attrs = append(append([]slog.Attr(nil), h.attrs...), attrs...)

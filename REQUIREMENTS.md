@@ -20,6 +20,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - `development`: all passwords `password`, all TOTP codes `123123`. Does not start over `https`.
 - Production or staging: does not start if `KEY_SETS` holds a public key from `.env.dev` or `.env.test`. Says to make
   new keys with `cmd/keysets/create_keysets.go`.
+- If the jobs DB or the logs DB does not open, the server removes it, makes an empty one, logs an error, and starts.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
 - Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`.
 
@@ -287,7 +288,17 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Log storage
 
-- Every server log is kept in the logs, written in batches, without IP addresses.
+- Every server log at info, warn or error is kept in the logs, written in batches, without IP addresses. Debug logs
+  are only written to standard out.
+- Requests refused before signing in are each logged at debug only: a site that does not exist (410/404), a missing or
+  wrong token or JWT, or a control admin not signed in (401), a country not allowed (403), an unknown host or Nightscout
+  path (404), the global, global IP and site unauthenticated rate limits (429) and a refused Socket.IO authorize.
+  - Each minute, and on shutdown, one `Unauthenticated requests refused` info log for each reason and status with any,
+    on the control logs page only (no site): `reason`, `status`, `total`, `keys`, `other` and `top`, the 10 most
+    refused keys with their counts. A key is the subdomain of a site that does not exist, the host refused, or the
+    route's pattern, never an IP address, token or path.
+  - At most 100 keys of a reason are counted apart; the rest are `other`, so a sweep of every subdomain cannot grow
+    the server's memory.
 - Logs, events and errors keep their `request_id` or `job_id`.
 - Logs waiting to be written are capped at 1 MB. Past that, they are dropped and the logs say how many.
 - Request logs and Sentry show `REDACTED` for the query's `token`, `secret` and Socket.IO `sid`.

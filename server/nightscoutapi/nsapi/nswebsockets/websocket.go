@@ -3,7 +3,6 @@ package nswebsockets
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -17,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/utils/alarms"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -270,7 +270,7 @@ func (ws *Websocket) identity(socket *socketio.Socket, token, secret string) (co
 		identity, err = ws.tokenIdentity(ws.config, ctx, secret)
 	}
 	if err != nil {
-		slog.InfoContext(r.Context(), "Websocket authorization failed", "error", err)
+		aslog.Refuse(r.Context(), http.StatusUnauthorized, "", "Websocket authorization failed", "error", err)
 		return ctx, nil
 	}
 	nsIdentity, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role), identity.Client)

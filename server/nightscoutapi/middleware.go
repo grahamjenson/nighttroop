@@ -3,7 +3,6 @@ package nightscoutapi
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -26,7 +26,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 			// An IP out of its unauthenticated budget is refused before its token is checked, which can cost a bcrypt
 			if httputils.SiteUnauthSpent(cfg, r) {
 				w.WriteHeader(http.StatusTooManyRequests)
-				slog.InfoContext(ctx, "Site unauthenticated rate limit exceeded")
+				aslog.Refuse(ctx, http.StatusTooManyRequests, "", "Site unauthenticated rate limit exceeded")
 				return
 			}
 
@@ -41,7 +41,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 
 			// If the JWT token is present but incorrect we need to stop
 			if !keepGoing {
-				slog.InfoContext(r.Context(), "JWT Auth Failed for Nightscout API", "error", err.Error())
+				aslog.Refuse(r.Context(), http.StatusUnauthorized, "", "JWT Auth Failed for Nightscout API", "error", err.Error())
 				// A failed auth spends the IP's budget on the site, as an authenticated request does not
 				httputils.SiteUnauthWithinRateLimit(cfg, r)
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
@@ -58,7 +58,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 				return
 			}
 
-			slog.InfoContext(r.Context(), "JWT and Legacy Token Auth Failed for Nightscout API", "error", err.Error())
+			aslog.Refuse(r.Context(), http.StatusUnauthorized, "", "JWT and Legacy Token Auth Failed for Nightscout API", "error", err.Error())
 			httputils.SiteUnauthWithinRateLimit(cfg, r)
 			// In JSON, as every other error is and as Nightscout's 401 is
 			nsutils.WriteError(w, nsutils.ErrMissingCredentials)

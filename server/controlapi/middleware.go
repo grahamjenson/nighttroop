@@ -9,6 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -35,7 +36,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 				return
 			}
 
-			slog.InfoContext(r.Context(), "Control User Not Logged In", "error", err.Error())
+			aslog.Refuse(r.Context(), http.StatusUnauthorized, "", "Control User Not Logged In", "error", err.Error())
 
 			if httputils.GetAcceptType(r).API() {
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
