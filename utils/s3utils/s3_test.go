@@ -33,5 +33,6 @@ func TestRetentionRules(t *testing.T) {
 		require.Nil(t, rule.Expiration, "the current version must never expire")
 		days[aws.ToString(rule.Filter.Tag.Value)] = aws.ToInt32(rule.NoncurrentVersionExpiration.NoncurrentDays)
 	}
-	require.Equal(t, map[string]int32{string(s3utils.SiteRetention): 30, string(s3utils.ControlRetention): 90}, days)
+	// The lock is written again every few seconds, so its replaced versions are kept only a day
+	require.Equal(t, map[string]int32{string(s3utils.SiteRetention): 30, string(s3utils.ControlRetention): 90, string(s3utils.LockRetention): 1}, days)
 }

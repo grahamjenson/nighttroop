@@ -116,6 +116,9 @@ AAPS, Trio) send.
 - `S3_URL` set:
   - The server tests an upload at startup, and again over about half a minute. If it never works, the server stops.
   - Production and staging require both keys, and do not start with `minioadmin`.
+  - The server takes a lock in the bucket, so two servers do not back up to the same folder. For the lock, S3 must
+    refuse a conditional write (`If-None-Match` and `If-Match`), as AWS S3 does. If it does not, the server logs an
+    error and has no lock.
 
 ## Sites and connectors
 

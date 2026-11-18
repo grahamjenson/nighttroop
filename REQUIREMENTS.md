@@ -1834,6 +1834,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
+  - Only one server backs up to a host's folder of the bucket. A server takes the lock `<host>/server.lock` before it
+    restores or backs up, writes it again every 20 seconds, and deletes it after its last backup.
+  - While another server holds the lock, a server that starts waits. It takes the lock when the other server deletes
+    it, or 60 seconds after the other server last wrote it.
+  - If another server takes a server's lock, that server uploads no more, and logs an error.
+  - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
 
 #### Backups
 

@@ -65,6 +65,8 @@ func run() error {
 	if err := s3Client.Start(ctx); err != nil {
 		return err
 	}
+	// Released on the way out, after the last backup, so only then may another server back up to the bucket
+	defer s3Client.Unlock()
 
 	// Run some tests to make sure the server is setup properly
 	if err := ValidateServer(); err != nil {
