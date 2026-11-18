@@ -7,10 +7,10 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result.items"
 
-// A profile switch from the Nightscout API is listed, with its profile's schedules
+// A profile switch from the Nightscout API is listed, with its profile's schedules and its timeshift in hours as minutes
 NAME create_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
-B { "eventType": "Profile Switch", "created_at": "{{ time 5 }}", "profile": "Weekend", "percentage": 110, "timeshift": -60, "duration": 60, "profileJson": "{\"units\":\"mg/dL\",\"dia\":5,\"timezone\":\"UTC\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":50}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.8}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":120}]}" }
+B { "eventType": "Profile Switch", "created_at": "{{ time 5 }}", "profile": "Weekend", "percentage": 110, "timeshift": -1, "duration": 60, "profileJson": "{\"units\":\"mg/dL\",\"dia\":5,\"timezone\":\"UTC\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":50}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.8}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":120}]}" }
 ASSERT_STATUS 200
 
 NAME list_profile_switches

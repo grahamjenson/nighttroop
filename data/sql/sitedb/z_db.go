@@ -456,6 +456,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchSummaryProfileSwitchesStmt, err = db.PrepareContext(ctx, searchSummaryProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSummaryProfileSwitches: %w", err)
 	}
+	if q.searchSummaryStoreProfilesStmt, err = db.PrepareContext(ctx, searchSummaryStoreProfiles); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSummaryStoreProfiles: %w", err)
+	}
 	if q.searchTempBasalsStmt, err = db.PrepareContext(ctx, searchTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchTempBasals: %w", err)
 	}
@@ -1283,6 +1286,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchSummaryProfileSwitchesStmt: %w", cerr)
 		}
 	}
+	if q.searchSummaryStoreProfilesStmt != nil {
+		if cerr := q.searchSummaryStoreProfilesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSummaryStoreProfilesStmt: %w", cerr)
+		}
+	}
 	if q.searchTempBasalsStmt != nil {
 		if cerr := q.searchTempBasalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchTempBasalsStmt: %w", cerr)
@@ -1636,6 +1644,7 @@ type Queries struct {
 	searchSummaryDefaultProfilesStmt            *sql.Stmt
 	searchSummaryPeriodsStmt                    *sql.Stmt
 	searchSummaryProfileSwitchesStmt            *sql.Stmt
+	searchSummaryStoreProfilesStmt              *sql.Stmt
 	searchTempBasalsStmt                        *sql.Stmt
 	searchTempTargetsStmt                       *sql.Stmt
 	softDeleteActivitiesByTypeStmt              *sql.Stmt
@@ -1820,6 +1829,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchSummaryDefaultProfilesStmt:            q.searchSummaryDefaultProfilesStmt,
 		searchSummaryPeriodsStmt:                    q.searchSummaryPeriodsStmt,
 		searchSummaryProfileSwitchesStmt:            q.searchSummaryProfileSwitchesStmt,
+		searchSummaryStoreProfilesStmt:              q.searchSummaryStoreProfilesStmt,
 		searchTempBasalsStmt:                        q.searchTempBasalsStmt,
 		searchTempTargetsStmt:                       q.searchTempTargetsStmt,
 		softDeleteActivitiesByTypeStmt:              q.softDeleteActivitiesByTypeStmt,

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
-	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -153,13 +152,14 @@ func (k eventKind[T, C, D]) hardDelete(ctx context.Context, q *sitedb.Queries, e
 	return err
 }
 
-// AAPS sends a profile switch's timeshift in ms, and reads it back so, with its originalProfileName, as Nightscout's
-// profile functions read it; one from the careportal or Trio has no originalProfileName and is kept in minutes
+// A profile switch's timeshift is in hours, as Nightscout's careportal and T1DCarer send it and Nightscout's profile
+// functions read it, and kept in minutes. AAPS's, sent with its originalProfileName, is in ms, and given back so. The
+// unit is told by the switch sent, not by the client sending it, so it is the same rule for every client.
 func aapsTimeshift[N any, T interface{ ~int64 }](originalProfileName *N, timeshift *T) bool {
 	return originalProfileName != nil && timeshift != nil
 }
 
-const msPerMinute = 60_000
+const msPerMinute, minutesPerHour = 60_000, 60
 
 // Loop's override with no end is indefinite, kept as long as a temp target can be, a week
 const (
@@ -341,6 +341,8 @@ var (
 			}
 			if aapsTimeshift(source.OriginalProfileName, source.Timeshift) {
 				target.Timeshift = ptr(int64(*source.Timeshift) / msPerMinute)
+			} else if source.Timeshift != nil {
+				target.Timeshift = ptr(int64(*source.Timeshift) * minutesPerHour)
 			}
 
 			if source.ProfileJSON != nil {
@@ -408,6 +410,8 @@ var (
 			nightscoutmodels.UpdateProfileSwitchToTreatment(event, siteContext, treatment)
 			if event != nil && aapsTimeshift(event.OriginalProfileName, event.Timeshift) {
 				treatment.Timeshift = ptr(types.FlexibleInt64(*event.Timeshift * msPerMinute))
+			} else if event != nil && event.Timeshift != nil {
+				treatment.Timeshift = ptr(types.FlexibleInt64(*event.Timeshift / minutesPerHour))
 			}
 		},
 		toCreate: nightscoutmodels.ProfileSwitchCreate, create: (*sitedb.Queries).CreateProfileSwitch,
@@ -511,7 +515,7 @@ func fillTempBasal(ctx context.Context, q *sitedb.Queries, treatment nightscoutm
 		slog.ErrorContext(ctx, "failed to find the profile for a temp basal's percent", "error", err)
 		return err
 	}
-	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: at, Until: at, Earliest: at - percentSwitchMs, Limit: percentSwitches})
+	switches, err := q.SummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: at, Until: at, Earliest: at - percentSwitchMs, Limit: percentSwitches})
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to find the profile switches for a temp basal's percent", "error", err)
 		return err
@@ -520,7 +524,6 @@ func fillTempBasal(ctx context.Context, q *sitedb.Queries, treatment nightscoutm
 	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
 		location = siteContext.GetSiteTimezone()
 	}
-	slices.Reverse(switches)
 	basal := sitemodels.BasalAt(at, location, defaults, switches)
 	switch {
 	case basal == nil:
