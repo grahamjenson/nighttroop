@@ -185,6 +185,33 @@ func TestBackupSiteJobTruncatesOnlyWrittenSites(t *testing.T) {
 	require.NoError(t, err, "a site not written is not truncated")
 }
 
+// While S3 is off, a site uploaded before is copied once an interval like any other, not at each tick as its last copy
+// is not uploaded; once S3 is on that copy uploads at the next tick
+func TestBackupWrittenSitesWithS3OffCopiesAnUploadedSiteOnceAnInterval(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, uploads, fail := t.Context(), [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	site := fileSite(t, controlDB, "qaaaaaaa")
+	written(t, controlDB, site, time.Now())
+	require.NoError(t, jobs.BackupWrittenSites(ctx, time.Now()))
+	require.Len(t, uploads, 1)
+
+	jobs.ServerConfig.Status.S3Working = false
+	time.Sleep(2 * time.Millisecond)
+	written(t, controlDB, site, time.Now())
+	require.NoError(t, jobs.BackupWrittenSites(ctx, time.Now()))
+	copied := *stored(t, controlDB, site).BackedUpAt
+	require.Greater(t, copied, *stored(t, controlDB, site).BackupUploadedAt)
+
+	time.Sleep(2 * time.Millisecond)
+	require.NoError(t, jobs.BackupWrittenSites(ctx, time.Now().Add(-time.Hour)))
+	require.Equal(t, copied, *stored(t, controlDB, site).BackedUpAt, "copied again within the interval")
+
+	jobs.ServerConfig.Status.S3Working = true
+	require.NoError(t, jobs.BackupWrittenSites(ctx, time.Now().Add(-time.Hour)))
+	require.Len(t, uploads, 2)
+}
+
 // A site records when its backup was copied and when it was uploaded: only once S3 has it, not while S3 is off
 func TestBackupWrittenSitesRecordsTheBackupOnTheSite(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)

@@ -1983,6 +1983,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A site whose copy is already uploaded is not uploaded again.
 - A failed upload is tried again at the next tick.
+- While S3 is off, a site uploaded before is copied at most one time each interval, not at each tick. Its copy uploads
+  at the next tick after S3 is on.
 - A live site that is not open is left out. The other sites are backed up.
 - Each tick deletes the sites never used, then truncates each site just before its backup copy. A site with no write
   is not truncated, as it does not grow.
