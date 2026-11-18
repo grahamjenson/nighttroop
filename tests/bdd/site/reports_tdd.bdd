@@ -11,6 +11,8 @@ ASSERT_NEW_URL
 ASSERT_PATH /reports/tdd
 ASSERT_TITLE TDD · Nighttroop
 ASSERT_VISIBLE #site--reports--tdd--previous
+// Its name is initials, so the page says what they are
+ASSERT_TEXT_EQUALS #site--reports--tdd--about Total Daily Dose: the insulin given each day.
 ASSERT_DRAWN #site--reports--tdd--next[disabled]
 ASSERT_VISIBLE #site--reports--tdd--empty
 ASSERT_TEXT_EQUALS #site--reports--tdd--days 0

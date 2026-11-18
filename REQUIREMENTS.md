@@ -690,6 +690,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   within range.
 - Days, weeks and months are the site's: from midnight, dated, listed and linked in its timezone, for all viewers.
 - Quick clicks on tabs, periods and arrows show the last one, logging no error for replaced pages.
+- A report named by its initials says what they are beside its name: AGP is Ambulatory Glucose Profile, and TDD is
+  Total Daily Dose, each with a few words on what it shows.
 
 | Report | Path | Default |
 |---|---|---|

@@ -12,6 +12,8 @@ CLICK #site--reports--agp-button
 ASSERT_STATUS 200
 ASSERT_PATH /reports/agp
 ASSERT_TITLE AGP · Nighttroop
+// Its name is initials, so the page says what they are
+ASSERT_TEXT_EQUALS #site--reports--about Ambulatory Glucose Profile: how much time glucose is in range, and a usual day.
 ASSERT_VISIBLE #site--reports--no-glucose
 // It says why a new site's report is empty, and when its readings will show
 ASSERT_VISIBLE #site--reports--no-glucose >> text=show here the day after
