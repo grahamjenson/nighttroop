@@ -83,23 +83,33 @@ func TimeAgo(ctx context.Context, ms int64, now time.Time) string {
 // as from a phone's clock running fast, is "just now".
 func RoundedAgo(ctx context.Context, ms int64, now time.Time) string {
 	since := now.Sub(time.UnixMilli(ms))
-	ago := func(how string) string { return i18n.T(ctx, "common.time.ago", i18n.Data{"HowLong": how}) }
-	switch {
-	case since < time.Minute:
+	if since < time.Minute {
 		return i18n.T(ctx, "common.time.just_now")
-	case since < time.Hour:
-		return ago(i18n.N(ctx, "common.time.minutes", int(since.Minutes())))
 	}
-	hours := int(since.Round(time.Hour).Hours())
+	return i18n.T(ctx, "common.time.ago", i18n.Data{"HowLong": rounded(ctx, since)})
+}
+
+// RoundedIn is how long after now the time in ms is, rounded as RoundedAgo rounds, as "in 58 minutes", for a time
+// planned ahead, as carbs a loop expects later
+func RoundedIn(ctx context.Context, ms int64, now time.Time) string {
+	return i18n.T(ctx, "common.time.in", i18n.Data{"HowLong": rounded(ctx, time.UnixMilli(ms).Sub(now))})
+}
+
+// rounded is how long d is in words, in whole minutes under an hour, else to the nearest hour
+func rounded(ctx context.Context, d time.Duration) string {
+	if d < time.Hour {
+		return i18n.N(ctx, "common.time.minutes", int(d.Minutes()))
+	}
+	hours := int(d.Round(time.Hour).Hours())
 	days := hours / 24
 	switch {
 	case days == 0:
-		return ago(i18n.N(ctx, "common.time.hours", hours))
+		return i18n.N(ctx, "common.time.hours", hours)
 	case hours%24 == 0:
-		return ago(i18n.N(ctx, "common.time.days", days))
+		return i18n.N(ctx, "common.time.days", days)
 	}
-	return ago(i18n.T(ctx, "common.time.days_and_hours", i18n.Data{"Days": i18n.N(ctx, "common.time.days", days),
-		"Hours": i18n.N(ctx, "common.time.hours", hours%24)}))
+	return i18n.T(ctx, "common.time.days_and_hours", i18n.Data{"Days": i18n.N(ctx, "common.time.days", days),
+		"Hours": i18n.N(ctx, "common.time.hours", hours%24)})
 }
 
 // Duration is how long ms milliseconds is, as "250 ms", "1.5 s", "2 min 5 s" or "3 h 20 min", leaving off a
