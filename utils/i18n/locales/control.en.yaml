@@ -354,6 +354,7 @@ control:
     download_db: "Download DB"
     download_db_intro: "Downloads the same zip its admins get from Download Data. Its admins see the download in its events."
     db_here_only: "Offered while its DB is here, before it is archived."
+    needs_db: "Its DB is unavailable. Fix it first, above."
     disable: "Disable"
     disable_intro: "Stops serving the site. Its data is kept."
     disable_confirm: "Disable this site? It will stop being served."
