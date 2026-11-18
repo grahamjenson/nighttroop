@@ -38,8 +38,9 @@ const (
 	maxCaptureLength         = 262144
 )
 
+// NewLogsDB opens the logs DB, made again, empty, if it does not open, and starts writing the server's logs to it
 func NewLogsDB(ctx context.Context, cfg *config.ServerConfig) (*LogsDB, error) {
-	rawDB, err := logsdb.NewDB(ctx, cfg)
+	rawDB, err := openDisposable(ctx, logsdb.GetPath(cfg), func() (*logsdb.DB, error) { return logsdb.NewDB(ctx, cfg) })
 	if err != nil {
 		return nil, fmt.Errorf("cannot open logs db: %w", err)
 	}
