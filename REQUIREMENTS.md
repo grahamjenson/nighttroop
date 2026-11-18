@@ -654,6 +654,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - The home page: latest glucose and its age, the loop's IOB and COB, treatments, and each device's latest status.
 - The devices are under a **Devices** title with a link to the Device Status page. With no device, neither shows.
+- If a device's pump is suspended, its card shows an amber **Suspended** badge. `GET /summary` gives `pump_state`
+  `suspended` in `device_statuses` and `loop`.
 - In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
@@ -1802,6 +1804,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   `status.bolusing`, `status.suspended`, and battery `string` and `display`.
 - After the status as sent is cleared: Loop's pump `pumpID`, `suspended` and `bolusing`, as sent. A follower still
   sees an older status's delivery suspended.
+- The pump's state is kept as `pump_state`:
+  - `suspended` if Loop sends `pump.suspended` true, Trio `pump.status.suspended` true, or AAPS
+    `pump.status.status` "suspended".
+  - `normal` if the pump sends one of them and it is not suspended. Else, no state.
 - Out of range, not stored (the rest kept, and the site's client errors show it): uploader or pump battery below 0 or
   over 100% (e.g. Trio's `uploader.battery` -100 for an unknown phone battery), reservoir below 0 or over 10000 U.
 
