@@ -690,6 +690,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   within range.
 - Days, weeks and months are the site's: from midnight, dated, listed and linked in its timezone, for all viewers.
 - Quick clicks on tabs, periods and arrows show the last one, logging no error for replaced pages.
+- A report named by its initials says what they are beside its name: AGP is Ambulatory Glucose Profile, and TDD is
+  Total Daily Dose, each with a few words on what it shows.
 
 | Report | Path | Default |
 |---|---|---|
@@ -835,6 +837,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - No glucose for over a month, or ever: a setup guide replaces the summary, until readings arrive and show live.
 - Each step opens its page:
   - Admin: get glucose in (the Nightscout URL for AAPS, Trio or xDrip+, or a Dexcom, LibreLinkUp or Nightscout sync).
+    - The Nightscout URL has a button that copies it.
+    - **Add your phone** opens Users & Devices with the Add Device modal open. A later visit to that page does not
+      open the modal.
+    - **Set up a connector** opens Connectors.
   - Admin: add people and devices.
   - All users: settings and alarms.
 - Non-admins see that the admin sets up data and users.
@@ -851,6 +857,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - A table for each kind, newest first and paged: add, view, edit, delete.
 - Add (the main action): right of the title, below it on a phone. Same on presets and push credentials.
+- An empty table of glucose readings, insulin doses, food intakes, temp basals, temp targets, profile switches,
+  activities, notifications or event groups says that a new site has nothing until an app or a connector sends it,
+  with a link to Getting Started. A table with a row does not.
 - Each main button has an icon before its words: save, add, delete, reset, backfill, filter, print and regenerate.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
@@ -1049,6 +1058,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 Third party integrations, each syncing from one service: **Dexcom** and **LibreLinkUp** (each with its region),
 another **Nightscout** site, or the **virtual connector** (realistic test data).
 
+#### Connectors page help
+
+- The page says that a connector pulls glucose into Nighttroop from another service.
+- A note says that AAPS, Trio, Loop and xDrip+ upload from the phone with no connector. Its link, **Add the phone as a
+  device**, opens Users & Devices.
+- Each of the Nightscout, Dexcom Share and FreeStyle Libre connectors says what it needs before it is turned on:
+  - Nightscout: the site's address, and its API secret or a token that can read it.
+  - Dexcom Share: the username and password of the account that wears the sensor, with Share on and one follower.
+  - FreeStyle Libre: the email and password of a LibreLinkUp account that the person with the sensor invited.
+
 #### Virtual connector
 
 - Only on development, test or staging servers (`MODE`). In production: not offered, save or enable refused, and one
@@ -1141,6 +1160,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Site alarms are each identity's default, which it can change.
 - An active alarm shows live in a banner below the header on all pages, and can be snoozed.
 - Impossible settings are refused (for example a high below the low).
+- The alarms page says that every alarm is off until it is turned on, and that an alarm that goes off shows in a
+  banner at the top of every page, where it can be snoozed for 30 minutes.
 
 ### Settings
 
@@ -1902,6 +1923,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - The start logs which it does: keeps the control DB there, restores it from the replica, or starts a new one, as
     there is no replica or S3 is off (a warning).
   - `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
+  - A control DB is replicated only to the replica it was restored from, or first replicated to. The file
+    `controldb.sqlite.replica` next to it has that replica's address.
+  - If a start finds a control DB that is not known to be the replica's, as one made while S3 was off or was another
+    bucket or host, it does not replicate it over the replica:
+    - If S3 has no replica, the control DB is replicated.
+    - If the control DB has no control admin, the server moves it to `controldb.sqlite.replaced-<time>` and restores
+      the replica.
+    - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
+      one of the two.
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
@@ -2165,6 +2195,13 @@ harder:
   A repeated finish is refused.
 - A passkey sign in or add finishes only from the IP that started it. Each IP keeps its 5 newest unfinished ones.
 - If one IP starts many passkey sign ins, it removes only its own oldest. Other IPs' sign ins still finish.
+
+#### Sign in help
+
+- The sign in page has **Trouble signing in?**, closed until clicked. Opened, it says:
+  - a person's username and password come from the site's admin, who can give new ones;
+  - an app, such as AAPS, Trio or xDrip+, does not sign in there: it uses the Nightscout URL and its own token;
+  - an admin who cannot sign in gets back in with the backup key, with a link to the recover page.
 
 #### Refused sign ins
 

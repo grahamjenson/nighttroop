@@ -72,7 +72,9 @@ templ Pager(p Props) {
 // row, so it goes once a row is added and comes back once the last is deleted.
 templ Empty(id string, columns int, text string) {
 	<tr id={ id } data-empty class="hidden only:table-row">
-		@table.EmptyCell(columns, text)
+		@table.EmptyCell(columns, text) {
+			{ children... }
+		}
 	</tr>
 }
 

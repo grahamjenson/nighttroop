@@ -4,10 +4,14 @@ package replica
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io/fs"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/benbjohnson/litestream"
 	"github.com/benbjohnson/litestream/s3"
@@ -25,6 +29,8 @@ type Replica struct {
 	mu    sync.Mutex
 	store *litestream.Store
 	path  string
+	// location is where the replica is in S3, which the control DB it is of keeps beside it, see Owns
+	location string
 }
 
 // New is the replica of the control DB in the server's S3 bucket, or nil when S3 is off. Over HTTPS S3 encrypts it
@@ -37,7 +43,62 @@ func New(cfg *config.ServerConfig, bucket *s3utils.S3Client) *Replica {
 	if !encrypted {
 		slog.Warn("S3_URL is not HTTPS, so the control DB's replica is not encrypted")
 	}
-	return &Replica{client: Client(cfg, bucket, encrypted)}
+	client := Client(cfg, bucket, encrypted)
+	return &Replica{client: client, location: client.Endpoint + "/" + client.Bucket + "/" + client.Path}
+}
+
+// ownerFile is the file beside the control DB at path that names the replica it was restored from or replicates to
+func ownerFile(path string) string {
+	return path + ".replica"
+}
+
+// Owns is whether the control DB at path is known to be the one this replica is of: it was restored from it, or has
+// replicated to it. A DB that replicated before it kept this file, known by Litestream's folder beside it, is too.
+func (r *Replica) Owns(path string) bool {
+	owner, err := os.ReadFile(ownerFile(path))
+	if errors.Is(err, fs.ErrNotExist) {
+		_, err = os.Stat(litestream.NewDB(path).MetaPath())
+		return err == nil
+	}
+	return err == nil && string(owner) == r.location
+}
+
+func (r *Replica) own(path string) error {
+	return os.WriteFile(ownerFile(path), []byte(r.location), 0o600)
+}
+
+// Adopt settles a control DB at path that this replica is not known to be of, as one made while S3 was off, or was
+// another bucket or host, before it is replicated over the replica. It is whether to replicate it:
+//   - with no replica in S3, it is the replica's first DB;
+//   - one never set up holds nothing, so it is moved aside and the replica restored in its place;
+//   - one set up is left as it is and not replicated, as only a person knows which of the two to keep.
+func (r *Replica) Adopt(ctx context.Context, path string, setUp func() (bool, error)) (bool, error) {
+	if r == nil || r.Owns(path) {
+		return true, nil
+	}
+	staged := path + ".restoring"
+	_ = os.Remove(staged)
+	found, err := r.Restore(ctx, staged)
+	_ = os.Remove(ownerFile(staged))
+	if err != nil {
+		return false, err
+	}
+	if !found {
+		return true, r.own(path)
+	}
+	if keep, err := setUp(); err != nil || keep {
+		return false, errors.Join(err, os.Remove(staged))
+	}
+	aside := fmt.Sprintf("%s.replaced-%d", path, time.Now().UnixMilli())
+	for _, suffix := range []string{"", "-wal", "-shm"} {
+		if err := os.Rename(path+suffix, aside+suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return false, err
+		}
+	}
+	if err := os.Rename(staged, path); err != nil {
+		return false, err
+	}
+	return true, r.own(path)
 }
 
 // Client is the Litestream S3 client of the control DB's replica, encrypted with its key when encrypted
@@ -65,6 +126,9 @@ func (r *Replica) Start(ctx context.Context, path string) error {
 	}
 	db := litestream.NewDB(path)
 	db.Replica = litestream.NewReplicaWithClient(db, r.client)
+	if err := r.own(path); err != nil {
+		return err
+	}
 	r.path, r.store = path, litestream.NewStore([]*litestream.DB{db}, litestream.DefaultCompactionLevels)
 	// Litestream logs each second's sync, and each compaction, so only its warnings and errors are kept
 	r.store.Logger = slog.New(warnings{slog.Default().Handler()}).With(litestream.LogKeySystem, litestream.LogSystemStore)
@@ -130,6 +194,9 @@ func (r *Replica) Restore(ctx context.Context, path string) (bool, error) {
 	err := litestream.NewReplicaWithClient(nil, r.client).Restore(ctx, opt)
 	if errors.Is(err, litestream.ErrTxNotAvailable) || errors.Is(err, litestream.ErrNoSnapshots) {
 		return false, nil
+	}
+	if err == nil {
+		err = r.own(path)
 	}
 	return err == nil, err
 }

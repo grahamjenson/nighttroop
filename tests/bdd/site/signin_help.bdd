@@ -1,0 +1,19 @@
+INCLUDE steps/new_site_admin.steps
+
+// Signed out, the sign in page has help that is closed until it is asked for
+CLICK #site--settings-menu
+CLICK #site--settings--logout-button
+ASSERT_PATH /login
+ASSERT_VISIBLE #site--login--help >> text=Trouble signing in?
+ASSERT_NOT_VISIBLE #site--login--help--recover-link
+
+// Opened, it says who gives a person their credentials, that an app does not sign in here, and how the admin gets
+// back in, with a link to the recover page
+CLICK #site--login--help summary
+ASSERT_VISIBLE #site--login--help >> text=Your username and password come from this site's admin
+ASSERT_VISIBLE #site--login--help >> text=does not sign in here
+ASSERT_VISIBLE #site--login--help--recover-link
+SCREENSHOT signin_help
+CLICK #site--login--help--recover-link
+ASSERT_PATH /recover
+ASSERT_VISIBLE #public--recover--form

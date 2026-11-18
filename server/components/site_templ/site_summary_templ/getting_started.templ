@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -37,6 +38,9 @@ func nsURL(ctx context.Context) string {
 	return ""
 }
 
+// stepLinkClass is how a step's link to the page it is done on looks
+const stepLinkClass = "inline-flex items-center rounded-lg bg-brand-night px-4 py-2 font-medium text-white hover:bg-brand-night/90"
+
 // GettingStartedPage is the guide to setting up the site on a page of its own, from My Account
 templ GettingStartedPage() {
 	@heading.Title(i18n.T(ctx, "site.summary.getting_started.title"))
@@ -58,13 +62,22 @@ templ GettingStarted() {
 		<ol class="grid gap-4 md:grid-cols-2">
 			if isAdmin(ctx) {
 				@step("site--getting-started--data", "1", icon.Droplet, i18n.T(ctx, "site.summary.getting_started.data")) {
-					<p>
-						<strong>{ i18n.T(ctx, "site.summary.getting_started.from_phone") }</strong> { i18n.T(ctx, "site.summary.getting_started.set_url") }
-						<code id="site--getting-started--ns-url" class="my-1 block break-all rounded bg-gray-100 px-2 py-1 text-gray-900">{ nsURL(ctx) }</code>
-						{ i18n.T(ctx, "site.summary.getting_started.with_token") }
-					</p>
+					<p><strong>{ i18n.T(ctx, "site.summary.getting_started.from_phone") }</strong> { i18n.T(ctx, "site.summary.getting_started.set_url") }</p>
+					<div class="my-1 flex items-center gap-1 rounded bg-gray-100 py-0.5 pl-2 pr-1">
+						<code id="site--getting-started--ns-url" class="min-w-0 flex-1 break-all text-gray-900">{ nsURL(ctx) }</code>
+						@copybutton.CopyButton(copybutton.Props{ID: "site--getting-started--ns-url-copy", TargetID: "site--getting-started--ns-url", Label: i18n.T(ctx, "site.summary.getting_started.copy_url")})
+					</div>
+					<p>{ i18n.T(ctx, "site.summary.getting_started.with_token") }</p>
 					<p class="mt-2"><strong>{ i18n.T(ctx, "site.summary.getting_started.from_cloud") }</strong> { i18n.T(ctx, "site.summary.getting_started.pull_from") }</p>
-					@stepLink("site--getting-started--connectors-link", "/settings/connectors", i18n.T(ctx, "site.summary.getting_started.connectors_link"))
+					<div class="mt-auto flex flex-wrap gap-2 pt-4">
+						// Opens Users & Devices with its Add Device modal, which it opens when asked to as the page loads
+						<a id="site--getting-started--add-device-link" href="/settings/identities" class={ stepLinkClass } onclick="try { sessionStorage.setItem('site--identities--add', 'device') } catch (e) {}" { nav.Attributes("/settings/identities")... }>
+							{ i18n.T(ctx, "site.summary.getting_started.add_device_link") }
+						</a>
+						@nav.Link("site--getting-started--connectors-link", "/settings/connectors", stepLinkClass) {
+							{ i18n.T(ctx, "site.summary.getting_started.connectors_link") }
+						}
+					</div>
 				}
 				@step("site--getting-started--identities", "2", icon.Users, i18n.T(ctx, "site.summary.getting_started.identities")) {
 					<p>{ i18n.T(ctx, "site.summary.getting_started.identities_text") }</p>
@@ -127,7 +140,7 @@ templ step(id, number string, ic func(...icon.Props) templ.Component, title stri
 // stepLink opens the page a step is done on, at the bottom of its card
 templ stepLink(id, path, text string) {
 	<div class="mt-auto pt-4">
-		@nav.Link(id, path, "inline-flex items-center rounded-lg bg-brand-night px-4 py-2 font-medium text-white hover:bg-brand-night/90") {
+		@nav.Link(id, path, stepLinkClass) {
 			{ text }
 		}
 	</div>

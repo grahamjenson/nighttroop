@@ -22,6 +22,23 @@ ASSERT_PATH /data/glucose
 CLICK #site--nav--home-icon
 ASSERT_VISIBLE #site--getting-started
 
+// The Nightscout URL has a button to copy it, and the phone's device is added from the guide: it opens Users & Devices
+// with the Add Device modal open, which a later visit to the page does not open again
+ASSERT_VISIBLE #site--getting-started--ns-url-copy
+CLICK #site--getting-started--add-device-link
+ASSERT_PATH /settings/identities
+ASSERT_VISIBLE #site--identities--add-device
+SCREENSHOT getting_started_add_device
+CLICK #site--identities--add-device--close
+ASSERT_NOT_VISIBLE #site--identities--add-device
+CLICK #site--nav--home-icon
+ASSERT_VISIBLE #site--getting-started
+CLICK #site--getting-started--identities-link
+ASSERT_PATH /settings/identities
+ASSERT_TEXT_VISIBLE Admins & Users
+ASSERT_NOT_VISIBLE #site--identities--add-device
+CLICK #site--nav--home-icon
+
 // Each step opens the page it is done on, and the guide is always on My Account and in the menu, to come back to
 CLICK #site--getting-started--connectors-link
 ASSERT_PATH /settings/connectors

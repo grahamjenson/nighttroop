@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -70,10 +71,29 @@ templ Login(name string) {
 					}
 				</form>
 				@PasskeyLogin("site--login")
+				@loginHelp()
 				@authenticator.InvalidAfterError("site--login--form")
 			}
 		}
 	}
+}
+
+// loginHelp says, closed until asked for, who gives a person their credentials, that an app does not sign in here, and
+// how the admin gets back in with the backup key
+templ loginHelp() {
+	<details id="site--login--help" class="mt-4 text-sm text-gray-600">
+		<summary class="cursor-pointer text-center font-medium text-brand-night">{ i18n.T(ctx, "site.login.help") }</summary>
+		<ul class="mt-2 list-disc space-y-1 pl-5">
+			<li>{ i18n.T(ctx, "site.login.help_person") }</li>
+			<li>{ i18n.T(ctx, "site.login.help_device") }</li>
+			<li>
+				{ i18n.T(ctx, "site.login.help_admin") }
+				if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && siteContext.Config != nil {
+					<a id="site--login--help--recover-link" href={ templ.SafeURL(siteContext.Config.RecoverURL()) } class="whitespace-nowrap font-medium text-brand-night underline">{ i18n.T(ctx, "site.login.help_recover") }</a>
+				}
+			</li>
+		</ul>
+	</details>
 }
 
 // LoginTOTP is the login's second step, which takes the place of its first's form, so it stays in the window's middle

@@ -1,0 +1,17 @@
+INCLUDE steps/new_site_admin.steps
+
+// The connectors page says what a connector is, and what each one needs before it is turned on
+CLICK #site--settings-menu
+CLICK #site--nav--menu--connectors
+ASSERT_PATH /settings/connectors
+ASSERT_TEXT_VISIBLE A connector pulls your glucose into Nighttroop from another service. Turn on the one you use.
+ASSERT_VISIBLE #site--settings--connectors--nightscout-needs >> text=its API secret or a token that can read it
+ASSERT_VISIBLE #site--settings--connectors--dexcom-needs >> text=turn on Share and invite one follower
+ASSERT_VISIBLE #site--settings--connectors--libre-needs >> text=a LibreLinkUp account, not the LibreLink one
+SCREENSHOT connectors_help
+
+// An app on a phone needs no connector, so the page sends its admin to where the phone is added as a device
+ASSERT_VISIBLE #site--settings--connectors--phone >> text=AAPS, Trio, Loop and xDrip+ upload from the phone by themselves, with no connector.
+CLICK #site--settings--connectors--phone-link
+ASSERT_PATH /settings/identities
+ASSERT_VISIBLE #site--identities--add-device-button

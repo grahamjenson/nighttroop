@@ -23,6 +23,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 		Above:       searchTotals("site--food", "site.data.food_intakes.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
+			EmptyHint: newSiteHint(),
 			ID:      "foodIntakesTable",
 			EmptyID: "site--food--empty",
 			Empty:   i18n.T(ctx, "site.data.food_intakes.empty"),

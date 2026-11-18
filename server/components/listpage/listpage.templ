@@ -34,7 +34,9 @@ type TableProps struct {
 	Columns []table.Column
 	EmptyID string
 	Empty   string
-	Static  bool
+	// EmptyHint is under Empty, such as how a new site gets its first rows
+	EmptyHint templ.Component
+	Static    bool
 	Rows    int
 }
 
@@ -89,7 +91,11 @@ templ Table(p TableProps) {
 // empty is the row saying the table has no rows: always there, or for Static rows, there only when there are none
 templ empty(p TableProps) {
 	if !p.Static {
-		@pager.Empty(p.EmptyID, len(p.Columns), p.Empty)
+		@pager.Empty(p.EmptyID, len(p.Columns), p.Empty) {
+			if p.EmptyHint != nil {
+				@p.EmptyHint
+			}
+		}
 	} else if p.Rows == 0 {
 		@table.Empty(p.EmptyID, len(p.Columns), p.Empty)
 	}
