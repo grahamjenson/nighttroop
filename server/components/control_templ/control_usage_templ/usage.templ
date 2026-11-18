@@ -180,30 +180,22 @@ templ Usage(model controlmodels.Usage) {
 			@stat.NoteTile("control--usage--pushes-today", i18n.T(ctx, "control.usage.pushes_today"), fmt.Sprint(model.Pushes.Today.Sent), i18n.T(ctx, "control.usage.pushes_failed_today", i18n.Data{"FailedCount": model.Pushes.Today.Failed}))
 			@stat.NoteTile("control--usage--pushes-week", i18n.T(ctx, "control.usage.pushes_week"), fmt.Sprint(model.Pushes.Week.Sent), i18n.T(ctx, "control.usage.pushes_failed_week", i18n.Data{"FailedCount": model.Pushes.Week.Failed}))
 		}
-		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.server"), Class: tiles}) {
-			@stat.NoteTile("control--usage--cpu", i18n.T(ctx, "control.usage.cpu"), fmt.Sprintf("%.1f%%", model.Server.CPUPercent), i18n.T(ctx, "control.usage.cpu_note", i18n.Data{"MaxPercent": 100 * model.Server.CPUs, "CoreCount": model.Server.CPUs}))
-			if model.Server.ResidentBytes > 0 {
-				// All the process's memory, as the OS counts it: SQLite's is outside Go's
-				@stat.NoteTile("control--usage--memory", i18n.T(ctx, "control.usage.memory"), display.Bytes(float64(model.Server.ResidentBytes)), i18n.T(ctx, "control.usage.memory_heap", i18n.Data{"HeapBytes": display.Bytes(float64(model.Server.HeapBytes))}))
-			} else {
-				@stat.NoteTile("control--usage--memory", i18n.T(ctx, "control.usage.memory"), display.Bytes(float64(model.Server.HeapBytes)), i18n.T(ctx, "control.usage.memory_os", i18n.Data{"SysBytes": display.Bytes(float64(model.Server.SysBytes))}))
-			}
-			@stat.NoteTile("control--usage--goroutines", i18n.T(ctx, "control.usage.goroutines"), fmt.Sprint(model.Server.Goroutines), i18n.T(ctx, "control.usage.gcs", i18n.Data{"GCCount": model.Server.GCs}))
-			@stat.NoteTile("control--usage--disk", i18n.T(ctx, "control.usage.db_disk_used"), display.Bytes(float64(model.Server.DiskUsed)), i18n.T(ctx, "control.usage.disk_free", i18n.Data{"FreeBytes": display.Bytes(float64(model.Server.DiskFree))}))
-			@stat.NoteTile("control--usage--uptime", i18n.T(ctx, "control.usage.uptime"), display.Duration(ctx, model.Server.UptimeMs), i18n.T(ctx, "control.usage.since_start"))
-		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.resources")}) {
-			@resourceRangeToggles(model.ResourcesRange)
-			if len(model.ResourceReadings) == 0 {
-				<p id="control--usage--resources-empty" class="text-sm text-gray-500">{ i18n.T(ctx, "control.usage.resources_empty") }</p>
-			} else {
-				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-					@resourceGraph(model, "cpu", i18n.T(ctx, "control.usage.mean_cpu"), cpuPercent, percent, -1, 100*float64(max(model.Server.CPUs, 1)))
-					@resourceGraph(model, "memory", i18n.T(ctx, "control.usage.memory_used"), memoryPercent, percent, model.MemoryAlertPercent, 100)
-					@resourceGraph(model, "goroutines", i18n.T(ctx, "control.usage.goroutines"), goroutines, whole, -1, mostGoroutines(model))
-					@resourceGraph(model, "disk", i18n.T(ctx, "control.usage.db_disk_used"), diskPercent, percent, model.DiskAlertPercent, 100)
+			<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+				<div class="text-sm text-gray-500">
+					{ i18n.T(ctx, "control.usage.uptime") }
+					<span id="control--usage--uptime" class="font-semibold tabular-nums text-gray-900">{ display.Duration(ctx, model.Server.UptimeMs) }</span>
 				</div>
+				@resourceRangeToggles(model.ResourcesRange)
+			</div>
+			if len(model.ResourceReadings) == 0 {
+				<p id="control--usage--resources-empty" class="mb-3 text-sm text-gray-500">{ i18n.T(ctx, "control.usage.resources_empty") }</p>
 			}
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+				for _, r := range resources(ctx, model) {
+					@resourceBlock(model, r)
+				}
+			</div>
 		}
 		@card.Card(card.Props{Title: i18n.T(ctx, "control.usage.server_dbs")}) {
 			<div class="space-y-4">
@@ -273,36 +265,80 @@ templ resourceRangeToggles(selected string) {
 	</div>
 }
 
-// resourceGraph is a small graph of a resource's percent over the checks kept, with a dashed line at the level it
-// warns at, unless alertPercent is negative
-// resourceGraph is a resource's checks drawn from 0 at its bottom to top at its top, with its alert level dashed, and,
-// hovering a column, the value and age of the check nearest it
-templ resourceGraph(model controlmodels.Usage, name string, label string, value func(controlmodels.ResourceReading) *float64, show func(float64) string, alertPercent int, top float64) {
-	<div class="rounded-lg border border-gray-200 p-3">
+// resource is one of the server's resources: its figure now, with a note on what it counts, and its checks' graph
+type resource struct {
+	name, label, text, note string
+	// graphLabel names what the graph draws; value is a check's value, shown with show, from 0 up to top, with a
+	// dashed line at alert, unless it is negative
+	graphLabel string
+	value      func(controlmodels.ResourceReading) *float64
+	show       func(float64) string
+	alert      int
+	top        float64
+}
+
+// resources are the server's CPU, as htop shows it, 100% for each core; its memory, all the OS counts for it, with
+// SQLite's outside Go's heap, or Go's own where the OS's is not known; its goroutines; and its DBs' disk
+func resources(ctx context.Context, model controlmodels.Usage) []resource {
+	server := model.Server
+	memory, memoryNote := display.Bytes(float64(server.HeapBytes)), i18n.T(ctx, "control.usage.memory_os", i18n.Data{"SysBytes": display.Bytes(float64(server.SysBytes))})
+	if server.ResidentBytes > 0 {
+		memory, memoryNote = display.Bytes(float64(server.ResidentBytes)), i18n.T(ctx, "control.usage.memory_heap", i18n.Data{"HeapBytes": display.Bytes(float64(server.HeapBytes))})
+	}
+	return []resource{
+		{"cpu", i18n.T(ctx, "control.usage.cpu"), fmt.Sprintf("%.1f%%", server.CPUPercent),
+			i18n.T(ctx, "control.usage.cpu_note", i18n.Data{"MaxPercent": 100 * server.CPUs, "CoreCount": server.CPUs}),
+			i18n.T(ctx, "control.usage.mean_cpu"), cpuPercent, percent, -1, 100 * float64(max(server.CPUs, 1))},
+		{"memory", i18n.T(ctx, "control.usage.memory"), memory, memoryNote,
+			i18n.T(ctx, "control.usage.memory_used"), memoryPercent, percent, model.MemoryAlertPercent, 100},
+		{"goroutines", i18n.T(ctx, "control.usage.goroutines"), fmt.Sprint(server.Goroutines), i18n.T(ctx, "control.usage.gcs", i18n.Data{"GCCount": server.GCs}),
+			i18n.T(ctx, "control.usage.goroutines"), goroutines, whole, -1, mostGoroutines(model)},
+		{"disk", i18n.T(ctx, "control.usage.db_disk_used"), display.Bytes(float64(server.DiskUsed)),
+			i18n.T(ctx, "control.usage.disk_free", i18n.Data{"FreeBytes": display.Bytes(float64(server.DiskFree))}),
+			i18n.T(ctx, "control.usage.db_disk_used"), diskPercent, percent, model.DiskAlertPercent, 100},
+	}
+}
+
+// resourceBlock is a resource's figure now, with its note, over its checks drawn from 0 at the bottom to its top, with
+// its alert level dashed, the newest check's value at the top right, and, hovering a column, the value and age of the
+// check nearest it
+templ resourceBlock(model controlmodels.Usage, r resource) {
+	<div class="panel flex flex-col p-4">
 		<div class="flex justify-between text-xs font-semibold uppercase tracking-wide text-gray-500">
-			<span>{ label }</span>
-			<span id={ "control--usage--resources-" + name + "-latest" } class="tabular-nums">{ latestValue(model, value, show) }</span>
+			<span>{ r.label }</span>
+			if len(model.ResourceReadings) > 0 {
+				<span id={ "control--usage--resources-" + r.name + "-latest" } class="tabular-nums">{ latestValue(model, r.value, r.show) }</span>
+			}
 		</div>
-		<div id={ "control--usage--resources-" + name } class="relative mt-2 h-16">
-			<svg viewBox={ fmt.Sprintf("0 0 %.0f %.0f", graphW, graphH) } preserveAspectRatio="none" class="h-16 w-full overflow-visible" role="img" aria-label={ i18n.T(ctx, "control.usage.graph_label", i18n.Data{"GraphName": label}) }>
-				<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphH) } y2={ fmt.Sprint(graphH) } class="stroke-gray-200" vector-effect="non-scaling-stroke"></line>
-				if alertPercent >= 0 {
-					<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(alertPercent), top)) } y2={ fmt.Sprint(graphY(float64(alertPercent), top)) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
-				}
-				<polyline points={ resourcePoints(model, value, top) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
-			</svg>
-			<div class="absolute inset-0 flex">
-				for i, shown := range hoverValues(ctx, model, value, show) {
-					<div class="group relative h-full flex-1">
-						if shown != "" {
-							<div class="invisible absolute inset-y-0 left-1/2 w-px bg-gray-400 group-hover:visible"></div>
-							<div id={ fmt.Sprintf("control--usage--resources-%s-hover-%d", name, i) } class="invisible absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs tabular-nums text-white group-hover:visible">{ shown }</div>
+		<div id={ "control--usage--" + r.name } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
+			@stat.Numbers(r.text, "text-sm font-medium text-gray-500")
+		</div>
+		<div class="text-xs text-gray-500">{ r.note }</div>
+		// The graphs line up at the blocks' bottoms, however many lines a note takes
+		if len(model.ResourceReadings) > 0 {
+			<div class="mt-auto pt-3">
+				<div id={ "control--usage--resources-" + r.name } class="relative h-16">
+					<svg viewBox={ fmt.Sprintf("0 0 %.0f %.0f", graphW, graphH) } preserveAspectRatio="none" class="h-16 w-full overflow-visible" role="img" aria-label={ i18n.T(ctx, "control.usage.graph_label", i18n.Data{"GraphName": r.graphLabel}) }>
+						<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphH) } y2={ fmt.Sprint(graphH) } class="stroke-gray-200" vector-effect="non-scaling-stroke"></line>
+						if r.alert >= 0 {
+							<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(r.alert), r.top)) } y2={ fmt.Sprint(graphY(float64(r.alert), r.top)) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
+						}
+						<polyline points={ resourcePoints(model, r.value, r.top) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+					</svg>
+					<div class="absolute inset-0 flex">
+						for i, shown := range hoverValues(ctx, model, r.value, r.show) {
+							<div class="group relative h-full flex-1">
+								if shown != "" {
+									<div class="invisible absolute inset-y-0 left-1/2 w-px bg-gray-400 group-hover:visible"></div>
+									<div id={ fmt.Sprintf("control--usage--resources-%s-hover-%d", r.name, i) } class="invisible absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs tabular-nums text-white group-hover:visible">{ shown }</div>
+								}
+							</div>
 						}
 					</div>
-				}
+				</div>
+				<div class="text-xs text-gray-500">{ i18n.T(ctx, "control.usage.graph_note") }</div>
 			</div>
-		</div>
-		<div class="text-xs text-gray-500">{ i18n.T(ctx, "control.usage.graph_note") }</div>
+		}
 	</div>
 }
 

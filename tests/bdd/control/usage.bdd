@@ -30,8 +30,9 @@ ASSERT_VISIBLE #control--usage--cpu + div >> text=/^of \d+00% for \d+ cores?, la
 ASSERT_VISIBLE #control--usage--memory + div >> text=/in Go's heap, the rest mostly SQLite$/
 // The DBs' size, and the space left on their disk
 ASSERT_VISIBLE #control--usage--disk
-// Once the resources are checked their graph has the same title, so the first is the tile
-ASSERT_VISIBLE #control--usage >> text=/^DB disk used$/i >> nth=0
+ASSERT_VISIBLE #control--usage >> text=/^DB disk used$/i
+// The server's uptime is beside the range toggles
+ASSERT_VISIBLE #control--usage--uptime
 ASSERT_VISIBLE #control--usage--disk + div >> text=/free on disk$/
 ASSERT_VISIBLE #control--usage--routes td >> text=/^site GET \/$/
 // Only signed in requests are counted, so no static file, unmatched or public page is
@@ -46,11 +47,16 @@ ASSERT_VISIBLE #control--usage--queries th >> text=/^p95 ms$/
 SCREENSHOT usage
 
 // The resources are checked every 30 seconds, from soon after the server starts: the CPU, memory, goroutines and DB
-// disk, each in a graph. Hovering a graph shows the check nearest the pointer, and how long ago it was.
+// disk, each in a graph under its figure now. Hovering a graph shows the check nearest the pointer, and how long ago it was.
 RUN_BACKGROUND_JOBS
 GOTO {{ .control_url }}/usage
 ASSERT_VISIBLE #control--usage--resources-goroutines
 ASSERT_VISIBLE #control--usage--resources-goroutines-latest >> text=/^\d+$/
+// Each resource's figure now and its graph are in one block
+ASSERT_VISIBLE #control--usage--cpu ~ div #control--usage--resources-cpu
+ASSERT_VISIBLE #control--usage--memory ~ div #control--usage--resources-memory
+ASSERT_VISIBLE #control--usage--goroutines ~ div #control--usage--resources-goroutines
+ASSERT_VISIBLE #control--usage--disk ~ div #control--usage--resources-disk
 ASSERT_NOT_VISIBLE #control--usage--resources-cpu-hover-59
 HOVER #control--usage--resources-cpu-hover-59 >> xpath=..
 ASSERT_VISIBLE #control--usage--resources-cpu-hover-59 >> text=/^\d+% · \d+m ago$/
