@@ -158,3 +158,12 @@ WHERE profile_presets.is_default = 1 AND profile_presets.occurred_at <= sqlc.arg
     AND profile_presets.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_presets AS before WHERE before.is_default = 1 AND before.occurred_at <= sqlc.arg('Since')), 0)
 ORDER BY profile_presets.occurred_at DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
+-- name: SearchSummaryStoreProfiles :many
+-- The profiles of the stores in force from Since to Until, newest first, each store's together: the last uploaded by
+-- Since and each one after, for the profile switches that name a profile
+SELECT * FROM profile_presets
+WHERE profile_presets.occurred_at <= sqlc.arg('Until')
+    AND profile_presets.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_presets AS before WHERE before.occurred_at <= sqlc.arg('Since')), 0)
+ORDER BY profile_presets.occurred_at DESC, profile_presets.profile_store_id
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);

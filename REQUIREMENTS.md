@@ -681,6 +681,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   within 5 minutes.
 - Each minute's targets and basal: a temp target or temp basal, else the profile switch, else the default profile in
   force. One from before the summary's hours counts. When a temp or timed switch ends, the one under it returns.
+  - A switch sent by name (no `profileJson`) uses the profile of that name in the profile store, with its shift and
+    percentage.
 
 #### Periods and time in range
 
@@ -1739,8 +1741,14 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 #### Profile switches
 
 - No `profileJson` (careportal, T1DCarer): comes back with none. AAPS switches to its own profile of that name.
+- No `profileJson`: the summary, reports and a percent temp basal use the profile of its `profile` name. The profile
+  comes from the profile store in force at the start of the switch.
+  - If that store has no profile of that name, they use the default profile.
 - `percentage`: a multiplier of the profile's insulin (120 as 1.2), returned as sent.
-- `timeshift`: minutes, or ms when sent with an `originalProfileName` (AAPS). API v1 returns it as sent.
+- `timeshift`: hours, as the careportal sends it, or ms when sent with an `originalProfileName` (AAPS). For all
+  clients, the unit comes from the switch, not from the client. API v1 returns it as sent.
+  - A shift of more than 24 hours is refused.
+  - A switch made on the site has its shift in minutes. API v1 returns it in whole hours.
 - API v3 and its storage socket return every `timeshift` in ms, because AAPS reads it in ms.
 
 #### Event types

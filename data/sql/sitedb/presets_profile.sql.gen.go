@@ -696,6 +696,74 @@ func (q *Queries) SearchSummaryDefaultProfiles(ctx context.Context, arg SearchSu
 	return items, nil
 }
 
+const searchSummaryStoreProfiles = `-- name: SearchSummaryStoreProfiles :many
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_id, remote_settings_id, entered_by, profile_name, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_presets
+WHERE profile_presets.occurred_at <= ?1
+    AND profile_presets.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_presets AS before WHERE before.occurred_at <= ?2), 0)
+ORDER BY profile_presets.occurred_at DESC, profile_presets.profile_store_id
+LIMIT CAST(?3 AS INTEGER)
+`
+
+type SearchSummaryStoreProfilesParams struct {
+	Until int64
+	Since int64
+	Limit int64
+}
+
+// The profiles of the stores in force from Since to Until, newest first, each store's together: the last uploaded by
+// Since and each one after, for the profile switches that name a profile
+func (q *Queries) SearchSummaryStoreProfiles(ctx context.Context, arg SearchSummaryStoreProfilesParams) ([]*ProfilePreset, error) {
+	rows, err := q.query(ctx, q.searchSummaryStoreProfilesStmt, searchSummaryStoreProfiles, arg.Until, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ProfilePreset
+	for rows.Next() {
+		var i ProfilePreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProfileStoreID,
+			&i.IsDefault,
+			&i.Dia,
+			&i.Units,
+			&i.Timezone,
+			&i.CarbsHr,
+			&i.Delay,
+			&i.CarbRatiosJson,
+			&i.InsulinSensitivitiesJson,
+			&i.BasalRatesJson,
+			&i.TargetsHighJson,
+			&i.TargetsLowJson,
+			&i.LoopSettingsID,
+			&i.RemoteSettingsID,
+			&i.EnteredBy,
+			&i.ProfileName,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateProfilePreset = `-- name: UpdateProfilePreset :one
 
 UPDATE profile_presets SET

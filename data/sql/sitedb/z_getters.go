@@ -5581,6 +5581,11 @@ func (m *SearchSummaryDefaultProfilesParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated SearchSummaryStoreProfilesParams.
+func (m *SearchSummaryStoreProfilesParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetName returns the Name value.
 func (m UpdateProfilePresetParams) GetName() *string {
 	return m.Name
