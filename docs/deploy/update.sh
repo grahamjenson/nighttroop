@@ -14,8 +14,9 @@
 # putting back a copy of ./data, as an earlier version cannot open databases a newer one migrated, and everything
 # written since the copy would be lost.
 #
-# HEALTH_TIMEOUT (seconds, default 180) is how long the new version has to be healthy; KEEP_BACKUPS (default 5) is how
-# many copies of ./data, and previous images, are kept. COMPOSE_FILE is the compose file, as for docker compose: the
+# HEALTH_TIMEOUT (seconds, default 1800) is how long the new version has to be healthy, and MAX_RESTARTS (default 3) how
+# many times its start can fail before then; KEEP_BACKUPS (default 5) is how many copies of ./data, and previous
+# images, are kept. COMPOSE_FILE is the compose file, as for docker compose: the
 # one .env names, or hostinger.compose.yml.
 set -euo pipefail
 
@@ -25,7 +26,8 @@ export COMPOSE_FILE=${COMPOSE_FILE:-hostinger.compose.yml}
 COMPOSE=(docker compose)
 SERVICE=nighttroop
 NEW_IMAGE=${1:-ghcr.io/grahamjenson/nighttroop:latest}
-HEALTH_TIMEOUT=${HEALTH_TIMEOUT:-180}
+HEALTH_TIMEOUT=${HEALTH_TIMEOUT:-1800}
+MAX_RESTARTS=${MAX_RESTARTS:-3}
 KEEP_BACKUPS=${KEEP_BACKUPS:-5}
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 BACKUP=backups/data-$STAMP.tar.gz
@@ -42,16 +44,21 @@ set_image() {
 	fi
 }
 
-# wait_healthy waits for the container's health check to pass, failing once it is unhealthy or the time is up
+# wait_healthy waits for the container's health check to pass. A start that fails ends the server, and Docker starts it
+# again, so it fails once the container has restarted MAX_RESTARTS times. A slow start, such as a big restore, has not
+# restarted, so it has until HEALTH_TIMEOUT, whatever Docker's health check says of it before it is ready
 wait_healthy() {
-	local container status
+	local container status restarts
 	container=$("${COMPOSE[@]}" ps -q "$SERVICE")
 	for ((waited = 0; waited < HEALTH_TIMEOUT; waited += 5)); do
-		status=$(docker inspect -f '{{.State.Health.Status}}' "$container" 2>/dev/null || echo missing)
-		case $status in
-		healthy) return 0 ;;
-		unhealthy) return 1 ;;
-		esac
+		read -r status restarts < <(docker inspect -f '{{.State.Health.Status}} {{.RestartCount}}' "$container" 2>/dev/null ||
+			echo "missing 0")
+		if [ "$status" = healthy ]; then
+			return 0
+		fi
+		if ((restarts >= MAX_RESTARTS)); then
+			return 1
+		fi
 		sleep 5
 	done
 	return 1

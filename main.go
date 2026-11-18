@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync/atomic"
 
 	"syscall"
 	"time"
@@ -24,6 +25,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/socketio/engineio"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -60,6 +62,15 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
+	// Listens before the slow steps of a start, so a port in use fails at once and each request is answered "starting"
+	starting := &startingHandler{}
+	httpServer := setupHTTP(serverConfig, starting)
+	serveErr, err := serve(httpServer)
+	if err != nil {
+		return fmt.Errorf("cannot serve HTTP: %w", err)
+	}
+	defer httpServer.Close()
+
 	// S3 is off without S3_URL; with it, the server only starts once S3 works
 	s3Client := s3utils.NewS3Client(serverConfig)
 	if err := s3Client.Start(ctx); err != nil {
@@ -83,12 +94,11 @@ func run() error {
 	backgroundManager.Start()
 	defer backgroundManager.Stop()
 
-	fmt.Printf("Starting HTTP server on port %d\n", serverConfig.HostPort)
-	httpServer := setupHTTP(controlDB, serverConfig)
-	serveErr := serve(httpServer)
+	fmt.Printf("Serving HTTP on port %d\n", serverConfig.HostPort)
+	starting.ready(server.WithCrossOriginProtection(server.GetMainHandler(controlDB, serverConfig)))
 
-	// A server that cannot serve, as when its port is in use, stops as a signal stops it, with a last backup, rather
-	// than exiting at once while the background jobs run and before Sentry has its error
+	// A server that cannot serve stops as a signal stops it, with a last backup, rather than exiting at once while the
+	// background jobs run and before Sentry has its error
 	select {
 	case <-ctx.Done():
 		shutdown(httpServer, backgroundManager, controlDB)
@@ -97,6 +107,22 @@ func run() error {
 		shutdown(httpServer, backgroundManager, controlDB)
 		return fmt.Errorf("cannot serve HTTP: %w", err)
 	}
+}
+
+// startingHandler answers every request 503 "starting" until the server is ready, then with its handler. A start can
+// take minutes, to restore from S3 and open every site, and a client or a deploy must tell that from a server that is
+// down: the process of a start that fails exits.
+type startingHandler struct{ handler atomic.Pointer[http.Handler] }
+
+func (s *startingHandler) ready(handler http.Handler) { s.handler.Store(&handler) }
+
+func (s *startingHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if handler := s.handler.Load(); handler != nil {
+		(*handler).ServeHTTP(w, r)
+		return
+	}
+	w.Header().Set("Retry-After", "5")
+	apiutils.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "starting"})
 }
 
 // restoreFromS3 downloads the control DB from its backup in S3, where there is one. A site whose DB is missing or does
@@ -219,10 +245,9 @@ func newHTTPServer(addr string, handler http.Handler) *http.Server {
 	}
 }
 
-func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http.Server {
+func setupHTTP(serverConfig *config.ServerConfig, handler http.Handler) *http.Server {
 	// The outer most layer is CORS and CSRF protection, so no state changing in GET requests
-	httpServer := newHTTPServer(fmt.Sprintf(":%d", serverConfig.HostPort),
-		server.WithCrossOriginProtection(server.GetMainHandler(controlDB, serverConfig)))
+	httpServer := newHTTPServer(fmt.Sprintf(":%d", serverConfig.HostPort), handler)
 	// Shutdown does not close websockets, so its start closes every Socket.IO session, and none writes to a site's DB
 	// after its last backup
 	closing, closeSessions := context.WithCancel(context.Background())
@@ -231,16 +256,20 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http
 	return httpServer
 }
 
-// serve serves httpServer in the background, and the channel gets the error that stops it other than its Shutdown,
-// such as its port being in use
-func serve(httpServer *http.Server) <-chan error {
+// serve listens on httpServer's address, or gives why it cannot, such as its port being in use, then serves in the
+// background, and the channel gets the error that stops it other than its Shutdown or Close
+func serve(httpServer *http.Server) (<-chan error, error) {
+	listener, err := net.Listen("tcp", httpServer.Addr)
+	if err != nil {
+		return nil, err
+	}
 	failed := make(chan error, 1)
 	go func() {
-		if err := httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		if err := httpServer.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 			failed <- err
 		}
 	}()
-	return failed
+	return failed, nil
 }
 
 func ValidateServer() error {

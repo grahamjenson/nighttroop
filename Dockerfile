@@ -32,7 +32,8 @@ WORKDIR /app
 USER nighttroop
 EXPOSE 3000
 VOLUME /data
-# The server only answers its own host name, so the check sends it. The start period covers restoring from S3.
+# The server only answers its own host name, so the check sends it. A start longer than the start period, such as a big
+# restore from S3, is unhealthy until it is ready, which update.sh waits for.
 HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=3 \
     CMD wget -q -O /dev/null --header "Host: ${HOST_NAME}" "http://127.0.0.1:${HOST_PORT}/health" || exit 1
 ENTRYPOINT ["nighttroop"]

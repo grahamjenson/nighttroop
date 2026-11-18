@@ -50,27 +50,44 @@ func TestRequestHeadersAreLimited(t *testing.T) {
 	}
 }
 
-// A server whose port is in use gives the error, for run to shut down with, rather than exiting at once, and one shut
-// down gives none
+// A server whose port is in use gives the error at once, before the slow steps of a start, and one shut down gives
+// none
 func TestServeGivesTheErrorThatStopsIt(t *testing.T) {
 	ok := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 	taken, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 	t.Cleanup(func() { taken.Close() })
 
-	select {
-	case err := <-serve(newHTTPServer(taken.Addr().String(), ok)):
-		require.ErrorContains(t, err, "address already in use")
-	case <-time.After(5 * time.Second):
-		t.Fatal("a server whose port is in use gave no error")
-	}
+	_, err = serve(newHTTPServer(taken.Addr().String(), ok))
+	require.ErrorContains(t, err, "address already in use")
 
 	httpServer := newHTTPServer("127.0.0.1:0", ok)
-	served := serve(httpServer)
+	served, err := serve(httpServer)
+	require.NoError(t, err)
 	require.NoError(t, httpServer.Shutdown(t.Context()))
 	select {
 	case err := <-served:
 		t.Fatalf("a server shut down gave an error: %v", err)
 	case <-time.After(100 * time.Millisecond):
 	}
+}
+
+// Until the server is ready each request, its health check too, is answered 503 "starting", to try again, and then by
+// the server's handler
+func TestStartingUntilReady(t *testing.T) {
+	starting := &startingHandler{}
+	get := func(path string) *httptest.ResponseRecorder {
+		recorder := httptest.NewRecorder()
+		starting.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
+		return recorder
+	}
+	for _, path := range []string{"/health", "/api/v1/entries.json"} {
+		response := get(path)
+		require.Equal(t, http.StatusServiceUnavailable, response.Code, path)
+		require.Equal(t, "5", response.Header().Get("Retry-After"), path)
+		require.JSONEq(t, `{"status":"starting"}`, response.Body.String(), path)
+	}
+
+	starting.ready(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusTeapot) }))
+	require.Equal(t, http.StatusTeapot, get("/health").Code)
 }
