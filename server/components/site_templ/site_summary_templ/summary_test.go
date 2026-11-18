@@ -111,3 +111,32 @@ func TestSummaryReloadsWhenItsReadingTurnsStale(t *testing.T) {
 	require.NoError(t, Summary(summary).Render(context.Background(), &buf))
 	require.Regexp(t, `reconnected from:#site--summary--live, load delay:30\d{4}ms"`, buf.String())
 }
+
+// TestGlucoseHeroShowsTheSensorNotAFingerstick checks the tile shows the newest sensor reading, with its arrow, and a
+// fingerstick newer than it beside it, not in its place; with only fingersticks it shows the newest of them
+func TestGlucoseHeroShowsTheSensorNotAFingerstick(t *testing.T) {
+	mmol, now := consts.UnitsMMOLL, time.Now()
+	reading := func(value float64, readingType string, ago time.Duration, direction *string) *sitemodels.SiteCleanGlucoseReading {
+		return &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: value, Units: &mmol, ReadingType: readingType, OccurredAt: now.Add(-ago).UnixMilli(), Direction: direction}}
+	}
+	falling := "SingleDown"
+	render := func(readings ...*sitemodels.SiteCleanGlucoseReading) string {
+		summary := &sitemodels.Summary{Units: &mmol, RangeLow: 3.9, RangeHigh: 10, GlucoseReadings: readings}
+		var buf bytes.Buffer
+		require.NoError(t, glucoseHero(summary).Render(context.Background(), &buf))
+		return buf.String()
+	}
+
+	html := render(reading(6.2, "mbg", time.Minute, nil), reading(4.7, "sgv", 3*time.Minute, &falling), reading(5.0, "sgv", 8*time.Minute, nil))
+	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>4.7</span>`, html)
+	require.Contains(t, html, "↓")
+	require.Regexp(t, `id="site--summary--glucose--meter"[^>]*>\s*Meter 6.2 mmol/L, `, html)
+
+	html = render(reading(4.7, "sgv", time.Minute, &falling), reading(6.2, "mbg", 3*time.Minute, nil))
+	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>4.7</span>`, html)
+	require.NotContains(t, html, "site--summary--glucose--meter", "an older fingerstick is not shown")
+
+	html = render(reading(6.2, "mbg", time.Minute, nil))
+	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>6.2</span>`, html)
+	require.NotContains(t, html, "site--summary--glucose--meter")
+}

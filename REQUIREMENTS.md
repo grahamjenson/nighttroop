@@ -692,6 +692,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Glucose colour, age and live updates
 
 - Alarm settings set readings' colour and label: low, in range, high. High text is darker amber than the graph's.
+- Latest glucose is the newest sensor reading, with its arrow. A newer fingerstick shows under it ("Meter 6.2 mmol/L,
+  1 minute ago"), not in its place. If the site has no sensor readings, it is the newest fingerstick.
 - Latest glucose older than the no data alarm's minutes (default 20) is grey, with an amber badge ("No reading for 45
   min"). An open summary changes when it becomes old, with no data change or reload, reading the summary one time then,
   not every few seconds.
