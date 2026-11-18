@@ -475,6 +475,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A new site gets its browser's time zone and language, and its country's units and formats.
 - Limits:
   - Rate limited for each IP and for the server.
+  - An IP over its own limit is refused without using the server's limit, so it cannot stop other IPs.
   - Refused when the server holds `MAX_SITES`.
   - If a control admin turns public site creation off, the home page says so in place of the offer, and creation is
     refused.
