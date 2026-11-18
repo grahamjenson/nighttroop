@@ -95,16 +95,10 @@ CLICK #control--menu
 CLICK #control--logs-button
 ASSERT_PATH /logs
 ASSERT_VISIBLE #controlLogsTable
-// The logs' columns keep their widths whatever the messages, each level a coloured badge. A log's button at its right
-// narrows the logs to its request, or else its job, without opening the log's details.
+// The logs' columns keep their widths whatever the messages, each level a coloured badge. Which logs this server has is
+// not known (see below), so each log's button narrowing to its request or job is checked in logview's unit test.
 ASSERT_VISIBLE #controlLogsTable.table-fixed
-ASSERT_VISIBLE #controlLogsTable [id^="control--log--"][id$="--request-id"] >> nth=0
 SCREENSHOT logs
-CLICK #controlLogsTable [id^="control--log--"][id$="--request-id"] >> nth=0
-ASSERT_PATH /logs
-ASSERT_VISIBLE #control--logs--filter--clear
-ASSERT_NOT_VISIBLE #control--log--details
-SCREENSHOT logs_narrowed
 
 // An event's details link to its request, which narrows the events to those made while answering it
 CLICK #control--menu
