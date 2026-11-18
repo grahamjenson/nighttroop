@@ -74,17 +74,21 @@ site:
       confirm: "Delete this site? Everyone is signed out and its data is archived."
     connectors:
       title: "Connectors"
-      about: "Choose where Nighttroop syncs your glucose data from."
+      about: "A connector pulls your glucose into Nighttroop from another service. Turn on the one you use."
+      phone: "AAPS, Trio, Loop and xDrip+ upload from the phone by themselves, with no connector."
+      phone_link: "Add the phone as a device"
       enable: "Enable Connector"
       nightscout:
         title: "Nightscout Connector"
         about: "Connect your Nightscout site"
+        needs: "You need the site's address, and its API secret or a token that can read it."
         url: "Nightscout URL"
         url_help: "The site's base URL. A link with its token, such as .../api/v1?token=..., is split into the URL and token."
         secret: "API Secret or Token"
       dexcom:
         title: "Dexcom Share Connector"
         about: "Connect your Dexcom account"
+        needs: "You need the username and password of the Dexcom account that wears the sensor. In the Dexcom app, turn on Share and invite one follower, or Dexcom sends nothing."
         username: "Dexcom Username"
         password: "Dexcom Password"
         region: "Dexcom Region"
@@ -93,6 +97,7 @@ site:
       libre:
         title: "FreeStyle Libre Connector"
         about: "Connect a LibreLinkUp account that follows you"
+        needs: "You need the email and password of a LibreLinkUp account, not the LibreLink one. The person with the sensor invites it in the LibreLink app, under Connected Apps."
         email: "LibreLinkUp Email"
         password: "LibreLinkUp Password"
         region: "LibreLinkUp Region"

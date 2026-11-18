@@ -1050,6 +1050,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 Third party integrations, each syncing from one service: **Dexcom** and **LibreLinkUp** (each with its region),
 another **Nightscout** site, or the **virtual connector** (realistic test data).
 
+#### Connectors page help
+
+- The page says that a connector pulls glucose into Nighttroop from another service.
+- A note says that AAPS, Trio, Loop and xDrip+ upload from the phone with no connector. Its link, **Add the phone as a
+  device**, opens Users & Devices.
+- Each of the Nightscout, Dexcom Share and FreeStyle Libre connectors says what it needs before it is turned on:
+  - Nightscout: the site's address, and its API secret or a token that can read it.
+  - Dexcom Share: the username and password of the account that wears the sensor, with Share on and one follower.
+  - FreeStyle Libre: the email and password of a LibreLinkUp account that the person with the sensor invited.
+
 #### Virtual connector
 
 - Only on development, test or staging servers (`MODE`). In production: not offered, save or enable refused, and one
