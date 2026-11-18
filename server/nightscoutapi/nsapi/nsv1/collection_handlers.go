@@ -71,11 +71,12 @@ const maxLeftOut = 10
 
 func Create(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
+		canUpdate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionUpdate)
 
 		var body any
 		if err := apiutils.ReadJSON(r, &body); err != nil {
@@ -130,10 +131,11 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			}
 
 			// As in Nightscout, a document sent with an _id replaces the one with it, as Loop sends an override again
-			// with its _id when it changes
+			// with its _id when it changes. That changes a record, so needs update: a caregiver, who can only add a
+			// device status, gets the stored one back unchanged
 			var record nsutils.Document
 			err := nsutils.BadDataBodyError
-			if id, isID := doc["_id"].(string); ok && isID && nsutils.ValidateIdentifierIsntBad(id) == nil {
+			if id, isID := doc["_id"].(string); ok && isID && canUpdate && nsutils.ValidateIdentifierIsntBad(id) == nil {
 				record, _, err = store.Replace(movableDate(r, collection), collection, id, doc, true)
 			} else if ok {
 				record, _, err = store.Create(r.Context(), collection, doc)
