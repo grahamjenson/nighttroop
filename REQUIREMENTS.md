@@ -2163,6 +2163,13 @@ harder:
 - A passkey sign in or add finishes only from the IP that started it. Each IP keeps its 5 newest unfinished ones.
 - If one IP starts many passkey sign ins, it removes only its own oldest. Other IPs' sign ins still finish.
 
+#### Sign in help
+
+- The sign in page has **Trouble signing in?**, closed until clicked. Opened, it says:
+  - a person's username and password come from the site's admin, who can give new ones;
+  - an app, such as AAPS, Trio or xDrip+, does not sign in there: it uses the Nightscout URL and its own token;
+  - an admin who cannot sign in gets back in with the backup key, with a link to the recover page.
+
 #### Refused sign ins
 
 - Sign in attempts are rate limited for each IP, and for each name from all IPs at a much higher rate
