@@ -116,7 +116,8 @@ From `nighttroop.env` and the compose file ([docs/config.md](config.md)).
 
 #### 5.2 Start S3
 
-If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4, 8 and 16 seconds.
+If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4, 8 and 16 seconds. A test that S3
+does not answer fails after 20 seconds, so the start does not wait for ever.
 
 - **Failure, with no control DB in `./data`:** `S3_URL is set but S3 is not working`, after about 30 seconds. Thus a
   server never starts empty and replicates over its replica.
