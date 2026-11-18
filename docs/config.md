@@ -114,7 +114,8 @@ AAPS, Trio) send.
 - `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted.
 - `S3_URL` set:
   - The server tests an upload at startup, and again over about half a minute. If it never works, a server with no
-    control DB stops. A server with its control DB starts without S3, and restarts when S3 works again.
+    control DB stops. A server with its control DB starts without S3, and restarts when S3 works again. It restarts by
+    an exit, so the server must run with a restart policy (see [deploy](deploy.md#step-5-start-the-new-version)).
   - Production and staging require both keys, and do not start with `minioadmin`.
   - The server takes a lock in the bucket, so two servers do not back up to the same folder. For the lock, S3 must
     refuse a conditional write (`If-None-Match` and `If-Match`), as AWS S3 does. If it does not, the server logs an
