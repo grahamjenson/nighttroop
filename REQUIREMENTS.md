@@ -1091,6 +1091,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Syncs a working connector (on, with no failed syncs in a row) more often while its next entry is due:
   - the next entry is due 5 minutes after Nightscout's entries last changed;
   - from 15 seconds before it is due to 90 seconds after, it syncs at most every 10 seconds, until it gets a new entry;
+  - a Nightscout host gets at most one of these syncs every 10 seconds, however many sites sync from it. The site that
+    waited longest gets the next one;
+  - if a sync of the site is running, or its last sync took over 2 seconds, it gets none of these syncs;
   - after a restart, or when a sync fails, it syncs on its usual schedule until a usual sync works again.
 - Copies the current profile store when Nightscout profiles change, however long ago it started. An edit in the
   Nightscout profile editor replaces the copy, whoever saved it, whatever its uploader's identifier (for example

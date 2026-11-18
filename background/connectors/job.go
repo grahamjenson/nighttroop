@@ -45,6 +45,10 @@ type ConnectorJobManager struct {
 	// Each site's LibreLinkUp client, kept between syncs like the Nightscout clients
 	libreClientsLock sync.Mutex
 	libreClients     *lru.Cache[string, *libreClient]
+
+	// When each Nightscout host was last given a timed sync, in Unix ms, kept for timedSyncGap
+	timedHostsLock sync.Mutex
+	timedHosts     map[string]int64
 }
 
 // maxNightscoutClients is how many sites' Nightscout clients are kept, about 1KB each, so memory stays bounded however
@@ -121,6 +125,7 @@ func SetupConnectorJobManager(config *config.ServerConfig, controlDB *db.Control
 		nightscoutStore:            nightscoutapi.NewNightTroopAPIStore(controlDB, config),
 		nightscoutClients:          nightscoutClients,
 		libreClients:               libreClients,
+		timedHosts:                 map[string]int64{},
 	}
 
 	return jobs

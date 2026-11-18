@@ -59,6 +59,37 @@ func TestEntriesDue(t *testing.T) {
 	require.Empty(t, jobs.entriesDue(due.Add(101*time.Second)), "too late")
 }
 
+// Sites on one Nightscout host, however it is written, share one timed sync every 10 seconds; one on another host does
+// not wait for them. A site whose client is syncing now, or whose last sync was slow, gets none.
+func TestEntriesDueLimitsEachHost(t *testing.T) {
+	cfg, controlDB, _ := testutils.NewControlDBWithSite(t)
+	jobs := SetupConnectorJobManager(cfg, controlDB)
+	due := time.UnixMilli(2_000_000_000_000)
+	timed := func(siteID, nightscoutURL string) *nightscoutClient {
+		c := jobs.nightscoutClientFor(&ConnectorJobInfo{SiteID: siteID, urlOrUsername: nightscoutURL, password: "token"})
+		c.nextEntryAt.Store(due.UnixMilli())
+		return c
+	}
+	timed("sharedaa", "https://shared.example.com/")
+	timed("sharedbb", "https://SHARED.example.com./api/v1")
+	timed("othersit", "https://other.example.com")
+
+	require.ElementsMatch(t, []string{"sharedaa", "othersit"}, jobs.entriesDue(due))
+	require.Empty(t, jobs.entriesDue(due.Add(5*time.Second)), "within 10 seconds of the host's last")
+	require.ElementsMatch(t, []string{"sharedbb", "othersit"}, jobs.entriesDue(due.Add(10*time.Second)), "the shared host's next is the site that waited")
+	require.Empty(t, jobs.entriesDue(due.Add(15*time.Second)))
+	require.ElementsMatch(t, []string{"sharedaa", "othersit"}, jobs.entriesDue(due.Add(20*time.Second)))
+
+	busy, slow := timed("busysite", "https://busy.example.com"), timed("slowsite", "https://slow.example.com")
+	busy.syncing.Store(true)
+	slow.lastSyncTook.Store(slowSync.Milliseconds() + 1)
+	require.NotContains(t, jobs.entriesDue(due.Add(30*time.Second)), "busysite")
+	require.NotContains(t, jobs.entriesDue(due.Add(40*time.Second)), "slowsite")
+	busy.syncing.Store(false)
+	slow.lastSyncTook.Store(slowSync.Milliseconds())
+	require.Subset(t, jobs.entriesDue(due.Add(50*time.Second)), []string{"busysite", "slowsite"})
+}
+
 // A sync on the usual schedule times the next entry; a timed sync runs only for an enabled connector with no failed
 // syncs in a row, so a failing or disabled Nightscout is not synced more often
 func TestTimedSyncOnlyForAWorkingConnector(t *testing.T) {

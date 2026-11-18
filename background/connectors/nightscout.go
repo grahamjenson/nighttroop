@@ -23,9 +23,11 @@ type nightscoutClient struct {
 	*nightscout_client.Client
 	// lastModified is Nightscout's lastModified for each collection when it was last read; a new client reads them all
 	lastModified map[nsutils.Collection]int64
-	// nextEntryAt is when the next entry is due, in Unix ms, or 0 when it is not known (see timeNextEntry), and
-	// lastTimedSync when a timed sync was last queued. They are read without the lock, as a sync can hold it for a while.
-	nextEntryAt, lastTimedSync atomic.Int64
+	// nextEntryAt is when the next entry is due, in Unix ms, or 0 when it is not known (see timeNextEntry),
+	// lastTimedSync when a timed sync was last queued, and lastSyncTook how many ms the last sync took. They and syncing
+	// are read without the lock, as a sync can hold it for a while.
+	nextEntryAt, lastTimedSync, lastSyncTook atomic.Int64
+	syncing                                  atomic.Bool
 }
 
 // nightscoutClientFor returns the site's kept client, or a new one when there is none or its URL or token has changed.
@@ -47,6 +49,11 @@ func (b *ConnectorJobManager) syncNightscout(jobInfo *ConnectorJobInfo) (added i
 	nsc := b.nightscoutClientFor(jobInfo)
 	nsc.Lock()
 	defer nsc.Unlock()
+	nsc.syncing.Store(true)
+	defer func(started time.Time) {
+		nsc.lastSyncTook.Store(time.Since(started).Milliseconds())
+		nsc.syncing.Store(false)
+	}(time.Now())
 
 	ctx, cancel := context.WithTimeout(jobInfo.ctx, syncTimeout)
 	defer cancel()
