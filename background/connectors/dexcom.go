@@ -7,9 +7,9 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/dexcommodels"
 	"nighttroop.t1d.nz/utils/consts"
-	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
 
 // syncDexcom copies the last 15 minutes of Dexcom readings into the site, returning how many were new
@@ -39,21 +39,11 @@ func copyDexcomEGVs(ctx context.Context, jobInfo *ConnectorJobInfo, minutes int)
 	if err != nil {
 		return 0, fmt.Errorf("Dexcom Error: %w", err)
 	}
-	added := 0
-	for _, e := range egvs {
-		createParams := dexcommodels.EGVToCreate(e, "dexcom_connector")
-		res, err := jobInfo.Site.SiteDB.Queries().CreateGlucoseReading(ctx, createParams)
-		if err != nil {
-			if utilerrors.IsSQLDuplicateID(err) {
-				continue
-			}
-			refuse(fmt.Errorf("Dexcom: cannot keep a reading: %w", err), e)
-			continue
-		}
-		if res != nil {
-			added++
-			jobInfo.Site.published(res)
-		}
+	added, err := keepReadings(ctx, jobInfo.Site, egvs, func(e dexcommodels.EGV) sitedb.CreateGlucoseReadingParams {
+		return dexcommodels.EGVToCreate(e, "dexcom_connector")
+	}, func(err error, e dexcommodels.EGV) { refuse(fmt.Errorf("Dexcom: cannot keep a reading: %w", err), e) })
+	if err != nil {
+		return 0, fmt.Errorf("Dexcom Error: %w", err)
 	}
 	if added > 0 {
 		slog.InfoContext(ctx, "Added new Dexcom entries for site", "added", added)
