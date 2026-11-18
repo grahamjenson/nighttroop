@@ -13,8 +13,8 @@
        written to, so its tiles can be checked after a backup, not only before one
     1. P2: Test the S3 lock (`utils/s3utils/lock.go`) against the production S3: it is tested against MinIO, and
        a provider can treat `If-None-Match`, `If-Match` or a deleted lock in a versioned bucket differently
-    1. P3: Page the admin when another server takes this server's S3 lock: the server restarts and waits for the
-       lock, with only an error logged
+    1. P3: Page the admin when the server's settings stop it starting (`config.NewServerConfig`): the pager's key
+       is one of those settings, so that failure is only printed
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
 

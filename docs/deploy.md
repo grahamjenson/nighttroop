@@ -103,6 +103,8 @@ After 5.1 the server listens on port 3000. Until 5.10 it answers each request, `
 and `{"status":"starting"}`.
 
 - A failed step ends the process with its error. Docker starts it again (`restart: unless-stopped`).
+- A failed step after 5.1 pages the admin with a Call, `The server did not start, so its sites are down`, with the
+  error. Each restart sends the same page, which PagerDuty keeps as one incident.
 - A start that always fails restarts until `update.sh` stops waiting ([step 6](#step-6-wait-for-a-healthy-server))
   and rolls back.
 
@@ -116,7 +118,8 @@ From `nighttroop.env` and the compose file ([docs/config.md](config.md)).
 
 #### 5.2 Start S3
 
-If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4, 8 and 16 seconds.
+If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4, 8 and 16 seconds. A test that S3
+does not answer fails after 20 seconds, so the start does not wait for ever.
 
 - **Failure, with no control DB in `./data`:** `S3_URL is set but S3 is not working`, after about 30 seconds. Thus a
   server never starts empty and replicates over its replica.

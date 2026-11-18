@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -144,6 +145,34 @@ func TestStartS3(t *testing.T) {
 	cancel()
 	_, err = startS3(stopped, down, here, whenWorking, admin)
 	require.Error(t, err)
+}
+
+// The admin is paged with a call when the server does not start, or stops with an error, each with one message so a
+// server that fails each time it is started again is one incident, and not when it is told to stop or restarts with S3
+func TestPageFailure(t *testing.T) {
+	tests := []struct {
+		name    string
+		started bool
+		err     error
+		want    string
+	}{
+		{"it does not start", false, errors.New("cannot create control db"), "The server did not start, so its sites are down"},
+		{"it stops with an error", true, errors.New("cannot serve HTTP"), "The server stopped with an error, so its sites are down"},
+		{"it stops as told", true, nil, ""},
+		{"it is told to stop as it starts", false, fmt.Errorf("S3: %w", context.Canceled), ""},
+		{"it restarts with S3", true, errRestartWithS3, ""},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			paged := ""
+			pageFailure(func(_ context.Context, level page.Level, message string, args ...any) {
+				require.Equal(t, page.Call, level)
+				require.Equal(t, []any{"error", test.err}, args)
+				paged = message
+			}, test.started, test.err)
+			require.Equal(t, test.want, paged)
+		})
+	}
 }
 
 // A control DB that is here and cannot be checked against its replica, as S3 gives an error, does not stop the start:
