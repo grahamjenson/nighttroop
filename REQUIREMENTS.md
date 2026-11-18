@@ -615,8 +615,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     (Low Alarm), "timezone" General settings.
   - Other names: "BGL" or "blood sugar" finds Glucose Readings, "bolus" Insulin Doses, "carbs" Food Intakes and Food
     Presets, "exercise" Activities.
+  - Words a new user looks for: "token", "password" or "invite" finds Users & Devices, "mmol" or "preferences" General
+    settings, "share" or "pull" Connectors, "snooze" Alarms, "pump" Device Status.
 - Results show under their hub (Data, Reports, Settings, Connectors, Alarms, Logs & Events, Usage), only pages the
-  identity can open, or "No pages match".
+  identity can open, or "No pages match" with a link to Getting Started, which says where things are.
 - Arrows move, Enter or a click opens, Escape closes. Ctrl+K (⌘K on a Mac) goes to the search from all pages.
 
 #### Phone layout and history

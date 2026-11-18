@@ -142,6 +142,8 @@ var synonyms = map[string]string{
 	"/settings/connectors": "site.nav.synonyms.connectors",
 	"/settings/identities": "site.nav.synonyms.users",
 	"/presets/profiles":    "site.nav.synonyms.profiles",
+	"/settings":            "site.nav.synonyms.settings",
+	"/data/device-status":  "site.nav.synonyms.device_status",
 }
 
 // translated is the message with the id in the context's language, or "" for none

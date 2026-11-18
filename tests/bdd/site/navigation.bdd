@@ -214,6 +214,7 @@ ASSERT_VISIBLE #site--nav--search--settings--push
 ASSERT_COUNT #site--nav--search-results [role=option] 2
 ASSERT_NOT_VISIBLE #site--nav--search--settings--push>[data-hint]
 ASSERT_NOT_VISIBLE #site--nav--search-empty
+ASSERT_NOT_VISIBLE #site--nav--search-guide
 SCREENSHOT navigation_search
 
 // The arrow keys move through them, and Enter opens one as its tab does
@@ -226,12 +227,27 @@ ASSERT_PATH /settings/push-credentials
 ASSERT_VISIBLE #site--settings--push-button[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--search-results
 
-// Nothing matching says so, and Escape closes the list
+// Nothing matching says so, with a link to the guide that says where things are, and Escape closes the list
 TYPE #site--nav--search zzz
 ASSERT_TEXT_EQUALS #site--nav--search-empty No pages match
+ASSERT_TEXT_EQUALS #site--nav--search-guide Getting Started says where things are
 ASSERT_COUNT #site--nav--search-results [role=option] 0
+SCREENSHOT navigation_search_none
 PRESS Escape
 ASSERT_NOT_VISIBLE #site--nav--search-results
+
+// A word a new user looks for finds the page it is on: an app's token is on Users & Devices, and units are in settings
+PRESS Control+k
+TYPE #site--nav--search token
+ASSERT_VISIBLE #site--nav--search--settings--identities[aria-selected="true"]
+PRESS Control+k
+TYPE #site--nav--search mmol
+ASSERT_VISIBLE #site--nav--search--settings--settings
+PRESS Control+k
+TYPE #site--nav--search zzz
+CLICK #site--nav--search-guide
+ASSERT_PATH /getting-started
+ASSERT_VISIBLE #site--getting-started
 
 // Search also finds a page by the headings and words on it, showing the one it was found by (Ctrl+K selects what was
 // searched, so what is typed replaces it)

@@ -1667,6 +1667,9 @@
   .pb-2 {
     padding-bottom: calc(var(--spacing) * 2);
   }
+  .pb-3 {
+    padding-bottom: calc(var(--spacing) * 3);
+  }
   .pb-4 {
     padding-bottom: calc(var(--spacing) * 4);
   }
@@ -3685,6 +3688,11 @@
         border-bottom-style: var(--tw-border-style);
         border-bottom-width: 0px;
       }
+    }
+  }
+  .\[\[hidden\]\+\&\]\:hidden {
+    [hidden]+& {
+      display: none;
     }
   }
   .\[button\:focus-visible_\&\]\:text-red-600 {
