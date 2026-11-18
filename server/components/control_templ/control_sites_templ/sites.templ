@@ -407,8 +407,8 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 }
 
 // siteActions are a list of what can be done to the site, each saying what it does with its button at its right: open it, and for an admin, download
-// a copy of its DB or truncate it while it is here, disable it once no one has used it for a while, and archive it once
-// it is disabled. One that cannot be done yet says when it can, in place of its button.
+// a copy of its DB or truncate it while it is here, upload a fixed DB or make a new empty one while it is unavailable,
+// disable it once no one has used it for a while, and archive it once it is disabled. One that cannot be done yet says when it can, in place of its button.
 templ siteActions(site *controlmodels.Site) {
 	@card.Card(card.Props{ID: "control--site--actions", Title: i18n.T(ctx, "control.site.actions")}) {
 		<div class="divide-y divide-gray-200">
@@ -439,6 +439,23 @@ templ siteActions(site *controlmodels.Site) {
 					@siteActionForm("/sites/"+site.ID+"/truncate", "", i18n.T(ctx, "control.site.truncate_confirm"), "control--site--truncate", i18n.T(ctx, "control.site.truncate"))
 				}
 				if unavailable(ctx, site) {
+					@actionCard("control--site--action-upload-db", i18n.T(ctx, "control.site.upload_db"), i18n.T(ctx, "control.site.upload_db_intro"), "", icon.CloudUpload) {
+						<form
+							hx-post={ "/sites/" + site.ID + "/db" }
+							hx-encoding="multipart/form-data"
+							hx-target="#main-content"
+							hx-swap="innerHTML"
+							hx-confirm={ i18n.T(ctx, "control.site.upload_db_confirm") }
+							hx-status:4xx="target:#toaster swap:beforeend"
+							hx-status:5xx="target:#toaster swap:beforeend"
+							class="flex flex-wrap items-center gap-2"
+						>
+							@input.Input(input.Props{ID: "control--site--upload-db--file", Name: "db", Type: input.TypeFile, Required: true, Attributes: templ.Attributes{"accept": ".sqlite"}})
+							@button.Button(button.Props{ID: "control--site--upload-db", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+								{ i18n.T(ctx, "control.site.upload_db") }
+							}
+						</form>
+					}
 					@actionCard("control--site--action-new-empty-db", i18n.T(ctx, "control.site.new_empty_db"), i18n.T(ctx, "control.site.new_empty_db_intro"), "", icon.DatabaseBackup) {
 						@siteActionForm("/sites/"+site.ID+"/new-empty-db", "", i18n.T(ctx, "control.site.new_empty_db_confirm"), "control--site--new-empty-db", i18n.T(ctx, "control.site.new_empty_db"))
 					}
@@ -578,6 +595,10 @@ templ backupVersions(site *controlmodels.Site, versions []s3utils.BackupVersion)
 
 templ SiteVersionRestored(site *controlmodels.Site) {
 	@siteChanged(site, i18n.T(ctx, "control.site.version_restored_toast"))
+}
+
+templ SiteDBUploaded(site *controlmodels.Site) {
+	@siteChanged(site, i18n.T(ctx, "control.site.upload_db_toast"))
 }
 
 templ SiteNewEmptyDB(site *controlmodels.Site) {

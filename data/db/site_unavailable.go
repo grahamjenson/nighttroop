@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"maps"
 	"os"
 	"path/filepath"
@@ -17,7 +18,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
-	"nighttroop.t1d.nz/utils/page"
+	pager "nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
 
@@ -165,7 +166,7 @@ var RestoreRetries = []time.Duration{time.Minute, 2 * time.Minute, 4 * time.Minu
 // KeepRestoringUnavailableSites restores the unavailable sites, then tries those still unavailable again after each of
 // retries, and pages the admin with page if any are still unavailable after the last. Each failed try is logged as an
 // error and a site_db_missing event. It stops when ctx ends, as the server stops.
-func (db *ControlDB) KeepRestoringUnavailableSites(ctx context.Context, download s3utils.DownloadFunc, retries []time.Duration, page page.Func) {
+func (db *ControlDB) KeepRestoringUnavailableSites(ctx context.Context, download s3utils.DownloadFunc, retries []time.Duration, page pager.Func) {
 	db.RestoreUnavailableSites(ctx, download)
 	for _, wait := range retries {
 		if len(db.UnavailableSites()) == 0 {
@@ -179,7 +180,7 @@ func (db *ControlDB) KeepRestoringUnavailableSites(ctx context.Context, download
 		db.RestoreUnavailableSites(ctx, download)
 	}
 	if unavailable := slices.Sorted(maps.Keys(db.UnavailableSites())); len(unavailable) > 0 && ctx.Err() == nil {
-		page(ctx, "Sites are unavailable, as their DBs could not be restored", "site_ids", unavailable, "tries", len(retries)+1)
+		page(ctx, pager.Call, "Sites are unavailable, as their DBs could not be restored", "site_ids", unavailable, "tries", len(retries)+1)
 	}
 }
 
@@ -206,6 +207,40 @@ func (db *ControlDB) NewEmptySiteDB(ctx context.Context, siteID string) error {
 		return fmt.Errorf("cannot make a new DB: %w", err)
 	}
 	db.sites.add(siteDB)
+	db.unavailable.remove(siteID)
+	now := time.Now().UnixMilli()
+	return db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{LastWriteAt: &now, ID: siteID})
+}
+
+// UploadSiteDB puts a DB a control admin uploaded, such as one they downloaded and fixed, in place of an unavailable
+// site's DB, and opens it, migrating it, so the site is served again. As in a restore, a DB there that did not open is
+// kept, and put back if the uploaded one is ErrDBDoesNotOpen. The site counts as written, so its new DB is backed up.
+func (db *ControlDB) UploadSiteDB(ctx context.Context, siteID string, upload io.Reader) error {
+	if !db.unavailable.claim(siteID) {
+		return ErrSiteNotUnavailable
+	}
+	defer db.unavailable.release(siteID)
+	folder := filepath.Dir(sitedb.GetPath(siteID, db.ServerConfig))
+	if err := utils.MkDirs(folder); err != nil {
+		return err
+	}
+	dir, err := os.MkdirTemp(filepath.Dir(folder), "."+filepath.Base(folder)+"-restore-") // as a restore's, on its disk
+	if err != nil {
+		return fmt.Errorf("cannot create staging dir: %w", err)
+	}
+	defer os.RemoveAll(dir)
+	staged := filepath.Join(dir, siteID+".sqlite")
+	file, err := os.Create(staged)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(file, upload)
+	if err = errors.Join(err, file.Close()); err != nil {
+		return fmt.Errorf("cannot save the uploaded DB: %w", err)
+	}
+	if err := db.replaceSiteDB(ctx, siteID, staged); err != nil {
+		return err
+	}
 	db.unavailable.remove(siteID)
 	now := time.Now().UnixMilli()
 	return db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{LastWriteAt: &now, ID: siteID})

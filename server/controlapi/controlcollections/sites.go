@@ -217,6 +217,44 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// uploadTimeout is how long receiving an uploaded site DB, and answering it, can take, past the server's usual timeouts
+const uploadTimeout = 10 * time.Minute
+
+// UploadDBHandler puts the DB in the db field a control admin uploads, such as one they got with Download DB and fixed,
+// in place of an unavailable site's DB, so the site is served again
+func (s *SitesCollection) UploadDBHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
+	if herr == nil && site == nil {
+		herr = apiutils.ErrNotFound
+	}
+	reason := controlContext.ControlDB.UnavailableSites()[chi.URLParam(r, "id")]
+	_ = http.NewResponseController(w).SetReadDeadline(time.Now().Add(uploadTimeout))
+	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(uploadTimeout))
+	upload, _, err := r.FormFile("db")
+	if err == nil {
+		defer upload.Close()
+	} else if herr == nil {
+		herr = apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.upload_db_file"))
+	}
+	if herr == nil {
+		err = controlContext.ControlDB.UploadSiteDB(r.Context(), site.ID, upload)
+		if errors.Is(err, db.ErrSiteNotUnavailable) {
+			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.upload_db"))
+		} else if errors.Is(err, db.ErrDBDoesNotOpen) {
+			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.upload_db_failed"))
+		} else if herr = apiutils.ErrorFor(err, s.GetName()); herr == nil {
+			controlContext.ControlDB.Logs.SiteDBUploadedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, reason)
+			site, herr = get(r.Context(), s, site.ID, controlContext)
+		}
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteDBUploaded(site))
+}
+
 // TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks
 // its DB, while its DB is here. Only admins can.
 // RestoreVersionHandler restores an unavailable site from the version of its backup in S3 a control admin picked, such

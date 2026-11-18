@@ -120,7 +120,7 @@ func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Cli
 	}
 	// A site whose DB is missing or does not open is unavailable, so the server starts without it and serves the rest
 	// while it is restored from its backup, tried again for about an hour, then the admin is paged
-	go controlDB.KeepRestoringUnavailableSites(ctx, s3Client.DownloadFilesFromS3, db.RestoreRetries, page.Admin)
+	go controlDB.KeepRestoringUnavailableSites(ctx, s3Client.DownloadFilesFromS3, db.RestoreRetries, setupPagerDuty(serverConfig).Admin)
 	// Development has an admin to log in with, and staging its configured one; anywhere else a new server is set up
 	// with the code it prints
 	if serverConfig.IsDev() {
@@ -168,6 +168,16 @@ func shutdown(httpServer *http.Server, backgroundManager *background.BackGroundM
 	slog.Info("Closing Database connections")
 	controlDB.Close()
 	slog.Info("Server shutdown complete")
+}
+
+// setupPagerDuty is the pager of the admin, through PagerDuty when PAGERDUTY_ROUTING_KEY is set, and records whether
+// it is in serverConfig.Status. PagerDuty is optional: without it each page is still logged as an error.
+func setupPagerDuty(serverConfig *config.ServerConfig) *page.Pager {
+	if serverConfig.PagerDutyRoutingKey == "" {
+		slog.Warn("PagerDuty is not set up, set PAGERDUTY_ROUTING_KEY to page the admin")
+	}
+	serverConfig.Status.PagerDutyWorking = serverConfig.PagerDutyRoutingKey != ""
+	return page.New(serverConfig.PagerDutyRoutingKey, serverConfig.PagerDutyEventsURL, serverConfig.HostName)
 }
 
 // setupSentry starts Sentry error reporting and records whether it is working in serverConfig.Status.

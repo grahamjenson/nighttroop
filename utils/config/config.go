@@ -36,6 +36,8 @@ const (
 type ServerStatus struct {
 	S3Working     bool
 	SentryWorking bool
+	// PagerDutyWorking is whether PAGERDUTY_ROUTING_KEY is set, so the admin is paged
+	PagerDutyWorking bool
 	// HighResources are the server's resources at or over their alert levels at its last check
 	HighResources []ResourceLevel
 	// Sites is how many sites the server has, and MaxSites how many MAX_SITES lets the public create
@@ -96,6 +98,11 @@ type ServerConfig struct {
 
 	// sentry
 	SentryDSN string
+
+	// PagerDutyRoutingKey is the integration key of the PagerDuty service that pages the admin, and
+	// PagerDutyEventsURL where its events are sent; with no key the admin is not paged
+	PagerDutyRoutingKey string
+	PagerDutyEventsURL  string
 
 	// Deployment names this server among those running Nighttroop, e.g. one of several staging servers, as Sentry's
 	// environment its errors are reported under
@@ -354,6 +361,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		// sentry
 		SentryDSN:  configStringSelect(dotenv, "SENTRY_DSN", ""),
+		// pagerduty
+		PagerDutyRoutingKey: configStringSelect(dotenv, "PAGERDUTY_ROUTING_KEY", ""),
+		PagerDutyEventsURL:  configStringSelect(dotenv, "PAGERDUTY_EVENTS_URL", "https://events.pagerduty.com/v2/enqueue"),
 		Deployment: configStringSelect(dotenv, "DEPLOYMENT", "development"),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", supportEmail),

@@ -48,3 +48,18 @@ ASSERT_VISIBLE #control--site--unavailable
 ASSERT_VISIBLE #control--site--migration >> text=/^1 failed, of 1$/
 SCROLL -3000
 SCREENSHOT migration_failed
+
+// Its page offers to upload a DB in place of the one whose migration failed, such as one got with Download DB and
+// fixed. Uploading asks first (the test accepts), then the site is served again, and its events say so.
+ASSERT_VISIBLE #control--site--action-upload-db >> text=such as one you got with Download DB and fixed
+INPUT #control--site--upload-db--file {{ .fixed_db }}
+CLICK #control--site--upload-db
+ASSERT_TEXT_VISIBLE DB Uploaded
+ASSERT_NOT_VISIBLE #control--site--unavailable
+ASSERT_VISIBLE #control--site--events--table td >> text=Site DB uploaded
+// Its DB is at the latest migration, and the banner, on every page, names only the other site
+GOTO {{ .control_url }}/sites/migrfail
+ASSERT_VISIBLE #control--site--migration >> text=/^1 of 1$/
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (1):
+ASSERT_NOT_VISIBLE #control--status-banner--unavailable--migrfail
+SCREENSHOT upload_db

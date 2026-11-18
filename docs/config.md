@@ -90,7 +90,7 @@ AAPS, Trio) send.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body, above an uploader's largest batch (Juggluco: 5000 readings). Larger gets 413. |
+| `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body, above an uploader's largest batch (Juggluco: 5000 readings). Larger gets 413. A site DB uploaded to the control site can be up to 512 MB. |
 | `REQUESTS_IN_FLIGHT_PER_CPU` | `16` | Requests each CPU works on at once. |
 | `REQUESTS_BACKLOG_PER_CPU` | `64` | Requests for each CPU that wait, up to 5 seconds, for one in flight to finish. |
 
@@ -138,10 +138,37 @@ AAPS, Trio) send.
 | `SLOW_QUERY_MS` | `100` | Milliseconds before a DB query (or a transaction that waits for the write lock) is logged as a `Slow query`, with its DB, sqlc name, duration and rows, never its values. `0` logs none. |
 | `QUERY_SAMPLE_PERCENT` | `10` | Percent (0 to 100) of DB queries whose time is kept, for the control usage page's slowest queries (longest in total since start). `0` keeps none. |
 | `SENTRY_DSN` | Empty | Where errors are reported. Empty turns Sentry off. |
+| `PAGERDUTY_ROUTING_KEY` | Empty | The integration key of the PagerDuty service that pages the admin. Empty turns paging off. |
+| `PAGERDUTY_EVENTS_URL` | `https://events.pagerduty.com/v2/enqueue` | Where pages are sent. For an account in the EU region, use `https://events.eu.pagerduty.com/v2/enqueue`. |
 | `MEMORY_ALERT_PERCENT` | `60` | Memory used (of the container's limit, else the machine's) at or above which the control site is warned. |
 | `DISK_ALERT_PERCENT` | `60` | The same, for space used on the DBs' disk. |
 | `DISK_ALERT_FREE_GB` | `100` | Free GB on the DBs' disk at or above which the disk never warns, however full. |
 | `CPU_PEGGED_ALERT_SECONDS` | `20` | How long the CPU is at 100% of every core before the control site is warned. |
+
+### Paging with PagerDuty
+
+If a problem needs the admin now, the server pages them, for example when site DBs cannot be restored. Each page has
+a level:
+
+| Level | PagerDuty severity | Urgency (default rule) | The admin gets |
+| --- | --- | --- | --- |
+| Email | `warning` | Low | Their low urgency notifications, for example an email |
+| SMS | `error` | High | Their high urgency notifications, for example an SMS |
+| Call | `critical` | High | Their high urgency notifications, for example a call |
+
+PagerDuty selects who to page and how, not Nighttroop. To set it up:
+
+1. In PagerDuty, make a service with an escalation policy and its on-call schedule.
+2. Set the service's urgency to **Based on alert severity**.
+3. Add an **Events API V2** integration to the service.
+4. Set `PAGERDUTY_ROUTING_KEY` to the integration key.
+5. Set each person's notification rules for low and high urgency, for example email and then SMS and a call.
+
+**Warning:** Treat the integration key as a secret. Anyone with it can page the admin.
+
+- SMS and Call are both high urgency. To make a Call ring at once, add an Event Orchestration rule for `critical`.
+- A page with the same message as an open incident adds to that incident. It does not page again.
+- Each page is also logged as an error, so the control site's errors and Sentry show it.
 
 ## Rate limits
 
