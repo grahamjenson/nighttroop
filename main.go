@@ -107,13 +107,13 @@ func run() (err error) {
 	}
 
 	control := replica.New(serverConfig, s3Client)
-	if err := restoreFromS3(ctx, serverConfig, control); err != nil {
+	if err := restoreFromS3(ctx, serverConfig, control, admin); err != nil {
 		return err
 	}
 	if !serverConfig.Status.S3Working {
 		control = nil // as restoreFromS3 turned S3 off
 	}
-	controlDB, err := openControlDB(ctx, serverConfig, s3Client, control)
+	controlDB, err := openControlDB(ctx, serverConfig, s3Client, control, admin)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (s *startingHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // restoreFromS3 restores a missing control DB from its replica in S3, where there is one; without one the server
 // starts with a new control DB. A site whose DB is missing or does not open is restored from its own backup once the
 // control DB is open (KeepRestoringUnavailableSites).
-func restoreFromS3(ctx context.Context, serverConfig *config.ServerConfig, control *replica.Replica) error {
+func restoreFromS3(ctx context.Context, serverConfig *config.ServerConfig, control *replica.Replica, admin page.Func) error {
 	// Before any restore runs, so none of the staging folders it removes is in use
 	restore.RemoveStaging(serverConfig)
 	path := controldb.GetPath(serverConfig)
@@ -250,11 +250,12 @@ func restoreFromS3(ctx context.Context, serverConfig *config.ServerConfig, contr
 		// One made while S3 was off, or was another bucket or host, is not replicated over the replica
 		replicate, err := control.Adopt(ctx, path, func() (bool, error) { return controlIsSetUp(ctx, serverConfig) })
 		if err != nil {
-			return fmt.Errorf("cannot check the control DB against its replica: %w", err)
+			// The control DB is here, so the sites are served from it, without S3, as it is not known to be its replica's
+			turnS3Off(serverConfig, admin, config.S3OffCheck, "The control DB could not be checked against its replica in S3, so S3 is off: nothing is replicated or backed up", err)
+			return nil
 		}
 		if !replicate {
-			serverConfig.Status.S3Working = false
-			slog.Error("The control DB here is set up, and is not the one replicated in S3, so S3 is off: nothing is replicated or backed up. Move it away to restore the replica, or delete the replica to replicate this one", "path", path)
+			turnS3Off(serverConfig, admin, config.S3OffConflict, "The control DB here is set up, and is not the one replicated in S3, so S3 is off: nothing is replicated or backed up. Move it away to restore the replica, or delete the replica to replicate this one", nil)
 			return nil
 		}
 		slog.Info("Control DB is here, so it is not restored", "path", path)
@@ -276,6 +277,14 @@ func restoreFromS3(ctx context.Context, serverConfig *config.ServerConfig, contr
 	return nil
 }
 
+// turnS3Off turns S3 off for this run of a server whose S3 works, as its control DB must not be replicated or cannot
+// be: its sites are served, nothing is replicated or backed up, the control site's banner says why, and the admin is
+// paged, as only a person can fix it
+func turnS3Off(serverConfig *config.ServerConfig, admin page.Func, reason, message string, err error) {
+	serverConfig.Status.S3Working, serverConfig.Status.S3Off = false, reason
+	admin(context.Background(), page.SMS, message, "error", err)
+}
+
 // controlIsSetUp is whether the control DB here has a control admin, so holds a server someone set up
 func controlIsSetUp(ctx context.Context, serverConfig *config.ServerConfig) (bool, error) {
 	control, err := controldb.NewDB(ctx, serverConfig)
@@ -290,13 +299,14 @@ func controlIsSetUp(ctx context.Context, serverConfig *config.ServerConfig) (boo
 // openControlDB opens the control DB and every site's, and restores, in the background, each site whose DB is missing
 // or does not open from its backup, with an admin to log in with in development and staging, and prints the setup code
 // of a server not yet set up
-func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Client *s3utils.S3Client, control *replica.Replica) (*db.ControlDB, error) {
+func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Client *s3utils.S3Client, control *replica.Replica, admin page.Func) (*db.ControlDB, error) {
 	controlDB, err := db.NewControlDB(context.Background(), serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
 	if err := controlDB.Replicate(ctx, control); err != nil {
-		return nil, fmt.Errorf("cannot replicate the control db: %w", err)
+		// The control DB is open, so the sites are served from it, without S3
+		turnS3Off(serverConfig, admin, config.S3OffReplication, "The control DB's replication could not start, so S3 is off: nothing is replicated or backed up", err)
 	}
 	// A site whose DB is missing or does not open is unavailable, so the server starts without it and serves the rest
 	// while it is restored from its backup, tried again for about an hour, then the admin is paged

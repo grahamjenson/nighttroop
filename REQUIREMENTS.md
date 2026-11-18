@@ -98,6 +98,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The banner shows when:
   - S3 backups, Sentry or PagerDuty are not connected;
   - the server started without S3, as S3 was not working (in red, in place of the S3 backups note);
+  - the server turned S3 off at start, with why (in red, in place of the S3 backups note);
   - sites reach 90% of `MAX_SITES`, or all of it;
   - a resource is high (see [Resource alerts](#resource-alerts));
   - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
@@ -1956,6 +1957,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
       the replica.
     - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
       one of the two.
+    - If S3 gives an error to that check, the server starts with S3 off.
+  - If the control DB's replication cannot start, the server starts with S3 off.
+  - A server that starts with S3 off for one of these replicates and backs up nothing until it is fixed and started
+    again. The control plane's banner says which, in red, and the admin is paged with an SMS.
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.

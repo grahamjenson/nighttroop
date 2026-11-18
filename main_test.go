@@ -7,9 +7,12 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 	"os"
 	"path/filepath"
@@ -172,6 +175,31 @@ func TestPageFailure(t *testing.T) {
 			require.Equal(t, test.want, paged)
 		})
 	}
+}
+
+// A control DB that is here and cannot be checked against its replica, as S3 gives an error, does not stop the start:
+// S3 is turned off for this run, the banner is told why, and the admin is paged
+func TestRestoreFromS3TurnsS3OffWhenItCannotCheck(t *testing.T) {
+	t.Setenv("AWS_CA_BUNDLE", "")
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode, cfg.DataDir = consts.Development, t.TempDir()
+	cfg.S3URL, cfg.Status.S3Working = "http://127.0.0.1:1", true // nothing listens there
+	path := controldb.GetPath(&cfg)
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o700))
+	require.NoError(t, os.WriteFile(path, []byte("a control DB"), 0o600))
+	pages := []string{}
+	admin := func(_ context.Context, level page.Level, message string, _ ...any) {
+		pages = append(pages, string(level)+": "+message)
+	}
+
+	require.NoError(t, restoreFromS3(t.Context(), &cfg, replica.New(&cfg, s3utils.NewS3Client(&cfg)), admin))
+	require.False(t, cfg.Status.S3Working)
+	require.Equal(t, config.S3OffCheck, cfg.Status.S3Off)
+	require.Len(t, pages, 1)
+	require.Contains(t, pages[0], string(page.SMS)+": The control DB could not be checked against its replica in S3")
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "a control DB", string(data), "the control DB is left as it is")
 }
 
 // A start on a nearly full disk makes room from what the server makes again: its local backup copies, then its logs

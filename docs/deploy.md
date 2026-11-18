@@ -174,6 +174,10 @@ Only if `data/db/controldb.sqlite` is not there, the server restores it from its
     not the one replicated in S3`. Nothing is replicated or backed up. To keep the replica, stop the server, move
     `data/db/controldb.sqlite` away, and start it. To keep the file, delete `<host>/litestream/control` in the
     bucket, and start the server again.
+  - If S3 gives an error to that check, the server also starts with S3 off, and logs `The control DB could not be
+    checked against its replica in S3`. Fix S3, and start the server again.
+  - For each of these, the control plane's banner shows `S3 is off`, in red, with why, and the admin is paged with an
+    SMS.
 - **Warning:** Stop a server that starts in setup with site files on disk. It knows none of its sites.
   - Cause: the file is missing, and **there is no replica, or S3 is off**.
   - It starts as a **new server, in setup**, with the site files still in `data/db`.
@@ -194,6 +198,9 @@ The server opens each and runs its new migrations.
   ([docs/migrations.md](migrations.md)).
 - **Fix:** `update.sh` rolls back, with the DB from the [step 4](#step-4-copy-data) copy. Fix the migration and
   release again.
+- **Failure:** The control DB's replication cannot start. The server starts with S3 off, and logs `The control DB's
+  replication could not start`. The banner shows `S3 is off`, and the admin is paged with an SMS.
+- **Fix:** Read the error, fix its cause (for example an S3 setting), and start the server again.
 
 #### 5.6 Open every site
 
