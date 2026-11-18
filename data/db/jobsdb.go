@@ -2,7 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
+	"log/slog"
+	"os"
 
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/utils/config"
@@ -12,19 +16,29 @@ type JobsDB struct {
 	*jobsdb.DB
 }
 
+// NewJobsDB opens the jobs DB, made again, empty, if it does not open
 func NewJobsDB(ctx context.Context, cfg *config.ServerConfig) (*JobsDB, error) {
-
-	rawDB, err := jobsdb.NewDB(ctx, cfg)
+	rawDB, err := openDisposable(ctx, jobsdb.GetPath(cfg), func() (*jobsdb.DB, error) { return jobsdb.NewDB(ctx, cfg) })
 	if err != nil {
 		return nil, fmt.Errorf("cannot open jobs db: %w", err)
 	}
+	return &JobsDB{DB: rawDB}, nil
+}
 
-	// Create a new jobs db
-	jobsDB := &JobsDB{
-		DB: rawDB,
+// openDisposable opens a DB that is not backed up, as its rows are not worth stopping a start for: one that does not
+// open, as when its file is corrupt or its migration fails, is removed and made again, empty, and logged as an error
+func openDisposable[D any](ctx context.Context, path string, open func() (*D, error)) (*D, error) {
+	opened, err := open()
+	if err == nil {
+		return opened, nil
 	}
-
-	return jobsDB, nil
+	slog.ErrorContext(ctx, "DB does not open, so it is removed and made again, empty", "path", path, "error", err)
+	for _, file := range dbFiles(path) {
+		if err := os.Remove(file); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("cannot remove the DB that did not open: %w", err)
+		}
+	}
+	return open()
 }
 
 func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error {

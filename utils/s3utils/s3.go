@@ -69,12 +69,7 @@ const DefaultRegion = "us-east-1"
 // Retention is the tag an upload carries so the bucket's lifecycle rules expire the versions it replaces
 type Retention string
 
-const (
-	SiteRetention    Retention = "site"
-	ControlRetention Retention = "control"
-	// LockRetention is the lock's, which is written again every lockHeartbeat, so its old versions are kept one day
-	LockRetention Retention = "lock"
-)
+const SiteRetention Retention = "site"
 
 const retentionTag = "nighttroop-retention"
 
@@ -221,22 +216,29 @@ func (c *S3Client) ConfigureVersioning(ctx context.Context) error {
 	return nil
 }
 
-// RetentionRules expire the old versions of the objects tagged with each Retention after its days in the config
+// RetentionRules expire the old versions of the site backups, tagged with SiteRetention, and of the files of the
+// control DB's replica, under its prefix, after their days in the config
 func (c *S3Client) RetentionRules() []types.LifecycleRule {
-	rules := []types.LifecycleRule{}
-	for retention, days := range map[Retention]int{
-		SiteRetention:    c.ServerConfig.SiteBackupRetentionDays,
-		ControlRetention: c.ServerConfig.ControlBackupRetentionDays,
-		LockRetention:    1,
-	} {
-		rules = append(rules, types.LifecycleRule{
-			ID:                          aws.String(retentionTag + "-" + string(retention)),
+	rule := func(name string, filter *types.LifecycleRuleFilter, days int) types.LifecycleRule {
+		return types.LifecycleRule{
+			ID:                          aws.String(retentionTag + "-" + name),
 			Status:                      types.ExpirationStatusEnabled,
-			Filter:                      &types.LifecycleRuleFilter{Tag: &types.Tag{Key: aws.String(retentionTag), Value: aws.String(string(retention))}},
+			Filter:                      filter,
 			NoncurrentVersionExpiration: &types.NoncurrentVersionExpiration{NoncurrentDays: aws.Int32(int32(days))},
-		})
+		}
 	}
-	return rules
+	return []types.LifecycleRule{
+		rule(string(SiteRetention), &types.LifecycleRuleFilter{Tag: &types.Tag{Key: aws.String(retentionTag), Value: aws.String(string(SiteRetention))}}, c.ServerConfig.SiteBackupRetentionDays),
+		rule("control", &types.LifecycleRuleFilter{Prefix: aws.String(c.ReplicaPrefix() + "control")}, c.ServerConfig.ControlBackupRetentionDays),
+		// The lock is written again every lockHeartbeat, so its old versions are kept one day
+		rule("lock", &types.LifecycleRuleFilter{Prefix: aws.String(c.lockKey())}, 1),
+	}
+}
+
+// ReplicaPrefix is where the replicas of the server's DBs are kept, as Litestream keeps them: the control DB's at
+// <prefix>control
+func (c *S3Client) ReplicaPrefix() string {
+	return c.HostName + "/litestream/"
 }
 
 // //

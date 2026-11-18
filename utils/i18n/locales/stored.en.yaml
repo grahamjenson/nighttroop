@@ -48,7 +48,6 @@ stored:
     site_version_restored: "Site restored from a backup"
     site_db_missing: "Site db missing"
     sites_backed_up: "Sites backed up"
-    control_backed_up: "Control backed up"
     site_admin_recovered: "Site admin recovered"
     identity_credentials_changed: "Identity credentials changed"
     connector_turned_off: "Connector turned off"

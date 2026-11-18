@@ -20,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -56,7 +57,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		allowed := httputils.GlobalIPWithinRateLimit(config, ipAddress)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			slog.InfoContext(r.Context(), "Global IP rate limit exceeded", "ip", ipAddress)
+			aslog.Refuse(r.Context(), http.StatusTooManyRequests, "", "Global IP rate limit exceeded", "ip", ipAddress)
 			return
 		}
 		host, _, err := net.SplitHostPort(r.Host)
@@ -65,7 +66,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		}
 		routeTarget, siteSubdomain, err := GetRouteTargetFromSubdomain(host, validHostnames)
 		if err != nil {
-			slog.InfoContext(r.Context(), "Main router 404 for host header", "host", host, "error", err)
+			aslog.Refuse(r.Context(), http.StatusNotFound, host, "Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -77,7 +78,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		// Global Rate Limit
 		if !globalWithinRateLimit(config, routeTarget, r) {
 			w.WriteHeader(http.StatusTooManyRequests)
-			slog.InfoContext(r.Context(), "Global rate limit exceeded", "route_target", routeTarget)
+			aslog.Refuse(r.Context(), http.StatusTooManyRequests, "", "Global rate limit exceeded", "route_target", routeTarget)
 			return
 		}
 
@@ -180,7 +181,7 @@ func globalWithinRateLimit(config *config.ServerConfig, routeTarget RouteTarget,
 func serveSite(ctx context.Context, w http.ResponseWriter, r *http.Request, router http.Handler, config *config.ServerConfig, controlDB *db.ControlDB, subdomain string, ipAddress string, missingStatus int) {
 	siteDB, siteModel, err := controlDB.GetSite(ctx, subdomain)
 	if errors.Is(err, db.ErrSiteNotFound) {
-		slog.InfoContext(ctx, "Main router site does not exist", "subdomain", subdomain, "status", missingStatus, "error", err)
+		aslog.Refuse(ctx, missingStatus, subdomain, "Main router site does not exist", "subdomain", subdomain, "status", missingStatus, "error", err)
 		apiutils.WriteJSON(w, missingStatus, map[string]any{"status": missingStatus, "message": "site does not exist"})
 		return
 	}

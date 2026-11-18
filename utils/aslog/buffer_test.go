@@ -51,3 +51,19 @@ func TestBufferKeepsWithinItsLimits(t *testing.T) {
 	require.Positive(t, dropped)
 	require.LessOrEqual(t, 500*(len(taken)+len(buffer.records)), maxBufferedBytes)
 }
+
+// Logs at info and above are held for the logs DB; debug logs are only written to standard out
+func TestBufferHandlerLeavesOutDebug(t *testing.T) {
+	buffer := &Buffer{Full: make(chan struct{}, 1)}
+	logger := slog.New(ContextHandler{BufferHandler{Buffer: buffer}})
+	logger.Debug("debug")
+	logger.Info("info")
+	logger.Warn("warn")
+	logger.Error("error")
+	records, _ := buffer.Take()
+	levels := []string{}
+	for _, record := range records {
+		levels = append(levels, record.Level)
+	}
+	require.Equal(t, []string{"info", "warn", "error"}, levels)
+}

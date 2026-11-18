@@ -9,6 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/errors"
@@ -41,12 +42,12 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 			// A failed sign in spends the IP's budget on the site, not the site's own limit its identities need
 			if allowed, _ := httputils.SiteUnauthWithinRateLimit(cfg, r); !allowed {
 				w.WriteHeader(http.StatusTooManyRequests)
-				slog.InfoContext(r.Context(), "Site unauthenticated rate limit exceeded")
+				aslog.Refuse(r.Context(), http.StatusTooManyRequests, "", "Site unauthenticated rate limit exceeded")
 				return
 			}
 
 			if acceptType.API() {
-				slog.InfoContext(r.Context(), "Identity Login Failed: invalid JWT token", "error", err, "stack", errors.LocalStack())
+				aslog.Refuse(r.Context(), http.StatusUnauthorized, "", "Identity Login Failed: invalid JWT token", "error", err, "stack", errors.LocalStack())
 				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 
 				return
@@ -78,7 +79,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	if err == nil {
 		identity, err := httputils.GetJWTSiteIdentity(r.Context(), config, cookieToken)
 		if err != nil {
-			slog.InfoContext(r.Context(), "Bad Cookie JWT token", "error", err)
+			slog.DebugContext(r.Context(), "Bad Cookie JWT token", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		return identity, nil

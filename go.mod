@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.19
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.6
 	github.com/aws/smithy-go v1.28.7
+	github.com/benbjohnson/litestream v0.5.18
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/go-echarts/go-echarts/v2 v2.7.3
@@ -17,6 +18,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
+	github.com/johannesboyne/gofakes3 v1.2.0
 	github.com/mxschmitt/playwright-go v0.6201.1
 	github.com/nicksnyder/go-i18n/v2 v2.7.0
 	github.com/oapi-codegen/runtime v1.1.2
@@ -27,6 +29,7 @@ require (
 	github.com/samber/slog-multi v1.9.0
 	github.com/samber/slog-sentry/v2 v2.11.0
 	github.com/stretchr/testify v1.12.1
+	github.com/superfly/ltx v0.5.2
 	github.com/tink-crypto/tink-go/v2 v2.9.0
 	github.com/yuin/goldmark v1.8.7
 	golang.org/x/crypto v0.58.0
@@ -44,6 +47,8 @@ require (
 	github.com/andybalholm/brotli v1.2.7 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.25 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.33.13 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.8 // indirect
@@ -51,8 +56,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.12.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.39.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.44.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.51.6 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/boombuler/barcode v1.1.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cli/browser v1.3.0 // indirect
 	github.com/dave/jennifer v1.6.0 // indirect
 	github.com/deckarep/golang-set/v2 v2.9.0 // indirect
@@ -70,11 +81,18 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/hablullah/go-hijri v1.0.2 // indirect
+	github.com/hablullah/go-juliandays v1.0.0 // indirect
+	github.com/jalaali/go-jalaali v0.0.0-20210801064154-80525e88d958 // indirect
 	github.com/jmattheis/goverter v1.11.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/lmittmann/tint v1.1.3 // indirect
+	github.com/magefile/mage v1.14.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/markusmobius/go-dateparser v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
@@ -83,16 +101,25 @@ require (
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
+	github.com/prometheus/client_golang v1.17.0 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
+	github.com/prometheus/common v0.45.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/psanford/sqlite3vfs v0.0.0-20260519004904-f9180fa2acc9 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/samber/slog-common v0.22.0 // indirect
 	github.com/speakeasy-api/jsonpath v0.6.0 // indirect
 	github.com/speakeasy-api/openapi-overlay v0.10.2 // indirect
+	github.com/tetratelabs/wazero v1.2.1 // indirect
 	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
+	github.com/wasilibs/go-re2 v1.3.0 // indirect
 	github.com/woodsbury/decimal128 v1.3.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.mongodb.org/mongo-driver v1.17.10 // indirect
+	go.shabbyrobe.org/gocovmerge v0.0.0-20230507111327-fa4f82cfbf4d // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect

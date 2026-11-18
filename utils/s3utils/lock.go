@@ -32,8 +32,7 @@ func (c *S3Client) lockKey() string {
 // if its ETag is still ifMatch. It gives the new ETag, or false when S3 refuses as the condition does not hold.
 func (c *S3Client) putLock(ctx context.Context, ifMatch string) (string, bool, error) {
 	input := &s3.PutObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey()),
-		Body:    strings.NewReader(time.Now().Format(time.RFC3339Nano)),
-		Tagging: aws.String(retentionTag + "=" + string(LockRetention))}
+		Body: strings.NewReader(time.Now().Format(time.RFC3339Nano))}
 	if ifMatch == "" {
 		input.IfNoneMatch = aws.String("*")
 	} else {

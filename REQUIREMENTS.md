@@ -20,6 +20,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - `development`: all passwords `password`, all TOTP codes `123123`. Does not start over `https`.
 - Production or staging: does not start if `KEY_SETS` holds a public key from `.env.dev` or `.env.test`. Says to make
   new keys with `cmd/keysets/create_keysets.go`.
+- If the jobs DB or the logs DB does not open, the server removes it, makes an empty one, logs an error, and starts.
 
 #### First control admin
 
@@ -285,7 +286,17 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Log storage
 
-- Every server log is kept in the logs, written in batches, without IP addresses.
+- Every server log at info, warn or error is kept in the logs, written in batches, without IP addresses. Debug logs
+  are only written to standard out.
+- Requests refused before signing in are each logged at debug only: a site that does not exist (410/404), a missing or
+  wrong token or JWT, or a control admin not signed in (401), a country not allowed (403), an unknown host or Nightscout
+  path (404), the global, global IP and site unauthenticated rate limits (429) and a refused Socket.IO authorize.
+  - Each minute, and on shutdown, one `Unauthenticated requests refused` info log for each reason and status with any,
+    on the control logs page only (no site): `reason`, `status`, `total`, `keys`, `other` and `top`, the 10 most
+    refused keys with their counts. A key is the subdomain of a site that does not exist, the host refused, or the
+    route's pattern, never an IP address, token or path.
+  - At most 100 keys of a reason are counted apart; the rest are `other`, so a sweep of every subdomain cannot grow
+    the server's memory.
 - Logs, events and errors keep their `request_id` or `job_id`.
 - Logs waiting to be written are capped at 1 MB. Past that, they are dropped and the logs say how many.
 - Request logs and Sentry show `REDACTED` for the query's `token`, `secret` and Socket.IO `sid`.
@@ -1835,29 +1846,36 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
   - Only one server backs up to a host's folder of the bucket. A server takes the lock `<host>/server.lock` before it
-    restores or backs up, writes it again every 20 seconds, and deletes it after its last backup.
+    restores, backs up or replicates, writes it again every 20 seconds, and deletes it after its last backup.
   - While another server holds the lock, a server that starts waits. It takes the lock when the other server deletes
     it, or 60 seconds after the other server last wrote it.
-  - If another server takes a server's lock, that server uploads no more, and logs an error.
+  - If another server takes a server's lock, that server uploads no more site backups, and logs an error.
   - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
 
 #### Backups
 
-- Each site DB goes to S3 by itself, and the control DB separately. S3 keeps old versions for a retention period.
+- Each site DB goes to S3 by itself. S3 keeps old versions for a retention period.
 - A site written to since its last backup is backed up once that backup is an hour old
-  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26). The control DB is backed up every 30
-  seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the server stops.
+  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26), and when the server stops.
+- With S3, the control DB is replicated by Litestream, with its defaults, as it is written: its writes are in S3 within
+  about a second, at `<host>/litestream/control`. Its last writes are sent when the server stops.
+  - Over HTTPS, S3 encrypts the replica with SSE-C, with a key made from the MAC key set. Production and staging
+    refuse an `S3_URL` that is not `https://`.
+  - A start with no `data/db/controldb.sqlite` restores it from the replica; with no replica, it starts a new server.
+  - The start logs which it does: keeps the control DB there, restores it from the replica, or starts a new one, as
+    there is no replica or S3 is off (a warning).
+  - `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
-  `data/backup/site/<letter>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`. `<letter>` is the first letter
+  `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
   - A copy cut short does not replace the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
-  `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
+  and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A site whose copy is already uploaded is not uploaded again.
 - A failed upload is tried again at the next tick.
@@ -1871,8 +1889,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Restore and start
 
-- A missing control DB is restored from S3 on start. A failed or cut download leaves nothing, and the next start
-  tries again.
+- A missing control DB is restored from its replica on start (see Backups). A restore that fails stops the start.
 - A restore decompresses each `.lz4` copy to its `.sqlite` DB.
 - A restore (on start, or of an archived site) without a backup at its `.tar.enc` key uses the old backup at the same
   key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.

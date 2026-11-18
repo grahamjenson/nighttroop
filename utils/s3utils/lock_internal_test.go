@@ -133,13 +133,13 @@ func TestLockStopsWaitingWhenCancelled(t *testing.T) {
 func TestLockLostStopsUploads(t *testing.T) {
 	fake, servers := lockServers(t, 1)
 	require.NoError(t, servers[0].Lock(t.Context()))
-	require.NoError(t, servers[0].uploadStreamToS3(t.Context(), "nighttroop.test/backup/controldb.tar.enc", ControlRetention, strings.NewReader("backup")))
+	require.NoError(t, servers[0].uploadStreamToS3(t.Context(), "nighttroop.test/sites/site.tar.enc", SiteRetention, strings.NewReader("backup")))
 
 	fake.Lock()
 	fake.etags["/bucket/"+servers[0].lockKey()] = `"another server"`
 	fake.Unlock()
 	require.Eventually(t, servers[0].lockLost.Load, time.Second, 5*time.Millisecond)
-	err := servers[0].uploadStreamToS3(t.Context(), "nighttroop.test/backup/controldb.tar.enc", ControlRetention, strings.NewReader("backup"))
+	err := servers[0].uploadStreamToS3(t.Context(), "nighttroop.test/sites/site.tar.enc", SiteRetention, strings.NewReader("backup"))
 	require.ErrorIs(t, err, ErrLockLost)
 
 	servers[0].Unlock()

@@ -16,6 +16,8 @@
        differently
     1. P3: Show in the control plane's status, and page the admin, when another server takes this server's S3 lock:
        it is only logged as an error
+    1. P1: Stop the control DB's replica when another server takes this server's S3 lock: only the site backups
+       stop, as Litestream uploads with its own S3 client
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
 
