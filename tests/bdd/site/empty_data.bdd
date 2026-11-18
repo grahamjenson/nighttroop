@@ -1,0 +1,21 @@
+INCLUDE steps/new_site_admin.steps
+
+// A new site has no readings, so the empty glucose readings table says how they get there, with a link to the guide
+CLICK #site--nav--data
+ASSERT_PATH /data/glucose
+ASSERT_VISIBLE #site--glucose--empty >> text=No glucose readings here.
+ASSERT_VISIBLE #site--glucose--empty >> text=On a new site, nothing is here until an app or a connector sends it.
+SCREENSHOT empty_glucose
+CLICK #site--glucose--empty #site--data--new-site-link
+ASSERT_PATH /getting-started
+ASSERT_VISIBLE #site--getting-started--data
+
+// The treatments' tables say the same, and a table with a row says neither
+GOTO {{ .site_url }}/data/insulin
+ASSERT_VISIBLE #site--insulin--empty #site--data--new-site-link
+GOTO {{ .site_url }}/data/glucose
+CLICK #site--glucose--add
+INPUT #site--glucose--create--reading 6.5
+CLICK #site--glucose--create--submit
+ASSERT_VISIBLE #glucoseReadingsTable >> text=6.5
+ASSERT_NOT_VISIBLE #site--data--new-site-link

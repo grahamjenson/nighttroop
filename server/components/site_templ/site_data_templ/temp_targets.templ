@@ -26,6 +26,7 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 		Above:       searchTotals("site--temp-target", "site.data.temp_targets.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
+			EmptyHint: newSiteHint(),
 			ID:      "tempTargetsTable",
 			EmptyID: "site--temp-target--empty",
 			Empty:   i18n.T(ctx, "site.data.temp_targets.empty"),

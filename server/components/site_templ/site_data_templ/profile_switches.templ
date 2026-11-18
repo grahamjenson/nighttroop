@@ -24,6 +24,7 @@ templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip
 		Above:       searchTotals("site--profile-switch", "site.data.profile_switches.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
+			EmptyHint: newSiteHint(),
 			ID:      "profileSwitchesTable",
 			EmptyID: "site--profile-switch--empty",
 			Empty:   i18n.T(ctx, "site.data.profile_switches.empty"),

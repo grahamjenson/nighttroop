@@ -52,10 +52,12 @@ templ Empty(id string, columns int, text string) {
 	</tr>
 }
 
-// EmptyCell is the one cell of a row saying a table has no rows: an icon over the words, in the middle of the table
+// EmptyCell is the one cell of a row saying a table has no rows: an icon over the words, in the middle of the table,
+// then its children, such as a hint on how rows get there
 templ EmptyCell(columns int, text string) {
 	<td colspan={ strconv.Itoa(columns) } class="p-6 text-center text-sm text-gray-500">
 		@icon.Inbox(icon.Props{Class: "mx-auto mb-1 size-5 text-gray-400"})
 		{ text }
+		{ children... }
 	</td>
 }

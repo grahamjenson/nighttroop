@@ -852,6 +852,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - A table for each kind, newest first and paged: add, view, edit, delete.
 - Add (the main action): right of the title, below it on a phone. Same on presets and push credentials.
+- An empty table of glucose readings, insulin doses, food intakes, temp basals, temp targets, profile switches,
+  activities, notifications or event groups says that a new site has nothing until an app or a connector sends it,
+  with a link to Getting Started. A table with a row does not.
 - Each main button has an icon before its words: save, add, delete, reset, backfill, filter, print and regenerate.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.

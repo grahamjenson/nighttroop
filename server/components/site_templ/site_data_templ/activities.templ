@@ -24,6 +24,7 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 		Above:       searchTotals("site--activity", "site.data.activities.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
+			EmptyHint: newSiteHint(),
 			ID:      "activitiesTable",
 			EmptyID: "site--activity--empty",
 			Empty:   i18n.T(ctx, "site.data.activities.empty"),

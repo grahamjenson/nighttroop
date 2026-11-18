@@ -3,6 +3,8 @@ site:
   data:
     # Shown on many of the data pages: their tables' columns, their forms' fields and their details
     common:
+      new_site: "On a new site, nothing is here until an app or a connector sends it."
+      new_site_link: "See how to get your data in"
       time: "Time"
       type: "Type"
       name: "Name"
