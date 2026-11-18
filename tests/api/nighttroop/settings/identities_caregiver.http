@@ -36,7 +36,7 @@ SET entry_id {{ dig "pwd_entry.result.identifier" }}
 NAME pwd_devicestatus
 POST http://{{ .ns_site }}/api/v3/devicestatus
 H Authorization: Bearer {{ .pwd_jwt }}
-B {"device": "loop://iPhone", "date": {{ itime 10 }}}
+B {"device": "loop://iPhone", "date": {{ itime 10 }}, "uploaderBattery": 90}
 ASSERT_STATUS 201
 SET devicestatus_id {{ dig "pwd_devicestatus.result.identifier" }}
 
@@ -132,6 +132,13 @@ B {"_id": "{{ .devicestatus_id }}", "device": "carer"}
 ASSERT_STATUS 403
 ASSERT_EQUALS "Missing permission api:devicestatus:update" "@message"
 
+# A v1 POST with an _id replaces the document with it, which a caregiver cannot do: the stored one comes back
+NAME carer_cannot_replace_devicestatus_by_post_v1
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ .carer_token }}
+B {"_id": "{{ .devicestatus_id }}", "device": "loop://iPhone", "uploaderBattery": 1}
+ASSERT_STATUS 200
+ASSERT_EQUALS 90 "@0.uploaderBattery"
+
 NAME carer_cannot_add_entries_v1
 POST http://{{ .ns_site }}/api/v1/entries?token={{ .carer_token }}
 B [{"type": "sgv", "sgv": 40, "date": {{ itime 5 }}}]
@@ -189,6 +196,7 @@ GET http://{{ .ns_site }}/api/v3/devicestatus/{{ .devicestatus_id }}
 H Authorization: Bearer {{ .pwd_jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "loop://iPhone" "@result.device"
+ASSERT_EQUALS 90 "@result.uploaderBattery"
 
 NAME profile_kept
 GET http://{{ .ns_site }}/api/v3/profile/{{ .profile_id }}

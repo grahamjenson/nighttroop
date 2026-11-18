@@ -2192,6 +2192,8 @@ harder:
   - It reads everything.
   - It adds, changes and deletes treatments, adds a device status, and reads and writes settings.
   - It cannot add readings or profiles, or change or delete readings, profiles or device statuses: 403.
+  - If it sends a device status with the `_id` of a stored one to API v1 `POST`, the stored one does not change and is
+    the answer.
   - On the socket, `authorize` gives it `write` false and `write_treatment` true. Its `dbAdd`, `dbUpdate`,
     `dbUpdateUnset` and `dbRemove` have the same permissions as on REST. If it does not have the permission, the
     answer is `Not permitted`.

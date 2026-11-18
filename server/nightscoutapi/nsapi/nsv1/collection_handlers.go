@@ -75,11 +75,13 @@ const maxLeftOut = 10
 // device status batches
 func Create(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
+		canUpdate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionUpdate)
+
 		documents, isBatch, err := readDocuments(r)
 		if err == nil {
 			err = batchWithinLimits(w, r, len(documents))
@@ -97,7 +99,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			if doc, _ := document.(map[string]any); collection == nsutils.Entries && doc["type"] == "cal" {
 				continue
 			}
-			record, err := storeDocument(r, store, collection, document)
+			record, err := storeDocument(r, store, collection, document, canUpdate)
 			if isBatch && left.leaves(err) {
 				continue
 			}
@@ -149,13 +151,14 @@ func batchWithinLimits(w http.ResponseWriter, r *http.Request, n int) *nsutils.H
 }
 
 // storeDocument stores one document sent to be created. As in Nightscout, one sent with an _id replaces the one with
-// it, as Loop sends an override again with its _id when it changes.
-func storeDocument(r *http.Request, store nsutils.Store, collection nsutils.Collection, document any) (nsutils.Document, *nsutils.HTTPError) {
+// it, as Loop sends an override again with its _id when it changes. That changes a record, so needs canUpdate: a
+// caregiver, who can only add a device status, gets the stored one back unchanged.
+func storeDocument(r *http.Request, store nsutils.Store, collection nsutils.Collection, document any, canUpdate bool) (nsutils.Document, *nsutils.HTTPError) {
 	doc, ok := document.(map[string]any)
 	if !ok {
 		return nil, nsutils.BadDataBodyError
 	}
-	if id, isID := doc["_id"].(string); isID && nsutils.ValidateIdentifierIsntBad(id) == nil {
+	if id, isID := doc["_id"].(string); isID && canUpdate && nsutils.ValidateIdentifierIsntBad(id) == nil {
 		record, _, err := store.Replace(movableDate(r, collection), collection, id, doc, true)
 		return record, err
 	}
