@@ -346,6 +346,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - If PagerDuty does not take a page, the server logs the error and continues.
 - If sites stay unavailable after their last restore try, the admin is paged with a Call.
 - If S3 is not working after the start's tries, and the server starts without it, the admin is paged with an SMS.
+- If the server does not start, or stops with an error after it started, the admin is paged with a Call. Each has one
+  message, so a server that fails each time Docker starts it again is one incident.
+  - A server whose S3 lock another server took stops with an error, so it pages.
+  - A server told to stop, or one that restarts to use S3 again, does not page.
+  - A server whose settings stop it starting does not page: it prints the error.
 - On the admins page, an admin selects a level and clicks **Test Admin Page** to page through PagerDuty.
   - Each test is a new incident. Its message names the admin and the time.
   - If `PAGERDUTY_ROUTING_KEY` is not set, a toast says PagerDuty is not set up. A read only admin does not see it.

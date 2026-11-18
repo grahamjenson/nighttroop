@@ -103,6 +103,8 @@ After 5.1 the server listens on port 3000. Until 5.10 it answers each request, `
 and `{"status":"starting"}`.
 
 - A failed step ends the process with its error. Docker starts it again (`restart: unless-stopped`).
+- A failed step after 5.1 pages the admin with a Call, `The server did not start, so its sites are down`, with the
+  error. Each restart sends the same page, which PagerDuty keeps as one incident.
 - A start that always fails restarts until `update.sh` stops waiting ([step 6](#step-6-wait-for-a-healthy-server))
   and rolls back.
 
