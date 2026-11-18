@@ -1,27 +1,21 @@
 package restore
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
-	"time"
 
-	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/s3utils"
 )
 
 // RemoveStaging removes the folders a start or archive killed part way leaves beside the DBs: a download's
 // `.<folder>-restore-*` staging folder (see s3utils.DownloadFilesFromS3) and an archive's `.archive-*` folder (see
 // ControlDB.ArchiveSite). It is run before any restore or archive, so none of them is still in use.
 func RemoveStaging(serverConfig *config.ServerConfig) {
-	// The control DB downloads to its DB folder, and each site to its letter's folder; an archive is beside its backup
-	restored := []string{serverConfig.DBDir()}
+	// Each site downloads to its letter's folder; an archive is beside its backup
+	restored := []string{}
 	patterns := []string{}
 	for _, char := range utils.SITE_CHAR_SET {
 		restored = append(restored, sitedb.GetSitesFolder(string(char), serverConfig))
@@ -45,48 +39,4 @@ func RemoveStaging(serverConfig *config.ServerConfig) {
 			}
 		}
 	}
-}
-
-func TryRestoreControlDB(s3Client *s3utils.S3Client) error {
-	defer aslog.TrackTime(context.Background(), time.Now(), "TryRestoreControlDB", nil, nil)
-	slog.Info("TryRestoreControlDB")
-
-	err := TryDownloadExtractControlDbs(s3Client)
-	if err != nil {
-		return fmt.Errorf("cannot try download control db: %w", err)
-	}
-
-	return nil
-}
-
-func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
-	path := controldb.GetPath(s3Client.ServerConfig)
-	backuppath := controldb.GetBackupPath(s3Client.ServerConfig)
-	s3Path := controldb.GetS3Path(s3Client.ServerConfig)
-
-	// If it already exists dont download
-	if utils.FileExists(path) {
-		return nil
-	}
-
-	err := utils.MkParentDirs(path)
-	if err != nil {
-		return fmt.Errorf("cannot create parent directories: %w", err)
-	}
-
-	err = utils.MkParentDirs(backuppath)
-	if err != nil {
-		return fmt.Errorf("cannot create parent directories: %w", err)
-	}
-
-	_, found, err := s3Client.DownloadFilesFromS3(context.Background(), s3Path, s3Client.ServerConfig.DBDir())
-	if !found && err == nil {
-		slog.Info("No control db backup found")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("cannot download control db: %w", err)
-	}
-
-	return nil
 }

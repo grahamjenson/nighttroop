@@ -192,10 +192,6 @@ func GetBackupPath(serverConfig *config.ServerConfig) string {
 	return fmt.Sprintf("%s/%s.sqlite.lz4", serverConfig.BackupDir(), "logsdb")
 }
 
-func GetS3Path(serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/backup/%s.tar.enc", serverConfig.HostName, "logsdb")
-}
-
 // Migrations are the DB's migrations, in their migrations folder
 //
 //go:embed migrations/*.sql
