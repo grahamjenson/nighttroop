@@ -154,6 +154,15 @@ Only if `data/db/controldb.sqlite` is not there, the server restores it from its
 (`go run cmd/keysets/restore_replica.go <path>` does the same by hand).
 
 - **Failure:** The restore fails. The start stops.
+- If the file is there, but was made while S3 was off or was another bucket or host, the server does not replicate it
+  over the replica in S3. `controldb.sqlite.replica` next to the file has the address of the replica it belongs to.
+  - With no replica in S3, the server replicates the file.
+  - If the file has no control admin (never set up), the server moves it to `controldb.sqlite.replaced-<time>` and
+    restores the replica.
+  - If the file has a control admin, the server starts with S3 off, and logs `The control DB here is set up, and is
+    not the one replicated in S3`. Nothing is replicated or backed up. To keep the replica, stop the server, move
+    `data/db/controldb.sqlite` away, and start it. To keep the file, delete `<host>/litestream/control` in the
+    bucket, and start the server again.
 - **Warning:** Stop a server that starts in setup with site files on disk. It knows none of its sites.
   - Cause: the file is missing, and **there is no replica, or S3 is off**.
   - It starts as a **new server, in setup**, with the site files still in `data/db`.
