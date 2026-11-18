@@ -18,7 +18,7 @@ func TestOverridesFor(t *testing.T) {
 	}{
 		{"no identity, as a broadcast", nil, ClientOverrides{}},
 		{"no client", &controldb.SiteIdentity{}, ClientOverrides{}},
-		{"Loop", client("loop"), ClientOverrides{FractionalDurations: true, SuspendReason: true}},
+		{"Loop", client("loop"), ClientOverrides{FractionalDurations: true}},
 		{"Trio", client("trio"), ClientOverrides{}},
 		{"AAPS", client("aaps"), ClientOverrides{}},
 		{"xDrip4iOS", client("xdrip4ios"), ClientOverrides{}},

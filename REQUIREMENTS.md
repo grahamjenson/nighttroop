@@ -1729,12 +1729,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Summary: the basal during a temp basal is its rate.
 - A temp basal of under a minute (e.g. `durationInMilliseconds` 43491 with `duration` 0) keeps 1 minute, not 0.
 - A suspended pump: a temp basal of `type` `PUMP_SUSPEND`, as AAPS sends it.
+  - From any client, a temp basal sent with `rate` 0 and `reason` `suspend`, and no `type`, is kept with `type`
+    `PUMP_SUSPEND`. Loop sends a suspend so with `duration` 0, then again with its `duration` when the pump resumes.
   - Summary: if its duration is 0, the pump has not resumed. The basal is 0 until the next temp basal, or until now.
 - Any other temp basal of duration 0 is a cancel. It ends the running temp basal (careportal: no `rate`; Trio: `rate`
   0).
-- Exception, for a device added for Loop only: a temp basal with `rate` 0 and `reason` `suspend` is kept with `type`
-  `PUMP_SUSPEND` (see `nsutils.ClientOverrides`). Loop sends a suspend with `duration` 0, then again with its
-  `duration` when the pump resumes. From any other device, it is a cancel.
 
 #### Temp targets and overrides
 

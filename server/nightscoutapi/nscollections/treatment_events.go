@@ -11,7 +11,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
@@ -256,6 +255,11 @@ var (
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.TempBasal) {
 			if rate := nightscoutmodels.TempBasalValuePtr(source); rate != nil {
 				target.Rate = *rate
+				// A rate of 0 sent with the reason suspend, as Loop sends one, is a suspended pump, kept so as AAPS sends
+				// one. A cancel has no such reason.
+				if *rate == 0 && target.Type == nil && target.Reason != nil && *target.Reason == "suspend" {
+					target.Type = new(sitemodels.PumpSuspendType)
+				}
 			}
 			// One that ran under a minute keeps 1, as 0 is a cancel, or a suspended pump that has not resumed
 			if ms := source.Duration.MsP(); target.DurationMinutes == 0 && ms != nil && *ms > 0 {
@@ -504,13 +508,8 @@ const maxMultiplier = 11
 
 // fillTempBasal sets what the treatment doesn't send of a temp basal's rate in U/hr and its multiplier, from the other
 // and the profile's basal at its start, see sitemodels.BasalAt, keeping them as they are when no profile has a basal
-// then. It also sets the type of a suspended pump a client sends as a reason, see nsutils.ClientOverrides.
+// then
 func fillTempBasal(ctx context.Context, q *sitedb.Queries, treatment nightscoutmodels.Treatment, tempBasal *sitedb.TempBasal) error {
-	// BAD, for Loop alone, against every other client: see nsutils.ClientOverrides
-	if siteContext := httputils.GetSiteContext(ctx); tempBasal != nil && tempBasal.Type == nil && tempBasal.Rate == 0 && tempBasal.Reason != nil &&
-		*tempBasal.Reason == "suspend" && siteContext != nil && nsutils.OverridesFor(siteContext.IdentityModel).SuspendReason {
-		tempBasal.Type = new(sitemodels.PumpSuspendType)
-	}
 	sentRate, sentPercent := nightscoutmodels.TempBasalValuePtr(treatment) != nil, treatment.TempBasalPercent != nil
 	if tempBasal == nil || sentRate == sentPercent || (sentPercent && tempBasal.Multiplier == nil) {
 		return nil

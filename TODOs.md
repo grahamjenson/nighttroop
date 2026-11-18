@@ -106,8 +106,6 @@
     1. P4: A suspended pump (`PUMP_SUSPEND`) of 0 minutes is a basal of 0 in the summaries until the next temp basal;
        also end it at a `Resume Pump` event, kept as an event group, for a Loop that does not send the suspend again
        with its duration
-    1. P3: Loop's suspend is a suspended pump only from a device added for Loop (`nsutils.ClientOverrides`). Ask a
-       site whose Loop uses the PWD phone token to add Loop as its device, as from that token it is a cancel
     1. P3: Count an AAPS or Juggluco bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal
        in the summaries, reports and IOB, as it is kept and given back but still counted as a bolus
     1. P4: Food, insulin and temp targets added on the site are not Nightscout treatments until grouped, so AAPS and

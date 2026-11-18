@@ -148,7 +148,7 @@ func TestSummaryMinutes(t *testing.T) {
 		},
 		{
 			// The careportal sends a cancel as a temp basal of 0 minutes with no rate, stored as a rate of 0, and Trio as
-			// one of rate 0. The reason suspend alone, from a device not added for Loop, is not a suspended pump.
+			// one of rate 0. The summary reads a suspended pump by its type, not its reason.
 			name:     "a temp basal of no duration that is not a suspended pump cancels the running one",
 			units:    &mgdl,
 			defaults: []*sitedb.ProfilePreset{defaultProfile},

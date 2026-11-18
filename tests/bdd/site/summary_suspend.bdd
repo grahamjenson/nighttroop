@@ -4,19 +4,12 @@ ASSERT_PATH /
 // A reading, so the summary shows its tables, not the guide to setting it up
 POST /data/glucose {"reading": 6.4, "reading_type": "sgv", "occurred_at": {{ itime 5 }}}
 
-// Loop, on a device added for Loop, suspends the pump: a temp basal of rate 0, duration 0 and reason suspend, until it
-// resumes
+// Loop, with the site's PWD phone token, suspends the pump: a temp basal of rate 0, duration 0 and reason suspend,
+// until it resumes
 HTTP
-NAME create_loop
-POST {{ .site_url }}/settings/identities
-H Authorization: Bearer {{ .login_admin.token }}
-H Accept: application/json
-B {"name": "loop", "role": "device_pwd_phone", "client": "loop"}
-ASSERT_STATUS 201
-
 NAME loop_suspend
 POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments
-H api-secret: {{ sha1 .create_loop.result.ns_token }}
+H api-secret: {{ sha1 .create_new_site.pwd_nstoken }}
 B [{"eventType": "Temp Basal", "reason": "suspend", "rate": 0, "absolute": 0, "temp": "absolute", "duration": 0, "created_at": "{{ time 3 }}", "enteredBy": "loop://iPhone", "syncIdentifier": "73757370656e64207375706d6172792062646420746573742d31"}]
 ASSERT_STATUS 200
 BROWSE
@@ -40,7 +33,7 @@ ASSERT_STATUS 200
 HTTP
 NAME loop_resume
 POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments
-H api-secret: {{ sha1 .create_loop.result.ns_token }}
+H api-secret: {{ sha1 .create_new_site.pwd_nstoken }}
 B [{"eventType": "Temp Basal", "reason": "suspend", "rate": 0, "absolute": 0, "temp": "absolute", "duration": 2, "created_at": "{{ dig "loop_suspend.0.created_at" }}", "enteredBy": "loop://iPhone", "syncIdentifier": "73757370656e64207375706d6172792062646420746573742d31"}]
 ASSERT_STATUS 200
 BROWSE
