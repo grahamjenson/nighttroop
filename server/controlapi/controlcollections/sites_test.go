@@ -39,7 +39,7 @@ func TestDisablingSiteRecordsEvent(t *testing.T) {
 }
 
 // TestDisablingActiveSite checks an admin can disable a live site however recently it was written to or seen, but not
-// one already disabled
+// one already disabled, and enable a disabled site, but not a live one
 func TestDisablingActiveSite(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	cfg.DisableAfterInactivityDays = 7
@@ -58,6 +58,19 @@ func TestDisablingActiveSite(t *testing.T) {
 
 	_, err = (&SitesCollection{}).UpdateRow(ctx, controlContext, active, &controlmodels.Site{State: "disabled"})
 	require.Error(t, err, "a site already disabled is not disabled again")
+
+	_, err = (&SitesCollection{}).UpdateRow(ctx, controlContext, active, &controlmodels.Site{State: "live"})
+	require.NoError(t, err)
+	row, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.Equal(t, "live", row.State)
+	require.Nil(t, row.DisabledAt)
+	_, err = (&SitesCollection{}).UpdateRow(ctx, controlContext, active, &controlmodels.Site{State: "live"})
+	require.ErrorContains(t, err, "only a disabled site can be enabled")
+
+	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Equal(t, "site_enabled", events[0].Name)
 }
 
 func TestTruncateHandler(t *testing.T) {

@@ -2653,6 +2653,16 @@ func (m *DisableSiteParams) SetID(v string) {
 }
 
 // GetID returns the ID value.
+func (m EnableSiteParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated EnableSiteParams.
+func (m *EnableSiteParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m GetSiteParams) GetID() string {
 	return m.ID
 }

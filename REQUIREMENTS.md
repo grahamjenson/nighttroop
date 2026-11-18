@@ -200,6 +200,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | --- | --- | --- |
 | Download DB | Live or disabled (DB here) | See below. |
 | Disable | Any live site, however recently used, after a confirmation | Not served. Socket.IO connections close. |
+| Enable | A disabled site, after a confirmation | Served again. Its data is as it was. |
 | Archive | After disable. Needs S3. | Uploaded to S3. |
 | Restore | From the archived sites page | Live again. |
 | Truncate | Live or disabled, any size | Truncates all device statuses (as each backup does the newest), deletes old loop settings no record refers to, shrinks the DB. |

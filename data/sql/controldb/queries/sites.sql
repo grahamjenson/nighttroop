@@ -138,6 +138,14 @@ SET
     state = 'disabled'
 WHERE id = ? AND state = 'live';
 
+-- name: EnableSite :execresult
+-- Brings a disabled site back live; its DB is still here
+UPDATE sites
+SET
+    disabled_at = NULL,
+    state = 'live'
+WHERE id = ? AND state = 'disabled';
+
 -- name: ArchiveSites :many
 UPDATE sites
 SET 
