@@ -53,7 +53,7 @@ func (c *S3Client) putLock(ctx context.Context, ifMatch string) (string, bool, e
 // release it, as in a deploy, or for lockStaleAfter without that server writing it, as after a crash. It ends when ctx
 // does. Without S3, or with one that does not refuse a conditional write, there is no lock.
 func (c *S3Client) Lock(ctx context.Context) error {
-	if !c.ServerConfig.Status.S3Working {
+	if c.Endpoint == "" {
 		return nil
 	}
 	seen, since := "", time.Now()

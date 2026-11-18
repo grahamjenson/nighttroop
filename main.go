@@ -76,7 +76,8 @@ func run() error {
 
 	// S3 is off without S3_URL; with it, the server only starts once S3 works
 	s3Client := s3utils.NewS3Client(serverConfig)
-	if err := s3Client.Start(ctx); err != nil {
+	restart, err := startS3(ctx, s3Client.Start, controldb.GetPath(serverConfig), s3Client.LockWhenWorking)
+	if err != nil {
 		return err
 	}
 	// Released on the way out, after the last backup, so only then may another server back up to the bucket
@@ -112,7 +113,29 @@ func run() error {
 	case err := <-serveErr:
 		shutdown(httpServer, backgroundManager, controlDB)
 		return fmt.Errorf("cannot serve HTTP: %w", err)
+	case <-restart:
+		shutdown(httpServer, backgroundManager, controlDB)
+		return errors.New("S3 works again, so the server restarts to restore, replicate and back up with it")
 	}
+}
+
+// startS3 starts S3. If S3 is not working and the control DB is here, the server starts without S3, so an S3 outage
+// does not take the sites down: nothing is restored, replicated or backed up, and the channel closes once S3 works again
+// and this server holds its lock, for the server to restart with S3. Without its control DB the server does not
+// start, as it would start new, and later replicate that over its replica.
+func startS3(ctx context.Context, start func(context.Context) error, controlPath string, lockWhenWorking func(context.Context) bool) (<-chan struct{}, error) {
+	err := start(ctx)
+	if err == nil || ctx.Err() != nil || !utils.FileExists(controlPath) {
+		return nil, err
+	}
+	slog.Error("S3 is not working, so the server starts from its DBs here without backups, and restarts when S3 works", "error", err)
+	restart := make(chan struct{})
+	go func() {
+		if lockWhenWorking(ctx) {
+			close(restart)
+		}
+	}()
+	return restart, nil
 }
 
 // startingHandler answers every request 503 "starting" until the server is ready, then with its handler. A start can

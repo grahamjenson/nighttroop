@@ -118,10 +118,18 @@ From `nighttroop.env` and the compose file ([docs/config.md](config.md)).
 
 If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4, 8 and 16 seconds.
 
-- **Failure:** `S3_URL is set but S3 is not working`, after about 30 seconds. Thus a server never starts empty and
-  uploads over its backups.
-- **Fix:** For an outage, wait. For wrong keys or a removed bucket, fix `nighttroop.env`. The rollback fails the same
-  way, so `update.sh` exits with 2. When S3 works, run `docker compose up -d`.
+- **Failure, with no control DB in `./data`:** `S3_URL is set but S3 is not working`, after about 30 seconds. Thus a
+  server never starts empty and replicates over its replica.
+  - **Fix:** For an outage, wait. For wrong keys or a removed bucket, fix `nighttroop.env`. When S3 works, run
+    `docker compose up -d`.
+- **Failure, with the control DB in `./data`:** The server starts without S3, so an S3 outage does not stop the sites.
+  It logs `S3 is not working, so the server starts from its DBs here without backups`.
+  - Nothing is restored, replicated or backed up. The control plane shows that S3 backups are not connected.
+  - The server tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, stops, and exits with
+    `S3 works again`. Docker starts it again, with S3. The sites are down for that restart only.
+  - While another server holds the lock, this server does not restart. It continues to serve without S3.
+  - **Fix:** For an outage, wait. For wrong keys or a removed bucket, fix `nighttroop.env` and run
+    `docker compose up -d`.
 - Without `S3_URL`, S3 is off: no restore, no backups. The control plane shows this.
 
 Then the server takes the lock `<host>/server.lock` in the bucket, so no other server backs up to the same folder.
