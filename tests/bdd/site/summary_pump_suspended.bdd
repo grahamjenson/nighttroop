@@ -1,0 +1,33 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// Loop uploads a status with its pump suspended
+HTTP
+NAME loop_pump_suspended
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/devicestatus?token={{ .create_new_site.pwd_nstoken }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 1 }}", "pump": {"suspended": true, "reservoir": 160, "clock": "{{ time 1 }}", "manufacturer": "Insulet", "model": "Dash"}, "loop": {"iob": {"iob": 0.5}, "cob": {"cob": 0}}}]
+ASSERT_STATUS 200
+BROWSE
+
+// Its device card on the summary says the pump is suspended, in the amber of a warning
+GOTO {{ .site_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--devices [id$="--suspended"].text-amber-800:text-is("Suspended")
+SCREENSHOT summary_pump_suspended
+
+// Its details give the pump's state
+CLICK #site--summary--devices button
+ASSERT_VISIBLE #site--device-status--details >> text=suspended
+CLICK #site--device-status--details--close
+
+// Once Loop resumes the pump, its card no longer says so
+HTTP
+NAME loop_pump_resumed
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/devicestatus?token={{ .create_new_site.pwd_nstoken }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 0 }}", "pump": {"suspended": false, "reservoir": 159}, "loop": {"iob": {"iob": 0.5}}}]
+ASSERT_STATUS 200
+BROWSE
+GOTO {{ .site_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--devices button >> text=Reservoir
+ASSERT_NOT_VISIBLE #site--summary--devices [id$="--suspended"]
