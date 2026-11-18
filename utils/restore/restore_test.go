@@ -111,39 +111,45 @@ func legacyKey(key string) string {
 	return strings.TrimSuffix(key, ".tar.enc") + ".tar.lz4.enc"
 }
 
-// A control DB is restored from its backup, decompressed
-func TestRestoreDecompressesTheControlDB(t *testing.T) {
+// A site's backup is downloaded and decompressed
+func TestDownloadDecompressesASiteBackup(t *testing.T) {
 	c, fake := newClient(t)
-	controlKey, controlPath := controldb.GetS3Path(c.ServerConfig), controldb.GetPath(c.ServerConfig)
-	controlArchive, controlContent := backup(t, c, controlKey, filepath.Base(controlPath), false)
-	fake.set(controlKey, controlArchive)
+	key, path := sitedb.GetS3SitePath("abcdefgh", c.ServerConfig), sitedb.GetPath("abcdefgh", c.ServerConfig)
+	archive, content := backup(t, c, key, filepath.Base(path), false)
+	fake.set(key, archive)
+	out := filepath.Join(t.TempDir(), "site")
 
-	require.NoError(t, restore.TryDownloadExtractControlDbs(c))
-
-	got, err := os.ReadFile(controlPath)
+	_, found, err := c.DownloadFilesFromS3(t.Context(), key, out)
 	require.NoError(t, err)
-	require.Equal(t, controlContent, got)
-	require.NoFileExists(t, controlPath+".lz4")
+	require.True(t, found)
+	got, err := os.ReadFile(filepath.Join(out, filepath.Base(path)))
+	require.NoError(t, err)
+	require.Equal(t, content, got)
+	require.NoFileExists(t, filepath.Join(out, filepath.Base(path)+".lz4"))
 }
 
-// A control DB download that is cut off leaves no control DB, so the next start downloads it again
-func TestCutOffControlDownloadLeavesNoControlDB(t *testing.T) {
+// A download that is cut off leaves no DB, so the next try downloads it again, and nothing beside it
+func TestCutOffDownloadLeavesNoDB(t *testing.T) {
 	c, fake := newClient(t)
-	key, path := controldb.GetS3Path(c.ServerConfig), controldb.GetPath(c.ServerConfig)
+	key, path := sitedb.GetS3SitePath("abcdefgh", c.ServerConfig), sitedb.GetPath("abcdefgh", c.ServerConfig)
 	archive, content := backup(t, c, key, filepath.Base(path), false)
+	dir := t.TempDir()
+	out, file := filepath.Join(dir, "site"), filepath.Join(dir, "site", filepath.Base(path))
 
 	fake.set(key, archive[:len(archive)/2])
-	require.Error(t, restore.TryDownloadExtractControlDbs(c))
-	require.NoFileExists(t, path)
+	_, _, err := c.DownloadFilesFromS3(t.Context(), key, out)
+	require.Error(t, err)
+	require.NoFileExists(t, file)
 
 	fake.set(key, archive)
-	require.NoError(t, restore.TryDownloadExtractControlDbs(c))
-	got, err := os.ReadFile(path)
+	_, _, err = c.DownloadFilesFromS3(t.Context(), key, out)
+	require.NoError(t, err)
+	got, err := os.ReadFile(file)
 	require.NoError(t, err)
 	require.Equal(t, content, got)
 
-	// Nothing is left beside the DBs from either download
-	entries, err := os.ReadDir(c.ServerConfig.DataDir)
+	// Nothing is left beside it from either download
+	entries, err := os.ReadDir(dir)
 	require.NoError(t, err)
 	for _, entry := range entries {
 		require.False(t, strings.HasPrefix(entry.Name(), "."), entry.Name())
@@ -159,13 +165,12 @@ func TestRemoveStagingRemovesOnlyStagingFolders(t *testing.T) {
 		require.NoError(t, os.WriteFile(path, []byte("x"), 0o600))
 		return path
 	}
-	dbDir, batch := cfg.DBDir(), sitedb.GetSitesFolder("a", cfg)
+	batch := sitedb.GetSitesFolder("a", cfg)
 	backupBatch := filepath.Dir(sitedb.GetBackupPath("abcdef", cfg))
 
 	// Made as the download and the archive make them, so the names are theirs
 	staging := []string{}
 	for dir, pattern := range map[string]string{
-		filepath.Dir(dbDir): "." + filepath.Base(dbDir) + "-restore-",
 		filepath.Dir(batch): "." + filepath.Base(batch) + "-restore-",
 		backupBatch:         ".archive-*",
 	} {

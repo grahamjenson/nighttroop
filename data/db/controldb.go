@@ -18,6 +18,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -51,6 +52,14 @@ type ControlDB struct {
 	// measured are the server's own DBs' tables as last measured, by DB name, to *measuredTables, kept in memory as those
 	// DBs have no row of their own to keep them in
 	measured sync.Map
+	// replica replicates the control DB once Replicate starts it. Nil, as without S3 or in tests, replicates nothing.
+	replica *replica.Replica
+}
+
+// Replicate replicates the control DB to S3 with control, as it is written
+func (db *ControlDB) Replicate(ctx context.Context, control *replica.Replica) error {
+	db.replica = control
+	return control.Start(ctx, db.Path)
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -907,7 +916,11 @@ func (db *ControlDB) GetSite(ctx context.Context, subdomain string) (*SiteDB, *c
 // End of Get SITE Methods
 ////
 
+// Close sends the control DB's last writes to its replica, then closes the DBs
 func (db *ControlDB) Close() error {
+	if err := db.replica.Close(context.Background()); err != nil {
+		slog.Error("Failed to send the control DB's last writes to its replica", "error", err)
+	}
 	for _, site := range db.sites.all() {
 		err := site.Close()
 		if err != nil {

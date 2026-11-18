@@ -2,6 +2,8 @@ package security
 
 import (
 	"bytes"
+	"crypto/hkdf"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -203,4 +205,24 @@ func (config *SecurityConfig) EncryptingWriterFor(writer io.Writer, objectKey st
 // DecryptingReaderFor decrypts a backup kept at the object key, and no other
 func (config *SecurityConfig) DecryptingReaderFor(reader io.Reader, objectKey string) (io.Reader, error) {
 	return config.streamEnc.NewDecryptingReader(reader, backupAssociatedData(objectKey))
+}
+
+// ReplicaKey is the base64 SSE-C key of the replica of the DB with name, such as "control": an HMAC-SHA256 of its
+// name with the MAC key set. It is sent to S3 with each request, so it is never a key that encrypts anything here.
+// A new primary MAC key makes a new key, and the replica made with the old one cannot be read.
+func (config *SecurityConfig) ReplicaKey(name string) (string, error) {
+	tag, err := config.mac.ComputeMAC([]byte("nighttroop litestream sse-c v1:" + name))
+	if err != nil {
+		return "", fmt.Errorf("failed to compute the replica key: %w", err)
+	}
+	// Tink puts a 5 byte prefix naming the key before a tag, but for a raw key
+	if len(tag) == 5+sha256.Size {
+		tag = tag[5:]
+	}
+	if len(tag) != sha256.Size {
+		if tag, err = hkdf.Key(sha256.New, tag, nil, "nighttroop litestream sse-c v1", sha256.Size); err != nil {
+			return "", err
+		}
+	}
+	return base64.StdEncoding.EncodeToString(tag), nil
 }
