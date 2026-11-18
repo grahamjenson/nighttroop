@@ -196,6 +196,11 @@ func (l *LogsDB) SiteDBMadeEmptyEvent(ctx context.Context, siteID string, by str
 	l.event(ctx, siteID, events.SiteDBMadeEmpty, SiteDBMadeEmptyAttributes{By: by, Reason: reason})
 }
 
+// SiteDBUploadedEvent records by, a control identity, uploading a site's DB, as it was unavailable for reason
+func (l *LogsDB) SiteDBUploadedEvent(ctx context.Context, siteID string, by string, reason string) {
+	l.event(ctx, siteID, events.SiteDBUploaded, SiteDBMadeEmptyAttributes{By: by, Reason: reason})
+}
+
 type SiteVersionRestoredAttributes struct {
 	By        string `json:"by"`
 	VersionID string `json:"version_id"`

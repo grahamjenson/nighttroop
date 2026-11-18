@@ -1,10 +1,12 @@
 package db_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -152,6 +154,35 @@ func TestNewEmptySiteDBKeepsTheDBThatDidNotOpen(t *testing.T) {
 	data, err := os.ReadFile(kept[0])
 	require.NoError(t, err)
 	require.Equal(t, "not a DB", string(data))
+}
+
+// A control admin uploads a fixed DB in place of an unavailable site's, which it is served from again, counted as
+// written so it is backed up. One that does not open leaves the site unavailable, with its DB there put back, and a
+// site that is not unavailable has none put in place.
+func TestUploadSiteDB(t *testing.T) {
+	controlDB, siteID, backup := missingSite(t)
+	ctx := t.Context()
+	path := sitedb.GetPath(siteID, controlDB.ServerConfig)
+	require.NoError(t, os.WriteFile(path, []byte("not a DB"), 0o600))
+	controlDB.MakeSiteUnavailable(siteID, db.UnavailableCannotOpen)
+
+	err := controlDB.UploadSiteDB(ctx, siteID, strings.NewReader("not a DB either"))
+	require.ErrorIs(t, err, db.ErrDBDoesNotOpen)
+	require.Contains(t, controlDB.UnavailableSites(), siteID)
+	kept, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "not a DB", string(kept), "its DB is put back")
+
+	require.NoError(t, controlDB.UploadSiteDB(ctx, siteID, bytes.NewReader(backup)))
+	_, model, err := controlDB.GetSite(ctx, siteID)
+	require.NoError(t, err, "it is served again")
+	require.Empty(t, controlDB.UnavailableSites())
+	require.NotNil(t, model.LastWriteAt, "it counts as written, so it is backed up")
+	aside, err := filepath.Glob(path + ".unopened-*")
+	require.NoError(t, err)
+	require.Len(t, aside, 1, "the DB that did not open is kept beside it")
+
+	require.ErrorIs(t, controlDB.UploadSiteDB(ctx, siteID, bytes.NewReader(backup)), db.ErrSiteNotUnavailable)
 }
 
 // A control admin restores an unavailable site from a backup they picked, which it is served from again. A backup not

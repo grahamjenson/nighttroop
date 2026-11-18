@@ -37,7 +37,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		// The control plane's collections, each at its route: sites, jobs, job stats and connectors
 		store.Routes(r)
 		// Only an admin can change the server, its sites, its push credentials and its admins, send a test push, or
-		// download a DB, not a read only identity
+		// download or upload a DB, not a read only identity
 		admin := r.With(controlcollections.AdminOnly)
 		admin.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		admin.Post("/settings", (&controlcollections.SitesCollection{}).SettingsHandler)
@@ -45,6 +45,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		admin.Post("/sites/{id}/new-empty-db", (&controlcollections.SitesCollection{}).NewEmptyDBHandler)
 		admin.Post("/sites/{id}/restore-version", (&controlcollections.SitesCollection{}).RestoreVersionHandler)
 		admin.Get("/sites/{id}/db", (&controlcollections.SitesCollection{}).DownloadDBHandler)
+		admin.Post("/sites/{id}/db", (&controlcollections.SitesCollection{}).UploadDBHandler)
 		r.Get("/sites/{id}/identities", (&controlcollections.SitesCollection{}).IdentitiesHandler)
 		admin.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)
 		admin.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)

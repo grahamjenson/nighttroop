@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -133,6 +135,44 @@ func TestCreateHandlerOverMaxSites(t *testing.T) {
 	require.Equal(t, cfg.MaxSites+1, controlDB.GetNSitesDBs())
 }
 
+// An admin uploads a DB in place of an unavailable site's, which is served again, with an event saying so; a form with
+// no DB, or a site that is not unavailable, has none put in place
+func TestUploadDBHandler(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
+	router := chi.NewRouter()
+	router.Post("/sites/{id}/db", (&SitesCollection{}).UploadDBHandler)
+	upload := func(field string) *httptest.ResponseRecorder {
+		body := &bytes.Buffer{}
+		form := multipart.NewWriter(body)
+		part, err := form.CreateFormFile(field, siteID+".sqlite")
+		require.NoError(t, err)
+		_, err = part.Write([]byte("SQLite format 3\x00"))
+		require.NoError(t, err)
+		require.NoError(t, form.Close())
+		r := httptest.NewRequest(http.MethodPost, "/sites/"+siteID+"/db", body)
+		r.Header.Set("Content-Type", form.FormDataContentType())
+		r.Header.Set("Accept", "application/json")
+		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionWrite)
+		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}, config.ServerStatus{})
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, r.WithContext(rctx))
+		return w
+	}
+
+	require.Equal(t, http.StatusBadRequest, upload("db").Code, "a site that is not unavailable")
+	controlDB.MakeSiteUnavailable(siteID, db.UnavailableCannotOpen)
+	require.Equal(t, http.StatusBadRequest, upload("file").Code, "a form with no DB")
+	w := upload("db")
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	require.Empty(t, controlDB.UnavailableSites(), "it is served again")
+
+	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Equal(t, "site_db_uploaded", events[0].Name)
+	require.Equal(t, `{"by":"admin","reason":"cannot_open"}`, *events[0].Attributes)
+}
+
 // An admin downloads the zip of a site's DB its admins get from Download Data, which its admins see in its events; a
 // control identity who is not an admin cannot, nor can a site with no DB here
 func TestDownloadDBHandler(t *testing.T) {
@@ -163,9 +203,9 @@ func TestDownloadDBHandler(t *testing.T) {
 	require.Equal(t, name+".sqlite", archive.File[0].Name)
 	entry, err := archive.File[0].Open()
 	require.NoError(t, err)
-	db, err := io.ReadAll(entry)
+	copied, err := io.ReadAll(entry)
 	require.NoError(t, err)
-	require.True(t, strings.HasPrefix(string(db), "SQLite format 3\x00"), "the zip holds a SQLite DB")
+	require.True(t, strings.HasPrefix(string(copied), "SQLite format 3\x00"), "the zip holds a SQLite DB")
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
