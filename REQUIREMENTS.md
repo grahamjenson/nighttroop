@@ -1934,6 +1934,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - If S3 takes a write of the lock and does not answer, or refuses it because another write is in progress, the
     server keeps its lock: the lock holds the ID of the server that wrote it.
   - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
+  - The server restarts by an exit with an error, when S3 works again and when its lock is taken. Its supervisor must
+    start it again: the compose files set `restart: unless-stopped`.
 
 #### Backups
 

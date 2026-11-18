@@ -105,6 +105,12 @@ and `{"status":"starting"}`.
 - A failed step ends the process with its error. Docker starts it again (`restart: unless-stopped`).
 - A failed step after 5.1 pages the admin with a Call, `The server did not start, so its sites are down`, with the
   error. Each restart sends the same page, which PagerDuty keeps as one incident.
+- **Warning:** Run the server with a restart policy, as `hostinger.compose.yml` and `voyager.compose.yml` do. The
+  server also exits on purpose, with an error, for its supervisor to start it again:
+  - when S3 works again, after a start without S3;
+  - when another server takes its S3 lock.
+
+  With plain `docker run`, or a systemd unit with no `Restart=`, the server stays down after such an exit.
 - A start that always fails restarts until `update.sh` stops waiting ([step 6](#step-6-wait-for-a-healthy-server))
   and rolls back.
 
@@ -259,6 +265,7 @@ The server answers requests. `/health` answers `ok` when the control DB answers.
 | --- | --- | --- |
 | The start fails ([step 5](#step-5-start-the-new-version)) | Never healthy. Rollback ([step 7](#step-7-roll-back-if-not-healthy)). | Read the printed logs. Fix the cause. |
 | A good version starts slowly: big restore, many sites | The script waits up to 1800 seconds. Clients get 503 `starting`. | If the start needs more, `sudo HEALTH_TIMEOUT=3600 ./update.sh ...`. |
+| S3 comes back, or the lock is lost, during the wait | The server exits on purpose and starts again. Each counts to `MAX_RESTARTS` (default 3). | None, unless it occurs 3 times in one deploy. Then run `update.sh` again. |
 | A start stops without an error and never finishes | Not healthy in 1800 seconds. Rollback. | Read the printed logs. **Gap:** The server does not say which step it is at. |
 | Healthy but broken: a page errors, syncs fail, a query is wrong | The script keeps it | [Fix forward](#after-a-version-serves-fix-forward). **Gap:** `/health` checks only the control DB, not a page, site or sync. |
 
