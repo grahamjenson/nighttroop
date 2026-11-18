@@ -250,7 +250,7 @@ func SiteUnauthRateLimitMiddleware(config *config.ServerConfig) func(http.Handle
 			allowed, remainingTime := SiteUnauthWithinRateLimit(config, r)
 			if !allowed {
 				writeTooManyRequests(w, remainingTime)
-				slog.InfoContext(r.Context(), "Site unauthenticated rate limit exceeded", "remainingTime", remainingTime)
+				aslog.Refuse(r.Context(), http.StatusTooManyRequests, "", "Site unauthenticated rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
 
