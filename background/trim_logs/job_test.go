@@ -38,3 +38,12 @@ func TestTrimLogsDBCron(t *testing.T) {
 	require.Equal(t, "third", rows[0].Message)
 	require.Equal(t, "second", rows[1].Message)
 }
+
+// The requests refused before signing in are summed in the logs each minute, by a job of its own
+func TestSumRefusedRequestsCron(t *testing.T) {
+	cfg, controlDB := testutils.NewControlDB(t)
+	jobs := scheduler{}
+	trim_logs.SetupCron(jobs, cfg, controlDB.Logs)
+	require.Contains(t, jobs, "SumRefusedRequests")
+	require.NoError(t, jobs["SumRefusedRequests"](t.Context()))
+}

@@ -151,6 +151,7 @@ func shutdown(httpServer *http.Server, backgroundManager *background.BackGroundM
 		slog.Error("HTTP server Shutdown Error", "err", err)
 	}
 	slog.Info("HTTP server shutdown complete")
+	aslog.RefusedRequests.Flush(context.Background())
 
 	slog.Info("Stopping background jobs...")
 	backgroundManager.Stop()
