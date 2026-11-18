@@ -6,6 +6,10 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/testutils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -139,4 +143,51 @@ func TestStartS3(t *testing.T) {
 	cancel()
 	_, err = startS3(stopped, down, here, whenWorking, admin)
 	require.Error(t, err)
+}
+
+// A start on a nearly full disk makes room from what the server makes again: its local backup copies, then its logs
+// DB if still short. It pages the admin, leaves the DBs, and does not start if there is still too little room.
+func TestMakeRoom(t *testing.T) {
+	mb := float64(1 << 20)
+	tests := []struct {
+		name            string
+		free            []float64 // at each look: before, after the backups, at the end
+		backups, logsDB bool      // whether each is still there after
+		pages           int
+		wantErr         string
+	}{
+		{"a disk with room is left as it is", []float64{500 * mb}, true, true, 0, ""},
+		{"the backup copies are enough", []float64{20 * mb, 300 * mb, 300 * mb}, false, true, 1, ""},
+		{"the logs DB goes too", []float64{20 * mb, 60 * mb, 400 * mb}, false, false, 1, ""},
+		{"still too little room", []float64{20 * mb, 30 * mb, 40 * mb}, false, false, 1, "the DBs' disk has 40 MB free, and the server needs 100 MB to start"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := *testutils.GetTestServerConfig()
+			cfg.DataDir = t.TempDir()
+			backup := filepath.Join(cfg.BackupDir(), "site", "a", "abcdefgh.sqlite.lz4")
+			control, logs := controldb.GetPath(&cfg), logsdb.GetPath(&cfg)
+			for _, file := range []string{backup, control, logs} {
+				require.NoError(t, os.MkdirAll(filepath.Dir(file), 0o700))
+				require.NoError(t, os.WriteFile(file, []byte("data"), 0o600))
+			}
+			looks, pages := 0, 0
+			err := makeRoom(&cfg, func(_ context.Context, level page.Level, _ string, _ ...any) {
+				require.Equal(t, page.SMS, level)
+				pages++
+			}, func() (float64, bool) {
+				looks++
+				return test.free[min(looks, len(test.free))-1], true
+			})
+			if test.wantErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, test.wantErr)
+			}
+			require.Equal(t, test.pages, pages)
+			require.Equal(t, test.backups, utils.FileExists(backup))
+			require.Equal(t, test.logsDB, utils.FileExists(logs))
+			require.FileExists(t, control, "a DB with data is never removed")
+		})
+	}
 }

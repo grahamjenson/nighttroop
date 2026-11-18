@@ -21,6 +21,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Production or staging: does not start if `KEY_SETS` holds a public key from `.env.dev` or `.env.test`. Says to make
   new keys with `cmd/keysets/create_keysets.go`.
 - If the jobs DB or the logs DB does not open, the server removes it, makes an empty one, logs an error, and starts.
+- If the DBs' disk has less than 100 MB free at start, the server makes room from what it makes again:
+  - It removes its local copies of the backups. If the disk is still short, it removes the logs DB.
+  - It pages the admin with an SMS, with the space free before and after.
+  - It never removes the control DB, a site's DB or the jobs DB.
+  - If the disk still has less than 100 MB free, the server does not start, and says how much is free.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
 - Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`.
 

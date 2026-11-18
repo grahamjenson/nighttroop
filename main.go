@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync/atomic"
 
 	"syscall"
@@ -24,6 +26,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/socketio/engineio"
@@ -36,6 +39,7 @@ import (
 	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/usage"
 )
 
 func main() {
@@ -84,6 +88,14 @@ func run() error {
 	serverConfig.Status.S3Down = restart != nil
 	// Released on the way out, after the last backup, so only then may another server back up to the bucket
 	defer s3Client.Unlock()
+
+	// Before anything is restored or opened, as none of it works on a full disk
+	if err := makeRoom(serverConfig, admin, func() (float64, bool) {
+		used, total, ok := usage.Disk(serverConfig.DataDir)
+		return total - used, ok
+	}); err != nil {
+		return err
+	}
 
 	// Run some tests to make sure the server is setup properly
 	if err := ValidateServer(); err != nil {
@@ -153,6 +165,39 @@ func startS3(ctx context.Context, start func(context.Context) error, controlPath
 		}
 	}()
 	return restart, nil
+}
+
+// minFreeDisk is the least space the DBs' disk must have for the server to start: room for the DBs to migrate and for
+// their write-ahead logs
+const minFreeDisk = 100 << 20
+
+// makeRoom frees space on the DBs' disk when a start finds less than minFreeDisk free, as a server on a full disk
+// cannot open its DBs. It removes only what the server makes again, the lesser loss first: the local copies of the
+// backups, which are made again from the DBs, then the logs DB, and pages the admin. With too little free after that
+// the server does not start, and says so.
+func makeRoom(serverConfig *config.ServerConfig, admin page.Func, free func() (float64, bool)) error {
+	before, ok := free()
+	if !ok || before >= minFreeDisk {
+		return nil
+	}
+	_ = filepath.WalkDir(serverConfig.BackupDir(), func(path string, entry fs.DirEntry, err error) error {
+		if err == nil && entry.Type().IsRegular() {
+			_ = os.Remove(path)
+		}
+		return nil
+	})
+	if after, _ := free(); after < minFreeDisk {
+		for _, suffix := range []string{"", "-wal", "-shm"} {
+			_ = os.Remove(logsdb.GetPath(serverConfig) + suffix)
+		}
+	}
+	after, _ := free()
+	admin(context.Background(), page.SMS, "The DBs' disk was nearly full at start, so the server removed its local backup copies and, if still short, its logs DB",
+		"free_mb_before", int(before)>>20, "free_mb_after", int(after)>>20)
+	if after < minFreeDisk {
+		return fmt.Errorf("the DBs' disk has %d MB free, and the server needs %d MB to start: free some space on it", int(after)>>20, minFreeDisk>>20)
+	}
+	return nil
 }
 
 // startingHandler answers every request 503 "starting" until the server is ready, then with its handler. A start can
