@@ -34,7 +34,9 @@ const (
 // ServerStatus records which optional services are working. It is filled in
 // at startup and read by anything that depends on them.
 type ServerStatus struct {
-	S3Working     bool
+	S3Working bool
+	// S3Down is whether S3_URL is set and S3 was not working at start, so the server started without it
+	S3Down        bool
 	SentryWorking bool
 	// PagerDutyWorking is whether PAGERDUTY_ROUTING_KEY is set, so the admin is paged
 	PagerDutyWorking bool

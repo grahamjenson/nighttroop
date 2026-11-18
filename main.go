@@ -76,10 +76,12 @@ func run() error {
 
 	// S3 is off without S3_URL; with it, the server only starts once S3 works
 	s3Client := s3utils.NewS3Client(serverConfig)
-	restart, err := startS3(ctx, s3Client.Start, controldb.GetPath(serverConfig), s3Client.LockWhenWorking)
+	admin := page.New(serverConfig.PagerDutyRoutingKey, serverConfig.PagerDutyEventsURL, serverConfig.HostName).Admin
+	restart, err := startS3(ctx, s3Client.Start, controldb.GetPath(serverConfig), s3Client.LockWhenWorking, admin)
 	if err != nil {
 		return err
 	}
+	serverConfig.Status.S3Down = restart != nil
 	// Released on the way out, after the last backup, so only then may another server back up to the bucket
 	defer s3Client.Unlock()
 
@@ -122,13 +124,15 @@ func run() error {
 // startS3 starts S3. If S3 is not working and the control DB is here, the server starts without S3, so an S3 outage
 // does not take the sites down: nothing is restored, replicated or backed up, and the channel closes once S3 works again
 // and this server holds its lock, for the server to restart with S3. Without its control DB the server does not
-// start, as it would start new, and later replicate that over its replica.
-func startS3(ctx context.Context, start func(context.Context) error, controlPath string, lockWhenWorking func(context.Context) bool) (<-chan struct{}, error) {
+// start, as it would start new, and later replicate that over its replica. A server that starts without S3 pages the
+// admin.
+func startS3(ctx context.Context, start func(context.Context) error, controlPath string, lockWhenWorking func(context.Context) bool, admin page.Func) (<-chan struct{}, error) {
 	err := start(ctx)
 	if err == nil || ctx.Err() != nil || !utils.FileExists(controlPath) {
 		return nil, err
 	}
-	slog.Error("S3 is not working, so the server starts from its DBs here without backups, and restarts when S3 works", "error", err)
+	// The start has tried S3 again for about half a minute, so the admin is paged: the sites are up, with no backups
+	admin(ctx, page.SMS, "S3 is not working, so the server started from its DBs here without backups, and restarts when S3 works", "error", err)
 	restart := make(chan struct{})
 	go func() {
 		if lockWhenWorking(ctx) {

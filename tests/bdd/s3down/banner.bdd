@@ -1,0 +1,18 @@
+// The control admin signs in to a server that started without S3, as S3 was not working, so every control page says
+// so, in red, in place of the note that S3 is not connected
+GOTO {{ .control_url }}/login
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+ASSERT_VISIBLE #control--status-banner--s3-down
+ASSERT_TEXT_VISIBLE S3 is not working:
+ASSERT_TEXT_VISIBLE the server started without it. Nothing is restored, replicated or backed up. The server restarts when S3 works again.
+ASSERT_NOT_VISIBLE #control--status-banner--s3
+SCREENSHOT s3_down
+
+// The banner stays when moving to another control page
+CLICK #control--menu
+CLICK #control--sites-button
+ASSERT_PATH /sites
+ASSERT_VISIBLE #control--status-banner--s3-down
