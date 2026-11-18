@@ -243,7 +243,7 @@ Test paths start at `tests/api/nightscout/`.
 | An override's UUID `_id`: posted again when it changes, deleted by it | Works since #515: a v1 POST with an `_id` replaces the record with it, or creates it |
 | `Temporary Override` with `durationType` `indefinite` and `duration` 0, or of 0 minutes | Fixed: indefinite, as with no `duration` (was 0 minutes). `loop/override_indefinite.http` |
 | A dose posted again when it ends | Fixed: replaces the first upload. `loop/treatments.http` |
-| A dose's or override's `duration` with a fraction of a minute | Fixed: kept to the millisecond in `durationInMilliseconds`, given back as the nearest minutes (a 1.67 minute bolus is 2; it came back as 1), as other clients read a whole number. `loop/treatments.http` |
+| A dose's or override's `duration` with a fraction of a minute | Fixed: kept to the millisecond in `durationInMilliseconds`. A device added for Loop gets it back with its fraction (1.6666666666666667) on API v1; every other client gets the nearest minutes (2), as they read a whole number. `loop/fractional_durations.http` |
 | Omnipod `syncIdentifier`s | Works since #515: kept as a hash. `loop/treatments.http` |
 | `syncIdentifier`, `insulinType`, `userEnteredAt`, `unabsorbed`, a temp basal's `automatic` | Fixed (were dropped). `loop/treatments.http` |
 | `utcOffset` of treatments, device statuses, profiles (times in UTC) | Fixed: the site timezone's offset; a device status uses its pump's `secondsFromGMT` (were 0). `loop/utc_offset.http` |

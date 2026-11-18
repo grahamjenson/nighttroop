@@ -1,0 +1,56 @@
+INCLUDE steps/new_site_admin.steps
+
+// Loop reads back a dose's or override's minutes with their fraction, as it sent them and as Nightscout gives them, so
+// a device added for Loop gets them so on API v1: e.g. 1.6666666666666667, not 2. No other client does, as Trio,
+// xDrip4iOS and AAPS drop a page with a fraction (nsutils.ClientOverrides). API v3 is in whole minutes for all.
+
+NAME create_loop
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "loop", "role": "device_pwd_phone", "client": "loop"}
+ASSERT_STATUS 201
+SET loop_token {{ .create_loop.result.ns_token }}
+
+NAME create_trio
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "trio", "role": "device_pwd_phone", "client": "trio"}
+ASSERT_STATUS 201
+SET trio_token {{ .create_trio.result.ns_token }}
+
+NAME loop_doses
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 .loop_token }}
+B [{"created_at": "{{ time 10 }}", "timestamp": "{{ time 10 }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 1, "programmed": 1, "duration": 1.6666666666666667, "automatic": false, "syncIdentifier": "626f6c757320312e3020323032362d31312d31385430353a30303a30305a"},
+   {"created_at": "{{ time 9 }}", "timestamp": "{{ time 9 }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 1.2, "absolute": 1.2, "duration": 0.2, "automatic": true, "syncIdentifier": "74656d70426173616c20312e3220323032362d31312d31385430353a30313a30305a"},
+   {"created_at": "{{ time 8 }}", "timestamp": "{{ time 8 }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 0.5, "absolute": 0.5, "duration": 30, "automatic": true, "syncIdentifier": "74656d70426173616c20302e3520323032362d31312d31385430353a30323a30305a"}]
+ASSERT_STATUS 200
+
+NAME loop_reads_fractions
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[created_at][$gte]={{ time 11 }}&count=10
+H api-secret: {{ sha1 .loop_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 30 "@0.duration"
+ASSERT_EQUALS 0.2 "@1.duration"
+ASSERT_EQUALS 12000 "@1.durationInMilliseconds"
+ASSERT_EQUALS 1.6666666666666667 "@2.duration"
+ASSERT_EQUALS 100000 "@2.durationInMilliseconds"
+
+NAME trio_reads_whole_minutes
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[created_at][$gte]={{ time 11 }}&count=10
+H api-secret: {{ sha1 .trio_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 30 "@0.duration"
+ASSERT_EQUALS 2 "@2.duration"
+ASSERT_EQUALS 100000 "@2.durationInMilliseconds"
+
+NAME loop_reads_v3_whole_minutes
+GET http://{{ .ns_site }}/api/v3/treatments?created_at$gte={{ time 11 }}&limit=10&sort$desc=date
+H api-secret: {{ sha1 .loop_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@result.2.duration"
+ASSERT_EQUALS 100000 "@result.2.durationInMilliseconds"
