@@ -1,0 +1,12 @@
+// The control admin signs in to a server that turned S3 off at start, as its control DB is not the one replicated in
+// S3, so every control page says so, in red, in place of the note that S3 is not connected
+GOTO {{ .control_url }}/login
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+ASSERT_VISIBLE #control--status-banner--s3-off >> text=S3 is off:
+ASSERT_VISIBLE #control--status-banner--s3-off >> text=the control DB on this server is not the one replicated in S3.
+ASSERT_VISIBLE #control--status-banner--s3-off >> text=Nothing is replicated or backed up until someone fixes it and restarts the server.
+ASSERT_NOT_VISIBLE #control--status-banner--s3
+SCREENSHOT s3_off

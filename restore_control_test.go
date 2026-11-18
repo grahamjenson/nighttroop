@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -23,7 +24,8 @@ func logged(t *testing.T, cfg *config.ServerConfig, control *replica.Replica) (s
 	before := slog.Default()
 	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
 	defer slog.SetDefault(before)
-	require.NoError(t, restoreFromS3(t.Context(), cfg, control))
+	noPage := func(_ context.Context, _ page.Level, message string, _ ...any) { t.Fatalf("paged: %s", message) }
+	require.NoError(t, restoreFromS3(t.Context(), cfg, control, noPage))
 	return logs.String(), utils.FileExists(controldb.GetPath(cfg))
 }
 

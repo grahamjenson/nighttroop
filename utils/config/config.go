@@ -31,12 +31,25 @@ const (
 	DefaultOperatorName = "T1DNZ"
 )
 
+// Why a server turned S3 off at start, as ServerStatus.S3Off
+const (
+	// S3OffConflict is a control DB that is set up and is not the one replicated in S3
+	S3OffConflict = "conflict"
+	// S3OffCheck is a control DB that could not be checked against the replica in S3
+	S3OffCheck = "check"
+	// S3OffReplication is a control DB whose replication could not start
+	S3OffReplication = "replication"
+)
+
 // ServerStatus records which optional services are working. It is filled in
 // at startup and read by anything that depends on them.
 type ServerStatus struct {
 	S3Working bool
 	// S3Down is whether S3_URL is set and S3 was not working at start, so the server started without it
-	S3Down        bool
+	S3Down bool
+	// S3Off is why the server turned S3 off at start although S3 works, for the control site's banner: the control DB
+	// is not its replica's, could not be checked against it, or could not be replicated. Empty when it did not.
+	S3Off         string
 	SentryWorking bool
 	// PagerDutyWorking is whether PAGERDUTY_ROUTING_KEY is set, so the admin is paged
 	PagerDutyWorking bool

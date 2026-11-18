@@ -58,8 +58,11 @@ type ControlDB struct {
 
 // Replicate replicates the control DB to S3 with control, as it is written
 func (db *ControlDB) Replicate(ctx context.Context, control *replica.Replica) error {
+	if err := control.Start(ctx, db.Path); err != nil {
+		return err
+	}
 	db.replica = control
-	return control.Start(ctx, db.Path)
+	return nil
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
