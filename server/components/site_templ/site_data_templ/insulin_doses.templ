@@ -24,6 +24,7 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 		Above:       searchTotals("site--insulin", "site.data.insulin_doses.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
+			EmptyHint: newSiteHint(),
 			ID:      "insulinDosesTable",
 			EmptyID: "site--insulin--empty",
 			Empty:   i18n.T(ctx, "site.data.insulin_doses.empty"),

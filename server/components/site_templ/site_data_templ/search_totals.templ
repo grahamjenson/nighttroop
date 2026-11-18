@@ -1,6 +1,7 @@
 package site_data_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/nav"
 	"context"
 	"time"
 
@@ -72,4 +73,14 @@ func totalsDate(ctx context.Context, ms int64, now time.Time) string {
 		return day.Format(display.ShortDayLayout)
 	}
 	return day.Format("2 Jan 2006")
+}
+
+// newSiteHint, under an empty table's words, sends the person whose site has no data yet to the guide on getting it in
+templ newSiteHint() {
+	<span class="mt-1 block text-xs text-gray-400">
+		{ i18n.T(ctx, "site.data.common.new_site") + " " }
+		@nav.Link("site--data--new-site-link", "/getting-started", "font-medium text-brand-night underline") {
+			{ i18n.T(ctx, "site.data.common.new_site_link") }
+		}
+	</span>
 }

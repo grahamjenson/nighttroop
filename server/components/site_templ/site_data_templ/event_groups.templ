@@ -69,6 +69,7 @@ templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, lim
 		Above:       searchTotals("site--event-group", "site.data.event_groups.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
+			EmptyHint: newSiteHint(),
 			ID:      "eventGroupsTable",
 			EmptyID: "site--event-group--empty",
 			Empty:   i18n.T(ctx, "site.data.event_groups.empty"),

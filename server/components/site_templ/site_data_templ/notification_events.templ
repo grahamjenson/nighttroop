@@ -24,6 +24,7 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 		Above:       searchTotals("site--notification", "site.data.notification_events.noun"),
 		Modal:       true,
 		Table: listpage.TableProps{
+			EmptyHint: newSiteHint(),
 			ID:      "notificationEventsTable",
 			EmptyID: "site--notification--empty",
 			Empty:   i18n.T(ctx, "site.data.notification_events.empty"),
