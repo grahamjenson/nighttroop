@@ -835,6 +835,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - No glucose for over a month, or ever: a setup guide replaces the summary, until readings arrive and show live.
 - Each step opens its page:
   - Admin: get glucose in (the Nightscout URL for AAPS, Trio or xDrip+, or a Dexcom, LibreLinkUp or Nightscout sync).
+    - The Nightscout URL has a button that copies it.
+    - **Add your phone** opens Users & Devices with the Add Device modal open. A later visit to that page does not
+      open the modal.
+    - **Set up a connector** opens Connectors.
   - Admin: add people and devices.
   - All users: settings and alarms.
 - Non-admins see that the admin sets up data and users.
