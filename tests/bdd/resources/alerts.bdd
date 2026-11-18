@@ -36,5 +36,5 @@ ASSERT_NOT_VISIBLE #control--usage--resources-empty
 ASSERT_VISIBLE #control--usage--resources-cpu
 ASSERT_VISIBLE #control--usage--resources-memory
 ASSERT_VISIBLE #control--usage--resources-disk
-ASSERT_TEXT_VISIBLE Resources, checked every 30 seconds
+ASSERT_TEXT_VISIBLE Server, checked every 30 seconds
 SCREENSHOT usage
