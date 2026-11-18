@@ -18,6 +18,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"syscall"
 	"testing"
@@ -65,8 +66,11 @@ func currentProfileEndpoint(nsURL string) string {
 func lastModifiedEndpoint(nsURL string) string {
 	return fmt.Sprintf("%s/api/v3/lastModified", nsURL)
 }
+
+// jwtEndpoint escapes the token, which a site's admin types: one with a "/", "?" or "#" would otherwise send the
+// request to another path or query on the Nightscout host, which its URL is refused for
 func jwtEndpoint(nsURL, token string) string {
-	return fmt.Sprintf("%s/api/v2/authorization/request/token=%s", nsURL, token)
+	return fmt.Sprintf("%s/api/v2/authorization/request/token=%s", nsURL, url.PathEscape(token))
 }
 
 // ClientOptions are how a Client connects

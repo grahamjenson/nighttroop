@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -237,5 +238,21 @@ func TestGetCurrentProfile(t *testing.T) {
 		srv.Close()
 		require.NoError(t, err, body)
 		require.Equal(t, want, profile, body)
+	}
+}
+
+// A token cannot move the request off the authorization path, or add a query or a fragment to it
+func TestJWTEndpointKeepsTheTokenInItsPath(t *testing.T) {
+	for token, path := range map[string]string{
+		"carer-0123456789abcdef":  "/api/v2/authorization/request/token=carer-0123456789abcdef",
+		"x/../../../v1/entries":   "/api/v2/authorization/request/token=x%2F..%2F..%2F..%2Fv1%2Fentries",
+		"x?count=100000&find=y#z": "/api/v2/authorization/request/token=x%3Fcount=100000&find=y%23z",
+	} {
+		endpoint, err := url.Parse(jwtEndpoint("https://ns.example.com", token))
+		require.NoError(t, err)
+		require.Equal(t, path, endpoint.EscapedPath(), token)
+		require.Equal(t, "/api/v2/authorization/request/token="+token, endpoint.Path, token)
+		require.Empty(t, endpoint.RawQuery, token)
+		require.Empty(t, endpoint.Fragment, token)
 	}
 }
