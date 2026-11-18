@@ -109,7 +109,38 @@ func (c *S3Client) Start(ctx context.Context) error {
 		return err
 	}
 	// Before anything is restored or backed up, so it is from and to a bucket no other server is writing
-	return c.Lock(ctx)
+	if err := c.Lock(ctx); err != nil {
+		c.ServerConfig.Status.S3Working = false
+		return err
+	}
+	return nil
+}
+
+// workingEvery and workingPasses are how often LockWhenWorking tests S3, and how many tests in a row must pass: a
+// minute, so an S3 that comes and goes is not taken as back
+var workingEvery, workingPasses = 20 * time.Second, 3
+
+// LockWhenWorking is for a server that started without S3, as S3 was not working: it waits until S3 has worked for
+// workingPasses tests in a row, then takes the lock, waiting while another server holds it. It is true once this
+// server holds the lock, so a restart finds S3 working and the lock free, and false if ctx ends first.
+func (c *S3Client) LockWhenWorking(ctx context.Context) bool {
+	return c.lockWhenWorking(ctx, c.TestS3Client)
+}
+
+func (c *S3Client) lockWhenWorking(ctx context.Context, test func(context.Context) error) bool {
+	for passes := 0; passes < workingPasses; {
+		select {
+		case <-ctx.Done():
+			return false
+		case <-time.After(workingEvery):
+		}
+		if err := test(ctx); err != nil {
+			passes = 0
+		} else {
+			passes++
+		}
+	}
+	return c.Lock(ctx) == nil
 }
 
 func (c *S3Client) start(ctx context.Context, test func(context.Context) error, waits []time.Duration) error {

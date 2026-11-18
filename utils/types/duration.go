@@ -138,7 +138,8 @@ func (d *Duration) Fields() DurationFields {
 	ms := d.Milliseconds()
 	fields := DurationFields{DurationMinutes: d.Minutes, DurationInMilliseconds: &ms}
 	if !d.wholeMinutes && ms/60_000 == d.Minutes {
-		fields.DurationMinutes = (ms + 30_000) / 60_000
+		// A duration of under half a minute is 1, not 0, which followers read as one cancelled
+		fields.DurationMinutes = max((ms+30_000)/60_000, min(ms, 1))
 	}
 	// BAD, for Loop alone: see InFractionalMinutes
 	if d.fractionalMinutes && !d.wholeMinutes && ms%60_000 != 0 {

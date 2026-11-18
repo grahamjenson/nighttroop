@@ -3,6 +3,7 @@ package s3utils
 import (
 	"context"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -157,4 +158,31 @@ func TestLockIsOffWithoutConditionalWritesOrS3(t *testing.T) {
 	off := NewS3Client(&config.ServerConfig{})
 	require.NoError(t, off.Lock(t.Context()))
 	require.Nil(t, off.unlock)
+}
+
+// A server that started without S3 takes the lock only once S3 has worked three tests in a row, so one that comes and
+// goes is not taken as back, and waits for a server that holds the lock
+func TestLockWhenWorking(t *testing.T) {
+	_, servers := lockServers(t, 2)
+	oldEvery := workingEvery
+	workingEvery = time.Millisecond
+	t.Cleanup(func() { workingEvery = oldEvery })
+
+	// Two passes, a failure, then it works: five more tests, three of them in a row
+	results, tests := []bool{true, true, false, true, true, true}, 0
+	flaky := func(context.Context) error {
+		tests++
+		if !results[tests-1] {
+			return errors.New("refused")
+		}
+		return nil
+	}
+	require.True(t, servers[0].lockWhenWorking(t.Context(), flaky))
+	require.Equal(t, 6, tests)
+	require.NotNil(t, servers[0].unlock, "it holds the lock")
+
+	// While that server holds the lock, another waits, however long S3 has worked
+	ctx, cancel := context.WithTimeout(t.Context(), 3*lockStaleAfter)
+	defer cancel()
+	require.False(t, servers[1].lockWhenWorking(ctx, func(context.Context) error { return nil }))
 }

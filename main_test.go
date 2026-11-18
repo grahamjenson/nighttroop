@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -90,4 +94,41 @@ func TestStartingUntilReady(t *testing.T) {
 
 	starting.ready(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusTeapot) }))
 	require.Equal(t, http.StatusTeapot, get("/health").Code)
+}
+
+// A server whose S3 is not working starts without it when its control DB is here, and is told to restart once S3 works
+// and it holds the lock. Without its control DB it does not start, as it would start new. A working S3 needs neither.
+func TestStartS3(t *testing.T) {
+	here := filepath.Join(t.TempDir(), "controldb.sqlite")
+	require.NoError(t, os.WriteFile(here, nil, 0o600))
+	down := func(context.Context) error { return errors.New("S3 is not working") }
+	works := make(chan struct{})
+	whenWorking := func(context.Context) bool { <-works; return true }
+
+	restart, err := startS3(t.Context(), func(context.Context) error { return nil }, here, whenWorking)
+	require.NoError(t, err)
+	require.Nil(t, restart, "a working S3 never restarts the server")
+
+	_, err = startS3(t.Context(), down, filepath.Join(t.TempDir(), "missing.sqlite"), whenWorking)
+	require.ErrorContains(t, err, "S3 is not working", "without its control DB the server does not start")
+
+	restart, err = startS3(t.Context(), down, here, whenWorking)
+	require.NoError(t, err, "with its control DB the server starts without S3")
+	select {
+	case <-restart:
+		t.Fatal("the server restarts while S3 is not working")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(works)
+	select {
+	case <-restart:
+	case <-time.After(time.Second):
+		t.Fatal("the server does not restart once S3 works")
+	}
+
+	// One told to stop while S3 is not working stops, and does not start without S3
+	stopped, cancel := context.WithCancel(t.Context())
+	cancel()
+	_, err = startS3(stopped, down, here, whenWorking)
+	require.Error(t, err)
 }
