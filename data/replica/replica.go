@@ -183,12 +183,18 @@ func (r *Replica) Abandon() {
 	}
 }
 
+// restoreTimeout is the longest a restore of the control DB takes
+var restoreTimeout = 15 * time.Minute
+
 // Restore restores the control DB from its replica to path, which must not be there, and is false when it has no
 // replica
 func (r *Replica) Restore(ctx context.Context, path string) (bool, error) {
 	if r == nil {
 		return false, nil
 	}
+	// A replica that S3 stops sending would otherwise hold the start for ever
+	ctx, cancel := context.WithTimeout(ctx, restoreTimeout)
+	defer cancel()
 	opt := litestream.NewRestoreOptions()
 	opt.OutputPath = path
 	err := litestream.NewReplicaWithClient(nil, r.client).Restore(ctx, opt)

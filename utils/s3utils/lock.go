@@ -43,6 +43,8 @@ func (c *S3Client) putLock(ctx context.Context, ifMatch string) (string, bool, e
 	} else {
 		input.IfMatch = aws.String(ifMatch)
 	}
+	ctx, cancel := c.short(ctx)
+	defer cancel()
 	output, err := c.s3.PutObject(ctx, input)
 	var response *awshttp.ResponseError
 	if errors.As(err, &response) && response.HTTPStatusCode() == 412 {
@@ -55,6 +57,13 @@ func (c *S3Client) putLock(ctx context.Context, ifMatch string) (string, bool, e
 		return "", false, err
 	}
 	return aws.ToString(output.ETag), true, nil
+}
+
+// headLock is the lock that is there, read within requestTimeout
+func (c *S3Client) headLock(ctx context.Context) (*s3.HeadObjectOutput, error) {
+	ctx, cancel := c.short(ctx)
+	defer cancel()
+	return c.s3.HeadObject(ctx, &s3.HeadObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())})
 }
 
 // Lock takes the lock, and keeps it until Unlock. While another server holds it, it waits: for that server to stop and
@@ -75,7 +84,7 @@ func (c *S3Client) Lock(ctx context.Context) error {
 				slog.Error("S3 does not refuse a conditional write, so there is no lock: do not run two servers on this bucket")
 				return nil
 			}
-		} else if head, err := c.s3.HeadObject(ctx, &s3.HeadObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())}); err == nil {
+		} else if head, err := c.headLock(ctx); err == nil {
 			if current := aws.ToString(head.ETag); current != seen {
 				seen, since = current, time.Now()
 				slog.Warn("Another server holds the S3 lock, waiting for it to stop", "key", c.lockKey())
@@ -106,7 +115,9 @@ func (c *S3Client) keepLock(ctx context.Context, etag string) {
 	for {
 		select {
 		case <-ctx.Done():
-			if _, err := c.s3.DeleteObject(context.Background(), &s3.DeleteObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())}); err != nil {
+			released, cancel := c.short(context.Background())
+			defer cancel()
+			if _, err := c.s3.DeleteObject(released, &s3.DeleteObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())}); err != nil {
 				slog.Error("Cannot release the S3 lock, so the next start waits for it", "error", err)
 			}
 			return
@@ -133,6 +144,8 @@ func (c *S3Client) keepLock(ctx context.Context, etag string) {
 
 // ownLockETag is the lock's ETag if this server wrote the lock that is there, or else empty
 func (c *S3Client) ownLockETag(ctx context.Context) string {
+	ctx, cancel := c.short(ctx)
+	defer cancel()
 	lock, err := c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())})
 	if err != nil {
 		return ""

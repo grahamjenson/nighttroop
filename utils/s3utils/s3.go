@@ -178,7 +178,18 @@ func (c *S3Client) start(ctx context.Context, test func(context.Context) error, 
 	return nil
 }
 
+// requestTimeout is the longest a small request to S3 takes, such as the start's test or a write of the lock: an S3
+// that takes a request and never answers would otherwise hold the start, the lock or the stop for ever
+var requestTimeout = 20 * time.Second
+
+// short is ctx for a small request to S3, ended after requestTimeout
+func (c *S3Client) short(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, requestTimeout)
+}
+
 func (c *S3Client) TestS3Client(ctx context.Context) error {
+	ctx, cancel := c.short(ctx)
+	defer cancel()
 	testKey := c.TestObjectPath()
 	randomGen := utils.NextSiteSubdomain(false)
 	testContent := fmt.Sprintf("This istest object %s", randomGen)
@@ -220,6 +231,8 @@ func (c *S3Client) TestS3Client(ctx context.Context) error {
 // ConfigureVersioning turns on the bucket's versioning, so an upload keeps the object it replaces as an old version,
 // and sets the lifecycle rules that expire those old versions
 func (c *S3Client) ConfigureVersioning(ctx context.Context) error {
+	ctx, cancel := c.short(ctx)
+	defer cancel()
 	_, err := c.s3.PutBucketVersioning(ctx, &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(c.Bucket),
 		VersioningConfiguration: &types.VersioningConfiguration{Status: types.BucketVersioningStatusEnabled},
