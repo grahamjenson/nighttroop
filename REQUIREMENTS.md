@@ -1850,7 +1850,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - Without `S3_URL`: no restore on start and no backups.
 - With `S3_URL`:
-  - The server does not start if no test upload works for about 30 seconds.
+  - If no test upload works for about 30 seconds, and the control DB is not on the server, the server does not start.
+  - If no test upload works for about 30 seconds, and the control DB is on the server, the server starts without S3:
+    - it serves its sites from the DBs on the server, and restores, replicates and backs up nothing;
+    - the control plane shows that S3 backups are not connected;
+    - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
+      error, for Docker to start it again with S3.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
