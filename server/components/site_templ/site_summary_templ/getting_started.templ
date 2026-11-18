@@ -80,13 +80,30 @@ templ GettingStarted() {
 				@stepLink("site--getting-started--alarms-link", "/settings/alarms", i18n.T(ctx, "site.summary.getting_started.alarms_link"))
 			}
 		</ol>
-		<p class="text-sm text-gray-600">
-			if !isAdmin(ctx) {
-				{ i18n.T(ctx, "site.summary.getting_started.not_admin") }
-			}
-			{ i18n.T(ctx, "site.summary.getting_started.where") }
-		</p>
+		if !isAdmin(ctx) {
+			<p id="site--getting-started--not-admin" class="text-sm text-gray-600">{ i18n.T(ctx, "site.summary.getting_started.not_admin") }</p>
+		}
+		// Where each kind of page is, each a link to it, as a new user does not know the header's words yet
+		<section id="site--getting-started--where" class="panel p-5 text-sm text-gray-700">
+			<h3 class="mb-2 text-base font-semibold text-gray-900">{ i18n.T(ctx, "site.summary.getting_started.where") }</h3>
+			<ul class="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+				@whereItem("site--getting-started--where-data", "/data/glucose", i18n.T(ctx, "site.nav.hubs.data"), i18n.T(ctx, "site.summary.getting_started.where_data"))
+				@whereItem("site--getting-started--where-reports", "/reports", i18n.T(ctx, "site.nav.hubs.reports"), i18n.T(ctx, "site.summary.getting_started.where_reports"))
+				@whereItem("site--getting-started--where-account", "/settings/account", i18n.T(ctx, "site.base.my_account"), i18n.T(ctx, "site.summary.getting_started.where_menu"))
+				<li><strong class="text-gray-900">{ i18n.T(ctx, "site.nav.search_pages") }</strong>{ " " + i18n.T(ctx, "site.summary.getting_started.where_search") }</li>
+			</ul>
+		</section>
 	</div>
+}
+
+// whereItem is one place in the site: a link to it, by its name in the header, then what is there
+templ whereItem(id, path, name, what string) {
+	<li>
+		@nav.Link(id, path, "font-semibold text-brand-night underline") {
+			{ name }
+		}
+		{ " " + what }
+	</li>
 }
 
 // step is one numbered card of the guide, or unnumbered when it can be done in any order

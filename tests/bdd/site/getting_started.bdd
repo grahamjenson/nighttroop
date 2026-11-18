@@ -10,7 +10,17 @@ ASSERT_VISIBLE #site--getting-started--identities
 ASSERT_VISIBLE #site--getting-started--settings
 ASSERT_VISIBLE #site--getting-started--alarms
 ASSERT_NOT_VISIBLE #site--summary--glucose
+// It ends with where things are, each a link to its place
+ASSERT_VISIBLE #site--getting-started--where >> text=Where things are
+ASSERT_VISIBLE #site--getting-started--where >> text=finds any page by name, or by a word on it.
 SCREENSHOT getting_started
+CLICK #site--getting-started--where-reports
+ASSERT_PATH /reports
+CLICK #site--nav--home-icon
+CLICK #site--getting-started--where-data
+ASSERT_PATH /data/glucose
+CLICK #site--nav--home-icon
+ASSERT_VISIBLE #site--getting-started
 
 // Each step opens the page it is done on, and the guide is always on My Account and in the menu, to come back to
 CLICK #site--getting-started--connectors-link

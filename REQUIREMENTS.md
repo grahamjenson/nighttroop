@@ -839,8 +839,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - All users: settings and alarms.
 - Non-admins see that the admin sets up data and users.
 - In the user menu ("Getting Started"), and on My Account, which explains and opens it.
-- The last step: readings, treatments and presets under Data; reports under Reports; settings, alarms, logs and
-  events in the user menu.
+- The guide ends with **Where things are**, each place a link to it:
+  - Data: readings, treatments, and food and profile presets.
+  - Reports: summaries, the overview, AGP and TDD.
+  - My Account, in the user menu with settings, alarms, logs and events.
+  - The search, which finds any page by name or by a word on it.
 
 ### Data
 
