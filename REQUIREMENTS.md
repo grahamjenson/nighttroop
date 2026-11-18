@@ -855,6 +855,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Data pages and tables
 
 - A table for each kind, newest first and paged: add, view, edit, delete.
+- Each data page says, under its title, what its kind of record is, before how to use the table. For example, a temp
+  target is a glucose target set for a time in place of the profile's target.
 - Add (the main action): right of the title, below it on a phone. Same on presets and push credentials.
 - An empty table of glucose readings, insulin doses, food intakes, temp basals, temp targets, profile switches,
   activities, notifications or event groups says that a new site has nothing until an app or a connector sends it,

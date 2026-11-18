@@ -15,6 +15,8 @@ GOTO /data/temp-targets
 ASSERT_STATUS 200
 ASSERT_PATH /data/temp-targets
 ASSERT_VISIBLE #tempTargetsTable
+// The page says what a temp target is, as its name does not
+ASSERT_TEXT_VISIBLE A glucose target set for a time in place of the profile's target, such as a higher one for exercise.
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_NOT_VISIBLE #site--temp-target--next
 ASSERT_NOT_VISIBLE #site--temp-target--previous

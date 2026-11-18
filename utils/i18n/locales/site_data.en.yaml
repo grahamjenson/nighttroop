@@ -37,7 +37,7 @@ site:
       yesterday: "Yesterday"
     glucose_readings:
       title: "Glucose Readings"
-      about: "Newest first. Click a reading to see all its details."
+      about: "Each glucose value from a sensor or a finger prick. Newest first. Click a reading to see all its details."
       add: "Add Reading"
       empty: "No glucose readings here."
       direction: "Direction"
@@ -71,7 +71,7 @@ site:
       no_readings: "No readings"
     insulin_doses:
       title: "Insulin Doses"
-      about: "Newest first. Click an insulin dose to see all its details."
+      about: "Each bolus of insulin, from a pump, a pen or a loop. Newest first. Click an insulin dose to see all its details."
       add: "Add Insulin Dose"
       noun:
         one: "insulin dose"
@@ -93,7 +93,7 @@ site:
       deleted: "Insulin Dose Deleted"
     food_intakes:
       title: "Food Intakes"
-      about: "Newest first. Click a food intake to see all its details."
+      about: "Carbs and other food eaten, as an app recorded them. Newest first. Click a food intake to see all its details."
       add: "Add Food Intake"
       noun:
         one: "food intake"
@@ -128,7 +128,7 @@ site:
       deleted: "Food Intake Deleted"
     temp_basals:
       title: "Temp Basals"
-      about: "Newest first. Click a temp basal to see all its details."
+      about: "A basal rate set for a time in place of the profile's rate, as a loop sets every few minutes. Newest first. Click a temp basal to see all its details."
       add: "Add Temp Basal"
       noun:
         one: "temp basal"
@@ -146,7 +146,7 @@ site:
       deleted: "Temp Basal Deleted"
     temp_targets:
       title: "Temp Targets"
-      about: "Newest first. Click a temp target to see all its details."
+      about: "A glucose target set for a time in place of the profile's target, such as a higher one for exercise. Newest first. Click a temp target to see all its details."
       add: "Add Temp Target"
       noun:
         one: "temp target"
@@ -168,7 +168,7 @@ site:
       deleted: "Temp Target Deleted"
     profile_switches:
       title: "Profile Switches"
-      about: "Newest first. Click a profile switch to see all its details."
+      about: "Each change to a different profile, or to a percent of the profile in use. Newest first. Click a profile switch to see all its details."
       add: "Add Profile Switch"
       noun:
         one: "profile switch"
@@ -199,7 +199,7 @@ site:
       deleted: "Profile Switch Deleted"
     activities:
       title: "Activities"
-      about: "Newest first. Click an activity to see all its details."
+      about: "Exercise, steps and heart rate that an app recorded. Newest first. Click an activity to see all its details."
       add: "Add Activity"
       noun:
         one: "activity"
@@ -221,7 +221,7 @@ site:
       deleted: "Activity Deleted"
     notification_events:
       title: "Notifications"
-      about: "Newest first. Click a notification to see all its details."
+      about: "Announcements and warnings that an app sent. Newest first. Click a notification to see all its details."
       add: "Add Notification"
       noun:
         one: "notification"
