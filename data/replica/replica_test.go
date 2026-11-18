@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -101,4 +102,102 @@ func TestNoReplicaWithoutS3(t *testing.T) {
 	require.False(t, found)
 	require.NoError(t, r.Close(t.Context()))
 	require.NoFileExists(t, path)
+}
+
+// replicated is a replica that a control DB with the site "replicat" was replicated to, and that DB's path
+func replicated(t *testing.T) (*replica.Replica, string) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	control, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { control.Close() })
+	r := replica.New(cfg, s3)
+	require.NoError(t, r.Start(t.Context(), control.Path))
+	_, err = control.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "replicat", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	require.NoError(t, r.Close(context.Background()))
+	return r, control.Path
+}
+
+// another is a DB at a new path that the replica is not of, as one made while S3 was off
+func another(t *testing.T) string {
+	path := filepath.Join(t.TempDir(), "controldb.sqlite")
+	require.NoError(t, os.WriteFile(path, []byte("another DB"), 0o600))
+	require.NoError(t, os.WriteFile(path+"-wal", []byte("its log"), 0o600))
+	return path
+}
+
+func neverSetUp() (bool, error) { return false, nil }
+func setUp() (bool, error)      { return true, nil }
+
+// A control DB is its replica's once it has replicated to it or was restored from it, and a DB made apart from it is
+// not, nor is one that belongs to a replica somewhere else
+func TestReplicaOwnsTheDBItIsOf(t *testing.T) {
+	r, path := replicated(t)
+	require.True(t, r.Owns(path), "the DB that replicated to it")
+	replicate, err := r.Adopt(t.Context(), path, func() (bool, error) { t.Fatal("its own DB is not checked"); return false, nil })
+	require.NoError(t, err)
+	require.True(t, replicate)
+
+	restored := filepath.Join(t.TempDir(), "controldb.sqlite")
+	found, err := r.Restore(t.Context(), restored)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.True(t, r.Owns(restored), "the DB restored from it")
+
+	apart := another(t)
+	require.False(t, r.Owns(apart), "a DB made apart from it")
+	require.NoError(t, os.WriteFile(apart+".replica", []byte("https://s3.example.com/other/host/litestream/control"), 0o600))
+	require.False(t, r.Owns(apart), "a DB of a replica somewhere else")
+}
+
+// A control DB never set up, made while S3 was off, is not replicated over the replica: it is moved aside, with its
+// log, and the replica restored in its place
+func TestAdoptRestoresOverADBNeverSetUp(t *testing.T) {
+	r, _ := replicated(t)
+	path := another(t)
+	replicate, err := r.Adopt(t.Context(), path, neverSetUp)
+	require.NoError(t, err)
+	require.True(t, replicate)
+	require.True(t, r.Owns(path))
+	require.NoFileExists(t, path+"-wal", "its log is not left beside the restored DB")
+	require.NoFileExists(t, path+".restoring")
+
+	db, err := controldb.OpenSqliteDB(path, 0)
+	require.NoError(t, err)
+	defer db.Close()
+	_, err = controldb.New(db).GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: "replicat"})
+	require.NoError(t, err, "the replica's DB is in its place")
+	aside, err := filepath.Glob(path + ".replaced-*")
+	require.NoError(t, err)
+	require.Len(t, aside, 2, "the DB and its log are kept")
+}
+
+// A control DB that was set up apart from the replica is left as it is and not replicated, so neither is lost
+func TestAdoptLeavesADBSetUpApart(t *testing.T) {
+	r, _ := replicated(t)
+	path := another(t)
+	replicate, err := r.Adopt(t.Context(), path, setUp)
+	require.NoError(t, err)
+	require.False(t, replicate)
+	require.False(t, r.Owns(path))
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "another DB", string(data))
+	require.NoFileExists(t, path+".restoring")
+}
+
+// With no replica in S3, as on a server that gets S3 for the first time, the DB here is the replica's first
+func TestAdoptWithoutAReplica(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	r := replica.New(cfg, s3)
+	path := another(t)
+	replicate, err := r.Adopt(t.Context(), path, func() (bool, error) { t.Fatal("there is no replica to choose from"); return false, nil })
+	require.NoError(t, err)
+	require.True(t, replicate)
+	require.True(t, r.Owns(path))
+
+	var off *replica.Replica
+	replicate, err = off.Adopt(t.Context(), path, setUp)
+	require.NoError(t, err)
+	require.True(t, replicate, "without S3 there is nothing to check")
 }
