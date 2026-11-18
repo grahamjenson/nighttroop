@@ -201,6 +201,7 @@ site:
       phone: "Phone"
       reservoir: "Reservoir"
       pump: "Pump"
+      suspended: "Suspended"
     getting_started:
       title: "Getting Started"
       welcome: "Welcome to your Nighttroop site"
