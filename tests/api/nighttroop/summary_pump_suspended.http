@@ -1,0 +1,59 @@
+INCLUDE steps/new_site.steps
+
+// Loop says its pump is suspended in the pump's suspended
+NAME loop_pump_suspended
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 2 }}", "pump": {"suspended": true, "reservoir": 160, "clock": "{{ time 2 }}", "manufacturer": "Insulet", "model": "Dash"}, "loop": {"iob": {"iob": 0.5}, "cob": {"cob": 0}}}]
+ASSERT_STATUS 200
+
+// The summary gives the pump as suspended, in the device's latest status and the loop's
+NAME summary_pump_suspended
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items.0.device_statuses"
+ASSERT_EQUALS "suspended" "@result.items.0.device_statuses.0.pump_state"
+ASSERT_EQUALS "suspended" "@result.items.0.loop.pump_state"
+ASSERT_EQUALS 160 "@result.items.0.loop.pump_reservoir"
+
+// Once Loop resumes the pump, it is normal again
+NAME loop_pump_resumed
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{"device": "loop://iPhone", "created_at": "{{ time 0 }}", "pump": {"suspended": false, "reservoir": 159}, "loop": {"iob": {"iob": 0.5}}}]
+ASSERT_STATUS 200
+
+NAME summary_pump_resumed
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "normal" "@result.items.0.device_statuses.0.pump_state"
+ASSERT_EQUALS "normal" "@result.items.0.loop.pump_state"
+
+// Trio says so in the pump's status, and AAPS with the status's status; the device status keeps it for each
+NAME trio_pump_suspended
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{"device": "Trio", "created_at": "{{ time 0 }}", "pump": {"reservoir": 80, "status": {"status": "normal", "suspended": true, "bolusing": false}}}]
+ASSERT_STATUS 200
+SET trio_status {{ dig "trio_pump_suspended.0._id" }}
+
+NAME trio_status_suspended
+GET http://{{ site }}/data/device-status/{{ .trio_status }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "suspended" "@result.pump_state"
+
+NAME aaps_pump_suspended
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{"device": "openaps://AAPS", "created_at": "{{ time 0 }}", "pump": {"reservoir": 46, "status": {"status": "suspended"}}}]
+ASSERT_STATUS 200
+SET aaps_status {{ dig "aaps_pump_suspended.0._id" }}
+
+NAME aaps_status_suspended
+GET http://{{ site }}/data/device-status/{{ .aaps_status }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "suspended" "@result.pump_state"
