@@ -3,7 +3,8 @@ INCLUDE steps/ns_units_mgdl.steps
 
 # An override Loop ends within a minute is posted again with its _id and its seconds in minutes, e.g. 0.28. It has
 # ended: it is not indefinite, which only an override sent with a duration of 0, or with durationType indefinite, is.
-# A dose of under half a minute is 1 minute on API v1, not 0, which followers read as one cancelled. The time to the
+# A dose of under half a minute is 1 minute on API v1 and v3, not 0, which followers read as one cancelled, and
+# which v3 readers read as an indefinite override. The time to the
 # millisecond is in durationInMilliseconds.
 
 NAME loop_start_override
@@ -33,6 +34,7 @@ NAME override_ended_v3
 GET http://{{ site }}/api/v3/treatments/57F0225B-1C2D-4E3F-8A9B-0C1D2E3F4A5B
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@result.duration"
 ASSERT_EQUALS 17050 "@result.durationInMilliseconds"
 ASSERT_EQUALS null "@result.durationType"
 

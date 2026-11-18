@@ -85,7 +85,8 @@ NAME get_ended_suspend
 GET http://{{ site }}/api/v3/treatments/{{ .add_suspend.identifier }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 0 "@result.duration"
+# Its 43 s are 1 minute, not the 0 sent, as other readers take 0 as cancelled; AAPS reads the milliseconds first
+ASSERT_EQUALS 1 "@result.duration"
 ASSERT_EQUALS 43491 "@result.durationInMilliseconds"
 
 // Extended carbs, which have no event with a duration

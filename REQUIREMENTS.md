@@ -1713,7 +1713,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   fraction (e.g. 1.6666666666666667, 0.2), as Loop sends and reads them. No other client gets this (see
   `nsutils.ClientOverrides`). API v3 and the Socket.IO broadcasts stay in whole minutes.
 - API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
-  treatment, or a page, with a fractional `duration`).
+  treatment, or a page, with a fractional `duration`). A duration of under a minute is 1, not 0: readers take 0 as a
+  cancelled temp basal, or an indefinite `Temporary Override`. AAPS reads `durationInMilliseconds` first.
 
 #### Temp basals
 

@@ -136,7 +136,9 @@ func (d *Duration) Fields() DurationFields {
 		return DurationFields{}
 	}
 	ms := d.Milliseconds()
-	fields := DurationFields{DurationMinutes: d.Minutes, DurationInMilliseconds: &ms}
+	// A duration of under a minute is 1, not 0, on API v3 too, as followers read 0 as cancelled, and a Temporary
+	// Override of 0 as indefinite
+	fields := DurationFields{DurationMinutes: max(d.Minutes, min(ms, 1)), DurationInMilliseconds: &ms}
 	if !d.wholeMinutes && ms/60_000 == d.Minutes {
 		// A duration of under half a minute is 1, not 0, which followers read as one cancelled
 		fields.DurationMinutes = max((ms+30_000)/60_000, min(ms, 1))
