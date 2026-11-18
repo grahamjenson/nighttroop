@@ -68,6 +68,7 @@ common:
     level: "Level"
     message: "Message"
     no_logs: "No logs here."
+    narrow: "Narrow to its request or job"
     request: "Request"
     job: "Job"
   authenticator:

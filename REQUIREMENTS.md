@@ -285,6 +285,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   search ignores case.
 - Errors and logs have their own pages. Narrow all three to one site, request or job run by ID. Details link to
   their request and job.
+- The logs table has fixed column widths. A long message is cut short, and shown whole on hover.
+- Each log's level is a coloured badge: grey for debug, blue for info, amber for warn, red for error.
+- On control, a button at the right of each log narrows the logs to its request, or else its job. The log's details
+  do not open.
 - Each control sign in, and each refused one, is an event with the IP's estimated country (and city with DB-IP's City
   Lite). The IP is not kept.
 

@@ -95,6 +95,10 @@ CLICK #control--menu
 CLICK #control--logs-button
 ASSERT_PATH /logs
 ASSERT_VISIBLE #controlLogsTable
+// The logs' columns keep their widths whatever the messages, each level a coloured badge. Which logs this server has is
+// not known (see below), so each log's button narrowing to its request or job is checked in logview's unit test.
+ASSERT_VISIBLE #controlLogsTable.table-fixed
+SCREENSHOT logs
 
 // An event's details link to its request, which narrows the events to those made while answering it
 CLICK #control--menu
