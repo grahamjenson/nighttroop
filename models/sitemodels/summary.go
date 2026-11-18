@@ -15,6 +15,10 @@ type Summary struct {
 	RangeUrgentLow  float64 `json:"range_urgent_low"`
 	RangeUrgentHigh float64 `json:"range_urgent_high"`
 
+	// CurrentGlucose is the newest CGM reading from Since, its change since the CGM reading before it. A finger stick
+	// is only in GlucoseReadings, unless there is no CGM reading from Since. It is null with no reading.
+	CurrentGlucose *SiteCleanGlucoseReading `json:"current_glucose"`
+
 	// GlucoseReadings are cleaned, the same glucose from more than one source kept once
 	GlucoseReadings []*SiteCleanGlucoseReading `json:"glucose_readings"`
 	InsulinDoses    []*SiteInsulinDose         `json:"insulin_doses"`

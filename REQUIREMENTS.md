@@ -653,6 +653,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Contents
 
 - The home page: latest glucose and its age, the loop's IOB and COB, treatments, and each device's latest status.
+- The latest glucose is the newest CGM reading (`sgv`) and its arrow. A newer finger stick does not replace it.
+  - If there is no CGM reading in the hours, the newest finger stick shows.
+  - `GET /summary` gives it as `current_glucose`. Its `diff_per_5m` is from the CGM reading before it.
+  - Finger sticks stay in `glucose_readings` and the graph.
 - The devices are under a **Devices** title with a link to the Device Status page. With no device, neither shows.
 - In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
