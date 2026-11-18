@@ -57,6 +57,7 @@ func TestValidateSecrets(t *testing.T) {
 		{"test with the dev keys", consts.Test, map[string]string{"KEY_SETS": security.DevKeySets}, ""},
 
 		{"production with S3 keys", consts.Production, s3, ""},
+		{"production with S3 over HTTP", consts.Production, map[string]string{"S3_URL": "http://s3.example.com", "S3_ACCESS_KEY": "an access key", "S3_SECRET_KEY": "a secret key"}, "HTTPS"},
 		{"production without S3", consts.Production, map[string]string{}, ""},
 		{"production with S3 and no access key", consts.Production, map[string]string{"S3_URL": "https://s3.example.com", "S3_SECRET_KEY": "a secret key"}, "S3_ACCESS_KEY"},
 		{"production with S3 and no secret key", consts.Production, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "an access key"}, "S3_SECRET_KEY"},

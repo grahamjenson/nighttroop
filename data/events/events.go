@@ -16,21 +16,20 @@ import (
 type Name string
 
 const (
-	SiteCreated        Name = "site_created"
-	SiteDisabled       Name = "site_disabled"
-	SiteEnabled        Name = "site_enabled"
-	SiteDeleted        Name = "site_deleted"
-	SiteArchived       Name = "site_archived"
-	SiteHydrated       Name = "site_hydrated"
-	SiteTruncated      Name = "site_truncated"
+	SiteCreated   Name = "site_created"
+	SiteDisabled  Name = "site_disabled"
+	SiteEnabled   Name = "site_enabled"
+	SiteDeleted   Name = "site_deleted"
+	SiteArchived  Name = "site_archived"
+	SiteHydrated  Name = "site_hydrated"
+	SiteTruncated Name = "site_truncated"
 	// SiteDBMadeEmpty is a control admin making an unavailable site's DB again, empty
 	SiteDBMadeEmpty Name = "site_db_made_empty"
 	SiteDBUploaded  Name = "site_db_uploaded"
 	// SiteVersionRestored is a control admin restoring an unavailable site from a version of its backup they picked
 	SiteVersionRestored Name = "site_version_restored"
-	SitesBackedUp      Name = "sites_backed_up"
-	ControlBackedUp    Name = "control_backed_up"
-	ConnectorTurnedOff Name = "connector_turned_off"
+	SitesBackedUp       Name = "sites_backed_up"
+	ConnectorTurnedOff  Name = "connector_turned_off"
 	// SiteDBMissing is a live site's DB file missing at start, restored from its backup or left out
 	SiteDBMissing Name = "site_db_missing"
 	// SiteAdminRecovered is the site's backup key being used to give its admin new credentials
@@ -66,7 +65,7 @@ const (
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
-var Persisted = []Name{SiteCreated, SiteDisabled, SiteEnabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMadeEmpty, SiteDBUploaded, SiteVersionRestored, SiteDBMissing, SitesBackedUp, ControlBackedUp,
+var Persisted = []Name{SiteCreated, SiteDisabled, SiteEnabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMadeEmpty, SiteDBUploaded, SiteVersionRestored, SiteDBMissing, SitesBackedUp,
 	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from

@@ -103,13 +103,12 @@ AAPS, Trio) send.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `S3_URL` | None | The S3-compatible endpoint for backups and archives (example: `http://localhost:9000`, the docker-compose MinIO). |
+| `S3_URL` | None | The S3-compatible endpoint for backups, archives and the control DB's replica. Outside development and test it must be `https://`, as S3 encrypts the replica with SSE-C only over HTTPS (example in development: `http://localhost:9000`, the docker-compose MinIO). |
 | `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on at startup. |
 | `S3_ACCESS_KEY` | `minioadmin` (docker-compose MinIO) | The access key ID. |
 | `S3_SECRET_KEY` | `minioadmin` (docker-compose MinIO) | The secret key. |
-| `CONTROL_BACKUP_INTERVAL_IN_SECONDS` | `30` | How often the control DB is backed up. |
 | `SITE_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How old a written site's backup is before it is backed up again. Each tick (the interval / 26) deletes the sites never used, then truncates and backs up those sites. |
-| `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a control backup after a newer upload replaces it. |
+| `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after Litestream replaces or deletes it. |
 | `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site backup or archive. |
 
 - `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted.

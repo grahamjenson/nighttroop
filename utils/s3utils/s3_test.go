@@ -23,15 +23,19 @@ func TestS3IsSkippedWhenNotWorking(t *testing.T) {
 }
 
 func TestRetentionRules(t *testing.T) {
-	c := &s3utils.S3Client{ServerConfig: &config.ServerConfig{SiteBackupRetentionDays: 30, ControlBackupRetentionDays: 90}}
+	c := &s3utils.S3Client{HostName: "host", ServerConfig: &config.ServerConfig{SiteBackupRetentionDays: 30, ControlBackupRetentionDays: 90}}
 
-	// Each rule expires the replaced versions of the uploads tagged with its retention
-	days := map[string]int32{}
-	for _, rule := range c.RetentionRules() {
-		require.Equal(t, "nighttroop-retention", aws.ToString(rule.Filter.Tag.Key))
-		require.Equal(t, "nighttroop-retention-"+aws.ToString(rule.Filter.Tag.Value), aws.ToString(rule.ID))
+	// The site backups, tagged, and the files of the control DB's replica, by prefix, keep replaced versions their days
+	rules := c.RetentionRules()
+	require.Len(t, rules, 2)
+	for _, rule := range rules {
 		require.Nil(t, rule.Expiration, "the current version must never expire")
-		days[aws.ToString(rule.Filter.Tag.Value)] = aws.ToInt32(rule.NoncurrentVersionExpiration.NoncurrentDays)
 	}
-	require.Equal(t, map[string]int32{string(s3utils.SiteRetention): 30, string(s3utils.ControlRetention): 90}, days)
+	require.Equal(t, "nighttroop-retention-site", aws.ToString(rules[0].ID))
+	require.Equal(t, "nighttroop-retention", aws.ToString(rules[0].Filter.Tag.Key))
+	require.Equal(t, string(s3utils.SiteRetention), aws.ToString(rules[0].Filter.Tag.Value))
+	require.Equal(t, int32(30), aws.ToInt32(rules[0].NoncurrentVersionExpiration.NoncurrentDays))
+	require.Equal(t, "nighttroop-retention-control", aws.ToString(rules[1].ID))
+	require.Equal(t, "host/litestream/control", aws.ToString(rules[1].Filter.Prefix))
+	require.Equal(t, int32(90), aws.ToInt32(rules[1].NoncurrentVersionExpiration.NoncurrentDays))
 }

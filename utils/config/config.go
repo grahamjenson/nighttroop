@@ -212,7 +212,6 @@ type ServerConfig struct {
 	CPUPeggedAlertSeconds int
 
 	// Backup Config
-	ControlBackupIntervalInSeconds int
 	// SiteBackupIntervalInSeconds is how old a written site's backup is before it is backed up again
 	SiteBackupIntervalInSeconds int
 	// SiteBackupRetentionDays is how long S3 keeps a site backup or archive after a newer upload replaces it
@@ -360,11 +359,11 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		S3AccessSecretKey: configStringSelect(dotenv, "S3_SECRET_KEY", "minioadmin"),
 
 		// sentry
-		SentryDSN:  configStringSelect(dotenv, "SENTRY_DSN", ""),
+		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
 		// pagerduty
 		PagerDutyRoutingKey: configStringSelect(dotenv, "PAGERDUTY_ROUTING_KEY", ""),
 		PagerDutyEventsURL:  configStringSelect(dotenv, "PAGERDUTY_EVENTS_URL", "https://events.pagerduty.com/v2/enqueue"),
-		Deployment: configStringSelect(dotenv, "DEPLOYMENT", "development"),
+		Deployment:          configStringSelect(dotenv, "DEPLOYMENT", "development"),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", supportEmail),
 		OperatorName: configStringSelect(dotenv, "OPERATOR_NAME", operatorName),
@@ -447,10 +446,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		CPUPeggedAlertSeconds: configIntSelect(dotenv, "CPU_PEGGED_ALERT_SECONDS", 20),
 
 		// Backup Config
-		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),
-		SiteBackupIntervalInSeconds:    configIntSelect(dotenv, "SITE_BACKUP_INTERVAL_IN_SECONDS", 3600), // 1 hour
-		SiteBackupRetentionDays:        configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
-		ControlBackupRetentionDays:     configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
+		SiteBackupIntervalInSeconds: configIntSelect(dotenv, "SITE_BACKUP_INTERVAL_IN_SECONDS", 3600), // 1 hour
+		SiteBackupRetentionDays:     configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
+		ControlBackupRetentionDays:  configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
 
 		// Connector Config
 		BackgroundConnectorWorkers: configIntSelect(dotenv, "BACKGROUND_CONNECTOR_WORKERS", 5),
@@ -594,6 +592,10 @@ func validateSecrets(keySets, s3URL, s3AccessKey, s3SecretKey string) error {
 	}
 	if s3URL == "" {
 		return nil
+	}
+	// The control DB's replica is encrypted by S3 with its own key (SSE-C), which S3 takes only over HTTPS
+	if !strings.HasPrefix(s3URL, "https://") {
+		return fmt.Errorf("S3_URL must be HTTPS, so S3 encrypts the control DB's replica")
 	}
 	if s3AccessKey == "" || s3AccessKey == "minioadmin" {
 		return fmt.Errorf("S3_URL is set, so S3_ACCESS_KEY must be set, and not to the development MinIO's minioadmin")
@@ -795,7 +797,6 @@ func printServerConfig(config ServerConfig) {
 		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
 		"DisableAfterInactivityDays", config.DisableAfterInactivityDays,
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
-		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"SiteBackupIntervalInSeconds", config.SiteBackupIntervalInSeconds,
 		"SiteBackupRetentionDays", config.SiteBackupRetentionDays,
 		"ControlBackupRetentionDays", config.ControlBackupRetentionDays,

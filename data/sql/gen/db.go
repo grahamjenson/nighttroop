@@ -281,10 +281,6 @@ func GetBackupPath(serverConfig *config.ServerConfig) string {
 	return fmt.Sprintf("%s/%s.sqlite.lz4", serverConfig.BackupDir(), "{{ .PkgName }}")
 }
 
-func GetS3Path(serverConfig *config.ServerConfig) string {
-	return fmt.Sprintf("%s/backup/%s.tar.enc", serverConfig.HostName,  "{{ .PkgName }}")
-}
-
 {{ end }}
 
 

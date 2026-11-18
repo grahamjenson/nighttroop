@@ -23,16 +23,15 @@ import (
 type ErrorKind string
 
 const (
-	ErrorKindServer          ErrorKind = "server"
-	ErrorKindClient          ErrorKind = "client"
-	ErrorKindConnector       ErrorKind = "connector"
-	ErrorKindSiteBackup      ErrorKind = "site_backup"
-	ErrorKindControlBackup   ErrorKind = "control_backup"
+	ErrorKindServer     ErrorKind = "server"
+	ErrorKindClient     ErrorKind = "client"
+	ErrorKindConnector  ErrorKind = "connector"
+	ErrorKindSiteBackup ErrorKind = "site_backup"
 )
 
 // ErrorKinds are every error's kind, to pick from
 var ErrorKinds = []string{
-	string(ErrorKindServer), string(ErrorKindClient), string(ErrorKindConnector), string(ErrorKindSiteBackup), string(ErrorKindControlBackup),
+	string(ErrorKindServer), string(ErrorKindClient), string(ErrorKindConnector), string(ErrorKindSiteBackup),
 }
 
 // LogLevel is how much a log matters
@@ -231,15 +230,6 @@ func (l *LogsDB) SitesBackedUpEvent(ctx context.Context, siteCount int, started 
 	l.finishedEvent(ctx, "", events.SitesBackedUp, started, SitesBackedUpAttributes{SiteCount: siteCount, Uploaded: uploaded})
 }
 
-type ControlBackedUpAttributes struct {
-	Uploaded bool `json:"uploaded"`
-}
-
-// ControlBackedUpEvent records the control DB being backed up from started, and uploaded when S3 works
-func (l *LogsDB) ControlBackedUpEvent(ctx context.Context, started time.Time, uploaded bool) {
-	l.finishedEvent(ctx, "", events.ControlBackedUp, started, ControlBackedUpAttributes{Uploaded: uploaded})
-}
-
 type ConnectorTurnedOffAttributes struct {
 	ConnectorType consts.ConnectorType `json:"connector_type"`
 }
@@ -400,12 +390,4 @@ type SiteBackupErrorAttributes struct {
 
 func (l *LogsDB) SiteBackupError(ctx context.Context, err error) {
 	l.error(ctx, nil, err, SiteBackupErrorAttributes{Kind: ErrorKindSiteBackup})
-}
-
-type ControlBackupErrorAttributes struct {
-	Kind ErrorKind `json:"kind"`
-}
-
-func (l *LogsDB) ControlBackupError(ctx context.Context, err error) {
-	l.error(ctx, nil, err, ControlBackupErrorAttributes{Kind: ErrorKindControlBackup})
 }
