@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"nighttroop.t1d.nz/clients/libre_client"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/libremodels"
 	"nighttroop.t1d.nz/utils/consts"
-	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
 
 // libreClient is a site's LibreLinkUp client, kept between syncs so its login is reused
@@ -70,16 +70,11 @@ func (b *ConnectorJobManager) copyLibreReadings(ctx context.Context, jobInfo *Co
 	if err != nil {
 		return 0, fmt.Errorf("Libre Error: %w", err)
 	}
-	added := 0
-	for _, r := range readings {
-		createParams := libremodels.ReadingToCreate(r, "libre_connector")
-		row, err := jobInfo.Site.SiteDB.Queries().CreateGlucoseReading(ctx, createParams)
-		if err == nil {
-			added++
-			jobInfo.Site.published(row)
-		} else if !utilerrors.IsSQLDuplicateID(err) {
-			refuse(fmt.Errorf("Libre: cannot keep a reading: %w", err), r)
-		}
+	added, err := keepReadings(ctx, jobInfo.Site, readings, func(r libremodels.Reading) sitedb.CreateGlucoseReadingParams {
+		return libremodels.ReadingToCreate(r, "libre_connector")
+	}, func(err error, r libremodels.Reading) { refuse(fmt.Errorf("Libre: cannot keep a reading: %w", err), r) })
+	if err != nil {
+		return 0, fmt.Errorf("Libre Error: %w", err)
 	}
 	return added, nil
 }

@@ -69,6 +69,10 @@ func Search(store nsutils.Store) http.HandlerFunc {
 // is refused
 const maxLeftOut = 10
 
+// Create stores a document, or a batch of them. A batch of any collection leaves out a document it cannot store and
+// stores the rest, as Nightscout stores them all: xDrip+ sends a failed entries batch again with every new reading
+// added, and its device status and treatments only after it is taken, and Loop, Trio and xDrip4iOS send treatment and
+// device status batches
 func Create(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
@@ -78,68 +82,24 @@ func Create(store nsutils.Store) http.HandlerFunc {
 		}
 		canUpdate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionUpdate)
 
-		var body any
-		if err := apiutils.ReadJSON(r, &body); err != nil {
-			nsutils.WriteError(w, nsutils.BadDataBodyError)
+		documents, isBatch, err := readDocuments(r)
+		if err == nil {
+			err = batchWithinLimits(w, r, len(documents))
+		}
+		if err != nil {
+			nsutils.WriteError(w, err)
 			return
 		}
 
 		var created []nsutils.Document
-
-		// Deal with one record being sent or an array being sent
-		arrayOfModels := []any{}
-		switch typed := body.(type) {
-		case map[string]any:
-			arrayOfModels = append(arrayOfModels, typed)
-		case []any:
-			arrayOfModels = typed
-		default:
-			slog.InfoContext(r.Context(), "Collection Create JSON type error", "type", typed)
-			nsutils.WriteError(w, nsutils.BadDataBodyError)
-			return
-		}
-
-		// Each record costs a duplicate check, a transaction and a fan-out, so cap a batch before storing any of it, and
-		// have each MaxBatchRecords past the first cost a write, so a large batch is limited as a run of small ones
-		if len(arrayOfModels) > consts.MaxV1BatchRecords {
-			nsutils.WriteError(w, nsutils.ErrTooManyRecords)
-			return
-		}
-		if !httputils.ExtraWritesWithinRateLimit(r, (len(arrayOfModels)-1)/consts.MaxBatchRecords) {
-			nsutils.WriteError(w, nsutils.ErrTooManyBatchWrites)
-			return
-		}
-		// A site flagged for abuse spends a flagged write for each record, so a batch cannot get around its limit
-		if allowed, seconds := httputils.FlaggedSiteWritesWithinRateLimit(httputils.GetSiteContext(r.Context()), len(arrayOfModels)-1); !allowed {
-			httputils.SetRetryAfter(w, seconds)
-			nsutils.WriteError(w, nsutils.ErrSiteOverStorage)
-			return
-		}
-
-		// Loop over the array of models sent. A batch of any collection leaves out a document it cannot store and stores
-		// the rest, as Nightscout stores them all: xDrip+ sends a failed entries batch again with every new reading added,
-		// and its device status and treatments only after it is taken, and Loop, Trio and xDrip4iOS send treatment and
-		// device status batches
-		_, isBatch := body.([]any)
 		var left leftOut
-		for _, item := range arrayOfModels {
-			doc, ok := item.(map[string]any)
+		for _, document := range documents {
 			// xDrip+ and xDrip4iOS send their sensor calibrations (type cal) in the same batch as their readings.
 			// They are not kept, so the readings still are.
-			if collection == nsutils.Entries && doc["type"] == "cal" {
+			if doc, _ := document.(map[string]any); collection == nsutils.Entries && doc["type"] == "cal" {
 				continue
 			}
-
-			// As in Nightscout, a document sent with an _id replaces the one with it, as Loop sends an override again
-			// with its _id when it changes. That changes a record, so needs update: a caregiver, who can only add a
-			// device status, gets the stored one back unchanged
-			var record nsutils.Document
-			err := nsutils.BadDataBodyError
-			if id, isID := doc["_id"].(string); ok && isID && canUpdate && nsutils.ValidateIdentifierIsntBad(id) == nil {
-				record, _, err = store.Replace(movableDate(r, collection), collection, id, doc, true)
-			} else if ok {
-				record, _, err = store.Create(r.Context(), collection, doc)
-			}
+			record, err := storeDocument(r, store, collection, document, canUpdate)
 			if isBatch && left.leaves(err) {
 				continue
 			}
@@ -149,23 +109,61 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			}
 			created = append(created, record)
 		}
-		if left.outOfRange+left.bad > 0 {
-			slog.InfoContext(r.Context(), "left out documents from a batch", "collection", collection, "out_of_range", left.outOfRange, "bad", left.bad, "stored", len(created))
-		}
-		// A batch with nothing stored and a document with another problem is refused with it, so the client is told
-		if len(created) == 0 && left.first != nil {
-			nsutils.WriteError(w, left.first)
+		if err := left.reported(r, collection, len(created)); err != nil {
+			nsutils.WriteError(w, err)
 			return
 		}
-		// One stored with a document left out for another problem shows on the site's client errors, so the admin can
-		// see what the client gets wrong, though the client is not told. Readings out of range alone are not, as a sensor
-		// can send them for hours.
-		if left.bad > 0 {
-			httputils.SetLeftOut(r.Context(), left.summary(collection, len(created)))
-		}
-
 		nsutils.WriteRecordsV1(w, created, nil)
 	}
+}
+
+// readDocuments is the documents of a create's body, one sent alone or an array of them, and whether it is an array
+func readDocuments(r *http.Request) ([]any, bool, *nsutils.HTTPError) {
+	var body any
+	if err := apiutils.ReadJSON(r, &body); err != nil {
+		return nil, false, nsutils.BadDataBodyError
+	}
+	switch typed := body.(type) {
+	case map[string]any:
+		return []any{typed}, false, nil
+	case []any:
+		return typed, true, nil
+	}
+	slog.InfoContext(r.Context(), "Collection Create JSON type error", "type", body)
+	return nil, false, nsutils.BadDataBodyError
+}
+
+// batchWithinLimits refuses a batch of n documents before any of it is stored, as each costs a duplicate check, a
+// transaction and a fan-out. Each MaxBatchRecords past the first costs a write, so a large batch is limited as a run of
+// small ones, and a site flagged for abuse spends a flagged write for each, so a batch cannot get around its limit.
+func batchWithinLimits(w http.ResponseWriter, r *http.Request, n int) *nsutils.HTTPError {
+	if n > consts.MaxV1BatchRecords {
+		return nsutils.ErrTooManyRecords
+	}
+	if !httputils.ExtraWritesWithinRateLimit(r, (n-1)/consts.MaxBatchRecords) {
+		return nsutils.ErrTooManyBatchWrites
+	}
+	if allowed, seconds := httputils.FlaggedSiteWritesWithinRateLimit(httputils.GetSiteContext(r.Context()), n-1); !allowed {
+		httputils.SetRetryAfter(w, seconds)
+		return nsutils.ErrSiteOverStorage
+	}
+	return nil
+}
+
+// storeDocument stores one document sent to be created. As in Nightscout, one sent with an _id replaces the one with
+// it, as Loop sends an override again with its _id when it changes. That changes a record, so needs canUpdate: a
+// caregiver, who can only add a device status, gets the stored one back unchanged.
+func storeDocument(r *http.Request, store nsutils.Store, collection nsutils.Collection, document any, canUpdate bool) (nsutils.Document, *nsutils.HTTPError) {
+	doc, ok := document.(map[string]any)
+	if !ok {
+		return nil, nsutils.BadDataBodyError
+	}
+	if id, isID := doc["_id"].(string); isID && canUpdate && nsutils.ValidateIdentifierIsntBad(id) == nil {
+		record, _, err := store.Replace(movableDate(r, collection), collection, id, doc, true)
+		return record, err
+	}
+	record, _, err := store.Create(r.Context(), collection, doc)
+	return record, err
 }
 
 // defaultCount gives a search with no count Nightscout's default count of the newest, as if it were sent
@@ -212,6 +210,23 @@ func (l *leftOut) leaves(err *nsutils.HTTPError) bool {
 		return false
 	}
 	return true
+}
+
+// reported logs the documents a batch left out, and is the error to refuse it with when it stored none and left one out
+// for a problem other than a reading out of range, so the client is told. One stored with a document left out for
+// another problem shows on the site's client errors, so the admin can see what the client gets wrong, though the
+// client is not told. Readings out of range alone are not, as a sensor can send them for hours.
+func (l *leftOut) reported(r *http.Request, collection nsutils.Collection, stored int) *nsutils.HTTPError {
+	if l.outOfRange+l.bad > 0 {
+		slog.InfoContext(r.Context(), "left out documents from a batch", "collection", collection, "out_of_range", l.outOfRange, "bad", l.bad, "stored", stored)
+	}
+	if stored == 0 && l.first != nil {
+		return l.first
+	}
+	if l.bad > 0 {
+		httputils.SetLeftOut(r.Context(), l.summary(collection, stored))
+	}
+	return nil
 }
 
 func (l *leftOut) add(reason string) {

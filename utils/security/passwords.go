@@ -25,12 +25,10 @@ func TOTPURI(name, siteURL, secret string) string {
 	return (&url.URL{Scheme: "otpauth", Host: "totp", Path: "/" + TOTPIssuer + ":" + account, RawQuery: query.Encode()}).String()
 }
 
-// TOTPGenerate makes a TOTP secret for an identity of the site, "" for a control admin, encrypted for that site
-func (cfg *SecurityConfig) TOTPGenerate(siteID, accountName string) (totpSecret, totpEncSecret string, err error) {
-	totpKey, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      TOTPIssuer,
-		AccountName: fmt.Sprintf("%s@%s", accountName, cfg.HostName),
-	})
+// TOTPGenerate makes a TOTP secret for an identity of the site, "" for a control admin, encrypted for that site. Only
+// the secret is kept: the account an authenticator app shows is TOTPURI's, from the page's host.
+func (cfg *SecurityConfig) TOTPGenerate(siteID string) (totpSecret, totpEncSecret string, err error) {
+	totpKey, err := totp.Generate(totp.GenerateOpts{Issuer: TOTPIssuer, AccountName: TOTPIssuer})
 
 	if err != nil {
 		return "", "", fmt.Errorf("cannot generate TOTP key: %w", err)

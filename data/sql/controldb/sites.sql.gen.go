@@ -823,13 +823,14 @@ SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_
 WHERE state IN ('live', 'disabled') AND (
     (last_write_at IS NOT NULL AND (backed_up_at IS NULL OR (last_write_at + 600000 > backed_up_at
         AND backed_up_at < CAST(?1 AS INTEGER))))
-    OR backup_uploaded_at < backed_up_at)
+    OR (CAST(?2 AS BOOLEAN) AND backup_uploaded_at < backed_up_at))
 ORDER BY COALESCE(backed_up_at, 0), id
-LIMIT CAST(?2 AS INTEGER)
+LIMIT CAST(?3 AS INTEGER)
 `
 
 type GetSitesToBackUpParams struct {
 	BackedUpBefore int64
+	Uploading      bool
 	Limit          int64
 }
 
@@ -837,10 +838,11 @@ type GetSitesToBackUpParams struct {
 // BACKUP
 // ------------------------------
 // The live and disabled sites to back up, the longest waiting first: those written since their last backup, copied
-// before BackedUpBefore, and those whose last copy is not uploaded. A site's last write is recorded at most every 10
-// minutes, so one written in the 10 minutes after its last copy, its last write before it, is written since too.
+// before BackedUpBefore, and, while Uploading, those whose last copy is not uploaded: with S3 off no copy uploads, so
+// such a site would be copied again each tick. A site's last write is recorded at most every 10 minutes, so one written
+// in the 10 minutes after its last copy, its last write before it, is written since too.
 func (q *Queries) GetSitesToBackUp(ctx context.Context, arg GetSitesToBackUpParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.getSitesToBackUpStmt, getSitesToBackUp, arg.BackedUpBefore, arg.Limit)
+	rows, err := q.query(ctx, q.getSitesToBackUpStmt, getSitesToBackUp, arg.BackedUpBefore, arg.Uploading, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

@@ -161,42 +161,30 @@ func IdentityCreateWithinRateLimit(siteContext *SiteContext) (bool, int) {
 // //
 // Utils Methods
 // //
+
+// WithinRateLimitAll spends one from each limiter, and none unless all have one now, so a request one limiter refuses
+// does not spend the others': an IP over its own site create limit cannot empty the server's. It is when to try again
+// if refused, in seconds.
 func WithinRateLimitAll(limiters ...*rate.Limiter) (bool, int) {
-	alloweds := make([]bool, len(limiters))
-	remainingTimes := make([]time.Duration, len(limiters))
-
+	now := time.Now()
+	reservations := make([]*rate.Reservation, len(limiters))
+	allowed, delay := true, time.Duration(0)
 	for i, limiter := range limiters {
-		alloweds[i], remainingTimes[i] = allowWithTimeRemaining(limiter)
-	}
-
-	return allTrue(alloweds), maxDuration(remainingTimes...)
-}
-
-func allowWithTimeRemaining(limiter *rate.Limiter) (bool, time.Duration) {
-	// Use a reservation to return the amount of time until the next event is allowed.
-	res := limiter.Reserve()
-	defer res.Cancel() // Cancel the reservation to avoid consuming tokens
-
-	// If the reservation is not possible (e.g., burst size exceeded)
-	if !res.OK() {
-		return false, 0
-	}
-
-	delay := res.Delay()
-	if delay == 0 {
-		return true, 0
-	}
-
-	return false, delay
-}
-
-func allTrue(bools []bool) bool {
-	for _, b := range bools {
-		if !b {
-			return false
+		reservations[i] = limiter.ReserveN(now, 1)
+		// One past its burst is never let through, so there is no time to wait for
+		if !reservations[i].OK() {
+			allowed = false
+		} else if wait := reservations[i].DelayFrom(now); wait > 0 {
+			allowed, delay = false, max(delay, wait)
 		}
 	}
-	return true
+	if !allowed {
+		// Cancelled at the time reserved, each gives back its token, as it is not yet used
+		for _, reservation := range reservations {
+			reservation.CancelAt(now)
+		}
+	}
+	return allowed, maxDuration(delay)
 }
 
 func maxDuration(durations ...time.Duration) int {

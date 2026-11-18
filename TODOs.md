@@ -29,6 +29,9 @@
 1. Security
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
+    1. P2: Check a site identity's rate limit before its site's (`server/siteapi/router.go`,
+       `server/nightscoutapi/router.go`): a request its identity refuses spends the site's limit first, so one
+       follower's token over its own limit can use up the site's, and its other apps get 429
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
@@ -79,7 +82,6 @@
        until then
     1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
        identities that can change the site's data are given them back, and push registrations keep them encrypted
-    1. P5: Disable the control site's Push Devices "Test" button while its push is sent, as the site's is
 
 
 1. Nightscout API:

@@ -185,13 +185,14 @@ RETURNING id;
 
 -- name: GetSitesToBackUp :many
 -- The live and disabled sites to back up, the longest waiting first: those written since their last backup, copied
--- before BackedUpBefore, and those whose last copy is not uploaded. A site's last write is recorded at most every 10
--- minutes, so one written in the 10 minutes after its last copy, its last write before it, is written since too.
+-- before BackedUpBefore, and, while Uploading, those whose last copy is not uploaded: with S3 off no copy uploads, so
+-- such a site would be copied again each tick. A site's last write is recorded at most every 10 minutes, so one written
+-- in the 10 minutes after its last copy, its last write before it, is written since too.
 SELECT * FROM sites
 WHERE state IN ('live', 'disabled') AND (
     (last_write_at IS NOT NULL AND (backed_up_at IS NULL OR (last_write_at + 600000 > backed_up_at
         AND backed_up_at < CAST(sqlc.arg('BackedUpBefore') AS INTEGER))))
-    OR backup_uploaded_at < backed_up_at)
+    OR (CAST(sqlc.arg('Uploading') AS BOOLEAN) AND backup_uploaded_at < backed_up_at))
 ORDER BY COALESCE(backed_up_at, 0), id
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 

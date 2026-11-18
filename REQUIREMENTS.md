@@ -268,6 +268,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   the token.
 - Test (`POST /push-devices/{id}/test`), within the site's push limit, shows the new last push or the failure. Read
   only control identities get no button and 403.
+- While a test push is sent, its Test button is disabled, so one click sends one push.
 
 ### Push credentials
 
@@ -474,6 +475,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A new site gets its browser's time zone and language, and its country's units and formats.
 - Limits:
   - Rate limited for each IP and for the server.
+  - An IP over its own limit is refused without using the server's limit, so it cannot stop other IPs.
   - Refused when the server holds `MAX_SITES`.
   - If a control admin turns public site creation off, the home page says so in place of the offer, and creation is
     refused.
@@ -1114,6 +1116,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - for each Dexcom, LibreLinkUp or virtual connector;
   - a sync over the limit sends no request and records nothing, so a later run, a few seconds after, tries again;
   - a backfill is not limited.
+- A Nightscout connector's token is sent as one part of the request path. A `/`, `?` or `#` in it does not change
+  the path or query of the request.
 - Password, API secret, token, username, email and URL are not offered to browsers or password managers. The password
   is a masked text box (not a password box) with an eye to show it.
 
@@ -1950,6 +1954,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - The start logs which it does: keeps the control DB there, restores it from the replica, or starts a new one, as
     there is no replica or S3 is off (a warning).
   - `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
+    - It only reads the bucket and does not take the S3 lock, so it also works while the server runs.
   - A control DB is replicated only to the replica it was restored from, or first replicated to. The file
     `controldb.sqlite.replica` next to it has that replica's address.
   - If a start finds a control DB that is not known to be the replica's, as one made while S3 was off or was another
@@ -1983,6 +1988,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A site whose copy is already uploaded is not uploaded again.
 - A failed upload is tried again at the next tick.
+- While S3 is off, a site uploaded before is copied at most one time each interval, not at each tick. Its copy uploads
+  at the next tick after S3 is on.
 - A live site that is not open is left out. The other sites are backed up.
 - Each tick deletes the sites never used, then truncates each site just before its backup copy. A site with no write
   is not truncated, as it does not grow.
