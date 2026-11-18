@@ -104,6 +104,33 @@ func TestNoReplicaWithoutS3(t *testing.T) {
 	require.NoFileExists(t, path)
 }
 
+// A replica that is abandoned, as when another server took this server's S3 lock, sends nothing more, not the writes
+// made before it nor those after, and closing it then does nothing
+func TestAbandonSendsNothingMore(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	control, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { control.Close() })
+	r := replica.New(cfg, s3)
+	require.NoError(t, r.Start(t.Context(), control.Path))
+	_, err = control.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "replicat", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	require.Eventually(t, func() bool { return len(testutils.ControlReplicaFiles(t, cfg, s3)) > 0 }, 10*time.Second, 100*time.Millisecond)
+
+	_, err = control.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "notsent1", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	r.Abandon()
+	sent := testutils.ControlReplicaFiles(t, cfg, s3)
+	_, err = control.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "notsent2", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	time.Sleep(2 * time.Second) // two of Litestream's syncs
+	require.NoError(t, r.Close(context.Background()))
+	require.Equal(t, sent, testutils.ControlReplicaFiles(t, cfg, s3))
+
+	var off *replica.Replica
+	off.Abandon()
+}
+
 // replicated is a replica that a control DB with the site "replicat" was replicated to, and that DB's path
 func replicated(t *testing.T) (*replica.Replica, string) {
 	cfg, s3 := testutils.ReplicatedConfig(t)

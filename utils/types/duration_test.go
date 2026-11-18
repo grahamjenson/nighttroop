@@ -57,6 +57,8 @@ func TestDurationFields(t *testing.T) {
 		{"rounded up to its minutes", types.DurationOfMs(new(int64(1799000))), `{"duration":30,"durationInMilliseconds":1799000}`, `{"duration":30,"durationInMilliseconds":1799000}`},
 		{"minutes changed on the site", (&types.Duration{Minutes: 90}).WithMs(new(int64(359587))), `{"duration":90,"durationInMilliseconds":5400000}`, `{"duration":90,"durationInMilliseconds":5400000}`},
 		{"under a minute", &types.Duration{Minutes: 0, Ms: new(int64(43491))}, `{"duration":1,"durationInMilliseconds":43491}`, `{"duration":0,"durationInMilliseconds":43491}`},
+		{"under half a minute", &types.Duration{Minutes: 0, Ms: new(int64(12000))}, `{"duration":1,"durationInMilliseconds":12000}`, `{"duration":0,"durationInMilliseconds":12000}`},
+		{"none of 0 minutes", types.DurationOfMinutes(new(int64(0))), `{"duration":0,"durationInMilliseconds":0}`, `{"duration":0,"durationInMilliseconds":0}`},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

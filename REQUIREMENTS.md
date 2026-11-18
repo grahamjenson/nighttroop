@@ -1648,7 +1648,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A treatment with a duration always has both `duration` and `durationInMilliseconds`, the missing one calculated.
 - A `duration` with a fraction (e.g. a Loop bolus `1.6666666666666667`, or a suspend) is kept to the ms.
 - API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds` (e.g. a Loop bolus of 1.6667 minutes
-  reads 2, an AAPS temp target ended at 120750 ms reads 2). A quick bolus is not 0 minutes. Trio and xDrip4iOS read
+  reads 2, an AAPS temp target ended at 120750 ms reads 2). A bolus or temp basal of under a minute, also under half
+  a minute (e.g. 12000 ms), reads 1, not 0: followers read a 0 minute temp basal as cancelled. Trio and xDrip4iOS read
   `duration` as a whole number and drop the page with a fraction.
 - API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
   treatment, or a page, with a fractional `duration`).
@@ -1669,6 +1670,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Indefinite override: lasts a week. Has `durationType` `indefinite` while the override as sent is kept.
 - Also indefinite, not ended as it starts: `indefinite` with a `duration` of 0, or a `Temporary Override` of 0
   minutes (the careportal sends one until cancelled).
+- An override with a duration of under a minute (e.g. Loop's `0.28` when it is ended after 17 seconds) has ended. It
+  is not indefinite. Its exact time is in `durationInMilliseconds`.
 - A `Temporary Target` of 0 minutes cancels the running one.
 
 #### Profile switches
@@ -1850,7 +1853,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - Without `S3_URL`: no restore on start and no backups.
 - With `S3_URL`:
-  - The server does not start if no test upload works for about 30 seconds.
+  - If no test upload works for about 30 seconds, and the control DB is not on the server, the server does not start.
+  - If no test upload works for about 30 seconds, and the control DB is on the server, the server starts without S3:
+    - it serves its sites from the DBs on the server, and restores, replicates and backs up nothing;
+    - the control plane shows that S3 backups are not connected;
+    - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
+      error, for Docker to start it again with S3.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
@@ -1858,7 +1866,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     restores, backs up or replicates, writes it again every 20 seconds, and deletes it after its last backup.
   - While another server holds the lock, a server that starts waits. It takes the lock when the other server deletes
     it, or 60 seconds after the other server last wrote it.
-  - If another server takes a server's lock, that server uploads no more site backups, and logs an error.
+  - If another server takes a server's lock, that server logs an error, stops replicating the control DB immediately
+    and sends no more of it, uploads no site backups, then stops and exits with an error. Docker starts it again,
+    and it waits for the lock.
+  - If S3 takes a write of the lock and does not answer, or refuses it because another write is in progress, the
+    server keeps its lock: the lock holds the ID of the server that wrote it.
   - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
 
 #### Backups

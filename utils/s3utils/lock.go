@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 	"time"
@@ -28,11 +29,15 @@ func (c *S3Client) lockKey() string {
 	return c.HostName + "/server.lock"
 }
 
-// putLock writes the lock, new each time so its ETag changes: only if there is none when ifMatch is empty, or else only
-// if its ETag is still ifMatch. It gives the new ETag, or false when S3 refuses as the condition does not hold.
+// errLockBusy is S3 refusing a write of the lock as another write of it is under way (409), so it is tried again
+var errLockBusy = errors.New("another write of the S3 lock is under way")
+
+// putLock writes the lock, with this server's ID and new each time so its ETag changes: only if there is none when
+// ifMatch is empty, or else only if its ETag is still ifMatch. It gives the new ETag, or false when S3 refuses as the
+// condition does not hold.
 func (c *S3Client) putLock(ctx context.Context, ifMatch string) (string, bool, error) {
 	input := &s3.PutObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey()),
-		Body: strings.NewReader(time.Now().Format(time.RFC3339Nano))}
+		Body: strings.NewReader(c.lockID + " " + time.Now().Format(time.RFC3339Nano))}
 	if ifMatch == "" {
 		input.IfNoneMatch = aws.String("*")
 	} else {
@@ -40,8 +45,11 @@ func (c *S3Client) putLock(ctx context.Context, ifMatch string) (string, bool, e
 	}
 	output, err := c.s3.PutObject(ctx, input)
 	var response *awshttp.ResponseError
-	if errors.As(err, &response) && (response.HTTPStatusCode() == 412 || response.HTTPStatusCode() == 409) {
+	if errors.As(err, &response) && response.HTTPStatusCode() == 412 {
 		return "", false, nil
+	}
+	if errors.As(err, &response) && response.HTTPStatusCode() == 409 {
+		return "", false, errLockBusy
 	}
 	if err != nil {
 		return "", false, err
@@ -53,13 +61,13 @@ func (c *S3Client) putLock(ctx context.Context, ifMatch string) (string, bool, e
 // release it, as in a deploy, or for lockStaleAfter without that server writing it, as after a crash. It ends when ctx
 // does. Without S3, or with one that does not refuse a conditional write, there is no lock.
 func (c *S3Client) Lock(ctx context.Context) error {
-	if !c.ServerConfig.Status.S3Working {
+	if c.Endpoint == "" {
 		return nil
 	}
 	seen, since := "", time.Now()
 	for {
 		etag, held, err := c.putLock(ctx, "")
-		if err != nil {
+		if err != nil && !errors.Is(err, errLockBusy) {
 			return fmt.Errorf("cannot take the S3 lock: %w", err)
 		}
 		if held {
@@ -72,7 +80,7 @@ func (c *S3Client) Lock(ctx context.Context) error {
 				seen, since = current, time.Now()
 				slog.Warn("Another server holds the S3 lock, waiting for it to stop", "key", c.lockKey())
 			} else if time.Since(since) >= lockStaleAfter {
-				if etag, held, err = c.putLock(ctx, seen); err != nil {
+				if etag, held, err = c.putLock(ctx, seen); err != nil && !errors.Is(err, errLockBusy) {
 					return fmt.Errorf("cannot take over the S3 lock: %w", err)
 				}
 			}
@@ -109,13 +117,36 @@ func (c *S3Client) keepLock(ctx context.Context, etag string) {
 		case err != nil:
 			slog.Warn("Cannot write the S3 lock, trying again", "error", err)
 		case !held:
+			// A write S3 took but never answered leaves the lock this server's, with an ETag it does not know
+			if etag = c.ownLockETag(ctx); etag != "" {
+				continue
+			}
 			c.lockLost.Store(true)
+			close(c.lost)
 			slog.Error("Another server took this server's S3 lock, so this server backs up no more: stop one of them")
 			return
 		default:
 			etag = next
 		}
 	}
+}
+
+// ownLockETag is the lock's ETag if this server wrote the lock that is there, or else empty
+func (c *S3Client) ownLockETag(ctx context.Context) string {
+	lock, err := c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())})
+	if err != nil {
+		return ""
+	}
+	defer lock.Body.Close()
+	if body, _ := io.ReadAll(lock.Body); !strings.HasPrefix(string(body), c.lockID+" ") {
+		return ""
+	}
+	return aws.ToString(lock.ETag)
+}
+
+// Lost closes when another server took this server's lock: the bucket is that server's now
+func (c *S3Client) Lost() <-chan struct{} {
+	return c.lost
 }
 
 // Unlock releases the lock, after the last backup, so the next server to start takes it at once

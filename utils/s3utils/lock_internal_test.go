@@ -3,6 +3,7 @@ package s3utils
 import (
 	"context"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,8 +21,10 @@ import (
 // unless unconditional, as a store that does not know conditional writes
 type lockS3 struct {
 	sync.Mutex
-	etags         map[string]string
+	etags, bodies map[string]string
 	unconditional bool
+	// unanswered is how many writes it takes and then answers 500, and busy how many it refuses with 409
+	unanswered, busy int
 }
 
 func (f *lockS3) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -37,14 +40,26 @@ func (f *lockS3) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `<Error><Code>PreconditionFailed</Code><Message>refused</Message></Error>`)
 			return
 		}
-		f.etags[r.URL.Path] = fmt.Sprintf(`"%x"`, md5.Sum(body))
+		if f.busy > 0 {
+			f.busy--
+			w.WriteHeader(http.StatusConflict)
+			fmt.Fprint(w, `<Error><Code>ConditionalRequestConflict</Code><Message>busy</Message></Error>`)
+			return
+		}
+		f.etags[r.URL.Path], f.bodies[r.URL.Path] = fmt.Sprintf(`"%x"`, md5.Sum(body)), string(body)
+		if f.unanswered > 0 {
+			f.unanswered--
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("ETag", f.etags[r.URL.Path])
-	case http.MethodHead:
+	case http.MethodHead, http.MethodGet:
 		if !found {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		w.Header().Set("ETag", current)
+		fmt.Fprint(w, f.bodies[r.URL.Path])
 	case http.MethodDelete:
 		delete(f.etags, r.URL.Path)
 		w.WriteHeader(http.StatusNoContent)
@@ -64,7 +79,7 @@ func lockServers(t *testing.T, n int) (*lockS3, []*S3Client) {
 	oldHeartbeat, oldStale, oldPoll := lockHeartbeat, lockStaleAfter, lockPoll
 	lockHeartbeat, lockStaleAfter, lockPoll = 20*time.Millisecond, 100*time.Millisecond, 5*time.Millisecond
 	t.Cleanup(func() { lockHeartbeat, lockStaleAfter, lockPoll = oldHeartbeat, oldStale, oldPoll })
-	fake := &lockS3{etags: map[string]string{}}
+	fake := &lockS3{etags: map[string]string{}, bodies: map[string]string{}}
 	server := httptest.NewServer(fake)
 	t.Cleanup(server.Close)
 	clients := make([]*S3Client, n)
@@ -136,9 +151,14 @@ func TestLockLostStopsUploads(t *testing.T) {
 	require.NoError(t, servers[0].uploadStreamToS3(t.Context(), "nighttroop.test/sites/site.tar.enc", SiteRetention, strings.NewReader("backup")))
 
 	fake.Lock()
-	fake.etags["/bucket/"+servers[0].lockKey()] = `"another server"`
+	fake.etags["/bucket/"+servers[0].lockKey()], fake.bodies["/bucket/"+servers[0].lockKey()] = `"another server"`, "another server's"
 	fake.Unlock()
-	require.Eventually(t, servers[0].lockLost.Load, time.Second, 5*time.Millisecond)
+	select {
+	case <-servers[0].Lost():
+	case <-time.After(time.Second):
+		t.Fatal("the server is not told its lock was taken")
+	}
+	require.True(t, servers[0].lockLost.Load())
 	err := servers[0].uploadStreamToS3(t.Context(), "nighttroop.test/sites/site.tar.enc", SiteRetention, strings.NewReader("backup"))
 	require.ErrorIs(t, err, ErrLockLost)
 
@@ -157,4 +177,65 @@ func TestLockIsOffWithoutConditionalWritesOrS3(t *testing.T) {
 	off := NewS3Client(&config.ServerConfig{})
 	require.NoError(t, off.Lock(t.Context()))
 	require.Nil(t, off.unlock)
+}
+
+// A server that started without S3 takes the lock only once S3 has worked three tests in a row, so one that comes and
+// goes is not taken as back, and waits for a server that holds the lock
+func TestLockWhenWorking(t *testing.T) {
+	_, servers := lockServers(t, 2)
+	oldEvery := workingEvery
+	workingEvery = time.Millisecond
+	t.Cleanup(func() { workingEvery = oldEvery })
+
+	// Two passes, a failure, then it works: five more tests, three of them in a row
+	results, tests := []bool{true, true, false, true, true, true}, 0
+	flaky := func(context.Context) error {
+		tests++
+		if !results[tests-1] {
+			return errors.New("refused")
+		}
+		return nil
+	}
+	require.True(t, servers[0].lockWhenWorking(t.Context(), flaky))
+	require.Equal(t, 6, tests)
+	require.NotNil(t, servers[0].unlock, "it holds the lock")
+
+	// While that server holds the lock, another waits, however long S3 has worked
+	ctx, cancel := context.WithTimeout(t.Context(), 3*lockStaleAfter)
+	defer cancel()
+	require.False(t, servers[1].lockWhenWorking(ctx, func(context.Context) error { return nil }))
+}
+
+// A server keeps its lock when S3 takes a write of it and never answers, or refuses one as another write is under
+// way: neither is another server taking it, so the server is not told its lock is lost
+func TestLockIsKeptThroughS3Faults(t *testing.T) {
+	for name, fault := range map[string]func(*lockS3){
+		// The SDK tries the write again, which S3 refuses, as the first try changed the lock
+		"a write S3 never answers":   func(f *lockS3) { f.unanswered = 1 },
+		"a write S3 refuses as busy": func(f *lockS3) { f.busy = 2 },
+	} {
+		t.Run(name, func(t *testing.T) {
+			fake, servers := lockServers(t, 1)
+			require.NoError(t, servers[0].Lock(t.Context()))
+			written := func() string {
+				fake.Lock()
+				defer fake.Unlock()
+				return fake.etags["/bucket/"+servers[0].lockKey()]
+			}
+			fake.Lock()
+			fault(fake)
+			fake.Unlock()
+			// Past the fault, and the SDK's wait before it tries again, it writes its lock again, twice
+			for range 2 {
+				before := written()
+				require.Eventually(t, func() bool {
+					fake.Lock()
+					faults := fake.unanswered + fake.busy
+					fake.Unlock()
+					return faults == 0 && written() != before
+				}, 30*time.Second, 5*time.Millisecond, "it writes its lock again")
+			}
+			require.False(t, servers[0].lockLost.Load())
+		})
+	}
 }
