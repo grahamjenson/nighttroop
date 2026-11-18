@@ -38,6 +38,7 @@ var labels = map[string]string{
 	"site_download":          "control.rate_limits.limiter_site_download",
 	"site_report_print":      "control.rate_limits.limiter_site_report_print",
 	"site_push":              "control.rate_limits.limiter_site_push",
+	"connector_sync":         "control.rate_limits.limiter_connector_sync",
 }
 
 // settingLabels are the ids of what each rate limit setting limits
@@ -57,6 +58,7 @@ var settingLabels = map[string]string{
 	"site_download":          "control.rate_limits.setting_site_download",
 	"site_report_print":      "control.rate_limits.setting_site_report_print",
 	"site_push":              "control.rate_limits.setting_site_push",
+	"connector_sync":         "control.rate_limits.setting_connector_sync",
 }
 
 func number(n float64) string { return strconv.FormatFloat(n, 'f', -1, 64) }
@@ -69,6 +71,8 @@ var pers = map[string]string{
 	"identity": "control.rate_limits.per_identity",
 	"login":    "control.rate_limits.per_login",
 	"site_ip":  "control.rate_limits.per_site_ip",
+	// A Nightscout host, or a Dexcom or LibreLinkUp connector
+	"connector": "control.rate_limits.per_connector",
 }
 
 // groups are the rate limit settings in groups of what they protect, each with the ids of its title and note
@@ -82,6 +86,7 @@ var groups = []struct {
 	{"site_data", "control.rate_limits.group_site_data", "control.rate_limits.group_site_data_note", []string{"site_get", "site_post", "site_post_flagged"}},
 	{"site_actions", "control.rate_limits.group_site_actions", "control.rate_limits.group_site_actions_note",
 		[]string{"site_update_connectors", "site_identity_create", "site_download", "site_report_print", "site_push"}},
+	{"connectors", "control.rate_limits.group_connectors", "control.rate_limits.group_connectors_note", []string{"connector_sync"}},
 }
 
 // level is how close a kind of rate limiter is to refusing: 2 while any would refuse, 1 once the most used has spent

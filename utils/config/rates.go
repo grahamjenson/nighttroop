@@ -37,6 +37,7 @@ type RateLimiters struct {
 	siteDownloadRateLimiters         *lru.Cache[string, *rate.Limiter]
 	siteReportPrintRateLimiters      *lru.Cache[string, *rate.Limiter]
 	sitePushRateLimiters             *lru.Cache[string, *rate.Limiter]
+	connectorSyncRateLimiters        *lru.Cache[string, *rate.Limiter]
 
 	SiteCreateLimiter   *rate.Limiter
 	siteCreateIpLimiter *lru.Cache[string, *rate.Limiter]
@@ -48,7 +49,8 @@ type RateLimiters struct {
 	ControlRateLimiter *rate.Limiter
 }
 
-func newRateLimiters(config ServerConfig) *RateLimiters {
+// NewRateLimiters are the rate limiters at the config's rates, as the config makes, or a test of its own
+func NewRateLimiters(config ServerConfig) *RateLimiters {
 	maxSites := config.MaxSites
 	// The caches keep an identity's, IP's or login's limiters for as many identities a site as a household uses, not
 	// MAX_IDENTITIES_PER_USER, so a high one does not let unique IPs or names fill gigabytes; one pushed out starts full
@@ -80,6 +82,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		siteDownloadRateLimiters:         lruMust(maxSites * wiggle),
 		siteReportPrintRateLimiters:      lruMust(maxSites * wiggle),
 		sitePushRateLimiters:             lruMust(maxSites * wiggle),
+		connectorSyncRateLimiters:        lruMust(maxSites * wiggle * 2),
 
 		SiteCreateLimiter:   defaultRate("site_create").limiter(),
 		siteCreateIpLimiter: lruMust(maxSites * wiggle),
@@ -202,6 +205,12 @@ func (r *RateLimiters) SitePushLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.sitePushRateLimiters, subdomain, "site_push")
 }
 
+// ConnectorSyncLimiter is the syncs of what a connector syncs from, keyed by the connectors package: a Nightscout
+// host, however many sites sync from it, or a Dexcom or LibreLinkUp connector
+func (r *RateLimiters) ConnectorSyncLimiter(key string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.connectorSyncRateLimiters, key, "connector_sync")
+}
+
 // SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes and authorizes spend it, not the site's own limit
 func (r *RateLimiters) SiteUnauthLimiter(subdomain string, ip string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ipKey(ip), "site_unauth")
@@ -293,6 +302,7 @@ func rateDefaults(c ServerConfig) []RateSetting {
 		{Name: "site_report_print", Env: "SITE_REPORT_PRINT_PER_MINUTE", Default: Rate{float64(c.SiteReportPrintPerMinuteLimit), c.SiteReportPrintPerMinuteBurst}},
 		{Name: "login_name", Env: "SITE_LOGIN_NAME_PER_MINUTE", Default: Rate{float64(c.SiteLoginNamePerMinuteLimit), c.SiteLoginNamePerMinuteBurst}},
 		{Name: "site_post_flagged", Env: "SITE_POST_FLAGGED_PER_MINUTE", Default: Rate{float64(c.SitePOSTFlaggedPerMinuteLimit), c.SitePOSTFlaggedPerMinuteBurst}},
+		{Name: "connector_sync", Env: "CONNECTOR_SYNC_PER_MINUTE", Default: Rate{float64(c.ConnectorSyncPerMinuteLimit), c.ConnectorSyncPerMinuteBurst}},
 	}
 	for i := range settings {
 		settings[i].Rate = settings[i].Default
@@ -366,6 +376,7 @@ func (r *RateLimiters) kinds() []limiterKind {
 		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values(), 1},
 		{"site_report_print", "site", "site_report_print", r.siteReportPrintRateLimiters.Values(), 1},
 		{"site_post_flagged", "site", "site_post_flagged", r.siteFlaggedPOSTRateLimiters.Values(), 1},
+		{"connector_sync", "connector", "connector_sync", r.connectorSyncRateLimiters.Values(), 1},
 	}
 }
 

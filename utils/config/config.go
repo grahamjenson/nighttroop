@@ -186,6 +186,10 @@ type ServerConfig struct {
 	// SitePushPerMinuteLimit and Burst cap the pushes a site sends, each a request to Apple or Firebase
 	SitePushPerMinuteLimit int
 	SitePushPerMinuteBurst int
+	// ConnectorSyncPerMinuteLimit and Burst cap the syncs from a Nightscout host, or of a Dexcom or LibreLinkUp
+	// connector, so a host many sites sync from, or a fault in scheduling, is never synced too often
+	ConnectorSyncPerMinuteLimit int
+	ConnectorSyncPerMinuteBurst int
 
 	//
 	// Site Create Rate Limits
@@ -424,6 +428,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteReportPrintPerMinuteBurst: configIntSelect(dotenv, "SITE_REPORT_PRINT_PER_MINUTE_BURST", 10),
 		SitePushPerMinuteLimit:        configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_LIMIT", 10),
 		SitePushPerMinuteBurst:        configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_BURST", 30),
+		ConnectorSyncPerMinuteLimit:   configIntSelect(dotenv, "CONNECTOR_SYNC_PER_MINUTE_LIMIT", 6),
+		ConnectorSyncPerMinuteBurst:   configIntSelect(dotenv, "CONNECTOR_SYNC_PER_MINUTE_BURST", 1),
 
 		//
 		// Site Limits
@@ -504,7 +510,7 @@ func (config *ServerConfig) setHostURLs() {
 
 // startServices builds what the server shares across requests from the config, e.g. its rate limiters and keys
 func (config *ServerConfig) startServices() {
-	config.RateLimiters = newRateLimiters(*config)
+	config.RateLimiters = NewRateLimiters(*config)
 	config.RecentClients = authclients.New(10_000)
 	config.GeoIP = geoip.New(config.GeoIPDBPath)
 	config.Events = events.NewSiteBus()

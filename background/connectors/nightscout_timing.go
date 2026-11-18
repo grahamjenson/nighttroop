@@ -1,9 +1,7 @@
 package connectors
 
 import (
-	"cmp"
 	"net/url"
-	"slices"
 	"strings"
 	"time"
 )
@@ -18,8 +16,7 @@ const (
 	entryEarly = 15 * time.Second
 	// entryLate is how long after the next entry is due the timed syncs stop, if it has not come
 	entryLate = 90 * time.Second
-	// timedSyncGap is the shortest time between a site's timed syncs, and between any timed syncs of one Nightscout host,
-	// however many sites sync from it, so a host gets at most one every 10 seconds on top of its usual syncs
+	// timedSyncGap is the shortest time between a site's timed syncs
 	timedSyncGap = 10 * time.Second
 	// slowSync is how long a sync can take before its Nightscout is left to its usual syncs, as one that slow may be
 	// struggling
@@ -41,44 +38,22 @@ func (c *nightscoutClient) timeNextEntry(entriesModified int64, timed bool, err 
 	}
 }
 
-// entriesDue are the sites whose next Nightscout entry is due about now, each at most every timedSyncGap, and at most
-// one a host every timedSyncGap, the one that has waited longest. A site whose client is syncing now, or whose last
-// sync was slow, is left out.
+// entriesDue are the sites whose next Nightscout entry is due about now, each at most every timedSyncGap. A site
+// whose client is syncing now, or whose last sync was slow, is left out. RunConnector also limits every sync.
 func (b *ConnectorJobManager) entriesDue(now time.Time) []string {
-	b.timedHostsLock.Lock()
-	defer b.timedHostsLock.Unlock()
-	ms, gap := now.UnixMilli(), timedSyncGap.Milliseconds()
-	for host, last := range b.timedHosts {
-		if ms >= last+gap {
-			delete(b.timedHosts, host)
-		}
-	}
-	type dueSite struct {
-		siteID string
-		c      *nightscoutClient
-	}
-	waiting := []dueSite{}
+	ms, due := now.UnixMilli(), []string{}
 	for _, siteID := range b.nightscoutClients.Keys() {
 		c, ok := b.nightscoutClients.Peek(siteID)
 		if !ok {
 			continue
 		}
 		next := c.nextEntryAt.Load()
-		if next != 0 && ms >= next-entryEarly.Milliseconds() && ms <= next+entryLate.Milliseconds() &&
-			ms >= c.lastTimedSync.Load()+gap && !c.syncing.Load() && c.lastSyncTook.Load() <= slowSync.Milliseconds() {
-			waiting = append(waiting, dueSite{siteID, c})
-		}
-	}
-	slices.SortStableFunc(waiting, func(a, b dueSite) int { return cmp.Compare(a.c.lastTimedSync.Load(), b.c.lastTimedSync.Load()) })
-	due := []string{}
-	for _, site := range waiting {
-		host := nightscoutHost(site.c.url)
-		if _, taken := b.timedHosts[host]; taken {
+		if next == 0 || ms < next-entryEarly.Milliseconds() || ms > next+entryLate.Milliseconds() ||
+			ms < c.lastTimedSync.Load()+timedSyncGap.Milliseconds() || c.syncing.Load() || c.lastSyncTook.Load() > slowSync.Milliseconds() {
 			continue
 		}
-		b.timedHosts[host] = ms
-		site.c.lastTimedSync.Store(ms)
-		due = append(due, site.siteID)
+		c.lastTimedSync.Store(ms)
+		due = append(due, siteID)
 	}
 	return due
 }

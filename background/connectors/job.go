@@ -45,10 +45,6 @@ type ConnectorJobManager struct {
 	// Each site's LibreLinkUp client, kept between syncs like the Nightscout clients
 	libreClientsLock sync.Mutex
 	libreClients     *lru.Cache[string, *libreClient]
-
-	// When each Nightscout host was last given a timed sync, in Unix ms, kept for timedSyncGap
-	timedHostsLock sync.Mutex
-	timedHosts     map[string]int64
 }
 
 // maxNightscoutClients is how many sites' Nightscout clients are kept, about 1KB each, so memory stays bounded however
@@ -125,7 +121,6 @@ func SetupConnectorJobManager(config *config.ServerConfig, controlDB *db.Control
 		nightscoutStore:            nightscoutapi.NewNightTroopAPIStore(controlDB, config),
 		nightscoutClients:          nightscoutClients,
 		libreClients:               libreClients,
-		timedHosts:                 map[string]int64{},
 	}
 
 	return jobs
@@ -191,6 +186,13 @@ func (b *ConnectorJobManager) RunConnector(ctx context.Context, connectorJob Con
 		return nil
 	}
 
+	// No sync goes over its limit, so a Nightscout many sites sync from, or a fault in scheduling, is never synced too
+	// often. One refused records nothing, so the next run, every few seconds, tries again. A backfill is not limited.
+	if connectorJob.Backfill == nil && !b.config.RateLimiters.ConnectorSyncLimiter(syncLimitKey(connector, username)).Allow() {
+		slog.DebugContext(ctx, "A connector sync is over its rate limit, so waits for a later run")
+		return nil
+	}
+
 	jobInfo := &ConnectorJobInfo{
 		SiteID:        connectorJob.SiteID,
 		Type:          connectorJob.Type,
@@ -206,6 +208,15 @@ func (b *ConnectorJobManager) RunConnector(ctx context.Context, connectorJob Con
 		return b.backfill(jobInfo, *connectorJob.Backfill)
 	}
 	return b.SyncUserData(jobInfo)
+}
+
+// syncLimitKey is what a connector's syncs are limited by: its Nightscout's host, as many sites can sync from one, or
+// else the connector itself
+func syncLimitKey(connector *controldb.SiteConnector, urlOrUsername string) string {
+	if connector.Type == consts.ConnectorTypeNightscout {
+		return "nightscout " + nightscoutHost(urlOrUsername)
+	}
+	return string(connector.Type) + " " + connector.SiteID
 }
 
 func (b *ConnectorJobManager) getUsernamePasswordRegion(connector *controldb.SiteConnector) (string, string, string, error) {

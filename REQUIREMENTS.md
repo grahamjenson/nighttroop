@@ -1046,6 +1046,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   or after, is kept. Never changed on a saved source.
 - Save does not check details. A failed first sync turns syncing off and tells why.
 - A site's connector saves (add or change) share one rate limit (`SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT`); over: 429.
+- Connector syncs, usual or timed, are limited by `CONNECTOR_SYNC_PER_MINUTE_LIMIT` (6 a minute, burst 1):
+  - for each Nightscout host, however many sites sync from it, and however its URL is written;
+  - for each Dexcom, LibreLinkUp or virtual connector;
+  - a sync over the limit sends no request and records nothing, so a later run, a few seconds after, tries again;
+  - a backfill is not limited.
 - Password, API secret, token, username, email and URL are not offered to browsers or password managers. The password
   is a masked text box (not a password box) with an eye to show it.
 
@@ -1091,8 +1096,6 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Syncs a working connector (on, with no failed syncs in a row) more often while its next entry is due:
   - the next entry is due 5 minutes after Nightscout's entries last changed;
   - from 15 seconds before it is due to 90 seconds after, it syncs at most every 10 seconds, until it gets a new entry;
-  - a Nightscout host gets at most one of these syncs every 10 seconds, however many sites sync from it. The site that
-    waited longest gets the next one;
   - if a sync of the site is running, or its last sync took over 2 seconds, it gets none of these syncs;
   - after a restart, or when a sync fails, it syncs on its usual schedule until a usual sync works again.
 - Copies the current profile store when Nightscout profiles change, however long ago it started. An edit in the
