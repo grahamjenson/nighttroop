@@ -17,16 +17,18 @@ the same.
 
 | Data | On the server | Backed up to S3 | If missing |
 | --- | --- | --- | --- |
-| Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Every 30 seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`), and on stop | Every site: the server starts new, in setup |
+| Control DB: sites, identities, the admin, settings | `data/db/controldb.sqlite` | Replicated by Litestream as it is written, within a second, and on stop, to `<host>/litestream/control`, encrypted by S3 (SSE-C) | Every site: the server starts new, in setup |
 | Site DBs: readings, treatments and settings of each site | `data/db/site/<letter>/<site>.sqlite`, a folder for each first letter of the site ID | Each site written to, an hour after its last backup (`SITE_BACKUP_INTERVAL_IN_SECONDS`), by itself, and on stop | The start stops until restored ([5.7](#57-restore-unavailable-sites)) |
 | Jobs DB: queued and past background jobs | `data/db/jobsdb.sqlite` | No | Queued jobs (they start again) and history |
 | Logs DB: events, errors, logs | `data/db/logsdb.sqlite` | No | The control plane history |
 | Live DB: data kept only while running (such as alarms) | `data/db/livedb.sqlite` | No | Active alarms, until new readings make them again |
-| Local backups of the control and site DBs, each compressed with LZ4 (`.sqlite.lz4`) | `data/backup/` | They are uploaded, as `<host>/sites/<site>.tar.enc` and `<host>/backup/controldb.tar.enc` | Nothing, while the DBs are there |
+| Local backups of the site DBs, each compressed with LZ4 (`.sqlite.lz4`) | `data/backup/` | They are uploaded, as `<host>/sites/<site>.tar.enc` | Nothing, while the DBs are there |
 | `update.sh` copies of `./data` | `backups/data-<time>.tar.gz`, the newest 5 | No | The way back to before a release |
 | `KEY_SETS` | `nighttroop.env` | No. Keep it in a password manager. | Every encrypted credential and S3 backup |
 
-`KEY_SETS` encrypts S3 backups. With bucket versioning, S3 keeps replaced backups 90 days (control) or 30 days (sites).
+`KEY_SETS` encrypts the site backups, and its MAC key makes the SSE-C key of the control DB's replica, so a new
+primary MAC key cannot read the replica made before it. With bucket versioning, S3 keeps replaced files 90 days
+(control) or 30 days (sites). The stores that take SSE-C include AWS S3, Cloudflare R2 and Backblaze B2.
 
 ## Production update
 
@@ -72,9 +74,8 @@ The script tags the running image `nighttroop-rollback:<time>`, to start it agai
 
 1. Stops HTTP requests and closes every Socket.IO connection. Requests in progress get 5 seconds.
 2. Stops background jobs (syncs, alarms, backups). Running jobs get up to 1 minute.
-3. Backs up the control DB locally and uploads it to S3.
-4. Backs up and uploads each site DB with changes since its last upload.
-5. Closes every DB.
+3. Backs up and uploads each site DB with changes since its last upload.
+4. Sends the control DB's last writes to its replica, and closes every DB.
 
 **Note:** Nighttroop is down from here until it is healthy in [step 6](#step-6-wait-for-a-healthy-server), usually
 less than 1 minute. Caddy answers with a `502`.
@@ -125,11 +126,12 @@ The server removes staging folders that a killed restore or archive left next to
 
 #### 5.4 Restore the control DB if missing
 
-Only if `data/db/controldb.sqlite` is not there, the server downloads the latest control DB backup from S3.
+Only if `data/db/controldb.sqlite` is not there, the server restores it from its Litestream replica in S3
+(`go run cmd/keysets/restore_replica.go <path>` does the same by hand).
 
-- **Failure:** The download fails. The start stops.
+- **Failure:** The restore fails. The start stops.
 - **Warning:** Stop a server that starts in setup with site files on disk. It knows none of its sites.
-  - Cause: the file is missing, and **there is no backup, or S3 is off**.
+  - Cause: the file is missing, and **there is no replica, or S3 is off**.
   - It starts as a **new server, in setup**, with the site files still in `data/db`.
   - Its health check passes, so `update.sh` keeps it.
 - **Fix:**
@@ -240,7 +242,7 @@ again.
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |
 | Two servers use one bucket (such as a new VPS while the old one runs) | Each overwrites the other's backups | Stop the old server, with its last uploads, before you start the new one. |
-| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to 30 seconds old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-unavailable-sites)). |
+| A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to about a second old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-unavailable-sites)). |
 
 ## Staging deploy
 

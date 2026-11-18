@@ -1837,21 +1837,26 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Backups
 
-- Each site DB goes to S3 by itself, and the control DB separately. S3 keeps old versions for a retention period.
+- Each site DB goes to S3 by itself. S3 keeps old versions for a retention period.
 - A site written to since its last backup is backed up once that backup is an hour old
-  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26). The control DB is backed up every 30
-  seconds (`CONTROL_BACKUP_INTERVAL_IN_SECONDS`). Both are also backed up when the server stops.
+  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26), and when the server stops.
+- With S3, the control DB is replicated by Litestream, with its defaults, as it is written: its writes are in S3 within
+  about a second, at `<host>/litestream/control`. Its last writes are sent when the server stops.
+  - Over HTTPS, S3 encrypts the replica with SSE-C, with a key made from the MAC key set. Production and staging
+    refuse an `S3_URL` that is not `https://`.
+  - A start with no `data/db/controldb.sqlite` restores it from the replica; with no replica, it starts a new server.
+  - `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
-  `data/backup/site/<letter>/<site>.sqlite.lz4` and `data/backup/controldb.sqlite.lz4`. `<letter>` is the first letter
+  `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
   - A copy cut short does not replace the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
-  `<host>/backup/controldb.tar.enc`, and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
+  and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
 - A site with no write since its last backup is not copied again, and its DB is not opened.
 - A site whose copy is already uploaded is not uploaded again.
 - A failed upload is tried again at the next tick.
@@ -1865,8 +1870,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Restore and start
 
-- A missing control DB is restored from S3 on start. A failed or cut download leaves nothing, and the next start
-  tries again.
+- A missing control DB is restored from its replica on start (see Backups). A restore that fails stops the start.
 - A restore decompresses each `.lz4` copy to its `.sqlite` DB.
 - A restore (on start, or of an archived site) without a backup at its `.tar.enc` key uses the old backup at the same
   key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.

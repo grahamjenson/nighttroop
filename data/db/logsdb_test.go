@@ -86,7 +86,7 @@ func TestLogsDBTrim(t *testing.T) {
 			for i := range test.written {
 				logs.Log(ctx, nil, db.LogLevelInfo, string(rune('a'+i)), nil)
 				logs.SiteCreatedEvent(ctx, string(rune('a'+i)))
-				logs.ControlBackupError(ctx, errors.New(string(rune('a'+i))))
+				logs.SiteBackupError(ctx, errors.New(string(rune('a'+i))))
 			}
 
 			require.NoError(t, logs.Trim(ctx, test.maxRows))
@@ -187,7 +187,6 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 	logs.SiteDisabledEvent(ctx, site, "admin")
 	logs.SiteDisabledEvent(ctx, other, "admin")
 	logs.SitesBackedUpEvent(ctx, 2, time.Now(), false)
-	logs.ControlBackedUpEvent(ctx, time.Now(), false)
 	logs.ConnectorError(ctx, other, consts.ConnectorTypeDexcom, errors.New("other failed"))
 	logs.SiteBackupError(ctx, errors.New("backup failed"))
 	logs.Log(ctx, &other, db.LogLevelInfo, "other synced", nil)
