@@ -1138,6 +1138,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Site alarms are each identity's default, which it can change.
 - An active alarm shows live in a banner below the header on all pages, and can be snoozed.
 - Impossible settings are refused (for example a high below the low).
+- The alarms page says that every alarm is off until it is turned on, and that an alarm that goes off shows in a
+  banner at the top of every page, where it can be snoozed for 30 minutes.
 
 ### Settings
 
