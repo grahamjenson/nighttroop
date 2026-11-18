@@ -1,3 +1,7 @@
+// A site whose Loop registers for pushes, so the control site has a device to test
+INCLUDE steps/new_site_admin.steps
+POST /settings/push-registrations {"app": "loop", "provider": "apns", "bundle_id": "com.CONTROLTEST.loopkit.Loop", "production": false, "token": "f0e1d2c3b4a5968778695a4b3c2d1e0ff0e1d2c3b4a5968778695a4b3c2d1e0f"}
+
 GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
 INPUT #control--login--name admin
@@ -14,6 +18,18 @@ ASSERT_PATH /push-devices
 ASSERT_TEXT_VISIBLE Their tokens are never shown.
 ASSERT_VISIBLE #control--push-devices--table
 SCREENSHOT push_devices
+
+// Test is disabled while its push is sent, so a second click sends no second push. A click passes through a disabled
+// button, so it is checked as drawn, not as what a click hits.
+HOLD /push-devices/*/test
+CLICK #control--push-devices--table tr:has-text("com.CONTROLTEST.loopkit.Loop") >> button:text-is("Test")
+ASSERT_HELD /push-devices/*/test
+ASSERT_DRAWN #control--push-devices--table tr:has-text("com.CONTROLTEST.loopkit.Loop") >> button:disabled:text-is("Test")
+SCREENSHOT push_device_test_sending
+// The site has no push credential for Loop, so the push is not sent, and Test can be clicked again
+RELEASE /push-devices/*/test
+ASSERT_TEXT_VISIBLE no push credential for the app
+ASSERT_VISIBLE #control--push-devices--table tr:has-text("com.CONTROLTEST.loopkit.Loop") >> button:enabled:text-is("Test")
 
 // The usage page counts the pushes sent today and this week, and how many failed
 CLICK #control--menu

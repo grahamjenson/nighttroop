@@ -79,7 +79,6 @@
        until then
     1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
        identities that can change the site's data are given them back, and push registrations keep them encrypted
-    1. P5: Disable the control site's Push Devices "Test" button while its push is sent, as the site's is
 
 
 1. Nightscout API:
