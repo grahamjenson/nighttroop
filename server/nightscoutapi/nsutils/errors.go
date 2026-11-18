@@ -63,7 +63,10 @@ var (
 	// ErrModifiedSince is a replace or patch of a record changed after the request's If-Unmodified-Since
 	ErrModifiedSince = &HTTPError{Status: http.StatusPreconditionFailed, Message: "record modified since If-Unmodified-Since"}
 	ErrInternal      = &HTTPError{Status: http.StatusInternalServerError, Message: "internal server error"}
-	ErrCannotModify  = func(field string) *HTTPError {
+	// ErrClientClosedRequest is a request its client stopped waiting for, with nginx's status for it: no one reads it,
+	// and it is not the server's error
+	ErrClientClosedRequest = &HTTPError{Status: 499, Message: "client closed request"}
+	ErrCannotModify        = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Field %s cannot be modified by the client", field)}
 	}
 	ErrRecordReadOnly = &HTTPError{Status: http.StatusForbidden, Message: "record is read-only (because soft deleted)"}
@@ -102,10 +105,10 @@ var (
 
 // Too Many Rows Errors
 var (
-	ErrTooManyRecords  = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many records: at most %d per request", consts.MaxV1BatchRecords)}
+	ErrTooManyRecords = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many records: at most %d per request", consts.MaxV1BatchRecords)}
 	// ErrTooManyBatchWrites is a batch that would take the site or identity past its limit on writes
 	ErrTooManyBatchWrites = &HTTPError{Status: http.StatusTooManyRequests, Message: "Too many records written: send them again shortly"}
-	ErrTooManyProfiles = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many profiles: at most %d in a store", consts.MaxProfilesPerStore)}
+	ErrTooManyProfiles    = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many profiles: at most %d in a store", consts.MaxProfilesPerStore)}
 )
 
 // ErrSiteOverStorage is a batch that would take a site flagged for abuse past its flagged write limit
