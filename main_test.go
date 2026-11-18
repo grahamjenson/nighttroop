@@ -15,6 +15,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/page"
 )
 
 // Sentry reports a server's errors under its deployment's name, so each staging server's are apart
@@ -104,16 +105,23 @@ func TestStartS3(t *testing.T) {
 	down := func(context.Context) error { return errors.New("S3 is not working") }
 	works := make(chan struct{})
 	whenWorking := func(context.Context) bool { <-works; return true }
+	pages := []string{}
+	admin := func(_ context.Context, level page.Level, message string, _ ...any) {
+		pages = append(pages, string(level)+": "+message)
+	}
 
-	restart, err := startS3(t.Context(), func(context.Context) error { return nil }, here, whenWorking)
+	restart, err := startS3(t.Context(), func(context.Context) error { return nil }, here, whenWorking, admin)
 	require.NoError(t, err)
 	require.Nil(t, restart, "a working S3 never restarts the server")
 
-	_, err = startS3(t.Context(), down, filepath.Join(t.TempDir(), "missing.sqlite"), whenWorking)
+	_, err = startS3(t.Context(), down, filepath.Join(t.TempDir(), "missing.sqlite"), whenWorking, admin)
 	require.ErrorContains(t, err, "S3 is not working", "without its control DB the server does not start")
 
-	restart, err = startS3(t.Context(), down, here, whenWorking)
+	require.Empty(t, pages, "a server that works, or does not start, pages no one")
+	restart, err = startS3(t.Context(), down, here, whenWorking, admin)
 	require.NoError(t, err, "with its control DB the server starts without S3")
+	require.Len(t, pages, 1, "the admin is paged once")
+	require.Contains(t, pages[0], string(page.SMS)+": S3 is not working")
 	select {
 	case <-restart:
 		t.Fatal("the server restarts while S3 is not working")
@@ -129,6 +137,6 @@ func TestStartS3(t *testing.T) {
 	// One told to stop while S3 is not working stops, and does not start without S3
 	stopped, cancel := context.WithCancel(t.Context())
 	cancel()
-	_, err = startS3(stopped, down, here, whenWorking)
+	_, err = startS3(stopped, down, here, whenWorking, admin)
 	require.Error(t, err)
 }

@@ -91,6 +91,8 @@ var ownServers = []ownServer{
 		controlDB.MakeSiteUnavailable("bkupsite", db.UnavailableCannotOpen)
 		return nil
 	}},
+	// A server that started without S3, as S3 was not working and its control DB was there
+	{"s3down/banner.bdd", "192.0.2.18", func(c *config.ServerConfig) { c.Status.S3Down = true }, seedDevAdmin},
 	// A server run by another operator, with its own support email
 	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
 		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"

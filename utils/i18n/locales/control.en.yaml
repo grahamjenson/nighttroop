@@ -5,6 +5,8 @@ control:
   status_banner:
     s3_title: "S3 not connected:"
     s3_text: "backups are not being stored."
+    s3_down_title: "S3 is not working:"
+    s3_down_text: "the server started without it. Nothing is restored, replicated or backed up. The server restarts when S3 works again."
     sentry_title: "Sentry not connected:"
     sentry_text: "errors are not being reported."
     pagerduty_title: "PagerDuty not connected:"

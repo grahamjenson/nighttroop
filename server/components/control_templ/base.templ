@@ -58,7 +58,9 @@ templ StatusBanner(status config.ServerStatus) {
 	if !status.S3Working || !status.SentryWorking || !status.PagerDutyWorking || len(status.HighResources) > 0 || status.SitesNearLimit() || len(status.UnavailableSites) > 0 {
 		<div id="control--status-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 text-sm" role="alert">
 			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
-				if !status.S3Working {
+				if status.S3Down {
+					<p id="control--status-banner--s3-down" class="text-red-700"><strong>{ i18n.T(ctx, "control.status_banner.s3_down_title") }</strong> { i18n.T(ctx, "control.status_banner.s3_down_text") }</p>
+				} else if !status.S3Working {
 					<p id="control--status-banner--s3"><strong>{ i18n.T(ctx, "control.status_banner.s3_title") }</strong> { i18n.T(ctx, "control.status_banner.s3_text") }</p>
 				}
 				if !status.SentryWorking {

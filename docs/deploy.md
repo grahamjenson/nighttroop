@@ -124,7 +124,8 @@ If `S3_URL` is set, the server uploads a test object. It tries again after 2, 4,
     `docker compose up -d`.
 - **Failure, with the control DB in `./data`:** The server starts without S3, so an S3 outage does not stop the sites.
   It logs `S3 is not working, so the server starts from its DBs here without backups`.
-  - Nothing is restored, replicated or backed up. The control plane shows that S3 backups are not connected.
+  - Nothing is restored, replicated or backed up. The control plane's banner shows `S3 is not working`, in red, and
+    the admin is paged with an SMS.
   - The server tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, stops, and exits with
     `S3 works again`. Docker starts it again, with S3. The sites are down for that restart only.
   - While another server holds the lock, this server does not restart. It continues to serve without S3.

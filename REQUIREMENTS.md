@@ -92,6 +92,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The header marks the link of the page shown, or of the page it is under: a site's page is under Sites.
 - The banner shows when:
   - S3 backups, Sentry or PagerDuty are not connected;
+  - the server started without S3, as S3 was not working (in red, in place of the S3 backups note);
   - sites reach 90% of `MAX_SITES`, or all of it;
   - a resource is high (see [Resource alerts](#resource-alerts));
   - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
@@ -340,6 +341,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Its summary and dedup key are its message. Its source is `HOST_NAME`. Its details are what it is about.
 - If PagerDuty does not take a page, the server logs the error and continues.
 - If sites stay unavailable after their last restore try, the admin is paged with a Call.
+- If S3 is not working after the start's tries, and the server starts without it, the admin is paged with an SMS.
 - On the admins page, an admin selects a level and clicks **Test Admin Page** to page through PagerDuty.
   - Each test is a new incident. Its message names the admin and the time.
   - If `PAGERDUTY_ROUTING_KEY` is not set, a toast says PagerDuty is not set up. A read only admin does not see it.
@@ -1862,7 +1864,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - If no test upload works for about 30 seconds, and the control DB is not on the server, the server does not start.
   - If no test upload works for about 30 seconds, and the control DB is on the server, the server starts without S3:
     - it serves its sites from the DBs on the server, and restores, replicates and backs up nothing;
-    - the control plane shows that S3 backups are not connected;
+    - the control plane's banner says, in red, that S3 is not working and the server started without it;
+    - the admin is paged with an SMS;
     - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
       error, for Docker to start it again with S3.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
