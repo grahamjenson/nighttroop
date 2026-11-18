@@ -319,8 +319,9 @@ The script:
 2. **Keeps the running image** as `nighttroop-rollback:<time>`, to start it again.
 3. **Stops Nighttroop,** which uploads a last backup to S3 (two minutes allowed).
 4. **Copies `./data`** to `./backups/data-<time>.tar.gz`, while nothing writes to it.
-5. **Starts the new image** and waits up to 3 minutes for its health check, `/health`. This answers when the control
+5. **Starts the new image** and waits up to 30 minutes for its health check, `/health`. This answers when the control
    database does.
+   - A start that fails restarts. After 3 restarts, the script does not wait more.
    - The server serves only after it opens and migrates each live site's database. A release that cannot open one is
      never healthy, and takes no data.
 6. **If healthy:** keeps the newest 5 backups and previous images, and deletes older ones.
@@ -340,8 +341,9 @@ Nighttroop is down from step 3 until healthy in step 5, usually much less than a
 
 Options:
 
-- `sudo HEALTH_TIMEOUT=300 ./update.sh ...` waits 5 minutes for the health check, not 3 (for example, for a large
-  restore).
+- `sudo HEALTH_TIMEOUT=3600 ./update.sh ...` waits 60 minutes for the health check, not 30 (for example, for a very
+  large restore).
+- `sudo MAX_RESTARTS=5 ./update.sh ...` permits 5 restarts of a start that fails, not 3.
 - `sudo KEEP_BACKUPS=10 ./update.sh ...` keeps 10 backups and previous images, not 5.
 
 ### What a rollback cannot undo

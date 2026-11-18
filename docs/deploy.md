@@ -98,6 +98,9 @@ With nothing writing, the script copies `./data` to `./backups/data-<time>.tar.g
 
 The script writes the new image into `.env` and runs `docker compose up -d`. The server does 5.1 to 5.10 in order.
 
+After 5.1 the server listens on port 3000. Until 5.10 it answers each request, `/health` too, with 503, `Retry-After: 5`
+and `{"status":"starting"}`.
+
 - A failed step ends the process with its error. Docker starts it again (`restart: unless-stopped`).
 - A start that always fails restarts until `update.sh` stops waiting ([step 6](#step-6-wait-for-a-healthy-server))
   and rolls back.
@@ -188,21 +191,27 @@ Syncs, backups, alarms and other jobs start before requests. From here, a sync c
 
 #### 5.10 Accept requests
 
-The server listens on port 3000. `/health` answers `ok` when the control DB answers.
+The server answers requests. `/health` answers `ok` when the control DB answers.
 
-- **Failure:** The port is not available. The process exits.
+- **Failure:** The port is not available. The process exits after 5.1, before S3 or a DB is used.
 - **Gap:** Background jobs can write before this, and the rollback copy loses those writes. They are only syncs, which
   fetch the data again.
 
 ### Step 6: Wait for a healthy server
 
-`update.sh` waits up to `HEALTH_TIMEOUT` (default 180 seconds) for the Docker health check. The check asks `/health`
-every 10 seconds, after a 120-second start period. It is unhealthy after 3 failures.
+`update.sh` waits up to `HEALTH_TIMEOUT` (default 1800 seconds) for the Docker health check to pass. The check asks
+`/health` every 10 seconds.
+
+- A start that fails ends the process, and Docker starts it again. After `MAX_RESTARTS` (default 3) restarts, the
+  script rolls back.
+- A slow start does not restart, so the script continues to wait. Docker can show it as `unhealthy` after 150 seconds;
+  the script ignores that, and Docker shows `healthy` when the server is ready.
 
 | Problem | Result | Fix |
 | --- | --- | --- |
 | The start fails ([step 5](#step-5-start-the-new-version)) | Never healthy. Rollback ([step 7](#step-7-roll-back-if-not-healthy)). | Read the printed logs. Fix the cause. |
-| A good version starts slowly: big restore, many sites | Not healthy in 180 seconds (or 150 for Docker). A working version rolls back. | `sudo HEALTH_TIMEOUT=600 ./update.sh ...`. **Gap:** The image fixes the Docker start period at 120 seconds. |
+| A good version starts slowly: big restore, many sites | The script waits up to 1800 seconds. Clients get 503 `starting`. | If the start needs more, `sudo HEALTH_TIMEOUT=3600 ./update.sh ...`. |
+| A start stops without an error and never finishes | Not healthy in 1800 seconds. Rollback. | Read the printed logs. **Gap:** The server does not say which step it is at. |
 | Healthy but broken: a page errors, syncs fail, a query is wrong | The script keeps it | [Fix forward](#after-a-version-serves-fix-forward). **Gap:** `/health` checks only the control DB, not a page, site or sync. |
 
 If healthy, the script deletes all but the newest 5 `./data` copies and previous images, and exits with 0.
@@ -239,7 +248,7 @@ again.
 | --- | --- | --- |
 | `KEY_SETS` is changed, cut short or lost | Encrypted credentials (Dexcom, Nightscout) and S3 backups cannot be decrypted | Put back the old value from the password manager. **Gap:** No way to move to new keys yet (TODOs: *Testing deploy with rolling to a new keyset*). |
 | A migration on `main` was edited, not added, after the first production deploy | DBs past it never get the change. Old and new DBs differ. | CI refuses it when `data/sql/MIGRATIONS_FROZEN` exists. **Gap:** It does not exist yet (TODOs P0). |
-| A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
+| A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` (1800 seconds) and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |
 | Two servers use one bucket (such as a new VPS while the old one runs) | Each overwrites the other's backups | Stop the old server, with its last uploads, before you start the new one. |
 | A new VPS restores from S3 | If the old server stopped before its last backup: control DB up to about a second old, sites up to an hour. Jobs, logs and live DBs start empty. | Expected. A new or restored site uploads in about 3 minutes. If it is in the control DB but has no backup, the start stops ([5.7](#57-restore-unavailable-sites)). |

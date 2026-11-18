@@ -21,6 +21,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Production or staging: does not start if `KEY_SETS` holds a public key from `.env.dev` or `.env.test`. Says to make
   new keys with `cmd/keysets/create_keysets.go`.
 - If the jobs DB or the logs DB does not open, the server removes it, makes an empty one, logs an error, and starts.
+- The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
+- Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`.
 
 #### First control admin
 
