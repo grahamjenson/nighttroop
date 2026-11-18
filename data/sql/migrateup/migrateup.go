@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"slices"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database"
@@ -128,4 +130,35 @@ func Latest(fsys fs.FS) (uint, error) {
 		latest = next
 	}
 	return latest, err
+}
+
+// SchemaError is a DB at the latest migration whose schema is not the one its migrations make on a new DB, as one made
+// before a migration was edited, which keeps the old schema even when every query still works on it
+type SchemaError struct {
+	DB         string
+	Difference string
+}
+
+func (e *SchemaError) Error() string {
+	return fmt.Sprintf("%s schema is not the one its migrations make: %s", e.DB, e.Difference)
+}
+
+// CheckSchema is a SchemaError naming a statement in one of schema, the DB called name's, and newSchema, the one its
+// migrations make on a new DB, and not the other, or nil when they are the same
+func CheckSchema(name, schema, newSchema string) error {
+	if schema == newSchema {
+		return nil
+	}
+	stmts, newStmts := strings.SplitAfter(schema, ";\n"), strings.SplitAfter(newSchema, ";\n")
+	for _, stmt := range stmts {
+		if !slices.Contains(newStmts, stmt) {
+			return &SchemaError{DB: name, Difference: fmt.Sprintf("it has %q", stmt)}
+		}
+	}
+	for _, stmt := range newStmts {
+		if !slices.Contains(stmts, stmt) {
+			return &SchemaError{DB: name, Difference: fmt.Sprintf("it has no %q", stmt)}
+		}
+	}
+	return &SchemaError{DB: name, Difference: "its statements are in another order"}
 }

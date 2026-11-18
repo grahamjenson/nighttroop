@@ -14,12 +14,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 )
 
@@ -55,26 +55,7 @@ func (k *kind) checkSchema(ctx context.Context, db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	if schema == k.newSchema {
-		return nil
-	}
-	return fmt.Errorf("its schema is not the one its migrations make: %s", difference(schema, k.newSchema))
-}
-
-// difference is a statement in one schema and not the other, to say why they differ
-func difference(schema, newSchema string) string {
-	stmts, newStmts := strings.SplitAfter(schema, ";\n"), strings.SplitAfter(newSchema, ";\n")
-	for _, stmt := range stmts {
-		if !slices.Contains(newStmts, stmt) {
-			return fmt.Sprintf("it has %q", stmt)
-		}
-	}
-	for _, stmt := range newStmts {
-		if !slices.Contains(stmts, stmt) {
-			return fmt.Sprintf("it has no %q", stmt)
-		}
-	}
-	return "its statements are in another order"
+	return migrateup.CheckSchema("its", schema, k.newSchema)
 }
 
 func open[Q interface{ Close() error }](k *kind, prepare func(context.Context, *sql.DB) (Q, error)) opener {

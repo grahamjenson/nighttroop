@@ -1,4 +1,4 @@
-// The control admin signs in to a server with three sites unavailable, as their DBs could not be opened or restored, so
+// The control admin signs in to a server with four sites unavailable, as their DBs could not be opened or restored, so
 // every control page names them, with why, each linked to its page
 GOTO {{ .control_url }}/login
 INPUT #control--login--name admin
@@ -6,17 +6,19 @@ INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 ASSERT_VISIBLE #control--status-banner--unavailable
-ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (3):
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (4):
 ASSERT_VISIBLE #control--status-banner--unavailable--amissing
 ASSERT_VISIBLE #control--status-banner--unavailable >> text=/amissing\s*\(DB missing\)/
 ASSERT_VISIBLE #control--status-banner--unavailable >> text=/brokensi\s*\(DB does not open\)/
 ASSERT_VISIBLE #control--status-banner--unavailable >> text=/migrfail\s*\(migration failed\)/
+ASSERT_VISIBLE #control--status-banner--unavailable >> text=/schemadf\s*\(schema differs\)/
 
 // The sites list, the dashboard, marks each unavailable site
 ASSERT_PATH /
 ASSERT_VISIBLE #control--site--amissing--unavailable
 ASSERT_VISIBLE #control--site--brokensi--unavailable
 ASSERT_VISIBLE #control--site--migrfail--unavailable
+ASSERT_VISIBLE #control--site--schemadf--unavailable
 SCREENSHOT dashboard
 
 // A site's name in the banner opens its page
@@ -38,7 +40,7 @@ ASSERT_VISIBLE #control--site--events--table td >> text=Site DB made empty
 GOTO {{ .control_url }}/sites/amissing
 ASSERT_VISIBLE #control--site--migration >> text=/^1 of 1$/
 // The banner, on every page, names only the other sites
-ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (2):
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (3):
 ASSERT_NOT_VISIBLE #control--status-banner--unavailable--amissing
 SCREENSHOT new_empty_db
 
@@ -57,9 +59,9 @@ CLICK #control--site--upload-db
 ASSERT_TEXT_VISIBLE DB Uploaded
 ASSERT_NOT_VISIBLE #control--site--unavailable
 ASSERT_VISIBLE #control--site--events--table td >> text=Site DB uploaded
-// Its DB is at the latest migration, and the banner, on every page, names only the other site
+// Its DB is at the latest migration, and the banner, on every page, names only the other sites
 GOTO {{ .control_url }}/sites/migrfail
 ASSERT_VISIBLE #control--site--migration >> text=/^1 of 1$/
-ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (1):
+ASSERT_TEXT_VISIBLE Sites unavailable, as their DBs could not be opened or restored (2):
 ASSERT_NOT_VISIBLE #control--status-banner--unavailable--migrfail
 SCREENSHOT upload_db

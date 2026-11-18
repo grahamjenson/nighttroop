@@ -20,7 +20,8 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	{{ if eq .PkgName "sitedb" }}"time"{{ end }}
+	{{ if eq .PkgName "sitedb" }}"time"
+	"sync"{{ end }}
 
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
@@ -95,6 +96,11 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 	}
 
 	{{ if eq .PkgName "sitedb" }}
+	// Checked on the connection that migrated it, as opening another costs more than the check
+	if err = CheckSchema(ctx, sqldb); err != nil {
+		sqldb.Close()
+		return db, fmt.Errorf("{{.PkgName}} Schema Error for: %s %w", path, err)
+	}
 	db.stmts = &stmtCache{DB: sqldb, prepareInTx: !db.InMemory}
 	db.queries = New(db.stmts)
 	// Every site's DB is opened at start, so the connection that migrated it is closed now rather than kept idle until
@@ -291,6 +297,35 @@ var Migrations embed.FS
 func MigrateUp(db *sql.DB) error {
 	return migrateup.Up("{{.PkgName}}", db, Migrations)
 }
+
+{{ if eq .PkgName "sitedb" }}
+// newSchema is the schema the migrations make on a new DB, made once
+var newSchema = sync.OnceValues(func() (string, error) {
+	newDB, err := OpenInMemorySqliteDB()
+	if err != nil {
+		return "", err
+	}
+	defer newDB.Close()
+	if err := MigrateUp(newDB); err != nil {
+		return "", err
+	}
+	return Schema(context.Background(), newDB)
+})
+
+// CheckSchema is a migrateup.SchemaError when a migrated DB's schema is not the one its migrations make on a new DB,
+// as for one made before a migration was edited, which a query may not work on
+func CheckSchema(ctx context.Context, db *sql.DB) error {
+	want, err := newSchema()
+	if err != nil {
+		return err
+	}
+	schema, err := Schema(ctx, db)
+	if err != nil {
+		return err
+	}
+	return migrateup.CheckSchema("{{.PkgName}}", schema, want)
+}
+{{ end }}
 
 func MigrateDown(db *sql.DB) error {
 	driver, err := sqlite.WithInstance(db, &sqlite.Config{})

@@ -29,6 +29,9 @@ const (
 	// UnavailableMigrationFailed is a site whose DB opened but could not be migrated to the latest migration, as one
 	// restored from long ago whose migration fails
 	UnavailableMigrationFailed = "migration_failed"
+	// UnavailableSchemaDiffers is a site whose DB is at the latest migration but whose schema is not the one the
+	// migrations make on a new DB, as one made before a migration was edited
+	UnavailableSchemaDiffers = "schema_differs"
 )
 
 // ErrSiteUnavailable is a live or disabled site whose DB is not open, as it was missing or did not open at start, so its
@@ -108,12 +111,24 @@ func (db *ControlDB) MakeSiteUnavailable(siteID, reason string) {
 	}
 }
 
+// unavailableReason is why a site whose DB did not open with err is unavailable
+func unavailableReason(err error) string {
+	switch {
+	case errors.As(err, new(*migrateup.FailedError)):
+		return UnavailableMigrationFailed
+	case errors.As(err, new(*migrateup.SchemaError)):
+		return UnavailableSchemaDiffers
+	}
+	return UnavailableCannotOpen
+}
+
 // MakeSiteUnavailableFor makes the site unavailable for why its DB did not open: UnavailableMigrationFailed, keeping
-// the migration that failed, when it could not be migrated, or UnavailableCannotOpen otherwise
+// the migration that failed, when it could not be migrated, UnavailableSchemaDiffers when its schema is not the
+// migrations', or UnavailableCannotOpen otherwise
 func (db *ControlDB) MakeSiteUnavailableFor(siteID string, err error) {
 	var failed *migrateup.FailedError
 	if !errors.As(err, &failed) {
-		db.MakeSiteUnavailable(siteID, UnavailableCannotOpen)
+		db.MakeSiteUnavailable(siteID, unavailableReason(err))
 		return
 	}
 	db.unavailable.mu.Lock()
