@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"slices"
 	"time"
@@ -243,7 +244,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 
 	dbModel, err := c.db.CreateModel(q, ctx, nsModel, converterContext(siteContext), identifier)
-	if httpErr := c.stored(dbModel, err, "create"); httpErr != nil {
+	if httpErr := c.stored(ctx, dbModel, err, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
 	deleted := c.sentDeleted(data)
@@ -253,7 +254,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		}
 	}
 
-	if httpErr := c.commit(tx, "create"); httpErr != nil {
+	if httpErr := c.commit(ctx, tx, "create"); httpErr != nil {
 		return nil, false, httpErr
 	}
 
@@ -362,7 +363,7 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
-	if httpErr := c.commit(tx, "refresh"); httpErr != nil {
+	if httpErr := c.commit(ctx, tx, "refresh"); httpErr != nil {
 		return nil, false, httpErr
 	}
 	siteContext.PublishModelChange(events.Updated, refreshed)
@@ -393,7 +394,7 @@ func (c Collection[NS, DM]) rewrite(ctx context.Context, siteContext *httputils.
 		return nil, merged, httpErr
 	}
 	rewritten, err := rewriter.RewriteModel(q, ctx, merged, data, stored, converterContext(siteContext))
-	if httpErr := c.stored(rewritten, err, "update"); httpErr != nil {
+	if httpErr := c.stored(ctx, rewritten, err, "update"); httpErr != nil {
 		return nil, merged, httpErr
 	}
 	return rewritten, merged, nil
@@ -636,7 +637,7 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		return httpErr
 	}
 
-	if httpErr := c.commit(tx, "delete"); httpErr != nil {
+	if httpErr := c.commit(ctx, tx, "delete"); httpErr != nil {
 		return httpErr
 	}
 	siteContext.PublishModelChange(events.Deleted, deleted)
@@ -687,7 +688,7 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 		return 0, httpErr
 	}
 
-	if httpErr := c.commit(tx, "delete"); httpErr != nil {
+	if httpErr := c.commit(ctx, tx, "delete"); httpErr != nil {
 		return 0, httpErr
 	}
 
@@ -717,7 +718,7 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 		return 0, nsutils.ErrInternal
 	}
 
-	if httpErr := c.commit(tx, "delete"); httpErr != nil {
+	if httpErr := c.commit(ctx, tx, "delete"); httpErr != nil {
 		return 0, httpErr
 	}
 	for _, deleted := range found {
@@ -764,14 +765,14 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	}
 
 	dbCreateModel, err := m.CreateModel(q, ctx, nsModel, converterContext(siteContext), &identifier)
-	if httpErr := c.stored(dbCreateModel, err, "replace"); httpErr != nil {
+	if httpErr := c.stored(ctx, dbCreateModel, err, "replace"); httpErr != nil {
 		return nil, false, httpErr
 	}
 	if httpErr := c.markStale(ctx, q, replaced); httpErr != nil {
 		return nil, false, httpErr
 	}
 
-	if httpErr := c.commit(tx, "replace"); httpErr != nil {
+	if httpErr := c.commit(ctx, tx, "replace"); httpErr != nil {
 		return nil, false, httpErr
 	}
 
@@ -884,7 +885,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, httpErr
 	}
 
-	if httpErr := c.commit(tx, "patch"); httpErr != nil {
+	if httpErr := c.commit(ctx, tx, "patch"); httpErr != nil {
 		return nil, httpErr
 	}
 
@@ -971,27 +972,37 @@ func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](repla
 func (c Collection[NS, DM]) begin(ctx context.Context, siteContext *httputils.SiteContext) (*sql.Tx, *sitedb.Queries, *nsutils.HTTPError) {
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, nil, nsutils.ErrInternal
+		return nil, nil, c.failed(ctx, err, "begin")
 	}
 	return tx, siteContext.SiteDB.QueriesWithTx(tx), nil
 }
 
-func (c Collection[NS, DM]) commit(tx *sql.Tx, action string) *nsutils.HTTPError {
+func (c Collection[NS, DM]) commit(ctx context.Context, tx *sql.Tx, action string) *nsutils.HTTPError {
 	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit "+action+" in database", "error", err, "collection", c.db.Name())
-		return nsutils.ErrInternal
+		return c.failed(ctx, err, "commit "+action)
 	}
 	return nil
 }
 
+// failed is the response to err from the site's database while it would action: Client Closed Request, logged as info,
+// when the client stopped waiting, so the request was cancelled and its transaction rolled back, as it is not the
+// server's error and no one reads it, or otherwise an internal error, logged with why
+func (c Collection[NS, DM]) failed(ctx context.Context, err error, action string) *nsutils.HTTPError {
+	if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+		slog.InfoContext(ctx, "Request cancelled, as its client stopped waiting, so it did not "+action+" in database", "error", err, "collection", c.db.Name())
+		return nsutils.ErrClientClosedRequest
+	}
+	slog.ErrorContext(ctx, "failed to "+action+" in database", "error", err, "collection", c.db.Name())
+	return nsutils.ErrInternal
+}
+
 // stored is the error from storing a model with CreateModel or RewriteModel. Data the database refuses is the client's error.
-func (c Collection[NS, DM]) stored(dbModel *DM, err error, action string) *nsutils.HTTPError {
+func (c Collection[NS, DM]) stored(ctx context.Context, dbModel *DM, err error, action string) *nsutils.HTTPError {
 	if err != nil {
 		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {
 			return sqlTranslatedError
 		}
-		slog.Error("failed to "+action+" in database", "error", err, "collection", c.db.Name())
-		return nsutils.ErrInternal
+		return c.failed(ctx, err, action)
 	}
 	if dbModel == nil {
 		slog.Error("failed to "+action+" in database, the model is nil", "collection", c.db.Name())

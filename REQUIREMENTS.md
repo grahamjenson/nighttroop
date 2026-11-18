@@ -1216,6 +1216,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - **v3**: create, read, update, patch, delete, search and history of each collection; version, status, lastModified,
   settings.
 - **Socket.IO**: live updates and alarms, over long polling or websockets.
+- A create, update or delete whose client stopped waiting, as an uploader that timed out, is `499` (client closed
+  request), logged as info, not an error, and nothing is stored. Any other database failure is `500`, logged as an
+  error with why.
 
 #### v1 endpoints
 
