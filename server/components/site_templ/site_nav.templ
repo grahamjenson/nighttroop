@@ -284,7 +284,11 @@ templ Search() {
 							}
 						</div>
 					}
-					<p id="site--nav--search-empty" hidden class="px-2 py-3 text-sm text-gray-500">{ i18n.T(ctx, "site.nav.no_match") }</p>
+					<p id="site--nav--search-empty" hidden class="px-2 pt-3 text-sm text-gray-500">{ i18n.T(ctx, "site.nav.no_match") }</p>
+					// With nothing found, the guide says where things are
+					@nav.Link("site--nav--search-guide", "/getting-started", "block px-2 pb-3 pt-1 text-sm font-medium text-brand-night underline [[hidden]+&]:hidden") {
+						{ i18n.T(ctx, "site.nav.no_match_guide") }
+					}
 				</div>
 			</div>
 		</div>

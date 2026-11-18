@@ -53,6 +53,7 @@ site:
     search_shortcut: "Ctrl K"
     search_results: "Pages"
     no_match: "No pages match"
+    no_match_guide: "Getting Started says where things are"
     # The headings and words on each page that the search finds it by, and shows when it does
     keywords:
       sensor_glucose: "Sensor Glucose"
@@ -138,10 +139,12 @@ site:
       insulin: "bolus dose smb injection shot"
       food: "carbs carbohydrates meal snack"
       activities: "exercise workout sport"
-      alarms: "alerts hypo hyper"
-      connectors: "sync integrations import sources cgm"
-      users: "people carers caregivers family"
+      alarms: "alerts hypo hyper snooze warnings"
+      connectors: "sync integrations import sources cgm share pull"
+      users: "people carers caregivers family tokens password credentials invite share phone app device"
       profiles: "basal isf icr"
+      settings: "preferences options mmol mgdl clock"
+      device_status: "pump phone uploader loop"
   base:
     alpha: "Alpha"
     open_user_menu: "Open user menu"
