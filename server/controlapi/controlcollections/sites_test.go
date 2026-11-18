@@ -38,8 +38,9 @@ func TestDisablingSiteRecordsEvent(t *testing.T) {
 	require.Equal(t, `{"by":"admin"}`, *events[0].Attributes)
 }
 
-// TestDisablingActiveSiteRefused checks only a site not written to or seen in DisableAfterInactivityDays is disabled
-func TestDisablingActiveSiteRefused(t *testing.T) {
+// TestDisablingActiveSite checks an admin can disable a live site however recently it was written to or seen, but not
+// one already disabled
+func TestDisablingActiveSite(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	cfg.DisableAfterInactivityDays = 7
 	t.Cleanup(func() { cfg.DisableAfterInactivityDays = 0 })
@@ -47,12 +48,16 @@ func TestDisablingActiveSiteRefused(t *testing.T) {
 	controlContext := &httputils.ControlContext{ControlDB: controlDB, IdentityModel: &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}}
 
 	active := &controlmodels.Site{ID: siteID, State: "live", CreatedAt: now, LastSeenAt: &now, LastWriteAt: &now}
+	require.False(t, active.Inactive(7, time.Now()))
 	_, err := (&SitesCollection{}).UpdateRow(ctx, controlContext, active, &controlmodels.Site{State: "disabled"})
-	require.ErrorContains(t, err, "only a site not written to or seen in 7 days can be disabled")
+	require.NoError(t, err)
 
 	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
-	require.Equal(t, "live", row.State)
+	require.Equal(t, "disabled", row.State)
+
+	_, err = (&SitesCollection{}).UpdateRow(ctx, controlContext, active, &controlmodels.Site{State: "disabled"})
+	require.Error(t, err, "a site already disabled is not disabled again")
 }
 
 func TestTruncateHandler(t *testing.T) {

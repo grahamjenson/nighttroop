@@ -124,7 +124,7 @@ AAPS, Trio) send.
 | `MAX_SITES` | `10000` | The most sites the public can create from the home page. A control admin can create more. |
 | `MAX_IDENTITIES_PER_USER` | `100` | The most identities on one site. Rate limiters are kept for 20 a site, so more costs no more memory. |
 | `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a never used site is kept before deletion. |
-| `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site is not written or seen before control can disable it. |
+| `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site is not written or seen before control marks it Inactive. An admin can disable any live site. |
 | `BACKGROUND_CONNECTOR_WORKERS` | `5` | Syncs that run at once. |
 | `CONNECTOR_INTERVAL_IN_SECONDS` | `5` | How often due syncs are queued. |
 | `BACKFILL_DAYS` | `7` | How far before a site's oldest glucose reading a backfill gets records. |

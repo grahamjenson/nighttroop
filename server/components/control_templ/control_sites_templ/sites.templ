@@ -457,7 +457,7 @@ templ siteActions(site *controlmodels.Site) {
 						{ i18n.T(ctx, "control.site.download_db") }
 					}
 				}
-				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
+				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(site.State == "live", disableWhen(ctx, site)), icon.Ban) {
 					@siteActionForm("/sites/"+site.ID, "disabled", i18n.T(ctx, "control.site.disable_confirm"), "control--site--disable", i18n.T(ctx, "control.site.disable"))
 				}
 				@actionCard("control--site--action-truncate", i18n.T(ctx, "control.site.truncate"), i18n.T(ctx, "control.site.truncate_intro"),
@@ -491,14 +491,10 @@ func needsDB(ctx context.Context, site *controlmodels.Site, can bool, why string
 
 // disableWhen is when a site that is not inactive could be disabled
 func disableWhen(ctx context.Context, site *controlmodels.Site) string {
-	controlContext := httputils.GetControlContext(ctx)
 	if site.State == "disabled" {
 		return i18n.T(ctx, "control.site.already_disabled")
 	}
-	if site.State != "live" || controlContext == nil || controlContext.ControlDB == nil {
-		return i18n.T(ctx, "control.site.disable_live_only")
-	}
-	return i18n.T(ctx, "control.site.disable_when", i18n.Data{"InactiveDays": controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays})
+	return i18n.T(ctx, "control.site.disable_live_only")
 }
 
 // actionCard is one action, a row of the list: its name and what it does, then at its right its button, or when it

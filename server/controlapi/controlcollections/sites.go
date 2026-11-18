@@ -70,7 +70,7 @@ func (s *SitesCollection) GetRow(ctx context.Context, id string, controlContext 
 	return controlContext.ControlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: id})
 }
 
-// UpdateRow disables a live, inactive site, which stops it being served, or archives a disabled one
+// UpdateRow disables a live site, which stops it being served, or archives a disabled one
 func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) (*controldb.Site, error) {
 	var err error
 	switch model.State {
@@ -88,10 +88,6 @@ func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputi
 }
 
 func (s *SitesCollection) disable(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
-	days := controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays
-	if !oldModel.Inactive(days, time.Now()) {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.disable_unused_only", i18n.Data{"Days": days}))
-	}
 	result, err := controlContext.ControlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: oldModel.ID})
 	if err != nil {
 		return err

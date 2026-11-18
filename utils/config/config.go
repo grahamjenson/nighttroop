@@ -200,7 +200,7 @@ type ServerConfig struct {
 	MaxIdentitiesPerSite int
 
 	DeleteAfterInactivityMins int
-	// DisableAfterInactivityDays is how long a site goes unwritten or unseen before the control plane can disable it
+	// DisableAfterInactivityDays is how long a site goes unwritten or unseen before the control plane marks it inactive
 	DisableAfterInactivityDays int
 
 	// MemoryAlertPercent and DiskAlertPercent are the memory and DB disk used, and CPUPeggedAlertSeconds how long the
