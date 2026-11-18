@@ -15,6 +15,9 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/badge"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -283,33 +286,97 @@ templ ErrorModal(v View, e Row) {
 	}
 }
 
-// LogsTable is a table of logs, newest first, each opening its details
+// levelVariants colour each log level's badge: grey for debug, the brand's for info, amber for warn, red for error
+var levelVariants = map[string]badge.Variant{"debug": badge.VariantNeutral, "info": badge.VariantPrimary,
+	"warn": badge.VariantWarning, "error": badge.VariantError}
+
+// LogsTable is a table of logs, newest first, each opening its details. Its columns keep their widths whatever the
+// messages, so a long one is cut short, and shown whole on hover. When the View Links, each log's request, or else
+// its job, has a button at its right narrowing the logs to it.
 templ LogsTable(v View, id string, logs []Row) {
-	@table.Table(table.Props{ID: id}) {
+	@table.Table(table.Props{ID: id, Class: "table-fixed"}) {
+		<colgroup>
+			<col class="w-20"/>
+			<col/>
+			if v.About != "" {
+				<col class="w-28"/>
+			}
+			<col class="w-28"/>
+			if v.Links {
+				<col class="w-28"/>
+			}
+		</colgroup>
 		@table.Header() {
 			@table.Row() {
 				@head(i18n.T(ctx, "common.log_view.level"))
 				@head(i18n.T(ctx, "common.log_view.message"))
 				@aboutHead(v)
 				@head(i18n.T(ctx, "common.log_view.when"))
+				if v.Links {
+					@table.Head() {
+						<span class="sr-only">{ i18n.T(ctx, "common.log_view.narrow") }</span>
+					}
+				}
 			}
 		}
 		@table.Body() {
 			if len(logs) == 0 {
-				@Empty(v.columns(4), i18n.T(ctx, "common.log_view.no_logs"))
+				@Empty(v.columns(4)+linkColumns(v), i18n.T(ctx, "common.log_view.no_logs"))
 			}
 			for _, log := range logs {
 				@modalRow(v, "log", log) {
 					@table.Cell() {
-						{ i18n.Stored(ctx, "log_levels", log.Name) }
+						@badge.Badge(badge.Props{Variant: levelVariants[log.Name]}) {
+							{ i18n.Stored(ctx, "log_levels", log.Name) }
+						}
 					}
 					@table.Cell() {
-						<span class="block max-w-md truncate">{ log.Message }</span>
+						<span class="block truncate" title={ log.Message }>{ log.Message }</span>
 					}
-					@aboutCell(v, log)
-					@when(v, log.At)
+					if v.About != "" {
+						@table.Cell() {
+							<span class="block truncate font-mono text-xs" title={ log.About }>{ log.About }</span>
+						}
+					}
+					@table.Cell(table.CellProps{Class: "whitespace-nowrap text-gray-500"}) {
+						<span title={ v.Date(ctx, log.At) }>{ display.Ago(ctx, &log.At, time.Now()) }</span>
+					}
+					if v.Links {
+						@table.Cell(table.CellProps{Class: "py-0.5 text-right"}) {
+							@narrowButton(v, log)
+						}
+					}
 				}
 			}
+		}
+	}
+}
+
+// linkColumns is the narrow button's column, when the View Links
+func linkColumns(v View) int {
+	if v.Links {
+		return 1
+	}
+	return 0
+}
+
+// narrowButton narrows the logs to the log's request, or else its job, without opening the log's details
+templ narrowButton(v View, log Row) {
+	{{ name, label, value := "request_id", i18n.T(ctx, "common.log_view.request"), log.RequestID }}
+	if value == nil {
+		{{ name, label, value = "job_id", i18n.T(ctx, "common.log_view.job"), log.JobID }}
+	}
+	if value != nil {
+		{{ link := filter.PagePath(v.Path+"/logs", nil, nil, filter.ID{Name: name, Value: value}) }}
+		@button.Button(button.Props{
+			ID:         fmt.Sprintf("%s--log--%d--%s", v.Prefix, log.ID, strings.ReplaceAll(name, "_", "-")),
+			Href:       link,
+			Variant:    button.VariantOutline,
+			Size:       button.SizeSm,
+			Attributes: templ.Attributes{"title": *value, "onclick": templ.JSUnsafeFuncCall("event.stopPropagation()"), "hx-get": link, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML"},
+		}) {
+			@icon.ListFilter(icon.Props{Class: "size-3.5"})
+			{ label }
 		}
 	}
 }
