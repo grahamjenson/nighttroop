@@ -70,3 +70,38 @@ func TestRestoreControlDBIsLogged(t *testing.T) {
 		require.True(t, here)
 	})
 }
+
+// A control DB that does not open, as a file a disk damaged, is restored from its replica and the admin is paged; one
+// that opens is left, and pages no one
+func TestRestoreUnopenedControlDB(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	control, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err)
+	r := replica.New(cfg, s3)
+	require.NoError(t, r.Start(t.Context(), control.Path))
+	_, err = control.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "replicat", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	require.NoError(t, r.Close(context.Background()))
+	require.NoError(t, control.Close())
+	pages := []string{}
+	admin := func(_ context.Context, level page.Level, message string, _ ...any) {
+		pages = append(pages, string(level)+": "+message)
+	}
+
+	require.NoError(t, restoreUnopened(t.Context(), cfg, r, admin))
+	require.Empty(t, pages, "a control DB that opens is left")
+
+	path := controldb.GetPath(cfg)
+	for _, file := range []string{path, path + "-wal", path + "-shm"} {
+		_ = os.Remove(file)
+	}
+	require.NoError(t, os.WriteFile(path, []byte("not a DB, as a disk damaged it"), 0o600))
+	require.NoError(t, restoreUnopened(t.Context(), cfg, r, admin))
+	require.Len(t, pages, 1)
+	require.Contains(t, pages[0], string(page.SMS)+": The control DB did not open, so it was restored from its replica in S3")
+	restored, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err, "the restored control DB opens")
+	defer restored.Close()
+	_, err = restored.Queries.GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: "replicat"})
+	require.NoError(t, err)
+}

@@ -1945,6 +1945,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
       one of the two.
     - If S3 gives an error to that check, the server starts with S3 off.
   - If the control DB's replication cannot start, the server starts with S3 off.
+  - If the control DB does not open at start, as a file a disk damaged, the server restores it from its replica:
+    - The one that does not open is kept as `controldb.sqlite.unopened-<time>`, with its write-ahead log.
+    - The admin is paged with an SMS.
+    - It is done one time. While a file is kept from an earlier time, the server does not restore again.
+    - With no replica, or a restore that fails, the file is put back and the start fails as before.
+    - A control DB whose migration fails is not restored: its replica has the same DB.
   - A server that starts with S3 off for one of these replicates and backs up nothing until it is fixed and started
     again. The control plane's banner says which, in red, and the admin is paged with an SMS.
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
