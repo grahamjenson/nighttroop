@@ -72,3 +72,11 @@ GOTO {{ .control_url }}/admins
 ASSERT_STATUS 200
 ASSERT_VISIBLE #control--admins--table tr:has-text("You")
 ASSERT_NOT_VISIBLE #control--admins--table tr:has-text("bdd_erin")
+
+// Under the admins, an admin tests paging through PagerDuty by email, SMS or call. The test server has no
+// PAGERDUTY_ROUTING_KEY, so it says PagerDuty is not set up.
+ASSERT_VISIBLE #control--admins--test-page--level
+INPUT #control--admins--test-page--level call
+CLICK #control--admins--test-page--submit
+ASSERT_TEXT_VISIBLE PagerDuty is not set up: set PAGERDUTY_ROUTING_KEY
+SCREENSHOT admins_test_page

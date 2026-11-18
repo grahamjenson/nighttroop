@@ -62,17 +62,25 @@ type payload struct {
 	CustomDetails map[string]any `json:"custom_details,omitempty"`
 }
 
+// Levels are the levels by the name a form sends, as an admin picks one to test
+var Levels = map[string]Level{"email": Email, "sms": SMS, "call": Call}
+
 // Admin pages the server's admin at level. It is always logged as an error, which the control site's errors and
 // Sentry show, and sent to PagerDuty when it is set up; a page PagerDuty does not take is logged too.
 func (p *Pager) Admin(ctx context.Context, level Level, message string, args ...any) {
-	slog.ErrorContext(ctx, "Page: "+message, append([]any{"level", level}, args...)...)
-	if p.routingKey == "" {
-		return
-	}
-	if err := p.send(ctx, event{RoutingKey: p.routingKey, EventAction: "trigger", DedupKey: message,
-		Payload: payload{Summary: message, Source: p.source, Severity: level, CustomDetails: details(args)}}); err != nil {
+	if err := p.Page(ctx, level, message, args...); err != nil {
 		slog.ErrorContext(ctx, "Cannot send a page to PagerDuty", "error", err)
 	}
+}
+
+// Page pages the admin as Admin does, and is why PagerDuty did not take it, if it did not
+func (p *Pager) Page(ctx context.Context, level Level, message string, args ...any) error {
+	slog.ErrorContext(ctx, "Page: "+message, append([]any{"level", level}, args...)...)
+	if p.routingKey == "" {
+		return nil
+	}
+	return p.send(ctx, event{RoutingKey: p.routingKey, EventAction: "trigger", DedupKey: message,
+		Payload: payload{Summary: message, Source: p.source, Severity: level, CustomDetails: details(args)}})
 }
 
 func (p *Pager) send(ctx context.Context, e event) error {

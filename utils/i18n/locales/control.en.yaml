@@ -44,6 +44,13 @@ control:
     errors: "Errors"
     logout: "Sign out"
   admins:
+    test_page: "Test Admin Page"
+    test_page_level: "Page by"
+    test_page_email: "Email"
+    test_page_sms: "SMS"
+    test_page_call: "Call"
+    test_paged: "Test page sent to PagerDuty, at severity {{.Severity}}."
+    test_page_failed: "Test page not sent"
     role_admin: "Admin"
     role_read: "Read-only"
     title: "Admins"

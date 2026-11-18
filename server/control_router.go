@@ -70,6 +70,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		admin.Post("/admins/{id}/password", controlapi.ResetControlAdminPasswordHandler)
 		admin.Post("/admins/{id}/totp", controlapi.ResetControlAdminTOTPHandler)
 		admin.Delete("/admins/{id}", controlapi.DeleteControlAdminHandler)
+		admin.Post("/admins/test-page", controlapi.TestPageHandler)
 		// Go's profiles (/debug/pprof/) and runtime stats (/debug/vars), to see where the server's memory and CPU go. A
 		// CPU profile or trace must take under the 30 seconds a request has, e.g. ?seconds=20
 		admin.Mount("/debug", middleware.Profiler())
