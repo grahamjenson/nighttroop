@@ -129,6 +129,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.disableSitesStmt, err = db.PrepareContext(ctx, disableSites); err != nil {
 		return nil, fmt.Errorf("error preparing query DisableSites: %w", err)
 	}
+	if q.enableSiteStmt, err = db.PrepareContext(ctx, enableSite); err != nil {
+		return nil, fmt.Errorf("error preparing query EnableSite: %w", err)
+	}
 	if q.finishConnectorBackfillStmt, err = db.PrepareContext(ctx, finishConnectorBackfill); err != nil {
 		return nil, fmt.Errorf("error preparing query FinishConnectorBackfill: %w", err)
 	}
@@ -526,6 +529,11 @@ func (q *Queries) Close() error {
 	if q.disableSitesStmt != nil {
 		if cerr := q.disableSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing disableSitesStmt: %w", cerr)
+		}
+	}
+	if q.enableSiteStmt != nil {
+		if cerr := q.enableSiteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing enableSiteStmt: %w", cerr)
 		}
 	}
 	if q.finishConnectorBackfillStmt != nil {
@@ -967,6 +975,7 @@ type Queries struct {
 	disableOtherSiteAdminsStmt              *sql.Stmt
 	disableSiteStmt                         *sql.Stmt
 	disableSitesStmt                        *sql.Stmt
+	enableSiteStmt                          *sql.Stmt
 	finishConnectorBackfillStmt             *sql.Stmt
 	getAllConnectorsForSiteStmt             *sql.Stmt
 	getAllSitesStmt                         *sql.Stmt
@@ -1081,6 +1090,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		disableOtherSiteAdminsStmt:              q.disableOtherSiteAdminsStmt,
 		disableSiteStmt:                         q.disableSiteStmt,
 		disableSitesStmt:                        q.disableSitesStmt,
+		enableSiteStmt:                          q.enableSiteStmt,
 		finishConnectorBackfillStmt:             q.finishConnectorBackfillStmt,
 		getAllConnectorsForSiteStmt:             q.getAllConnectorsForSiteStmt,
 		getAllSitesStmt:                         q.getAllSitesStmt,

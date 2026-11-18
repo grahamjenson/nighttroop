@@ -15,7 +15,7 @@ TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
 // The dashboard is the list of sites. A site not written to or seen in DISABLE_AFTER_INACTIVITY_DAYS, 0 in tests, is
-// marked inactive and can be disabled
+// marked inactive. An admin can disable any live site.
 ASSERT_PATH /
 ASSERT_VISIBLE #controlSitesTable
 ASSERT_TEXT_VISIBLE Inactive
@@ -115,6 +115,9 @@ ASSERT_NOT_VISIBLE #control--site--archive
 ASSERT_VISIBLE #control--site--action-archive >> text=Offered once it is disabled.
 ASSERT_VISIBLE #control--site--action-disable >> text=Stops serving the site. Its data is kept.
 ASSERT_VISIBLE #control--site--disable
+// A live site is not offered to be enabled
+ASSERT_NOT_VISIBLE #control--site--enable
+ASSERT_VISIBLE #control--site--action-enable >> text=Offered once it is disabled.
 // An admin can download a copy of its DB to look into, which its admins see in its events
 ASSERT_VISIBLE #control--site--action-download-db >> text=Its admins see the download in its events.
 ASSERT_VISIBLE #control--site--download-db[href$="/db"][download]
@@ -159,6 +162,17 @@ ASSERT_VISIBLE #control--site--truncate
 ASSERT_VISIBLE #control--site--archive
 CLICK #control--site--archive
 ASSERT_TEXT_VISIBLE a site can only be archived when S3 is connected
+
+// A disabled site can be enabled, after asking first, which serves it again, with the event saying so
+ASSERT_VISIBLE #control--site--action-enable >> text=Serves a disabled site again.
+CLICK #control--site--enable
+ASSERT_TEXT_VISIBLE Site Enabled
+ASSERT_TEXT_EQUALS #control--site--state Live
+ASSERT_VISIBLE #control--site--open
+ASSERT_VISIBLE #control--site--events--table td >> text=Site enabled
+ASSERT_NOT_VISIBLE #control--site--enable
+ASSERT_VISIBLE #control--site--disable
+SCREENSHOT site_enabled
 
 // Its events link to all of them, filtered to the site
 CLICK #control--site--events--all

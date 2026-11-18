@@ -39,6 +39,7 @@ stored:
   events:
     site_created: "Site created"
     site_disabled: "Site disabled"
+    site_enabled: "Site enabled"
     site_deleted: "Site deleted"
     site_archived: "Site archived"
     site_hydrated: "Site restored"

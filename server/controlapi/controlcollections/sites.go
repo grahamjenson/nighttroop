@@ -70,12 +70,15 @@ func (s *SitesCollection) GetRow(ctx context.Context, id string, controlContext 
 	return controlContext.ControlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: id})
 }
 
-// UpdateRow disables a live, inactive site, which stops it being served, or archives a disabled one
+// UpdateRow disables a live site, which stops it being served, enables a disabled one, which serves it again, or
+// archives a disabled one
 func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) (*controldb.Site, error) {
 	var err error
 	switch model.State {
 	case "disabled":
 		err = s.disable(ctx, controlContext, oldModel)
+	case "live":
+		err = s.enable(ctx, controlContext, oldModel)
 	case "archived":
 		err = s.archive(ctx, controlContext, oldModel)
 	default:
@@ -88,10 +91,6 @@ func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputi
 }
 
 func (s *SitesCollection) disable(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
-	days := controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays
-	if !oldModel.Inactive(days, time.Now()) {
-		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.disable_unused_only", i18n.Data{"Days": days}))
-	}
 	result, err := controlContext.ControlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: oldModel.ID})
 	if err != nil {
 		return err
@@ -100,6 +99,19 @@ func (s *SitesCollection) disable(ctx context.Context, controlContext *httputils
 		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.disable_live_only"))
 	}
 	controlContext.ControlDB.Logs.SiteDisabledEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
+	return nil
+}
+
+// enable serves a disabled site again; its DB is still here, so nothing else is needed
+func (s *SitesCollection) enable(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
+	result, err := controlContext.ControlDB.Queries.EnableSite(ctx, controldb.EnableSiteParams{ID: oldModel.ID})
+	if err != nil {
+		return err
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.enable_disabled_only"))
+	}
+	controlContext.ControlDB.Logs.SiteEnabledEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
 	return nil
 }
 

@@ -457,8 +457,11 @@ templ siteActions(site *controlmodels.Site) {
 						{ i18n.T(ctx, "control.site.download_db") }
 					}
 				}
-				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
+				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(site.State == "live", disableWhen(ctx, site)), icon.Ban) {
 					@siteActionForm("/sites/"+site.ID, "disabled", i18n.T(ctx, "control.site.disable_confirm"), "control--site--disable", i18n.T(ctx, "control.site.disable"))
+				}
+				@actionCard("control--site--action-enable", i18n.T(ctx, "control.site.enable"), i18n.T(ctx, "control.site.enable_intro"), unless(site.State == "disabled", i18n.T(ctx, "control.site.enable_disabled_only")), icon.RotateCcw) {
+					@siteActionForm("/sites/"+site.ID, "live", i18n.T(ctx, "control.site.enable_confirm"), "control--site--enable", i18n.T(ctx, "control.site.enable"))
 				}
 				@actionCard("control--site--action-truncate", i18n.T(ctx, "control.site.truncate"), i18n.T(ctx, "control.site.truncate_intro"),
 					needsDB(ctx, site, site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Scissors) {
@@ -491,14 +494,10 @@ func needsDB(ctx context.Context, site *controlmodels.Site, can bool, why string
 
 // disableWhen is when a site that is not inactive could be disabled
 func disableWhen(ctx context.Context, site *controlmodels.Site) string {
-	controlContext := httputils.GetControlContext(ctx)
 	if site.State == "disabled" {
 		return i18n.T(ctx, "control.site.already_disabled")
 	}
-	if site.State != "live" || controlContext == nil || controlContext.ControlDB == nil {
-		return i18n.T(ctx, "control.site.disable_live_only")
-	}
-	return i18n.T(ctx, "control.site.disable_when", i18n.Data{"InactiveDays": controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays})
+	return i18n.T(ctx, "control.site.disable_live_only")
 }
 
 // actionCard is one action, a row of the list: its name and what it does, then at its right its button, or when it
@@ -542,7 +541,12 @@ templ siteActionForm(path, state, confirm, id, label string) {
 		if state != "" {
 			<input type="hidden" name="state" value={ state }/>
 		}
-		@button.Button(button.Props{ID: id, Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+		// Every action but serving a site again takes something away
+		{{ variant := button.VariantDestructive }}
+		if state == "live" {
+			{{ variant = button.VariantDefault }}
+		}
+		@button.Button(button.Props{ID: id, Type: button.TypeSubmit, Variant: variant}) {
 			{ label }
 		}
 	</form>
@@ -557,7 +561,8 @@ func sizeMB(kb *int64) string {
 }
 
 // updatedToasts are the ids of the toasts saying a site is disabled or archived
-var updatedToasts = map[string]string{"disabled": "control.site.disabled_toast", "archived": "control.site.archived_toast"}
+var updatedToasts = map[string]string{"disabled": "control.site.disabled_toast", "live": "control.site.enabled_toast",
+	"archived": "control.site.archived_toast"}
 
 // SiteUpdated shows the site's page again, with a toast saying it is disabled or archived
 templ SiteUpdated(site *controlmodels.Site) {

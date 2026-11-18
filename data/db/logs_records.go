@@ -124,6 +124,11 @@ func (l *LogsDB) SiteDisabledEvent(ctx context.Context, siteID string, by string
 	l.event(ctx, siteID, events.SiteDisabled, SiteDisabledAttributes{By: by})
 }
 
+// SiteEnabledEvent records a control identity bringing a disabled site back live
+func (l *LogsDB) SiteEnabledEvent(ctx context.Context, siteID string, by string) {
+	l.event(ctx, siteID, events.SiteEnabled, SiteDisabledAttributes{By: by})
+}
+
 type SiteArchivedAttributes struct {
 	By string `json:"by"`
 }
