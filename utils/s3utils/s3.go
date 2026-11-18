@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"cmp"
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
@@ -58,6 +59,9 @@ type S3Client struct {
 	unlock   context.CancelFunc
 	lockDone chan struct{}
 	lockLost atomic.Bool
+	// lockID is this server's, which the lock it writes holds, and lost closes when another server took its lock
+	lockID string
+	lost   chan struct{}
 }
 
 // MaxKeys is the number of keys S3 can operate on per batch.
@@ -83,6 +87,8 @@ func NewS3Client(config *config.ServerConfig) *S3Client {
 		Endpoint:        config.S3URL,
 		Region:          DefaultRegion,
 		HostName:        config.HostName,
+		lockID:          rand.Text(),
+		lost:            make(chan struct{}),
 	}
 
 	slog.Info("S3Client Being Created", "bucket", c.Bucket, "region", c.Region, "endpoint", c.Endpoint)
