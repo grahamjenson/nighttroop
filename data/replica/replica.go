@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"path/filepath"
 	"strings"
 
 	"github.com/benbjohnson/litestream"
@@ -62,7 +63,25 @@ func (r *Replica) Start(ctx context.Context, path string) error {
 	db := litestream.NewDB(path)
 	db.Replica = litestream.NewReplicaWithClient(db, r.client)
 	r.path, r.store = path, litestream.NewStore([]*litestream.DB{db}, litestream.DefaultCompactionLevels)
+	// Litestream logs each second's sync, and each compaction, so only its warnings and errors are kept
+	r.store.Logger = slog.New(warnings{slog.Default().Handler()}).With(litestream.LogKeySystem, litestream.LogSystemStore)
+	db.SetLogger(r.store.Logger.With(litestream.LogKeyDB, filepath.Base(path)))
 	return r.store.Open(ctx)
+}
+
+// warnings passes on only the logs of handler that are warnings or errors
+type warnings struct{ slog.Handler }
+
+func (w warnings) Enabled(ctx context.Context, level slog.Level) bool {
+	return level >= slog.LevelWarn && w.Handler.Enabled(ctx, level)
+}
+
+func (w warnings) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return warnings{w.Handler.WithAttrs(attrs)}
+}
+
+func (w warnings) WithGroup(name string) slog.Handler {
+	return warnings{w.Handler.WithGroup(name)}
 }
 
 // Close sends the control DB's last writes and stops replicating it. It is synced first: Litestream only sends a DB's

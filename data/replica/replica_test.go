@@ -1,10 +1,13 @@
 package replica_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"log/slog"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/replica"
@@ -36,6 +39,27 @@ func TestControlWritesReachItsReplica(t *testing.T) {
 	defer db.Close()
 	_, err = controldb.New(db).GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: "replicat"})
 	require.NoError(t, err)
+}
+
+// Replicating logs none of Litestream's routine logs, such as each second's sync, which the server's logs would be full of
+func TestReplicatingLogsNoRoutineLogs(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	control, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { control.Close() })
+	// After the test config, which sets the default logger as the server does
+	var logs bytes.Buffer
+	before := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	t.Cleanup(func() { slog.SetDefault(before) })
+	r := replica.New(cfg, s3)
+	require.NoError(t, r.Start(t.Context(), control.Path))
+	_, err = control.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "quietsit", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	// Litestream's own sync, each second, sends it
+	require.Eventually(t, func() bool { return len(testutils.ControlReplicaFiles(t, cfg, s3)) > 0 }, 10*time.Second, 100*time.Millisecond)
+	require.NoError(t, r.Close(context.Background()))
+	require.NotContains(t, logs.String(), "system=store")
 }
 
 // A control DB with no replica, as on a new server, is not found
