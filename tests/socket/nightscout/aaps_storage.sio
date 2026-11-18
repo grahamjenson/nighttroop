@@ -81,7 +81,8 @@ ASSERT_EXISTS "@doc.srvModified"
 # No timestamp, which AAPS reads as a number (RemoteTreatment.timestamp) and drops the treatment when it is not
 ASSERT_EQUALS null "@doc.timestamp"
 
-# A temp basal ended early has whole minutes on the storage socket, as AAPS reads them, and its exact milliseconds
+# A temp basal ended early has whole minutes on the storage socket, as AAPS reads them, and its exact milliseconds.
+# 43 s are 1 minute, not 0, which other readers take as cancelled; AAPS reads the milliseconds first
 NAME end_temp_basal
 PATCH http://{{ site }}/api/v3/treatments/{{ .post_temp_basal.identifier }}?token={{ token }}
 B {"duration":0,"durationInMilliseconds":43491}
@@ -91,7 +92,7 @@ NAME temp_basal_updated
 WAIT update
 T 5s
 ASSERT_EQUALS "treatments" "@colName"
-ASSERT_EQUALS 0 "@doc.duration"
+ASSERT_EQUALS 1 "@doc.duration"
 ASSERT_EQUALS 43491 "@doc.durationInMilliseconds"
 
 # Carbs AAPS deleted while offline, uploaded with isValid false, go out as a delete, so no follower takes them as current

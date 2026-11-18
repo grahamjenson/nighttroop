@@ -56,8 +56,8 @@ func TestDurationFields(t *testing.T) {
 		{"Loop's bolus", &types.Duration{Minutes: 1, Ms: new(int64(100000))}, `{"duration":2,"durationInMilliseconds":100000}`, `{"duration":1,"durationInMilliseconds":100000}`},
 		{"rounded up to its minutes", types.DurationOfMs(new(int64(1799000))), `{"duration":30,"durationInMilliseconds":1799000}`, `{"duration":30,"durationInMilliseconds":1799000}`},
 		{"minutes changed on the site", (&types.Duration{Minutes: 90}).WithMs(new(int64(359587))), `{"duration":90,"durationInMilliseconds":5400000}`, `{"duration":90,"durationInMilliseconds":5400000}`},
-		{"under a minute", &types.Duration{Minutes: 0, Ms: new(int64(43491))}, `{"duration":1,"durationInMilliseconds":43491}`, `{"duration":0,"durationInMilliseconds":43491}`},
-		{"under half a minute", &types.Duration{Minutes: 0, Ms: new(int64(12000))}, `{"duration":1,"durationInMilliseconds":12000}`, `{"duration":0,"durationInMilliseconds":12000}`},
+		{"under a minute", &types.Duration{Minutes: 0, Ms: new(int64(43491))}, `{"duration":1,"durationInMilliseconds":43491}`, `{"duration":1,"durationInMilliseconds":43491}`},
+		{"under half a minute", &types.Duration{Minutes: 0, Ms: new(int64(12000))}, `{"duration":1,"durationInMilliseconds":12000}`, `{"duration":1,"durationInMilliseconds":12000}`},
 		{"none of 0 minutes", types.DurationOfMinutes(new(int64(0))), `{"duration":0,"durationInMilliseconds":0}`, `{"duration":0,"durationInMilliseconds":0}`},
 	}
 	for _, test := range tests {
@@ -91,7 +91,7 @@ func TestDurationInFractionalMinutes(t *testing.T) {
 	}{
 		{"none", nil, `{}`, `{}`},
 		{"Loop's bolus", &types.Duration{Minutes: 1, Ms: new(int64(100000))}, `{"duration":1.6666666666666667,"durationInMilliseconds":100000}`, `{"duration":1,"durationInMilliseconds":100000}`},
-		{"under a minute", &types.Duration{Minutes: 0, Ms: new(int64(12000))}, `{"duration":0.2,"durationInMilliseconds":12000}`, `{"duration":0,"durationInMilliseconds":12000}`},
+		{"under a minute", &types.Duration{Minutes: 0, Ms: new(int64(12000))}, `{"duration":0.2,"durationInMilliseconds":12000}`, `{"duration":1,"durationInMilliseconds":12000}`},
 		{"whole minutes", types.DurationOfMinutes(new(int64(30))), `{"duration":30,"durationInMilliseconds":1800000}`, `{"duration":30,"durationInMilliseconds":1800000}`},
 	}
 	for _, test := range tests {
