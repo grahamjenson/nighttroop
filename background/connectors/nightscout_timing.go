@@ -1,6 +1,8 @@
 package connectors
 
 import (
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -16,6 +18,9 @@ const (
 	entryLate = 90 * time.Second
 	// timedSyncGap is the shortest time between a site's timed syncs
 	timedSyncGap = 10 * time.Second
+	// slowSync is how long a sync can take before its Nightscout is left to its usual syncs, as one that slow may be
+	// struggling
+	slowSync = 2 * time.Second
 )
 
 // timeNextEntry sets when the client's next entry is due, after a sync that read when entries were last modified. A
@@ -33,7 +38,8 @@ func (c *nightscoutClient) timeNextEntry(entriesModified int64, timed bool, err 
 	}
 }
 
-// entriesDue are the sites whose next Nightscout entry is due about now, each at most every timedSyncGap
+// entriesDue are the sites whose next Nightscout entry is due about now, each at most every timedSyncGap. A site
+// whose client is syncing now, or whose last sync was slow, is left out. RunConnector also limits every sync.
 func (b *ConnectorJobManager) entriesDue(now time.Time) []string {
 	ms, due := now.UnixMilli(), []string{}
 	for _, siteID := range b.nightscoutClients.Keys() {
@@ -43,11 +49,20 @@ func (b *ConnectorJobManager) entriesDue(now time.Time) []string {
 		}
 		next := c.nextEntryAt.Load()
 		if next == 0 || ms < next-entryEarly.Milliseconds() || ms > next+entryLate.Milliseconds() ||
-			ms < c.lastTimedSync.Load()+timedSyncGap.Milliseconds() {
+			ms < c.lastTimedSync.Load()+timedSyncGap.Milliseconds() || c.syncing.Load() || c.lastSyncTook.Load() > slowSync.Milliseconds() {
 			continue
 		}
 		c.lastTimedSync.Store(ms)
 		due = append(due, siteID)
 	}
 	return due
+}
+
+// nightscoutHost is the host a Nightscout URL is on, as one host is written many ways, or the URL when it has none
+func nightscoutHost(nightscoutURL string) string {
+	parsed, err := url.Parse(nightscoutURL)
+	if err != nil || parsed.Hostname() == "" {
+		return nightscoutURL
+	}
+	return strings.TrimSuffix(strings.ToLower(parsed.Hostname()), ".")
 }

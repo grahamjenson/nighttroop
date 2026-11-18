@@ -9,7 +9,7 @@ import (
 )
 
 func TestSiteUpdateConnectorsLimiterIsSeparateFromPOST(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{
+	limiters := NewRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10,
 		SitePOSTPerMinuteLimit: 60, SitePOSTPerMinuteBurst: 100,
 		SiteUpdateConnectorsPerMinuteLimit: 1, SiteUpdateConnectorsPerMinuteBurst: 1,
@@ -26,7 +26,7 @@ func TestSiteUpdateConnectorsLimiterIsSeparateFromPOST(t *testing.T) {
 
 // A login name comes straight from the request body, so a huge one must not pin a huge key in the LRU
 func TestSiteLoginAllowKeysAreFixedSize(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{
+	limiters := NewRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10,
 		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 10, SiteLoginNamePerMinuteLimit: 30, SiteLoginNamePerMinuteBurst: 60,
 	})
@@ -46,7 +46,7 @@ func TestSiteLoginAllowKeysAreFixedSize(t *testing.T) {
 // logging in to it. A name's own limit, across every IP, only caps guessing spread over many, and an attempt one
 // limiter refuses spends nothing from the other.
 func TestSiteLoginAllowOneIPCannotLockOthersOut(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{
+	limiters := NewRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10,
 		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 3, SiteLoginNamePerMinuteLimit: 1, SiteLoginNamePerMinuteBurst: 6,
 	})
@@ -81,7 +81,7 @@ func TestSiteLoginAllowOneIPCannotLockOthersOut(t *testing.T) {
 // A host is usually given a whole IPv6 /64, so an IP's limits hold for every address in it, or stepping through them
 // would give it fresh limits on every request
 func TestIPLimitersKeyOnIPv6Slash64(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{
+	limiters := NewRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10,
 		GlobalIPPerMinuteLimit: 1, GlobalIPPerMinuteBurst: 1,
 		SiteLoginPerMinuteLimit: 1, SiteLoginPerMinuteBurst: 1, SiteLoginNamePerMinuteLimit: 30, SiteLoginNamePerMinuteBurst: 60,
@@ -116,7 +116,7 @@ func TestIPLimitersKeyOnIPv6Slash64(t *testing.T) {
 
 // Stats counts the limiters kept of each kind, how full the most used is and how many would refuse, without spending any
 func TestRateLimiterStats(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{
+	limiters := NewRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10, GlobalRateLimit: 60, GlobalRateBurst: 10,
 		SiteGETPerMinuteLimit: 60, SiteGETPerMinuteBurst: 4,
 	})
@@ -131,7 +131,7 @@ func TestRateLimiterStats(t *testing.T) {
 	for _, s := range limiters.Stats(now) {
 		byName[s.Name] = s
 	}
-	require.Len(t, byName, 18)
+	require.Len(t, byName, 19)
 	require.Equal(t, RateLimiterStats{Name: "site_get", Per: "site", Setting: "site_get", Scale: SiteIdentitiesShare, PerMinute: 240, Burst: 16, Tracked: 2, Limited: 1, FullestPercent: 100},
 		byName["site_get"], "busy has spent its burst, quiet a sixteenth")
 	require.Equal(t, RateLimiterStats{Name: "global", Per: "server", Setting: "global", Scale: 1, PerMinute: 60, Burst: 10, Tracked: 1}, byName["global"])
@@ -151,7 +151,7 @@ func TestRateLimiterStats(t *testing.T) {
 
 // A rate a control admin sets is used by the limiters already kept and those made after, until it is set back
 func TestSetRatesChangesEveryLimiterOfItsKind(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{
+	limiters := NewRateLimiters(ServerConfig{
 		MaxSites: 10, MaxIdentitiesPerSite: 10,
 		SiteDownloadPerMinuteLimit: 1, SiteDownloadPerMinuteBurst: 1, SitePOSTPerMinuteLimit: 60, SitePOSTPerMinuteBurst: 10,
 	})
@@ -193,7 +193,7 @@ func TestSetRatesChangesEveryLimiterOfItsKind(t *testing.T) {
 // The limiters are kept for cachedIdentitiesPerSite identities a site, whatever MAX_IDENTITIES_PER_USER is, so a high
 // one does not let unique IPs or names fill memory; one pushed out is made again, starting full
 func TestRateLimiterCachesKeepAHouseholdsIdentitiesASite(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{MaxSites: 1, MaxIdentitiesPerSite: 100, SitePOSTPerMinuteLimit: 1, SitePOSTPerMinuteBurst: 1})
+	limiters := NewRateLimiters(ServerConfig{MaxSites: 1, MaxIdentitiesPerSite: 100, SitePOSTPerMinuteLimit: 1, SitePOSTPerMinuteBurst: 1})
 	now := time.Now()
 	require.True(t, limiters.IdentityPOSTLimiter(0).AllowN(now, 1))
 	require.False(t, limiters.IdentityPOSTLimiter(0).AllowN(now, 1), "the first identity has spent its burst")
@@ -208,7 +208,7 @@ func TestRateLimiterCachesKeepAHouseholdsIdentitiesASite(t *testing.T) {
 // One identity spending all its writes, as a phone uploading a day's backlog does, leaves the site's limit room for its
 // other identities, so a carer's carbs or an AAPSClient command still go through
 func TestOneIdentityLeavesItsSiteRoomForOthers(t *testing.T) {
-	limiters := newRateLimiters(ServerConfig{MaxSites: 10, MaxIdentitiesPerSite: 10, SitePOSTPerMinuteLimit: 60, SitePOSTPerMinuteBurst: 4})
+	limiters := NewRateLimiters(ServerConfig{MaxSites: 10, MaxIdentitiesPerSite: 10, SitePOSTPerMinuteLimit: 60, SitePOSTPerMinuteBurst: 4})
 	now := time.Now()
 	site, phone, carer := limiters.SitePOSTLimiter("site"), limiters.IdentityPOSTLimiter(1), limiters.IdentityPOSTLimiter(2)
 	for range 4 {

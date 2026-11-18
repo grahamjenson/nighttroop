@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -57,6 +58,63 @@ func TestEntriesDue(t *testing.T) {
 	require.Equal(t, []string{"timedsite"}, jobs.entriesDue(due.Add(-5*time.Second)))
 	require.Equal(t, []string{"timedsite"}, jobs.entriesDue(due.Add(90*time.Second)))
 	require.Empty(t, jobs.entriesDue(due.Add(101*time.Second)), "too late")
+}
+
+// A site whose client is syncing now, or whose last sync was slow, gets no timed sync until that changes
+func TestEntriesDueSkipsABusyOrSlowNightscout(t *testing.T) {
+	cfg, controlDB, _ := testutils.NewControlDBWithSite(t)
+	jobs := SetupConnectorJobManager(cfg, controlDB)
+	due := time.UnixMilli(2_000_000_000_000)
+	timed := func(siteID string) *nightscoutClient {
+		c := jobs.nightscoutClientFor(&ConnectorJobInfo{SiteID: siteID, urlOrUsername: "https://" + siteID + ".example.com", password: "token"})
+		c.nextEntryAt.Store(due.UnixMilli())
+		return c
+	}
+	busy, slow := timed("busysite"), timed("slowsite")
+	busy.syncing.Store(true)
+	slow.lastSyncTook.Store(slowSync.Milliseconds() + 1)
+	require.Empty(t, jobs.entriesDue(due))
+	busy.syncing.Store(false)
+	slow.lastSyncTook.Store(slowSync.Milliseconds())
+	require.ElementsMatch(t, []string{"busysite", "slowsite"}, jobs.entriesDue(due))
+}
+
+// Every sync, usual or timed, of every connector is limited by CONNECTOR_SYNC_PER_MINUTE: a Nightscout host however
+// many sites sync from it, and however it is written, or else each connector
+func TestConnectorSyncsAreRateLimited(t *testing.T) {
+	shared, controlDB, site := testutils.NewControlDBWithSite(t)
+	// Its own limiters, so the other tests' syncs of the fake Nightscout are not limited by it
+	cfg := *shared
+	cfg.RateLimiters = config.NewRateLimiters(cfg)
+	cfg.RateLimiters.SetRates(map[string]config.Rate{"connector_sync": {PerMinute: 6, Burst: 1}})
+	q, ctx, typ := controlDB.Queries, t.Context(), consts.ConnectorTypeNightscout
+	jobs := SetupConnectorJobManager(&cfg, controlDB)
+	other, err := controlDB.CreateSite(ctx)
+	require.NoError(t, err)
+	attempted := func(siteID string) *int64 {
+		connector, err := q.GetConnector(ctx, controldb.GetConnectorParams{SiteID: siteID, Type: typ})
+		require.NoError(t, err)
+		return connector.LastAttemptedSync
+	}
+	for _, siteID := range []string{site.SiteDB.Subdomain, other.SiteDB.Subdomain} {
+		url, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, nightscout_client.TestValidURL)
+		require.NoError(t, err)
+		token, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, "token")
+		require.NoError(t, err)
+		require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: &url, PasswordEnc: &token, Enabled: true}))
+	}
+
+	require.NoError(t, jobs.RunConnector(ctx, ConnectorJobParams{SiteID: site.SiteDB.Subdomain, Type: typ}))
+	synced := attempted(site.SiteDB.Subdomain)
+	require.NotNil(t, synced)
+	require.NoError(t, jobs.RunConnector(ctx, ConnectorJobParams{SiteID: other.SiteDB.Subdomain, Type: typ}))
+	require.Nil(t, attempted(other.SiteDB.Subdomain), "another site on the same host waits")
+	require.NoError(t, jobs.RunConnector(ctx, ConnectorJobParams{SiteID: site.SiteDB.Subdomain, Type: typ, Timed: true}))
+	require.Equal(t, *synced, *attempted(site.SiteDB.Subdomain), "a timed sync waits too")
+
+	nightscout := &controldb.SiteConnector{Type: typ, SiteID: "aaaaaaaa"}
+	require.Equal(t, syncLimitKey(nightscout, "https://ns.example.com/"), syncLimitKey(&controldb.SiteConnector{Type: typ, SiteID: "bbbbbbbb"}, "https://NS.example.com./api/v1"))
+	require.NotEqual(t, syncLimitKey(&controldb.SiteConnector{Type: consts.ConnectorTypeDexcom, SiteID: "aaaaaaaa"}, "user"), syncLimitKey(&controldb.SiteConnector{Type: consts.ConnectorTypeDexcom, SiteID: "bbbbbbbb"}, "user"), "Dexcom is limited by connector")
 }
 
 // A sync on the usual schedule times the next entry; a timed sync runs only for an enabled connector with no failed

@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"os"
 	"testing"
 
 	"nighttroop.t1d.nz/data/db"
@@ -15,6 +16,8 @@ func GetTestServerConfig() *config.ServerConfig {
 		return storedServerConfig
 	}
 
+	// Tests sync a connector many times a minute, as RUN_BACKGROUND_JOBS does, so they set the connector sync limit
+	os.Setenv("CONNECTOR_SYNC_PER_MINUTE_BURST", "100000")
 	cfg, err := config.NewServerConfig()
 	if err != nil {
 		panic(err)
