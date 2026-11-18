@@ -26,6 +26,9 @@ ASSERT_VISIBLE #site--alarms--site--alarm_low_prediction_minutes[placeholder="De
 ASSERT_TEXT_VISIBLE Rises By (mmol/L)
 ASSERT_VISIBLE #site--alarms--site--alarm_fast_rise[placeholder="Default (1.0)"]
 ASSERT_VISIBLE #site--alarms--site--alarm_fast_drop_minutes[placeholder="Default (15)"]
+// The page says that alarms start off, and where one that goes off shows
+ASSERT_VISIBLE #site--alarms--about >> text=Every alarm is off until it is turned on.
+ASSERT_VISIBLE #site--alarms--about >> text=shows in a banner at the top of every page
 SCREENSHOT alarm_settings
 
 // The site turns on its urgent low at 3.5 mmol/L

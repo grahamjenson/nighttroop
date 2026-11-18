@@ -259,6 +259,13 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 				{ i18n.T(ctx, "site.settings.page.yours_about") }
 			}
 		}
+		if page.ID == alarmsPage.ID {
+			// What an alarm is, as the page is only its settings: they are off, and where one that goes off shows
+			<p id="site--alarms--about" class="panel flex items-start gap-2 px-4 py-3 text-sm text-gray-700">
+				@icon.BellRing(icon.Props{Class: "mt-0.5 size-4 shrink-0 text-gray-500"})
+				<span>{ i18n.T(ctx, "site.settings.page.alarms_about") }</span>
+			</p>
+		}
 		for _, column := range columns {
 			<form
 				id={ column.FormID }

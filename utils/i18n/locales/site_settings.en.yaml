@@ -9,6 +9,7 @@ site:
       identity_about: "{{.Name}}'s own settings and alarms, such as the units the Nightscout API gives it. Any left on the site setting follow the site."
       site_about: "Site settings apply to everyone. Yours override them just for you; any left on the site setting follow the site."
       yours_about: "Your own settings. Any left on the site setting follow the site."
+      alarms_about: "Every alarm is off until it is turned on. An alarm that goes off shows in a banner at the top of every page, where it can be snoozed for 30 minutes."
     columns:
       site: "Site"
       save_site: "Save Site Settings"
