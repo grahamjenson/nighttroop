@@ -48,7 +48,7 @@ func main() {
 
 // run starts the server: from its config, it restores the control DB from its replica in S3, opens and replicates it,
 // then runs the background jobs and serves HTTP until it is told to stop, when it shuts down
-func run() error {
+func run() (err error) {
 	// Make all envars and config in one struct
 	serverConfig, err := config.NewServerConfig()
 	if err != nil {
@@ -59,6 +59,11 @@ func run() error {
 	// Events are sent in the background, so wait for them on the way out: otherwise the errors of a failed start or of
 	// the final backup are lost
 	defer sentry.Flush(2 * time.Second)
+	// A server that does not start, or stops with an error, has no sites up and restarts in a loop, so the admin is
+	// paged: before Sentry is flushed, as a page is logged as an error too
+	admin := page.New(serverConfig.PagerDutyRoutingKey, serverConfig.PagerDutyEventsURL, serverConfig.HostName).Admin
+	started := false
+	defer func() { pageFailure(admin, started, err) }()
 	sqltiming.SetSlowThreshold(time.Duration(serverConfig.SlowQueryMS) * time.Millisecond)
 	sqltiming.SetSamplePercent(serverConfig.QuerySamplePercent)
 
@@ -77,7 +82,6 @@ func run() error {
 
 	// S3 is off without S3_URL; with it, the server only starts once S3 works
 	s3Client := s3utils.NewS3Client(serverConfig)
-	admin := page.New(serverConfig.PagerDutyRoutingKey, serverConfig.PagerDutyEventsURL, serverConfig.HostName).Admin
 	restart, err := startS3(ctx, s3Client.Start, controldb.GetPath(serverConfig), s3Client.LockWhenWorking, admin)
 	if err != nil {
 		return err
@@ -118,6 +122,7 @@ func run() error {
 
 	fmt.Printf("Serving HTTP on port %d\n", serverConfig.HostPort)
 	starting.ready(server.WithCrossOriginProtection(server.GetMainHandler(controlDB, serverConfig)))
+	started = true
 
 	// A server that cannot serve stops as a signal stops it, with a last backup, rather than exiting at once while the
 	// background jobs run and before Sentry has its error
@@ -134,8 +139,25 @@ func run() error {
 		return errors.New("another server took this server's S3 lock, so the server restarts and waits for the lock")
 	case <-restart:
 		shutdown(httpServer, backgroundManager, controlDB)
-		return errors.New("S3 works again, so the server restarts to restore, replicate and back up with it")
+		return errRestartWithS3
 	}
+}
+
+// errRestartWithS3 stops a server that started without S3, for it to start again with S3: not a failure
+var errRestartWithS3 = errors.New("S3 works again, so the server restarts to restore, replicate and back up with it")
+
+// pageFailure pages the admin with a call when the server did not start, or stopped with an error after it had: its
+// sites are down. Each has one message, so a server that fails each time it is started again is one incident. A server
+// told to stop, or restarting with S3, is not a failure.
+func pageFailure(admin page.Func, started bool, err error) {
+	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, errRestartWithS3) {
+		return
+	}
+	message := "The server did not start, so its sites are down"
+	if started {
+		message = "The server stopped with an error, so its sites are down"
+	}
+	admin(context.Background(), page.Call, message, "error", err)
 }
 
 // startS3 starts S3. If S3 is not working and the control DB is here, the server starts without S3, so an S3 outage
