@@ -133,8 +133,8 @@ func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
 // ticks rather than copying thousands of DBs at once
 const maxSitesEachTick = 500
 
-// BackupWrittenSites backs up the sites written since their last backup, copied before backedUpBefore, and those whose
-// last copy is not uploaded, the longest waiting first, recording the round as an event in the logs DB and a failure as
+// BackupWrittenSites backs up the sites written since their last backup, copied before backedUpBefore, and, while S3
+// is on, those whose last copy is not uploaded, the longest waiting first, recording the round as an event in the logs DB and a failure as
 // an error. It logs the sites it backs up once, then only what goes wrong. A site grows only while written to, so it is
 // truncated just before its backup, looking back to its last backup, when it was last truncated.
 func (b *BackupSiteJobManager) BackupWrittenSites(ctx context.Context, backedUpBefore time.Time) (err error) {
@@ -144,7 +144,9 @@ func (b *BackupSiteJobManager) BackupWrittenSites(ctx context.Context, backedUpB
 			b.controlDB.Logs.SiteBackupError(ctx, err)
 		}
 	}()
-	res, err := b.controlDB.Queries.GetSitesToBackUp(ctx, controldb.GetSitesToBackUpParams{BackedUpBefore: backedUpBefore.UnixMilli(), Limit: maxSitesEachTick})
+	res, err := b.controlDB.Queries.GetSitesToBackUp(ctx, controldb.GetSitesToBackUpParams{
+		BackedUpBefore: backedUpBefore.UnixMilli(), Uploading: b.ServerConfig.Status.S3Working, Limit: maxSitesEachTick,
+	})
 	if err != nil {
 		return fmt.Errorf("cannot get the sites to back up: %w", err)
 	}
