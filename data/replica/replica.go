@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/benbjohnson/litestream"
 	"github.com/benbjohnson/litestream/s3"
@@ -20,8 +21,10 @@ const Name = "control"
 // Replica is the control DB's replica. Nil, as when S3 is off, replicates and restores nothing.
 type Replica struct {
 	client litestream.ReplicaClient
-	store  *litestream.Store
-	path   string
+	// mu guards store, which Abandon ends while the server runs
+	mu    sync.Mutex
+	store *litestream.Store
+	path  string
 }
 
 // New is the replica of the control DB in the server's S3 bucket, or nil when S3 is off. Over HTTPS S3 encrypts it
@@ -87,11 +90,33 @@ func (w warnings) WithGroup(name string) slog.Handler {
 // Close sends the control DB's last writes and stops replicating it. It is synced first: Litestream only sends a DB's
 // last writes as it closes it once it has read the DB, which it first does a second after start.
 func (r *Replica) Close(ctx context.Context) error {
-	if r == nil || r.store == nil {
+	if r == nil {
+		return nil
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.store == nil {
 		return nil
 	}
 	_, err := r.store.SyncDB(ctx, r.path, true)
 	return errors.Join(err, r.store.Close(ctx))
+}
+
+// Abandon stops replicating at once and sends nothing more, as when another server took this server's S3 lock, and
+// the replica is that server's. Close then does nothing.
+func (r *Replica) Abandon() {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.store != nil {
+		// Litestream sends a DB's last writes as it closes it, but not with a context that has ended
+		ended, end := context.WithCancel(context.Background())
+		end()
+		_ = r.store.Close(ended)
+		r.store = nil
+	}
 }
 
 // Restore restores the control DB from its replica to path, which must not be there, and is false when it has no

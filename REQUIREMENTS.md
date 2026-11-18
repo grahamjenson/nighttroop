@@ -1866,7 +1866,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     restores, backs up or replicates, writes it again every 20 seconds, and deletes it after its last backup.
   - While another server holds the lock, a server that starts waits. It takes the lock when the other server deletes
     it, or 60 seconds after the other server last wrote it.
-  - If another server takes a server's lock, that server uploads no more site backups, and logs an error.
+  - If another server takes a server's lock, that server logs an error, stops replicating the control DB immediately
+    and sends no more of it, uploads no site backups, then stops and exits with an error. Docker starts it again,
+    and it waits for the lock.
+  - If S3 takes a write of the lock and does not answer, or refuses it because another write is in progress, the
+    server keeps its lock: the lock holds the ID of the server that wrote it.
   - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
 
 #### Backups

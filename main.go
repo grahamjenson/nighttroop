@@ -97,6 +97,12 @@ func run() error {
 		return err
 	}
 
+	// A server whose lock another took stops replicating at once, as the replica is that server's now
+	go func() {
+		<-s3Client.Lost()
+		control.Abandon()
+	}()
+
 	backgroundManager := background.NewBackGroundManager(context.Background(), controlDB, serverConfig, s3Client)
 	backgroundManager.Start()
 	defer backgroundManager.Stop()
@@ -113,6 +119,10 @@ func run() error {
 	case err := <-serveErr:
 		shutdown(httpServer, backgroundManager, controlDB)
 		return fmt.Errorf("cannot serve HTTP: %w", err)
+	case <-s3Client.Lost():
+		control.Abandon()
+		shutdown(httpServer, backgroundManager, controlDB)
+		return errors.New("another server took this server's S3 lock, so the server restarts and waits for the lock")
 	case <-restart:
 		shutdown(httpServer, backgroundManager, controlDB)
 		return errors.New("S3 works again, so the server restarts to restore, replicate and back up with it")

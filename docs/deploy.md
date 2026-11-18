@@ -138,6 +138,10 @@ Then the server takes the lock `<host>/server.lock` in the bucket, so no other s
   server last wrote the lock. A server that Docker killed, or that crashed, leaves its lock, so the next start waits
   those 60 seconds.
 - If S3 does not refuse a conditional write (`If-None-Match`), there is no lock. The server logs an error and starts.
+- If another server takes the lock of a server that runs, that server logs `Another server took this server's S3
+  lock`, stops replicating and backing up, and exits. Docker starts it again, and it waits for the lock: it answers
+  503 `starting` while the other server runs. This occurs only when two servers use one bucket. An S3 outage does not
+  cause it.
 
 #### 5.3 Remove leftovers
 
