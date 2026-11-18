@@ -107,11 +107,19 @@ templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
 	</div>
 }
 
-// periodNav is a report's name over the dates it is of, its title, with arrow buttons either side to the period, a
+// reportAbouts say what a report known by its initials is, beside its name
+var reportAbouts = map[string]string{"AGP": "site.reports.agp.about", "TDD": "site.reports.tdd.about"}
+
+// periodNav is a report's name, with what its initials are, over the dates it is of, its title, with arrow buttons either side to the period, a
 // unit as month, before and after, then anything else about it
 templ periodNav(name, id, titleID, title, previous, next, unit string) {
 	<div>
-		<h1 class="text-2xl font-bold">{ name }</h1>
+		<h1 class="text-2xl font-bold">
+			{ name }
+			if about, ok := reportAbouts[name]; ok {
+				<span id={ id + "--about" } class="ml-1 text-sm font-normal text-gray-500">{ i18n.T(ctx, about) }</span>
+			}
+		</h1>
 		<div class="flex items-center gap-1">
 			@arrowButton(id+"--previous", previous, i18n.T(ctx, "site.reports.nav.previous", i18n.Data{"Unit": unit})) {
 				@icon.ChevronLeft()

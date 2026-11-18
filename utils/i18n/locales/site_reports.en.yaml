@@ -71,6 +71,7 @@ site:
       basal_split: "Basal {{.Dose}} · {{.Percent}}"
       bolus_split: "Bolus {{.Dose}} · {{.Percent}}"
     agp:
+      about: "Ambulatory Glucose Profile: how much time glucose is in range, and a usual day."
       time_in_ranges: "Time in ranges"
       goals_for: "Goals for type 1 and type 2 diabetes"
       goal: "Goal: {{.Goal}}"
@@ -91,6 +92,7 @@ site:
       each_runs: "Each runs from midnight to midnight."
       each_runs_and_opens: "Each runs from midnight to midnight, and opens that day's report."
     tdd:
+      about: "Total Daily Dose: the insulin given each day."
       dates: "{{.First}} to {{.Last}}"
       days_with_insulin: "Days with insulin"
       lowest: "Lowest"
