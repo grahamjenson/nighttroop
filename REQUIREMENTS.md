@@ -204,7 +204,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - the same zip and code as a site admin's Download Data: `<site>-<date>.zip` holding `<site>-<date>.sqlite`, a
     consistent copy even during writes;
   - control admins only, within the site's download limit;
-  - records a "Site DB downloaded by control" event, with the admin, on the site's Events page.
+  - records a "Site DB downloaded by control" event, with the admin, on the site's Events page;
+  - for an unavailable site with its DB here, such as one whose migration failed, sends that DB as it is, not
+    migrated, so the admin can fix it and use Upload DB. The site stays unavailable.
+  - If an unavailable site has no DB here, or its DB is being restored at that moment, the download is 404.
 - Permanent delete (for example, of a site never used) deletes its identities (with passwords, TOTP secrets and push
   tokens) and push credentials. Archive keeps them for restore.
 

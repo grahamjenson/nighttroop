@@ -179,12 +179,13 @@ func (s *SitesCollection) SettingsHandler(w http.ResponseWriter, r *http.Request
 // DownloadDBHandler sends a control admin the site's download (backup.SiteDownload), the same zip of a snapshot of its
 // DB its own admins get from Download Data, to look into what it holds. It holds the site's data, so only an admin can,
 // it shares the site's few downloads a minute, and it is recorded as an event the site's own admins see. A site whose
-// DB is not here, as one archived, has none to download.
+// DB is not here, as one archived or missing, or is being restored, has none to download.
 func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	siteID := chi.URLParam(r, "id")
 	siteDB, _, err := controlContext.ControlDB.GetSite(r.Context(), siteID)
-	if err != nil {
+	unavailable := errors.Is(err, db.ErrSiteUnavailable)
+	if err != nil && !unavailable {
 		apiutils.ErrNotFound.Write(acceptType, w)
 		return
 	}
@@ -192,8 +193,18 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 		apiutils.ErrRateLimitExceeded(wait).Write(acceptType, w)
 		return
 	}
-	// The same download as the site's admin gets from its Download Data
-	download, err := backup.SnapshotSite(r.Context(), siteDB.SQLiteDB, siteID)
+	// The same download as the site's admin gets from its Download Data, or for an unavailable site, its DB here that
+	// did not open, as it is, to fix
+	var download *backup.SiteDownload
+	if unavailable {
+		download, err = controlContext.ControlDB.SnapshotUnavailableSite(r.Context(), siteID)
+	} else {
+		download, err = backup.SnapshotSite(r.Context(), siteDB.SQLiteDB, siteID)
+	}
+	if errors.Is(err, db.ErrNoSiteDBHere) || errors.Is(err, db.ErrSiteNotUnavailable) {
+		apiutils.ErrNotFound.Write(acceptType, w)
+		return
+	}
 	if err != nil {
 		slog.ErrorContext(r.Context(), "failed to copy a site's DB for a control admin", "error", err)
 		apiutils.ErrInternalServerError.Write(acceptType, w)

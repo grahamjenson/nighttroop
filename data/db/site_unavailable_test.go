@@ -1,9 +1,12 @@
 package db_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"errors"
+	"io"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -210,4 +213,41 @@ func TestRestorePickedBackup(t *testing.T) {
 
 	_, err = controlDB.RestoreUnavailableSite(ctx, siteID, picked)
 	require.ErrorIs(t, err, db.ErrSiteNotUnavailable)
+}
+
+// A control admin downloads the DB here of an unavailable site, such as one whose migration failed, as it is, to fix it.
+// A site with no DB here, or whose DB is being restored, has none to download.
+func TestSnapshotUnavailableSite(t *testing.T) {
+	controlDB, siteID, backup := missingSite(t)
+	ctx := t.Context()
+	_, err := controlDB.SnapshotUnavailableSite(ctx, siteID)
+	require.ErrorIs(t, err, db.ErrNoSiteDBHere)
+
+	path := sitedb.GetPath(siteID, controlDB.ServerConfig)
+	require.NoError(t, os.WriteFile(path, backup, 0o600))
+	controlDB.MakeSiteUnavailable(siteID, db.UnavailableMigrationFailed)
+	controlDB.RestoreUnavailableSites(ctx, func(context.Context, string, string) (int64, bool, error) {
+		_, err := controlDB.SnapshotUnavailableSite(ctx, siteID)
+		require.ErrorIs(t, err, db.ErrSiteNotUnavailable, "not while it is being restored")
+		return 0, false, nil
+	})
+
+	download, err := controlDB.SnapshotUnavailableSite(ctx, siteID)
+	require.NoError(t, err)
+	defer download.Close()
+	w := httptest.NewRecorder()
+	require.NoError(t, download.Send(w))
+	archive, err := zip.NewReader(bytes.NewReader(w.Body.Bytes()), int64(w.Body.Len()))
+	require.NoError(t, err)
+	require.Len(t, archive.File, 1)
+	entry, err := archive.File[0].Open()
+	require.NoError(t, err)
+	copied, err := io.ReadAll(entry)
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(string(copied), "SQLite format 3\x00"), "the zip holds a SQLite DB")
+
+	kept, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, backup, kept, "its DB is not changed")
+	require.Contains(t, controlDB.UnavailableSites(), siteID, "it stays unavailable")
 }

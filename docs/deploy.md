@@ -157,7 +157,8 @@ missing, or does not open or migrate, is unavailable: the start goes on, and 5.7
 - **Failure:** A site is unavailable, its requests get 503, and its error is logged with the site. A migration that
   fails on every site leaves every site unavailable, and the server is still healthy, so `update.sh` keeps it.
 - **Fix:** Release a fixed migration. A site DB that does not open is kept, so the next start opens it.
-- **Gap:** Without a shell and `sqlite3`, you cannot see why one site fails, or try a fix on a copy.
+- **Inspect:** On the site's control page, use Download DB. It gets the site DB as it is, not migrated, to see why it
+  fails and to try a fix on a copy. Then use Upload DB to put the fixed DB back ([5.7](#57-restore-unavailable-sites)).
 
 #### 5.7 Restore unavailable sites
 
@@ -268,7 +269,8 @@ push.
 Failures with no fix except a shell on the server, or none. Choose the tools from this list. Details are in each step.
 
 1. **An unavailable site is not tried again after about an hour**, until the next start, and its page is only a logged
-   error: no tools to inspect, fix or remove it ([5.6](#56-open-every-site), [5.7](#57-restore-unavailable-sites)).
+   error. Its control page can download, upload or empty its DB, but not remove it
+   ([5.6](#56-open-every-site), [5.7](#57-restore-unavailable-sites)).
 2. **A missing control DB starts a new server** that passes its health check
    ([5.4](#54-restore-the-control-db-if-missing)).
 3. **No check after a deploy except `/health`** ([step 6](#step-6-wait-for-a-healthy-server)).
