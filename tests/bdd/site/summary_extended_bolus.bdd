@@ -1,0 +1,32 @@
+INCLUDE steps/new_site_admin.steps
+
+// A reading, so the summary is shown and not the guide to setting it up, and two combo boluses uploaded through the
+// Nightscout API: Nightscout's careportal gives 1.2 U at once and 1.8 U over 2 hours, and AAPS gives 0 U at once and
+// 2 U over 2 hours
+HTTP
+NAME reading_for_summary
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 120, "date": {{ itime 2 }}, "device": "xDrip-DexcomG6"}]
+ASSERT_STATUS 200
+
+NAME careportal_combo_bolus
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Combo Bolus", "enteredinsulin": 3, "insulin": 1.2, "splitNow": 40, "splitExt": 60, "relative": 0.9, "duration": 120, "carbs": 25, "created_at": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+
+NAME aaps_extended_bolus
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v3/treatments?token={{ .create_new_site.pwd_nstoken }}
+B {"eventType": "Combo Bolus", "insulin": 0, "enteredinsulin": 2, "relative": 1, "duration": 120, "durationInMilliseconds": 7200000, "splitNow": 0, "splitExt": 100, "date": {{ itime 0 }}, "isEmulatingTempBasal": false, "pumpId": 1794605395291, "pumpType": "VIRTUAL", "pumpSerial": "S1", "app": "AAPS"}
+ASSERT_STATUS 201
+BROWSE
+
+// The insulin and carbs table shows each extended dose and the time it is given over, after the dose given at once,
+// or alone when none is given at once
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*1\.2\sU \+ 1\.8\sU over 2\sh$/
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*2\sU over 2\sh$/
+ASSERT_NOT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*0\sU$/
+// The units and words are smaller and grey beside the numbers
+ASSERT_VISIBLE #site--summary--insulin-carbs td span.text-gray-500 >> text=/over/ >> nth=0
+SCREENSHOT summary_extended_bolus

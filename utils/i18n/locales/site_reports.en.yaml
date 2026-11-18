@@ -185,6 +185,8 @@ site:
       insulin: "Insulin"
       carbs: "Carbs"
       none: "No insulin or carbs in this time."
+      extended: "{{.Dose}} + {{.Extended}} over {{.Duration}}"
+      extended_only: "{{.Extended}} over {{.Duration}}"
     other_treatments: "Other treatments"
     treatments:
       none: "No temp targets or temp basals in this time."
