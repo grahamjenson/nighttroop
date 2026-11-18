@@ -79,3 +79,23 @@ func TestTransfersTimeOut(t *testing.T) {
 	require.Error(t, err)
 	require.Less(t, time.Since(start), 20*time.Second)
 }
+
+// An S3 that takes a request and never answers fails the start's test, and the taking of the lock, once requestTimeout
+// is up, so the server can start without S3 instead of waiting for ever
+func TestStartRequestsTimeOut(t *testing.T) {
+	defer func(old time.Duration) { requestTimeout = old }(requestTimeout)
+	requestTimeout = 200 * time.Millisecond
+	stop := make(chan struct{})
+	stalled := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { <-stop }))
+	defer stalled.Close()
+	defer close(stop)
+
+	c := NewS3Client(&config.ServerConfig{S3URL: stalled.URL, S3Bucket: "bucket", HostName: "nighttroop.test", S3AccessKeyID: "key", S3AccessSecretKey: "secret"})
+	started := time.Now()
+	err := c.start(context.Background(), c.TestS3Client, nil)
+	require.ErrorContains(t, err, "S3_URL is set but S3 is not working")
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	require.ErrorIs(t, c.Lock(context.Background()), context.DeadlineExceeded)
+	require.Error(t, c.ConfigureVersioning(context.Background()))
+	require.Less(t, time.Since(started), 10*time.Second)
+}
