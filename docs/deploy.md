@@ -147,9 +147,17 @@ Then the server takes the lock `<host>/server.lock` in the bucket, so no other s
   503 `starting` while the other server runs. This occurs only when two servers use one bucket. An S3 outage does not
   cause it.
 
-#### 5.3 Remove leftovers
+#### 5.3 Make room and remove leftovers
 
-The server removes staging folders that a killed restore or archive left next to the DBs. This never stops the start.
+If the disk of `./data` has less than 100 MB free, the server removes its local copies of the backups
+(`data/backup`), then the logs DB if the disk is still short. It pages the admin with an SMS. It makes both again.
+
+- **Failure:** `the DBs' disk has <n> MB free, and the server needs 100 MB to start`. The process exits.
+- **Fix:** Free space (`du -sh /opt/nighttroop/*`, old `data-failed-*` folders, `docker system prune`), or make the
+  disk larger. Then `docker compose up -d`.
+
+Then the server removes staging folders that a killed restore or archive left next to the DBs. This never stops the
+start.
 
 #### 5.4 Restore the control DB if missing
 
