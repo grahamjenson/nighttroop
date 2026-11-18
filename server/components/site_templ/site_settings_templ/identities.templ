@@ -161,6 +161,16 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 		}
 		@rolesTable()
 		<div id="modal-container"></div>
+		// The setup guide's "Add your phone" asks for the Add Device modal, once, as this page opens
+		<script>
+			try {
+				if (sessionStorage.getItem("site--identities--add") === "device") {
+					sessionStorage.removeItem("site--identities--add")
+					// Once the page is in place, so the button opens its modal
+					setTimeout(() => document.getElementById("site--identities--add-device-button")?.click(), 0)
+				}
+			} catch (e) {}
+		</script>
 	</div>
 }
 
