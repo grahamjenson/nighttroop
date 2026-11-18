@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
@@ -22,6 +23,9 @@ type nightscoutClient struct {
 	*nightscout_client.Client
 	// lastModified is Nightscout's lastModified for each collection when it was last read; a new client reads them all
 	lastModified map[nsutils.Collection]int64
+	// nextEntryAt is when the next entry is due, in Unix ms, or 0 when it is not known (see timeNextEntry), and
+	// lastTimedSync when a timed sync was last queued. They are read without the lock, as a sync can hold it for a while.
+	nextEntryAt, lastTimedSync atomic.Int64
 }
 
 // nightscoutClientFor returns the site's kept client, or a new one when there is none or its URL or token has changed.
@@ -37,8 +41,9 @@ func (b *ConnectorJobManager) nightscoutClientFor(jobInfo *ConnectorJobInfo) *ni
 	return c
 }
 
-// syncNightscout copies the changed collections' newest documents into the site, returning how many were new
-func (b *ConnectorJobManager) syncNightscout(jobInfo *ConnectorJobInfo) (int, error) {
+// syncNightscout copies the changed collections' newest documents into the site, returning how many were new, and
+// times when the next entry is due
+func (b *ConnectorJobManager) syncNightscout(jobInfo *ConnectorJobInfo) (added int, err error) {
 	nsc := b.nightscoutClientFor(jobInfo)
 	nsc.Lock()
 	defer nsc.Unlock()
@@ -48,11 +53,11 @@ func (b *ConnectorJobManager) syncNightscout(jobInfo *ConnectorJobInfo) (int, er
 
 	// One small call says which collections have changed, so unchanged ones are not read every sync
 	lastModified, err := nsc.GetLastModified(ctx)
+	defer func() { nsc.timeNextEntry(lastModified[string(nsutils.Entries)], jobInfo.timed, err) }()
 	if err != nil {
 		return 0, fmt.Errorf("Nightscout connector error: %w", err)
 	}
 
-	added := 0
 	for _, c := range nightscoutCollections {
 		modified := lastModified[string(c.collection)]
 		if !changedSince(nsc.lastModified[c.collection], modified) {

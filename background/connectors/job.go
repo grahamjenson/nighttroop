@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"nighttroop.t1d.nz/data/events"
 	"sync"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 
@@ -55,6 +56,8 @@ type ConnectorJobParams struct {
 	Type   consts.ConnectorType
 	// Backfill is set for a backfill rather than a sync
 	Backfill *BackfillParams `json:",omitempty"`
+	// Timed is set for a sync as a Nightscout entry is due, on top of the usual schedule
+	Timed bool `json:",omitempty"`
 }
 
 type ConnectorJobInfo struct {
@@ -68,6 +71,8 @@ type ConnectorJobInfo struct {
 	region string
 	// firstSync is true until a sync has worked since the source was saved; a failure then disables it
 	firstSync bool
+	// timed is a sync as a Nightscout entry is due, on top of the usual schedule
+	timed bool
 	// ctx logs the job, the site and the sync's type. It is never cancelled, as a first sync stopped part way would be
 	// a failure that turns syncing off.
 	ctx context.Context
@@ -159,6 +164,10 @@ func (b *ConnectorJobManager) RunConnector(ctx context.Context, connectorJob Con
 		slog.WarnContext(ctx, "The virtual source is not synced on a production server")
 		return nil
 	}
+	// A timed sync is only on top of a working connector's usual syncs
+	if connectorJob.Timed && (!connector.Enabled || connector.ConsecutiveFailedSyncs != nil && *connector.ConsecutiveFailedSyncs > 0) {
+		return nil
+	}
 
 	site, err := b.connectorSite(ctx, connector.SiteID)
 	if err != nil {
@@ -185,6 +194,7 @@ func (b *ConnectorJobManager) RunConnector(ctx context.Context, connectorJob Con
 		password:      password,
 		region:        region,
 		firstSync:     connector.FirstSuccessfulSyncTime == nil,
+		timed:         connectorJob.Timed,
 		ctx:           context.WithoutCancel(ctx),
 	}
 	if connectorJob.Backfill != nil {
@@ -265,27 +275,30 @@ func (b *ConnectorJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func(ctx 
 			if source.Type == consts.ConnectorTypeVirtual && !b.config.VirtualConnectorAllowed() {
 				continue
 			}
-
-			connectorJob := &ConnectorJobParams{
-				SiteID: source.SiteID,
-				Type:   source.Type,
-			}
-
-			jsonRaw, err := json.Marshal(connectorJob)
-			if err != nil {
-				slog.ErrorContext(ctx, "Error marshalling connector job params", "error", err, "connectorJob", connectorJob)
-				continue
-			}
-			err = queue.QueueJob(ctx, liteq.QueueJobParams{
-				Queue:       CONNECTOR_JOB,
-				Job:         string(jsonRaw),
-				DedupingKey: liteq.ReplaceDuplicate(fmt.Sprintf("%s-%s", connectorJob.SiteID, connectorJob.Type)),
-			})
-			if err != nil {
-				slog.ErrorContext(ctx, "Error queueing connector job", "error", err)
-			}
+			queueSync(ctx, queue, ConnectorJobParams{SiteID: source.SiteID, Type: source.Type}, "")
+		}
+		// Each Nightscout connector whose next entry is due about now, by its own key so it does not replace a usual sync
+		for _, siteID := range b.entriesDue(time.Now()) {
+			queueSync(ctx, queue, ConnectorJobParams{SiteID: siteID, Type: consts.ConnectorTypeNightscout, Timed: true}, "-timed")
 		}
 
 		return nil
+	}
+}
+
+// queueSync queues a connector's sync, replacing one of it queued with the same key suffix
+func queueSync(ctx context.Context, queue *liteq.JobQueue, connectorJob ConnectorJobParams, keySuffix string) {
+	jsonRaw, err := json.Marshal(connectorJob)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error marshalling connector job params", "error", err, "connectorJob", connectorJob)
+		return
+	}
+	err = queue.QueueJob(ctx, liteq.QueueJobParams{
+		Queue:       CONNECTOR_JOB,
+		Job:         string(jsonRaw),
+		DedupingKey: liteq.ReplaceDuplicate(fmt.Sprintf("%s-%s%s", connectorJob.SiteID, connectorJob.Type, keySuffix)),
+	})
+	if err != nil {
+		slog.ErrorContext(ctx, "Error queueing connector job", "error", err)
 	}
 }

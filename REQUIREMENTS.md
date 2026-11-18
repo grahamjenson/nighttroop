@@ -1083,6 +1083,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### Nightscout connector
 
 - Copies the newest readings, treatments and device statuses.
+- Syncs a working connector (on, with no failed syncs in a row) more often while its next entry is due:
+  - the next entry is due 5 minutes after Nightscout's entries last changed;
+  - from 15 seconds before it is due to 90 seconds after, it syncs at most every 10 seconds, until it gets a new entry;
+  - after a restart, or when a sync fails, it syncs on its usual schedule until a usual sync works again.
 - Copies the current profile store when Nightscout profiles change, however long ago it started. An edit in the
   Nightscout profile editor replaces the copy, whoever saved it, whatever its uploader's identifier (for example
   AAPS). A new one is added beside it.
