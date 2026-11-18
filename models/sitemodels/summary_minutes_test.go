@@ -123,6 +123,40 @@ func TestSummaryMinutes(t *testing.T) {
 			basals: []*SiteTempBasal{{OccurredAt: minute(0), DurationMinutes: 10, Rate: new(1.2)}},
 			want:   []want{{0, nil, nil, new(1.2)}, {10, nil, nil, nil}},
 		},
+		{
+			// A suspended pump, as AAPS sends one, or Loop with no duration until the pump resumes
+			name:     "a suspend of no duration is a basal of 0 until the next temp basal",
+			units:    &mgdl,
+			defaults: []*sitedb.ProfilePreset{defaultProfile},
+			basals:   []*SiteTempBasal{{OccurredAt: minute(10), Rate: new(0.0), Type: str(PumpSuspendType)}, {OccurredAt: minute(60), DurationMinutes: 30, Rate: new(0.25)}},
+			want:     []want{{9, new(100.0), new(160.0), new(0.5)}, {10, new(100.0), new(160.0), new(0.0)}, {59, new(100.0), new(160.0), new(0.0)}, {60, new(100.0), new(160.0), new(0.25)}, {90, new(100.0), new(160.0), new(0.5)}},
+		},
+		{
+			name:     "a suspend that is the newest temp basal is a basal of 0 to the end",
+			units:    &mgdl,
+			defaults: []*sitedb.ProfilePreset{defaultProfile},
+			basals:   []*SiteTempBasal{{OccurredAt: minute(200), Rate: new(0.0), Type: str(PumpSuspendType)}},
+			want:     []want{{199, new(100.0), new(160.0), new(0.8)}, {200, new(100.0), new(160.0), new(0.0)}, {240, new(100.0), new(160.0), new(0.0)}},
+		},
+		{
+			// Loop sends the suspend again with its duration once the pump resumes, as AAPS ends one
+			name:     "a suspend with a duration ends after it",
+			units:    &mgdl,
+			defaults: []*sitedb.ProfilePreset{defaultProfile},
+			basals:   []*SiteTempBasal{{OccurredAt: minute(10), DurationMinutes: 20, Rate: new(0.0), Type: str(PumpSuspendType)}},
+			want:     []want{{10, new(100.0), new(160.0), new(0.0)}, {29, new(100.0), new(160.0), new(0.0)}, {30, new(100.0), new(160.0), new(0.5)}},
+		},
+		{
+			// The careportal sends a cancel as a temp basal of 0 minutes with no rate, stored as a rate of 0, and Trio as
+			// one of rate 0. The reason suspend alone, from a device not added for Loop, is not a suspended pump.
+			name:     "a temp basal of no duration that is not a suspended pump cancels the running one",
+			units:    &mgdl,
+			defaults: []*sitedb.ProfilePreset{defaultProfile},
+			basals: []*SiteTempBasal{{OccurredAt: minute(10), DurationMinutes: 60, Rate: new(1.5)}, {OccurredAt: minute(30), Rate: new(0.0)},
+				{OccurredAt: minute(100), DurationMinutes: 60, Rate: new(1.5)}, {OccurredAt: minute(120), Rate: new(0.0), Reason: str("suspend")}},
+			want: []want{{29, new(100.0), new(160.0), new(1.5)}, {30, new(100.0), new(160.0), new(0.5)}, {80, new(100.0), new(160.0), new(0.5)},
+				{110, new(100.0), new(160.0), new(1.5)}, {130, new(100.0), new(160.0), new(0.8)}},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

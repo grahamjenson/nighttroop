@@ -1,0 +1,49 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A reading, so the summary shows its tables, not the guide to setting it up
+POST /data/glucose {"reading": 6.4, "reading_type": "sgv", "occurred_at": {{ itime 5 }}}
+
+// Loop, on a device added for Loop, suspends the pump: a temp basal of rate 0, duration 0 and reason suspend, until it
+// resumes
+HTTP
+NAME create_loop
+POST {{ .site_url }}/settings/identities
+H Authorization: Bearer {{ .login_admin.token }}
+H Accept: application/json
+B {"name": "loop", "role": "device_pwd_phone", "client": "loop"}
+ASSERT_STATUS 201
+
+NAME loop_suspend
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments
+H api-secret: {{ sha1 .create_loop.result.ns_token }}
+B [{"eventType": "Temp Basal", "reason": "suspend", "rate": 0, "absolute": 0, "temp": "absolute", "duration": 0, "created_at": "{{ time 3 }}", "enteredBy": "loop://iPhone", "syncIdentifier": "73757370656e64207375706d6172792062646420746573742d31"}]
+ASSERT_STATUS 200
+BROWSE
+
+// The other treatments show the suspend as the pump suspended until it resumes, not as a temp basal of 0 minutes
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> a:text-is("Suspended")
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=Pump suspended until it resumes
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=Temp Basal
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=for 0 min
+SCREENSHOT summary_suspended
+// The suspend links to the temp basals page, as a temp basal does
+CLICK #site--summary--treatments a >> text="Suspended"
+ASSERT_STATUS 200
+ASSERT_PATH /data/temp-basals
+CLICK_BACK
+ASSERT_STATUS 200
+
+// Loop sends the suspend again with its duration once the pump resumes, which the summary shows
+HTTP
+NAME loop_resume
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments
+H api-secret: {{ sha1 .create_loop.result.ns_token }}
+B [{"eventType": "Temp Basal", "reason": "suspend", "rate": 0, "absolute": 0, "temp": "absolute", "duration": 2, "created_at": "{{ dig "loop_suspend.0.created_at" }}", "enteredBy": "loop://iPhone", "syncIdentifier": "73757370656e64207375706d6172792062646420746573742d31"}]
+ASSERT_STATUS 200
+BROWSE
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=Pump suspended for 2 min

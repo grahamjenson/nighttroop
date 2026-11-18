@@ -192,6 +192,9 @@ site:
       temp_target_detail: "{{.Low}}–{{.High}} {{.Units}} for {{.Minutes}} min"
       temp_basal: "Temp Basal"
       temp_basal_detail: "{{.Rate}} for {{.Minutes}} min"
+      suspended: "Suspended"
+      suspended_detail: "Pump suspended for {{.Minutes}} min"
+      suspended_until_resumed: "Pump suspended until it resumes"
     device:
       title: "Devices"
       all: "All device statuses"
