@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
@@ -18,6 +19,7 @@ import (
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/page"
 )
 
 // Roles are the control roles, as an admin chooses them, the first picked to start with so an admin added without
@@ -63,6 +65,7 @@ templ Admins(admins []*controlmodels.ControlAdmin) {
 		}
 		if httputils.IsControlAdmin(ctx) {
 			@addForm()
+			@testPageForm()
 		}
 		<div id="modal-container"></div>
 	</div>
@@ -198,6 +201,45 @@ templ addForm() {
 			{ i18n.T(ctx, "control.admins.add") }
 		}
 	</form>
+}
+
+// testPageLevels are the levels an admin can test a page at, least urgent first, with their labels
+var testPageLevels = []struct{ name, label string }{{"email", "control.admins.test_page_email"},
+	{"sms", "control.admins.test_page_sms"}, {"call", "control.admins.test_page_call"}}
+
+// testPageForm pages the admin through PagerDuty at the level picked, to see who it reaches and how
+templ testPageForm() {
+	<form
+		id="control--admins--test-page"
+		class="flex flex-wrap items-end justify-end gap-2"
+		hx-post="/admins/test-page"
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		@field.Field("control--admins--test-page--level", i18n.T(ctx, "control.admins.test_page_level"), "w-36") {
+			<select id="control--admins--test-page--level" name="level" class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
+				for _, level := range testPageLevels {
+					<option value={ level.name }>{ i18n.T(ctx, level.label) }</option>
+				}
+			</select>
+		}
+		@button.Button(button.Props{ID: "control--admins--test-page--submit", Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+			@icon.BellRing()
+			{ i18n.T(ctx, "control.admins.test_page") }
+		}
+	</form>
+}
+
+// TestPaged is a toast saying the test page reached PagerDuty, at its level
+templ TestPaged(level page.Level) {
+	@successtoast.Toast(i18n.T(ctx, "control.admins.test_paged", i18n.Data{"Severity": string(level)}))
+}
+
+// TestPageFailed is a toast saying why the test page was not sent
+templ TestPageFailed(message string) {
+	@errortoast.Toast(i18n.T(ctx, "control.admins.test_page_failed"), message)
 }
 
 // Added is the new admin's row, and its credentials, shown once

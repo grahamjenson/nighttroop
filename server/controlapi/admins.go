@@ -3,11 +3,13 @@ package controlapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -19,6 +21,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/page"
 )
 
 // maxControlAdmins is the most admins control can have, far more than a server needs, as each is made with bcrypt
@@ -187,4 +190,34 @@ func adminCredentials(identity *controldb.ControlIdentity, values *db.IdentityVa
 		credentials.Password = &values.Password
 	}
 	return credentials
+}
+
+// TestPageHandler pages the admin through PagerDuty at the level picked, so an admin sees who it reaches and how. Each
+// test's message names who sent it and when, so it is a new incident, not added to an open one. Only admins can.
+func TestPageHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	config := controlContext.ControlDB.ServerConfig
+	level, ok := page.Levels[r.FormValue("level")]
+	var herr *apiutils.HTTPError
+	switch {
+	case !ok:
+		herr = &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "The level must be email, sms or call"}
+	case config.PagerDutyRoutingKey == "":
+		herr = &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "PagerDuty is not set up: set PAGERDUTY_ROUTING_KEY"}
+	default:
+		message := fmt.Sprintf("Test page from the control site, sent by %s at %s", controlContext.IdentityModel.Name, time.Now().UTC().Format(time.RFC3339))
+		if err := page.New(config.PagerDutyRoutingKey, config.PagerDutyEventsURL, config.HostName).Page(r.Context(), level, message); err != nil {
+			herr = &apiutils.HTTPError{Status: http.StatusBadGateway, Message: err.Error()}
+		}
+	}
+	if herr != nil && acceptType == httputils.AcceptTypeHTMX {
+		apiutils.WriteStatus(w, acceptType, herr.Status)
+		control_admins_templ.TestPageFailed(herr.Message).Render(r.Context(), w)
+		return
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, map[string]string{"level": string(level)}, control_admins_templ.TestPaged(level))
 }

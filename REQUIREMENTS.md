@@ -323,6 +323,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Its summary and dedup key are its message. Its source is `HOST_NAME`. Its details are what it is about.
 - If PagerDuty does not take a page, the server logs the error and continues.
 - If sites stay unavailable after their last restore try, the admin is paged with a Call.
+- On the admins page, an admin selects a level and clicks **Test Admin Page** to page through PagerDuty.
+  - Each test is a new incident. Its message names the admin and the time.
+  - If `PAGERDUTY_ROUTING_KEY` is not set, a toast says PagerDuty is not set up. A read only admin does not see it.
 
 #### Logs DB download
 
