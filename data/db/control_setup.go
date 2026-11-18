@@ -70,7 +70,7 @@ func (db *ControlDB) BeginSetup(code string) (*SetupAdmin, error) {
 		return nil, err
 	}
 	name := consts.FIRST_ADMIN_NAME
-	totpSecret, totpSecretEnc, err := db.ServerConfig.Security.TOTPGenerate("", fmt.Sprintf("%s@%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN))
+	totpSecret, totpSecretEnc, err := db.ServerConfig.Security.TOTPGenerate("")
 	if err != nil {
 		return nil, err
 	}
