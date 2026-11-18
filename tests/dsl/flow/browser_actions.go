@@ -441,9 +441,13 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	}
 
 	// A date or time input splits typing across its parts, so it takes the value whole, e.g. 2026-01-02T12:30, as does a
-	// text area, which is pasted into, such as with a key
-	if kind, err := locator.Evaluate("element => element.type", nil, playwright.LocatorEvaluateOptions{Timeout: readWait}); err == nil && (kind == "datetime-local" || kind == "date" || kind == "time" || kind == "textarea") {
+	// text area, which is pasted into, such as with a key. A file input takes the path of the file to pick.
+	kind, err := locator.Evaluate("element => element.type", nil, playwright.LocatorEvaluateOptions{Timeout: readWait})
+	if err == nil && (kind == "datetime-local" || kind == "date" || kind == "time" || kind == "textarea") {
 		return page, locator.Fill(value, playwright.LocatorFillOptions{Timeout: playwright.Float(actionWait)})
+	}
+	if err == nil && kind == "file" {
+		return page, locator.SetInputFiles(value, playwright.LocatorSetInputFilesOptions{Timeout: playwright.Float(actionWait)})
 	}
 
 	err = locator.Clear(playwright.LocatorClearOptions{Timeout: playwright.Float(actionWait)})

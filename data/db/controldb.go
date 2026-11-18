@@ -204,20 +204,30 @@ func (db *ControlDB) restoreSite(ctx context.Context, siteID string, download s3
 	if _, found, err := download(ctx, sitedb.GetS3SitePath(siteID, db.ServerConfig), downloaded); err != nil || !found {
 		return false, err
 	}
+	return true, db.replaceSiteDB(ctx, siteID, filepath.Join(downloaded, filepath.Base(path)))
+}
+
+// ErrDBDoesNotOpen is a DB put in place of a site's that does not open or migrate, so the one there is put back
+var ErrDBDoesNotOpen = errors.New("the DB does not open or migrate")
+
+// replaceSiteDB puts the DB at staged, on the same disk, in place of the site's, and opens it. A DB there that did not
+// open is moved aside first, and put back if the one at staged does not open either.
+func (db *ControlDB) replaceSiteDB(ctx context.Context, siteID string, staged string) error {
+	path := sitedb.GetPath(siteID, db.ServerConfig)
 	aside := fmt.Sprintf("%s.unopened-%d", path, time.Now().UnixMilli())
 	if err := moveDB(path, aside); err != nil {
-		return false, fmt.Errorf("cannot move the DB that did not open aside: %w", err)
+		return fmt.Errorf("cannot move the DB that did not open aside: %w", err)
 	}
 	// A rename on the same disk, so the site's DB is there whole or not at all
-	if err := os.Rename(filepath.Join(downloaded, filepath.Base(path)), path); err != nil {
-		return false, errors.Join(fmt.Errorf("the backup has no DB: %w", err), moveDB(aside, path))
+	if err := os.Rename(staged, path); err != nil {
+		return errors.Join(fmt.Errorf("there is no DB to put in place: %w", err), moveDB(aside, path))
 	}
 	siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
 	if err != nil {
-		return false, errors.Join(fmt.Errorf("the restored DB does not open: %w", err), utils.DeleteFiles(dbFiles(path)), moveDB(aside, path))
+		return errors.Join(fmt.Errorf("%w: %w", ErrDBDoesNotOpen, err), utils.DeleteFiles(dbFiles(path)), moveDB(aside, path))
 	}
 	db.sites.add(siteDB)
-	return true, nil
+	return nil
 }
 
 ///

@@ -44,6 +44,7 @@ stored:
     site_hydrated: "Site restored"
     site_truncated: "Site truncated"
     site_db_made_empty: "Site DB made empty"
+    site_db_uploaded: "Site DB uploaded"
     site_version_restored: "Site restored from a backup"
     site_db_missing: "Site db missing"
     sites_backed_up: "Sites backed up"

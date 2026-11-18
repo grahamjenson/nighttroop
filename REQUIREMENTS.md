@@ -101,6 +101,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - counts the site as written, so its new DB is backed up;
   - records a "Site DB made empty" event with who made it and why the site was unavailable.
 - New Empty DB is refused for a site that is not unavailable, or whose DB is being restored at that moment.
+- An unavailable site's page offers a control admin Upload DB (`POST /sites/{id}/db`, field `db`), for a `.sqlite`
+  DB such as one from Download DB that the admin fixed. It asks first, then:
+  - migrates and opens the uploaded DB, so the site is served again with that DB's data;
+  - keeps a DB there that did not open beside the new one;
+  - counts the site as written, so its new DB is backed up;
+  - records a "Site DB uploaded" event with who uploaded it and why the site was unavailable.
+- If the uploaded DB does not open or migrate, the upload is refused, the DB there is put back, and the site stays
+  unavailable.
+- Upload DB is refused for a site that is not unavailable, or whose DB is being restored at that moment.
+- If the form has no `db` file, or the file is over 512 MB, the upload is refused.
 - An unavailable site's page lists the backups S3 keeps of it (up to 100), newest first: when each was uploaded, its
   size, and which is the latest. A control admin can restore any of them, after a confirm:
   - as a restore at start does, a DB there that did not open is kept, and put back if the restored one does not open;
@@ -2000,6 +2010,7 @@ harder:
 - A live update upload holds at most 100.
 - A Nightscout API delete of a treatment or entry type deletes at most 1000, newest first, and says how many.
 - A body over `MAX_REQUEST_BODY_BYTES`: 413. With no length given, reading stops at the limit and it is a bad body.
+- A site DB uploaded to the control site (`POST /sites/{id}/db`) can be up to 512 MB.
 - Headers over 64 KiB: 431.
 
 #### Security headers
