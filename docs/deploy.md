@@ -168,7 +168,7 @@ start.
 #### 5.4 Restore the control DB if missing
 
 Only if `data/db/controldb.sqlite` is not there, the server restores it from its Litestream replica in S3
-(`go run cmd/keysets/restore_replica.go <path>` does the same by hand).
+(`go run cmd/keysets/restore_replica.go <path>` does the same by hand, also while the server runs).
 
 - **Failure:** The restore fails. The start stops.
 - If the file is there, but was made while S3 was off or was another bucket or host, the server does not replicate it

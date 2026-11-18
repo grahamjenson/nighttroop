@@ -5,8 +5,13 @@ import (
 	"context"
 	"encoding/base64"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -275,4 +280,35 @@ func TestRestoreOverWithoutAReplica(t *testing.T) {
 	restored, err = off.RestoreOver(t.Context(), path)
 	require.NoError(t, err)
 	require.False(t, restored)
+}
+
+// A restore by hand finds the replica and writes nothing to the bucket: no test object, and no S3 lock, which a
+// running server holds
+func TestRestoreByHandOnlyReadsTheBucket(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	control, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { control.Close() })
+	r := replica.New(cfg, s3)
+	require.NoError(t, r.Start(t.Context(), control.Path))
+	require.NoError(t, r.Close(context.Background()))
+
+	bucket, err := url.Parse(cfg.S3URL)
+	require.NoError(t, err)
+	var writes atomic.Int64
+	reads := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			writes.Add(1)
+		}
+		httputil.NewSingleHostReverseProxy(bucket).ServeHTTP(w, r)
+	}))
+	t.Cleanup(reads.Close)
+	byHand := *cfg
+	byHand.S3URL = reads.URL
+
+	path := filepath.Join(t.TempDir(), "controldb.sqlite")
+	require.NoError(t, replica.RestoreByHand(t.Context(), &byHand, path))
+	require.FileExists(t, path)
+	require.Zero(t, writes.Load())
+	require.ErrorContains(t, replica.RestoreByHand(t.Context(), &byHand, ""), "give the path")
 }

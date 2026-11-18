@@ -1950,6 +1950,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - The start logs which it does: keeps the control DB there, restores it from the replica, or starts a new one, as
     there is no replica or S3 is off (a warning).
   - `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
+    - It only reads the bucket and does not take the S3 lock, so it also works while the server runs.
   - A control DB is replicated only to the replica it was restored from, or first replicated to. The file
     `controldb.sqlite.replica` next to it has that replica's address.
   - If a start finds a control DB that is not known to be the replica's, as one made while S3 was off or was another

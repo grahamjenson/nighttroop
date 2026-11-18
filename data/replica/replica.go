@@ -235,3 +235,20 @@ func (r *Replica) Restore(ctx context.Context, path string) (bool, error) {
 	}
 	return err == nil, err
 }
+
+// RestoreByHand restores the control DB from its replica to path, which must not be there, for a person with the
+// server's config. It only reads the bucket: it does not take the S3 lock, which a running server holds and a tool
+// would wait for, or leave behind for the next start to wait out.
+func RestoreByHand(ctx context.Context, cfg *config.ServerConfig, path string) error {
+	if cfg.S3URL == "" || path == "" {
+		return errors.New("set S3_URL, and give the path to restore the control DB to")
+	}
+	cfg.Status.S3Working = true
+	found, err := New(cfg, s3utils.NewS3Client(cfg)).Restore(ctx, path)
+	if err != nil {
+		return fmt.Errorf("cannot restore the control DB: %w", err)
+	} else if !found {
+		return errors.New("the control DB has no replica")
+	}
+	return nil
+}
