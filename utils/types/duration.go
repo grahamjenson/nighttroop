@@ -15,6 +15,8 @@ type Duration struct {
 	Ms *int64
 	// wholeMinutes writes its duration in whole minutes, as API v3 does
 	wholeMinutes bool
+	// fractionalMinutes writes its duration in minutes with their fraction, for Loop alone (InFractionalMinutes)
+	fractionalMinutes bool
 }
 
 // SentDuration is a duration as a client sends it, for a model to read it from
@@ -106,6 +108,19 @@ func (d *Duration) InWholeMinutes() *Duration {
 	return &whole
 }
 
+// InFractionalMinutes is it written in the minutes of its milliseconds, with their fraction, on API v1.
+//
+// WARNING: this is against how a duration is written to every other client, in whole minutes. Trio, xDrip4iOS and
+// AAPS drop the whole page if one duration has a fraction. Use it only through nsutils.ClientOverrides, for Loop.
+func (d *Duration) InFractionalMinutes() *Duration {
+	if d == nil {
+		return nil
+	}
+	fractional := *d
+	fractional.fractionalMinutes = true
+	return &fractional
+}
+
 // DurationFields are a duration as it is written, for a model to embed
 type DurationFields struct {
 	DurationMinutes        any    `json:"duration,omitempty"`
@@ -124,6 +139,10 @@ func (d *Duration) Fields() DurationFields {
 	fields := DurationFields{DurationMinutes: d.Minutes, DurationInMilliseconds: &ms}
 	if !d.wholeMinutes && ms/60_000 == d.Minutes {
 		fields.DurationMinutes = (ms + 30_000) / 60_000
+	}
+	// BAD, for Loop alone: see InFractionalMinutes
+	if d.fractionalMinutes && !d.wholeMinutes && ms%60_000 != 0 {
+		fields.DurationMinutes = float64(ms) / 60_000
 	}
 	return fields
 }

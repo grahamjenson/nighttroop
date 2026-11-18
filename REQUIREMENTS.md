@@ -1650,6 +1650,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds` (e.g. a Loop bolus of 1.6667 minutes
   reads 2, an AAPS temp target ended at 120750 ms reads 2). A quick bolus is not 0 minutes. Trio and xDrip4iOS read
   `duration` as a whole number and drop the page with a fraction.
+- Exception, for a device added for Loop only: API v1 `duration` is the minutes of `durationInMilliseconds`, with their
+  fraction (e.g. 1.6666666666666667, 0.2), as Loop sends and reads them. No other client gets this (see
+  `nsutils.ClientOverrides`). API v3 and the Socket.IO broadcasts stay in whole minutes.
 - API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
   treatment, or a page, with a fractional `duration`).
 

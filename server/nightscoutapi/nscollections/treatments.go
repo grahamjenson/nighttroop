@@ -350,6 +350,10 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	}
 	// The duration sent in milliseconds is kept with the minutes its event keeps, as AAPS reads it before the minutes
 	treatment.Duration = treatment.Duration.WithMs(source.EventGroup.DurationMs)
+	// BAD, for Loop alone, against every other client: see nsutils.ClientOverrides
+	if nsutils.OverridesFor(siteContext.IdentityModel).FractionalDurations {
+		treatment.Duration = treatment.Duration.InFractionalMinutes()
+	}
 	// A Combo Bolus gives back its dose given at once as insulin, none when all of it is extended, as AAPS reads a
 	// treatment with insulin as a bolus; all of it as enteredinsulin, which AAPS drops one without; the percents of each
 	// part as splitNow and splitExt; and the extended part's units an hour as relative, as Nightscout's careportal sends
