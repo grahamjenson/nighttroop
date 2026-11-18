@@ -1856,6 +1856,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Over HTTPS, S3 encrypts the replica with SSE-C, with a key made from the MAC key set. Production and staging
     refuse an `S3_URL` that is not `https://`.
   - A start with no `data/db/controldb.sqlite` restores it from the replica; with no replica, it starts a new server.
+  - The start logs which it does: keeps the control DB there, restores it from the replica, or starts a new one, as
+    there is no replica or S3 is off (a warning).
   - `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last

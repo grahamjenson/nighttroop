@@ -109,12 +109,25 @@ func run() error {
 func restoreFromS3(ctx context.Context, serverConfig *config.ServerConfig, control *replica.Replica) error {
 	// Before any restore runs, so none of the staging folders it removes is in use
 	restore.RemoveStaging(serverConfig)
-	if utils.FileExists(controldb.GetPath(serverConfig)) {
+	path := controldb.GetPath(serverConfig)
+	switch {
+	case utils.FileExists(path):
+		slog.Info("Control DB is here, so it is not restored", "path", path)
+		return nil
+	case control == nil:
+		slog.Warn("Control DB is missing and S3 is off, so the server starts with a new control DB", "path", path)
 		return nil
 	}
-	if _, err := control.Restore(ctx, controldb.GetPath(serverConfig)); err != nil {
+	slog.Info("Control DB is missing, so it is restored from its replica in S3", "path", path)
+	found, err := control.Restore(ctx, path)
+	if err != nil {
 		return fmt.Errorf("cannot restore the control DB from its replica: %w", err)
 	}
+	if !found {
+		slog.Warn("Control DB has no replica in S3, so the server starts with a new control DB", "path", path)
+		return nil
+	}
+	slog.Info("Control DB restored from its replica in S3", "path", path)
 	return nil
 }
 
