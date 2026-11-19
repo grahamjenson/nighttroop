@@ -111,8 +111,6 @@ func (b *ConnectorJobManager) publishConnector(siteID string, sourceType consts.
 	}
 }
 
-// recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is
-// truncated first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
 // recordRefused records a record a sync could not read, or the site refused, with the record, as an error of the
 // site's connector, to debug it by. It is logged and sent to Sentry with only its fields' names and types, as its
 // values are health data and notes. A sync records only its first, so one bad kind of record cannot fill the errors.
@@ -136,6 +134,8 @@ func recordFields(record any) map[string]string {
 	return types
 }
 
+// recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is
+// truncated first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
 func (b *ConnectorJobManager) recordSyncFailure(jobInfo *ConnectorJobInfo, err error, elapsedTimeMS int64) {
 	b.controlDB.Logs.ConnectorError(jobInfo.ctx, jobInfo.SiteID, jobInfo.Type, err)
 	errMsg := errors.Truncate(err.Error())
