@@ -664,6 +664,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
+- A suspended pump (`PUMP_SUSPEND`) shows in **Other treatments** as **Suspended**, "Pump suspended until it
+  resumes". After the pump resumes, it shows "Pump suspended for" its minutes.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
 - Links: latest glucose to all readings; each other treatment's kind (Temp Basal) to its page; with no readings in its
   time, to Connectors.
@@ -1738,6 +1740,13 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   A rate over 11 times that basal keeps no percent.
 - Output: always `rate` and `absolute` (both U/hr), and `percent` if it has one.
 - Summary: the basal during a temp basal is its rate.
+- A temp basal of under a minute (e.g. `durationInMilliseconds` 43491 with `duration` 0) keeps 1 minute, not 0.
+- A suspended pump: a temp basal of `type` `PUMP_SUSPEND`, as AAPS sends it.
+  - From any client, a temp basal sent with `rate` 0 and `reason` `suspend`, and no `type`, is kept with `type`
+    `PUMP_SUSPEND`. Loop sends a suspend so with `duration` 0, then again with its `duration` when the pump resumes.
+  - Summary: if its duration is 0, the pump has not resumed. The basal is 0 until the next temp basal, or until now.
+- Any other temp basal of duration 0 is a cancel. It ends the running temp basal (careportal: no `rate`; Trio: `rate`
+  0).
 
 #### Temp targets and overrides
 

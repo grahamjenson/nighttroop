@@ -105,6 +105,9 @@
        search yet; filtering in the oldest first query would need each search's filters there too
     1. P4: A v2 subject's `accessToken` is kept in memory for 10 minutes, so it is lost on a restart or on another
        server; AAPS pairing a client again after that gets no token. Keep it in the DB if this is a problem
+    1. P4: A suspended pump (`PUMP_SUSPEND`) of 0 minutes is a basal of 0 in the summaries until the next temp basal;
+       also end it at a `Resume Pump` event, kept as an event group, for a Loop that does not send the suspend again
+       with its duration
     1. P3: Count an AAPS or Juggluco bolus with `isBasalInsulin` (long acting insulin logged by an MDI user) as basal
        in the summaries, reports and IOB, as it is kept and given back but still counted as a bolus
     1. P4: Food, insulin and temp targets added on the site are not Nightscout treatments until grouped, so AAPS and

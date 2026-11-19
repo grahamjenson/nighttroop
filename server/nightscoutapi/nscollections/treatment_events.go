@@ -255,6 +255,15 @@ var (
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.TempBasal) {
 			if rate := nightscoutmodels.TempBasalValuePtr(source); rate != nil {
 				target.Rate = *rate
+				// A rate of 0 sent with the reason suspend, as Loop sends one, is a suspended pump, kept so as AAPS sends
+				// one. A cancel has no such reason.
+				if *rate == 0 && target.Type == nil && target.Reason != nil && *target.Reason == "suspend" {
+					target.Type = new(sitemodels.PumpSuspendType)
+				}
+			}
+			// One that ran under a minute keeps 1, as 0 is a cancel, or a suspended pump that has not resumed
+			if ms := source.Duration.MsP(); target.DurationMinutes == 0 && ms != nil && *ms > 0 {
+				target.DurationMinutes = 1
 			}
 		},
 		toTreatment: withoutSite(nightscoutmodels.UpdateTempBasalToTreatment),
