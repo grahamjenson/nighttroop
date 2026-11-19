@@ -325,9 +325,12 @@ templ glucoseHero(summary *sitemodels.Summary) {
 	</div>
 }
 
-// previous is a day tile's value for yesterday, or the mean day of last week or month, under today's
+// previous is a day tile's value for yesterday, or the mean day of last week or month, under today's. A time with no
+// data, as each is on a new site, has no line, not four that each say only a dash.
 templ previous(id, label, text string) {
-	<div id={ id } class="text-xs text-gray-500">{ label } { text }</div>
+	if text != "–" {
+		<div id={ id } class="text-xs text-gray-500">{ label } { text }</div>
+	}
 }
 
 // deviceCard is a device's latest status; clicking it opens all its details
