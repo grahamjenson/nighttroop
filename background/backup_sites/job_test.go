@@ -100,6 +100,20 @@ func TestBackupWrittenSitesBacksUpOnlyDirtySites(t *testing.T) {
 	require.Equal(t, [][]string{upload(dirty)}, uploads[2:])
 }
 
+// As the server stops every written site is backed up, not only the most a tick backs up: no later tick has the rest
+func TestBackupToS3BacksUpEverySitePastATicksLimit(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	uploads, fail := [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	jobs.MaxSitesEachTick = 1
+	first, second := fileSite(t, controlDB, "qaaaaaaa"), fileSite(t, controlDB, "qbbbbbbb")
+	written(t, controlDB, first, time.Now())
+	written(t, controlDB, second, time.Now())
+
+	jobs.BackupToS3(t.Context())
+	require.ElementsMatch(t, [][]string{upload(first), upload(second)}, uploads)
+}
+
 // A site whose upload failed is uploaded again at the next tick, though it is not written since: by the sites not
 // uploaded yet, or by the backup of written sites once it was uploaded before
 func TestBackupWrittenSitesUploadsAgainAfterAFailedUpload(t *testing.T) {

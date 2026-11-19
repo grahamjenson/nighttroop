@@ -27,6 +27,9 @@ type BackupSiteJobManager struct {
 	DeleteAfterInactivity time.Duration
 	// Interval is how old a written site's backup is before it is backed up again
 	Interval time.Duration
+	// MaxSitesEachTick is the most sites one tick backs up, so a burst of writes to many sites is backed up over a few
+	// ticks rather than copying thousands of DBs at once
+	MaxSitesEachTick int64
 }
 
 // SetupBackupSiteJob backs up each site written to, once its last backup is an interval old, to S3
@@ -36,6 +39,7 @@ func SetupBackupSiteJob(controlDB *db.ControlDB, config *config.ServerConfig, s3
 		DeleteAfterInactivity: time.Duration(config.DeleteAfterInactivityMins) * time.Minute,
 		Interval:              time.Duration(config.SiteBackupIntervalInSeconds) * time.Second,
 		Upload:                s3Client.UploadFilesToS3,
+		MaxSitesEachTick:      500,
 		ServerConfig:          config,
 	}
 }
@@ -122,22 +126,24 @@ func (b *BackupSiteJobManager) findSitesToDelete(ctx context.Context) ([]string,
 	return deleteSites, nil
 }
 
-// BackupToS3 backs up every site written since its last backup, as the server stops
+// BackupToS3 backs up every site written since its last backup, as the server stops: all of them, not a tick's
+// MaxSitesEachTick, as no later tick backs up the rest
 func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
-	if err := b.BackupWrittenSites(ctx, time.Now()); err != nil {
+	if err := b.backupWrittenSites(ctx, time.Now(), -1); err != nil {
 		slog.ErrorContext(ctx, "Error backing up the sites", "error", err)
 	}
 }
-
-// maxSitesEachTick is the most sites one tick backs up, so a burst of writes to many sites is backed up over a few
-// ticks rather than copying thousands of DBs at once
-const maxSitesEachTick = 500
 
 // BackupWrittenSites backs up the sites written since their last backup, copied before backedUpBefore, and, while S3
 // is on, those whose last copy is not uploaded, the longest waiting first, recording the round as an event in the logs DB and a failure as
 // an error. It logs the sites it backs up once, then only what goes wrong. A site grows only while written to, so it is
 // truncated just before its backup, looking back to its last backup, when it was last truncated.
-func (b *BackupSiteJobManager) BackupWrittenSites(ctx context.Context, backedUpBefore time.Time) (err error) {
+func (b *BackupSiteJobManager) BackupWrittenSites(ctx context.Context, backedUpBefore time.Time) error {
+	return b.backupWrittenSites(ctx, backedUpBefore, b.MaxSitesEachTick)
+}
+
+// backupWrittenSites is BackupWrittenSites for at most limit sites, or for every site with a limit of -1
+func (b *BackupSiteJobManager) backupWrittenSites(ctx context.Context, backedUpBefore time.Time, limit int64) (err error) {
 	started := time.Now()
 	defer func() {
 		if err != nil {
@@ -145,7 +151,7 @@ func (b *BackupSiteJobManager) BackupWrittenSites(ctx context.Context, backedUpB
 		}
 	}()
 	res, err := b.controlDB.Queries.GetSitesToBackUp(ctx, controldb.GetSitesToBackUpParams{
-		BackedUpBefore: backedUpBefore.UnixMilli(), Uploading: b.ServerConfig.Status.S3Working, Limit: maxSitesEachTick,
+		BackedUpBefore: backedUpBefore.UnixMilli(), Uploading: b.ServerConfig.Status.S3Working, Limit: limit,
 	})
 	if err != nil {
 		return fmt.Errorf("cannot get the sites to back up: %w", err)
