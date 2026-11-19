@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -273,4 +275,21 @@ func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "site_deleted", events[0].Name)
 	require.Equal(t, `{"reason":"unused"}`, *events[0].Attributes)
+}
+
+// A copy that fails leaves the site's last backup: a site archived after the round listed it has its DB closed, and
+// its backup is then its archive, the only one with S3 off
+func TestBackupWrittenSitesKeepsTheLastBackupWhenACopyFails(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	uploads, fail := [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	site := fileSite(t, controlDB, "qaaaaaaa")
+	written(t, controlDB, site, time.Now())
+	require.NoError(t, os.MkdirAll(filepath.Dir(site.BackupPath), 0o700))
+	require.NoError(t, os.WriteFile(site.BackupPath, []byte("the archive"), 0o600))
+	require.NoError(t, site.Close())
+
+	require.Error(t, jobs.BackupWrittenSites(t.Context(), time.Now()))
+	require.FileExists(t, site.BackupPath)
+	require.Empty(t, uploads)
 }

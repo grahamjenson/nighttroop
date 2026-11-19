@@ -12,7 +12,6 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -178,7 +177,9 @@ func (b *BackupSiteJobManager) BackupWrittenSites(ctx context.Context, backedUpB
 
 // backupSite copies the site's DB to its backup, and uploads it by itself to S3 when S3 is on
 func (b *BackupSiteJobManager) backupSite(ctx context.Context, site *db.SiteDB) error {
-	if err := copyBackup(ctx, site); err != nil {
+	// A copy that fails leaves the last one, as it is written beside it and renamed: for a site archived since this
+	// round listed it, that is its archive
+	if err := site.Backup(ctx); err != nil {
 		return err
 	}
 	b.recordBackup(ctx, site)
@@ -192,15 +193,6 @@ func (b *BackupSiteJobManager) backupSite(ctx context.Context, site *db.SiteDB) 
 		slog.ErrorContext(ctx, "Cannot record the site's upload", "error", err)
 	}
 	return nil
-}
-
-// copyBackup copies site's DB to its backup. A copy that failed part way goes.
-func copyBackup(ctx context.Context, site *db.SiteDB) error {
-	err := site.Backup(ctx)
-	if err != nil {
-		_ = utils.DeleteFile(site.BackupPath)
-	}
-	return err
 }
 
 // recordBackup records on the site that its backup was copied now, with the copy's size on disk. Not recording it

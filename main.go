@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 
 	"syscall"
@@ -28,6 +29,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/migrateup"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/server/components/errortoast"
@@ -201,15 +203,17 @@ const minFreeDisk = 100 << 20
 
 // makeRoom frees space on the DBs' disk when a start finds less than minFreeDisk free, as a server on a full disk
 // cannot open its DBs. It removes only what the server makes again, the lesser loss first: the local copies of the
-// backups, which are made again from the DBs, then the logs DB, and pages the admin. With too little free after that
-// the server does not start, and says so.
+// backups, which are made again from the DBs, then the logs DB, and pages the admin. The backup of a site with no DB
+// here is kept: it is an archived site's archive, the only one with S3 off. With too little free after that the server
+// does not start, and says so.
 func makeRoom(serverConfig *config.ServerConfig, admin page.Func, free func() (float64, bool)) error {
 	before, ok := free()
 	if !ok || before >= minFreeDisk {
 		return nil
 	}
 	_ = filepath.WalkDir(serverConfig.BackupDir(), func(path string, entry fs.DirEntry, err error) error {
-		if err == nil && entry.Type().IsRegular() {
+		site, isBackup := strings.CutSuffix(entry.Name(), ".sqlite.lz4")
+		if err == nil && entry.Type().IsRegular() && !(isBackup && site != "" && !utils.FileExists(sitedb.GetPath(site, serverConfig))) {
 			_ = os.Remove(path)
 		}
 		return nil
