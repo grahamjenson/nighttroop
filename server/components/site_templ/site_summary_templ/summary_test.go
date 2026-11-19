@@ -128,9 +128,12 @@ func TestDoseText(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.text, doseText(context.Background(), tt.dose))
+			require.Equal(t, tt.text, doseText(context.Background(), tt.dose, " U"))
 		})
 	}
+	// On the graph its unit follows the number, as in 2.5U
+	combo := &sitemodels.SiteInsulinDose{Dose: 0.3, ExtendedDose: new(0.7), ExtendedDurationMinutes: new(int64(60))}
+	require.Equal(t, "0.3U + 0.7U over 1 h", doseText(context.Background(), combo, "U"))
 }
 
 // TestInsulinCarbsTableSaysWhenAPlannedIntakeIs checks carbs planned an hour ahead, as Trio's from fat and protein, say

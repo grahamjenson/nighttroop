@@ -292,3 +292,35 @@ func TestGraphHoverData(t *testing.T) {
 	require.Contains(t, page, "var d = {'units':'mmol/L'")
 	require.NotContains(t, page, `\"`)
 }
+
+// TestGraphDrawsTheExtendedPart checks an extended bolus's marker is labelled with its extended dose, not 0U, and its
+// extended part is a line just below the marker over the time it is given, named Insulin so the legend hides both
+func TestGraphDrawsTheExtendedPart(t *testing.T) {
+	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC).UnixMilli()
+	hour := time.Hour.Milliseconds()
+	s := &sitemodels.Summary{Since: now - 6*hour, Units: new(consts.UnitsMGDL), InsulinDoses: []*sitemodels.SiteInsulinDose{
+		{Dose: 0, ExtendedDose: new(1.0), ExtendedDurationMinutes: new(int64(60)), OccurredAt: now - 2*hour},
+		{Dose: 2, OccurredAt: now - 3*hour},
+	}}
+	got := option(t, s, now)
+	insulin := series(got, "Insulin")["data"].([]any)
+	require.Equal(t, "1U over 1 h", insulin[0].(map[string]any)["name"])
+	require.Equal(t, "2U", insulin[1].(map[string]any)["name"])
+
+	var line map[string]any
+	for _, item := range got["series"].([]any) {
+		if item.(map[string]any)["name"] == "Insulin" && item.(map[string]any)["type"] == "line" {
+			line = item.(map[string]any)
+		}
+	}
+	require.NotNil(t, line)
+	require.EqualValues(t, treatmentAxis, line["yAxisIndex"])
+	values := []any{}
+	for _, point := range line["data"].([]any) {
+		values = append(values, point.(map[string]any)["value"])
+	}
+	require.Equal(t, []any{[]any{float64(now - 2*hour), extendedHeight}, []any{float64(now - hour), extendedHeight}, "-"}, values)
+
+	script := hoverTooltip(context.Background(), s, now, func(ms int64) int64 { return ms })
+	require.Contains(t, script, "Insulin: 1U over 1 h")
+}

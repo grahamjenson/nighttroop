@@ -28,8 +28,9 @@ const (
 	// Everything is drawn on one grid, as Carer draws it: glucose on the left axis, the basal on its own axis along
 	// the bottom, and the treatments on a hidden axis from 0 at the bottom to 1 at the top
 	glucoseAxis, basalAxis, treatmentAxis = 0, 1, 2
-	// Carbs are drawn above insulin, near the top of the treatment axis
-	carbsHeight, insulinHeight = 0.95, 0.87
+	// Carbs are drawn above insulin, near the top of the treatment axis, and a dose's extended part just below its
+	// marker, clear of its label
+	carbsHeight, insulinHeight, extendedHeight = 0.95, 0.87, 0.83
 	// Readings further apart than this are not joined by the glucose line
 	glucoseGapMs = 15 * 60_000
 )
@@ -72,6 +73,15 @@ func isSMB(d *sitemodels.SiteInsulinDose) bool {
 	return (d.DoseType != nil && strings.EqualFold(*d.DoseType, "SMB")) || (d.Automatic != nil && *d.Automatic)
 }
 
+// extendedMinutes are the minutes a combo or extended bolus's extended dose is given over, or 0 when it has none, or
+// none over time, as an extended dose with no duration is given at once, as doseText reads it
+func extendedMinutes(d *sitemodels.SiteInsulinDose) int64 {
+	if d.ExtendedDose == nil || *d.ExtendedDose <= 0 || d.ExtendedDurationMinutes == nil || *d.ExtendedDurationMinutes <= 0 {
+		return 0
+	}
+	return *d.ExtendedDurationMinutes
+}
+
 // graph is the summary as a go-echarts chart on one grid, as Carer draws it: the urgent range and the range shaded
 // across it, the targets in force each minute as bands over those, the glucose as dots joined by a thin line, the basal
 // in force each minute along the bottom, and above the readings carbs as triangles pointing up and insulin as
@@ -98,10 +108,19 @@ func graph(ctx context.Context, s *sitemodels.Summary, now int64, location *time
 
 	insulin, smbs, carbs := treatmentPoints(ctx, s, at)
 	chart.AddSeries("SMB", smbs, marker(brandNight, 7, true)...)
-	chart.AddSeries(i18n.T(ctx, "site.summary.graph.insulin"), insulin, marker(brandNight, 10, false)...)
+	chart.AddSeries(i18n.T(ctx, "site.summary.graph.insulin"), insulin, append(marker(brandNight, 10, false), seriesID("insulin"))...)
+	// A label that would pass the graph's right edge, as the long one of a combo bolus given just now would, is drawn
+	// left of its marker instead
+	chart.AddJSFuncStrs("%MY_ECHARTS%.setOption({series: [{id: 'insulin', labelLayout: function (p) { return p.labelRect.x + p.labelRect.width <= %MY_ECHARTS%.getWidth() ? {hideOverlap: true} : {hideOverlap: true, x: p.rect.x - 5, y: p.rect.y + p.rect.height / 2, align: 'right', verticalAlign: 'middle'}; }}]});")
 	chart.AddSeries(i18n.T(ctx, "site.summary.graph.carbs"), carbs, marker(amber500, 10, false)...)
 
 	lines := charts.NewLine()
+	// A dose's extended part is a faint line below its marker over the time it is given, named as insulin is, so the
+	// legend's Insulin hides both
+	lines.AddSeries(i18n.T(ctx, "site.summary.graph.insulin"), extendedParts(s, at),
+		charts.WithLineChartOpts(opts.LineChart{YAxisIndex: treatmentAxis, ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
+		charts.WithLineStyleOpts(opts.LineStyle{Color: brandNight, Width: 3, Opacity: opts.Float(0.5)}),
+	)
 	lines.AddSeries(i18n.T(ctx, "site.summary.graph.target"), targetLines,
 		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
 		charts.WithLineStyleOpts(opts.LineStyle{Color: blue700, Width: 1.5}),
@@ -262,7 +281,7 @@ func marker(colour string, size int, faint bool) []charts.SeriesOpts {
 // treatmentPoints are the insulin doses given by hand, a loop's SMBs and the carbs, each labelled with how much
 func treatmentPoints(ctx context.Context, s *sitemodels.Summary, at localTime) (insulin, smbs, carbs []opts.ScatterData) {
 	for _, d := range s.InsulinDoses {
-		point := opts.ScatterData{Name: display.Value(ctx, &d.Dose, "U"), Value: []any{at(d.OccurredAt), insulinHeight}, SymbolRotate: 180}
+		point := opts.ScatterData{Name: doseText(ctx, d, "U"), Value: []any{at(d.OccurredAt), insulinHeight}, SymbolRotate: 180}
 		if isSMB(d) {
 			smbs = append(smbs, point)
 		} else {
@@ -275,6 +294,19 @@ func treatmentPoints(ctx context.Context, s *sitemodels.Summary, at localTime) (
 		}
 	}
 	return insulin, smbs, carbs
+}
+
+// extendedParts are the lines of each dose's extended part, just below its marker, from when it was given until its
+// extended dose is all given, each broken from the next
+func extendedParts(s *sitemodels.Summary, at localTime) []opts.LineData {
+	var parts []opts.LineData
+	for _, d := range s.InsulinDoses {
+		if minutes := extendedMinutes(d); minutes > 0 {
+			parts = append(parts, opts.LineData{Value: []any{at(d.OccurredAt), extendedHeight}},
+				opts.LineData{Value: []any{at(d.OccurredAt + minutes*60_000), extendedHeight}}, opts.LineData{Value: "-"})
+		}
+	}
+	return parts
 }
 
 // basalSteps is the basal's line: it steps to each rate when it comes into force, and falls to nothing where none is
@@ -383,7 +415,7 @@ func hoverTooltip(ctx context.Context, s *sitemodels.Summary, now int64, at loca
 		if isSMB(d) {
 			what = "site.summary.graph.tooltip.smb"
 		}
-		dose := i18n.Data{"Dose": display.Value(ctx, &d.Dose, "U")}
+		dose := i18n.Data{"Dose": doseText(ctx, d, "U")}
 		h.Treatments = append(h.Treatments, []any{at(d.OccurredAt), i18n.T(ctx, what, dose)})
 	}
 	for _, f := range s.FoodIntakes {

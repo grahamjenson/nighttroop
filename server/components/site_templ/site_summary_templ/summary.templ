@@ -72,7 +72,7 @@ type intake struct {
 func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 	list := []intake{}
 	for _, d := range s.InsulinDoses {
-		list = append(list, intake{At: d.OccurredAt, Insulin: doseText(ctx, d), SMB: isSMB(d)})
+		list = append(list, intake{At: d.OccurredAt, Insulin: doseText(ctx, d, " U"), SMB: isSMB(d)})
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
@@ -84,17 +84,17 @@ func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 }
 
 // doseText is a dose's units, with a combo or extended bolus's extended units and the time they are given over, as
-// "1.2 U + 1.8 U over 2 h", or "2 U over 2 h" when none is given at once. An extended dose with no time is given at
-// once, as the daily dose counts it.
-func doseText(ctx context.Context, d *sitemodels.SiteInsulinDose) string {
-	dose := display.Value(ctx, &d.Dose, " U")
+// "1.2 U + 1.8 U over 2 h", or "2 U over 2 h" when none is given at once, each followed by unit, as " U" in a table or
+// "U" on the graph. An extended dose with no time is given at once, as the daily dose counts it.
+func doseText(ctx context.Context, d *sitemodels.SiteInsulinDose, unit string) string {
+	dose := display.Value(ctx, &d.Dose, unit)
 	if d.ExtendedDose == nil || *d.ExtendedDose <= 0 {
 		return dose
 	}
 	if d.ExtendedDurationMinutes == nil || *d.ExtendedDurationMinutes <= 0 {
-		return display.Value(ctx, new(d.Dose+*d.ExtendedDose), " U")
+		return display.Value(ctx, new(d.Dose+*d.ExtendedDose), unit)
 	}
-	data := i18n.Data{"Dose": dose, "Extended": display.Value(ctx, d.ExtendedDose, " U"),
+	data := i18n.Data{"Dose": dose, "Extended": display.Value(ctx, d.ExtendedDose, unit),
 		"Duration": display.Duration(ctx, *d.ExtendedDurationMinutes*60_000)}
 	if d.Dose == 0 {
 		return i18n.T(ctx, "site.summary.intake.extended_only", data)

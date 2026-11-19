@@ -687,6 +687,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     schedules read in the site's, for all viewers.
   - Carbs as labelled up triangles above insulin as labelled down triangles; on overlap the latest label stays. SMBs
     smaller, fainter, unlabelled.
+  - A combo or extended bolus's label has its extended part, as in Insulin and carbs ("2U over 2 h"). A faint line
+    below its triangle shows the time of the extended part.
+  - If a label goes past the right edge, it shows left of its triangle.
 - Legend, as drawn: insulin and SMB (down), carbs (up), basal (outlined area), target (line).
 - On a phone: fewer times on the time axis, and the legend below them, so no time or legend item covers another.
 - Pointing shows the time, nearest reading within 5 minutes and its time, basal and targets in force, and treatments
