@@ -441,6 +441,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A site's reads and writes have 4 times an identity's limit. Test: one identity spends all its own (for example, a
   day's backlog upload). A carer's carbs and AAPSClient's commands still go through.
 - Over a site's or identity's limit: 429, with `Retry-After` the seconds until one is accepted, at least 1.
+- If an identity is over its own limit, its request does not use the site's limit. The site's other apps get no 429.
 - A site flagged for abuse also spends its flagged writes limit (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT`). See
   [Abuse flag](#abuse-flag).
 
