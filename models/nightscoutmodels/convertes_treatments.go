@@ -250,6 +250,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map TempBasalPercent Multiplier | PercentToMultiplier
+	// goverter:map . FollowsBasal | SentAsPercent
 	// goverter:map Duration DurationMinutes | DurationToMinutes
 	PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal
 

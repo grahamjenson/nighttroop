@@ -598,6 +598,7 @@ CREATE TABLE temp_basals (
     duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
     rate REAL NOT NULL CHECK(rate BETWEEN 0 AND 100), -- the units an hour given while it runs
     multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal at its start, so 0.5 is half and 0 a zero temp; optional, but rate is not
+    follows_basal INTEGER CHECK(follows_basal IN (0, 1)), -- whether it was sent as a percent with no absolute rate, so it is multiplier times the scheduled basal each minute it runs, as Nightscout reads it
     type TEXT CHECK(length(type) <= 64), -- AAPS's kind of temp basal, e.g. NORMAL, or PUMP_SUSPEND for a suspended pump
     insulin_type TEXT CHECK(length(insulin_type) <= 64), -- the insulin it is of, Loop's, e.g. Novolog
     automatic INTEGER CHECK(automatic IN (0, 1)), -- whether the loop set it, Loop's, rather than the user

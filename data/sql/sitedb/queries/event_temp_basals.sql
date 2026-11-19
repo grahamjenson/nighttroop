@@ -7,6 +7,7 @@ INSERT INTO temp_basals (
     duration_minutes,
     rate,
     multiplier,
+    follows_basal,
     type,
     insulin_type,
     automatic,
@@ -20,7 +21,7 @@ INSERT INTO temp_basals (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -90,6 +91,7 @@ UPDATE temp_basals SET
     duration_minutes = sqlc.arg('DurationMinutes'),
     rate = sqlc.arg('Rate'),
     multiplier = sqlc.arg('Multiplier'),
+    follows_basal = sqlc.arg('FollowsBasal'),
     type = sqlc.arg('Type'),
     insulin_type = sqlc.arg('InsulinType'),
     automatic = sqlc.arg('Automatic'),

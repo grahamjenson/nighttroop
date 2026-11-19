@@ -356,6 +356,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"DurationMinutes":       {Column: "duration_minutes", Required: true, Min: new(0.0), Max: new(10080.0)},
 		"Rate":                  {Column: "rate", Required: true, Min: new(0.0), Max: new(100.0)},
 		"Multiplier":            {Column: "multiplier", Min: new(0.0), Max: new(11.0)},
+		"FollowsBasal":          {Column: "follows_basal"},
 		"Type":                  {Column: "type", MaxLength: 64},
 		"InsulinType":           {Column: "insulin_type", MaxLength: 64},
 		"Automatic":             {Column: "automatic"},

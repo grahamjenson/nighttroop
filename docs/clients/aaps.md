@@ -207,6 +207,7 @@ Unless a row says otherwise, Nighttroop keeps each field and returns it as sent.
 | Profile Switch from the site, the careportal or T1DCarer (`timeshift` in hours) | Fixed: API v3 and the storage socket give it in ms, as AAPS reads it (a 1 hour shift was read as 1 minute). A site switch of under an hour is given as 0 | `profile_switch_timeshift.http` |
 | `units` as AAPS writes them | Works: a device added for AAPS writes `mg/dl`. Another device writes units as it first sent them, `mg/dl` once AAPS uploads | `bolus_wizard.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), and its update | Works: kept as a multiplier | `sync_v3.http`, `treatments/temp_basal_percent.http` |
+| Temp basal on a percent pump (`percent` and `rate`, no `absolute`) across a profile switch end or a basal schedule block | Fixed: the summary and daily dose use its percent of the scheduled basal each minute, as AAPS does (was the rate at its start). Returned with no `absolute` or `temp`, as sent, so AAPS reads it as a percent (was read as an absolute rate) | `percent_pump_temp_basal.http` |
 | Temp basal `type` (for example `PUMP_SUSPEND`) | Works: a follower shows a suspended pump | `sync_v3.http` |
 | Profile switch and effective profile switch `original*` | Works: a follower reads an effective profile switch as one, not a Note | `sync_v3.http` |
 | Running mode `mode`, `autoForced`, `reasons`, `originalDuration` | Works: a follower reads its mode, not UNKNOWN. An empty `reasons` is left out | `sync_v3.http` |

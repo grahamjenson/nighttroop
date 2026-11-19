@@ -64,7 +64,7 @@ POST http://{{ .ns_site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
 B [{"eventType": "Temp Basal", "percent": -50, "duration": 30, "created_at": "{{ time 2 }}", "enteredBy": "careportal"}]
 ASSERT_STATUS 200
-ASSERT_EQUALS 1.5 "@0.absolute"
+ASSERT_EQUALS 1.5 "@0.rate"
 
 NAME summary_switch_name_temp_basal_delete
 DELETE http://{{ .ns_site }}/api/v1/treatments/{{ dig "summary_switch_name_temp_basal.0._id" }}

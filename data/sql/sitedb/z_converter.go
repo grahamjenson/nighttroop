@@ -1879,6 +1879,10 @@ func TempBasalFromView(source TempBasalsVw) TempBasal {
 		xfloat64 := *source.Multiplier
 		sitedbTempBasal.Multiplier = &xfloat64
 	}
+	if source.FollowsBasal != nil {
+		xbool := *source.FollowsBasal
+		sitedbTempBasal.FollowsBasal = &xbool
+	}
 	if source.Type != nil {
 		xstring := *source.Type
 		sitedbTempBasal.Type = &xstring
@@ -1888,8 +1892,8 @@ func TempBasalFromView(source TempBasalsVw) TempBasal {
 		sitedbTempBasal.InsulinType = &xstring2
 	}
 	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbTempBasal.Automatic = &xbool
+		xbool2 := *source.Automatic
+		sitedbTempBasal.Automatic = &xbool2
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -1950,6 +1954,10 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 		xfloat64 := *source.Multiplier
 		sitedbCreateTempBasalParams.Multiplier = &xfloat64
 	}
+	if source.FollowsBasal != nil {
+		xbool := *source.FollowsBasal
+		sitedbCreateTempBasalParams.FollowsBasal = &xbool
+	}
 	if source.Type != nil {
 		xstring := *source.Type
 		sitedbCreateTempBasalParams.Type = &xstring
@@ -1959,8 +1967,8 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 		sitedbCreateTempBasalParams.InsulinType = &xstring2
 	}
 	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbCreateTempBasalParams.Automatic = &xbool
+		xbool2 := *source.Automatic
+		sitedbCreateTempBasalParams.Automatic = &xbool2
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -2979,6 +2987,10 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 		xfloat642 := *source.Multiplier
 		sitedbTempBasalsVw.Multiplier = &xfloat642
 	}
+	if source.FollowsBasal != nil {
+		xbool := *source.FollowsBasal
+		sitedbTempBasalsVw.FollowsBasal = &xbool
+	}
 	if source.Type != nil {
 		xstring2 := *source.Type
 		sitedbTempBasalsVw.Type = &xstring2
@@ -2988,8 +3000,8 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 		sitedbTempBasalsVw.InsulinType = &xstring3
 	}
 	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbTempBasalsVw.Automatic = &xbool
+		xbool2 := *source.Automatic
+		sitedbTempBasalsVw.Automatic = &xbool2
 	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes

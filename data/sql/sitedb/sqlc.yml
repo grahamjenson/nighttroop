@@ -50,6 +50,12 @@ overrides:
       - column: "temp_basals_vw.automatic"
         go_type:
           type: "*bool"
+      - column: "temp_basals.follows_basal"
+        go_type:
+          type: "*bool"
+      - column: "temp_basals_vw.follows_basal"
+        go_type:
+          type: "*bool"
       - column: "insulin_doses.is_basal_insulin"
         go_type:
           type: "*bool"

@@ -361,8 +361,12 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	if isCombo := treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus; treatment.Insulin != nil && (isCombo || amount(treatment.ExtendedDose) > 0) {
 		comboParts(treatment)
 	}
-	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
+	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed. A temp basal
+	// sent as a percent with no absolute rate has none, so a client reads it as its percent of the basal, as sent.
 	treatment.Programmed = treatment.Insulin
+	if source.TempBasal != nil && source.TempBasal.FollowsBasal != nil && *source.TempBasal.FollowsBasal {
+		treatment.Absolute = nil
+	}
 	if treatment.Absolute != nil {
 		treatment.Temp = new(types.ShortString("absolute"))
 	}

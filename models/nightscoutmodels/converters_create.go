@@ -151,6 +151,15 @@ func TempBasalValuePtr(t Treatment) *float64 {
 	return nil
 }
 
+// SentAsPercent is whether a temp basal is sent as a percent with no absolute rate, as AAPS on a percent pump sends it,
+// so it follows the scheduled basal while it runs, as Nightscout reads it. Its rate is only the rate at its start.
+func SentAsPercent(t Treatment) *bool {
+	if t.TempBasalPercent == nil || t.Absolute != nil {
+		return nil
+	}
+	return new(true)
+}
+
 // PercentToMultiplier is a temp basal's times the scheduled basal from Nightscout's percent change from it, so -50 is 0.5
 func PercentToMultiplier(percent *types.FlexibleFloat64) *float64 {
 	if percent == nil {

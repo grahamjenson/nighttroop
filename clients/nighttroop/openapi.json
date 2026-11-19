@@ -825,7 +825,8 @@
             "properties": {
               "duration_minutes": { "type": "integer", "format": "int64" },
               "rate": { "type": "number", "format": "double", "nullable": true, "description": "U/hr while it runs; 0 is a suspended basal" },
-              "multiplier": { "type": "number", "format": "double", "nullable": true, "description": "Times the scheduled basal at its start, so 0.5 is half" }
+              "multiplier": { "type": "number", "format": "double", "nullable": true, "description": "Times the scheduled basal at its start, so 0.5 is half" },
+              "follows_basal": { "type": "boolean", "nullable": true, "readOnly": true, "description": "True when a Nightscout client sent it as a percent with no absolute rate: each minute it runs is multiplier times the scheduled basal then" }
             }
           }
         ]

@@ -17,4 +17,8 @@ type SiteTempBasal struct {
 	CreatedByDeviceName   *string  `json:"created_by_device_name"`
 	CreatedByIdentityName string   `json:"created_by_identity_name"`
 	UpdatedByIdentityName *string  `json:"updated_by_identity_name"`
+
+	// FollowsBasal is whether a Nightscout client sent it as a percent with no absolute rate, as AAPS on a percent pump,
+	// so each minute it runs it is Multiplier times the scheduled basal then, not Rate
+	FollowsBasal *bool `json:"follows_basal"`
 }

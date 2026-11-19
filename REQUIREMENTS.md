@@ -690,6 +690,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   force. One from before the summary's hours counts. When a temp or timed switch ends, the one under it returns.
   - A switch sent by name (no `profileJson`) uses the profile of that name in the profile store, with its shift and
     percentage.
+  - A temp basal sent as a `percent` with no `absolute` is that percent of the scheduled basal each minute. So it
+    changes when a schedule block starts or a switch starts or ends. Other temp basals keep their rate.
 
 #### Periods and time in range
 
@@ -958,6 +960,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     returns it, ignores it on create or update.
 - **Food intakes**
 - **Temp basals**: rate in U/hr, and a multiplier of the scheduled basal (0 for a zero temp).
+  - `follows_basal`: `true` if a Nightscout client sent it as a `percent` with no `absolute`. Site API returns it,
+    ignores it on create or update.
 - **Temp targets**: in the settings' units.
 - **Profile switches**: the profile's schedules, and a multiplier of its insulin.
   - Details: basal, carb ratio, sensitivity and target schedule tables, as on profiles, in the settings' units (named
@@ -1670,7 +1674,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Each treatment has (Loop's NightscoutKit drops treatments without them):
   - `created_at` also as `timestamp`.
   - A bolus's insulin also as `programmed`.
-  - A temp basal's `temp` `absolute`.
+  - A temp basal's `temp` `absolute`, if it has an `absolute`.
 - A Combo Bolus (extended bolus):
   - Kept on its insulin dose as the dose given at once, the extended dose, and the extended duration (its `duration`).
   - `insulin` up to `enteredinsulin`: `insulin` is the dose at once, and the rest is extended (Nightscout's careportal).
@@ -1731,13 +1735,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Temp basals
 
-- Input: the U/hr rate as `rate` or `absolute`, the `percent`, or both.
+- Input: the U/hr rate as `rate` or `absolute`, the `percent`, or both. A `percent` with no `absolute` (AAPS on a
+  percent pump) follows the basal.
 - `percent`: Nightscout's change from the basal, as AAPS sends it (-50 for half, 20 for 1.2x, -100 for a zero temp,
   never under -100). Stored as a multiplier (0.5, 1.2, 0).
 - The value not sent: from the default profile's or profile switch's basal at the start, in the profile's timezone.
   A rate over 11 times that basal keeps no percent.
-- Output: always `rate` and `absolute` (both U/hr), and `percent` if it has one.
-- Summary: the basal during a temp basal is its rate.
+- Output: always `rate` (U/hr), and `percent` if it has one. `absolute` (U/hr), if it does not follow the basal.
+- Summary and daily dose: the basal during a temp basal is its rate. If it follows the basal, the basal is its
+  `percent` of the scheduled basal each minute, as Nightscout and AAPS read it.
 
 #### Temp targets and overrides
 

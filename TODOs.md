@@ -114,6 +114,11 @@
     1. P5: Let the site clear a sensor change's sensor code or transmitter ID, as an empty one keeps what it had
     1. P4: Refuse a treatment's other values past their limits (e.g. fat, protein, a temp basal's rate, a duration)
        with their range and what was sent, as insulin and carbs are; the database refuses them saying only the column
+    1. P4: A temp basal sent as a percent with no absolute (AAPS on a percent pump) is given back with no `absolute`
+       or `temp`, as Nightscout gives it, so Loop's NightscoutKit drops it. Check what LoopFollow and Loop Caregiver
+       show for one
+    1. P4: The summary's other treatments and the temp basals page show a temp basal that follows the basal
+       (`follows_basal`) at its rate at its start: show its percent of the basal
 
 1. Backups:
     1. P2: Keep a dated daily copy of each written site (`<host>/sites/<site>/daily/<date>`), so the hourly versions

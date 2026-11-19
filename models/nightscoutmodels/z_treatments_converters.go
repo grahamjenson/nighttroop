@@ -827,6 +827,7 @@ func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 		sitedbTempBasal.Rate = FlexibleFloat64ToFloat64(*source.Rate)
 	}
 	sitedbTempBasal.Multiplier = PercentToMultiplier(source.TempBasalPercent)
+	sitedbTempBasal.FollowsBasal = SentAsPercent(source)
 	if source.Type != nil {
 		xstring := ShortStringToString(*source.Type)
 		sitedbTempBasal.Type = &xstring
@@ -1014,6 +1015,10 @@ func TempBasalCreate(source sitedb.TempBasal, context ConverterContext) sitedb.C
 		xfloat64 := *source.Multiplier
 		sitedbCreateTempBasalParams.Multiplier = &xfloat64
 	}
+	if source.FollowsBasal != nil {
+		xbool := *source.FollowsBasal
+		sitedbCreateTempBasalParams.FollowsBasal = &xbool
+	}
 	if source.Type != nil {
 		xstring := *source.Type
 		sitedbCreateTempBasalParams.Type = &xstring
@@ -1023,8 +1028,8 @@ func TempBasalCreate(source sitedb.TempBasal, context ConverterContext) sitedb.C
 		sitedbCreateTempBasalParams.InsulinType = &xstring2
 	}
 	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbCreateTempBasalParams.Automatic = &xbool
+		xbool2 := *source.Automatic
+		sitedbCreateTempBasalParams.Automatic = &xbool2
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes

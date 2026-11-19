@@ -589,7 +589,10 @@ type TempBasal struct {
 	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
 	CreatedByIdentityName *string `json:"created_by_identity_name,omitempty"`
 	DurationMinutes       *int64  `json:"duration_minutes,omitempty"`
-	Id                    *string `json:"id,omitempty"`
+
+	// FollowsBasal True when a Nightscout client sent it as a percent with no absolute rate: each minute it runs is multiplier times the scheduled basal then
+	FollowsBasal *bool   `json:"follows_basal"`
+	Id           *string `json:"id,omitempty"`
 
 	// Multiplier Times the scheduled basal at its start, so 0.5 is half
 	Multiplier *float64 `json:"multiplier"`

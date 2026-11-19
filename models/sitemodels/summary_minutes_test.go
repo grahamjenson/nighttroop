@@ -19,6 +19,14 @@ func TestSummaryMinutes(t *testing.T) {
 	basalRates := str(`[{"time":"00:00","value":0.5,"timeAsSeconds":0},{"time":"02:00","value":0.8,"timeAsSeconds":7200}]`)
 	defaultProfile := &sitedb.ProfilePreset{OccurredAt: since - 1000, TargetsLowJson: targets("100"), TargetsHighJson: targets("160"), BasalRatesJson: basalRates}
 	mgdl, mmol := consts.UnitsMGDL, consts.UnitsMMOLL
+	// Base is 1.0 U/hr all day and High 2.0 U/hr, as AAPS switches between profiles
+	base := &sitedb.ProfilePreset{OccurredAt: since - 1000, BasalRatesJson: str(`[{"time":"00:00","value":1.0,"timeAsSeconds":0}]`)}
+	high := str(`[{"time":"00:00","value":2.0,"timeAsSeconds":0}]`)
+	// A temporary switch to High from 01:00 for 10 minutes
+	toHigh := []*sitedb.ProfileSwitch{{OccurredAt: minute(60), DurationMinutes: 10, BasalRatesJson: high}}
+	// 1.0 U/hr until 06:00 and 1.2 U/hr from then, in a timezone 4 hours ahead of UTC, so 06:00 there is 02:00 UTC
+	sixAM := &sitedb.ProfilePreset{OccurredAt: since - 1000, Timezone: str("Etc/GMT-4"), BasalRatesJson: str(`[{"time":"00:00","value":1.0,"timeAsSeconds":0},{"time":"06:00","value":1.2,"timeAsSeconds":21600}]`)}
+	follows, fixed := new(true), new(false)
 
 	type want struct {
 		minute           int64
@@ -116,6 +124,37 @@ func TestSummaryMinutes(t *testing.T) {
 			defaults: []*sitedb.ProfilePreset{defaultProfile},
 			basals:   []*SiteTempBasal{{OccurredAt: minute(90), DurationMinutes: 60, Rate: new(0.25), Multiplier: new(0.5)}},
 			want:     []want{{119, new(100.0), new(160.0), new(0.25)}, {120, new(100.0), new(160.0), new(0.25)}, {150, new(100.0), new(160.0), new(0.8)}},
+		},
+		{
+			// AAPS's 150% from 01:05 for 30 minutes, 3.0 U/hr at its start on High, is 1.5 U/hr once the switch ends
+			name:     "a temp basal that follows the basal is its multiplier times the basal after a switch ends",
+			units:    &mgdl,
+			defaults: []*sitedb.ProfilePreset{base},
+			switches: toHigh,
+			basals:   []*SiteTempBasal{{OccurredAt: minute(65), DurationMinutes: 30, Rate: new(3.0), Multiplier: new(1.5), FollowsBasal: follows}},
+			want:     []want{{64, nil, nil, new(2.0)}, {65, nil, nil, new(3.0)}, {69, nil, nil, new(3.0)}, {70, nil, nil, new(1.5)}, {94, nil, nil, new(1.5)}, {95, nil, nil, new(1.0)}},
+		},
+		{
+			// 50% from 05:45 to 06:45 is 0.5 U/hr until 06:00 and 0.6 U/hr from then
+			name:     "a temp basal that follows the basal changes with the schedule",
+			units:    &mgdl,
+			defaults: []*sitedb.ProfilePreset{sixAM},
+			basals:   []*SiteTempBasal{{OccurredAt: minute(105), DurationMinutes: 60, Rate: new(0.5), Multiplier: new(0.5), FollowsBasal: follows}},
+			want:     []want{{104, nil, nil, new(1.0)}, {105, nil, nil, new(0.5)}, {119, nil, nil, new(0.5)}, {120, nil, nil, new(0.6)}, {164, nil, nil, new(0.6)}, {165, nil, nil, new(1.2)}},
+		},
+		{
+			name:     "an absolute temp basal keeps its rate after a switch ends",
+			units:    &mgdl,
+			defaults: []*sitedb.ProfilePreset{base},
+			switches: toHigh,
+			basals:   []*SiteTempBasal{{OccurredAt: minute(65), DurationMinutes: 30, Rate: new(3.0), Multiplier: new(1.5), FollowsBasal: fixed}},
+			want:     []want{{65, nil, nil, new(3.0)}, {70, nil, nil, new(3.0)}, {94, nil, nil, new(3.0)}, {95, nil, nil, new(1.0)}},
+		},
+		{
+			name:   "a temp basal that follows the basal is its rate without a profile",
+			units:  &mgdl,
+			basals: []*SiteTempBasal{{OccurredAt: minute(0), DurationMinutes: 10, Rate: new(0.0), Multiplier: new(1.5), FollowsBasal: follows}},
+			want:   []want{{0, nil, nil, new(0.0)}, {10, nil, nil, nil}},
 		},
 		{
 			name:   "a temp basal's rate is in force without a profile",
