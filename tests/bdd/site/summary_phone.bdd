@@ -23,6 +23,8 @@ ASSERT_VISIBLE #site--summary--graph >> text=SMB
 ASSERT_VISIBLE #site--summary--graph >> text=Carbs
 ASSERT_VISIBLE #site--summary--graph >> text=Basal
 ASSERT_VISIBLE #site--summary--graph >> text=Target
+// A treatment's detail is a line of its own under when and what it was, read in one piece
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> td >> nth=2 >> text=/ for 30 min$/
 SCREENSHOT summary_graph_phone
 
 // So it does over a longer range, where the times are further apart

@@ -2891,9 +2891,34 @@
       transition-property: none;
     }
   }
+  .max-sm\:flex {
+    @media (width < 40rem) {
+      display: flex;
+    }
+  }
   .max-sm\:hidden {
     @media (width < 40rem) {
       display: none;
+    }
+  }
+  .max-sm\:basis-full {
+    @media (width < 40rem) {
+      flex-basis: 100%;
+    }
+  }
+  .max-sm\:flex-wrap {
+    @media (width < 40rem) {
+      flex-wrap: wrap;
+    }
+  }
+  .max-sm\:pt-0 {
+    @media (width < 40rem) {
+      padding-top: calc(var(--spacing) * 0);
+    }
+  }
+  .max-sm\:text-gray-600 {
+    @media (width < 40rem) {
+      color: var(--color-gray-600);
     }
   }
   .sm\:col-span-2 {
