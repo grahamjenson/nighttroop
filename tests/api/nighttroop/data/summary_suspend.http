@@ -1,0 +1,118 @@
+INCLUDE steps/new_site_admin.steps
+
+// A suspended pump is a basal of 0 in the summary's minutes until it resumes. Loop sends a suspend as a temp basal of
+// rate 0, duration 0 and reason suspend, with the site's PWD phone token, and sends it again with its duration when the
+// pump resumes. From any client, a temp basal of rate 0 with the reason suspend is kept as a suspended pump, of type
+// PUMP_SUSPEND. A cancel, a temp basal of duration 0 with no rate from the careportal, or of rate 0 from Trio, still
+// ends the running temp basal. Each minute is since + its index in minutes, so index 0 is 6 hours ago and 360 now.
+
+NAME create_trio
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "trio", "role": "device_pwd_phone", "client": "trio"}
+ASSERT_STATUS 201
+SET trio_token {{ .create_trio.result.ns_token }}
+
+// The default profile, uploaded two days ago: a basal of 0.5
+NAME summary_suspend_default_profile
+POST http://{{ .ns_site }}/api/v1/profiles?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 2880 }}", "created_at": "{{ time 2880 }}", "units": "mg/dL", "store": {"Default": {"dia": 5, "units": "mg/dL", "timezone": "UTC", "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 50}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}], "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.5}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 120}]}}}
+ASSERT_STATUS 200
+
+// A temp basal of 2 U/hr 3 hours ago for 60 minutes (index 180 to 240), cancelled by the careportal 20 minutes in
+// (index 200)
+NAME summary_suspend_temp_basal
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Temp Basal", "created_at": "{{ time 180 }}", "duration": 60, "absolute": 2, "rate": 2}
+ASSERT_STATUS 200
+
+NAME summary_suspend_careportal_cancel
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Temp Basal", "created_at": "{{ time 160 }}", "duration": 0, "enteredBy": "careportal"}
+ASSERT_STATUS 200
+
+// Trio's temp basal of 2 U/hr 2 hours ago for 60 minutes (index 240 to 300), cancelled 20 minutes in (index 260) with
+// a temp basal of rate 0 and duration 0
+NAME summary_suspend_trio_temp_basal
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 .trio_token }}
+B [{"eventType": "Temp Basal", "created_at": "{{ time 120 }}", "duration": 60, "absolute": 2, "rate": 2, "enteredBy": "Trio", "id": "5355535045-0001"},
+   {"eventType": "Temp Basal", "created_at": "{{ time 100 }}", "duration": 0, "absolute": 0, "rate": 0, "enteredBy": "Trio", "id": "5355535045-0002"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@1.type"
+
+// The same from Trio with the reason suspend is a suspended pump: a basal of 0 from 80 minutes ago (index 280) until
+// its temp basal of 1.5 U/hr 10 minutes later (index 290)
+NAME summary_suspend_trio_suspend
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 .trio_token }}
+B [{"eventType": "Temp Basal", "created_at": "{{ time 80 }}", "duration": 0, "absolute": 0, "rate": 0, "reason": "suspend", "enteredBy": "Trio", "id": "5355535045-0003"},
+   {"eventType": "Temp Basal", "created_at": "{{ time 70 }}", "duration": 30, "absolute": 1.5, "rate": 1.5, "enteredBy": "Trio", "id": "5355535045-0004"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "PUMP_SUSPEND" "@0.type"
+
+// AAPS's pump suspended an hour ago (index 300) and resumed after 43 s: kept as 1 minute, so it has resumed
+NAME summary_suspend_aaps_suspend
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "Temp Basal", "created_at": "{{ time 60 }}", "rate": 0, "absolute": 0, "duration": 0, "durationInMilliseconds": 43491, "type": "PUMP_SUSPEND", "app": "AAPS"}
+ASSERT_STATUS 200
+
+// Loop, with the site's PWD phone token, suspends the pump 3 minutes ago (index 357)
+SET suspend_at {{ time 3 }}
+NAME summary_suspend_loop_suspend
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Temp Basal", "reason": "suspend", "rate": 0, "absolute": 0, "temp": "absolute", "duration": 0, "created_at": "{{ .suspend_at }}", "timestamp": "{{ .suspend_at }}", "enteredBy": "loop://iPhone", "syncIdentifier": "73757370656e64207375706d61727920737573706e6420746573742d31"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS "PUMP_SUSPEND" "@0.type"
+
+NAME summary_suspend_suspended
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 361 "@result.items.0.minutes"
+// The default's basal before the suspend
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.350.basal"
+// The suspend is a basal of 0 from when it starts to now
+ASSERT_EQUALS 0 "@result.items.0.minutes.358.basal"
+ASSERT_EQUALS 0 "@result.items.0.minutes.359.basal"
+ASSERT_EQUALS 0 "@result.items.0.minutes.360.basal"
+ASSERT_EQUALS "PUMP_SUSPEND" "@result.items.0.temp_basals.0.type"
+ASSERT_EQUALS 0 "@result.items.0.temp_basals.0.duration_minutes"
+// Each temp basal before its cancel, and the default's basal after it, where the temp basal would still run
+ASSERT_EQUALS 2 "@result.items.0.minutes.190.basal"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.210.basal"
+ASSERT_EQUALS 2 "@result.items.0.minutes.250.basal"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.270.basal"
+// Trio's suspend, until its next temp basal
+ASSERT_EQUALS 0 "@result.items.0.minutes.285.basal"
+ASSERT_EQUALS 1.5 "@result.items.0.minutes.295.basal"
+// AAPS's suspend of 43 s is a basal of 0 for its minute, then the default's basal
+ASSERT_EQUALS 1 "@result.items.0.temp_basals.1.duration_minutes"
+ASSERT_EQUALS 0 "@result.items.0.minutes.300.basal"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.310.basal"
+
+// The pump resumes after 2 minutes, and Loop sends the suspend again with that duration (index 357 to 359)
+NAME summary_suspend_loop_resume
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Temp Basal", "reason": "suspend", "rate": 0, "absolute": 0, "temp": "absolute", "duration": 2, "created_at": "{{ .suspend_at }}", "timestamp": "{{ .suspend_at }}", "enteredBy": "loop://iPhone", "syncIdentifier": "73757370656e64207375706d61727920737573706e6420746573742d31"}]
+ASSERT_STATUS 200
+
+NAME summary_suspend_resumed
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+// The same suspend, now with its duration: a basal of 0 for its 2 minutes, then the default's basal again
+ASSERT_LENGTH 8 "@result.items.0.temp_basals"
+ASSERT_EQUALS "PUMP_SUSPEND" "@result.items.0.temp_basals.0.type"
+ASSERT_EQUALS 2 "@result.items.0.temp_basals.0.duration_minutes"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.350.basal"
+ASSERT_EQUALS 0 "@result.items.0.minutes.358.basal"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.360.basal"

@@ -1719,6 +1719,10 @@ func TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal {
 			xstring3 := *(*source).UpdatedByIdentityName
 			sitemodelsSiteTempBasal.UpdatedByIdentityName = &xstring3
 		}
+		if (*source).Type != nil {
+			xstring4 := *(*source).Type
+			sitemodelsSiteTempBasal.Type = &xstring4
+		}
 		pSitemodelsSiteTempBasal = &sitemodelsSiteTempBasal
 	}
 	return pSitemodelsSiteTempBasal

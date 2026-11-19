@@ -24,9 +24,9 @@ var embeddedFiles embed.FS
 func TestNS(t *testing.T) {
 	// A new site can create 5 identities at once, so identities_max.http reaches the identity limit within that burst
 	t.Setenv("MAX_IDENTITIES_PER_USER", "8")
-	// Every file signs in as its site's admin from the same IP
-	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "100")
-	t.Setenv("SITE_LOGIN_NAME_PER_MINUTE_BURST", "100")
+	// Every file signs in as its site's admin from the same IP, over 100 sign ins in all
+	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "150")
+	t.Setenv("SITE_LOGIN_NAME_PER_MINUTE_BURST", "150")
 	// A site can save its connectors 10 times at once: connectors.http saves 9, connectors_rate_limit.http goes past it
 	t.Setenv("SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT", "1")
 	t.Setenv("SITE_UPDATE_CONNECTORS_PER_MINUTE_BURST", "10")
