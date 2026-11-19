@@ -25,6 +25,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - It removes its local copies of the backups. If the disk is still short, it removes the logs DB.
   - It pages the admin with an SMS, with the space free before and after.
   - It never removes the control DB, a site's DB or the jobs DB.
+  - It keeps the backup of a site with no DB on the server: that backup is the archive of an archived site.
   - If the disk still has less than 100 MB free, the server does not start, and says how much is free.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
 - Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`. A button or form on a page (an htmx request) gets an error toast instead: "The server is starting. Try again in a few seconds."
@@ -2037,7 +2038,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
-  - A copy cut short does not replace the last copy.
+  - A copy cut short, or one that fails, does not replace or remove the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
   and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
