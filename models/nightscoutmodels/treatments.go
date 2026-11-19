@@ -510,11 +510,11 @@ func (t Treatment) GetSubject() *string {
 // durationInMilliseconds, which AAPS reads first, is exact; API v1 gives the nearest minutes.
 //
 // A profile switch's timeshift is in milliseconds too, as AAPS reads it so: one AAPS sent, with its
-// originalProfileName, is already, and another, from the site or the careportal, is kept in minutes.
+// originalProfileName, is already, and another, from the site or the careportal, is in hours.
 func (t Treatment) V3() any {
 	t.Duration = t.Duration.InWholeMinutes()
 	if t.Timeshift != nil && t.OriginalProfileName == nil {
-		t.Timeshift = new(*t.Timeshift * 60_000)
+		t.Timeshift = new(*t.Timeshift * 3_600_000)
 	}
 	return t
 }

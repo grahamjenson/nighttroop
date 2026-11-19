@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/glucose"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/limits"
 )
@@ -126,6 +127,10 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 		return nil, apiutils.ErrInternalServerError
 	}
 	summary.GlucoseReadings = readings[:min(len(readings), maxRows)]
+	if summary.CurrentGlucose, err = currentGlucose(ctx, q, since, readings, siteContext); err != nil {
+		slog.ErrorContext(ctx, "Error finding summary current glucose", "error", err)
+		return nil, apiutils.ErrInternalServerError
+	}
 	doses, err := q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: &since, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if summary.InsulinDoses, herr = apiutils.Searched(doses, err, "summary insulin doses", sitemodels.InsulinDoseFromDB); herr != nil {
 		return nil, herr
@@ -178,6 +183,27 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	return summary, nil
 }
 
+// maxCGMRows caps the CGM readings the current glucose is cleaned from at trendLookback of them each minute from three
+// sources
+const maxCGMRows = 3 * 15
+
+// currentGlucose is the newest CGM reading from since, cleaned with the CGM readings trendLookback before it, so its
+// change is since the CGM's reading before and not a finger stick's. With no CGM reading from since, it is the newest
+// of the readings, as a meter's.
+func currentGlucose(ctx context.Context, q *sitedb.Queries, since int64, readings []*sitemodels.SiteCleanGlucoseReading, siteContext *httputils.SiteContext) (*sitemodels.SiteCleanGlucoseReading, error) {
+	rows, err := q.AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: int64(trendLookback.Minutes()), Limit: maxCGMRows})
+	if err != nil {
+		return nil, err
+	}
+	if cgm := glucose.CleanReadings(rows); len(cgm) > 0 && cgm[0].Row.OccurredAt >= since {
+		return cleanGlucoseReadingFromDB(cgm[0], siteContext), nil
+	}
+	if len(readings) > 0 {
+		return readings[0], nil
+	}
+	return nil, nil
+}
+
 // addMinutes works out the targets and basal in force each minute of the summary. A profile sent without its own
 // timezone is read in the site's, as the daily summaries are, not the viewer's.
 func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) (herr *apiutils.HTTPError) {
@@ -196,7 +222,7 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 		slog.ErrorContext(ctx, "Error searching summary profiles", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
-	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: until, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
+	switches, err := q.SummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: until, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
 	if err != nil {
 		slog.ErrorContext(ctx, "Error searching summary profile switches", "error", err)
 		return nil, apiutils.ErrInternalServerError
@@ -216,7 +242,6 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 		return nil, herr
 	}
 	slices.Reverse(defaults)
-	slices.Reverse(switches)
 	return sitemodels.SummaryMinutes(since, until, units, location, defaults, switches,
 		append(earlier, targets...), append(earlierBasal, basals...)), nil
 }
