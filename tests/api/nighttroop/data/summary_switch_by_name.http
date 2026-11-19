@@ -1,0 +1,98 @@
+INCLUDE steps/new_site.steps
+
+// A profile switch sent by its profile's name, with no profileJson, as the careportal and T1DCarer send one, takes the
+// schedules of the profile of that name in the profile store, as Nightscout's profile functions read it, shifted by its
+// timeshift in hours and with its basal times its percentage. Each check is of the summary's last minute, now.
+//
+// Weekend's schedules repeat every 6 hours: A (basal 1, targets 110 to 130) from half past 0, and B (basal 2, targets
+// 150 to 170) from half past 3. Its timezone is chosen by the hour now so that now is from 1:00 to 3:00 in it, in A at
+// least 30 minutes from its ends, and now shifted 3 hours is in B. The default profile is a basal of 0.05 and targets
+// 80 to 180.
+NAME summary_switch_name_units
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME summary_switch_name_store
+POST http://{{ .ns_site }}/api/v1/profile
+H api-secret: {{ sha1 token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 60 }}", "created_at": "{{ time 60 }}", "units": "mg/dL", "enteredBy": "careportal", "store": {"Default": {"dia": 5, "units": "mg/dL", "timezone": "UTC", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.05}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 80}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 180}]}, "Weekend": {"dia": 5, "units": "mg/dL", "timezone": "{{ if eq (now "UTC" "15") "01" "02" "07" "08" "13" "14" "19" "20" }}UTC{{ else if eq (now "UTC" "15") "03" "04" "09" "10" "15" "16" "21" "22" }}Etc/GMT+2{{ else }}Etc/GMT-2{{ end }}", "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 2}, {"time": "00:30", "timeAsSeconds": 1800, "value": 1}, {"time": "03:30", "timeAsSeconds": 12600, "value": 2}, {"time": "06:30", "timeAsSeconds": 23400, "value": 1}, {"time": "09:30", "timeAsSeconds": 34200, "value": 2}, {"time": "12:30", "timeAsSeconds": 45000, "value": 1}, {"time": "15:30", "timeAsSeconds": 55800, "value": 2}, {"time": "18:30", "timeAsSeconds": 66600, "value": 1}, {"time": "21:30", "timeAsSeconds": 77400, "value": 2}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 150}, {"time": "00:30", "timeAsSeconds": 1800, "value": 110}, {"time": "03:30", "timeAsSeconds": 12600, "value": 150}, {"time": "06:30", "timeAsSeconds": 23400, "value": 110}, {"time": "09:30", "timeAsSeconds": 34200, "value": 150}, {"time": "12:30", "timeAsSeconds": 45000, "value": 110}, {"time": "15:30", "timeAsSeconds": 55800, "value": 150}, {"time": "18:30", "timeAsSeconds": 66600, "value": 110}, {"time": "21:30", "timeAsSeconds": 77400, "value": 150}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 170}, {"time": "00:30", "timeAsSeconds": 1800, "value": 130}, {"time": "03:30", "timeAsSeconds": 12600, "value": 170}, {"time": "06:30", "timeAsSeconds": 23400, "value": 130}, {"time": "09:30", "timeAsSeconds": 34200, "value": 170}, {"time": "12:30", "timeAsSeconds": 45000, "value": 130}, {"time": "15:30", "timeAsSeconds": 55800, "value": 170}, {"time": "18:30", "timeAsSeconds": 66600, "value": 130}, {"time": "21:30", "timeAsSeconds": 77400, "value": 170}]}}}
+ASSERT_STATUS 200
+
+// At 100% with no timeshift: Weekend's A now
+NAME summary_switch_name_switch
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Profile Switch", "profile": "Weekend", "duration": 30, "percentage": 100, "timeshift": 0, "created_at": "{{ time 3 }}", "enteredBy": "careportal"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@0.profileJson"
+
+NAME summary_switch_name
+GET http://{{ site }}/summary?hours=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 61 "@result.items.0.minutes"
+ASSERT_EQUALS 110 "@result.items.0.minutes.60.low_target"
+ASSERT_EQUALS 130 "@result.items.0.minutes.60.high_target"
+ASSERT_EQUALS 1 "@result.items.0.minutes.60.basal"
+
+// At 150% with a timeshift of 3 hours: Weekend's B, as it is 3 hours from now, and its basal of 2 times 1.5
+NAME summary_switch_name_shifted_switch
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Profile Switch", "profile": "Weekend", "duration": 30, "percentage": 150, "timeshift": 3, "created_at": "{{ time 2 }}", "enteredBy": "careportal"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@0.profileJson"
+ASSERT_EQUALS 3 "@0.timeshift"
+ASSERT_EQUALS 150 "@0.percentage"
+
+NAME summary_switch_name_shifted
+GET http://{{ site }}/summary?hours=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 150 "@result.items.0.minutes.60.low_target"
+ASSERT_EQUALS 170 "@result.items.0.minutes.60.high_target"
+ASSERT_EQUALS 3 "@result.items.0.minutes.60.basal"
+
+// A percent temp basal's rate is from the switch's profile too: half of Weekend's B times 1.5
+NAME summary_switch_name_temp_basal
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Temp Basal", "percent": -50, "duration": 30, "created_at": "{{ time 2 }}", "enteredBy": "careportal"}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.5 "@0.absolute"
+
+NAME summary_switch_name_temp_basal_delete
+DELETE http://{{ .ns_site }}/api/v1/treatments/{{ dig "summary_switch_name_temp_basal.0._id" }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+
+// A name not in the profile store keeps the default profile, times the switch's percentage
+NAME summary_switch_name_missing_switch
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Profile Switch", "profile": "Holiday", "duration": 30, "percentage": 200, "timeshift": 3, "created_at": "{{ time 1 }}", "enteredBy": "careportal"}]
+ASSERT_STATUS 200
+
+NAME summary_switch_name_missing
+GET http://{{ site }}/summary?hours=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 80 "@result.items.0.minutes.60.low_target"
+ASSERT_EQUALS 180 "@result.items.0.minutes.60.high_target"
+ASSERT_EQUALS 0.1 "@result.items.0.minutes.60.basal"
+
+// The switches still come back without a profileJson, and the timeshift in hours as sent
+NAME summary_switch_name_read
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[eventType]=Profile%20Switch&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS null "@1.profileJson"
+ASSERT_EQUALS "Weekend" "@1.profile"
+ASSERT_EQUALS 3 "@1.timeshift"

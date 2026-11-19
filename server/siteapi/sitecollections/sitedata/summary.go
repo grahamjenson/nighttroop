@@ -196,7 +196,7 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 		slog.ErrorContext(ctx, "Error searching summary profiles", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
-	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: until, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
+	switches, err := q.SummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: until, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
 	if err != nil {
 		slog.ErrorContext(ctx, "Error searching summary profile switches", "error", err)
 		return nil, apiutils.ErrInternalServerError
@@ -216,7 +216,6 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 		return nil, herr
 	}
 	slices.Reverse(defaults)
-	slices.Reverse(switches)
 	return sitemodels.SummaryMinutes(since, until, units, location, defaults, switches,
 		append(earlier, targets...), append(earlierBasal, basals...)), nil
 }

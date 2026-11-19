@@ -164,3 +164,28 @@ func TestUploaderFields(t *testing.T) {
 	require.JSONEq(t, `{"name": "phone"}`, *jsonp(status.Uploader))
 	require.Len(t, left, 2)
 }
+
+// A pump's state is suspended as Loop, Trio and AAPS each say it, normal when they say it is not, and unset when the
+// pump does not say
+func TestPumpState(t *testing.T) {
+	tests := []struct {
+		name, pump string
+		state      *string
+	}{
+		{"Loop suspended", `{"suspended": true, "reservoir": 160}`, new("suspended")},
+		{"Loop not suspended", `{"suspended": false}`, new("normal")},
+		{"Trio suspended", `{"status": {"status": "normal", "suspended": true, "bolusing": false}}`, new("suspended")},
+		{"Trio not suspended", `{"status": {"status": "normal", "suspended": false}}`, new("normal")},
+		{"AAPS suspended", `{"status": {"status": "suspended"}}`, new("suspended")},
+		{"AAPS suspended in capitals", `{"status": {"status": "SUSPENDED"}}`, new("suspended")},
+		{"AAPS normal", `{"status": {"status": "normal"}}`, new("normal")},
+		{"no state", `{"reservoir": 50}`, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var status nightscoutmodels.DeviceStatus
+			require.NoError(t, json.Unmarshal([]byte(`{"device": "test", "pump": `+tt.pump+`}`), &status))
+			require.Equal(t, tt.state, NightscoutToDBCreateDeviceReport(status, nightscoutmodels.ConverterContext{}).PumpState)
+		})
+	}
+}

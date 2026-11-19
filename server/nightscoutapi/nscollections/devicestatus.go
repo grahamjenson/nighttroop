@@ -1,9 +1,11 @@
 package nscollections
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strings"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -84,7 +86,7 @@ func (c DeviceStatusCollection) Delete(q *sitedb.Queries, ctx context.Context, i
 
 // RewriteModel keeps what the report's document cannot give back unless it is sent: its pump and loop status, whose
 // JSON is kept only on its device's newest report, its configuration, kept in loop_settings and given as the identity
-// may see it, and the pump's state and charging, which only a connector sets
+// may see it, and the pump's charging, which only a connector sets
 func (c DeviceStatusCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, sent map[string]any, stored *sitedb.DeviceReport, cc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
 	params, err := deviceReportParams(q, ctx, nsModel, cc)
 	if err != nil {
@@ -94,6 +96,7 @@ func (c DeviceStatusCollection) RewriteModel(q *sitedb.Queries, ctx context.Cont
 		params.PumpReservoir, params.PumpBatteryPercent, params.PumpClock = stored.PumpReservoir, stored.PumpBatteryPercent, stored.PumpClock
 		params.PumpManufacturer, params.PumpModel, params.PumpID = stored.PumpManufacturer, stored.PumpModel, stored.PumpID
 		params.PumpSuspended, params.PumpBolusing, params.PumpJson = stored.PumpSuspended, stored.PumpBolusing, stored.PumpJson
+		params.PumpState = stored.PumpState
 	}
 	_, sentOpenAPS := sent["openaps"]
 	if _, sentLoop := sent["loop"]; !sentOpenAPS && !sentLoop {
@@ -103,7 +106,7 @@ func (c DeviceStatusCollection) RewriteModel(q *sitedb.Queries, ctx context.Cont
 	if _, ok := sent["configuration"]; !ok {
 		params.ConfigurationID = stored.ConfigurationID
 	}
-	params.ID, params.PumpState, params.PumpChargingState = stored.ID, stored.PumpState, stored.PumpChargingState
+	params.ID, params.PumpChargingState = stored.ID, stored.PumpChargingState
 	return q.RewriteDeviceReport(ctx, sitedb.RewriteDeviceReportParams(params))
 }
 
@@ -301,6 +304,7 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 		createParams.PumpID = source.Pump.PumpID.Stringp()
 		createParams.PumpSuspended = (*bool)(source.Pump.Suspended)
 		createParams.PumpBolusing = (*bool)(source.Pump.Bolusing)
+		createParams.PumpState = pumpState(source.Pump)
 	}
 
 	// Loop's are set last, so a status with both keeps Loop's settings, IOB, COB and predictions over OpenAPS's
@@ -312,6 +316,23 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 	}
 
 	return createParams
+}
+
+// pumpState is "suspended" when the pump says it is: Loop in its suspended, Trio in its status's suspended, and AAPS
+// with its status's status. It is "normal" when the pump says it is not, and nil when the pump does not say.
+func pumpState(pump *nightscoutmodels.PumpStatus) *string {
+	suspended := pump.Suspended
+	var status *string
+	if pump.Status != nil {
+		suspended, status = cmp.Or(suspended, pump.Status.Suspended), pump.Status.Status.Stringp()
+	}
+	switch {
+	case (suspended != nil && bool(*suspended)) || (status != nil && strings.EqualFold(*status, "suspended")):
+		return ptr("suspended")
+	case suspended != nil || status != nil:
+		return ptr("normal")
+	}
+	return nil
 }
 
 // setOpenAPSColumns keeps an OpenAPS loop's status, with its predictions, and its IOB and COB

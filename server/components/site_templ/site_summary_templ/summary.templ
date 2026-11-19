@@ -296,7 +296,13 @@ templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 	>
 		<div class="flex items-baseline justify-between gap-2">
 			<span class="truncate font-semibold text-brand-night">{ orDash(status.CreatedByDeviceName) }</span>
-			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(ctx, status.OccurredAt, time.Now()) }</span>
+			// A suspended pump gives no insulin, so the card says so
+			if status.PumpState != nil && *status.PumpState == "suspended" {
+				@badge.Badge(badge.Props{ID: "site--summary--device--" + status.ID + "--suspended", Variant: badge.VariantWarning}) {
+					{ i18n.T(ctx, "site.summary.device.suspended") }
+				}
+			}
+			<span class="ml-auto whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(ctx, status.OccurredAt, time.Now()) }</span>
 		</div>
 		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
 			@detail(i18n.T(ctx, "site.summary.device.phone"), display.Value(ctx, status.DeviceBatteryPercent, "%"))

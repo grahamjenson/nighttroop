@@ -3,7 +3,7 @@ INCLUDE steps/ns_units_mgdl.steps
 
 // AAPS sends a profile switch's timeshift in milliseconds (PS.timeshift, toNSProfileSwitch) with its
 // originalProfileName, and reads it back as milliseconds, as Nightscout's profile functions read it. It is kept in
-// minutes, as the careportal's is.
+// minutes, as the careportal's hours are.
 
 // Activate 110 % for 60 minutes, shifted an hour forward
 NAME add_profile_switch_shift_forward
@@ -78,14 +78,22 @@ B {
  }
 ASSERT_STATUS 400
 
-// A switch from the careportal or the site, with no originalProfileName, is kept in minutes, which API v1 gives back.
-// API v3 and its storage socket, which AAPS reads, give it in milliseconds, so AAPS shifts its profile by the hour
+// A switch from the careportal or T1DCarer, with no originalProfileName, has its timeshift in hours, as Nightscout's
+// careportal sends it, which API v1 gives back. API v3 and its storage socket, which AAPS reads, give it in
+// milliseconds, so AAPS shifts its profile by the hour
 NAME add_careportal_switch_shifted
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
-B [{"eventType": "Profile Switch", "profile": "NSmmol", "percentage": 90, "timeshift": 60, "duration": 20, "created_at": "{{ time 3 }}"}]
+B [{"eventType": "Profile Switch", "profile": "NSmmol", "percentage": 90, "timeshift": 1, "duration": 20, "created_at": "{{ time 3 }}"}]
 ASSERT_STATUS 200
-ASSERT_EQUALS 60 "@0.timeshift"
+ASSERT_EQUALS 1 "@0.timeshift"
+
+// A careportal shift of more than a day is refused, as AAPS's is
+NAME add_careportal_switch_shift_too_far
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Profile Switch", "profile": "NSmmol", "percentage": 90, "timeshift": 25, "duration": 20, "created_at": "{{ time 2 }}"}]
+ASSERT_STATUS 400
 
 NAME careportal_switch_shifted_v3
 GET http://{{ site }}/api/v3/treatments/{{ dig "add_careportal_switch_shifted.0._id" }}
@@ -98,4 +106,4 @@ NAME careportal_switch_shifted_v1
 GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Profile%20Switch&count=10
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 60 "@0.timeshift"
+ASSERT_EQUALS 1 "@0.timeshift"
