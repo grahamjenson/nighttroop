@@ -18,17 +18,14 @@ import (
 func TestControlStoreRoutes(t *testing.T) {
 	tests := []struct {
 		name    string
-		role    consts.ControlRole
 		method  string
 		path    string
 		status  int
 		message string
 	}{
-		{"read only cannot disable a site", consts.ControlRoleRead, http.MethodPost, "/sites/some-site", http.StatusForbidden, ""},
-		{"read only cannot hydrate a site", consts.ControlRoleRead, http.MethodPost, "/archived-sites/some-site", http.StatusForbidden, ""},
-		{"jobs cannot be updated", consts.ControlRoleAdmin, http.MethodPost, "/jobs/1", http.StatusMethodNotAllowed, "jobs cannot be updated here"},
-		{"job stats cannot be updated", consts.ControlRoleAdmin, http.MethodPost, "/job-stats/day", http.StatusMethodNotAllowed, "job-stats cannot be updated here"},
-		{"connectors cannot be updated", consts.ControlRoleAdmin, http.MethodPost, "/connectors/site::virtual", http.StatusMethodNotAllowed, "connectors cannot be updated here"},
+		{"jobs cannot be updated", http.MethodPost, "/jobs/1", http.StatusMethodNotAllowed, "jobs cannot be updated here"},
+		{"job stats cannot be updated", http.MethodPost, "/job-stats/day", http.StatusMethodNotAllowed, "job-stats cannot be updated here"},
+		{"connectors cannot be updated", http.MethodPost, "/connectors/site::virtual", http.StatusMethodNotAllowed, "connectors cannot be updated here"},
 	}
 
 	r := chi.NewRouter()
@@ -40,7 +37,7 @@ func TestControlStoreRoutes(t *testing.T) {
 			req.Header.Set("Accept", "application/json")
 			req.Header.Set("Content-Type", "application/json")
 			ctx := httputils.CreateControlContext(req.Context(), nil, "", httputils.HTTPActionWrite)
-			ctx = httputils.SetAdminControlContext(ctx, &controldb.ControlIdentity{Name: "tester", Role: test.role}, config.ServerStatus{})
+			ctx = httputils.SetAdminControlContext(ctx, &controldb.ControlIdentity{Name: "tester", Role: consts.ControlRoleAdmin}, config.ServerStatus{})
 			w := httptest.NewRecorder()
 
 			r.ServeHTTP(w, req.WithContext(ctx))

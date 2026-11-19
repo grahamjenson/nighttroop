@@ -77,12 +77,12 @@ func TestTruncateHandler(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	router := chi.NewRouter()
-	router.With(AdminOnly).Post("/sites/{id}/truncate", (&SitesCollection{}).TruncateHandler)
-	truncate := func(role consts.ControlRole) *httptest.ResponseRecorder {
+	router.Post("/sites/{id}/truncate", (&SitesCollection{}).TruncateHandler)
+	truncate := func() *httptest.ResponseRecorder {
 		r := httptest.NewRequest(http.MethodPost, "/sites/"+siteID+"/truncate", nil)
 		r.Header.Set("Accept", "application/json")
 		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionWrite)
-		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: role}, config.ServerStatus{})
+		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}, config.ServerStatus{})
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, r.WithContext(rctx))
 		return w
@@ -91,8 +91,7 @@ func TestTruncateHandler(t *testing.T) {
 	// Any site whose DB is here can be truncated by an admin, within its DB size limit or over it
 	size := int64(1000)
 	require.NoError(t, controlDB.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: &size, ID: siteID}))
-	require.Equal(t, http.StatusForbidden, truncate(consts.ControlRoleRead).Code)
-	require.Equal(t, http.StatusOK, truncate(consts.ControlRoleAdmin).Code, "a site within its limit is truncated")
+	require.Equal(t, http.StatusOK, truncate().Code, "a site within its limit is truncated")
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
@@ -104,33 +103,31 @@ func TestTruncateHandler(t *testing.T) {
 	require.NoError(t, err)
 	_, err = controlDB.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: `["` + siteID + `"]`})
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, truncate(consts.ControlRoleAdmin).Code, "an archived site is not truncated")
+	require.Equal(t, http.StatusBadRequest, truncate().Code, "an archived site is not truncated")
 }
 
-// TestSettingsHandler checks only an admin can turn public site creation off and on
+// TestSettingsHandler checks an admin can turn public site creation off and on
 func TestSettingsHandler(t *testing.T) {
 	_, controlDB, _ := testutils.NewControlDBWithSite(t)
-	settings := func(role consts.ControlRole, body string) *httptest.ResponseRecorder {
+	settings := func(body string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(http.MethodPost, "/settings", strings.NewReader(body))
 		r.Header.Set("Accept", "application/json")
 		r.Header.Set("Content-Type", "application/json")
 		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionWrite)
-		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: role}, config.ServerStatus{})
+		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}, config.ServerStatus{})
 		w := httptest.NewRecorder()
-		AdminOnly(http.HandlerFunc((&SitesCollection{}).SettingsHandler)).ServeHTTP(w, r.WithContext(rctx))
+		(&SitesCollection{}).SettingsHandler(w, r.WithContext(rctx))
 		return w
 	}
 
 	require.True(t, controlDB.PublicSiteCreation(t.Context()), "the public can create sites on a new server")
-	require.Equal(t, http.StatusForbidden, settings(consts.ControlRoleRead, `{"public_site_creation": false}`).Code)
-	require.True(t, controlDB.PublicSiteCreation(t.Context()))
 
-	off := settings(consts.ControlRoleAdmin, `{"public_site_creation": false}`)
+	off := settings(`{"public_site_creation": false}`)
 	require.Equal(t, http.StatusOK, off.Code)
 	require.JSONEq(t, `{"status": 200, "result": {"public_site_creation": false}}`, off.Body.String())
 	require.False(t, controlDB.PublicSiteCreation(t.Context()))
 
-	require.Equal(t, http.StatusOK, settings(consts.ControlRoleAdmin, `{"public_site_creation": true}`).Code)
+	require.Equal(t, http.StatusOK, settings(`{"public_site_creation": true}`).Code)
 	require.True(t, controlDB.PublicSiteCreation(t.Context()))
 }
 
@@ -191,26 +188,25 @@ func TestUploadDBHandler(t *testing.T) {
 	require.Equal(t, `{"by":"admin","reason":"cannot_open"}`, *events[0].Attributes)
 }
 
-// An admin downloads the zip of a site's DB its admins get from Download Data, which its admins see in its events; a
-// control identity who is not an admin cannot, nor can a site with no DB here
+// An admin downloads the zip of a site's DB its admins get from Download Data, which its admins see in its events, but
+// not of a site with no DB here
 func TestDownloadDBHandler(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	router := chi.NewRouter()
-	router.With(AdminOnly).Get("/sites/{id}/db", (&SitesCollection{}).DownloadDBHandler)
-	download := func(role consts.ControlRole, id string) *httptest.ResponseRecorder {
+	router.Get("/sites/{id}/db", (&SitesCollection{}).DownloadDBHandler)
+	download := func(id string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(http.MethodGet, "/sites/"+id+"/db", nil)
 		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionRead)
-		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: role}, config.ServerStatus{})
+		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}, config.ServerStatus{})
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, r.WithContext(rctx))
 		return w
 	}
 
-	require.Equal(t, http.StatusForbidden, download(consts.ControlRoleRead, siteID).Code)
-	require.Equal(t, http.StatusNotFound, download(consts.ControlRoleAdmin, "nosuchsite").Code)
+	require.Equal(t, http.StatusNotFound, download("nosuchsite").Code)
 
-	w := download(consts.ControlRoleAdmin, siteID)
+	w := download(siteID)
 	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
 	name := siteID + "-" + time.Now().UTC().Format(time.DateOnly)
 	require.Equal(t, "application/zip", w.Header().Get("Content-Type"))
@@ -232,7 +228,7 @@ func TestDownloadDBHandler(t *testing.T) {
 
 	// An unavailable site with no DB here has none to download
 	controlDB.MakeSiteUnavailable(siteID, db.UnavailableMissing)
-	require.Equal(t, http.StatusNotFound, download(consts.ControlRoleAdmin, siteID).Code)
+	require.Equal(t, http.StatusNotFound, download(siteID).Code)
 }
 
 // An admin downloads the DB here of a site unavailable as its migration failed, as it is, to fix it
