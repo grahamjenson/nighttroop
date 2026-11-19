@@ -133,13 +133,14 @@ func (c DeviceStatusCollection) SearchModels(q *sitedb.Queries, ctx context.Cont
 // DB TO NIGHTSCOUT
 ///////
 
+// DBToNightscoutDeviceStatus is a device report as Nightscout's device status: its columns, then its uploader, pump,
+// configuration and loop, each read from what was kept as sent and filled in from the columns
 func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httputils.SiteContext) nightscoutmodels.DeviceStatus {
 	if source == nil {
 		return nightscoutmodels.DeviceStatus{}
 	}
 
 	nsModel := nightscoutmodels.DBModelToDeviceStatus(source, siteContext)
-
 	if source.IsDeviceCharging != nil {
 		nsModel.IsCharging = ptr(types.FlexibleBool(*source.IsDeviceCharging))
 	}
@@ -149,47 +150,54 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if source.OverrideJson != nil {
 		nsModel.OverrideRaw = ptr(json.RawMessage(*source.OverrideJson))
 	}
-
-	/////
-	// Pump
-	/////
-	// Its fields without a column, like AAPS's extended with the profile and temp basal Nightguard shows, are read
-	// from the pump and uploader kept as sent, through the model so only known fields go out; the columns fill in the
-	// rest, as for one kept before them
-	pump := nightscoutmodels.PumpStatus{}
-	uploader := nightscoutmodels.UploaderStatus{}
-	if source.PumpJson != nil {
-		_ = json.Unmarshal([]byte(*source.PumpJson), &pump)
+	nsModel.Uploader = uploaderStatus(source)
+	nsModel.Pump = pumpStatus(source)
+	// Its configuration is the loop_settings it refers to, left out when they were deleted
+	if configuration := loopSettingsJSON(context.Background(), siteContext, source.ConfigurationID); configuration != nil {
+		nsModel.ConfigurationRaw = &configuration
 	}
+	if status := loopStatus(source); status != nil && *source.LoopName == "openaps" {
+		nsModel.OpenAPSRaw = &status
+	} else if status != nil && *source.LoopName == "loop" {
+		nsModel.LoopRaw = &status
+	}
+	return nsModel
+}
+
+// uploaderStatus is the uploader kept as sent, through the model so only known fields go out, with the phone's battery
+// and charging from their columns, as Loop and Trio send them in uploader, where LoopFollow reads them. It is nil when
+// it has none of these.
+func uploaderStatus(source *sitedb.DeviceReport) *nightscoutmodels.UploaderStatus {
+	uploader := nightscoutmodels.UploaderStatus{}
 	if source.UploaderJson != nil {
 		_ = json.Unmarshal([]byte(*source.UploaderJson), &uploader)
 	}
-	// Loop and Trio send the phone's battery and charging in uploader, where LoopFollow reads them
 	if uploader.Battery == nil && source.DeviceBatteryPercent != nil {
 		uploader.Battery = ptr(types.FlexibleInt64(*source.DeviceBatteryPercent))
 	}
 	if uploader.IsCharging == nil && source.IsDeviceCharging != nil {
 		uploader.IsCharging = ptr(types.FlexibleBool(*source.IsDeviceCharging))
 	}
-	if uploader != (nightscoutmodels.UploaderStatus{}) {
-		nsModel.Uploader = &uploader
+	if uploader == (nightscoutmodels.UploaderStatus{}) {
+		return nil
 	}
-	if pump.Manufacturer == nil && source.PumpManufacturer != nil {
-		pump.Manufacturer = (*types.ShortString)(source.PumpManufacturer)
+	return &uploader
+}
+
+// pumpStatus is the pump kept as sent, through the model so only known fields go out, such as AAPS's extended with the
+// profile and temp basal Nightguard shows. The columns fill in the fields it does not have, as for a pump kept before
+// its JSON was. It is nil when it has none of these.
+func pumpStatus(source *sitedb.DeviceReport) *nightscoutmodels.PumpStatus {
+	pump := nightscoutmodels.PumpStatus{}
+	if source.PumpJson != nil {
+		_ = json.Unmarshal([]byte(*source.PumpJson), &pump)
 	}
-	if pump.Model == nil && source.PumpModel != nil {
-		pump.Model = (*types.ShortString)(source.PumpModel)
-	}
-	if pump.PumpID == nil && source.PumpID != nil {
-		pump.PumpID = (*types.ShortString)(source.PumpID)
-	}
+	pump.Manufacturer = cmp.Or(pump.Manufacturer, (*types.ShortString)(source.PumpManufacturer))
+	pump.Model = cmp.Or(pump.Model, (*types.ShortString)(source.PumpModel))
+	pump.PumpID = cmp.Or(pump.PumpID, (*types.ShortString)(source.PumpID))
 	// Followers show a suspended pump's insulin delivery as suspended
-	if pump.Suspended == nil && source.PumpSuspended != nil {
-		pump.Suspended = (*types.FlexibleBool)(source.PumpSuspended)
-	}
-	if pump.Bolusing == nil && source.PumpBolusing != nil {
-		pump.Bolusing = (*types.FlexibleBool)(source.PumpBolusing)
-	}
+	pump.Suspended = cmp.Or(pump.Suspended, (*types.FlexibleBool)(source.PumpSuspended))
+	pump.Bolusing = cmp.Or(pump.Bolusing, (*types.FlexibleBool)(source.PumpBolusing))
 	if pump.Battery == nil && source.PumpBatteryPercent != nil {
 		pump.Battery = &nightscoutmodels.PumpBattery{Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent))}
 	}
@@ -199,35 +207,23 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if pump.Clock == nil && source.PumpClock != nil {
 		pump.Clock = ptr(types.DateStringFromInt64AndUTCOffset(*source.PumpClock, nil))
 	}
-	if pump != (nightscoutmodels.PumpStatus{}) {
-		nsModel.Pump = &pump
+	if pump == (nightscoutmodels.PumpStatus{}) {
+		return nil
 	}
+	return &pump
+}
 
-	///////
-	/// Extracting Loop values
-	///////
-	// Its configuration is the loop_settings it refers to, left out when they were deleted
-	if configuration := loopSettingsJSON(context.Background(), siteContext, source.ConfigurationID); configuration != nil {
-		nsModel.ConfigurationRaw = &configuration
+// loopStatus is the loop's status, given back as its openaps or loop object: as it was sent, without its predictions
+// once a day old, or, for one cleared whole by an earlier truncate, as what was extracted of it, its IOB and COB. It is
+// nil without a loop.
+func loopStatus(source *sitedb.DeviceReport) json.RawMessage {
+	if source.LoopName == nil {
+		return nil
 	}
-
-	// The loop's status goes back as its openaps or loop object, as it was sent, without its predictions once a day old,
-	// or, for one cleared whole by an earlier truncate, as what was extracted of it, its IOB and COB
-	if source.LoopName != nil {
-		status := extractedLoopStatus(*source.LoopName, source)
-		if source.LoopStatusJson != nil {
-			status = json.RawMessage(*source.LoopStatusJson)
-		}
-		switch {
-		case status == nil:
-		case *source.LoopName == "openaps":
-			nsModel.OpenAPSRaw = &status
-		case *source.LoopName == "loop":
-			nsModel.LoopRaw = &status
-		}
+	if source.LoopStatusJson != nil {
+		return json.RawMessage(*source.LoopStatusJson)
 	}
-
-	return nsModel
+	return extractedLoopStatus(*source.LoopName, source)
 }
 
 // extractedLoopStatus is a loop's status as its IOB and COB columns keep it, where the loop sends them, nil without them

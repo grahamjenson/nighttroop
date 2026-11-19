@@ -189,3 +189,37 @@ func TestPumpState(t *testing.T) {
 		})
 	}
 }
+
+// A device report's uploader and pump go back as they were sent, with each field they do not have filled in from its
+// column, and are left out when neither has any
+func TestDBToNightscoutDeviceStatusUploaderAndPump(t *testing.T) {
+	tests := []struct {
+		name           string
+		report         sitedb.DeviceReport
+		uploader, pump string
+	}{
+		{"none", sitedb.DeviceReport{}, "", ""},
+		{"columns only", sitedb.DeviceReport{DeviceBatteryPercent: ptr(80.0), IsDeviceCharging: ptr(true),
+			PumpManufacturer: ptr("Insulet"), PumpSuspended: ptr(true), PumpBatteryPercent: ptr(75.0), PumpReservoir: ptr(50.0)},
+			`{"battery":80,"isCharging":true}`, `{"manufacturer":"Insulet","suspended":true,"battery":{"percent":75},"reservoir":50}`},
+		{"as sent over the columns", sitedb.DeviceReport{
+			UploaderJson: ptr(`{"battery":60,"name":"phone"}`), DeviceBatteryPercent: ptr(80.0),
+			PumpJson: ptr(`{"manufacturer":"Medtronic","reservoir":20}`), PumpManufacturer: ptr("Insulet"), PumpReservoir: ptr(50.0), PumpModel: ptr("Dash")},
+			`{"battery":60,"name":"phone"}`, `{"manufacturer":"Medtronic","model":"Dash","reservoir":20}`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DBToNightscoutDeviceStatus(&tt.report, nil)
+			for _, part := range []struct {
+				want string
+				got  *string
+			}{{tt.uploader, jsonp(got.Uploader)}, {tt.pump, jsonp(got.Pump)}} {
+				if part.want == "" {
+					require.Nil(t, part.got)
+				} else {
+					require.JSONEq(t, part.want, *part.got)
+				}
+			}
+		})
+	}
+}
