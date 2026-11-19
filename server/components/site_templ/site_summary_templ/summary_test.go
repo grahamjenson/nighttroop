@@ -112,6 +112,20 @@ func TestSummaryReloadsWhenItsReadingTurnsStale(t *testing.T) {
 	require.Regexp(t, `reconnected from:#site--summary--live, load delay:30\d{4}ms"`, buf.String())
 }
 
+// TestInsulinCarbsTableSaysWhenAPlannedIntakeIs checks carbs planned an hour ahead, as Trio's from fat and protein, say
+// "in 58 minutes", not "just now", while one only minutes ahead, as from a phone's clock running fast, is "just now"
+func TestInsulinCarbsTableSaysWhenAPlannedIntakeIs(t *testing.T) {
+	now := time.Now()
+	render := func(at time.Time) string {
+		var buf bytes.Buffer
+		require.NoError(t, insulinCarbsTable([]intake{{At: at.UnixMilli(), Carbs: "17 g"}}).Render(context.Background(), &buf))
+		return buf.String()
+	}
+	require.Contains(t, render(now.Add(58*time.Minute+30*time.Second)), ">in 58 minutes</span>")
+	require.Contains(t, render(now.Add(5*time.Minute)), ">just now</span>")
+	require.Contains(t, render(now.Add(-2*time.Minute-time.Second)), ">2 minutes ago</span>")
+}
+
 // TestGlucoseHeroShowsTheSensorNotAFingerstick checks the tile shows the current glucose, the newest sensor reading,
 // with its arrow, and a fingerstick newer than it under it, not in its place; with only fingersticks the current
 // glucose is the newest of them, and none shows under it

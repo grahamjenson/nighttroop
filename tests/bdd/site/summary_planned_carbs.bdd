@@ -1,0 +1,20 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A reading, a meal, and the carbs Trio expects from its fat and protein an hour later, sent as Trio sends them
+HTTP
+NAME reading
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 110, "direction": "Flat", "date": {{ itime 1 }}, "dateString": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+NAME meal_and_planned_carbs
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Carb Correction", "carbs": 20, "created_at": "{{ time 2 }}", "enteredBy": "Trio"}, {"eventType": "Carb Correction", "carbs": 17, "created_at": "{{ time -60 }}", "enteredBy": "Trio"}]
+ASSERT_STATUS 200
+BROWSE
+
+// The planned carbs say how long until they are, not "just now", and the meal how long ago it was
+GOTO /
+ASSERT_VISIBLE #site--summary--insulin-carbs tr:has-text("17 g") >> text=/^in 5[89] minutes$/
+ASSERT_VISIBLE #site--summary--insulin-carbs tr:has-text("20 g") >> text=/^[12] minutes? ago$/
+SCREENSHOT planned_carbs
