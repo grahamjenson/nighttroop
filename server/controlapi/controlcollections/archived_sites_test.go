@@ -11,7 +11,8 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// TestHydratingRefused checks only an archived site is hydrated, to live, and only with S3, which the tests do not have
+// TestHydratingRefused checks only an archived site is hydrated, to live, and only from its archive here or in S3:
+// the tests have no S3, and this site has no archive here
 func TestHydratingRefused(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	controlContext := &httputils.ControlContext{ControlDB: controlDB, IdentityModel: &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}}
@@ -21,7 +22,7 @@ func TestHydratingRefused(t *testing.T) {
 	}{
 		{"only to live", "archived", "disabled", "an archived site's state can only be changed to live"},
 		{"only an archived site", "live", "live", "only an archived site can be restored"},
-		{"only with S3", "archived", "live", "a site can only be restored when S3 is connected"},
+		{"only with an archive here or S3", "archived", "live", "this site has no archive here, and S3 is not connected"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := (&ArchivedSitesCollection{}).UpdateRow(t.Context(), controlContext, &controlmodels.Site{ID: siteID, State: test.from}, &controlmodels.Site{State: test.to})

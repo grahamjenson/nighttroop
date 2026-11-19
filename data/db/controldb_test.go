@@ -102,7 +102,7 @@ func TestArchiveSite(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "archived", row.State)
 	require.NotNil(t, row.ArchivedAt)
-	require.NoFileExists(t, site.SiteDB.BackupPath)
+	require.FileExists(t, site.SiteDB.BackupPath, "its archive is kept here, as its backup, to restore from first")
 
 	// It is no longer open, so it cannot be archived again
 	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(context.Context, string, s3utils.Retention, []string) error { return nil }), "is not open")
@@ -128,9 +128,61 @@ func TestArchiveSiteDuringBackup(t *testing.T) {
 		require.True(t, strings.HasPrefix(string(data), "SQLite format 3\x00"), "the archive is a whole DB, compressed")
 		return nil
 	}))
-	// Named as the site's DB so it hydrates, and removed once uploaded
+	// Named as the site's DB so it hydrates, and kept here as its backup once uploaded, in place of the one the backup
+	// rewrote
 	require.Equal(t, filepath.Base(site.SiteDB.BackupPath), filepath.Base(uploaded))
 	require.NoFileExists(t, uploaded)
+	kept, err := os.Open(site.SiteDB.BackupPath)
+	require.NoError(t, err)
+	defer kept.Close()
+	data, err := io.ReadAll(lz4.NewReader(kept))
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(string(data), "SQLite format 3\x00"))
+}
+
+// Without S3, a site archives with no upload, its archive kept only here, and hydrates from it with its data, migrated
+// and live again; with S3 too, the archive here is used first, without a download
+func TestArchiveAndHydrateHereWithoutS3(t *testing.T) {
+	cfg, controlDB := testutils.NewControlDB(t)
+	fileCfg := *cfg
+	fileCfg.Mode, fileCfg.DataDir = consts.Development, t.TempDir()
+	controlDB.ServerConfig = &fileCfg
+	ctx := t.Context()
+	site, err := controlDB.CreateSite(ctx)
+	require.NoError(t, err)
+	siteID := site.SiteDB.Subdomain
+	_, err = site.SiteDB.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	require.NoError(t, err)
+
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, nil))
+	require.NoFileExists(t, sitedb.GetPath(siteID, &fileCfg))
+	require.FileExists(t, sitedb.GetBackupPath(siteID, &fileCfg))
+
+	notCalled := func(context.Context, string, string) (int64, bool, error) {
+		t.Fatal("the archive here is restored first, without a download")
+		return 0, false, nil
+	}
+	require.NoError(t, controlDB.HydrateSite(ctx, siteID, notCalled))
+	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.Equal(t, "live", row.State)
+	siteDB, _, err := controlDB.GetSite(ctx, siteID)
+	require.NoError(t, err)
+	reading, err := siteDB.Queries().GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "kept"})
+	require.NoError(t, err)
+	require.Equal(t, 120.0, reading.Mgdl)
+
+	// Archived again with no archive here and no S3, it cannot be hydrated, and stays archived
+	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	require.NoError(t, err)
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, nil))
+	require.NoError(t, os.Remove(sitedb.GetBackupPath(siteID, &fileCfg)))
+	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID, nil), "no archive here, and S3 is off")
+	row, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.Equal(t, "archived", row.State)
 }
 
 // An archived site hydrates from its archive with its data, live again and open, and only an archived one does
@@ -175,6 +227,8 @@ func TestHydrateSite(t *testing.T) {
 		return os.WriteFile(archive, data, 0o600)
 	}))
 	require.NoFileExists(t, sitedb.GetPath(siteID, &fileCfg))
+	// The archive kept here goes, as on a new server, so it is downloaded from S3
+	require.NoError(t, os.Remove(sitedb.GetBackupPath(siteID, &fileCfg)))
 
 	// A download that fails, or finds no archive, leaves it archived
 	require.Error(t, controlDB.HydrateSite(ctx, siteID, func(context.Context, string, string) (int64, bool, error) { return 0, false, errors.New("S3 is down") }))

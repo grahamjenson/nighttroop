@@ -390,7 +390,8 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 }
 
 // ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
-// deletes its local files, so it is no longer served or backed up but can be restored from the archive
+// deletes its DB, so it is no longer served or backed up. The copy is kept as its backup here, which HydrateSite
+// restores from first, so a server without S3 archives with a nil upload, keeping only that copy.
 func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s3utils.UploadFunc) error {
 	site := db.sites.get(subdomain)
 	if site == nil {
@@ -410,8 +411,10 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 	if err := backup.CompressedBackup(ctx, site.SQLiteDB, path); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
-	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
-		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
+	if upload != nil {
+		if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
+			return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
+		}
 	}
 	bytes, _ := json.Marshal([]string{subdomain})
 	if _, err := db.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: string(bytes)}); err != nil {
@@ -420,29 +423,42 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 
 	db.sites.remove(subdomain)
 	site.Close()
-	if err := utils.DeleteFiles([]string{site.Path, site.BackupPath}); err != nil {
+	if err := os.Rename(path, site.BackupPath); err != nil {
+		slog.ErrorContext(ctx, "Failed to keep the archive of a site here", "subdomain", subdomain, "error", err)
+	}
+	if err := utils.DeleteFiles(dbFiles(site.Path)); err != nil {
 		slog.ErrorContext(ctx, "Failed to delete archived site db files", "subdomain", subdomain, "error", err)
 	}
 	return nil
 }
 
-// HydrateSite brings an archived site back: it downloads, with download, the site's archive into its DB's folder, opens
-// it and makes the site live again
+// HydrateSite brings an archived site back: it restores the site's DB from its backup here, kept when it was archived,
+// or else downloads, with download, its archive from S3, opens it, migrating it, and makes the site live again. A nil
+// download, as without S3, restores only from the backup here.
 func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download s3utils.DownloadFunc) error {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
 	if db.sites.get(subdomain) != nil {
 		return fmt.Errorf("site %s is already open", subdomain)
 	}
-	path := sitedb.GetPath(subdomain, db.ServerConfig)
-	if _, found, err := download(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
-		return fmt.Errorf("cannot download the archive of site %s: %w", subdomain, err)
-	} else if !found || !utils.FileExists(path) {
-		return fmt.Errorf("site %s has no archive", subdomain)
+	path, backupPath := sitedb.GetPath(subdomain, db.ServerConfig), sitedb.GetBackupPath(subdomain, db.ServerConfig)
+	switch {
+	case utils.FileExists(backupPath):
+		if err := backup.Decompress(backupPath, path); err != nil {
+			return fmt.Errorf("cannot restore site %s from its backup here: %w", subdomain, err)
+		}
+	case download == nil:
+		return fmt.Errorf("site %s has no archive here, and S3 is off", subdomain)
+	default:
+		if _, found, err := download(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
+			return fmt.Errorf("cannot download the archive of site %s: %w", subdomain, err)
+		} else if !found || !utils.FileExists(path) {
+			return fmt.Errorf("site %s has no archive", subdomain)
+		}
 	}
 	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	if err != nil {
-		// The archive is still in S3, so the copy downloaded from it goes
+		// The archive is still here or in S3, so the copy restored from it goes
 		_ = utils.DeleteFiles([]string{path})
 		return err
 	}
