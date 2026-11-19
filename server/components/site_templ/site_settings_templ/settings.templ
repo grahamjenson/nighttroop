@@ -356,6 +356,10 @@ templ settingControl(column settingsColumn, field settingField) {
 					{ i18n.T(ctx, "site.settings.timezone.use_browser") }
 				}
 			}
+			if field.Name == "language" {
+				// What to type, as the box takes any text, and that it does not yet change the pages' words
+				<p id={ column.IDPrefix + "language--help" } class="text-xs text-gray-500">{ i18n.T(ctx, "site.settings.language_help") }</p>
+			}
 		</div>
 	}
 }

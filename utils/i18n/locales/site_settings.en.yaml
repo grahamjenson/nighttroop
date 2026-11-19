@@ -59,6 +59,7 @@ site:
     timezone:
       this_browser: "This browser's timezone"
       use_browser: "Use this browser's timezone"
+    language_help: "A language code, such as en or en-NZ. The pages are in English only for now."
     saved: "Settings Saved"
     credentials:
       title: "Password & TOTP"

@@ -18,6 +18,8 @@ ASSERT_VISIBLE #site--settings--site--language[value="en"]
 // The week's days read as names, capitalised, as does the default
 ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value="sunday"] Sunday
 ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value=""] Default (Monday)
+// The language is typed, so its box says what to type and that the pages are in English only for now
+ASSERT_TEXT_EQUALS #site--settings--site--language--help A language code, such as en or en-NZ. The pages are in English only for now.
 SCREENSHOT site_settings
 
 // The timezone suggests the browser's timezones as it is typed, the browser's own first, and a button fills it in

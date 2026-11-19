@@ -627,7 +627,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Not found page
 
-- An address the site has nothing at shows **Not found**, with what was not there.
+- An address the site has nothing at shows **Not found** and the address, as "There is no page at /data/nope".
 - It says that the search at the top of the page finds any page by name, and links to the summary, Data, Reports and
   Getting Started.
 
@@ -670,6 +670,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
+  - On a phone, each treatment's detail is on a line of its own, under when it was and its name.
 - A suspended pump (`PUMP_SUSPEND`) shows in **Other treatments** as **Suspended**, "Pump suspended until it
   resumes". After the pump resumes, it shows "Pump suspended for" its minutes.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
@@ -911,6 +912,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - An empty table of glucose readings, insulin doses, food intakes, temp basals, temp targets, profile switches,
   activities, notifications or event groups says that a new site has nothing until an app or a connector sends it,
   with a link to Getting Started. A table with a row does not.
+- The device status page with no device says the same, under "No device has reported in the last week."
 - Each main button has an icon before its words: save, add, delete, reset, backfill, filter, print and regenerate.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
@@ -1221,6 +1223,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### General settings
 
 - Units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
+- The language is typed. Under its box, the page says to type a language code, such as en or en-NZ, and that the
+  pages are in English only for now.
 - Admins set site settings. Identities can override them.
 - Identity value, then site value, then fallback:
 

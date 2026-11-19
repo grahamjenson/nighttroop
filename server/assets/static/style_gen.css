@@ -2898,9 +2898,19 @@
       display: none;
     }
   }
+  .max-sm\:basis-full {
+    @media (width < 40rem) {
+      flex-basis: 100%;
+    }
+  }
   .max-sm\:flex-col {
     @media (width < 40rem) {
       flex-direction: column;
+    }
+  }
+  .max-sm\:flex-wrap {
+    @media (width < 40rem) {
+      flex-wrap: wrap;
     }
   }
   .max-sm\:py-0 {
@@ -2932,6 +2942,11 @@
   .max-sm\:text-gray-500 {
     @media (width < 40rem) {
       color: var(--color-gray-500);
+    }
+  }
+  .max-sm\:text-gray-600 {
+    @media (width < 40rem) {
+      color: var(--color-gray-600);
     }
   }
   .max-sm\:before\:font-sans {
