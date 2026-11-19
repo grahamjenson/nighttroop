@@ -9,30 +9,31 @@ import (
 // Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
 // its terms of service, privacy policy and API docs, and Nighttroop's year, spaced apart and wrapping on a narrow
 // screen. Each link opens in a new tab, so what the user was doing stays open.
+// On a phone its links wrap, so the dots between them, one of which would start the second line, are left out
 templ Footer() {
-	<footer id="footer" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
+	<footer id="footer" class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-3 border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
 		@NewTabLink("footer--contact", "mailto:"+httputils.SupportEmail(ctx), "hover:text-primary") {
 			{ i18n.T(ctx, "common.footer.contact") }
 		}
-		<span aria-hidden="true">·</span>
+		<span aria-hidden="true" class="max-sm:hidden">·</span>
 		if url := httputils.FeedbackURL(ctx); url != "" {
 			@NewTabLink("footer--feedback", url, "hover:text-primary") {
 				{ i18n.T(ctx, "common.footer.feedback") }
 			}
-			<span aria-hidden="true">·</span>
+			<span aria-hidden="true" class="max-sm:hidden">·</span>
 		}
 		@NewTabLink("footer--terms", "/terms", "hover:text-primary") {
 			{ i18n.T(ctx, "common.footer.terms") }
 		}
-		<span aria-hidden="true">·</span>
+		<span aria-hidden="true" class="max-sm:hidden">·</span>
 		@NewTabLink("footer--privacy", "/privacy", "hover:text-primary") {
 			{ i18n.T(ctx, "common.footer.privacy") }
 		}
-		<span aria-hidden="true">·</span>
+		<span aria-hidden="true" class="max-sm:hidden">·</span>
 		@NewTabLink("footer--api-docs", "/api-docs", "hover:text-primary") {
 			{ i18n.T(ctx, "common.footer.api_docs") }
 		}
-		<span aria-hidden="true">·</span>
+		<span aria-hidden="true" class="max-sm:hidden">·</span>
 		<span>{ i18n.T(ctx, "common.footer.year") }</span>
 		<span id="footer--dbip" class="contents">
 			if httputils.DBIPCredited(ctx) {
@@ -64,7 +65,7 @@ templ DBIPCredit() {
 }
 
 templ dbipLink() {
-	<span aria-hidden="true">·</span>
+	<span aria-hidden="true" class="max-sm:hidden">·</span>
 	@NewTabLink("footer--dbip-link", "https://db-ip.com", "hover:text-primary") {
 		{ i18n.T(ctx, "common.footer.dbip") }
 	}
