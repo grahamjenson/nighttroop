@@ -706,6 +706,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Periods and time in range
 
 - Today, yesterday, last week, last month: time in range, total daily dose, last sensor and site change.
+  - A tile shows a line for yesterday, last week, last fortnight or last month only when that time has data.
   - No data: "–" for time in range and daily dose, not 0. No insulin: 0 U.
   - Total daily dose: a combo bolus adds its dose given at once immediately. Its extended dose adds as it is given,
     by the share of its minutes that are complete.
