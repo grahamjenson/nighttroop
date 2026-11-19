@@ -10,6 +10,10 @@ ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
 ASSERT_VISIBLE #site--identities--add-user-button
 ASSERT_VISIBLE #site--identities--add-device-button
+// What each role can do is a block for each role, read in full with nothing cut off: the last cell of the role with
+// the most to say is in view
+ASSERT_VISIBLE #site--identities--role--device_read_write td >> nth=1 >> text=Cannot change readings.
+ASSERT_VISIBLE #site--identities--role--device_read_write td >> nth=3 >> text=api:settings:*
 ASSERT_FITS
 SCREENSHOT identities_phone
 
