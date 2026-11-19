@@ -42,6 +42,9 @@ a `?token=` in the URL (`NightscoutAPI`, each function's `URLComponents`). Thus 
     mmol/L site too.
   - Profile: Trio uploads it in the user's units, labelled `mg/dl` or `mmol`. On import, it finds mmol/L from
     `units`, or from targets of 39 or less.
+  - The profile comes back in the units it was uploaded in. Trio's import sets its units from the profile and keeps
+    picker indexes for those units: an mmol/L user who switched an mg/dL import to mmol/L got targets and ISF about
+    64% too high (FP-1, Trio T3/B3).
 - Dates (`JSONCoding`, `Formatters.swift` `customISO8601`):
   - Trio reads a date only from an ISO 8601 string with a time zone, with or without fractional seconds
     (`2026-11-01T12:00:00Z`, `2026-11-01T12:00:00.123Z`). A number, or a date without a zone, fails.

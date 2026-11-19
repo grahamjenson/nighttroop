@@ -112,6 +112,30 @@ func TestSummaryReloadsWhenItsReadingTurnsStale(t *testing.T) {
 	require.Regexp(t, `reconnected from:#site--summary--live, load delay:30\d{4}ms"`, buf.String())
 }
 
+// A dose in the insulin and carbs table shows its extended dose and the time it is given over, after the dose given at
+// once unless that is 0, and an extended dose with no time is given at once
+func TestDoseText(t *testing.T) {
+	tests := []struct {
+		name string
+		dose *sitemodels.SiteInsulinDose
+		text string
+	}{
+		{"a bolus", &sitemodels.SiteInsulinDose{Dose: 2.5}, "2.5 U"},
+		{"a combo bolus", &sitemodels.SiteInsulinDose{Dose: 1.2, ExtendedDose: new(1.8), ExtendedDurationMinutes: new(int64(120))}, "1.2 U + 1.8 U over 2 h"},
+		{"an extended bolus", &sitemodels.SiteInsulinDose{Dose: 0, ExtendedDose: new(2.0), ExtendedDurationMinutes: new(int64(90))}, "2 U over 1 h 30 min"},
+		{"an extended dose with no time", &sitemodels.SiteInsulinDose{Dose: 1, ExtendedDose: new(2.0)}, "3 U"},
+		{"an extended dose of 0", &sitemodels.SiteInsulinDose{Dose: 1, ExtendedDose: new(0.0), ExtendedDurationMinutes: new(int64(120))}, "1 U"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.text, doseText(context.Background(), tt.dose, " U"))
+		})
+	}
+	// On the graph its unit follows the number, as in 2.5U
+	combo := &sitemodels.SiteInsulinDose{Dose: 0.3, ExtendedDose: new(0.7), ExtendedDurationMinutes: new(int64(60))}
+	require.Equal(t, "0.3U + 0.7U over 1 h", doseText(context.Background(), combo, "U"))
+}
+
 // TestInsulinCarbsTableSaysWhenAPlannedIntakeIs checks carbs planned an hour ahead, as Trio's from fat and protein, say
 // "in 58 minutes", not "just now", while one only minutes ahead, as from a phone's clock running fast, is "just now"
 func TestInsulinCarbsTableSaysWhenAPlannedIntakeIs(t *testing.T) {
