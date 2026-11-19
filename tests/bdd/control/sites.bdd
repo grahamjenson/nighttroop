@@ -152,7 +152,7 @@ ASSERT_NOT_VISIBLE #control--site--open
 ASSERT_VISIBLE #control--site--events--table td >> text=Site disabled
 SCREENSHOT site_disabled
 
-// A disabled site cannot be disabled again, but can be archived, which needs S3 (not connected in tests)
+// A disabled site cannot be disabled again, but can be archived (control/archive_restore.bdd archives and restores one)
 ASSERT_NOT_VISIBLE #control--site--disable
 ASSERT_VISIBLE #control--site--action-disable >> text=It is already disabled.
 ASSERT_VISIBLE #control--site--action-open >> text=Only a live site is served.
@@ -160,8 +160,6 @@ ASSERT_VISIBLE #control--site--action-open >> text=Only a live site is served.
 ASSERT_VISIBLE #control--site--download-db
 ASSERT_VISIBLE #control--site--truncate
 ASSERT_VISIBLE #control--site--archive
-CLICK #control--site--archive
-ASSERT_TEXT_VISIBLE a site can only be archived when S3 is connected
 
 // A disabled site can be enabled, after asking first, which serves it again, with the event saying so
 ASSERT_VISIBLE #control--site--action-enable >> text=Serves a disabled site again.
@@ -180,8 +178,8 @@ ASSERT_PATH /events
 ASSERT_VISIBLE #controlEventsTable td >> text=Site disabled
 ASSERT_VISIBLE #control--events--filter--clear
 
-// The archived sites have a page of their own, each with a button to hydrate it, bringing it back live. There are none
-// here, as archiving needs S3
+// The archived sites have a page of their own, each with a button to hydrate it, bringing it back live. This server has
+// none: control/archive_restore.bdd archives one on a server of its own
 CLICK #control--menu
 CLICK #control--archived-sites-button
 ASSERT_STATUS 200

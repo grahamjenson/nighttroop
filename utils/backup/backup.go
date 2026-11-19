@@ -6,6 +6,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -133,6 +134,32 @@ func writeCompressed(data []byte, path string) error {
 	}
 	if err == nil {
 		err = os.Rename(file.Name(), path)
+	}
+	return err
+}
+
+// Decompress writes the DB in src, a backup compressed with LZ4 as CompressedBackup writes it, to dst, through a temp
+// file beside dst renamed once whole, so a copy cut short is never at dst
+func Decompress(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	if err := utils.MkParentDirs(dst); err != nil {
+		return err
+	}
+	file, err := os.CreateTemp(filepath.Dir(dst), "."+filepath.Base(dst)+"-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(file.Name())
+	_, err = io.Copy(file, lz4.NewReader(in))
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(file.Name(), dst)
 	}
 	return err
 }

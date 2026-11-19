@@ -92,6 +92,13 @@ var ownServers = []ownServer{
 		return nil
 	}},
 	// A server that started without S3, as S3 was not working and its control DB was there
+	// A server without S3, as staging, with archivme, a site no one has used, to disable, archive and restore
+	{"control/archive_restore.bdd", "192.0.2.20", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		_, err := controlDB.CreateSiteWithID(t.Context(), "archivme")
+		require.NoError(t, err)
+		return nil
+	}},
 	{"s3down/banner.bdd", "192.0.2.18", func(c *config.ServerConfig) { c.Status.S3Down = true }, seedDevAdmin},
 	// A server that turned S3 off at start, as its control DB is not the one replicated in S3
 	{"s3off/banner.bdd", "192.0.2.19", func(c *config.ServerConfig) { c.Status.S3Off = config.S3OffConflict }, seedDevAdmin},
