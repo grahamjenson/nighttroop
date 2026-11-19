@@ -193,27 +193,30 @@ func nightscoutPermissions(ctx context.Context, role consts.IdentityRole) string
 // Nightscout API. The last two are read from utils/can, so the page cannot differ from what the server allows.
 templ rolesTable() {
 	@card.Card(card.Props{ID: "site--identities--roles", Title: i18n.T(ctx, "site.settings.identities.roles_table.title")}) {
-		@table.Table(table.Props{ID: "site--identities--roles--table"}) {
+		// On a phone each role is a block, its name over what it can do, then the two columns the headings name on a
+		// wider window, each with its heading before it: a table of four columns would be cut off mid sentence
+		@table.Table(table.Props{ID: "site--identities--roles--table", Class: "max-sm:[&_thead]:hidden"}) {
 			@table.Heads([]table.Column{{Label: i18n.T(ctx, "site.settings.identities.heads.role")}, {Label: i18n.T(ctx, "site.settings.identities.roles_table.can")},
 				{Label: i18n.T(ctx, "site.settings.identities.roles_table.signs_in")}, {Label: i18n.T(ctx, "site.settings.identities.roles_table.nightscout")}})
 			@table.Body() {
 				for _, role := range allRoles {
-					@table.Row(table.RowProps{ID: "site--identities--role--" + string(role)}) {
-						@table.Cell(table.CellProps{Class: "font-medium"}) {
+					@table.Row(table.RowProps{ID: "site--identities--role--" + string(role), Class: "max-sm:flex max-sm:flex-col max-sm:py-1"}) {
+						@table.Cell(table.CellProps{Class: "font-medium max-sm:pb-0"}) {
 							{ RoleLabel(ctx, string(role)) }
 						}
-						// Wide enough to read on a phone, where the table scrolls sideways
-						@table.Cell(table.CellProps{Class: "min-w-64 whitespace-normal"}) {
+						@table.Cell(table.CellProps{Class: "whitespace-normal max-sm:py-0 sm:min-w-64"}) {
 							{ i18n.T(ctx, roleAbouts[role]) }
 						}
-						@table.Cell() {
+						@table.Cell(table.CellProps{Class: "max-sm:py-0 max-sm:text-xs max-sm:text-gray-500 max-sm:before:content-[attr(data-label)]",
+							Attributes: templ.Attributes{"data-label": i18n.T(ctx, "site.settings.identities.roles_table.signs_in") + ": "}}) {
 							if can.IdentityLoginToWebsite(role) {
 								{ i18n.T(ctx, "site.settings.identities.roles_table.does") }
 							} else {
 								{ i18n.T(ctx, "site.settings.identities.roles_table.does_not") }
 							}
 						}
-						@table.Cell(table.CellProps{Class: "min-w-56 whitespace-normal font-mono text-xs"}) {
+						@table.Cell(table.CellProps{Class: "whitespace-normal font-mono text-xs max-sm:pt-0 max-sm:text-gray-500 max-sm:before:font-sans max-sm:before:content-[attr(data-label)] sm:min-w-56",
+							Attributes: templ.Attributes{"data-label": i18n.T(ctx, "site.settings.identities.roles_table.nightscout") + ": "}}) {
 							{ nightscoutPermissions(ctx, role) }
 						}
 					}
