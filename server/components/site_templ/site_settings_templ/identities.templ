@@ -287,7 +287,9 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 		@table.Cell() {
 			@recentClients(identity)
 		}
-		@table.Cell() {
+		// Its switch and Manage menu stay at the card's right edge while a phone scrolls the table's other columns
+		// sideways under them, so they are in reach with no scrolling
+		@table.Cell(table.CellProps{ID: "site--identities--" + identity.Name + "--actions", Class: "max-sm:sticky max-sm:right-0 max-sm:bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]"}) {
 			@identityActions(identity)
 		}
 	}

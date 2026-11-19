@@ -2907,6 +2907,16 @@
       transition-property: none;
     }
   }
+  .max-sm\:sticky {
+    @media (width < 40rem) {
+      position: sticky;
+    }
+  }
+  .max-sm\:right-0 {
+    @media (width < 40rem) {
+      right: calc(var(--spacing) * 0);
+    }
+  }
   .max-sm\:flex {
     @media (width < 40rem) {
       display: flex;
@@ -2930,6 +2940,11 @@
   .max-sm\:flex-wrap {
     @media (width < 40rem) {
       flex-wrap: wrap;
+    }
+  }
+  .max-sm\:bg-white {
+    @media (width < 40rem) {
+      background-color: var(--color-white);
     }
   }
   .max-sm\:py-0 {
@@ -2966,6 +2981,12 @@
   .max-sm\:text-gray-600 {
     @media (width < 40rem) {
       color: var(--color-gray-600);
+    }
+  }
+  .max-sm\:shadow-\[-8px_0_8px_-8px_rgba\(0\,0\,0\,0\.15\)\] {
+    @media (width < 40rem) {
+      --tw-shadow: -8px 0 8px -8px var(--tw-shadow-color, rgba(0,0,0,0.15));
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
   .max-sm\:before\:font-sans {

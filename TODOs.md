@@ -29,9 +29,6 @@
 1. Security
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
-    1. P2: Check a site identity's rate limit before its site's (`server/siteapi/router.go`,
-       `server/nightscoutapi/router.go`): a request its identity refuses spends the site's limit first, so one
-       follower's token over its own limit can use up the site's, and its other apps get 429
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
@@ -132,10 +129,8 @@
        these on start, as the restore staging folders are
 
 1. Database:
-    1. P3: CAST the bare values that a column equals in the other DBs' queries, as the site DB's are (data/sql/README.md),
-       as SQLite prepares them again on each run: `controldb`'s `AllSiteIdentities` and its push
-       queries, `jobsdb`'s `MarkJobsForConsumer`, `livedb`'s `IdentityAlarms`, and `logsdb`'s site and connector
-       searches
+    1. P4: Make `go generate` fail for a bare value that an indexed column equals in a query with an `ORDER BY`, as
+       SQLite prepares such a query again on each run (data/sql/README.md); it fails now only for a bare `LIMIT`
     1. P4: `data/sql/gen/limits.go` reads a table's constraint written with no space, `UNIQUE(site_id, type)`, as a
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
     1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's

@@ -53,8 +53,8 @@ func TestPushCredentialFor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			credential, err := q.PushCredentialFor(t.Context(), controldb.PushCredentialForParams{SiteID: &tt.siteID,
-				Provider: tt.provider, App: tt.app, BundleID: tt.bundleID})
+			credential, err := q.PushCredentialFor(t.Context(), controldb.PushCredentialForParams{SiteID: tt.siteID,
+				Provider: string(tt.provider), App: tt.app, BundleID: tt.bundleID})
 			if tt.want == "" {
 				require.ErrorIs(t, err, sql.ErrNoRows)
 				return
@@ -231,7 +231,7 @@ func TestNewestPushRegistrationForApp(t *testing.T) {
 	}
 	newest := func() (*controldb.PushRegistration, error) {
 		return q.NewestPushRegistrationForApp(t.Context(), controldb.NewestPushRegistrationForAppParams{SiteID: siteID,
-			App: consts.PushAppLoop, Roles: can.DeviceTokenRoles})
+			App: string(consts.PushAppLoop), Roles: can.DeviceTokenRoles})
 	}
 	loop := register(byRole[consts.IdentityRoleDevicePWDPhone], "a000000000000000000000000000000000000000000000000000000000000000")
 	register(byRole[consts.IdentityRoleDeviceRead], "b000000000000000000000000000000000000000000000000000000000000000")

@@ -54,7 +54,6 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Use(siteapiutils.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
 		// Checks read and write rates and makes sure not over limit, once the site's own identity has signed in
 		r.Use(httputils.SiteRateLimitMiddleware(config))
-		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 		r.Use(httputils.CountRoutes(config.Usage, "site"))
 		r.Use(clinicianReportOnly)
