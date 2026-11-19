@@ -36,6 +36,8 @@ ASSERT_PATH /settings/connectors
 // TestVirtualConnectorIsOnlyOnDevelopmentTestAndStaging checks
 ASSERT_VISIBLE #site--settings--virtual-connector--enable
 ASSERT_VISIBLE #site--settings--virtual-connector--submit
+// Each connector says its state beside its title: none is set up yet
+ASSERT_VISIBLE #site--settings--dexcom-connector--state[data-state="not_set_up"] >> text=Not set up
 SCREENSHOT virtual_connector_offered_on_test_server
 
 ASSERT_VISIBLE #site--settings--nightscout-connector--enable
@@ -96,6 +98,9 @@ ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--interval 2 min
 // The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
 ASSERT_VISIBLE #site--settings--dexcom-connector--region
 ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-connector--region)
+// Its state says it stopped, and the others are still not set up
+ASSERT_VISIBLE #site--settings--nightscout-connector--state[data-state="stopped"] >> text=Stopped
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--state-synced
 SCREENSHOT connector_first_sync_failed
 
 // Deleting a source leaves the page in place, with the source's form rendered unset again
