@@ -93,6 +93,16 @@ ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
 ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--last-success Never
 ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--last-failure just now
 ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--interval 2 min (Error response)
+// Now the site has a connector, those not set up show only their title and Set Up, which opens one
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--region
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--enable
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--submit
+ASSERT_VISIBLE #site--settings--libre-connector--set-up
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--set-up
+SCREENSHOT connectors_not_set_up_closed
+CLICK #site--settings--dexcom-connector--set-up
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--set-up
+ASSERT_VISIBLE #site--settings--dexcom-connector--enable
 // The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
 ASSERT_VISIBLE #site--settings--dexcom-connector--region
 ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-connector--region)
@@ -104,6 +114,7 @@ ASSERT_TEXT_VISIBLE Connector Deleted
 ASSERT_PATH /settings/connectors
 ASSERT_TITLE Connectors · Nighttroop
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--errors
+// It stays open, though it is not set up, as it is what the user is looking at
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:not([value*="will_not_pass"])
 // Unset again, it has no Delete or Backfill until it is saved
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--delete
@@ -121,6 +132,8 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--url[value="https://split-m
 CLICK #site--settings--nightscout-connector--delete
 ASSERT_TEXT_VISIBLE Connector Deleted
 
+// The page was read while the site had a connector, so Dexcom is opened with Set Up
+CLICK #site--settings--dexcom-connector--set-up
 // The Dexcom region is picked from a list like the Libre region, starting outside the United States
 ASSERT_VISIBLE #site--settings--dexcom-connector--enable
 ASSERT_VISIBLE #site--settings--dexcom-connector--username

@@ -3913,6 +3913,17 @@
   padding-block: 0;
   transition: grid-template-rows 300ms ease-in, padding 300ms ease-in, opacity 300ms, transform 300ms !important;
 }
+[data-connectors-in-use] form[data-connector-unused]:not([data-open]) {
+  .p-6 > :not(:first-child), [data-connector-enable] {
+    display: none;
+  }
+  .p-6 > :first-child {
+    margin-bottom: 0;
+  }
+  [data-connector-set-up] {
+    display: inline-flex;
+  }
+}
 @keyframes toast-in {
   from {
     grid-template-rows: minmax(0, 0fr);

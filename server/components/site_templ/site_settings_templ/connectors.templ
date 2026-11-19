@@ -2,6 +2,7 @@ package site_settings_templ
 
 import (
 	"context"
+	"io"
 	"strings"
 	"time"
 
@@ -52,7 +53,9 @@ func enableOnFirstInput(source *sitemodels.Connector) templ.Attributes {
 }
 
 templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
-	<div id="mainForm" class="mx-auto max-w-5xl">
+	// Once the site uses a connector, those not set up show only their title and a Set Up button, which opens one,
+	// so the one in use is not three forms down the page. A new site shows them all, to choose from.
+	<div id="mainForm" class="mx-auto max-w-5xl" data-connectors-in-use?={ len(connectorSettings) > 0 }>
 		@heading.PageBeside(i18n.T(ctx, "site.settings.connectors.title"), badge.Live("site--settings--connectors--live", "/settings/connectors/events")) {
 			{ i18n.T(ctx, "site.settings.connectors.about") }
 		}
@@ -107,6 +110,8 @@ templ ConnectorErrors(source *sitemodels.Connector, name string) {
 templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 	<form
 		hx-post="/settings/connectors/dexcom"
+		data-connector-unused?={ dexcomConnectorSettings == nil }
+		data-open?={ ctx.Value(openConnector{}) != nil }
 		{ enableOnFirstInput(dexcomConnectorSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
@@ -128,7 +133,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 						<p id="site--settings--connectors--dexcom-needs" class="mt-1 max-w-2xl text-sm text-gray-500">{ i18n.T(ctx, "site.settings.connectors.dexcom.needs") }</p>
 					</div>
 					@form.Item(form.ItemProps{
-						Class: "flex items-start gap-2 justify-center",
+						Class: "flex items-start gap-2 justify-center", Attributes: templ.Attributes{"data-connector-enable": true},
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--dexcom-connector--enable",
@@ -143,6 +148,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
+					@connectorSetUp("dexcom")
 				</div>
 				@ConnectorErrors(dexcomConnectorSettings, "dexcom")
 				<!-- Fields -->
@@ -217,6 +223,8 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 	<form
 		hx-post="/settings/connectors/libre"
+		data-connector-unused?={ libreConnectorSettings == nil }
+		data-open?={ ctx.Value(openConnector{}) != nil }
 		{ enableOnFirstInput(libreConnectorSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
@@ -238,7 +246,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 						<p id="site--settings--connectors--libre-needs" class="mt-1 max-w-2xl text-sm text-gray-500">{ i18n.T(ctx, "site.settings.connectors.libre.needs") }</p>
 					</div>
 					@form.Item(form.ItemProps{
-						Class: "flex items-start gap-2 justify-center",
+						Class: "flex items-start gap-2 justify-center", Attributes: templ.Attributes{"data-connector-enable": true},
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--libre-connector--enable",
@@ -253,6 +261,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
+					@connectorSetUp("libre")
 				</div>
 				@ConnectorErrors(libreConnectorSettings, "libre")
 				<!-- Fields -->
@@ -326,6 +335,8 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 	@splitNightscoutURL()
 	<form
 		hx-post="/settings/connectors/nightscout"
+		data-connector-unused?={ nightscoutConnectorSettings == nil }
+		data-open?={ ctx.Value(openConnector{}) != nil }
 		{ enableOnFirstInput(nightscoutConnectorSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
@@ -347,7 +358,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 						<p id="site--settings--connectors--nightscout-needs" class="mt-1 max-w-2xl text-sm text-gray-500">{ i18n.T(ctx, "site.settings.connectors.nightscout.needs") }</p>
 					</div>
 					@form.Item(form.ItemProps{
-						Class: "flex items-start gap-2 justify-center",
+						Class: "flex items-start gap-2 justify-center", Attributes: templ.Attributes{"data-connector-enable": true},
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--nightscout-connector--enable",
@@ -362,6 +373,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
+					@connectorSetUp("nightscout")
 				</div>
 				@ConnectorErrors(nightscoutConnectorSettings, "nightscout")
 				<!-- Fields -->
@@ -451,6 +463,8 @@ templ splitNightscoutURL() {
 templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 	<form
 		hx-post="/settings/connectors/virtual"
+		data-connector-unused?={ synSource == nil }
+		data-open?={ ctx.Value(openConnector{}) != nil }
 		hx-target="#toaster"
 		hx-swap="beforeend"
 		hx-status:4xx="target:#toaster swap:beforeend"
@@ -470,7 +484,7 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 						</div>
 					</div>
 					@form.Item(form.ItemProps{
-						Class: "flex items-start gap-2 justify-center",
+						Class: "flex items-start gap-2 justify-center", Attributes: templ.Attributes{"data-connector-enable": true},
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--virtual-connector--enable",
@@ -485,6 +499,7 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 							{ i18n.T(ctx, "site.settings.connectors.enable") }
 						}
 					}
+					@connectorSetUp("virtual")
 				</div>
 				@ConnectorErrors(synSource, "virtual")
 				@connectorActions(synSource, consts.ConnectorTypeVirtual, false)
@@ -492,6 +507,16 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 			</div>
 		</div>
 	</form>
+}
+
+// connectorSetUp opens the form of a connector that is not set up, which shows only its title while the site uses
+// another. It shows only then.
+templ connectorSetUp(name string) {
+	@button.Button(button.Props{ID: "site--settings--" + name + "-connector--set-up", Variant: button.VariantOutline, Type: button.TypeButton, Class: "hidden",
+		Attributes: templ.Attributes{"data-connector-set-up": true, "onclick": templ.JSUnsafeFuncCall("this.closest('form').dataset.open = 'true'")}}) {
+		@icon.Plus()
+		{ i18n.T(ctx, "site.settings.connectors.set_up") }
+	}
 }
 
 // connectorActions are a connector's buttons: Save, and once it is saved, Backfill and a quieter Delete, as one not
@@ -602,17 +627,27 @@ func connectorLabel(ctx context.Context, connectorType consts.ConnectorType) str
 	return i18n.T(ctx, "site.settings.connectors.virtual.name")
 }
 
-// ConnectorDeleted replaces the deleted source's form with an empty one and shows a toast
+// openConnector is in the context of a connector's form that stays open though it is not set up
+type openConnector struct{}
+
+// open is a connector's form kept open, for the one just deleted, which the user is looking at
+func open(form templ.Component) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		return form.Render(context.WithValue(ctx, openConnector{}, true), w)
+	})
+}
+
+// ConnectorDeleted replaces the deleted source's form with an empty one, left open, and shows a toast
 templ ConnectorDeleted(sourceType consts.ConnectorType) {
 	switch sourceType {
 		case consts.ConnectorTypeNightscout:
-			@NightscoutConnectorForm(nil)
+			@open(NightscoutConnectorForm(nil))
 		case consts.ConnectorTypeDexcom:
-			@DexcomConnectorForm(nil)
+			@open(DexcomConnectorForm(nil))
 		case consts.ConnectorTypeLibre:
-			@LibreConnectorForm(nil)
+			@open(LibreConnectorForm(nil))
 		case consts.ConnectorTypeVirtual:
-			@VirtualConnectorForm(nil)
+			@open(VirtualConnectorForm(nil))
 	}
 	@successtoast.OOB(i18n.T(ctx, "site.settings.connectors.deleted"))
 }
