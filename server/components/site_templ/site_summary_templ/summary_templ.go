@@ -544,11 +544,11 @@ func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
 // reload finds it so, or "" when there is no reading or it already is. A reading from the future waits no longer than
 // the stale minutes, as a timer too long for the browser fires at once, which would reload again and again.
 func staleTrigger(ctx context.Context, summary *sitemodels.Summary, now time.Time) string {
-	if len(summary.GlucoseReadings) == 0 || staleFor(ctx, summary.GlucoseReadings[0].OccurredAt, now) != "" {
+	if summary.CurrentGlucose == nil || staleFor(ctx, summary.CurrentGlucose.OccurredAt, now) != "" {
 		return ""
 	}
 	after := time.Duration(staleAfterMinutes(ctx)) * time.Minute
-	in := min(time.UnixMilli(summary.GlucoseReadings[0].OccurredAt).Add(after).Sub(now), after) + time.Second
+	in := min(time.UnixMilli(summary.CurrentGlucose.OccurredAt).Add(after).Sub(now), after) + time.Second
 	return fmt.Sprintf(", load delay:%dms", in.Milliseconds())
 }
 
@@ -573,8 +573,8 @@ func glucoseHero(summary *sitemodels.Summary) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(summary.GlucoseReadings) > 0 {
-			latest := summary.GlucoseReadings[0]
+		if summary.CurrentGlucose != nil {
+			latest := summary.CurrentGlucose
 			outOfRange, stale := display.GlucoseRange(latest.Reading, summary.RangeLow, summary.RangeHigh), staleFor(ctx, latest.OccurredAt, time.Now())
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div><div class=\"flex items-center gap-2\"><span class=\"text-sm font-semibold uppercase tracking-wide text-gray-500\">")
 			if templ_7745c5c3_Err != nil {
@@ -688,14 +688,14 @@ func glucoseHero(summary *sitemodels.Summary) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</span> <span class=\"ml-2 text-4xl text-gray-700\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</span> <span id=\"site--summary--glucose--arrow\" class=\"ml-2 text-4xl text-gray-700\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(display.Arrow(latest.Direction))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 254, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 254, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {

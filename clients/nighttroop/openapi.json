@@ -954,6 +954,7 @@
           "range_urgent_low": { "type": "number", "format": "double" },
           "range_urgent_high": { "type": "number", "format": "double" },
           "glucose_readings": { "type": "array", "items": { "$ref": "#/components/schemas/CleanGlucoseReading" } },
+          "current_glucose": { "$ref": "#/components/schemas/CleanGlucoseReading" },
           "insulin_doses": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } },
           "food_intakes": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } }
         }

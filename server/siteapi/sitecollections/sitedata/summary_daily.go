@@ -371,6 +371,6 @@ func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *http
 		return nil, herr
 	}
 	low, high := siteContext.GetSiteRangeMgdl()
-	return sitemodels.NewSummaryDaily(date, location.String(), start, end, float64(low), float64(high),
+	return sitemodels.NewSummaryDaily(date, location.String(), start, end, until, float64(low), float64(high),
 		glucose.CleanReadings(rows), doses, food, reports, start, minutes), nil
 }

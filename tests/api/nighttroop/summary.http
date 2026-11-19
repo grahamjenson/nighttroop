@@ -174,3 +174,25 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS 50 "@result.items.0.today.time_in_range"
 ASSERT_EQUALS 2.5 "@result.items.0.today.total_daily_dose"
+
+// A combo bolus counts in today's total daily dose its part given at once, and its extended part only as it is given:
+// Nightscout's careportal gives 1.2 U at once and 1.8 U over 2 hours, and AAPS 0 U at once and 2 U over 2 hours, so
+// just after them today's dose is the 2.5 U and the 1.2 U
+NAME careportal_combo_for_summary
+POST http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B [{"eventType": "Combo Bolus", "enteredinsulin": 3, "insulin": 1.2, "splitNow": 40, "splitExt": 60, "relative": 0.9, "duration": 120, "carbs": 25, "created_at": "{{ time 0 }}"}]
+ASSERT_STATUS 200
+
+NAME aaps_combo_for_summary
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Combo Bolus", "insulin": 0, "enteredinsulin": 2, "relative": 1, "duration": 120, "durationInMilliseconds": 7200000, "splitNow": 0, "splitExt": 100, "date": {{ itime 0 }}, "isEmulatingTempBasal": false, "pumpId": 1794605395290, "pumpType": "VIRTUAL", "pumpSerial": "S1", "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME summary_combo_extended_so_far
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 3.7 "@result.items.0.today.total_daily_dose"
