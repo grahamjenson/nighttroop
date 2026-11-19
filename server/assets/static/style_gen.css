@@ -2891,6 +2891,12 @@
       transition-property: none;
     }
   }
+  .max-sm\:shadow-\[-8px_0_8px_-8px_rgba\(0\,0\,0\,0\.15\)\] {
+    @media (width < 40rem) {
+      --tw-shadow: -8px 0 8px -8px var(--tw-shadow-color, rgba(0,0,0,0.15));
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
   .sm\:col-span-2 {
     @media (width >= 40rem) {
       grid-column: span 2 / span 2;

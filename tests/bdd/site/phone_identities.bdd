@@ -10,6 +10,13 @@ ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
 ASSERT_VISIBLE #site--identities--add-user-button
 ASSERT_VISIBLE #site--identities--add-device-button
+// Each identity's switch and Manage menu are at the card's right edge, in reach, while its other columns scroll
+// sideways under them
+ASSERT_VISIBLE #site--identities--pwd_phone--enabled
+ASSERT_VISIBLE #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--manage
+ASSERT_VISIBLE #site--identities--pwd_phone--settings
+PRESS Escape
 ASSERT_FITS
 SCREENSHOT identities_phone
 
