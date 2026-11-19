@@ -1975,6 +1975,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - the admin is paged with an SMS;
     - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
       error, for Docker to start it again with S3.
+    - if S3 refuses the lock, it logs a warning and tests S3 again until 3 tests in a row work.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
