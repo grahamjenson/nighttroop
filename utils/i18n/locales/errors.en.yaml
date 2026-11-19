@@ -3,6 +3,8 @@
 errors:
   # An error not written for people, as a library's, shown as it is
   as_written: "{{.Text}}"
+  # A request while the server starts, as during a deploy
+  server_starting: "The server is starting. Try again in a few seconds."
   missing_field:
     name: "Missing required field name"
     group_type: "Missing required field group_type"

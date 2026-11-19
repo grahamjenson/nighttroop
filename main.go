@@ -30,12 +30,14 @@ import (
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -239,6 +241,13 @@ func (s *startingHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Retry-After", "5")
+	// An htmx request puts the reply in a toast, so it gets one to read rather than the JSON
+	if httputils.GetAcceptType(r) == httputils.AcceptTypeHTMX {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_ = errortoast.Toast("", i18n.T(r.Context(), "errors.server_starting")).Render(r.Context(), w)
+		return
+	}
 	apiutils.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "starting"})
 }
 
