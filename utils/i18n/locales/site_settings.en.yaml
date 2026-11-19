@@ -224,6 +224,8 @@ site:
         password: "Password:"
         ns_token: "Nightscout token:"
         totp_secret: "TOTP secret:"
+      waiting: "Waiting for {{.Name}} to connect. Enter the details in its app, and this changes when it does."
+      connected: "{{.Name}} connected. Its app is set up."
       setting_up: "Setting up {{.Client}}"
       needs_mgdl: "{{.Client}} needs mg/dL, so this device's own units are mg/dL, whatever the site's."
       values:
