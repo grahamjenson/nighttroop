@@ -57,6 +57,7 @@ errors:
   connectors:
     bad_type: "Invalid connector type: {{.Type}}"
     bad_nightscout_url: "Nightscout URL is not a valid URL. {{.Error}}"
+    token_for_new_url: "Enter the Nightscout token again to change the Nightscout URL."
     virtual_not_here: "virtual connector, which makes up glucose, is only on development, test and staging servers"
     bad_libre_region: "LibreLinkUp region '{{.Region}}' is not a known region."
   push:

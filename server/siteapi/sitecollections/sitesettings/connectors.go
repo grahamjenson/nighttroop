@@ -158,6 +158,13 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 		params.PasswordEnc = nil
 	}
 
+	// The saved Nightscout token is for the saved URL only: sent to another, it is given to whoever can change the URL,
+	// who is never shown it
+	if params.Type == consts.ConnectorTypeNightscout && params.UrlOrUsernameEnc != nil && params.PasswordEnc == nil &&
+		(oldModel.UrlOrUsername == nil || *oldModel.UrlOrUsername != *params.UrlOrUsernameEnc) {
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.token_for_new_url"))
+	}
+
 	if err := encryptCredentials(siteContext.Config.Security, siteContext.SiteID, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
 		return nil, err
 	}
