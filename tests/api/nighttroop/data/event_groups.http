@@ -289,4 +289,4 @@ GET http://{{ site }}/data/nope
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
-ASSERT_EQUALS "There is no nope here" "@message"
+ASSERT_EQUALS "There is no page at /data/nope" "@message"

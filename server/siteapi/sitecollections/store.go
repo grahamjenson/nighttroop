@@ -168,7 +168,8 @@ func (s *SiteStore) routes(section string, r *http.Request) *SiteCollectionRoute
 	if routes, exists := s.collectionRoutes[section][name]; exists {
 		return routes
 	}
-	missing := answerNotFound(http.StatusNotFound, "There is no "+name+" here")
+	// The address as it was asked for, as "There is no nope here" says little to someone who followed a link
+	missing := answerNotFound(http.StatusNotFound, "There is no page at "+r.URL.Path)
 	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing, Events: missing, New: missing}
 }
 

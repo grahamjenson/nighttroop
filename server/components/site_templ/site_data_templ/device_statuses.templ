@@ -59,8 +59,11 @@ templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 			{ i18n.T(ctx, "site.data.device_statuses.about") }
 		}
 		if len(statuses) == 0 {
-			<section id="site--device-status--empty" class="panel p-4 text-sm text-gray-500">
+			// As an empty table of the other data pages: an icon over the words, then how a new site gets its data
+			<section id="site--device-status--empty" class="panel p-6 text-center text-sm text-gray-500">
+				@icon.Inbox(icon.Props{Class: "mx-auto mb-1 size-5 text-gray-400"})
 				{ i18n.T(ctx, "site.data.device_statuses.none") }
+				@newSiteHint()
 			</section>
 		}
 		for i, group := range groupByDevice(statuses) {

@@ -2901,14 +2901,39 @@
       right: calc(var(--spacing) * 0);
     }
   }
+  .max-sm\:flex {
+    @media (width < 40rem) {
+      display: flex;
+    }
+  }
   .max-sm\:hidden {
     @media (width < 40rem) {
       display: none;
     }
   }
+  .max-sm\:basis-full {
+    @media (width < 40rem) {
+      flex-basis: 100%;
+    }
+  }
+  .max-sm\:flex-wrap {
+    @media (width < 40rem) {
+      flex-wrap: wrap;
+    }
+  }
   .max-sm\:bg-white {
     @media (width < 40rem) {
       background-color: var(--color-white);
+    }
+  }
+  .max-sm\:pt-0 {
+    @media (width < 40rem) {
+      padding-top: calc(var(--spacing) * 0);
+    }
+  }
+  .max-sm\:text-gray-600 {
+    @media (width < 40rem) {
+      color: var(--color-gray-600);
     }
   }
   .max-sm\:shadow-\[-8px_0_8px_-8px_rgba\(0\,0\,0\,0\.15\)\] {
