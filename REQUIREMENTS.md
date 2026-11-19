@@ -2271,6 +2271,8 @@ harder:
   - its permissions on the Nightscout API, as the server gives them (for example `api:*:read`), or None.
   - On a phone, each role is a block, not a row: its name, what it can do, then the other two with their headings
     before them. Nothing is cut off.
+- On a phone, each identity's switch and Manage menu stay at the right edge of its table's card, in reach, while
+  the table's other columns scroll sideways under them.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
