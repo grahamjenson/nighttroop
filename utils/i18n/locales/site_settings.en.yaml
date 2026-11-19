@@ -165,6 +165,8 @@ site:
       clients_shared_add: "Add a device for one of them"
       enabled: "Enabled"
       manage: "Manage"
+      its_events: "Its events"
+      its_errors: "Its errors"
       settings: "Settings"
       reset_password: "Reset password"
       reset_password_confirm: "Reset {{.Name}}'s password? Its old password and Nightscout token stop working, and it is signed out."

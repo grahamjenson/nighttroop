@@ -2382,6 +2382,8 @@ harder:
 - A row's Manage menu has Settings, Reset password, Reset TOTP and Delete, each with its icon. Delete is red and
   apart.
 - Actions that do not apply (e.g. to reset or delete yourself) are greyed out. An identity cannot lock itself out.
+- Each identity's Manage menu has **Its events** and **Its errors**. Each opens the site's Events or Errors page
+  searched for the identity's name, to see what it did and what was refused it.
 - Each identity lists the clients (browsers and apps) that used it. It shows as shared when several did.
 - A shared device says to give each device its own identity, with a link that opens the Add Device modal.
 - From a row, an admin changes the identity's own settings and alarms. A device's units go to followers in its
