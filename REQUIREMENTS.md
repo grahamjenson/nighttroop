@@ -1148,6 +1148,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - a backfill is not limited.
 - A Nightscout connector's token is sent as one part of the request path. A `/`, `?` or `#` in it does not change
   the path or query of the request.
+- A change of a Nightscout connector's URL needs its token again, or the API returns 400 with "Enter the Nightscout
+  token again to change the Nightscout URL.": the saved token is never sent to another URL.
 - Password, API secret, token, username, email and URL are not offered to browsers or password managers. The password
   is a masked text box (not a password box) with an eye to show it.
 
