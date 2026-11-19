@@ -1221,6 +1221,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### General settings
 
 - Units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
+- The language is typed. Under its box, the page says to type a language code, such as en or en-NZ, and that the
+  pages are in English only for now.
 - Admins set site settings. Identities can override them.
 - Identity value, then site value, then fallback:
 
