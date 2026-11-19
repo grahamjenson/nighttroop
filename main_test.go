@@ -101,6 +101,16 @@ func TestStartingUntilReady(t *testing.T) {
 		require.JSONEq(t, `{"status":"starting"}`, response.Body.String(), path)
 	}
 
+	// An htmx request, as a button's, gets a toast to read, as htmx puts the reply in the toaster
+	request := httptest.NewRequest(http.MethodPost, "/archived-sites/site", nil)
+	request.Header.Set("HX-Request", "true")
+	response := httptest.NewRecorder()
+	starting.ServeHTTP(response, request)
+	require.Equal(t, http.StatusServiceUnavailable, response.Code)
+	require.Equal(t, "5", response.Header().Get("Retry-After"))
+	require.Contains(t, response.Body.String(), "The server is starting. Try again in a few seconds.")
+	require.NotContains(t, response.Body.String(), `"status"`)
+
 	starting.ready(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusTeapot) }))
 	require.Equal(t, http.StatusTeapot, get("/health").Code)
 }

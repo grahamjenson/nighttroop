@@ -27,7 +27,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - It never removes the control DB, a site's DB or the jobs DB.
   - If the disk still has less than 100 MB free, the server does not start, and says how much is free.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
-- Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`.
+- Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`. A button or form on a page (an htmx request) gets an error toast instead: "The server is starting. Try again in a few seconds."
 
 #### First control admin
 
