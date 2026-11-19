@@ -602,11 +602,14 @@ type TempBasal struct {
 	OccurredAt *int64 `json:"occurred_at,omitempty"`
 
 	// Rate U/hr while it runs; 0 is a suspended basal
-	Rate                  *float64 `json:"rate"`
-	Reason                *string  `json:"reason,omitempty"`
-	UpdatedAt             *int64   `json:"updated_at,omitempty"`
-	UpdatedByIdentityName *string  `json:"updated_by_identity_name,omitempty"`
-	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes,omitempty"`
+	Rate   *float64 `json:"rate"`
+	Reason *string  `json:"reason,omitempty"`
+
+	// Type The kind of temp basal a Nightscout client sent, e.g. NORMAL, or PUMP_SUSPEND for a suspended pump. The site does not set it.
+	Type                  *string `json:"type"`
+	UpdatedAt             *int64  `json:"updated_at,omitempty"`
+	UpdatedByIdentityName *string `json:"updated_by_identity_name,omitempty"`
+	UtcOffsetMinutes      *int64  `json:"utc_offset_minutes,omitempty"`
 }
 
 // TempTarget defines model for TempTarget.

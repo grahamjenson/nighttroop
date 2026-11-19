@@ -47,8 +47,15 @@ func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 		list = append(list, treatment{t.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_target"), "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		detail := i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(ctx, b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
-		list = append(list, treatment{b.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_basal"), "/data/temp-basals", detail})
+		kind, detail := i18n.T(ctx, "site.summary.treatments.temp_basal"), i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(ctx, b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
+		// A suspended pump shows as one, which has not resumed while it has no duration
+		if b.Suspend() {
+			kind, detail = i18n.T(ctx, "site.summary.treatments.suspended"), i18n.T(ctx, "site.summary.treatments.suspended_detail", i18n.Data{"Minutes": b.DurationMinutes})
+			if b.DurationMinutes == 0 {
+				detail = i18n.T(ctx, "site.summary.treatments.suspended_until_resumed")
+			}
+		}
+		list = append(list, treatment{b.OccurredAt, kind, "/data/temp-basals", detail})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list

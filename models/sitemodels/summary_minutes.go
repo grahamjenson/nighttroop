@@ -78,7 +78,8 @@ func (p *profile) at(schedule []*SiteScheduleValue, ms int64) *float64 {
 // Defaults and switches are oldest first. A switch lasts its duration, or until the next one when it has none, and
 // one that ends hands back to the last switch without a duration. A newer temp target or temp basal replaces an older
 // one, and a temp basal's rate, the U/hr given, is the basal; one that follows the basal is its multiplier times the
-// scheduled basal each minute, as Nightscout and AAPS read a temp basal sent as a percent.
+// scheduled basal each minute, as Nightscout and AAPS read a temp basal sent as a percent. A suspend of 0 minutes is a
+// basal of 0 until the next.
 func SummaryMinutes(since, until int64, units *consts.Units, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch, targets []*SiteTempTarget, basals []*SiteTempBasal) []SummaryMinute {
 	var defaultProfiles, switchProfiles []*profile
 	parsed := schedules{}
@@ -156,7 +157,7 @@ func SummaryMinutes(since, until int64, units *consts.Units, location *time.Loca
 		if target != nil && ms < target.OccurredAt+target.DurationMinutes*60_000 {
 			minute.LowTarget, minute.HighTarget = new(target.LowTarget), new(target.HighTarget)
 		}
-		if basal != nil && ms < basal.OccurredAt+basal.DurationMinutes*60_000 {
+		if basal != nil && basal.Running(ms) {
 			follows := basal.FollowsBasal != nil && *basal.FollowsBasal && basal.Multiplier != nil && minute.Basal != nil
 			if follows {
 				minute.Basal = new(*minute.Basal * *basal.Multiplier)
