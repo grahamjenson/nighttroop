@@ -30,8 +30,8 @@ type Alert struct {
 // site's own, else the server's. It records the push, with its error, if it had one, and deletes a token the push
 // service says is gone.
 func Send(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfig, registration *controldb.PushRegistration, alert Alert) error {
-	credential, err := q.PushCredentialFor(ctx, controldb.PushCredentialForParams{SiteID: &registration.SiteID,
-		Provider: registration.Provider, App: string(registration.App), BundleID: registration.BundleID})
+	credential, err := q.PushCredentialFor(ctx, controldb.PushCredentialForParams{SiteID: registration.SiteID,
+		Provider: string(registration.Provider), App: string(registration.App), BundleID: registration.BundleID})
 	if errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("%w %s", ErrNoCredential, registration.App)
 	}

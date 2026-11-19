@@ -191,7 +191,7 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 	logs.SiteBackupError(ctx, errors.New("backup failed"))
 	logs.Log(ctx, &other, db.LogLevelInfo, "other synced", nil)
 
-	siteEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Limit: 100})
+	siteEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: site, Limit: 100})
 	require.NoError(t, err)
 	require.Len(t, siteEvents, 1)
 	require.Equal(t, string(events.SiteDisabled), siteEvents[0].Name)
@@ -251,7 +251,7 @@ func TestLogsDBSearchByType(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			events, err := logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &site, Type: tt.typ, Limit: 10})
 			require.NoError(t, err)
-			siteEvents, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Type: tt.typ, Limit: 10})
+			siteEvents, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: site, Type: tt.typ, Limit: 10})
 			require.NoError(t, err)
 			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Type: tt.typ, Limit: 10})
 			require.NoError(t, err)
@@ -307,7 +307,7 @@ func TestLogsDBSearchText(t *testing.T) {
 			found, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &site, Search: tt.search, Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, found, tt.logs)
-			events, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Search: tt.search, Limit: 10})
+			events, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: site, Search: tt.search, Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, events, tt.siteEvents)
 			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Search: tt.search, Limit: 10})

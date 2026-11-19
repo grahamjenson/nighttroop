@@ -261,11 +261,11 @@ const recentConnectorLogs = 5
 // addRecentLogs adds the source's newest events and errors from the logs DB, the site's own only
 func addRecentLogs(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.Connector) error {
 	logs, connectorType := siteContext.ControlDB.Logs.Queries, string(model.Type)
-	events, err := logs.RecentConnectorEvents(ctx, logsdb.RecentConnectorEventsParams{SiteID: &siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
+	events, err := logs.RecentConnectorEvents(ctx, logsdb.RecentConnectorEventsParams{SiteID: siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
 	if err != nil {
 		return err
 	}
-	syncErrors, err := logs.RecentConnectorErrors(ctx, logsdb.RecentConnectorErrorsParams{SiteID: &siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
+	syncErrors, err := logs.RecentConnectorErrors(ctx, logsdb.RecentConnectorErrorsParams{SiteID: siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
 	if err != nil {
 		return err
 	}

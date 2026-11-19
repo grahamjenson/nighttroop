@@ -34,7 +34,7 @@ INSERT INTO site_identities (
 
 
 -- name: AllSiteIdentities :many
-SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') ORDER BY created_at DESC, id DESC; -- id breaks ties, as identities made together can share a millisecond
+SELECT * FROM site_identities WHERE site_id = CAST(sqlc.arg('SiteID') AS TEXT) ORDER BY created_at DESC, id DESC; -- id breaks ties, as identities made together can share a millisecond
 
 -- name: CountSiteIdentities :one
 SELECT COUNT(*) FROM site_identities WHERE site_id = sqlc.arg('SiteID');

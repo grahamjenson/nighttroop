@@ -297,9 +297,9 @@ WHERE
         FROM
             jobs js
         WHERE
-            js.queue = ?
+            js.queue = CAST(?1 AS TEXT)
             AND js.job_status = 'queued'
-            AND js.execute_after <= ?
+            AND js.execute_after <= ?2
             AND js.remaining_attempts > 0
         ORDER BY
             execute_after ASC
