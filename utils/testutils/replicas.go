@@ -21,7 +21,13 @@ func FakeS3(t testing.TB, cfg *config.ServerConfig) *s3utils.S3Client {
 	t.Helper()
 	// Litestream's S3 client cannot start with a CA bundle, as a sandbox's proxy may set
 	t.Setenv("AWS_CA_BUNDLE", "")
-	server := httptest.NewServer(gofakes3.New(s3mem.New(), gofakes3.WithAutoBucket(true)).Server())
+	// The bucket is made now, not by gofakes3's auto bucket: that makes it in each request that finds it missing, so
+	// of two first requests at once, as a test's and Litestream's, one fails with NoSuchBucket
+	backend := s3mem.New()
+	if err := backend.CreateBucket(cfg.S3Bucket); err != nil {
+		t.Fatalf("cannot make the fake S3's bucket: %v", err)
+	}
+	server := httptest.NewServer(gofakes3.New(backend).Server())
 	t.Cleanup(server.Close)
 	cfg.S3URL, cfg.Status.S3Working = server.URL, true
 	return s3utils.NewS3Client(cfg)
