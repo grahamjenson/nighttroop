@@ -211,7 +211,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | Disable | Any live site, however recently used, after a confirmation | Not served. Socket.IO connections close. |
 | Enable | A disabled site, after a confirmation | Served again. Its data is as it was. |
 | Archive | After disable. S3 not needed. | A compressed copy of its DB is kept in the backup folder here (`data/backup/site/<letter>/<site>.sqlite.lz4`), and uploaded to S3 when S3 is connected. Its DB here is deleted. |
-| Restore | From the archived sites page | Restored from the copy in the backup folder here first, else from S3, migrated, and live again. Without S3 and without a copy here, it is refused and stays archived. |
+| Restore | From the archived sites page | Restored from the copy in the backup folder here first, else from S3, migrated, and live again. A restored DB that does not open or migrate still makes it live, but unavailable, its DB kept here, with a toast saying so, and its page offers the fixes. Without S3 and without a copy here, it is refused and stays archived. |
 | Truncate | Live or disabled, any size | Truncates all device statuses (as each backup does the newest), deletes old loop settings no record refers to, shrinks the DB. |
 
 - Download DB (`/sites/{id}/db`):
