@@ -230,18 +230,18 @@ func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
 // reload finds it so, or "" when there is no reading or it already is. A reading from the future waits no longer than
 // the stale minutes, as a timer too long for the browser fires at once, which would reload again and again.
 func staleTrigger(ctx context.Context, summary *sitemodels.Summary, now time.Time) string {
-	if len(summary.GlucoseReadings) == 0 || staleFor(ctx, summary.GlucoseReadings[0].OccurredAt, now) != "" {
+	if summary.CurrentGlucose == nil || staleFor(ctx, summary.CurrentGlucose.OccurredAt, now) != "" {
 		return ""
 	}
 	after := time.Duration(staleAfterMinutes(ctx)) * time.Minute
-	in := min(time.UnixMilli(summary.GlucoseReadings[0].OccurredAt).Add(after).Sub(now), after) + time.Second
+	in := min(time.UnixMilli(summary.CurrentGlucose.OccurredAt).Add(after).Sub(now), after) + time.Second
 	return fmt.Sprintf(", load delay:%dms", in.Milliseconds())
 }
 
 templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="panel col-span-2 flex flex-wrap items-center p-4 sm:col-span-4 lg:col-span-2 lg:row-span-2">
-		if len(summary.GlucoseReadings) > 0 {
-			{{ latest := summary.GlucoseReadings[0] }}
+		if summary.CurrentGlucose != nil {
+			{{ latest := summary.CurrentGlucose }}
 			{{ outOfRange, stale := display.GlucoseRange(latest.Reading, summary.RangeLow, summary.RangeHigh), staleFor(ctx, latest.OccurredAt, time.Now()) }}
 			<div>
 				<div class="flex items-center gap-2">
@@ -256,7 +256,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 					// An old reading is grey, as it may no longer be the glucose
 					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(site_data_templ.GlucoseColours[outOfRange].Text, stale == ""), templ.KV("text-gray-400", stale != "") }>{ display.Glucose(ctx, latest.Reading, latest.Units) }</span>
 					<span class="text-lg text-gray-500">{ display.Units(latest.Units) }</span>
-					<span class="ml-2 text-4xl text-gray-700">{ display.Arrow(latest.Direction) }</span>
+					<span id="site--summary--glucose--arrow" class="ml-2 text-4xl text-gray-700">{ display.Arrow(latest.Direction) }</span>
 					if outOfRange != "" {
 						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseColours[outOfRange].Text }>{ i18n.T(ctx, rangeNames[outOfRange]) }</span>
 					}

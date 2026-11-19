@@ -1,0 +1,23 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A CGM reads 5.1 mmol/L and rising, then Loop uploads a finger stick of 7.2 mmol/L from a minute ago
+POST /data/glucose {"reading": 5.1, "reading_type": "sgv", "direction": "FortyFiveUp", "occurred_at": {{ itime 3 }}}
+HTTP
+NAME loop_finger_stick
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "BG Check", "glucose": 7.2, "glucoseType": "Finger", "units": "mmol", "created_at": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+BROWSE
+
+// The glucose tile shows the CGM's reading with its arrow, not the finger stick
+GOTO {{ .site_url }}/
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 5.1
+ASSERT_TEXT_EQUALS #site--summary--glucose--arrow ↗
+SCREENSHOT summary_cgm_over_finger_stick
+
+// The finger stick is still one of the readings
+GOTO {{ .site_url }}/data/glucose
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> text="7.2"
