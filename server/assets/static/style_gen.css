@@ -795,9 +795,6 @@
   .min-w-48 {
     min-width: calc(var(--spacing) * 48);
   }
-  .min-w-56 {
-    min-width: calc(var(--spacing) * 56);
-  }
   .min-w-64 {
     min-width: calc(var(--spacing) * 64);
   }
@@ -2891,6 +2888,63 @@
       transition-property: none;
     }
   }
+  .max-sm\:flex {
+    @media (width < 40rem) {
+      display: flex;
+    }
+  }
+  .max-sm\:flex-col {
+    @media (width < 40rem) {
+      flex-direction: column;
+    }
+  }
+  .max-sm\:py-0 {
+    @media (width < 40rem) {
+      padding-block: calc(var(--spacing) * 0);
+    }
+  }
+  .max-sm\:py-1 {
+    @media (width < 40rem) {
+      padding-block: calc(var(--spacing) * 1);
+    }
+  }
+  .max-sm\:pt-0 {
+    @media (width < 40rem) {
+      padding-top: calc(var(--spacing) * 0);
+    }
+  }
+  .max-sm\:pb-0 {
+    @media (width < 40rem) {
+      padding-bottom: calc(var(--spacing) * 0);
+    }
+  }
+  .max-sm\:text-xs {
+    @media (width < 40rem) {
+      font-size: var(--text-xs);
+      line-height: var(--tw-leading, var(--text-xs--line-height));
+    }
+  }
+  .max-sm\:text-gray-500 {
+    @media (width < 40rem) {
+      color: var(--color-gray-500);
+    }
+  }
+  .max-sm\:before\:font-sans {
+    @media (width < 40rem) {
+      &::before {
+        content: var(--tw-content);
+        font-family: var(--font-sans);
+      }
+    }
+  }
+  .max-sm\:before\:content-\[attr\(data-label\)\] {
+    @media (width < 40rem) {
+      &::before {
+        --tw-content: attr(data-label);
+        content: var(--tw-content);
+      }
+    }
+  }
   .sm\:col-span-2 {
     @media (width >= 40rem) {
       grid-column: span 2 / span 2;
@@ -2960,6 +3014,16 @@
   .sm\:max-w-\[calc\(100vw-2rem\)\] {
     @media (width >= 40rem) {
       max-width: calc(100vw - 2rem);
+    }
+  }
+  .sm\:min-w-56 {
+    @media (width >= 40rem) {
+      min-width: calc(var(--spacing) * 56);
+    }
+  }
+  .sm\:min-w-64 {
+    @media (width >= 40rem) {
+      min-width: calc(var(--spacing) * 64);
     }
   }
   .sm\:columns-2 {
@@ -3640,6 +3704,13 @@
     & svg:not([class*='size-']) {
       width: calc(var(--spacing) * 4);
       height: calc(var(--spacing) * 4);
+    }
+  }
+  .max-sm\:\[\&_thead\]\:hidden {
+    @media (width < 40rem) {
+      & thead {
+        display: none;
+      }
     }
   }
   .\[\&_tr\]\:border-b {
