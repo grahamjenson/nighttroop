@@ -1,0 +1,18 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A falling sensor reading, then a fingerstick, sent as Trio's Add Glucose sends it, through the Nightscout API
+HTTP
+NAME sensor_then_fingerstick
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 85, "direction": "SingleDown", "date": {{ itime 3 }}, "dateString": "{{ time 3 }}"}, {"type": "mbg", "mbg": 112, "date": {{ itime 1 }}, "dateString": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+BROWSE
+
+// The glucose tile shows the sensor's reading (85 mg/dL) and its arrow, and the newer fingerstick (112 mg/dL) beside it,
+// not in its place
+GOTO /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 4.7
+ASSERT_VISIBLE #site--summary--glucose >> text=↓
+ASSERT_VISIBLE #site--summary--glucose--meter >> text=/^Meter 6.2 mmol\/L, /
+SCREENSHOT fingerstick

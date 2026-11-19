@@ -233,10 +233,24 @@ func staleTrigger(ctx context.Context, summary *sitemodels.Summary, now time.Tim
 	return fmt.Sprintf(", load delay:%dms", in.Milliseconds())
 }
 
+// newerMeter is the newest meter reading newer than the current glucose, shown under it, as a fingerstick is not the
+// sensor's glucose and has no trend, or nil when there is none, as when the current glucose is the newest fingerstick
+func newerMeter(summary *sitemodels.Summary) *sitemodels.SiteCleanGlucoseReading {
+	for _, reading := range summary.GlucoseReadings {
+		if summary.CurrentGlucose == nil || reading.OccurredAt <= summary.CurrentGlucose.OccurredAt {
+			return nil
+		}
+		if reading.ReadingType == "mbg" {
+			return reading
+		}
+	}
+	return nil
+}
+
 templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="panel col-span-2 flex flex-wrap items-center p-4 sm:col-span-4 lg:col-span-2 lg:row-span-2">
 		if summary.CurrentGlucose != nil {
-			{{ latest := summary.CurrentGlucose }}
+			{{ latest, meter := summary.CurrentGlucose, newerMeter(summary) }}
 			{{ outOfRange, stale := display.GlucoseRange(latest.Reading, summary.RangeLow, summary.RangeHigh), staleFor(ctx, latest.OccurredAt, time.Now()) }}
 			<div>
 				<div class="flex items-center gap-2">
@@ -256,6 +270,11 @@ templ glucoseHero(summary *sitemodels.Summary) {
 						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", site_data_templ.GlucoseColours[outOfRange].Text }>{ i18n.T(ctx, rangeNames[outOfRange]) }</span>
 					}
 				</div>
+				if meter != nil {
+					<div id="site--summary--glucose--meter" class="mt-1 text-sm text-gray-700" title={ site_data_templ.FormatDate(ctx, meter.OccurredAt) }>
+						{ i18n.T(ctx, "site.summary.glucose.meter", i18n.Data{"Reading": display.Glucose(ctx, meter.Reading, meter.Units), "Units": display.Units(meter.Units), "Ago": display.RoundedAgo(ctx, meter.OccurredAt, time.Now())}) }
+					</div>
+				}
 				<div class="mt-1 flex gap-3 text-sm">
 					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(ctx, latest.OccurredAt, time.Now()) }</span>
 					@nav.Link("site--summary--all-readings", "/data/glucose", "text-primary underline") {
