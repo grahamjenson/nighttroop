@@ -29,9 +29,6 @@
 1. Security
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
-    1. P2: Check a site identity's rate limit before its site's (`server/siteapi/router.go`,
-       `server/nightscoutapi/router.go`): a request its identity refuses spends the site's limit first, so one
-       follower's token over its own limit can use up the site's, and its other apps get 429
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
