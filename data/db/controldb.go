@@ -434,7 +434,8 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 
 // HydrateSite brings an archived site back: it restores the site's DB from its backup here, kept when it was archived,
 // or else downloads, with download, its archive from S3, opens it, migrating it, and makes the site live again. A nil
-// download, as without S3, restores only from the backup here.
+// download, as without S3, restores only from the backup here. A DB that does not open or migrate makes it live but
+// unavailable, see MakeSiteUnavailableFor.
 func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download s3utils.DownloadFunc) error {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
@@ -456,12 +457,10 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 			return fmt.Errorf("site %s has no archive", subdomain)
 		}
 	}
-	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
-	if err != nil {
-		// The archive is still here or in S3, so the copy restored from it goes
-		_ = utils.DeleteFiles([]string{path})
-		return err
-	}
+	// A DB restored that does not open or migrate, as one archived long ago, still makes the site live again, but
+	// unavailable, with its DB kept here, so its page offers the fixes: download, fix and upload it, restore a backup or
+	// make a new empty DB
+	siteDB, openErr := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	result, err := db.Queries.HydrateSite(ctx, controldb.HydrateSiteParams{ID: subdomain})
 	if err == nil {
 		if rows, _ := result.RowsAffected(); rows == 0 {
@@ -469,9 +468,17 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 		}
 	}
 	if err != nil {
-		siteDB.Close()
-		_ = utils.DeleteFiles([]string{path})
+		if siteDB != nil {
+			siteDB.Close()
+		}
+		// The archive is still here or in S3, so the copy restored from it goes
+		_ = utils.DeleteFiles(dbFiles(path))
 		return err
+	}
+	if openErr != nil {
+		slog.ErrorContext(ctx, "Restored site's DB does not open, so the site is unavailable", "site_id", subdomain, "error", openErr)
+		db.MakeSiteUnavailableFor(subdomain, openErr)
+		return nil
 	}
 
 	db.sites.add(siteDB)

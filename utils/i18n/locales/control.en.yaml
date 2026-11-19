@@ -436,6 +436,8 @@ control:
     hydrate_confirm: "Restore this site? Its archive here, or else in S3, is restored and it is live again."
     hydrate: "Restore"
     hydrated: "Site Restored: {{.SiteID}} is live again"
+    hydrated_unavailable_title: "Site Restored, but Unavailable"
+    hydrated_unavailable: "{{.SiteID}} is live, but its DB does not open or migrate. Its page offers ways to fix it."
   usage:
     title: "Usage"
     intro: "How many use the server and how much. Active sites and users are from the DB; the rest is counted since the server started {{.StartedAgo}}. Updates every 10 seconds."

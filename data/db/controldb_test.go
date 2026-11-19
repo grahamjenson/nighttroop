@@ -185,6 +185,38 @@ func TestArchiveAndHydrateHereWithoutS3(t *testing.T) {
 	require.Equal(t, "archived", row.State)
 }
 
+// An archive that does not open, as one archived long ago, still makes the site live, but unavailable with its DB kept
+// here, so its page offers the fixes
+func TestHydrateSiteThatDoesNotOpenIsUnavailable(t *testing.T) {
+	cfg, controlDB := testutils.NewControlDB(t)
+	fileCfg := *cfg
+	fileCfg.Mode, fileCfg.DataDir = consts.Development, t.TempDir()
+	controlDB.ServerConfig = &fileCfg
+	ctx := t.Context()
+	site, err := controlDB.CreateSite(ctx)
+	require.NoError(t, err)
+	siteID := site.SiteDB.Subdomain
+	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	require.NoError(t, err)
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, nil))
+
+	// The archive here holds a file that is not a DB
+	file, err := os.Create(sitedb.GetBackupPath(siteID, &fileCfg))
+	require.NoError(t, err)
+	writer := lz4.NewWriter(file)
+	_, err = writer.Write([]byte("not a sqlite db, but long enough to have a header of one"))
+	require.NoError(t, err)
+	require.NoError(t, writer.Close())
+	require.NoError(t, file.Close())
+
+	require.NoError(t, controlDB.HydrateSite(ctx, siteID, nil))
+	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.Equal(t, "live", row.State)
+	require.Equal(t, "cannot_open", controlDB.UnavailableSites()[siteID])
+	require.FileExists(t, sitedb.GetPath(siteID, &fileCfg))
+}
+
 // An archived site hydrates from its archive with its data, live again and open, and only an archived one does
 func TestHydrateSite(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)
