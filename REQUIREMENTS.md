@@ -646,8 +646,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Phone layout and history
 
-- On a phone: hub links and search are icons, the search opening a box across the page. Reports and Logs & Events tabs
-  scroll sideways; Data and Settings tabs wrap above the page. No page gets wider. The user menu is unchanged.
+- On a phone: hub links and search are icons, the search opening a box across the page. Each hub's tabs are one row
+  above the page that scrolls sideways, with the tab of the page shown in view. No page gets wider. The user menu is
+  unchanged.
 - Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns. Quick clicks show the
   last one clicked.
 - A box that has focus keeps its value when the page changes, for example a date picked or a search sent with Enter.

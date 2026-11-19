@@ -338,6 +338,7 @@ CLICK #site--nav--search--data--device-status
 ASSERT_STATUS 200
 ASSERT_PATH /data/device-status
 ASSERT_NOT_VISIBLE #site--nav--search
+// Data's thirteen tabs are one row that scrolls sideways, and the tab of the page shown, its tenth, is in view
 ASSERT_VISIBLE #site--data--device-status-button[aria-current="page"]
 ASSERT_FITS
 SCREENSHOT navigation_phone_data
