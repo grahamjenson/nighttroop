@@ -6,7 +6,7 @@ ASSERT_VISIBLE "Nighttroop"
 GOTO /data/nope
 ASSERT_STATUS 404
 ASSERT_VISIBLE #site--not-found
-ASSERT_TEXT_EQUALS #site--not-found--message There is no nope here
+ASSERT_TEXT_EQUALS #site--not-found--message There is no page at /data/nope
 // It says how to find a page, and links to the summary, the data, the reports and the setup guide
 ASSERT_TEXT_EQUALS #site--not-found--help The search at the top of the page finds any page by name. Or go to:
 ASSERT_VISIBLE #site--not-found--home
