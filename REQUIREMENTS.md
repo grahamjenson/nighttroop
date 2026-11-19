@@ -186,8 +186,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - not on disk: from its tables. Neither: not measured yet.
 - DB size bar:
   - the five largest tables (with their indexes), darkest first, then Other;
-  - a key: name, records in thousands, MB and share (for example, `7.9k · 6.11 MB · 54%`). Other sums its tables'
-    records. Hover names a part;
+  - a key: name, records in the number format, MB and share (for example, `7,912 records · 6.11 MB · 54%`). Other
+    sums its tables' records. Hover names a part;
+  - a site table has the name of the page that shows it (for example, Device Status for `device_reports`), with its
+    table name on hover. A table with no page keeps its table name;
   - table sizes as last measured (at creation, by the 5-minute site measurement after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
@@ -2407,6 +2409,8 @@ harder:
 - Usage (`/usage`) is in the user menu, for an admin only. My Account and the General settings do not show it.
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
+- The key names each table by the page that shows it, such as Glucose Readings or Device Status, not by its table name.
+- On a phone the key fits the window, with no sideways scroll.
 - "Truncate", after a confirmation, does as control's Truncate:
   - Removes the predictions from loop statuses over 1 day old.
   - Clears the pump as sent from all but each device's newest status.
