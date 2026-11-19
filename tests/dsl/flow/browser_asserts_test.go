@@ -1,8 +1,11 @@
 package flow
 
 import (
+	imagecolor "image/color"
+	"image/png"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -308,4 +311,39 @@ func TestInputTypesALongValueOnASlowRunner(t *testing.T) {
 	typed, err := page.Locator("#notes").InputValue()
 	require.NoError(t, err)
 	require.Equal(t, value, typed)
+}
+
+// A page left scrolled down is drawn from its top, its sticky header at the top and not across its middle, and is
+// scrolled back to where it was after
+func TestScreenshotIsTakenFromThePagesTop(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+	defer func(old string) { ScreenshotDir = old }(ScreenshotDir)
+	ScreenshotDir = t.TempDir()
+
+	page, err := browser.NewPage(playwright.BrowserNewPageOptions{Viewport: &playwright.Size{Width: 400, Height: 300}})
+	require.NoError(t, err)
+	require.NoError(t, page.SetContent(`<html><body style="margin:0;background:#fff">
+<div style="position:sticky;top:0;height:40px;background:#f00"></div><div style="height:1200px"></div></body></html>`))
+	_, err = page.Evaluate("window.scrollTo(0, 600)")
+	require.NoError(t, err)
+
+	path, err := ScreenshotPage(page, "shots", "site/page.bdd", "page")
+	require.NoError(t, err)
+	file, err := os.Open(path)
+	require.NoError(t, err)
+	defer file.Close()
+	shot, err := png.Decode(file)
+	require.NoError(t, err)
+	red, white := imagecolor.RGBA{R: 255, A: 255}, imagecolor.RGBA{R: 255, G: 255, B: 255, A: 255}
+	require.Equal(t, red, imagecolor.RGBAModel.Convert(shot.At(200, 20)), "the header is at the top")
+	require.Equal(t, white, imagecolor.RGBAModel.Convert(shot.At(200, 620)), "and not where the page was scrolled to")
+
+	scrolled, err := page.Evaluate("window.scrollY")
+	require.NoError(t, err)
+	require.EqualValues(t, 600, scrolled, "the page is scrolled back")
 }

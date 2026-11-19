@@ -40,6 +40,13 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
 		return "", err
 	}
+	// It is taken from the page's top: a page left scrolled down, as by a step that looked at something low on it, is
+	// drawn with its sticky header across its middle. It is scrolled back after, so the next steps find it as it was.
+	scrolled, err := page.Evaluate("(() => { const y = window.scrollY; window.scrollTo(0, 0); return y })()")
+	if err != nil {
+		return "", err
+	}
+	defer func() { _, _ = page.Evaluate("y => window.scrollTo(0, y)", scrolled) }()
 	// The whole page is taken, not just the window, so a long page shows all of it, up to maxScreenshotHeight
 	height, err := page.Evaluate("document.documentElement.scrollHeight")
 	if err != nil {
