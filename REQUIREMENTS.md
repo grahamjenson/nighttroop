@@ -562,6 +562,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Footer and legal notes
 
 - Every footer links (each in a new tab) to contact, terms of service, privacy policy and API docs.
+- The footer's links have a dot between each. On a phone they wrap and have no dots, so no line starts with one.
 - With `FEEDBACK_URL` set (a Google Form or GitHub issues), the footer links "feedback" and the home page asks for it
   under its features, each in a new tab. Unset, neither shows.
 - Pages with estimated locations (events pages) also link DB-IP, whose free databases make the estimates.
@@ -646,8 +647,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Phone layout and history
 
-- On a phone: hub links and search are icons, the search opening a box across the page. Reports and Logs & Events tabs
-  scroll sideways; Data and Settings tabs wrap above the page. No page gets wider. The user menu is unchanged.
+- On a phone: hub links and search are icons, the search opening a box across the page. Each hub's tabs are one row
+  above the page that scrolls sideways, with the tab of the page shown in view. No page gets wider. The user menu is
+  unchanged.
 - Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns. Quick clicks show the
   last one clicked.
 - A box that has focus keeps its value when the page changes, for example a date picked or a search sent with Enter.
@@ -706,6 +708,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Periods and time in range
 
 - Today, yesterday, last week, last month: time in range, total daily dose, last sensor and site change.
+  - A tile shows a line for yesterday, last week, last fortnight or last month only when that time has data.
   - No data: "–" for time in range and daily dose, not 0. No insulin: 0 U.
   - Total daily dose: a combo bolus adds its dose given at once immediately. Its extended dose adds as it is given,
     by the share of its minutes that are complete.
