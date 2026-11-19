@@ -96,6 +96,8 @@ ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--interval 2 min
 // The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
 ASSERT_VISIBLE #site--settings--dexcom-connector--region
 ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-connector--region)
+// Under the error, plain words say what to do about it: the address cannot be reached
+ASSERT_VISIBLE #site--settings--nightscout-connector--advice >> text=Nighttroop cannot reach that address
 SCREENSHOT connector_first_sync_failed
 
 // Deleting a source leaves the page in place, with the source's form rendered unset again
