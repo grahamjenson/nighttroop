@@ -204,7 +204,7 @@ GET http://{{ site }}/data/sync
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
-ASSERT_EQUALS "There is no sync here" "@message"
+ASSERT_EQUALS "There is no page at /data/sync" "@message"
 
 NAME glucose_not_presets
 GET http://{{ site }}/presets/glucose
