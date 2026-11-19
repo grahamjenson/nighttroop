@@ -11,6 +11,8 @@ ASSERT_COUNT #site--nav--links a 3
 ASSERT_NOT_VISIBLE #site--nav--links >> text=Summary
 ASSERT_NOT_VISIBLE #site--nav--links >> text=Settings
 ASSERT_VISIBLE #site--nav--search[aria-label="Search pages"]
+// The footer's links are one line, with a dot between each
+ASSERT_COUNT #footer > span[aria-hidden="true"] 4
 SCREENSHOT navigation_header
 
 // The user menu has who is signed in, their account, the guide, Settings, Connectors, Alarms, Logs & Events, Usage and
@@ -313,6 +315,9 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--nav--reports
 ASSERT_VISIBLE #site--settings-menu button >> nth=0
 ASSERT_NOT_VISIBLE #site--nav--search
+// The footer's links wrap on a phone, so they have no dots between them: one would start the second line
+ASSERT_COUNT #footer > span[aria-hidden="true"] 0
+ASSERT_VISIBLE #footer--api-docs
 ASSERT_FITS
 SCREENSHOT navigation_phone_header
 
