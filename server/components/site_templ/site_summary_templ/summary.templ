@@ -375,7 +375,8 @@ templ treatmentsTable(list []treatment) {
 				@table.Empty("", 1, i18n.T(ctx, "site.summary.treatments.none"))
 			}
 			for _, t := range list {
-				@table.Row() {
+				// On a phone its detail is a line of its own under when and what it was, not a column a word wide
+				@table.Row(table.RowProps{Class: "max-sm:flex max-sm:flex-wrap"}) {
 					@table.Cell() {
 						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(ctx, t.At, time.Now()) }</span>
 					}
@@ -384,7 +385,7 @@ templ treatmentsTable(list []treatment) {
 							{ t.Kind }
 						}
 					}
-					@table.Cell(table.CellProps{Class: "whitespace-normal"}) {
+					@table.Cell(table.CellProps{Class: "whitespace-normal max-sm:basis-full max-sm:pt-0 max-sm:text-gray-600"}) {
 						{ t.Detail }
 					}
 				}
