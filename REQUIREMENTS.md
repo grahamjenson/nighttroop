@@ -653,7 +653,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Contents
 
 - The home page: latest glucose and its age, the loop's IOB and COB, treatments, and each device's latest status.
-- The latest glucose is the newest CGM reading (`sgv`) and its arrow. A newer finger stick does not replace it.
+- The latest glucose is the newest CGM reading (`sgv`) and its arrow. A newer finger stick does not replace it: it
+  shows under it ("Meter 6.2 mmol/L, 1 minute ago").
   - If there is no CGM reading in the hours, the newest finger stick shows.
   - `GET /summary` gives it as `current_glucose`. Its `diff_per_5m` is from the CGM reading before it.
   - Finger sticks stay in `glucose_readings` and the graph.
