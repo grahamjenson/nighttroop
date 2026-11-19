@@ -105,8 +105,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     missing, DB does not open, migration failed, or schema differs) and a link to its page, then how many more.
 - An unavailable site has a red Unavailable badge in the sites list and on its page.
 - An unavailable site's actions start with what fixes it, Upload DB then New Empty DB. Open Site, Download DB,
-  Truncate and Archive need its DB, so in place of their buttons they say "Its DB is unavailable. Fix it first,
-  above." Disable is still offered as for any site.
+  Truncate and Archive need its DB, so in place of their buttons they say "Its DB is unavailable. Fix it first, in
+  Actions." Disable is still offered as for any site.
 - An unavailable site's page offers a control admin New Empty DB, as for a site created just before a crash, which has
   no backup. It asks first, then:
   - makes the site's DB again, empty, so the site is served again; its identities are kept, its data is not;
@@ -204,6 +204,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Actions list, one action a row with its button at its right (under its words on a phone): Open Site, and for an admin the actions below. Each says what it does, and has its button or says when
   it is offered. The page shows the change.
+- Actions, at the top, has the actions that do not stop the site or remove its data: Open Site, Download DB and
+  Enable.
+- Dangerous Actions, the last card of the page in red, has Disable, Truncate and Archive, in that order. Only an admin
+  sees it.
 
 | Action | When | Result |
 | --- | --- | --- |

@@ -110,7 +110,13 @@ ASSERT_VISIBLE #control--site--action-truncate >> text=then shrinks its DB.
 ASSERT_VISIBLE #control--site--truncate
 // Each action is a row, and its button is as wide as its words, not the page
 ASSERT_COUNT #control--site--actions .w-full 0
-ASSERT_VISIBLE #control--site--actions .divide-y > #control--site--action-truncate
+ASSERT_COUNT #control--site--dangerous-actions .w-full 0
+// What stops the site or removes its data is apart, in Dangerous Actions, the page's last card: disable, truncate
+// and archive, in that order. The safe actions stay in Actions at the top.
+ASSERT_VISIBLE #control--site--dangerous-actions .divide-y > #control--site--action-disable:first-child + #control--site--action-truncate + #control--site--action-archive
+ASSERT_COUNT #control--site--actions #control--site--action-truncate 0
+ASSERT_VISIBLE #control--site--actions .divide-y > #control--site--action-download-db
+ASSERT_VISIBLE #control--site--page > section:last-of-type#control--site--dangerous-actions
 ASSERT_NOT_VISIBLE #control--site--archive
 ASSERT_VISIBLE #control--site--action-archive >> text=Offered once it is disabled.
 ASSERT_VISIBLE #control--site--action-disable >> text=Stops serving the site. Its data is kept.
@@ -122,6 +128,8 @@ ASSERT_VISIBLE #control--site--action-enable >> text=Offered once it is disabled
 ASSERT_VISIBLE #control--site--action-download-db >> text=Its admins see the download in its events.
 ASSERT_VISIBLE #control--site--download-db[href$="/db"][download]
 SCREENSHOT site_download_db
+SCROLL -3000
+SCREENSHOT dangerous_actions
 // Truncating asks first (the test accepts), then shows its page again, with the event saying so
 CLICK #control--site--truncate
 ASSERT_TEXT_VISIBLE Site Truncated
