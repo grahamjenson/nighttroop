@@ -278,6 +278,27 @@ func newerMeter(summary *sitemodels.Summary) *sitemodels.SiteCleanGlucoseReading
 	return nil
 }
 
+// staleHelp says, under a reading that is too old, where to look for why readings stopped: an admin gets links to the
+// three pages that say, and anyone else is told to ask an admin, as they cannot open those pages
+templ staleHelp() {
+	<p id="site--summary--glucose--stale-help" class="mt-2 flex max-w-md flex-wrap gap-x-3 gap-y-1 rounded-lg bg-amber-100 px-3 py-2 text-sm text-amber-800">
+		if isAdmin(ctx) {
+			<span class="font-medium">{ i18n.T(ctx, "site.summary.glucose.stale_help") }</span>
+			@nav.Link("site--summary--stale--connectors", "/settings/connectors", "font-medium underline") {
+				{ i18n.T(ctx, "site.settings.connectors.title") }
+			}
+			@nav.Link("site--summary--stale--identities", "/settings/identities", "font-medium underline") {
+				{ i18n.T(ctx, "site.settings.identities.title") }
+			}
+			@nav.Link("site--summary--stale--errors", "/logs/errors", "font-medium underline") {
+				{ i18n.T(ctx, "site.logs.errors.title") }
+			}
+		} else {
+			{ i18n.T(ctx, "site.summary.glucose.stale_ask") }
+		}
+	</p>
+}
+
 templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="panel col-span-2 flex flex-wrap items-center p-4 sm:col-span-4 lg:col-span-2 lg:row-span-2">
 		if summary.CurrentGlucose != nil {
@@ -312,6 +333,9 @@ templ glucoseHero(summary *sitemodels.Summary) {
 						{ i18n.T(ctx, "site.summary.glucose.all_readings") }
 					}
 				</div>
+				if stale != "" {
+					@staleHelp()
+				}
 			</div>
 		} else {
 			<div>

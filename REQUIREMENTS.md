@@ -722,6 +722,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Latest glucose older than the no data alarm's minutes (default 20) is grey, with an amber badge ("No reading for 45
   min"). An open summary changes when it becomes old, with no data change or reload, reading the summary one time then,
   not every few seconds.
+  - Under the old reading, an admin sees "Readings stopped. See why on:" with links to Connectors, Users & Devices
+    and Errors.
+  - An identity that is not an admin sees "Readings stopped. Tell an admin of this site." with no links.
 - Ages in words, nearest hour after one hour: "45 minutes ago", "2 days 1 hour ago".
 - In Insulin and carbs, an intake more than 10 minutes ahead, as carbs Trio expects from fat and protein, says how
   long until it: "in 58 minutes". One less ahead, as from a phone's clock running fast, is "just now".

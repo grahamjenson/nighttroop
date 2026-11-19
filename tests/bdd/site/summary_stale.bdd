@@ -16,4 +16,10 @@ WAIT_VISIBLE 30 #site--summary--glucose--stale:text-matches("^No reading for 20 
 ASSERT_VISIBLE #site--summary--glucose--reading.text-gray-400
 ASSERT_NOT_VISIBLE #site--summary--content[hx-trigger*="load delay:"]
 ASSERT_PATH /
+// Under it, an admin is told where to look for why readings stopped, each a link
+ASSERT_VISIBLE #site--summary--glucose--stale-help >> text=Readings stopped. See why on:
+ASSERT_VISIBLE #site--summary--stale--connectors >> text=Connectors
+ASSERT_VISIBLE #site--summary--stale--identities >> text=Users & Devices
 SCREENSHOT summary_stale_reloaded
+CLICK #site--summary--stale--errors
+ASSERT_PATH /logs/errors
