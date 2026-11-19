@@ -562,6 +562,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Footer and legal notes
 
 - Every footer links (each in a new tab) to contact, terms of service, privacy policy and API docs.
+- The footer's links have a dot between each. On a phone they wrap and have no dots, so no line starts with one.
 - With `FEEDBACK_URL` set (a Google Form or GitHub issues), the footer links "feedback" and the home page asks for it
   under its features, each in a new tab. Unset, neither shows.
 - Pages with estimated locations (events pages) also link DB-IP, whose free databases make the estimates.
