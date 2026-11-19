@@ -63,7 +63,7 @@ func LoopNotification(w http.ResponseWriter, r *http.Request, identity *nsutils.
 		return
 	}
 	q := siteContext.ControlDB.Queries
-	registration, err := q.NewestPushRegistrationForApp(r.Context(), controldb.NewestPushRegistrationForAppParams{SiteID: siteContext.SiteID, App: consts.PushAppLoop, Roles: can.DeviceTokenRoles})
+	registration, err := q.NewestPushRegistrationForApp(r.Context(), controldb.NewestPushRegistrationForAppParams{SiteID: siteContext.SiteID, App: string(consts.PushAppLoop), Roles: can.DeviceTokenRoles})
 	if errors.Is(err, sql.ErrNoRows) {
 		nsutils.WriteError(w, &nsutils.HTTPError{Status: http.StatusBadRequest, Message: "Loop notification failed: no Loop has uploaded its profile with its device token"})
 		return

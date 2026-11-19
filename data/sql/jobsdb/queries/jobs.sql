@@ -121,9 +121,9 @@ WHERE
         FROM
             jobs js
         WHERE
-            js.queue = ?
+            js.queue = CAST(sqlc.arg('Queue') AS TEXT)
             AND js.job_status = 'queued'
-            AND js.execute_after <= ?
+            AND js.execute_after <= sqlc.arg('ExecuteAfter')
             AND js.remaining_attempts > 0
         ORDER BY
             execute_after ASC
