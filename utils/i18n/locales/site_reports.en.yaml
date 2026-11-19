@@ -143,6 +143,7 @@ site:
       low: "Low"
       high: "High"
       all_readings: "All readings"
+      meter: "Meter {{.Reading}} {{.Units}}, {{.Ago}}"
       none: "No glucose readings in this time"
       connect: "Upload from your phone, or set up a connector in"
       connectors: "Connectors"
