@@ -1,0 +1,28 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A reading, so the summary shows, then an extended bolus, as AAPS sends it, with all its units given over an hour, and a careportal's combo bolus split
+// into units given at once and units given over an hour
+HTTP
+NAME reading
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 110, "direction": "Flat", "date": {{ itime 1 }}, "dateString": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+NAME extended_and_combo
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Combo Bolus", "enteredinsulin": 1, "splitNow": 0, "splitExt": 100, "duration": 60, "created_at": "{{ time 5 }}", "enteredBy": "AAPS"}, {"eventType": "Combo Bolus", "enteredinsulin": 1, "insulin": 0.3, "splitNow": 30, "splitExt": 70, "duration": 60, "created_at": "{{ time 180 }}"}]
+ASSERT_STATUS 200
+BROWSE
+
+// Each row shows the units given over time after the dose, not only the units given at once, which are 0 for the
+// extended bolus
+GOTO /
+ASSERT_VISIBLE #site--summary--insulin-carbs tr:has-text("1 U over 60 min") >> text=/^(just now|\d+ minutes? ago)$/
+ASSERT_VISIBLE #site--summary--insulin-carbs tr:has-text("0.3 U + 0.7 U over 60 min")
+ASSERT_NOT_VISIBLE #site--summary--insulin-carbs tr:has-text("0 U")
+
+// The graph labels the extended bolus's marker with the same units, not 0U
+ASSERT_DRAWN #site--summary--graph >> text=1U over 60 min
+ASSERT_NOT_VISIBLE #site--summary--graph >> text=/^0U$/
+CLICK #site--summary--insulin-carbs
+SCREENSHOT extended_bolus

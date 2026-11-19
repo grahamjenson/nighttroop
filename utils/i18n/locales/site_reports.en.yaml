@@ -181,6 +181,10 @@ site:
         smb: "SMB: {{.Dose}}"
         carbs: "Carbs: {{.Carbs}}"
     insulin_and_carbs: "Insulin and carbs"
+    # A combo or extended bolus's dose, with the units given over time after the dose
+    dose:
+      extended: "{{.Extended}} over {{.Minutes}} min"
+      combo: "{{.Dose}} + {{.Extended}} over {{.Minutes}} min"
     intake:
       when: "When"
       insulin: "Insulin"

@@ -72,7 +72,7 @@ type intake struct {
 func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 	list := []intake{}
 	for _, d := range s.InsulinDoses {
-		list = append(list, intake{At: d.OccurredAt, Insulin: display.Value(ctx, &d.Dose, " U"), SMB: isSMB(d)})
+		list = append(list, intake{At: d.OccurredAt, Insulin: doseText(ctx, d, " U"), SMB: isSMB(d)})
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {

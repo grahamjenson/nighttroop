@@ -158,3 +158,14 @@ func TestGlucoseHeroShowsTheSensorNotAFingerstick(t *testing.T) {
 	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>6.2</span>`, html)
 	require.NotContains(t, html, "site--summary--glucose--meter")
 }
+
+// TestInsulinAndCarbsShowAnExtendedPart checks an extended bolus and a split combo show the units given over time,
+// not only the units given at once, which for an extended bolus is 0
+func TestInsulinAndCarbsShowAnExtendedPart(t *testing.T) {
+	list := insulinAndCarbs(context.Background(), &sitemodels.Summary{InsulinDoses: []*sitemodels.SiteInsulinDose{
+		{Dose: 0, ExtendedDose: new(1.0), ExtendedDurationMinutes: new(int64(60)), OccurredAt: 3},
+		{Dose: 0.3, ExtendedDose: new(0.7), ExtendedDurationMinutes: new(int64(60)), OccurredAt: 2},
+		{Dose: 2, OccurredAt: 1},
+	}})
+	require.Equal(t, []string{"1 U over 60 min", "0.3 U + 0.7 U over 60 min", "2 U"}, []string{list[0].Insulin, list[1].Insulin, list[2].Insulin})
+}

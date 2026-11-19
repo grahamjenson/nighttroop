@@ -665,6 +665,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
+- A combo or extended bolus shows its extended part: "0.3 U + 0.7 U over 60 min", or "1 U over 60 min" with no dose
+  given at once. An extended dose with no minutes is added to the dose.
 - Links: latest glucose to all readings; each other treatment's kind (Temp Basal) to its page; with no readings in its
   time, to Connectors.
 
@@ -682,6 +684,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     schedules read in the site's, for all viewers.
   - Carbs as labelled up triangles above insulin as labelled down triangles; on overlap the latest label stays. SMBs
     smaller, fainter, unlabelled.
+  - A combo or extended bolus's label has its extended part, as in Insulin and carbs ("1U over 60 min"). A faint line
+    below its triangle shows the minutes of the extended part.
+  - If a label goes past the right edge, it shows left of its triangle.
 - Legend, as drawn: insulin and SMB (down), carbs (up), basal (outlined area), target (line).
 - On a phone: fewer times on the time axis, and the legend below them, so no time or legend item covers another.
 - Pointing shows the time, nearest reading within 5 minutes and its time, basal and targets in force, and treatments
