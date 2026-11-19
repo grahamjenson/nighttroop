@@ -111,3 +111,36 @@ func TestSummaryReloadsWhenItsReadingTurnsStale(t *testing.T) {
 	require.NoError(t, Summary(summary).Render(context.Background(), &buf))
 	require.Regexp(t, `reconnected from:#site--summary--live, load delay:30\d{4}ms"`, buf.String())
 }
+
+// TestGlucoseHeroShowsTheSensorNotAFingerstick checks the tile shows the current glucose, the newest sensor reading,
+// with its arrow, and a fingerstick newer than it under it, not in its place; with only fingersticks the current
+// glucose is the newest of them, and none shows under it
+func TestGlucoseHeroShowsTheSensorNotAFingerstick(t *testing.T) {
+	mmol, now := consts.UnitsMMOLL, time.Now()
+	reading := func(value float64, readingType string, ago time.Duration, direction *string) *sitemodels.SiteCleanGlucoseReading {
+		return &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: value, Units: &mmol, ReadingType: readingType, OccurredAt: now.Add(-ago).UnixMilli(), Direction: direction}}
+	}
+	falling := "SingleDown"
+	render := func(current *sitemodels.SiteCleanGlucoseReading, readings ...*sitemodels.SiteCleanGlucoseReading) string {
+		summary := &sitemodels.Summary{Units: &mmol, RangeLow: 3.9, RangeHigh: 10, CurrentGlucose: current, GlucoseReadings: readings}
+		var buf bytes.Buffer
+		require.NoError(t, glucoseHero(summary).Render(context.Background(), &buf))
+		return buf.String()
+	}
+
+	sensor := reading(4.7, "sgv", 3*time.Minute, &falling)
+	html := render(sensor, reading(6.2, "mbg", time.Minute, nil), sensor, reading(5.0, "sgv", 8*time.Minute, nil))
+	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>4.7</span>`, html)
+	require.Contains(t, html, "↓")
+	require.Regexp(t, `id="site--summary--glucose--meter"[^>]*>\s*Meter 6.2 mmol/L, `, html)
+
+	sensor = reading(4.7, "sgv", time.Minute, &falling)
+	html = render(sensor, sensor, reading(6.2, "mbg", 3*time.Minute, nil))
+	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>4.7</span>`, html)
+	require.NotContains(t, html, "site--summary--glucose--meter", "an older fingerstick is not shown")
+
+	meter := reading(6.2, "mbg", time.Minute, nil)
+	html = render(meter, meter)
+	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>6.2</span>`, html)
+	require.NotContains(t, html, "site--summary--glucose--meter")
+}
