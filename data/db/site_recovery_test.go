@@ -59,4 +59,15 @@ func TestRecoverSiteAdmin(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(consts.IdentityRoleAdmin), string(admin().Role))
 	require.NotEqual(t, recovered.BackupKey, again.BackupKey)
+
+	// Whoever deleted the admin cannot block the recovery with an identity of its name that is not an admin
+	require.NoError(t, q.DeleteSiteIdentity(ctx, controldb.DeleteSiteIdentityParams{SiteID: siteID, ID: admin().ID}))
+	_, err = controlDB.CreateSiteIdentity(ctx, q, siteID, consts.FIRST_ADMIN_NAME, consts.IdentityRoleUserReadOnly, nil)
+	require.NoError(t, err)
+	_, err = controlDB.RecoverSiteAdmin(ctx, siteID, again.BackupKey)
+	require.NoError(t, err)
+	require.Equal(t, string(consts.IdentityRoleAdmin), string(admin().Role))
+	identity, err = q.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteID, Name: "other"})
+	require.NoError(t, err)
+	require.False(t, identity.Enabled, "the other admin stays off")
 }

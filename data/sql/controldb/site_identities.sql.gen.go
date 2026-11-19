@@ -235,6 +235,23 @@ func (q *Queries) DeleteSiteIdentity(ctx context.Context, arg DeleteSiteIdentity
 	return err
 }
 
+const deleteSiteIdentityNamedNotAdmin = `-- name: DeleteSiteIdentityNamedNotAdmin :exec
+DELETE FROM site_identities
+WHERE site_id = ?1 AND name = ?2 AND role != 'admin'
+`
+
+type DeleteSiteIdentityNamedNotAdminParams struct {
+	SiteID string
+	Name   string
+}
+
+// A recovery makes the site's admin again under its name, so an identity that is not an admin and took the name of a
+// deleted admin goes, with its credentials, and cannot block the recovery
+func (q *Queries) DeleteSiteIdentityNamedNotAdmin(ctx context.Context, arg DeleteSiteIdentityNamedNotAdminParams) error {
+	_, err := q.exec(ctx, q.deleteSiteIdentityNamedNotAdminStmt, deleteSiteIdentityNamedNotAdmin, arg.SiteID, arg.Name)
+	return err
+}
+
 const disableOtherSiteAdmins = `-- name: DisableOtherSiteAdmins :exec
 UPDATE site_identities SET enabled = 0, updated_by_identity_name = 'backup key',
     credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)

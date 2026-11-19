@@ -2568,6 +2568,11 @@ func (m *DeleteSiteIdentityParams) SetID(v int64) {
 }
 
 // GetName returns the Name value.
+func (m DeleteSiteIdentityNamedNotAdminParams) GetName() string {
+	return m.Name
+}
+
+// GetName returns the Name value.
 func (m DisableOtherSiteAdminsParams) GetName() string {
 	return m.Name
 }
