@@ -208,6 +208,10 @@ templ EventsTable(v View, id string, events []Row) {
 		@table.Header() {
 			@table.Row() {
 				@head(i18n.T(ctx, "common.log_view.event"))
+				// Not on a phone, where the event and when it started fill the window
+				@table.Head(table.HeadProps{Class: "max-sm:hidden"}) {
+					{ i18n.T(ctx, "common.log_view.details") }
+				}
 				@aboutHead(v)
 				@head(i18n.T(ctx, "common.log_view.started"))
 				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
@@ -217,12 +221,16 @@ templ EventsTable(v View, id string, events []Row) {
 		}
 		@table.Body() {
 			if len(events) == 0 {
-				@Empty(v.columns(4), i18n.T(ctx, "common.log_view.no_events"))
+				@Empty(v.columns(5), i18n.T(ctx, "common.log_view.no_events"))
 			}
 			for _, event := range events {
 				@modalRow(v, "event", event) {
 					@table.Cell() {
 						{ i18n.Stored(ctx, "events", event.Name) }
+					}
+					// Who it was for, the connector, how many records and where from, to tell events apart
+					@table.Cell(table.CellProps{Class: "text-gray-600 max-sm:hidden"}) {
+						<span class="block max-w-xs truncate" title={ EventAbout(ctx, event.Attributes) }>{ EventAbout(ctx, event.Attributes) }</span>
 					}
 					@aboutCell(v, event)
 					@when(v, event.At)
