@@ -54,6 +54,9 @@ common:
     not_measured: "Not measured yet"
     limit: "of its {{.Limit}} MB limit"
     other_tables: "Other"
+    records:
+      one: "{{.Records}} record"
+      other: "{{.Records}} records"
     used: "{{.Percent}}% of its limit used"
     measured_by: "It is measured in the background, so check back soon."
   log_view:
