@@ -82,7 +82,7 @@ ASSERT_VISIBLE #control--usage--resources-range-hour.bg-primary
 // jobs, and the live DB, which is in memory, so measured by its tables
 ASSERT_VISIBLE #control--usage--control--db-size >> text=/^\d+\.\d\d$/
 ASSERT_NOT_VISIBLE #control--usage--control--db-limit
-ASSERT_VISIBLE #control--usage--control--db-tables li >> nth=0 >> text=/\d+\.\dk · \d+\.\d\d MB · \d+%$/
+ASSERT_VISIBLE #control--usage--control--db-tables li >> nth=0 >> text=/[\d,]+ records? · \d+\.\d\d MB · \d+%$/
 ASSERT_VISIBLE #control--usage--logs--db-tables
 ASSERT_VISIBLE #control--usage--jobs--db-tables
 ASSERT_VISIBLE #control--usage--live--db-size >> text=/^\d+\.\d\d$/

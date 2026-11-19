@@ -1433,7 +1433,7 @@ func (m GetPushRegistrationParams) GetIdentityID() *int64 {
 }
 
 // GetApp returns the App value.
-func (m NewestPushRegistrationForAppParams) GetApp() consts.PushApp {
+func (m NewestPushRegistrationForAppParams) GetApp() string {
 	return m.App
 }
 

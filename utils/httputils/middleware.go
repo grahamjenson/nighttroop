@@ -217,14 +217,16 @@ func RecordServerErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 // Site based middleware
 //////
 
+// SiteRateLimitMiddleware spends a signed in request's site and identity limits together, so a request one refuses
+// spends neither
 func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			allowed, remainingTime := SiteHTTPActionWithinRateLimit(config, r)
+			allowed, remainingTime := SiteAndIdentityWithinRateLimit(config, r)
 			if !allowed {
 				writeTooManyRequests(w, remainingTime)
-				slog.InfoContext(r.Context(), "Site rate limit exceeded", "remainingTime", remainingTime)
+				slog.InfoContext(r.Context(), "Site or identity rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
 			// A site flagged for abuse spends its flagged write limit too, whatever the identity, API or route
@@ -251,22 +253,6 @@ func SiteUnauthRateLimitMiddleware(config *config.ServerConfig) func(http.Handle
 			if !allowed {
 				writeTooManyRequests(w, remainingTime)
 				aslog.Refuse(r.Context(), http.StatusTooManyRequests, "", "Site unauthenticated rate limit exceeded", "remainingTime", remainingTime)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-func SiteIdentityRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
-
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			allowed, remainingTime := IdentityHTTPWithinRateLimit(config, r)
-			if !allowed {
-				writeTooManyRequests(w, remainingTime)
-				slog.InfoContext(r.Context(), "Identity rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
 

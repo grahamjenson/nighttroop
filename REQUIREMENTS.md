@@ -25,6 +25,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - It removes its local copies of the backups. If the disk is still short, it removes the logs DB.
   - It pages the admin with an SMS, with the space free before and after.
   - It never removes the control DB, a site's DB or the jobs DB.
+  - It keeps the backup of a site with no DB on the server: that backup is the archive of an archived site.
   - If the disk still has less than 100 MB free, the server does not start, and says how much is free.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
 - Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`. A button or form on a page (an htmx request) gets an error toast instead: "The server is starting. Try again in a few seconds."
@@ -186,8 +187,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - not on disk: from its tables. Neither: not measured yet.
 - DB size bar:
   - the five largest tables (with their indexes), darkest first, then Other;
-  - a key: name, records in thousands, MB and share (for example, `7.9k · 6.11 MB · 54%`). Other sums its tables'
-    records. Hover names a part;
+  - a key: name, records in the number format, MB and share (for example, `7,912 records · 6.11 MB · 54%`). Other
+    sums its tables' records. Hover names a part;
+  - a site table has the name of the page that shows it (for example, Device Status for `device_reports`), with its
+    table name on hover. A table with no page keeps its table name;
   - table sizes as last measured (at creation, by the 5-minute site measurement after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
@@ -438,6 +441,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A site's reads and writes have 4 times an identity's limit. Test: one identity spends all its own (for example, a
   day's backlog upload). A carer's carbs and AAPSClient's commands still go through.
 - Over a site's or identity's limit: 429, with `Retry-After` the seconds until one is accepted, at least 1.
+- If an identity is over its own limit, its request does not use the site's limit. The site's other apps get no 429.
 - A site flagged for abuse also spends its flagged writes limit (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT`). See
   [Abuse flag](#abuse-flag).
 
@@ -1977,6 +1981,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - the admin is paged with an SMS;
     - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
       error, for Docker to start it again with S3.
+    - if S3 refuses the lock, it logs a warning and tests S3 again until 3 tests in a row work.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
@@ -2034,10 +2039,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
+- When the server stops, it backs up every site written since its last backup, with no such limit.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
-  - A copy cut short does not replace the last copy.
+  - A copy cut short, or one that fails, does not replace or remove the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
   and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
@@ -2266,6 +2272,8 @@ harder:
   - its permissions on the Nightscout API, as the server gives them (for example `api:*:read`), or None.
   - On a phone, each role is a block, not a row: its name, what it can do, then the other two with their headings
     before them. Nothing is cut off.
+- On a phone, each identity's switch and Manage menu stay at the right edge of its table's card, in reach, while
+  the table's other columns scroll sideways under them.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
@@ -2422,6 +2430,8 @@ harder:
 - Usage (`/usage`) is in the user menu, for an admin only. My Account and the General settings do not show it.
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
+- The key names each table by the page that shows it, such as Glucose Readings or Device Status, not by its table name.
+- On a phone the key fits the window, with no sideways scroll.
 - "Truncate", after a confirmation, does as control's Truncate:
   - Removes the predictions from loop statuses over 1 day old.
   - Clears the pump as sent from all but each device's newest status.

@@ -51,7 +51,7 @@ func TestIdentityRateLimitSaysWhenToRetry(t *testing.T) {
 	limiter := cfg.RateLimiters.IdentityPOSTLimiter(identity.ID)
 	limiter.SetLimit(rate.Limit(1.0 / 30))
 	limiter.SetBurst(1)
-	limited := httputils.SiteIdentityRateLimitMiddleware(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	limited := httputils.SiteRateLimitMiddleware(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
 	first := httptest.NewRecorder()
 	limited.ServeHTTP(first, r)
@@ -62,4 +62,38 @@ func TestIdentityRateLimitSaysWhenToRetry(t *testing.T) {
 	limited.ServeHTTP(refused, r)
 	require.Equal(t, http.StatusTooManyRequests, refused.Code)
 	require.Contains(t, []string{"29", "30"}, refused.Header().Get("Retry-After"))
+}
+
+// A request its identity's limit refuses spends none of its site's, so a follower's app over its own limit cannot
+// use up the limit the site's other identities and apps share
+func TestIdentityOverItsLimitSpendsNoneOfItsSites(t *testing.T) {
+	cfg := testutils.GetTestServerConfig()
+	limiters := cfg.RateLimiters
+	limited := httputils.SiteRateLimitMiddleware(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	for _, test := range []struct {
+		action         httputils.HTTPAction
+		siteID         string
+		identityID     int64
+		site, identity *rate.Limiter
+	}{
+		{httputils.HTTPActionRead, "sharedreadzzz", -20, limiters.SiteGETLimiter("sharedreadzzz"), limiters.IdentityGETLimiter(-20)},
+		{httputils.HTTPActionWrite, "sharedwritezzz", -21, limiters.SitePOSTLimiter("sharedwritezzz"), limiters.IdentityPOSTLimiter(-21)},
+	} {
+		test.site.SetLimit(rate.Limit(1.0 / 60))
+		test.site.SetBurst(5)
+		test.identity.SetLimit(rate.Limit(1.0 / 60))
+		test.identity.SetBurst(1)
+		ctx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, test.siteID, "10.0.0.4", test.action, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		r := httptest.NewRequest("GET", "/api/v1/entries", nil).WithContext(httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{ID: test.identityID}))
+
+		codes := []int{}
+		for range 4 {
+			w := httptest.NewRecorder()
+			limited.ServeHTTP(w, r)
+			codes = append(codes, w.Code)
+		}
+		require.Equal(t, []int{http.StatusOK, http.StatusTooManyRequests, http.StatusTooManyRequests, http.StatusTooManyRequests}, codes)
+		// Only the first spent one of the site's, so its other identities have the rest
+		require.InDelta(t, 4, test.site.Tokens(), 0.1)
+	}
 }
