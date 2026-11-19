@@ -83,6 +83,18 @@ func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 	return list
 }
 
+// plannedAhead is how far after now an intake is planned, as carbs a loop expects from fat and protein, rather than
+// from a phone's clock running fast, which says "just now"
+const plannedAhead = 10 * time.Minute
+
+// intakeWhen is when an intake was, or for one planned ahead, how long until it is: "in 58 minutes"
+func intakeWhen(ctx context.Context, at int64, now time.Time) string {
+	if time.UnixMilli(at).Sub(now) > plannedAhead {
+		return display.RoundedIn(ctx, at, now)
+	}
+	return display.RoundedAgo(ctx, at, now)
+}
+
 // ago is how long ago ms was, or a dash when it is not set
 func ago(ctx context.Context, ms *int64) string {
 	if ms == nil {
@@ -385,7 +397,7 @@ templ insulinCarbsTable(list []intake) {
 			for _, i := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(ctx, i.At, time.Now()) }</span>
+						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ intakeWhen(ctx, i.At, time.Now()) }</span>
 					}
 					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
 						if i.SMB {

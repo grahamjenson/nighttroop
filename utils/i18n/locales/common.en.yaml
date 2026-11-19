@@ -101,6 +101,7 @@ common:
     hours_minutes_ago: "{{.Hours}}h{{.Minutes}}m ago"
     minutes_ago: "{{.Minutes}}m ago"
     ago: "{{.HowLong}} ago"
+    in: "in {{.HowLong}}"
     minutes:
       one: "{{.Count}} minute"
       other: "{{.Count}} minutes"

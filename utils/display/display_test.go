@@ -182,3 +182,20 @@ func TestValueAndPerDay(t *testing.T) {
 		}
 	}
 }
+
+func TestRoundedIn(t *testing.T) {
+	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	tests := []struct {
+		after time.Duration
+		want  string
+	}{
+		{58*time.Minute + 30*time.Second, "in 58 minutes"},
+		{time.Hour + 30*time.Minute, "in 2 hours"},
+		{24*time.Hour + 30*time.Minute, "in 1 day 1 hour"},
+	}
+	for _, tt := range tests {
+		if got := RoundedIn(context.Background(), now.Add(tt.after).UnixMilli(), now); got != tt.want {
+			t.Errorf("RoundedIn(context.Background(), %s after) = %q, want %q", tt.after, got, tt.want)
+		}
+	}
+}
