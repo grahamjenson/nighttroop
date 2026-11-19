@@ -1509,16 +1509,20 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 ### Nightscout API: glucose units
 
 - Glucose is stored and always returned in mg/dL, whatever the identity or site units, over HTTP and Socket.IO:
-  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`, profile targets.
-  - Entries, treatments, profiles and their `units`.
+  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`.
+  - Entries and treatments, and their `units`.
+- A profile is the exception: its targets are stored in mg/dL, but it comes back in the units it was uploaded in, as
+  Nightscout gives it back. Apps that import it, such as Trio, take its units from it.
 - Input: in the units sent with it.
   - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value. A low of 30 or less
     stays low (e.g. 28), and 39 (a sensor's LOW) is kept as sent. Dexcom's error codes (1 to 12) are not kept.
   - Other glucose with no `units`: guessed from the value.
-- A profile, or a profile switch's `profileJson`, in mmol/L comes back in mg/dL in each glucose field:
-  - `sens`, `target_low`, `target_high`.
+- A profile in mmol/L comes back in mmol/L in each glucose field, with the values as sent:
+  - `units`, `sens`, `target_low`, `target_high`.
   - Loop's `loopSettings`: `minimumBGGuard`, `preMealTargetRange`, each override preset's `targetRange`, the running
     `scheduleOverride`'s `targetRange`.
+- A profile uploaded without `units` comes back in mg/dL.
+- A profile switch's `profileJson` in mmol/L comes back in mg/dL in `sens`, `target_low` and `target_high`.
 - Each treatment comes back with `units`, temp targets and therapy events (e.g. Note, Sensor Change) too.
 - v1 status `settings.units`: the identity's units, as Nightscout writes them (`mg/dl` or `mmol`). Followers,
   `/pebble`, `alexa` and `googlehome` use them.
