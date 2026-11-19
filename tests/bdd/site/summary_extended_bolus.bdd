@@ -1,28 +1,35 @@
 INCLUDE steps/new_site_admin.steps
-ASSERT_PATH /
 
-// A reading, so the summary shows, then an extended bolus, as AAPS sends it, with all its units given over an hour, and a careportal's combo bolus split
-// into units given at once and units given over an hour
+// A reading, so the summary is shown and not the guide to setting it up, and two combo boluses uploaded through the
+// Nightscout API: Nightscout's careportal gives 1.2 U at once and 1.8 U over 2 hours, and AAPS gives 0 U at once and
+// 2 U over 2 hours
 HTTP
-NAME reading
+NAME reading_for_summary
 POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
-B [{"type": "sgv", "sgv": 110, "direction": "Flat", "date": {{ itime 1 }}, "dateString": "{{ time 1 }}"}]
+B [{"type": "sgv", "sgv": 120, "date": {{ itime 2 }}, "device": "xDrip-DexcomG6"}]
 ASSERT_STATUS 200
-NAME extended_and_combo
+
+NAME careportal_combo_bolus
 POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
-B [{"eventType": "Combo Bolus", "enteredinsulin": 1, "splitNow": 0, "splitExt": 100, "duration": 60, "created_at": "{{ time 5 }}", "enteredBy": "AAPS"}, {"eventType": "Combo Bolus", "enteredinsulin": 1, "insulin": 0.3, "splitNow": 30, "splitExt": 70, "duration": 60, "created_at": "{{ time 180 }}"}]
+B [{"eventType": "Combo Bolus", "enteredinsulin": 3, "insulin": 1.2, "splitNow": 40, "splitExt": 60, "relative": 0.9, "duration": 120, "carbs": 25, "created_at": "{{ time 1 }}"}]
 ASSERT_STATUS 200
+
+NAME aaps_extended_bolus
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v3/treatments?token={{ .create_new_site.pwd_nstoken }}
+B {"eventType": "Combo Bolus", "insulin": 0, "enteredinsulin": 2, "relative": 1, "duration": 120, "durationInMilliseconds": 7200000, "splitNow": 0, "splitExt": 100, "date": {{ itime 0 }}, "isEmulatingTempBasal": false, "pumpId": 1794605395291, "pumpType": "VIRTUAL", "pumpSerial": "S1", "app": "AAPS"}
+ASSERT_STATUS 201
 BROWSE
 
-// Each row shows the units given over time after the dose, not only the units given at once, which are 0 for the
-// extended bolus
+// The insulin and carbs table shows each extended dose and the time it is given over, after the dose given at once,
+// or alone when none is given at once
 GOTO /
-ASSERT_VISIBLE #site--summary--insulin-carbs tr:has-text("1 U over 60 min") >> text=/^(just now|\d+ minutes? ago)$/
-ASSERT_VISIBLE #site--summary--insulin-carbs tr:has-text("0.3 U + 0.7 U over 60 min")
-ASSERT_NOT_VISIBLE #site--summary--insulin-carbs tr:has-text("0 U")
-
-// The graph labels the extended bolus's marker with the same units, not 0U
-ASSERT_DRAWN #site--summary--graph >> text=1U over 60 min
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*1\.2\sU \+ 1\.8\sU over 2\sh$/
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*2\sU over 2\sh$/
+ASSERT_NOT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*0\sU$/
+// The units and words are smaller and grey beside the numbers
+ASSERT_VISIBLE #site--summary--insulin-carbs td span.text-gray-500 >> text=/over/ >> nth=0
+// The graph labels the extended bolus's marker with the same units, not 0U, its extended part a faint line under it
+ASSERT_DRAWN #site--summary--graph >> text=2U over 2 h
 ASSERT_NOT_VISIBLE #site--summary--graph >> text=/^0U$/
-CLICK #site--summary--insulin-carbs
-SCREENSHOT extended_bolus
+SCREENSHOT summary_extended_bolus

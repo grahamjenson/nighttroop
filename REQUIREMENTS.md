@@ -664,9 +664,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
+- A suspended pump (`PUMP_SUSPEND`) shows in **Other treatments** as **Suspended**, "Pump suspended until it
+  resumes". After the pump resumes, it shows "Pump suspended for" its minutes.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
-- A combo or extended bolus shows its extended part: "0.3 U + 0.7 U over 60 min", or "1 U over 60 min" with no dose
-  given at once. An extended dose with no minutes is added to the dose.
+- A combo bolus shows its dose given at once, then its extended dose and its time ("1.2 U + 1.8 U over 2 h").
+  - If no dose is given at once, it shows only the extended dose and its time ("2 U over 2 h").
+  - If the extended dose has no time, it shows the total dose, as it is given at once.
 - Links: latest glucose to all readings; each other treatment's kind (Temp Basal) to its page; with no readings in its
   time, to Connectors.
 
@@ -684,8 +687,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     schedules read in the site's, for all viewers.
   - Carbs as labelled up triangles above insulin as labelled down triangles; on overlap the latest label stays. SMBs
     smaller, fainter, unlabelled.
-  - A combo or extended bolus's label has its extended part, as in Insulin and carbs ("1U over 60 min"). A faint line
-    below its triangle shows the minutes of the extended part.
+  - A combo or extended bolus's label has its extended part, as in Insulin and carbs ("2U over 2 h"). A faint line
+    below its triangle shows the time of the extended part.
   - If a label goes past the right edge, it shows left of its triangle.
 - Legend, as drawn: insulin and SMB (down), carbs (up), basal (outlined area), target (line).
 - On a phone: fewer times on the time axis, and the legend below them, so no time or legend item covers another.
@@ -1509,16 +1512,20 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 ### Nightscout API: glucose units
 
 - Glucose is stored and always returned in mg/dL, whatever the identity or site units, over HTTP and Socket.IO:
-  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`, profile targets.
-  - Entries, treatments, profiles and their `units`.
+  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`.
+  - Entries and treatments, and their `units`.
+- A profile is the exception: its targets are stored in mg/dL, but it comes back in the units it was uploaded in, as
+  Nightscout gives it back. Apps that import it, such as Trio, take its units from it.
 - Input: in the units sent with it.
   - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value. A low of 30 or less
     stays low (e.g. 28), and 39 (a sensor's LOW) is kept as sent. Dexcom's error codes (1 to 12) are not kept.
   - Other glucose with no `units`: guessed from the value.
-- A profile, or a profile switch's `profileJson`, in mmol/L comes back in mg/dL in each glucose field:
-  - `sens`, `target_low`, `target_high`.
+- A profile in mmol/L comes back in mmol/L in each glucose field, with the values as sent:
+  - `units`, `sens`, `target_low`, `target_high`.
   - Loop's `loopSettings`: `minimumBGGuard`, `preMealTargetRange`, each override preset's `targetRange`, the running
     `scheduleOverride`'s `targetRange`.
+- A profile uploaded without `units` comes back in mg/dL.
+- A profile switch's `profileJson` in mmol/L comes back in mg/dL in `sens`, `target_low` and `target_high`.
 - Each treatment comes back with `units`, temp targets and therapy events (e.g. Note, Sensor Change) too.
 - v1 status `settings.units`: the identity's units, as Nightscout writes them (`mg/dl` or `mmol`). Followers,
   `/pebble`, `alexa` and `googlehome` use them.
@@ -1743,6 +1750,13 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   A rate over 11 times that basal keeps no percent.
 - Output: always `rate` and `absolute` (both U/hr), and `percent` if it has one.
 - Summary: the basal during a temp basal is its rate.
+- A temp basal of under a minute (e.g. `durationInMilliseconds` 43491 with `duration` 0) keeps 1 minute, not 0.
+- A suspended pump: a temp basal of `type` `PUMP_SUSPEND`, as AAPS sends it.
+  - From any client, a temp basal sent with `rate` 0 and `reason` `suspend`, and no `type`, is kept with `type`
+    `PUMP_SUSPEND`. Loop sends a suspend so with `duration` 0, then again with its `duration` when the pump resumes.
+  - Summary: if its duration is 0, the pump has not resumed. The basal is 0 until the next temp basal, or until now.
+- Any other temp basal of duration 0 is a cancel. It ends the running temp basal (careportal: no `rate`; Trio: `rate`
+  0).
 
 #### Temp targets and overrides
 

@@ -293,33 +293,6 @@ func TestGraphHoverData(t *testing.T) {
 	require.NotContains(t, page, `\"`)
 }
 
-// TestDoseText checks a dose is its units, and a combo or extended bolus's has the units given over time after it,
-// with or without units given at once; an extended dose with no time is given at once, so it is added to the dose
-func TestDoseText(t *testing.T) {
-	tests := []struct {
-		name     string
-		dose     float64
-		extended *float64
-		minutes  *int64
-		unit     string
-		want     string
-	}{
-		{"a bolus", 2, nil, nil, " U", "2 U"},
-		{"an extended bolus", 0, new(1.0), new(int64(60)), " U", "1 U over 60 min"},
-		{"a split combo", 0.3, new(0.7), new(int64(60)), " U", "0.3 U + 0.7 U over 60 min"},
-		{"a combo on the graph", 0.3, new(0.7), new(int64(60)), "U", "0.3U + 0.7U over 60 min"},
-		{"an extended dose of 0", 2, new(0.0), new(int64(60)), " U", "2 U"},
-		{"an extended dose with no time", 1, new(0.5), nil, " U", "1.5 U"},
-		{"an extended dose over 0 minutes", 1, new(0.5), new(int64(0)), " U", "1.5 U"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &sitemodels.SiteInsulinDose{Dose: tt.dose, ExtendedDose: tt.extended, ExtendedDurationMinutes: tt.minutes}
-			require.Equal(t, tt.want, doseText(context.Background(), d, tt.unit))
-		})
-	}
-}
-
 // TestGraphDrawsTheExtendedPart checks an extended bolus's marker is labelled with its extended dose, not 0U, and its
 // extended part is a line just below the marker over the time it is given, named Insulin so the legend hides both
 func TestGraphDrawsTheExtendedPart(t *testing.T) {
@@ -331,7 +304,7 @@ func TestGraphDrawsTheExtendedPart(t *testing.T) {
 	}}
 	got := option(t, s, now)
 	insulin := series(got, "Insulin")["data"].([]any)
-	require.Equal(t, "1U over 60 min", insulin[0].(map[string]any)["name"])
+	require.Equal(t, "1U over 1 h", insulin[0].(map[string]any)["name"])
 	require.Equal(t, "2U", insulin[1].(map[string]any)["name"])
 
 	var line map[string]any
@@ -349,5 +322,5 @@ func TestGraphDrawsTheExtendedPart(t *testing.T) {
 	require.Equal(t, []any{[]any{float64(now - 2*hour), extendedHeight}, []any{float64(now - hour), extendedHeight}, "-"}, values)
 
 	script := hoverTooltip(context.Background(), s, now, func(ms int64) int64 { return ms })
-	require.Contains(t, script, "Insulin: 1U over 60 min")
+	require.Contains(t, script, "Insulin: 1U over 1 h")
 }

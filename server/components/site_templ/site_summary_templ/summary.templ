@@ -47,8 +47,15 @@ func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 		list = append(list, treatment{t.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_target"), "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		detail := i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(ctx, b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
-		list = append(list, treatment{b.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_basal"), "/data/temp-basals", detail})
+		kind, detail := i18n.T(ctx, "site.summary.treatments.temp_basal"), i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(ctx, b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
+		// A suspended pump shows as one, which has not resumed while it has no duration
+		if b.Suspend() {
+			kind, detail = i18n.T(ctx, "site.summary.treatments.suspended"), i18n.T(ctx, "site.summary.treatments.suspended_detail", i18n.Data{"Minutes": b.DurationMinutes})
+			if b.DurationMinutes == 0 {
+				detail = i18n.T(ctx, "site.summary.treatments.suspended_until_resumed")
+			}
+		}
+		list = append(list, treatment{b.OccurredAt, kind, "/data/temp-basals", detail})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
@@ -74,6 +81,25 @@ func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
+}
+
+// doseText is a dose's units, with a combo or extended bolus's extended units and the time they are given over, as
+// "1.2 U + 1.8 U over 2 h", or "2 U over 2 h" when none is given at once, each followed by unit, as " U" in a table or
+// "U" on the graph. An extended dose with no time is given at once, as the daily dose counts it.
+func doseText(ctx context.Context, d *sitemodels.SiteInsulinDose, unit string) string {
+	dose := display.Value(ctx, &d.Dose, unit)
+	if d.ExtendedDose == nil || *d.ExtendedDose <= 0 {
+		return dose
+	}
+	if d.ExtendedDurationMinutes == nil || *d.ExtendedDurationMinutes <= 0 {
+		return display.Value(ctx, new(d.Dose+*d.ExtendedDose), unit)
+	}
+	data := i18n.Data{"Dose": dose, "Extended": display.Value(ctx, d.ExtendedDose, unit),
+		"Duration": display.Duration(ctx, *d.ExtendedDurationMinutes*60_000)}
+	if d.Dose == 0 {
+		return i18n.T(ctx, "site.summary.intake.extended_only", data)
+	}
+	return i18n.T(ctx, "site.summary.intake.extended", data)
 }
 
 // plannedAhead is how far after now an intake is planned, as carbs a loop expects from fat and protein, rather than

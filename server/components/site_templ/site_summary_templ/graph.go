@@ -74,30 +74,12 @@ func isSMB(d *sitemodels.SiteInsulinDose) bool {
 }
 
 // extendedMinutes are the minutes a combo or extended bolus's extended dose is given over, or 0 when it has none, or
-// none over time, as an extended dose with no duration is given at once
+// none over time, as an extended dose with no duration is given at once, as doseText reads it
 func extendedMinutes(d *sitemodels.SiteInsulinDose) int64 {
-	if d.ExtendedDose == nil || *d.ExtendedDose == 0 || d.ExtendedDurationMinutes == nil {
+	if d.ExtendedDose == nil || *d.ExtendedDose <= 0 || d.ExtendedDurationMinutes == nil || *d.ExtendedDurationMinutes <= 0 {
 		return 0
 	}
 	return *d.ExtendedDurationMinutes
-}
-
-// doseText is a dose's units, as "2 U", and a combo or extended bolus's units given over time after it, as
-// "0.3 U + 0.7 U over 60 min", or "1 U over 60 min" with none given at once
-func doseText(ctx context.Context, d *sitemodels.SiteInsulinDose, unit string) string {
-	minutes := extendedMinutes(d)
-	if minutes <= 0 {
-		total := d.Dose
-		if d.ExtendedDose != nil {
-			total += *d.ExtendedDose
-		}
-		return display.Value(ctx, &total, unit)
-	}
-	data := i18n.Data{"Dose": display.Value(ctx, &d.Dose, unit), "Extended": display.Value(ctx, d.ExtendedDose, unit), "Minutes": minutes}
-	if d.Dose == 0 {
-		return i18n.T(ctx, "site.summary.dose.extended", data)
-	}
-	return i18n.T(ctx, "site.summary.dose.combo", data)
 }
 
 // graph is the summary as a go-echarts chart on one grid, as Carer draws it: the urgent range and the range shaded

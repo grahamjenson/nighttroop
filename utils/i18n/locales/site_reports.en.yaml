@@ -181,15 +181,13 @@ site:
         smb: "SMB: {{.Dose}}"
         carbs: "Carbs: {{.Carbs}}"
     insulin_and_carbs: "Insulin and carbs"
-    # A combo or extended bolus's dose, with the units given over time after the dose
-    dose:
-      extended: "{{.Extended}} over {{.Minutes}} min"
-      combo: "{{.Dose}} + {{.Extended}} over {{.Minutes}} min"
     intake:
       when: "When"
       insulin: "Insulin"
       carbs: "Carbs"
       none: "No insulin or carbs in this time."
+      extended: "{{.Dose}} + {{.Extended}} over {{.Duration}}"
+      extended_only: "{{.Extended}} over {{.Duration}}"
     other_treatments: "Other treatments"
     treatments:
       none: "No temp targets or temp basals in this time."
@@ -197,6 +195,9 @@ site:
       temp_target_detail: "{{.Low}}–{{.High}} {{.Units}} for {{.Minutes}} min"
       temp_basal: "Temp Basal"
       temp_basal_detail: "{{.Rate}} for {{.Minutes}} min"
+      suspended: "Suspended"
+      suspended_detail: "Pump suspended for {{.Minutes}} min"
+      suspended_until_resumed: "Pump suspended until it resumes"
     device:
       title: "Devices"
       all: "All device statuses"
