@@ -1078,7 +1078,7 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = table.Cell(table.CellProps{ID: "site--identities--" + identity.Name + "--actions", Class: "sticky right-0 bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var56), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = table.Cell(table.CellProps{ID: "site--identities--" + identity.Name + "--actions", Class: "max-sm:sticky max-sm:right-0 max-sm:bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var56), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

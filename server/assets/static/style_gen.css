@@ -2891,6 +2891,21 @@
       transition-property: none;
     }
   }
+  .max-sm\:sticky {
+    @media (width < 40rem) {
+      position: sticky;
+    }
+  }
+  .max-sm\:right-0 {
+    @media (width < 40rem) {
+      right: calc(var(--spacing) * 0);
+    }
+  }
+  .max-sm\:bg-white {
+    @media (width < 40rem) {
+      background-color: var(--color-white);
+    }
+  }
   .max-sm\:shadow-\[-8px_0_8px_-8px_rgba\(0\,0\,0\,0\.15\)\] {
     @media (width < 40rem) {
       --tw-shadow: -8px 0 8px -8px var(--tw-shadow-color, rgba(0,0,0,0.15));
