@@ -48,42 +48,25 @@ func SiteUnauthSpent(serverConfig *config.ServerConfig, r *http.Request) bool {
 // //////
 // Once We know Who the user is then we can apply user-specific rate limiting
 // //////
-func SiteHTTPActionWithinRateLimit(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
-	siteContext := GetSiteContext(r.Context())
-	userSubdomain := siteContext.SiteID
 
-	var limiter *rate.Limiter
-	switch siteContext.HTTPAction {
-	case HTTPActionRead:
-		limiter = serverConfig.RateLimiters.SiteGETLimiter(userSubdomain)
-	case HTTPActionWrite:
-		limiter = serverConfig.RateLimiters.SitePOSTLimiter(userSubdomain)
-	default:
-		return false, 0
-	}
-
-	return WithinRateLimitAll(limiter)
-}
-
-func IdentityHTTPWithinRateLimit(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
+// SiteAndIdentityWithinRateLimit spends one read or write from the site's and its identity's limits, and none unless
+// both have one now, so an identity over its own limit cannot spend the site's that its other apps share
+func SiteAndIdentityWithinRateLimit(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
 	identity := siteContext.IdentityModel
-
 	if identity == nil {
 		return false, 0
 	}
 
-	var limiter *rate.Limiter
+	limiters := serverConfig.RateLimiters
 	switch siteContext.HTTPAction {
 	case HTTPActionRead:
-		limiter = serverConfig.RateLimiters.IdentityGETLimiter(identity.ID)
+		return WithinRateLimitAll(limiters.SiteGETLimiter(siteContext.SiteID), limiters.IdentityGETLimiter(identity.ID))
 	case HTTPActionWrite:
-		limiter = serverConfig.RateLimiters.IdentityPOSTLimiter(identity.ID)
+		return WithinRateLimitAll(limiters.SitePOSTLimiter(siteContext.SiteID), limiters.IdentityPOSTLimiter(identity.ID))
 	default:
 		return false, 0
 	}
-
-	return WithinRateLimitAll(limiter)
 }
 
 // ExtraWritesWithinRateLimit spends n more writes from the site's and its identity's limits, as for a batch of many

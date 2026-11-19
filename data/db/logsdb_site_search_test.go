@@ -58,13 +58,13 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			wantLogs, err := q.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &site, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
 			require.NoError(t, err)
-			gotLogs, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: &site, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
+			gotLogs, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: site, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
 			require.NoError(t, err)
 			require.Equal(t, wantLogs, gotLogs)
 
 			wantErrors, err := q.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Type: tt.typ, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
 			require.NoError(t, err)
-			gotErrors, err := q.SearchSiteErrors(ctx, logsdb.SearchSiteErrorsParams{SiteID: &site, Type: tt.typ, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
+			gotErrors, err := q.SearchSiteErrors(ctx, logsdb.SearchSiteErrorsParams{SiteID: site, Type: tt.typ, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
 			require.NoError(t, err)
 			require.Equal(t, wantErrors, gotErrors)
 
@@ -79,7 +79,7 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 			}
 			wantEvents = wantEvents[min(tt.skip, int64(len(wantEvents))):]
 			wantEvents = wantEvents[:min(tt.limit, int64(len(wantEvents)))]
-			gotEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Type: tt.typ, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
+			gotEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: site, Type: tt.typ, Search: tt.search, Skip: tt.skip, Limit: tt.limit})
 			require.NoError(t, err)
 			if len(wantEvents) == 0 {
 				require.Empty(t, gotEvents)
@@ -120,7 +120,7 @@ func BenchmarkSiteLogsSearch(b *testing.B) {
 	})
 	b.Run("site logs", func(b *testing.B) {
 		for b.Loop() {
-			rows, err := logs.Queries.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: &site, Limit: 100})
+			rows, err := logs.Queries.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: site, Limit: 100})
 			require.NoError(b, err)
 			require.Len(b, rows, 10)
 		}
@@ -134,7 +134,7 @@ func BenchmarkSiteLogsSearch(b *testing.B) {
 	})
 	b.Run("site errors", func(b *testing.B) {
 		for b.Loop() {
-			rows, err := logs.Queries.SearchSiteErrors(ctx, logsdb.SearchSiteErrorsParams{SiteID: &site, Limit: 100})
+			rows, err := logs.Queries.SearchSiteErrors(ctx, logsdb.SearchSiteErrorsParams{SiteID: site, Limit: 100})
 			require.NoError(b, err)
 			require.Len(b, rows, 10)
 		}

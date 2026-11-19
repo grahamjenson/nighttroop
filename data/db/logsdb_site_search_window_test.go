@@ -24,19 +24,19 @@ func TestSiteSearchesLookThroughOnlyTheNewestRows(t *testing.T) {
 	logs.Log(ctx, &site, db.LogLevelInfo, "newest needle", nil)
 
 	needle := "NEEDLE"
-	found, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: &site, Search: &needle, Limit: 10})
+	found, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: site, Search: &needle, Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, found, 1)
 	require.Equal(t, "newest needle", found[0].Message)
 
-	oldest, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: &site, Skip: 10001, Limit: 10})
+	oldest, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: site, Skip: 10001, Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, oldest, 1, "without a search every row is paged to")
 	require.Equal(t, "oldest needle", oldest[0].Message)
 
 	// A site with fewer rows than that searches them all
 	otherLog := "OTHER"
-	all, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: &other, Search: &otherLog, Limit: 1000})
+	all, err := q.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: other, Search: &otherLog, Limit: 1000})
 	require.NoError(t, err)
 	require.Len(t, all, 1000)
 }

@@ -68,9 +68,9 @@ SELECT * FROM errors WHERE id = sqlc.arg('ID');
 -- name: SearchSiteLogs :many
 -- Newest first, only those with Search in their text when it is set
 SELECT own.* FROM logs own
-WHERE own.site_id = sqlc.arg('SiteID')
+WHERE own.site_id = CAST(sqlc.arg('SiteID') AS TEXT)
 AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM logs newest
-  WHERE newest.site_id = sqlc.arg('SiteID') ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+  WHERE newest.site_id = CAST(sqlc.arg('SiteID') AS TEXT) ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
 ORDER BY own.id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
@@ -78,9 +78,9 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- name: SearchSiteErrors :many
 -- Newest first, only those of the kind Type when it is set, and only those with Search in their text when it is set
 SELECT own.* FROM errors own
-WHERE own.site_id = sqlc.arg('SiteID')
+WHERE own.site_id = CAST(sqlc.arg('SiteID') AS TEXT)
 AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL AND CAST(sqlc.narg('Type') AS TEXT) IS NULL THEN 0
-  ELSE COALESCE((SELECT newest.id FROM errors newest WHERE newest.site_id = sqlc.arg('SiteID') ORDER BY newest.id DESC
+  ELSE COALESCE((SELECT newest.id FROM errors newest WHERE newest.site_id = CAST(sqlc.arg('SiteID') AS TEXT) ORDER BY newest.id DESC
   LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR json_extract(own.attributes, '$.kind') = sqlc.narg('Type'))
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
@@ -90,9 +90,9 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- name: SearchSiteEvents :many
 -- Newest first, the site's own events, which is all a site may see, only those named Type when it is set
 SELECT own.* FROM events own
-WHERE own.site_id = sqlc.arg('SiteID')
+WHERE own.site_id = CAST(sqlc.arg('SiteID') AS TEXT)
 AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
-  WHERE newest.site_id = sqlc.arg('SiteID') ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+  WHERE newest.site_id = CAST(sqlc.arg('SiteID') AS TEXT) ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR own.name = sqlc.narg('Type'))
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.name), lower(sqlc.narg('Search'))) > 0
   OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
@@ -130,13 +130,13 @@ DELETE FROM errors WHERE id <= (SELECT MAX(newest.id) FROM errors newest) - CAST
 -- name: RecentConnectorEvents :many
 -- The newest events of one of the site's connectors, by the connector_type the sync events record
 SELECT * FROM events
-WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.connector_type') = sqlc.arg('ConnectorType')
+WHERE site_id = CAST(sqlc.arg('SiteID') AS TEXT) AND json_extract(attributes, '$.connector_type') = sqlc.arg('ConnectorType')
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: RecentConnectorErrors :many
 -- The newest errors of one of the site's connectors
 SELECT * FROM errors
-WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.kind') = 'connector' AND json_extract(attributes, '$.connector_type') = sqlc.arg('ConnectorType')
+WHERE site_id = CAST(sqlc.arg('SiteID') AS TEXT) AND json_extract(attributes, '$.kind') = 'connector' AND json_extract(attributes, '$.connector_type') = sqlc.arg('ConnectorType')
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);

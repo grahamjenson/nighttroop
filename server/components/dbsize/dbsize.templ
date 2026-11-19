@@ -3,9 +3,11 @@ package dbsize
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -67,12 +69,19 @@ func dbParts(tables []*controlmodels.SiteTable) []dbPart {
 // otherTables names the part of the rest of a DB's tables together in its elements' IDs
 const otherTables = "Other"
 
-// partName is a part's name as people read it: its table's, or Other for the rest of them
+// partName is a part's name as people read it: Other for the rest of the tables, or its table's, by the page that shows
+// it for a site's table, as Device Status for device_reports
 func partName(ctx context.Context, part dbPart) string {
 	if part.Name == otherTables {
 		return i18n.T(ctx, "common.db_size.other_tables")
 	}
-	return part.Name
+	return i18n.Stored(ctx, "site_tables", part.Name)
+}
+
+// asStored is whether a part is named by its table's name as it is stored, as a server DB's table with no page is, so
+// it is shown in code type
+func asStored(ctx context.Context, part dbPart) bool {
+	return part.Name != otherTables && partName(ctx, part) == part.Name
 }
 
 // measuredBy is the DB's size, or its size from its tables when the resource check has not measured it yet
@@ -98,9 +107,10 @@ func partText(part dbPart) string {
 	return fmt.Sprintf("%.2f MB · %.0f%%", float64(part.Bytes)/1024/1024, part.Percent)
 }
 
-// keyText is a part's records in thousands, then its size and share of the DB, as "7.9k · 1.25 MB · 40%"
-func keyText(part dbPart) string {
-	return fmt.Sprintf("%.1fk · %s", float64(part.Records)/1000, partText(part))
+// keyText is a part's records in the number format, then its size and share of the DB, as "7,912 records · 1.25 MB · 40%"
+func keyText(ctx context.Context, part dbPart) string {
+	records := display.Number(ctx, strconv.FormatInt(part.Records, 10))
+	return i18n.N(ctx, "common.db_size.records", int(part.Records), i18n.Data{"Records": records}) + " · " + partText(part)
 }
 
 // barWidth is how much of the bar the DB fills: its share of its limit, at most all of it, or all of it with no limit
@@ -141,7 +151,7 @@ templ Panel(prefix string, sizeKB, limitKB *int64, tables []*controlmodels.SiteT
 						<div id={ prefix + "--db-part--" + part.Name } aria-label={ partName(ctx, part) + ": " + partText(part) } class={ "group relative h-full min-w-[2px]", part.Class, templ.KV("rounded-l-full", i == 0), templ.KV("rounded-r-full", i == len(parts)-1) } style={ fmt.Sprintf("flex: %d 1 0%%", part.Bytes) }>
 							// A tooltip naming the table shows over its part on hover, kept inside the bar at its ends
 							<div id={ prefix + "--db-part--" + part.Name + "--tooltip" } class={ "pointer-events-none absolute bottom-full z-10 mb-2 hidden whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-md group-hover:block", templ.KV("left-0", i == 0), templ.KV("right-0", i > 0 && i == len(parts)-1), templ.KV("left-1/2 -translate-x-1/2", i > 0 && i < len(parts)-1) }>
-								<span class="font-mono font-semibold">{ partName(ctx, part) }</span>
+								<span class={ "font-semibold", templ.KV("font-mono", asStored(ctx, part)) }>{ partName(ctx, part) }</span>
 								<span class="tabular-nums text-gray-500">{ partText(part) }</span>
 							</div>
 						</div>
@@ -167,8 +177,8 @@ templ Panel(prefix string, sizeKB, limitKB *int64, tables []*controlmodels.SiteT
 				for _, part := range parts {
 					<li id={ prefix + "--db-table--" + part.Name } class="flex break-inside-avoid items-center gap-2">
 						<span class={ "size-3 shrink-0 rounded-sm", part.Class }></span>
-						<span class="truncate font-mono text-xs">{ partName(ctx, part) }</span>
-						<span class="ml-auto shrink-0 text-xs tabular-nums text-gray-500">{ keyText(part) }</span>
+						<span class={ "truncate", templ.KV("font-mono text-xs", asStored(ctx, part)) } title={ part.Name }>{ partName(ctx, part) }</span>
+						<span class="ml-auto shrink-0 text-xs tabular-nums text-gray-500">{ keyText(ctx, part) }</span>
 					</li>
 				}
 			</ul>
