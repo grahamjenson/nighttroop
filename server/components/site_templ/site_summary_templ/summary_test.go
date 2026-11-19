@@ -33,7 +33,7 @@ func TestGlucoseHeroColoursItsRange(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// The alarms are 70 and 180 mg/dL, as the summary has them in its units
-			summary := &sitemodels.Summary{Units: tt.units, RangeLow: tt.units.FromMGDL(70), RangeHigh: tt.units.FromMGDL(180), GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: tt.reading, Units: tt.units, OccurredAt: time.Now().UnixMilli()}}}}
+			summary := &sitemodels.Summary{Units: tt.units, RangeLow: tt.units.FromMGDL(70), RangeHigh: tt.units.FromMGDL(180), CurrentGlucose: &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: tt.reading, Units: tt.units, OccurredAt: time.Now().UnixMilli()}}}
 			var buf bytes.Buffer
 			require.NoError(t, glucoseHero(summary).Render(context.Background(), &buf))
 			html := buf.String()
@@ -64,7 +64,7 @@ func TestGlucoseHeroGreysAnOldReading(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reading := sitemodels.SiteGlucoseReading{Reading: 6.5, Units: &mmol, OccurredAt: time.Now().Add(-tt.age).UnixMilli()}
-			summary := &sitemodels.Summary{Units: &mmol, RangeLow: 3.9, RangeHigh: 10, GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: reading}}}
+			summary := &sitemodels.Summary{Units: &mmol, RangeLow: 3.9, RangeHigh: 10, CurrentGlucose: &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: reading}}
 			var buf bytes.Buffer
 			require.NoError(t, glucoseHero(summary).Render(context.Background(), &buf))
 			html := buf.String()
@@ -98,7 +98,7 @@ func TestSummaryReloadsWhenItsReadingTurnsStale(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reading := sitemodels.SiteGlucoseReading{Reading: 6.5, Units: &mmol, OccurredAt: now.Add(-tt.age).UnixMilli()}
-			summary := &sitemodels.Summary{Units: &mmol, GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: reading}}}
+			summary := &sitemodels.Summary{Units: &mmol, CurrentGlucose: &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: reading}}
 			require.Equal(t, tt.trigger, staleTrigger(context.Background(), summary, now))
 		})
 	}
@@ -106,37 +106,41 @@ func TestSummaryReloadsWhenItsReadingTurnsStale(t *testing.T) {
 
 	// The rendered summary schedules it after its stream's triggers
 	reading := sitemodels.SiteGlucoseReading{Reading: 6.5, Units: &mmol, OccurredAt: now.Add(-10 * time.Minute).UnixMilli()}
-	summary := &sitemodels.Summary{Hours: 6, Units: &mmol, GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: reading}}}
+	summary := &sitemodels.Summary{Hours: 6, Units: &mmol, CurrentGlucose: &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: reading}}
 	var buf bytes.Buffer
 	require.NoError(t, Summary(summary).Render(context.Background(), &buf))
 	require.Regexp(t, `reconnected from:#site--summary--live, load delay:30\d{4}ms"`, buf.String())
 }
 
-// TestGlucoseHeroShowsTheSensorNotAFingerstick checks the tile shows the newest sensor reading, with its arrow, and a
-// fingerstick newer than it beside it, not in its place; with only fingersticks it shows the newest of them
+// TestGlucoseHeroShowsTheSensorNotAFingerstick checks the tile shows the current glucose, the newest sensor reading,
+// with its arrow, and a fingerstick newer than it under it, not in its place; with only fingersticks the current
+// glucose is the newest of them, and none shows under it
 func TestGlucoseHeroShowsTheSensorNotAFingerstick(t *testing.T) {
 	mmol, now := consts.UnitsMMOLL, time.Now()
 	reading := func(value float64, readingType string, ago time.Duration, direction *string) *sitemodels.SiteCleanGlucoseReading {
 		return &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: value, Units: &mmol, ReadingType: readingType, OccurredAt: now.Add(-ago).UnixMilli(), Direction: direction}}
 	}
 	falling := "SingleDown"
-	render := func(readings ...*sitemodels.SiteCleanGlucoseReading) string {
-		summary := &sitemodels.Summary{Units: &mmol, RangeLow: 3.9, RangeHigh: 10, GlucoseReadings: readings}
+	render := func(current *sitemodels.SiteCleanGlucoseReading, readings ...*sitemodels.SiteCleanGlucoseReading) string {
+		summary := &sitemodels.Summary{Units: &mmol, RangeLow: 3.9, RangeHigh: 10, CurrentGlucose: current, GlucoseReadings: readings}
 		var buf bytes.Buffer
 		require.NoError(t, glucoseHero(summary).Render(context.Background(), &buf))
 		return buf.String()
 	}
 
-	html := render(reading(6.2, "mbg", time.Minute, nil), reading(4.7, "sgv", 3*time.Minute, &falling), reading(5.0, "sgv", 8*time.Minute, nil))
+	sensor := reading(4.7, "sgv", 3*time.Minute, &falling)
+	html := render(sensor, reading(6.2, "mbg", time.Minute, nil), sensor, reading(5.0, "sgv", 8*time.Minute, nil))
 	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>4.7</span>`, html)
 	require.Contains(t, html, "↓")
 	require.Regexp(t, `id="site--summary--glucose--meter"[^>]*>\s*Meter 6.2 mmol/L, `, html)
 
-	html = render(reading(4.7, "sgv", time.Minute, &falling), reading(6.2, "mbg", 3*time.Minute, nil))
+	sensor = reading(4.7, "sgv", time.Minute, &falling)
+	html = render(sensor, sensor, reading(6.2, "mbg", 3*time.Minute, nil))
 	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>4.7</span>`, html)
 	require.NotContains(t, html, "site--summary--glucose--meter", "an older fingerstick is not shown")
 
-	html = render(reading(6.2, "mbg", time.Minute, nil))
+	meter := reading(6.2, "mbg", time.Minute, nil)
+	html = render(meter, meter)
 	require.Regexp(t, `id="site--summary--glucose--reading"[^>]*>6.2</span>`, html)
 	require.NotContains(t, html, "site--summary--glucose--meter")
 }

@@ -84,13 +84,14 @@ func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
 	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose, Days: row.Days}
 }
 
-// NewSummaryDaily is the day named date from start until end, built from readings, doses, food, loop reports and
-// minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, and its times very
+// NewSummaryDaily is the day named date from start until end, as it is at until, built from readings, doses, food,
+// loop reports and minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, and its times very
 // low, low, high and very high of those outside it, with their mean and standard deviation. Its total daily dose is
-// the doses' insulin in it and the basal in force each minute from minutesSince, its glucose is the newest reading in each 5 minutes,
+// the doses' insulin in it given by until, so an extended dose counts as it is given, and the basal in force each minute
+// from minutesSince, its glucose is the newest reading in each 5 minutes,
 // and its loop IOB and COB the newest report's, newest first, in each 5 minutes, or else in the 5 minutes before,
 // rounded to 2 decimals.
-func NewSummaryDaily(date, timezone string, start, end int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
+func NewSummaryDaily(date, timezone string, start, end, until int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
 	day := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	within := func(at int64) bool { return at >= start && at < end }
 	slots := make([]*int64, (end-start+SummaryDailySlotMs-1)/SummaryDailySlotMs)
@@ -127,7 +128,7 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 		day.GlucoseMeanMgdl, day.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
 	}
 	for _, d := range doses {
-		day.TotalDailyDose += insulinWithin(d, start, end)
+		day.TotalDailyDose += insulinWithin(d, start, min(end, until))
 	}
 	for i, m := range minutes {
 		if within(minutesSince+int64(i)*60_000) && m.Basal != nil {

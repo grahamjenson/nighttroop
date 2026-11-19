@@ -481,6 +481,7 @@ type SiteUsage struct {
 
 // Summary The parts of the summary described here; the rest is kept in AdditionalProperties
 type Summary struct {
+	CurrentGlucose       *CleanGlucoseReading   `json:"current_glucose,omitempty"`
 	FoodIntakes          *[]FoodIntake          `json:"food_intakes,omitempty"`
 	GlucoseReadings      *[]CleanGlucoseReading `json:"glucose_readings,omitempty"`
 	Hours                *int64                 `json:"hours,omitempty"`
@@ -1584,6 +1585,14 @@ func (a *Summary) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+	if raw, found := object["current_glucose"]; found {
+		err = json.Unmarshal(raw, &a.CurrentGlucose)
+		if err != nil {
+			return fmt.Errorf("error reading 'current_glucose': %w", err)
+		}
+		delete(object, "current_glucose")
+	}
+
 	if raw, found := object["food_intakes"]; found {
 		err = json.Unmarshal(raw, &a.FoodIntakes)
 		if err != nil {
@@ -1682,6 +1691,13 @@ func (a *Summary) UnmarshalJSON(b []byte) error {
 func (a Summary) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
+
+	if a.CurrentGlucose != nil {
+		object["current_glucose"], err = json.Marshal(a.CurrentGlucose)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'current_glucose': %w", err)
+		}
+	}
 
 	if a.FoodIntakes != nil {
 		object["food_intakes"], err = json.Marshal(a.FoodIntakes)

@@ -653,7 +653,14 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Contents
 
 - The home page: latest glucose and its age, the loop's IOB and COB, treatments, and each device's latest status.
+- The latest glucose is the newest CGM reading (`sgv`) and its arrow. A newer finger stick does not replace it: it
+  shows under it ("Meter 6.2 mmol/L, 1 minute ago").
+  - If there is no CGM reading in the hours, the newest finger stick shows.
+  - `GET /summary` gives it as `current_glucose`. Its `diff_per_5m` is from the CGM reading before it.
+  - Finger sticks stay in `glucose_readings` and the graph.
 - The devices are under a **Devices** title with a link to the Device Status page. With no device, neither shows.
+- If a device's pump is suspended, its card shows an amber **Suspended** badge. `GET /summary` gives `pump_state`
+  `suspended` in `device_statuses` and `loop`.
 - In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
@@ -681,19 +688,21 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   within 5 minutes.
 - Each minute's targets and basal: a temp target or temp basal, else the profile switch, else the default profile in
   force. One from before the summary's hours counts. When a temp or timed switch ends, the one under it returns.
+  - A switch sent by name (no `profileJson`) uses the profile of that name in the profile store, with its shift and
+    percentage.
 
 #### Periods and time in range
 
 - Today, yesterday, last week, last month: time in range, total daily dose, last sensor and site change.
   - No data: "–" for time in range and daily dose, not 0. No insulin: 0 U.
+  - Total daily dose: a combo bolus adds its dose given at once immediately. Its extended dose adds as it is given,
+    by the share of its minutes that are complete.
 - Time in range, on the summary, Summaries page, overviews, AGP reports and readings' glucose days: whole percent,
   "<1%" above 0 that rounds to 0, "–" for none.
 
 #### Glucose colour, age and live updates
 
 - Alarm settings set readings' colour and label: low, in range, high. High text is darker amber than the graph's.
-- Latest glucose is the newest sensor reading, with its arrow. A newer fingerstick shows under it ("Meter 6.2 mmol/L,
-  1 minute ago"), not in its place. If the site has no sensor readings, it is the newest fingerstick.
 - Latest glucose older than the no data alarm's minutes (default 20) is grey, with an amber badge ("No reading for 45
   min"). An open summary changes when it becomes old, with no data change or reload, reading the summary one time then,
   not every few seconds.
@@ -828,7 +837,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - ‹ and ›: the 30 days before and after. › disabled for the latest month, ‹ past one year ago. A last day after today,
   or over one year before yesterday, is refused. Back and forward work.
 - Chart: a bar of each day's total daily dose, oldest first, on an axis of every day, a few pixels apart.
-  - A dose's extended part counts in each day by the share of its minutes in that day. Today has the share due today.
+  - A dose's extended part counts in each day by the share of its minutes in that day. Today has only the part given until now.
   - Basal (gold) under boluses, with a legend.
   - No insulin: no bar, not counted.
   - Hover: date and basal or boluses in U.
@@ -1741,8 +1750,14 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 #### Profile switches
 
 - No `profileJson` (careportal, T1DCarer): comes back with none. AAPS switches to its own profile of that name.
+- No `profileJson`: the summary, reports and a percent temp basal use the profile of its `profile` name. The profile
+  comes from the profile store in force at the start of the switch.
+  - If that store has no profile of that name, they use the default profile.
 - `percentage`: a multiplier of the profile's insulin (120 as 1.2), returned as sent.
-- `timeshift`: minutes, or ms when sent with an `originalProfileName` (AAPS). API v1 returns it as sent.
+- `timeshift`: hours, as the careportal sends it, or ms when sent with an `originalProfileName` (AAPS). For all
+  clients, the unit comes from the switch, not from the client. API v1 returns it as sent.
+  - A shift of more than 24 hours is refused.
+  - A switch made on the site has its shift in minutes. API v1 returns it in whole hours.
 - API v3 and its storage socket return every `timeshift` in ms, because AAPS reads it in ms.
 
 #### Event types
@@ -1801,6 +1816,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   `status.bolusing`, `status.suspended`, and battery `string` and `display`.
 - After the status as sent is cleared: Loop's pump `pumpID`, `suspended` and `bolusing`, as sent. A follower still
   sees an older status's delivery suspended.
+- The pump's state is kept as `pump_state`:
+  - `suspended` if Loop sends `pump.suspended` true, Trio `pump.status.suspended` true, or AAPS
+    `pump.status.status` "suspended".
+  - `normal` if the pump sends one of them and it is not suspended. Else, no state.
 - Out of range, not stored (the rest kept, and the site's client errors show it): uploader or pump battery below 0 or
   over 100% (e.g. Trio's `uploader.battery` -100 for an unknown phone battery), reservoir below 0 or over 10000 U.
 
