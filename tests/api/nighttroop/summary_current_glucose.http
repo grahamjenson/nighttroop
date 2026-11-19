@@ -1,0 +1,53 @@
+INCLUDE steps/new_site.steps
+
+// A CGM reads 86 then 92 mg/dL (4.773 then 5.106 mmol/L), and finger sticks of 7.2 mmol/L are taken between them and
+// after them, as Loop uploads a BG check
+NAME cgm_readings
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 86, "date": {{ itime 8 }}, "direction": "Flat"}, {"type": "sgv", "sgv": 92, "date": {{ itime 3 }}, "direction": "FortyFiveUp"}]
+ASSERT_STATUS 200
+
+NAME finger_sticks
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "BG Check", "glucose": 7.2, "glucoseType": "Finger", "units": "mmol", "created_at": "{{ time 6 }}"}, {"eventType": "BG Check", "glucose": 7.2, "glucoseType": "Finger", "units": "mmol", "created_at": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+
+// The current glucose is the newest CGM reading, with its arrow, and its change since the CGM's reading before it, not
+// since a finger stick. The finger sticks are still listed as their own readings.
+NAME summary_current_glucose_is_cgm
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 5.106 "@result.items.0.current_glucose.reading"
+ASSERT_EQUALS "sgv" "@result.items.0.current_glucose.reading_type"
+ASSERT_EQUALS "FortyFiveUp" "@result.items.0.current_glucose.direction"
+ASSERT_EQUALS 0.333 "@result.items.0.current_glucose.diff_per_5m"
+ASSERT_LENGTH 4 "@result.items.0.glucose_readings"
+ASSERT_EQUALS 7.2 "@result.items.0.glucose_readings.0.reading"
+ASSERT_EQUALS "mbg" "@result.items.0.glucose_readings.0.reading_type"
+ASSERT_EQUALS 5.106 "@result.items.0.glucose_readings.1.reading"
+
+// A site with only finger sticks shows its newest one, as it has no CGM
+NAME meter_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET m_site {{ .meter_site.site_subdomain }}.localhost
+SET m_ns_site {{ .meter_site.site_subdomain }}.ns.localhost
+
+NAME meter_jwt
+GET http://{{ .m_ns_site }}/api/v2/authorization/request/token={{ .meter_site.pwd_nstoken }}
+ASSERT_STATUS 200
+
+NAME meter_finger_stick
+POST http://{{ .m_ns_site }}/api/v1/treatments?token={{ .meter_site.pwd_nstoken }}
+B [{"eventType": "BG Check", "glucose": 7.2, "glucoseType": "Finger", "units": "mmol", "created_at": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+
+NAME meter_summary_current_glucose
+GET http://{{ .m_site }}/summary
+H Authorization: Bearer {{ .meter_jwt.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 7.2 "@result.items.0.current_glucose.reading"
+ASSERT_EQUALS "mbg" "@result.items.0.current_glucose.reading_type"
