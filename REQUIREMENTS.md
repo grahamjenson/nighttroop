@@ -2353,6 +2353,17 @@ harder:
 - The server refuses an identity with no role.
 - Identity creation is rate limited.
 
+#### How each identity is used
+
+- A badge after each identity's name says how it is used:
+  - **Not connected yet** (amber): a device that no app has used.
+  - **Not signed in yet** (amber): a person who has not signed in.
+  - **Active** (green): it was seen in the last 30 minutes.
+  - **Quiet for over a day** (amber): a device that was not seen for more than 24 hours.
+  - No badge: a person or a device seen between 30 minutes and 24 hours ago, or a person seen before that.
+- An identity that is turned off has no badge. The badge goes as its switch is turned off, and comes back as it is
+  turned on.
+
 #### Device clients
 
 - Add Device, at the right of the Devices card, opens a modal with three steps: the app, what it can do, and its name.
