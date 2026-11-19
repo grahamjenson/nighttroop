@@ -337,7 +337,7 @@ func siteURL(ctx context.Context, siteID string) string {
 
 // SitePage is a site's own page, laid out like a site's summary: its state and when it changed, a grid of what can be
 // done to it, its DB size against its limit, tiles of when it was last used, its identities and its last
-// error, tiles of its backup's size, when it was copied and uploaded, and the migration its DB is at, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
+// error, tiles of its backup's size, when it was copied and uploaded, and the migration its DB is at, then its identities, which an admin can reset or sign in to the site as, its latest events and errors, and last what stops it or removes its data
 templ SitePage(page *controlmodels.SitePage) {
 	{{ site := page.Site }}
 	@heading.Title(site.ID)
@@ -397,6 +397,7 @@ templ SitePage(page *controlmodels.SitePage) {
 				@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors, false)
 			}
 		</div>
+		@dangerousActions(site)
 		<div id="modal-container"></div>
 	</div>
 }
@@ -408,9 +409,9 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 
 // siteActions are a list of what can be done to the site, each saying what it does with its button at its right. For an
 // admin of an unavailable site, what fixes it comes first: upload a fixed DB or make a new empty one. Then open it, and
-// for an admin, download a copy of its DB or truncate it while it is here, disable it once no one has used it for a
-// while, and archive it once it is disabled. One that cannot be done yet says when it can, in place of its button, and
-// one that needs the site's DB, while it is unavailable, says so.
+// for an admin, download a copy of its DB while it is here, and enable it again once disabled. What stops it or removes
+// its data is in dangerousActions, at the bottom of its page. One that cannot be done yet says when it can, in place of
+// its button, and one that needs the site's DB, while it is unavailable, says so.
 templ siteActions(site *controlmodels.Site) {
 	@card.Card(card.Props{ID: "control--site--actions", Title: i18n.T(ctx, "control.site.actions")}) {
 		<div class="divide-y divide-gray-200">
@@ -457,11 +458,22 @@ templ siteActions(site *controlmodels.Site) {
 						{ i18n.T(ctx, "control.site.download_db") }
 					}
 				}
-				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(site.State == "live", disableWhen(ctx, site)), icon.Ban) {
-					@siteActionForm("/sites/"+site.ID, "disabled", i18n.T(ctx, "control.site.disable_confirm"), "control--site--disable", i18n.T(ctx, "control.site.disable"))
-				}
 				@actionCard("control--site--action-enable", i18n.T(ctx, "control.site.enable"), i18n.T(ctx, "control.site.enable_intro"), unless(site.State == "disabled", i18n.T(ctx, "control.site.enable_disabled_only")), icon.RotateCcw) {
 					@siteActionForm("/sites/"+site.ID, "live", i18n.T(ctx, "control.site.enable_confirm"), "control--site--enable", i18n.T(ctx, "control.site.enable"))
+				}
+			}
+		</div>
+	}
+}
+
+// dangerousActions are, for an admin, the actions that stop a site or remove its data, apart in red at the bottom of its
+// page: disable it once no one has used it for a while, truncate it while its DB is here, and archive it once disabled
+templ dangerousActions(site *controlmodels.Site) {
+	if httputils.IsControlAdmin(ctx) {
+		@card.Card(card.Props{ID: "control--site--dangerous-actions", Title: i18n.T(ctx, "control.site.dangerous_actions"), Danger: true}) {
+			<div class="divide-y divide-gray-200">
+				@actionCard("control--site--action-disable", i18n.T(ctx, "control.site.disable"), i18n.T(ctx, "control.site.disable_intro"), unless(site.State == "live", disableWhen(ctx, site)), icon.Ban) {
+					@siteActionForm("/sites/"+site.ID, "disabled", i18n.T(ctx, "control.site.disable_confirm"), "control--site--disable", i18n.T(ctx, "control.site.disable"))
 				}
 				@actionCard("control--site--action-truncate", i18n.T(ctx, "control.site.truncate"), i18n.T(ctx, "control.site.truncate_intro"),
 					needsDB(ctx, site, site.State == "live" || site.State == "disabled", i18n.T(ctx, "control.site.db_here_only")), icon.Scissors) {
@@ -470,8 +482,8 @@ templ siteActions(site *controlmodels.Site) {
 				@actionCard("control--site--action-archive", i18n.T(ctx, "control.site.archive"), i18n.T(ctx, "control.site.archive_intro"), needsDB(ctx, site, site.State == "disabled", i18n.T(ctx, "control.site.archive_unavailable")), icon.Archive) {
 					@siteActionForm("/sites/"+site.ID, "archived", i18n.T(ctx, "control.site.archive_confirm"), "control--site--archive", i18n.T(ctx, "control.site.archive"))
 				}
-			}
-		</div>
+			</div>
+		}
 	}
 }
 
