@@ -911,6 +911,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - An empty table of glucose readings, insulin doses, food intakes, temp basals, temp targets, profile switches,
   activities, notifications or event groups says that a new site has nothing until an app or a connector sends it,
   with a link to Getting Started. A table with a row does not.
+- The device status page with no device says the same, under "No device has reported in the last week."
 - Each main button has an icon before its words: save, add, delete, reset, backfill, filter, print and regenerate.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
