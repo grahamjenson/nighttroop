@@ -726,6 +726,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Latest glucose older than the no data alarm's minutes (default 20) is grey, with an amber badge ("No reading for 45
   min"). An open summary changes when it becomes old, with no data change or reload, reading the summary one time then,
   not every few seconds.
+  - Under the old reading, an admin sees "Readings stopped. See why on:" with links to Connectors, Users & Devices
+    and Errors.
+  - An identity that is not an admin sees "Readings stopped. Tell an admin of this site." with no links.
 - Ages in words, nearest hour after one hour: "45 minutes ago", "2 days 1 hour ago".
 - In Insulin and carbs, an intake more than 10 minutes ahead, as carbs Trio expects from fat and protein, says how
   long until it: "in 58 minutes". One less ahead, as from a phone's clock running fast, is "just now".
@@ -1124,6 +1127,15 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Nightscout: the site's address, and its API secret or a token that can read it.
   - Dexcom Share: the username and password of the account that wears the sensor, with Share on and one follower.
   - FreeStyle Libre: the email and password of a LibreLinkUp account that the person with the sensor invited.
+- Each connector has a badge beside its title that says its state:
+  - **Not set up** (grey): it is not saved.
+  - **Off** (grey): it is saved and turned off.
+  - **Stopped** (red): its first sync failed, so it was turned off.
+  - **Waiting for first sync** (amber): it is on and has not synced yet.
+  - **Failing** (red): its last sync failed.
+  - **Working** (green): its last sync worked.
+  - Working and Failing also say when it last synced, for example "synced 2 min ago".
+  - The badge changes with no reload when a sync finishes.
 
 #### Virtual connector
 
@@ -1272,6 +1284,18 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
   only, filtered by type and searched. They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
+- The errors table has a **From** column: the identity, what it asked for, and its app (for example
+  "watch · GET /api/v1/entries · Nightguard"), or the connector. It is empty if the error does not say. Text too
+  long for the column is cut short, and shows whole on hover.
+- An error's details say **What it means:** in plain words, above the details to debug it by:
+  - a connector's sync failed: the Connectors page says what to do;
+  - a backup failed: Nighttroop tries again;
+  - 401: the app's token or password is wrong, or its identity is off;
+  - 403: the identity's role does not allow it;
+  - 404: the app asked for something that does not exist;
+  - 429: the identity sent too many requests;
+  - 500 and above: Nighttroop failed, not the app;
+  - other refusals: the site did not accept what was sent.
 - Each event, error and log shows its request or background job run.
 - A search, or a filter by error kind, reads only the newest 10,000 of each. Paging without one reaches all rows.
 
@@ -2360,6 +2384,17 @@ harder:
 - If the server refuses the person or the device, such as for a name the site has, the modal stays open to fix it.
 - The server refuses an identity with no role.
 - Identity creation is rate limited.
+
+#### How each identity is used
+
+- A badge after each identity's name says how it is used:
+  - **Not connected yet** (amber): a device that no app has used.
+  - **Not signed in yet** (amber): a person who has not signed in.
+  - **Active** (green): it was seen in the last 30 minutes.
+  - **Quiet for over a day** (amber): a device that was not seen for more than 24 hours.
+  - No badge: a person or a device seen between 30 minutes and 24 hours ago, or a person seen before that.
+- An identity that is turned off has no badge. The badge goes as its switch is turned off, and comes back as it is
+  turned on.
 
 #### Device clients
 
