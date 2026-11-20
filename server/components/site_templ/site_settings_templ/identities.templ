@@ -1,6 +1,7 @@
 package site_settings_templ
 
 import (
+	"net/url"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/server/components/addmodal"
 	"context"
@@ -416,6 +417,15 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 						Attributes: resetAttributes(identity.ID, "totp", i18n.T(ctx, "site.settings.identities.reset_totp_confirm", i18n.Data{"Name": identity.Name}))}) {
 						@menuLabel(icon.RotateCcwKey, i18n.T(ctx, "site.settings.identities.reset_totp"))
 					}
+				}
+				// What the identity did and what was refused it, to see why its app does not work: the site's events and
+				// errors, searched for its name
+				@dropdown.Separator()
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--events", Attributes: nav.Attributes("/logs/events?search=" + url.QueryEscape(identity.Name))}) {
+					@menuLabel(icon.Activity, i18n.T(ctx, "site.settings.identities.its_events"))
+				}
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--errors", Attributes: nav.Attributes("/logs/errors?search=" + url.QueryEscape(identity.Name))}) {
+					@menuLabel(icon.TriangleAlert, i18n.T(ctx, "site.settings.identities.its_errors"))
 				}
 				@dropdown.Separator()
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--delete", Disabled: identity.CurrentIdentity, Class: "text-red-600 hover:text-red-700",

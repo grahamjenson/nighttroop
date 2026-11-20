@@ -1137,6 +1137,17 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Working and Failing also say when it last synced, for example "synced 2 min ago".
   - The badge changes with no reload when a sync finishes.
 
+#### What to do about a failed sync
+
+- Under a connector's sync error, **What to do:** says in plain words how to fix it:
+  - The service refused the username, password or token: enter them again and save.
+  - The address cannot be reached, or has no Nightscout site: check the address, then save.
+  - The service did not answer in time, or had an error of its own: Nighttroop tries again; check the service if it
+    continues.
+  - LibreLinkUp needs an invite or its terms accepted: open the LibreLinkUp app, then save again.
+  - The Nightscout address is on a private network: use its public address.
+- If the error does not say why the sync failed, there is no **What to do:** line.
+
 #### Virtual connector
 
 - Only on development, test or staging servers (`MODE`). In production: not offered, save or enable refused, and one
@@ -1284,6 +1295,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
   only, filtered by type and searched. They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
+- The events table has a **Details** column that says, when the event has them: the identity it was for, who did it
+  ("by admin") when that is another identity, the connector, the count of records, the reason, and the city and
+  country of a sign in. For example "mum · Wellington, NZ" or "dexcom · 12 records". Text too long for the column
+  is cut short, and shows whole on hover. A phone does not show the column; the event's details have the same.
 - The errors table has a **From** column: the identity, what it asked for, and its app (for example
   "watch · GET /api/v1/entries · Nightguard"), or the connector. It is empty if the error does not say. Text too
   long for the column is cut short, and shows whole on hover.
@@ -2425,6 +2440,8 @@ harder:
 - A row's Manage menu has Settings, Reset password, Reset TOTP and Delete, each with its icon. Delete is red and
   apart.
 - Actions that do not apply (e.g. to reset or delete yourself) are greyed out. An identity cannot lock itself out.
+- Each identity's Manage menu has **Its events** and **Its errors**. Each opens the site's Events or Errors page
+  searched for the identity's name, to see what it did and what was refused it.
 - Each identity lists the clients (browsers and apps) that used it. It shows as shared when several did.
 - A shared device says to give each device its own identity, with a link that opens the Add Device modal.
 - From a row, an admin changes the identity's own settings and alarms. A device's units go to followers in its

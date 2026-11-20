@@ -37,6 +37,26 @@ CLICK #site--identities--read_only--enabled
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--identities--read_only--state
 
+// An identity's Manage menu opens the site's events and errors searched for its name, to see what it did and what
+// was refused it
+CLICK #site--identities--admin--manage
+ASSERT_VISIBLE #site--identities--admin--events >> text=Its events
+ASSERT_VISIBLE #site--identities--admin--errors >> text=Its errors
+SCREENSHOT identity_logs_menu
+CLICK #site--identities--admin--events
+ASSERT_PATH /logs/events
+ASSERT_TEXT_EQUALS #site--events--filter--search admin
+ASSERT_VISIBLE #siteEventsTable >> text=Signed in
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=Site created
+GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--errors
+ASSERT_PATH /logs/errors
+ASSERT_TEXT_EQUALS #site--errors--filter--search pwd_phone
+ASSERT_TEXT_VISIBLE No errors here.
+GOTO /settings/identities
+ASSERT_STATUS 200
+
 // A name longer than the database keeps is refused in its own words, which the toast leaves to the Errors page
 CLICK #site--identities--add-user-button
 INPUT #site--identities--add-user--name {{ repeat "a" 40 }}

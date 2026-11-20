@@ -127,6 +127,13 @@ site:
       failing: "Failing"
       working: "Working"
       synced: "synced {{.Ago}}"
+    connector_advice:
+      what_to_do: "What to do:"
+      credentials: "The service refused the sign in. Enter the username and password, or the token, again and save."
+      address: "Nighttroop cannot reach that address. Check it for a mistake, and that the site is running, then save."
+      wait: "The service did not answer, or has a problem of its own. Nighttroop tries again by itself. If this continues, check the service."
+      app: "Open the LibreLinkUp app, do what it asks, then save here again."
+      private: "Use the public address of the Nightscout site, not one on a home or local network."
     connector_status:
       last_worked: "Last worked"
       last_failed: "Last failed"
@@ -178,6 +185,8 @@ site:
       clients_shared_add: "Add a device for one of them"
       enabled: "Enabled"
       manage: "Manage"
+      its_events: "Its events"
+      its_errors: "Its errors"
       settings: "Settings"
       reset_password: "Reset password"
       reset_token: "New token & setup steps"
