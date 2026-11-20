@@ -237,119 +237,102 @@ const uploadTimeout = 10 * time.Minute
 // UploadDBHandler puts the DB in the db field a control admin uploads, such as one they got with Download DB and fixed,
 // in place of an unavailable site's DB, so the site is served again
 func (s *SitesCollection) UploadDBHandler(w http.ResponseWriter, r *http.Request) {
-	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
-	if herr == nil && site == nil {
-		herr = apiutils.ErrNotFound
-	}
-	reason := controlContext.ControlDB.UnavailableSites()[chi.URLParam(r, "id")]
-	_ = http.NewResponseController(w).SetReadDeadline(time.Now().Add(uploadTimeout))
-	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(uploadTimeout))
-	upload, _, err := r.FormFile("db")
-	if err == nil {
+	s.siteAction(w, r, control_sites_templ.SiteDBUploaded, func(controlContext *httputils.ControlContext, site *controlmodels.Site) *apiutils.HTTPError {
+		reason := controlContext.ControlDB.UnavailableSites()[site.ID]
+		_ = http.NewResponseController(w).SetReadDeadline(time.Now().Add(uploadTimeout))
+		_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(uploadTimeout))
+		upload, _, err := r.FormFile("db")
+		if err != nil {
+			return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.upload_db_file"))
+		}
 		defer upload.Close()
-	} else if herr == nil {
-		herr = apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.upload_db_file"))
-	}
-	if herr == nil {
 		err = controlContext.ControlDB.UploadSiteDB(r.Context(), site.ID, upload)
 		if errors.Is(err, db.ErrSiteNotUnavailable) {
-			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.upload_db"))
+			return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.upload_db"))
 		} else if errors.Is(err, db.ErrDBDoesNotOpen) {
-			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.upload_db_failed"))
-		} else if herr = apiutils.ErrorFor(err, s.GetName()); herr == nil {
-			controlContext.ControlDB.Logs.SiteDBUploadedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, reason)
-			site, herr = get(r.Context(), s, site.ID, controlContext)
+			return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.upload_db_failed"))
+		} else if herr := apiutils.ErrorFor(err, s.GetName()); herr != nil {
+			return herr
 		}
-	}
-	if herr != nil {
-		herr.Write(acceptType, w)
-		return
-	}
-	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteDBUploaded(site))
+		controlContext.ControlDB.Logs.SiteDBUploadedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, reason)
+		return nil
+	})
 }
 
-// TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks
-// its DB, while its DB is here. Only admins can.
 // RestoreVersionHandler restores an unavailable site from the version of its backup in S3 a control admin picked, such
 // as an older one when the latest does not open
 func (s *SitesCollection) RestoreVersionHandler(w http.ResponseWriter, r *http.Request) {
-	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
-	if herr == nil && site == nil {
-		herr = apiutils.ErrNotFound
-	}
-	// An S3 version ID is at most 1024 characters
-	versionID := r.FormValue("version_id")
-	if herr == nil && (versionID == "" || len(versionID) > 1024) {
-		herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.restore_version"))
-	}
-	if herr == nil {
+	s.siteAction(w, r, control_sites_templ.SiteVersionRestored, func(controlContext *httputils.ControlContext, site *controlmodels.Site) *apiutils.HTTPError {
+		// An S3 version ID is at most 1024 characters
+		versionID := r.FormValue("version_id")
+		if versionID == "" || len(versionID) > 1024 {
+			return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.restore_version"))
+		}
 		cfg := controlContext.ControlDB.ServerConfig
 		restored, err := controlContext.ControlDB.RestoreUnavailableSite(r.Context(), site.ID, s3utils.NewS3Client(cfg).VersionDownload(versionID))
 		if errors.Is(err, db.ErrSiteNotUnavailable) {
-			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.new_empty_db"))
+			return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.new_empty_db"))
 		} else if err != nil || !restored {
 			slog.ErrorContext(r.Context(), "Cannot restore a site from a version of its backup", "site_id", site.ID, "version_id", versionID, "error", err)
-			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.restore_version_failed"))
-		} else {
-			controlContext.ControlDB.Logs.SiteVersionRestoredEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, versionID)
-			site, herr = get(r.Context(), s, site.ID, controlContext)
+			return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.restore_version_failed"))
 		}
-	}
-	if herr != nil {
-		herr.Write(acceptType, w)
-		return
-	}
-	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteVersionRestored(site))
+		controlContext.ControlDB.Logs.SiteVersionRestoredEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, versionID)
+		return nil
+	})
 }
 
 // NewEmptyDBHandler makes an unavailable site's DB again, empty, so the site is served again without its data, as for one
 // created just before a crash, which has no backup
 func (s *SitesCollection) NewEmptyDBHandler(w http.ResponseWriter, r *http.Request) {
-	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
-	if herr == nil && site == nil {
-		herr = apiutils.ErrNotFound
-	}
-	// Why it was unavailable, for its event
-	reason := controlContext.ControlDB.UnavailableSites()[chi.URLParam(r, "id")]
-	if herr == nil {
+	s.siteAction(w, r, control_sites_templ.SiteNewEmptyDB, func(controlContext *httputils.ControlContext, site *controlmodels.Site) *apiutils.HTTPError {
+		// Why it was unavailable, for its event
+		reason := controlContext.ControlDB.UnavailableSites()[site.ID]
 		err := controlContext.ControlDB.NewEmptySiteDB(r.Context(), site.ID)
 		if errors.Is(err, db.ErrSiteNotUnavailable) {
-			herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.new_empty_db"))
-		} else if herr = apiutils.ErrorFor(err, s.GetName()); herr == nil {
-			controlContext.ControlDB.Logs.SiteDBMadeEmptyEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, reason)
-			site, herr = get(r.Context(), s, site.ID, controlContext)
+			return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.new_empty_db"))
+		} else if herr := apiutils.ErrorFor(err, s.GetName()); herr != nil {
+			return herr
 		}
-	}
-	if herr != nil {
-		herr.Write(acceptType, w)
-		return
-	}
-	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteNewEmptyDB(site))
+		controlContext.ControlDB.Logs.SiteDBMadeEmptyEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, reason)
+		return nil
+	})
 }
 
+// TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks
+// its DB, while its DB is here. Only admins can.
 func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
+	s.siteAction(w, r, control_sites_templ.SiteTruncated, func(controlContext *httputils.ControlContext, site *controlmodels.Site) *apiutils.HTTPError {
+		if site.State != "live" && site.State != "disabled" {
+			return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.truncate"))
+		}
+		started := time.Now()
+		sizeKB, err := controlContext.ControlDB.TruncateSite(r.Context(), site.ID)
+		if herr := apiutils.ErrorFor(err, s.GetName()); herr != nil {
+			return herr
+		}
+		controlContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, started, site.EstimatedDbSizeKb, sizeKB)
+		return nil
+	})
+}
+
+// siteAction does an admin's action to the site in the URL, then answers with the site as the action left it, shown in
+// its component. When there is no such site, it is not found and the action is not done.
+func (s *SitesCollection) siteAction(w http.ResponseWriter, r *http.Request, component func(*controlmodels.Site) templ.Component,
+	action func(*httputils.ControlContext, *controlmodels.Site) *apiutils.HTTPError) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
 	if herr == nil && site == nil {
 		herr = apiutils.ErrNotFound
 	}
-	if herr == nil && site.State != "live" && site.State != "disabled" {
-		herr = apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.truncate"))
+	if herr == nil {
+		herr = action(controlContext, site)
 	}
 	if herr == nil {
-		started := time.Now()
-		sizeKB, err := controlContext.ControlDB.TruncateSite(r.Context(), site.ID)
-		if herr = apiutils.ErrorFor(err, s.GetName()); herr == nil {
-			controlContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, started, site.EstimatedDbSizeKb, sizeKB)
-			site, herr = get(r.Context(), s, site.ID, controlContext)
-		}
+		site, herr = get(r.Context(), s, site.ID, controlContext)
 	}
 	if herr != nil {
 		herr.Write(acceptType, w)
 		return
 	}
-	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteTruncated(site))
+	WriteResponse(w, r, acceptType, http.StatusOK, site, component(site))
 }
