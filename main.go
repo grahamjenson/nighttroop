@@ -212,8 +212,11 @@ func makeRoom(serverConfig *config.ServerConfig, admin page.Func, free func() (f
 		return nil
 	}
 	_ = filepath.WalkDir(serverConfig.BackupDir(), func(path string, entry fs.DirEntry, err error) error {
+		if err != nil { // a folder that cannot be read, or no backup folder at all, which has no entry
+			return nil
+		}
 		site, isBackup := strings.CutSuffix(entry.Name(), ".sqlite.lz4")
-		if err == nil && entry.Type().IsRegular() && !(isBackup && site != "" && !utils.FileExists(sitedb.GetPath(site, serverConfig))) {
+		if entry.Type().IsRegular() && !(isBackup && site != "" && !utils.FileExists(sitedb.GetPath(site, serverConfig))) {
 			_ = os.Remove(path)
 		}
 		return nil
