@@ -158,6 +158,11 @@ site:
         recent_clients: "Recent Clients"
         actions: "Actions"
       you: "You"
+      state:
+        not_connected: "Not connected yet"
+        not_signed_in: "Not signed in yet"
+        active: "Active"
+        quiet: "Quiet for over a day"
       roles:
         admin: "Admin"
         user: "User"
