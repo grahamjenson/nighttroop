@@ -1154,8 +1154,12 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Under them, **Add a connector** has one tile for each kind of connector the site does not have. A tile has the
   connector's icon, its name and what it connects. A site with no connector shows only the tiles.
   - The Nightscout tile has the Nightscout icon. A kind with no icon in Nighttroop has a tile of its first letter.
+  - The tiles are in a grid, each the same width. One tile alone is not the width of the page.
+  - A site with no connector is told to choose the service its glucose comes from.
   - A tile opens that connector's form in its place, and the tile goes. The form has the inputs, Enable Connector
-    and Save.
+    (ticked), **Cancel** and **Add Connector**. The cursor is in its first input.
+  - **Cancel** makes the form a tile again. What was typed in it is gone.
+  - After the connector is added, its buttons are Delete, Backfill and Save.
   - A connector that is deleted is a tile again.
   - If the site has every kind of connector, the **Add a connector** heading does not show.
 
@@ -1173,10 +1177,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Connector form
 
-- Before a save: only Save. After, without a reload: also Backfill, and Delete (red outline, apart from Save).
+- Before a connector is added: only Cancel and Add Connector. After, without a reload: Save, Backfill, and Delete
+  (red outline, apart from Save).
 - While a backfill request is sent, the Backfill button is disabled.
-- Enable Connector: ticked by typing a new Dexcom, LibreLinkUp or Nightscout source's details. A click on it, before
-  or after, is kept. Never changed on a saved source.
+- Enable Connector: ticked when a connector's form is opened from its tile. A click on it after that is kept. Never
+  changed on a saved connector.
 - Save does not check details. A failed first sync turns syncing off and tells why.
 - A site's connector saves (add or change) share one rate limit (`SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT`); over: 429.
 - Connector syncs, usual or timed, are limited by `CONNECTOR_SYNC_PER_MINUTE_LIMIT` (6 a minute, burst 1):

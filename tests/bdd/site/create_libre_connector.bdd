@@ -47,7 +47,7 @@ ASSERT_VISIBLE #site--settings--libre-connector--submit
 INPUT #site--settings--libre-connector--email follower@example.com
 INPUT #site--settings--libre-connector--password libre-pass
 INPUT #site--settings--libre-connector--region EU
-// Typing a new source's details turns it on, as it is easy to forget
+// A connector opened from its tile is on, as it is added to be used
 CLICK #site--settings--libre-connector--email
 ASSERT_VISIBLE #site--settings--libre-connector--enable:checked
 CLICK #site--settings--libre-connector--submit

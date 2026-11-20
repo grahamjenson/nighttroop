@@ -9,7 +9,6 @@ ASSERT_PATH /settings/connectors
 ASSERT_VISIBLE #mainForm h1 + #site--settings--connectors--live
 
 CLICK #site--settings--virtual-connector--add
-CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit
 ASSERT_TEXT_VISIBLE Connector Updated
 

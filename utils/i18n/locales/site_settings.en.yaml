@@ -76,6 +76,9 @@ site:
       confirm: "Delete this site? Everyone is signed out and its data is archived."
     connectors:
       add: "Add a connector"
+      none: "This site has no connector yet. Choose the service your glucose comes from."
+      add_submit: "Add Connector"
+      cancel: "Cancel"
       title: "Connectors"
       about: "A connector pulls your glucose into Nighttroop from another service. Add the one you use."
       phone: "AAPS, Trio, Loop and xDrip+ upload from the phone by themselves, with no connector."
