@@ -262,3 +262,18 @@ func TestMakeRoom(t *testing.T) {
 		})
 	}
 }
+
+// A start on a nearly full disk with no backup folder, which an admin can remove to free space, removes the logs DB
+// and says how little room there is: it does not panic.
+func TestMakeRoomWithNoBackupDir(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.DataDir = t.TempDir()
+	logs := logsdb.GetPath(&cfg)
+	require.NoError(t, os.MkdirAll(filepath.Dir(logs), 0o700))
+	require.NoError(t, os.WriteFile(logs, []byte("data"), 0o600))
+	require.NoDirExists(t, cfg.BackupDir())
+
+	err := makeRoom(&cfg, func(context.Context, page.Level, string, ...any) {}, func() (float64, bool) { return 20 << 20, true })
+	require.ErrorContains(t, err, "the DBs' disk has 20 MB free")
+	require.NoFileExists(t, logs)
+}
