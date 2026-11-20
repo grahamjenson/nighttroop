@@ -12,7 +12,7 @@ Having all SQL explicit and in sql, rater than ORM-ish, hopefully makes all inte
   - a bare `LIMIT` or `OFFSET` value. `go generate` fails for it.
   - a bare value that a column equals (example: `group_type = ?`), in each query except a lookup on one table by its primary key or a unique index.
 - Put the value in a `CAST` (example: `group_type = CAST(sqlc.arg('GroupType') AS TEXT)`). SQLite does not read a `CAST` when it plans, and it uses the same index.
-- A query that SQLite prepares again takes 3 to 6 times as long (`BenchmarkReadsByKey` in `data/db`).
+- A query that SQLite prepares again takes 3 to 6 times as long (`BenchmarkReadsByKey` and `BenchmarkReadsBySite` in `data/db`).
 
 # Control DB
 

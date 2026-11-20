@@ -409,6 +409,10 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = ConnectorState(dexcomConnectorSettings, "dexcom").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</h2><div class=\"text-sm text-gray-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -416,7 +420,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.dexcom.about"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 131, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 132, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -429,7 +433,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.dexcom.needs"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 133, Col: 154}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 134, Col: 154}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -475,7 +479,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.enable"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 148, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 149, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -537,7 +541,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.dexcom.username"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 161, Col: 65}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 162, Col: 65}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -603,7 +607,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.dexcom.password"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 183, Col: 65}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 184, Col: 65}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -670,7 +674,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.dexcom.region"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 206, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 207, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -701,7 +705,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.dexcom.outside_us"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 209, Col: 140}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 210, Col: 140}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -724,7 +728,7 @@ func DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) templ.Co
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.dexcom.us"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 210, Col: 130}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 211, Col: 130}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -810,9 +814,13 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.libre.title"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 238, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 239, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ConnectorState(libreConnectorSettings, "libre").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -823,7 +831,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.libre.about"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 241, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 243, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -836,7 +844,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.libre.needs"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 243, Col: 152}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 245, Col: 152}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {
@@ -882,7 +890,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.enable"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 258, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 260, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -944,7 +952,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.libre.email"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 270, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 272, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -1010,7 +1018,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var45 string
 				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.libre.password"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 291, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 293, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 				if templ_7745c5c3_Err != nil {
@@ -1077,7 +1085,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var48 string
 				templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.libre.region"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 313, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 315, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 				if templ_7745c5c3_Err != nil {
@@ -1103,7 +1111,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var49 string
 				templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression(region.Code).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 317, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 319, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 				if templ_7745c5c3_Err != nil {
@@ -1126,7 +1134,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var50 string
 				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(region.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 317, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 319, Col: 121}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -1221,9 +1229,13 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.nightscout.title"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 347, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 349, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ConnectorState(nightscoutConnectorSettings, "nightscout").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1234,7 +1246,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.nightscout.about"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 350, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 353, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1247,7 +1259,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.nightscout.needs"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 352, Col: 162}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 355, Col: 162}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1293,7 +1305,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 				var templ_7745c5c3_Var57 string
 				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.enable"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 367, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 370, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 				if templ_7745c5c3_Err != nil {
@@ -1355,7 +1367,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 				var templ_7745c5c3_Var60 string
 				templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.nightscout.url"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 380, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 383, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 				if templ_7745c5c3_Err != nil {
@@ -1405,7 +1417,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 				var templ_7745c5c3_Var62 string
 				templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.nightscout.url_help"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 401, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 404, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 				if templ_7745c5c3_Err != nil {
@@ -1454,7 +1466,7 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 				var templ_7745c5c3_Var65 string
 				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.nightscout.secret"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 411, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 414, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 				if templ_7745c5c3_Err != nil {
@@ -1581,9 +1593,13 @@ func VirtualConnectorForm(synSource *sitemodels.Connector) templ.Component {
 		var templ_7745c5c3_Var69 string
 		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.virtual.title"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 471, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 474, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ConnectorState(synSource, "virtual").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1594,7 +1610,7 @@ func VirtualConnectorForm(synSource *sitemodels.Connector) templ.Component {
 		var templ_7745c5c3_Var70 string
 		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.virtual.about"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 474, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 478, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 		if templ_7745c5c3_Err != nil {
@@ -1640,7 +1656,7 @@ func VirtualConnectorForm(synSource *sitemodels.Connector) templ.Component {
 				var templ_7745c5c3_Var73 string
 				templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.enable"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 490, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 494, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 				if templ_7745c5c3_Err != nil {
@@ -1718,7 +1734,7 @@ func connectorActions(source *sitemodels.Connector, connectorType consts.Connect
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--settings--" + name + "-connector--actions").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 506, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 510, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 			if templ_7745c5c3_Err != nil {
@@ -1774,7 +1790,7 @@ func connectorActions(source *sitemodels.Connector, connectorType consts.Connect
 				var templ_7745c5c3_Var77 string
 				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.delete"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 523, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 527, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 				if templ_7745c5c3_Err != nil {
@@ -1832,7 +1848,7 @@ func connectorActions(source *sitemodels.Connector, connectorType consts.Connect
 			var templ_7745c5c3_Var79 string
 			templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.save"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 536, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 540, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 			if templ_7745c5c3_Err != nil {
@@ -1897,7 +1913,7 @@ func BackfillButton(name string) templ.Component {
 			var templ_7745c5c3_Var82 string
 			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.connectors.backfill"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 562, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 566, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 			if templ_7745c5c3_Err != nil {

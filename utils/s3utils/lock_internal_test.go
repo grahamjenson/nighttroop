@@ -196,14 +196,38 @@ func TestLockWhenWorking(t *testing.T) {
 		}
 		return nil
 	}
-	require.True(t, servers[0].lockWhenWorking(t.Context(), flaky))
+	require.True(t, servers[0].lockWhenWorking(t.Context(), flaky, servers[0].Lock))
 	require.Equal(t, 6, tests)
 	require.NotNil(t, servers[0].unlock, "it holds the lock")
 
 	// While that server holds the lock, another waits, however long S3 has worked
 	ctx, cancel := context.WithTimeout(t.Context(), 3*lockStaleAfter)
 	defer cancel()
-	require.False(t, servers[1].lockWhenWorking(ctx, func(context.Context) error { return nil }))
+	require.False(t, servers[1].lockWhenWorking(ctx, func(context.Context) error { return nil }, servers[1].Lock))
+}
+
+// A server whose lock S3 refuses once, though its tests passed, waits for S3 to work again and takes the lock then:
+// it is the only thing that restarts the server with S3
+func TestLockWhenWorkingTriesAgainAfterARefusedLock(t *testing.T) {
+	_, servers := lockServers(t, 1)
+	oldEvery := workingEvery
+	workingEvery = time.Millisecond
+	t.Cleanup(func() { workingEvery = oldEvery })
+
+	tests, locks := 0, 0
+	working := func(context.Context) error { tests++; return nil }
+	refusedOnce := func(ctx context.Context) error {
+		if locks++; locks == 1 {
+			return errors.New("S3 refused the lock")
+		}
+		return servers[0].Lock(ctx)
+	}
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	require.True(t, servers[0].lockWhenWorking(ctx, working, refusedOnce))
+	require.Equal(t, 2, locks)
+	require.Equal(t, 2*workingPasses, tests, "S3 works three tests in a row again first")
+	require.NotNil(t, servers[0].unlock, "it holds the lock")
 }
 
 // A server keeps its lock when S3 takes a write of it and never answers, or refuses one as another write is under

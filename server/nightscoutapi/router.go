@@ -44,7 +44,6 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	r.Group(func(r chi.Router) {
 		r.Use(NightscoutAuthMiddleware(controlDB, config))
 		r.Use(httputils.SiteRateLimitMiddleware(config))
-		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 		r.Use(httputils.CountRoutes(config.Usage, "nightscout"))
 

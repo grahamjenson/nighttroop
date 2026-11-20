@@ -119,6 +119,14 @@ site:
       fetching_again: ", and again from {{.From}} UTC to fill any gaps"
       updated: "Connector Updated"
       deleted: "Connector Deleted"
+    connector_state:
+      not_set_up: "Not set up"
+      off: "Off"
+      stopped: "Stopped"
+      waiting: "Waiting for first sync"
+      failing: "Failing"
+      working: "Working"
+      synced: "synced {{.Ago}}"
     connector_advice:
       what_to_do: "What to do:"
       credentials: "The service refused the sign in. Enter the username and password, or the token, again and save."
