@@ -326,6 +326,14 @@ H Accept: application/json
 B {"name": "Toast", "carbs": 15}
 ASSERT_STATUS 403
 
+// A group's delete also deletes its events, so a caregiver cannot put a reading in a group
+NAME carer_site_cannot_group_glucose
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+B {"group_type": "BG Check", "glucose_reading_id": "{{ .site_glucose_id }}"}
+ASSERT_STATUS 403
+
 // Nothing was changed or deleted
 NAME site_glucose_kept
 GET http://{{ site }}/data/glucose/{{ .site_glucose_id }}

@@ -196,7 +196,7 @@
       },
       "post": {
         "operationId": "CreateEventGroup", "tags": ["Data"], "summary": "Groups events already made, picked by their IDs",
-        "description": "Needs group_type. Each ID sent must be of a kind the type can have, from GET /data/event-groups/choices, and at least one is needed, except for a change (a sensor, site or pump part), which has none. 400 when the type is missing or unknown, an ID is of a kind the type cannot have, none is sent, or an event does not exist; 409 when an event is already in another group.",
+        "description": "Needs group_type. Each ID sent must be of a kind the type can have, from GET /data/event-groups/choices, and at least one is needed, except for a change (a sensor, site or pump part), which has none. 400 when the type is missing or unknown, an ID is of a kind the type cannot have, none is sent, or an event does not exist; 403 when a Caregiver device sends a glucose_reading_id; 409 when an event is already in another group.",
         "requestBody": { "$ref": "#/components/requestBodies/EventGroupBody" },
         "responses": { "201": { "$ref": "#/components/responses/EventGroupResult" }, "409": { "$ref": "#/components/responses/Error" }, "default": { "$ref": "#/components/responses/Error" } }
       }

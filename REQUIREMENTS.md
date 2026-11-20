@@ -2332,6 +2332,7 @@ harder:
   - Adds, changes and deletes event groups, insulin, food, temp basals, temp targets, profile switches, activities and
     notifications.
   - Cannot add, change or delete glucose readings, device statuses, profiles, food presets or loop settings: 403.
+  - Cannot put a glucose reading in an event group, as the delete of a group also deletes its events: 403.
   - Changes its own settings, alarms and push registrations.
 - The Users & Devices page names it "Caregiver".
 - The Users & Devices page has a table, "What each role can do", with a row for each role:
