@@ -62,52 +62,48 @@ func TestDateTime(t *testing.T) {
 	}
 }
 
-func TestTimeAgo(t *testing.T) {
+// TimeAgo, RoundedAgo and RoundedIn say how long before or after now a time is; a time after now is no time ago
+func TestRelativeTimes(t *testing.T) {
 	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	says := map[string]func(context.Context, int64, time.Time) string{"TimeAgo": TimeAgo, "RoundedAgo": RoundedAgo, "RoundedIn": RoundedIn}
 	tests := []struct {
-		before time.Duration
-		want   string
+		say  string
+		at   time.Duration // after now, or before it when negative
+		want string
 	}{
-		{30 * time.Second, "0m ago"},
-		{5 * time.Minute, "5m ago"},
-		{59*time.Minute + 59*time.Second, "59m ago"},
-		{time.Hour, "1h0m ago"},
-		{time.Hour + 5*time.Minute, "1h5m ago"},
-		{23*time.Hour + 59*time.Minute, "23h59m ago"},
-		{24 * time.Hour, "1d0h0m ago"},
-		{49*time.Hour + 5*time.Minute, "2d1h5m ago"},
-		{-10 * time.Minute, "0m ago"},
-	}
-	for _, tt := range tests {
-		if got := TimeAgo(context.Background(), now.Add(-tt.before).UnixMilli(), now); got != tt.want {
-			t.Errorf("TimeAgo(context.Background(), %s before) = %q, want %q", tt.before, got, tt.want)
-		}
-	}
-}
+		{"TimeAgo", -30 * time.Second, "0m ago"},
+		{"TimeAgo", -5 * time.Minute, "5m ago"},
+		{"TimeAgo", -(59*time.Minute + 59*time.Second), "59m ago"},
+		{"TimeAgo", -time.Hour, "1h0m ago"},
+		{"TimeAgo", -(time.Hour + 5*time.Minute), "1h5m ago"},
+		{"TimeAgo", -(23*time.Hour + 59*time.Minute), "23h59m ago"},
+		{"TimeAgo", -24 * time.Hour, "1d0h0m ago"},
+		{"TimeAgo", -(49*time.Hour + 5*time.Minute), "2d1h5m ago"},
+		{"TimeAgo", 10 * time.Minute, "0m ago"},
 
-func TestRoundedAgo(t *testing.T) {
-	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
-	tests := []struct {
-		before time.Duration
-		want   string
-	}{
-		{30 * time.Second, "just now"},
-		{-10 * time.Minute, "just now"},
-		{time.Minute, "1 minute ago"},
-		{59*time.Minute + 59*time.Second, "59 minutes ago"},
-		{time.Hour + 29*time.Minute, "1 hour ago"},
-		{time.Hour + 30*time.Minute, "2 hours ago"},
-		{23*time.Hour + 29*time.Minute, "23 hours ago"},
-		{23*time.Hour + 30*time.Minute, "1 day ago"},
-		{24*time.Hour + 30*time.Minute, "1 day 1 hour ago"},
-		{48*time.Hour + 49*time.Minute, "2 days 1 hour ago"},
-		{48*time.Hour + 45*time.Minute, "2 days 1 hour ago"},
-		{9*24*time.Hour + 23*time.Hour + 50*time.Minute, "10 days ago"},
+		{"RoundedAgo", -30 * time.Second, "just now"},
+		{"RoundedAgo", 10 * time.Minute, "just now"},
+		{"RoundedAgo", -time.Minute, "1 minute ago"},
+		{"RoundedAgo", -(59*time.Minute + 59*time.Second), "59 minutes ago"},
+		{"RoundedAgo", -(time.Hour + 29*time.Minute), "1 hour ago"},
+		{"RoundedAgo", -(time.Hour + 30*time.Minute), "2 hours ago"},
+		{"RoundedAgo", -(23*time.Hour + 29*time.Minute), "23 hours ago"},
+		{"RoundedAgo", -(23*time.Hour + 30*time.Minute), "1 day ago"},
+		{"RoundedAgo", -(24*time.Hour + 30*time.Minute), "1 day 1 hour ago"},
+		{"RoundedAgo", -(48*time.Hour + 49*time.Minute), "2 days 1 hour ago"},
+		{"RoundedAgo", -(48*time.Hour + 45*time.Minute), "2 days 1 hour ago"},
+		{"RoundedAgo", -(9*24*time.Hour + 23*time.Hour + 50*time.Minute), "10 days ago"},
+
+		{"RoundedIn", 58*time.Minute + 30*time.Second, "in 58 minutes"},
+		{"RoundedIn", time.Hour + 30*time.Minute, "in 2 hours"},
+		{"RoundedIn", 24*time.Hour + 30*time.Minute, "in 1 day 1 hour"},
 	}
 	for _, tt := range tests {
-		if got := RoundedAgo(context.Background(), now.Add(-tt.before).UnixMilli(), now); got != tt.want {
-			t.Errorf("RoundedAgo(context.Background(), %s before) = %q, want %q", tt.before, got, tt.want)
-		}
+		t.Run(tt.say+" "+tt.at.String(), func(t *testing.T) {
+			if got := says[tt.say](context.Background(), now.Add(tt.at).UnixMilli(), now); got != tt.want {
+				t.Errorf("%s(%s from now) = %q, want %q", tt.say, tt.at, got, tt.want)
+			}
+		})
 	}
 }
 
@@ -179,23 +175,6 @@ func TestValueAndPerDay(t *testing.T) {
 	for _, test := range tests {
 		if test.got != test.want {
 			t.Errorf("%s: got %q, want %q", test.name, test.got, test.want)
-		}
-	}
-}
-
-func TestRoundedIn(t *testing.T) {
-	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
-	tests := []struct {
-		after time.Duration
-		want  string
-	}{
-		{58*time.Minute + 30*time.Second, "in 58 minutes"},
-		{time.Hour + 30*time.Minute, "in 2 hours"},
-		{24*time.Hour + 30*time.Minute, "in 1 day 1 hour"},
-	}
-	for _, tt := range tests {
-		if got := RoundedIn(context.Background(), now.Add(tt.after).UnixMilli(), now); got != tt.want {
-			t.Errorf("RoundedIn(context.Background(), %s after) = %q, want %q", tt.after, got, tt.want)
 		}
 	}
 }
