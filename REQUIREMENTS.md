@@ -2466,6 +2466,9 @@ harder:
 #### Credential resets
 
 - An admin resets a device's password. A new Nightscout token comes with it.
+  - In a device's Manage menu the reset is **New token & setup steps**. In a person's it is **Reset password**.
+  - If the device was added for an app, its new credentials show that app's setup steps again, with the new token
+    in them.
 - An identity resets its own password on the settings page, the admin its own TOTP. Both sign it out.
 - Each reset is an event, with who made it.
 - The site's backup key, on the recover page, recovers a lost admin password or TOTP.

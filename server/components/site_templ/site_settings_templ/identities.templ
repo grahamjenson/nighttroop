@@ -405,7 +405,12 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 				}
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Disabled: identity.CurrentIdentity,
 					Attributes: resetAttributes(identity.ID, "password", i18n.T(ctx, "site.settings.identities.reset_password_confirm", i18n.Data{"Name": identity.Name}))}) {
-					@menuLabel(icon.KeyRound, i18n.T(ctx, "site.settings.identities.reset_password"))
+					// A device's apps use its token, so that is what its reset is named for
+					if consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice {
+						@menuLabel(icon.KeyRound, i18n.T(ctx, "site.settings.identities.reset_token"))
+					} else {
+						@menuLabel(icon.KeyRound, i18n.T(ctx, "site.settings.identities.reset_password"))
+					}
 				}
 				if identity.HasTotpSecret {
 					@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-totp", Disabled: identity.CurrentIdentity,
@@ -550,7 +555,10 @@ templ copyValue(id string, name string, value string) {
 
 // IdentityReset shows an identity's new credentials once. Resetting your own signed you out, to sign in again with them.
 templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut bool) {
-	@CredentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut)
+	// A device added for an app has that app's setup steps again, with its new token, as the app needs it entered
+	@CredentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut) {
+		@clientGuide(identity)
+	}
 }
 
 // CredentialsModal is a dialog of an identity's, or a control admin's, new credentials. Escape or pressing beside it

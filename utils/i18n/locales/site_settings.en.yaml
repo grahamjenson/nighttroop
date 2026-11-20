@@ -190,6 +190,7 @@ site:
       its_errors: "Its errors"
       settings: "Settings"
       reset_password: "Reset password"
+      reset_token: "New token & setup steps"
       reset_password_confirm: "Reset {{.Name}}'s password? Its old password and Nightscout token stop working, and it is signed out."
       reset_totp: "Reset TOTP"
       reset_totp_confirm: "Reset {{.Name}}'s TOTP? Codes from its old secret stop working, and it is signed out."

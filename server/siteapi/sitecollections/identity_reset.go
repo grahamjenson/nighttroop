@@ -88,6 +88,8 @@ func resetIdentity(w http.ResponseWriter, r *http.Request, credential string) {
 	}
 	model := sitemodels.IdentityFromDB(identity, siteContext)
 	model.Password, model.TotpSecret, model.NSToken = values.Password, values.TotpSecret, values.NSToken
+	// For a device's setup steps, which have the Nightscout URL with the new token
+	model.NSURL = siteContext.SiteDB.NSURL()
 	url := siteContext.SiteDB.URL()
 	WriteResponse(w, r, siteContext, http.StatusOK, model, site_settings_templ.IdentityReset(url, model, signedOut), false)
 }
