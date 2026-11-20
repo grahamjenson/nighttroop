@@ -65,7 +65,7 @@ CLICK #site--settings--connectors--nightscout-needs
 ASSERT_VISIBLE #site--settings--nightscout-connector--password:valid
 SCREENSHOT nightscout_link_split
 
-// Typing a new source's details turns it on, as it is easy to forget; unticking it then keeps it off while typing on
+// A connector opened from its tile is on, as it is added to be used; unticking it then keeps it off while typing on
 INPUT #site--settings--nightscout-connector--url         http://will_not_pass_the_test.test
 CLICK #site--settings--nightscout-connector--url
 ASSERT_VISIBLE #site--settings--nightscout-connector--enable:checked

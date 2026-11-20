@@ -126,17 +126,20 @@
     transition: grid-template-rows 300ms ease-in, padding 300ms ease-in, opacity 300ms, transform 300ms !important;
 }
 
-/* A connector the site does not have is only its tile, beside the others' under Add a connector, until the tile is
+/* A connector the site does not have is only its tile, in a grid of them under Add a connector, until the tile is
    pressed. Then, as for one the site has, it is its whole form and no tile. With no tile left, the heading goes. */
 [data-connectors] {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  form,
+  [data-connectors-add] {
+    grid-column: 1 / -1;
+  }
   form {
-    width: 100%;
     margin-top: 0;
   }
   form[data-connector-unused]:not([data-open]) {
     order: 2;
-    flex: 1 1 16rem;
-    width: auto;
+    grid-column: auto;
     .panel:not([data-connector-add]) {
       display: none;
     }

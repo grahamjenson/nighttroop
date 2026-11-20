@@ -41,16 +41,13 @@ func virtualConnectorAllowed(ctx context.Context) bool {
 	return siteContext != nil && siteContext.Config != nil && siteContext.Config.VirtualConnectorAllowed()
 }
 
-// enableOnFirstInput ticks a new source's Enable Connector as its details are first typed in, as it is easy to forget and
-// then wonder why nothing syncs. A click on the box itself first, or after, is left as it is, and a saved source's
-// box is never changed.
-func enableOnFirstInput(source *sitemodels.Connector) templ.Attributes {
-	if source != nil {
-		return nil
-	}
-	return templ.Attributes{"oninput": templ.JSUnsafeFuncCall("if (this.dataset.enableTouched) return; this.dataset.enableTouched = 'true'; " +
-		"if (event.target.name !== 'enabled') this.querySelector('[name=enabled]').checked = true")}
-}
+// openConnector opens the form of the tile pressed in the tile's place, with the connector turned on, as it is added
+// to be used, and the cursor in its first input
+const openConnector = `const form = this.closest("form"); form.dataset.open = "true"; form.elements.enabled.checked = true;
+form.querySelector("input:not([type=checkbox]), select")?.focus(); form.scrollIntoView({block: "nearest"})`
+
+// closeConnector makes a form that is not saved its tile again, with what was typed in it gone
+const closeConnector = `const form = this.closest("form"); form.reset(); delete form.dataset.open`
 
 templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
 	<div id="mainForm" class="mx-auto max-w-5xl">
@@ -68,8 +65,14 @@ templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
 		@connectorsLive()
 		// The site's connectors each show whole. Under them, Add a connector has a tile for each kind the site does not
 		// have, with its icon, which opens that kind's form: the page is the connectors in use, not four forms.
-		<div id="site--settings--connectors--list" data-connectors class="flex flex-wrap gap-3">
-			<h2 id="site--settings--connectors--add" data-connectors-add class="order-1 mt-4 w-full text-sm font-semibold uppercase tracking-wide text-gray-500">{ i18n.T(ctx, "site.settings.connectors.add") }</h2>
+		<div id="site--settings--connectors--list" data-connectors class="grid gap-3">
+			<div id="site--settings--connectors--add" data-connectors-add class="order-1 mt-4">
+				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ i18n.T(ctx, "site.settings.connectors.add") }</h2>
+				// A new site is told what to pick, as its page has nothing else
+				if len(connectorSettings) == 0 {
+					<p id="site--settings--connectors--none" class="mt-1 text-sm text-gray-600">{ i18n.T(ctx, "site.settings.connectors.none") }</p>
+				}
+			</div>
 			@NightscoutConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeNightscout))
 			@DexcomConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeDexcom))
 			@LibreConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeLibre))
@@ -119,7 +122,6 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 	<form
 		hx-post="/settings/connectors/dexcom"
 		data-connector-unused?={ dexcomConnectorSettings == nil }
-		{ enableOnFirstInput(dexcomConnectorSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
 		hx-status:4xx="target:#toaster swap:beforeend"
@@ -232,7 +234,6 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 	<form
 		hx-post="/settings/connectors/libre"
 		data-connector-unused?={ libreConnectorSettings == nil }
-		{ enableOnFirstInput(libreConnectorSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
 		hx-status:4xx="target:#toaster swap:beforeend"
@@ -344,7 +345,6 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 	<form
 		hx-post="/settings/connectors/nightscout"
 		data-connector-unused?={ nightscoutConnectorSettings == nil }
-		{ enableOnFirstInput(nightscoutConnectorSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
 		hx-status:4xx="target:#toaster swap:beforeend"
@@ -520,7 +520,7 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 // connectorAdd is the tile of a connector the site does not have: its icon, or its first letter where Nighttroop has
 // no leave to use its maker's, its name and what it connects. Pressing it opens the connector's form in its place.
 templ connectorAdd(name, title, about string) {
-	<button type="button" id={ "site--settings--" + name + "-connector--add" } data-connector-add class="panel flex h-full w-full cursor-pointer items-center gap-3 p-4 text-left hover:border-primary" onclick="this.closest('form').dataset.open = 'true'">
+	<button type="button" id={ "site--settings--" + name + "-connector--add" } data-connector-add class="panel flex h-full w-full cursor-pointer items-center gap-3 p-4 text-left hover:border-primary" onclick={ templ.JSUnsafeFuncCall(openConnector) }>
 		if name == "nightscout" {
 			<img src={ static.URL("/logos/nightscout.png") } alt="" class="size-10 shrink-0"/>
 		} else {
@@ -562,13 +562,24 @@ templ connectorActions(source *sitemodels.Connector, connectorType consts.Connec
 		<div class="flex gap-3">
 			if source != nil {
 				@BackfillButton(name)
+			} else {
+				// One not saved yet goes back to its tile
+				@button.Button(button.Props{ID: "site--settings--" + name + "-connector--cancel", Type: button.TypeButton, Variant: button.VariantOutline,
+					Attributes: templ.Attributes{"onclick": templ.JSUnsafeFuncCall(closeConnector)}}) {
+					{ i18n.T(ctx, "site.settings.connectors.cancel") }
+				}
 			}
 			@button.Button(button.Props{
 				ID:   "site--settings--" + name + "-connector--submit",
 				Type: button.TypeSubmit,
 			}) {
-				@icon.Save()
-				{ i18n.T(ctx, "site.settings.connectors.save") }
+				if source != nil {
+					@icon.Save()
+					{ i18n.T(ctx, "site.settings.connectors.save") }
+				} else {
+					@icon.Plus()
+					{ i18n.T(ctx, "site.settings.connectors.add_submit") }
+				}
 			}
 		</div>
 	</div>

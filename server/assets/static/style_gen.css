@@ -3962,14 +3962,16 @@
   transition: grid-template-rows 300ms ease-in, padding 300ms ease-in, opacity 300ms, transform 300ms !important;
 }
 [data-connectors] {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  form, [data-connectors-add] {
+    grid-column: 1 / -1;
+  }
   form {
-    width: 100%;
     margin-top: 0;
   }
   form[data-connector-unused]:not([data-open]) {
     order: 2;
-    flex: 1 1 16rem;
-    width: auto;
+    grid-column: auto;
     .panel:not([data-connector-add]) {
       display: none;
     }
