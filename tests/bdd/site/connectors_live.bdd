@@ -8,6 +8,7 @@ ASSERT_PATH /settings/connectors
 // The page listens for its syncs' changes, shown Live beside its title
 ASSERT_VISIBLE #mainForm h1 + #site--settings--connectors--live
 
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit
 ASSERT_TEXT_VISIBLE Connector Updated

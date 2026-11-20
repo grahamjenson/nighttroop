@@ -52,6 +52,7 @@ ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /settings/connectors
 
+CLICK #site--settings--nightscout-connector--add
 ASSERT_VISIBLE #site--settings--nightscout-connector--enable
 ASSERT_VISIBLE #site--settings--nightscout-connector--url
 // Its button that saves has an icon
@@ -70,6 +71,7 @@ CLICK #site--settings--nightscout-connector--enable
 CLICK #site--settings--nightscout-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200

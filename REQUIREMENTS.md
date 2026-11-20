@@ -1120,7 +1120,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Connectors page help
 
-- The page says that a connector pulls glucose into Nighttroop from another service.
+- The page says that a connector pulls glucose into Nighttroop from another service, and to add the one you use.
 - A note says that AAPS, Trio, Loop and xDrip+ upload from the phone with no connector. Its link, **Add the phone as a
   device**, opens Users & Devices.
 - Each of the Nightscout, Dexcom Share and FreeStyle Libre connectors says what it needs before it is turned on:
@@ -1148,13 +1148,16 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - The Nightscout address is on a private network: use its public address.
 - If the error does not say why the sync failed, there is no **What to do:** line.
 
-#### Connectors not set up
+#### Add a connector
 
-- A site with no connector shows each connector's form, to choose from.
-- Once the site has a connector, each connector that is not set up shows only its title, what it is, and a
-  **Set Up** button. Its inputs, Enable Connector and Save do not show.
-  - **Set Up** opens the form, and the button goes.
-  - A connector that is deleted stays open, with its inputs empty.
+- The page shows each connector the site has, whole.
+- Under them, **Add a connector** has one tile for each kind of connector the site does not have. A tile has the
+  connector's icon, its name and what it connects. A site with no connector shows only the tiles.
+  - The Nightscout tile has the Nightscout icon. A kind with no icon in Nighttroop has a tile of its first letter.
+  - A tile opens that connector's form in its place, and the tile goes. The form has the inputs, Enable Connector
+    and Save.
+  - A connector that is deleted is a tile again.
+  - If the site has every kind of connector, the **Add a connector** heading does not show.
 
 #### Virtual connector
 

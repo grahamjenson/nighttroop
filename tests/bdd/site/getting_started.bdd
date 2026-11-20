@@ -42,7 +42,7 @@ CLICK #site--nav--home-icon
 // Each step opens the page it is done on, and the guide is always on My Account and in the menu, to come back to
 CLICK #site--getting-started--connectors-link
 ASSERT_PATH /settings/connectors
-ASSERT_VISIBLE #site--settings--virtual-connector--enable
+ASSERT_VISIBLE #site--settings--virtual-connector--add
 
 CLICK #site--settings-menu
 CLICK #site--settings--account-button

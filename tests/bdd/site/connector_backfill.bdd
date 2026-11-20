@@ -7,12 +7,14 @@ ASSERT_STATUS 200
 ASSERT_PATH /settings/connectors
 
 // A connector not saved yet has nothing to backfill or delete, so it has only Save
+CLICK #site--settings--nightscout-connector--add
 ASSERT_VISIBLE #site--settings--nightscout-connector--submit
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--backfill
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--delete
 SCREENSHOT connectors_unsaved
 
 // Virtual connector's first run writes its last 30 minutes, all on the first page of 100 readings
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
