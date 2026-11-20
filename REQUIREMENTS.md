@@ -1137,6 +1137,17 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Working and Failing also say when it last synced, for example "synced 2 min ago".
   - The badge changes with no reload when a sync finishes.
 
+#### What to do about a failed sync
+
+- Under a connector's sync error, **What to do:** says in plain words how to fix it:
+  - The service refused the username, password or token: enter them again and save.
+  - The address cannot be reached, or has no Nightscout site: check the address, then save.
+  - The service did not answer in time, or had an error of its own: Nighttroop tries again; check the service if it
+    continues.
+  - LibreLinkUp needs an invite or its terms accepted: open the LibreLinkUp app, then save again.
+  - The Nightscout address is on a private network: use its public address.
+- If the error does not say why the sync failed, there is no **What to do:** line.
+
 #### Virtual connector
 
 - Only on development, test or staging servers (`MODE`). In production: not offered, save or enable refused, and one
