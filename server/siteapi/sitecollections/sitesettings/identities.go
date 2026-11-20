@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
@@ -194,6 +195,13 @@ func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapi
 // ToModel is the identity: it is converted as it is read, so its row is its model
 func (s *IdentitiesCollection) ToModel(row *sitemodels.UserIdentity, _ *httputils.SiteContext) *sitemodels.UserIdentity {
 	return row
+}
+
+// Hides a change with an identity's credentials, as a new identity's row has, from the identities' stream, which
+// another admin or tab may have open: they are shown once, to whoever made the identity, so it is sent as {}
+func (s *IdentitiesCollection) Hides(event events.Event, _ *httputils.SiteContext) bool {
+	identity, ok := event.Model.(*sitemodels.UserIdentity)
+	return ok && (identity.Password != "" || identity.TotpSecret != nil || identity.NSToken != nil)
 }
 
 func (s *IdentitiesCollection) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {

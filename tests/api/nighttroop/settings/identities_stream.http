@@ -1,0 +1,50 @@
+// An admin's stream of the identities' changes never has a new identity's credentials, which are shown once, to
+// whoever made it, as another admin, or another tab, may be streaming them
+INCLUDE steps/new_site_admin.steps
+
+NAME identities_stream
+STREAM http://{{ site }}/settings/identities/events
+H Authorization: Bearer {{ jwt }}
+
+NAME create_device
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "stream-device", "role": "device_read"}
+ASSERT_STATUS 201
+ASSERT_EXISTS "@result.password"
+ASSERT_EXISTS "@result.ns_token"
+SET device_id {{ .create_device.result.id }}
+
+NAME device_created
+WAIT created
+ASSERT_EQUALS null "@password"
+ASSERT_EQUALS null "@ns_token"
+ASSERT_EQUALS null "@totp_secret"
+
+NAME create_user
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "stream-user", "role": "user"}
+ASSERT_STATUS 201
+ASSERT_EXISTS "@result.password"
+
+NAME user_created
+WAIT created
+ASSERT_EQUALS null "@password"
+ASSERT_EQUALS null "@totp_secret"
+
+// A change to an identity is streamed as it is, which has no credentials
+NAME disable_device
+POST http://{{ site }}/settings/identities/{{ .device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": false}
+ASSERT_STATUS 200
+
+NAME device_updated
+WAIT updated
+ASSERT_EQUALS "stream-device" "@name"
+ASSERT_EQUALS false "@enabled"
+ASSERT_EQUALS null "@password"
