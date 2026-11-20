@@ -20,6 +20,12 @@ ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value="sunday"] 
 ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value=""] Default (Monday)
 // The language is typed, so its box says what to type and that the pages are in English only for now
 ASSERT_TEXT_EQUALS #site--settings--site--language--help A language code, such as en or en-NZ. The pages are in English only for now.
+// Each column says who its settings are for, and neither can be saved before one of its settings changes
+ASSERT_TEXT_EQUALS #site--settings--site--scope For everyone on this site
+ASSERT_TEXT_EQUALS #site--settings--identity--scope For you only
+ASSERT_DRAWN #site--settings--site--save:disabled
+ASSERT_DRAWN #site--settings--identity--save:disabled
+ASSERT_VISIBLE #site--settings--credentials >> text=Your Password & TOTP
 SCREENSHOT site_settings
 
 // The timezone suggests the browser's timezones as it is typed, the browser's own first, and a button fills it in
@@ -30,6 +36,9 @@ ASSERT_TEXT_EQUALS #site--settings--timezones>option[value="Pacific/Auckland"] P
 CLICK #site--settings--site--timezone--browser
 ASSERT_VISIBLE #site--settings--site--timezone:not(:placeholder-shown)
 ASSERT_VISIBLE #site--settings--identity--timezone:placeholder-shown
+// It changed the site's column, so only the site's Save is on: the change cannot be lost by pressing the other
+ASSERT_VISIBLE #site--settings--site--save:enabled
+ASSERT_DRAWN #site--settings--identity--save:disabled
 SCREENSHOT browser_timezone
 // Each button that saves has an icon
 ASSERT_DRAWN #site--settings--site--save > svg
@@ -41,6 +50,8 @@ INPUT #site--settings--site--timezone Pacific/Auckland
 CLICK #site--settings--site--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
+// Once saved there is nothing to save, so its Save is off again
+ASSERT_DRAWN #site--settings--site--save:disabled
 
 // The saved values are shown when the page is opened again, and the admin's own settings follow the site's
 GOTO /settings
@@ -137,7 +148,7 @@ ASSERT_TEXT_EQUALS #settings_page>div>div:has(#site--settings--site--units)>span
 ASSERT_TEXT_EQUALS #settings_page>div>div:has(#site--settings--identity--units)>span Yours
 ASSERT_VISIBLE #site--settings--site--units
 ASSERT_VISIBLE #site--settings--identity--units
-ASSERT_VISIBLE #site--settings--site--save
-ASSERT_VISIBLE #site--settings--identity--save
+ASSERT_DRAWN #site--settings--site--save:disabled
+ASSERT_DRAWN #site--settings--identity--save:disabled
 ASSERT_FITS
 SCREENSHOT settings_phone
