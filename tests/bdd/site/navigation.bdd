@@ -91,8 +91,9 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
 ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
 
-// Settings, from the user menu, has side tabs in their groups, every one for an admin, Push Devices and Push
-// Certificates in Push, and no connectors, alarms, events, errors or logs; the menu marks it, and the header marks no hub
+// Settings, from the user menu, has side tabs in their groups, every one for an admin: the pages the site is set up
+// on, with Connectors, Alarms and Usage, are under This site, and Push Devices and Push Credentials in Push. It has no
+// events, errors or logs; the menu marks it, and the header marks no hub
 CLICK #site--settings-menu
 CLICK #site--nav--menu--settings
 ASSERT_STATUS 200
@@ -106,14 +107,17 @@ ASSERT_VISIBLE #site--hub--settings nav >> text="Push"
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="Push"] #site--settings--push-devices-button
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="Push"] #site--settings--push-button >> text=Push Credentials
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Connections"
-ASSERT_NOT_VISIBLE #site--settings--connectors-button
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settings--settings-button
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settings--connectors-button
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settings--alarms-button
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--usage-button
+ASSERT_COUNT #site--hub--settings nav ul[aria-label="This site"] 1
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Presets"
-ASSERT_NOT_VISIBLE #site--settings--alarms-button
 ASSERT_NOT_VISIBLE #site--logs--events-button
 ASSERT_NOT_VISIBLE #site--logs--errors-button
 ASSERT_NOT_VISIBLE #site--logs--logs-button
-ASSERT_COUNT #site--hub--settings nav a 4
+ASSERT_COUNT #site--hub--settings nav a 7
 SCREENSHOT navigation_settings_hub
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--settings[aria-current="page"]
@@ -141,28 +145,30 @@ CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--logs[aria-current="page"]
 ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
 
-// Connectors, from the user menu, is a page of its own, with no tabs, the menu marking it
+// Connectors, from the user menu, has the Settings side tabs with its own marked, so the site's other settings are
+// one click from it; the menu marks Connectors
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /settings/connectors
 ASSERT_TITLE Connectors · Nighttroop
-ASSERT_NOT_VISIBLE #site--hub--connectors
-ASSERT_NOT_VISIBLE #site--settings--settings-button
+ASSERT_VISIBLE #site--hub--settings #site--settings--connectors-button[aria-current="page"]
+ASSERT_VISIBLE #site--settings--settings-button:not([aria-current])
 SCREENSHOT navigation_connectors
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--connectors[aria-current="page"]
 ASSERT_COUNT #site--settings-menu [aria-current="page"] 1
 
-// Alarms, from the user menu, is a page of its own, with no tabs, the menu marking it
-CLICK #site--nav--menu--alarms
+// Alarms, opened from the side tab on Connectors, has the same tabs with its own marked; the menu marks Alarms
+PRESS Escape
+CLICK #site--settings--alarms-button
 ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /settings/alarms
 ASSERT_TITLE Alarms · Nighttroop
 ASSERT_VISIBLE #alarm_settings_page h1:text-is("Alarms")
-ASSERT_NOT_VISIBLE #site--hub--alarms
-ASSERT_NOT_VISIBLE #site--settings--settings-button
+ASSERT_VISIBLE #site--hub--settings #site--settings--alarms-button[aria-current="page"]
+ASSERT_VISIBLE #site--settings--settings-button:not([aria-current])
 ASSERT_NOT_VISIBLE #site--logs--events-button
 SCREENSHOT navigation_alarms
 CLICK #site--settings-menu
@@ -401,11 +407,13 @@ ASSERT_VISIBLE #site--settings--push-devices-button
 ASSERT_NOT_VISIBLE #site--settings--identities-button
 ASSERT_NOT_VISIBLE #site--settings--connectors-button
 ASSERT_NOT_VISIBLE #site--settings--push-button
-ASSERT_NOT_VISIBLE #site--settings--alarms-button
+ASSERT_NOT_VISIBLE #site--usage-button
+// Their own alarms are a tab beside their own settings
+ASSERT_VISIBLE #site--settings--alarms-button
 ASSERT_NOT_VISIBLE #site--logs--events-button
 ASSERT_NOT_VISIBLE #site--logs--errors-button
 ASSERT_NOT_VISIBLE #site--logs--logs-button
-ASSERT_COUNT #site--hub--settings nav a 2
+ASSERT_COUNT #site--hub--settings nav a 3
 SCREENSHOT navigation_settings_user
 TYPE #site--nav--search push
 ASSERT_VISIBLE #site--nav--search--settings--push-devices

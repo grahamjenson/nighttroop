@@ -615,12 +615,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 |---|---|---|
 | Data | Header | Side groups: **Readings & treatments** (Glucose Readings, Insulin Doses, Food Intakes, Temp Targets, Temp Basals, Profile Switches), **Events** (Activities, Notifications, Event Groups), **Devices** (Device Status), **Presets** (Food Presets, Profiles, Loop Settings) |
 | Reports | Header | Summaries (first), Overview, AGP, TDD |
-| Settings | User menu | Side groups: **This site** (General), **People & devices** (Users & Devices, also another identity's settings), **Push** (Push Devices, Push Credentials) |
-| Connectors | User menu | None (`/settings/connectors`) |
-| Alarms | User menu | None (`/settings/alarms`) |
+| Settings | User menu | Side groups: **This site** (General, Connectors, Alarms, Usage), **People & devices** (Users & Devices, also another identity's settings), **Push** (Push Devices, Push Credentials) |
+| Connectors | User menu | The Settings side groups (`/settings/connectors`) |
+| Alarms | User menu | The Settings side groups (`/settings/alarms`) |
+| Usage | User menu | The Settings side groups (`/usage`) |
 | Logs & Events | User menu | A row: Events (first), Errors, Logs |
 
 - The shown page's tab is marked. Each tab keeps its URL, so links, back and forward work.
+- General, Connectors, Alarms and Usage show the same side groups, so each page the site is set up on is one click
+  from the others. The user menu still opens each, and marks the one shown.
 
 #### User menu and access
 

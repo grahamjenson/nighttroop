@@ -470,8 +470,8 @@ func InHub(path string, content templ.Component, oob bool) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if page := sitenav.At(path); page != nil && len(sitenav.Visible(signedIn(ctx), page.Hub)) > 1 {
-			pages := sitenav.Visible(signedIn(ctx), page.Hub)
+		if page := sitenav.At(path); page != nil && len(sitenav.Tabs(signedIn(ctx), sitenav.TabsHub(page.Hub))) > 1 {
+			pages := sitenav.Tabs(signedIn(ctx), sitenav.TabsHub(page.Hub))
 			if page.Group != "" {
 				templ_7745c5c3_Var18 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -491,7 +491,7 @@ func InHub(path string, content templ.Component, oob bool) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = sideTabs(page, pages).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = sideTabs(sitenav.TabsHub(page.Hub), page, pages).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -620,7 +620,7 @@ func topTabs(current *sitenav.Page, pages []sitenav.Page) templ.Component {
 
 // sideTabs are a hub's pages in their groups beside the page, or above it on a phone, where they are one row that
 // scrolls sideways on its own, without their groups' names, so thirteen tabs do not push the page half way down
-func sideTabs(current *sitenav.Page, pages []sitenav.Page) templ.Component {
+func sideTabs(hub sitenav.Hub, current *sitenav.Page, pages []sitenav.Page) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -643,9 +643,9 @@ func sideTabs(current *sitenav.Page, pages []sitenav.Page) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var24 string
-		templ_7745c5c3_Var24, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--hub--" + current.Hub.Slug()).Resolve(ctx)
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--hub--" + hub.Slug()).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 196, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 196, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -656,9 +656,9 @@ func sideTabs(current *sitenav.Page, pages []sitenav.Page) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(hubPages(ctx, current.Hub)).Resolve(ctx)
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(hubPages(ctx, hub)).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 197, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 197, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
