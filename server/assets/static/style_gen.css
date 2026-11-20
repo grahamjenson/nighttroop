@@ -353,6 +353,9 @@
   .z-\[9999\] {
     z-index: 9999;
   }
+  .order-1 {
+    order: 1;
+  }
   .col-span-2 {
     grid-column: span 2 / span 2;
   }
@@ -3958,15 +3961,24 @@
   padding-block: 0;
   transition: grid-template-rows 300ms ease-in, padding 300ms ease-in, opacity 300ms, transform 300ms !important;
 }
-[data-connectors-in-use] form[data-connector-unused]:not([data-open]) {
-  .p-6 > :not(:first-child), [data-connector-enable] {
+[data-connectors] {
+  form {
+    width: 100%;
+    margin-top: 0;
+  }
+  form[data-connector-unused]:not([data-open]) {
+    order: 2;
+    flex: 1 1 16rem;
+    width: auto;
+    .panel:not([data-connector-add]) {
+      display: none;
+    }
+  }
+  form:not([data-connector-unused]) [data-connector-add], form[data-open] [data-connector-add] {
     display: none;
   }
-  .p-6 > :first-child {
-    margin-bottom: 0;
-  }
-  [data-connector-set-up] {
-    display: inline-flex;
+  &:not(:has(form[data-connector-unused]:not([data-open]))) [data-connectors-add] {
+    display: none;
   }
 }
 @keyframes toast-in {

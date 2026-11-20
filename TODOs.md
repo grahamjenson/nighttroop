@@ -21,6 +21,8 @@
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
        of Custom Type One: its tile in the Add Device modal shows its first letter
+    1. P4: Add the icons of Dexcom and FreeStyle Libre to `server/assets/static/logos`, with their makers' leave, as
+       they are trade marks of Dexcom and Abbott: their tiles under Add a connector show their first letter
     1. P4: Open the Add Device modal from a shared identity with the app of one of its clients picked, read from
        the client's user agent
     1. Recovering a site's admin without the initial backup key

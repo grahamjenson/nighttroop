@@ -11,6 +11,7 @@ ASSERT_NOT_VISIBLE #site--summary--glucose
 CLICK #site--getting-started--connectors-link
 ASSERT_STATUS 200
 ASSERT_PATH /settings/connectors
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--enable
 CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200

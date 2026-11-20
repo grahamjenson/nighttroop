@@ -126,18 +126,27 @@
     transition: grid-template-rows 300ms ease-in, padding 300ms ease-in, opacity 300ms, transform 300ms !important;
 }
 
-/* Once a site uses a connector, one that is not set up shows only its title and its Set Up button, until that is
-   pressed: its form, and its Enable Connector, are not shown */
-[data-connectors-in-use] form[data-connector-unused]:not([data-open]) {
-  .p-6 > :not(:first-child),
-  [data-connector-enable] {
+/* A connector the site does not have is only its tile, beside the others' under Add a connector, until the tile is
+   pressed. Then, as for one the site has, it is its whole form and no tile. With no tile left, the heading goes. */
+[data-connectors] {
+  form {
+    width: 100%;
+    margin-top: 0;
+  }
+  form[data-connector-unused]:not([data-open]) {
+    order: 2;
+    flex: 1 1 16rem;
+    width: auto;
+    .panel:not([data-connector-add]) {
+      display: none;
+    }
+  }
+  form:not([data-connector-unused]) [data-connector-add],
+  form[data-open] [data-connector-add] {
     display: none;
   }
-  .p-6 > :first-child {
-    margin-bottom: 0;
-  }
-  [data-connector-set-up] {
-    display: inline-flex;
+  &:not(:has(form[data-connector-unused]:not([data-open]))) [data-connectors-add] {
+    display: none;
   }
 }
 

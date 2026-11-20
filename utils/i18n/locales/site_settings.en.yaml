@@ -75,9 +75,9 @@ site:
       about: "Deleting the site signs everyone out and takes it offline for you, your devices and Nightscout apps. Its data is archived, so the server's admins can restore it."
       confirm: "Delete this site? Everyone is signed out and its data is archived."
     connectors:
-      set_up: "Set Up"
+      add: "Add a connector"
       title: "Connectors"
-      about: "A connector pulls your glucose into Nighttroop from another service. Turn on the one you use."
+      about: "A connector pulls your glucose into Nighttroop from another service. Add the one you use."
       phone: "AAPS, Trio, Loop and xDrip+ upload from the phone by themselves, with no connector."
       phone_link: "Add the phone as a device"
       enable: "Enable Connector"
