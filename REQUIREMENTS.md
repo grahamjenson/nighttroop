@@ -1148,6 +1148,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - The Nightscout address is on a private network: use its public address.
 - If the error does not say why the sync failed, there is no **What to do:** line.
 
+#### Connectors not set up
+
+- A site with no connector shows each connector's form, to choose from.
+- Once the site has a connector, each connector that is not set up shows only its title, what it is, and a
+  **Set Up** button. Its inputs, Enable Connector and Save do not show.
+  - **Set Up** opens the form, and the button goes.
+  - A connector that is deleted stays open, with its inputs empty.
+
 #### Virtual connector
 
 - Only on development, test or staging servers (`MODE`). In production: not offered, save or enable refused, and one
