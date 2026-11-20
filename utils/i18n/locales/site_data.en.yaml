@@ -69,6 +69,7 @@ site:
       glucose_on: "Glucose on {{.Date}}"
       last_days: "Last {{.Days}} days"
       no_readings: "No readings"
+      open_report: "Click a day to see its AGP report."
     insulin_doses:
       title: "Insulin Doses"
       about: "Each bolus of insulin, from a pump, a pen or a loop. Newest first. Click an insulin dose to see all its details."

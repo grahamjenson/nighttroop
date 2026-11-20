@@ -50,6 +50,20 @@ ASSERT_FITS
 SCREENSHOT glucose_days_phone
 WINDOW 1280x720
 
+// Each day opens its AGP report, which draws that day's glucose, and back returns to the readings
+GOTO /data/glucose?limit=10
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Click a day to see its AGP report.
+HOVER #site--glucose--days li:last-child a
+SCREENSHOT glucose_days_open_report
+CLICK #site--glucose--days li >> nth=-2 >> a
+ASSERT_PATH /reports/agp/day-{{ date -1 }}
+ASSERT_TITLE AGP · Nighttroop
+ASSERT_DRAWN #site--agp--day-{{ date -1 }} .site--agp--glucose >> nth=1
+CLICK_BACK
+ASSERT_PATH /data/glucose
+ASSERT_VISIBLE #site--glucose--days
+
 // The days are only on the first page of readings
 GOTO /data/glucose?skip=100
 ASSERT_STATUS 200
