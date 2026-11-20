@@ -34,6 +34,9 @@ ASSERT_TEXT_VISIBLE Site created
 ASSERT_NOT_VISIBLE #siteEventsTable >> text=site_created
 // The admin signing in is an event, with where from by DB-IP's estimate, so the footer links to DB-IP
 ASSERT_VISIBLE #siteEventsTable >> text=Signed in
+// Each event says in a few words who or what it was for, with no need to open it
+ASSERT_VISIBLE #siteEventsTable th >> text=Details
+ASSERT_VISIBLE #siteEventsTable tr:has-text("Signed in") td >> nth=1 >> text=admin
 ASSERT_VISIBLE #footer--dbip-link[target="_blank"]
 // Each event is the site's own, so no column says who it was for
 ASSERT_NOT_VISIBLE #siteEventsTable th >> text=/^For$/

@@ -1295,6 +1295,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
   only, filtered by type and searched. They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
+- The events table has a **Details** column that says, when the event has them: the identity it was for, who did it
+  ("by admin") when that is another identity, the connector, the count of records, the reason, and the city and
+  country of a sign in. For example "mum · Wellington, NZ" or "dexcom · 12 records". Text too long for the column
+  is cut short, and shows whole on hover. A phone does not show the column; the event's details have the same.
 - The errors table has a **From** column: the identity, what it asked for, and its app (for example
   "watch · GET /api/v1/entries · Nightguard"), or the connector. It is empty if the error does not say. Text too
   long for the column is cut short, and shows whole on hover.
