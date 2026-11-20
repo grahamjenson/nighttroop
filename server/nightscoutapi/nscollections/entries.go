@@ -3,6 +3,7 @@ package nscollections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -113,6 +114,11 @@ func (c EntriesCollection) Refreshes(nsModel nightscoutmodels.Entry, stored *sit
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
 	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
+}
+
+func (c EntriesCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*sitedb.GlucoseReading, error) {
+	idIn, _ := json.Marshal(ids)
+	return q.GetGlucoseReadingsByIDs(ctx, sitedb.GetGlucoseReadingsByIDsParams{IDs: new(string(idIn)), IncludeDeleted: includeDeleted})
 }
 
 func (c EntriesCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {

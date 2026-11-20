@@ -77,6 +77,11 @@ func (c DeviceStatusCollection) GetModel(q *sitedb.Queries, ctx context.Context,
 	return q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
+func (c DeviceStatusCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*sitedb.DeviceReport, error) {
+	idIn, _ := json.Marshal(ids)
+	return q.GetDeviceReportsByIDs(ctx, sitedb.GetDeviceReportsByIDsParams{IDs: new(string(idIn)), IncludeDeleted: includeDeleted})
+}
+
 func (c DeviceStatusCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
 	if permanent {
 		return q.HardDeleteDeviceReport(ctx, sitedb.HardDeleteDeviceReportParams{ID: identifier})

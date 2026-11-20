@@ -75,6 +75,12 @@ FROM device_reports WHERE deleted_at IS NULL AND created_by_device_name = sqlc.a
 -- name: GetDeviceReport :one
 SELECT * FROM device_reports WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
+-- name: GetDeviceReportsByIDs :many
+-- The reports with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+SELECT * FROM device_reports
+WHERE id IN (SELECT value FROM json_each(CAST(sqlc.narg('IDs') AS TEXT)))
+    AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
+
 
 -- name: DeviceReportsLoopBetween :many
 -- The loop's IOB and COB of the reports from Start until End that have any, newest first, from occurred_at's index, to

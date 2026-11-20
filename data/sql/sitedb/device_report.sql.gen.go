@@ -542,6 +542,76 @@ func (q *Queries) GetDeviceReport(ctx context.Context, arg GetDeviceReportParams
 	return &i, err
 }
 
+const getDeviceReportsByIDs = `-- name: GetDeviceReportsByIDs :many
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, pump_id, pump_suspended, pump_bolusing, override_json, pump_json, uploader_json, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
+WHERE id IN (SELECT value FROM json_each(CAST(?1 AS TEXT)))
+    AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+`
+
+type GetDeviceReportsByIDsParams struct {
+	IDs            *string
+	IncludeDeleted bool
+}
+
+// The reports with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+func (q *Queries) GetDeviceReportsByIDs(ctx context.Context, arg GetDeviceReportsByIDsParams) ([]*DeviceReport, error) {
+	rows, err := q.query(ctx, q.getDeviceReportsByIDsStmt, getDeviceReportsByIDs, arg.IDs, arg.IncludeDeleted)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*DeviceReport
+	for rows.Next() {
+		var i DeviceReport
+		if err := rows.Scan(
+			&i.ID,
+			&i.DeviceBatteryPercent,
+			&i.IsDeviceCharging,
+			&i.PumpState,
+			&i.PumpReservoir,
+			&i.PumpBatteryPercent,
+			&i.PumpChargingState,
+			&i.LoopIob,
+			&i.LoopIobBasal,
+			&i.LoopIobTreatment,
+			&i.LoopCob,
+			&i.ConfigurationID,
+			&i.LoopStatusJson,
+			&i.LoopName,
+			&i.PumpClock,
+			&i.PumpManufacturer,
+			&i.PumpModel,
+			&i.PumpID,
+			&i.PumpSuspended,
+			&i.PumpBolusing,
+			&i.OverrideJson,
+			&i.PumpJson,
+			&i.UploaderJson,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLatestDeviceReportWithBattery = `-- name: GetLatestDeviceReportWithBattery :one
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, pump_id, pump_suspended, pump_bolusing, override_json, pump_json, uploader_json, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name from device_reports
 WHERE

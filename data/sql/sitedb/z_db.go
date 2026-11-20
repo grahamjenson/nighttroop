@@ -222,6 +222,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getDeviceReportStmt, err = db.PrepareContext(ctx, getDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDeviceReport: %w", err)
 	}
+	if q.getDeviceReportsByIDsStmt, err = db.PrepareContext(ctx, getDeviceReportsByIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDeviceReportsByIDs: %w", err)
+	}
 	if q.getEventGroupStmt, err = db.PrepareContext(ctx, getEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEventGroup: %w", err)
 	}
@@ -242,6 +245,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getGlucoseReadingStmt, err = db.PrepareContext(ctx, getGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query GetGlucoseReading: %w", err)
+	}
+	if q.getGlucoseReadingsByIDsStmt, err = db.PrepareContext(ctx, getGlucoseReadingsByIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query GetGlucoseReadingsByIDs: %w", err)
 	}
 	if q.getInsulinDoseStmt, err = db.PrepareContext(ctx, getInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query GetInsulinDose: %w", err)
@@ -896,6 +902,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getDeviceReportStmt: %w", cerr)
 		}
 	}
+	if q.getDeviceReportsByIDsStmt != nil {
+		if cerr := q.getDeviceReportsByIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDeviceReportsByIDsStmt: %w", cerr)
+		}
+	}
 	if q.getEventGroupStmt != nil {
 		if cerr := q.getEventGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getEventGroupStmt: %w", cerr)
@@ -929,6 +940,11 @@ func (q *Queries) Close() error {
 	if q.getGlucoseReadingStmt != nil {
 		if cerr := q.getGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getGlucoseReadingStmt: %w", cerr)
+		}
+	}
+	if q.getGlucoseReadingsByIDsStmt != nil {
+		if cerr := q.getGlucoseReadingsByIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getGlucoseReadingsByIDsStmt: %w", cerr)
 		}
 	}
 	if q.getInsulinDoseStmt != nil {
@@ -1566,6 +1582,7 @@ type Queries struct {
 	foodPresetHistoryIDsStmt                    *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getDeviceReportStmt                         *sql.Stmt
+	getDeviceReportsByIDsStmt                   *sql.Stmt
 	getEventGroupStmt                           *sql.Stmt
 	getEventGroupOfTypeWithoutJoinsStmt         *sql.Stmt
 	getEventGroupWithoutJoinsStmt               *sql.Stmt
@@ -1573,6 +1590,7 @@ type Queries struct {
 	getFoodPresetStmt                           *sql.Stmt
 	getGeneralSettingStmt                       *sql.Stmt
 	getGlucoseReadingStmt                       *sql.Stmt
+	getGlucoseReadingsByIDsStmt                 *sql.Stmt
 	getInsulinDoseStmt                          *sql.Stmt
 	getLatestDeviceReportWithBatteryStmt        *sql.Stmt
 	getLatestDeviceReportWithPWDInformationStmt *sql.Stmt
@@ -1751,6 +1769,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		foodPresetHistoryIDsStmt:                    q.foodPresetHistoryIDsStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getDeviceReportStmt:                         q.getDeviceReportStmt,
+		getDeviceReportsByIDsStmt:                   q.getDeviceReportsByIDsStmt,
 		getEventGroupStmt:                           q.getEventGroupStmt,
 		getEventGroupOfTypeWithoutJoinsStmt:         q.getEventGroupOfTypeWithoutJoinsStmt,
 		getEventGroupWithoutJoinsStmt:               q.getEventGroupWithoutJoinsStmt,
@@ -1758,6 +1777,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getFoodPresetStmt:                           q.getFoodPresetStmt,
 		getGeneralSettingStmt:                       q.getGeneralSettingStmt,
 		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
+		getGlucoseReadingsByIDsStmt:                 q.getGlucoseReadingsByIDsStmt,
 		getInsulinDoseStmt:                          q.getInsulinDoseStmt,
 		getLatestDeviceReportWithBatteryStmt:        q.getLatestDeviceReportWithBatteryStmt,
 		getLatestDeviceReportWithPWDInformationStmt: q.getLatestDeviceReportWithPWDInformationStmt,

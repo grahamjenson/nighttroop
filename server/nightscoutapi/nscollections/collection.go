@@ -577,9 +577,24 @@ func (c Collection[NS, DM]) ascending(q *sitedb.Queries, ctx context.Context, qu
 	return c.byKey(q, ctx, ids, query.IncludeDeleted)
 }
 
+// CollectionKeysReader is a CollectionDB that reads the models with many identifiers in one query, in any order, which
+// is faster than one query for each
+type CollectionKeysReader[DM any] interface {
+	GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*DM, error)
+}
+
 // byKey are the models with identifiers ids, in their order, each read by its primary key. One deleted for good since
 // its identifier was read is left out.
 func (c Collection[NS, DM]) byKey(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*DM, error) {
+	if reader, ok := any(c.db).(CollectionKeysReader[DM]); ok {
+		models, err := reader.GetModels(q, ctx, ids, includeDeleted)
+		order := make(map[string]int, len(ids))
+		for i, id := range ids {
+			order[id] = i
+		}
+		slices.SortFunc(models, func(a, b *DM) int { return cmp.Compare(order[(*a).GetID()], order[(*b).GetID()]) })
+		return models, err
+	}
 	models := make([]*DM, 0, len(ids))
 	for _, id := range ids {
 		model, err := c.db.GetModel(q, ctx, id, includeDeleted)
