@@ -1242,6 +1242,9 @@
   .border-t-amber-400 {
     border-top-color: var(--color-amber-400);
   }
+  .border-t-amber-500 {
+    border-top-color: var(--color-amber-500);
+  }
   .border-l-primary {
     border-left-color: var(--primary);
   }
@@ -2836,6 +2839,22 @@
   .data-\[position\=top-right\]\:right-0 {
     &[data-position="top-right"] {
       right: calc(var(--spacing) * 0);
+    }
+  }
+  .data-\[state\=connected\]\:bg-green-50 {
+    &[data-state="connected"] {
+      background-color: var(--color-green-50);
+    }
+  }
+  .data-\[state\=connected\]\:font-medium {
+    &[data-state="connected"] {
+      --tw-font-weight: var(--font-weight-medium);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+  .data-\[state\=connected\]\:text-green-800 {
+    &[data-state="connected"] {
+      color: var(--color-green-800);
     }
   }
   .data-\[tui-popover-open\=false\]\:opacity-0 {
