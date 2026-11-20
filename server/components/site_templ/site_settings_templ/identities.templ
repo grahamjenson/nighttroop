@@ -281,7 +281,7 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			{ formatIdentityDate(ctx, &identity.CreatedAt) }
 		}
 		@table.Cell() {
-			<span title={ formatIdentityDate(ctx, identity.LastSeenAt) }>{ display.Ago(ctx, identity.LastSeenAt, time.Now()) }</span>
+			<span id={ "site--identities--" + identity.Name + "--seen" } data-seen?={ identity.LastSeenAt != nil } title={ formatIdentityDate(ctx, identity.LastSeenAt) }>{ display.Ago(ctx, identity.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			<span title={ formatIdentityDate(ctx, identity.LastWriteAt) }>{ display.Ago(ctx, identity.LastWriteAt, time.Now()) }</span>
@@ -482,8 +482,39 @@ templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, pass
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
 		@CredentialsModal(url, identity.Name, password, totpSecret, nsToken, false) {
 			@clientGuide(identity)
+			if nsToken != nil && consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice {
+				@waitingToConnect(identity.Name)
+			}
 		}
 	</div>
+}
+
+// waitingToConnect says, under a new device's credentials, that Nighttroop is waiting for its app, and then that the
+// app connected, so the person setting it up knows it worked without leaving the credentials. It reads this page
+// every 3 seconds, for at most 10 minutes, for the device's Last Seen, and puts it in the device's row too.
+templ waitingToConnect(name string) {
+	<p id="site--identities--created--connection" data-seen-id={ "site--identities--" + name + "--seen" } data-connected={ i18n.T(ctx, "site.settings.identities.connected", i18n.Data{"Name": name}) } class="mt-4 flex w-full items-center gap-2 rounded-lg bg-amber-100 px-3 py-2 text-left text-sm text-amber-800 data-[state=connected]:bg-green-50 data-[state=connected]:font-medium data-[state=connected]:text-green-800" role="status">
+		<span class="size-4 shrink-0 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-500"></span>
+		<span>{ i18n.T(ctx, "site.settings.identities.waiting", i18n.Data{"Name": name}) }</span>
+	</p>
+	<script>
+		(() => {
+			const el = document.getElementById("site--identities--created--connection")
+			let tries = 200
+			const timer = setInterval(async () => {
+				if (!el.isConnected || tries-- <= 0) return clearInterval(timer)
+				try {
+					const page = new DOMParser().parseFromString(await (await fetch("/settings/identities", {headers: {"HX-Request": "true"}})).text(), "text/html")
+					const seen = page.getElementById(el.dataset.seenId)
+					if (!seen?.hasAttribute("data-seen")) return
+					clearInterval(timer)
+					document.getElementById(el.dataset.seenId)?.replaceWith(seen)
+					el.dataset.state = "connected"
+					el.textContent = el.dataset.connected
+				} catch (e) {}
+			}, 3000)
+		})()
+	</script>
 }
 
 // clientGuide says how to set up the client a device was added for, and that its units are mg/dL when it needs them

@@ -1242,6 +1242,9 @@
   .border-t-amber-400 {
     border-top-color: var(--color-amber-400);
   }
+  .border-t-amber-500 {
+    border-top-color: var(--color-amber-500);
+  }
   .border-l-primary {
     border-left-color: var(--primary);
   }
@@ -2838,6 +2841,22 @@
       right: calc(var(--spacing) * 0);
     }
   }
+  .data-\[state\=connected\]\:bg-green-50 {
+    &[data-state="connected"] {
+      background-color: var(--color-green-50);
+    }
+  }
+  .data-\[state\=connected\]\:font-medium {
+    &[data-state="connected"] {
+      --tw-font-weight: var(--font-weight-medium);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+  .data-\[state\=connected\]\:text-green-800 {
+    &[data-state="connected"] {
+      color: var(--color-green-800);
+    }
+  }
   .data-\[tui-popover-open\=false\]\:opacity-0 {
     &[data-tui-popover-open="false"] {
       opacity: 0%;
@@ -3938,6 +3957,17 @@
   grid-template-rows: minmax(0, 0fr);
   padding-block: 0;
   transition: grid-template-rows 300ms ease-in, padding 300ms ease-in, opacity 300ms, transform 300ms !important;
+}
+[data-connectors-in-use] form[data-connector-unused]:not([data-open]) {
+  .p-6 > :not(:first-child), [data-connector-enable] {
+    display: none;
+  }
+  .p-6 > :first-child {
+    margin-bottom: 0;
+  }
+  [data-connector-set-up] {
+    display: inline-flex;
+  }
 }
 @keyframes toast-in {
   from {

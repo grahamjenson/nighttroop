@@ -1,0 +1,55 @@
+// A new device's credentials wait for its app: the line under them says so, and changes by itself once the app first
+// uses the device's token, so the person setting it up knows it worked. It starts with HTTP steps; BROWSE and HTTP switch.
+NAME create_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+BROWSE
+GOTO {{ site_url .create_site.site_subdomain }}/login
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+GOTO {{ site_url .create_site.site_subdomain }}/settings/identities
+
+// A new user's credentials have no such line, as a person signs in when they like
+CLICK #site--identities--add-user-button
+INPUT #site--identities--add-user--name mum
+CLICK #site--identities--add-user--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #site--identities--created--username
+ASSERT_NOT_VISIBLE #site--identities--created--connection
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+
+// A new device's say they wait for it, and its row that it was never seen. On a taller window, so the line under
+// its setup steps is in the modal without scrolling
+WINDOW 1280x1100
+CLICK #site--identities--add-device-button
+CLICK #site--identities--add-device--form label:has(#site--identities--add-device--client-aaps)
+INPUT #site--identities--add-device--name loop_phone
+CLICK #site--identities--add-device--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #site--identities--created--connection >> text=Waiting for loop_phone to connect
+ASSERT_COUNT #site--identities--loop_phone--seen[data-seen] 0
+SCREENSHOT device_waiting
+SAVE_TEXT #site--identities--created--ns-token device_token
+
+// Its app uses the token for the first time
+HTTP
+NAME status
+GET http://{{ .create_site.site_subdomain }}.ns.localhost/api/v1/status.json?token={{ .device_token }}
+ASSERT_STATUS 200
+
+// The line says it connected, with no reload, and the credentials are still there to finish with
+BROWSE
+WAIT_VISIBLE 10 #site--identities--created--connection[data-state="connected"]
+ASSERT_VISIBLE #site--identities--created--connection[data-state="connected"] >> text=loop_phone connected
+ASSERT_VISIBLE #site--identities--created--ns-token
+SCREENSHOT device_connected
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+// Its row says when it was seen
+ASSERT_VISIBLE #site--identities--loop_phone--seen[data-seen] >> text=just now

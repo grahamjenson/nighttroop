@@ -1148,6 +1148,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - The Nightscout address is on a private network: use its public address.
 - If the error does not say why the sync failed, there is no **What to do:** line.
 
+#### Connectors not set up
+
+- A site with no connector shows each connector's form, to choose from.
+- Once the site has a connector, each connector that is not set up shows only its title, what it is, and a
+  **Set Up** button. Its inputs, Enable Connector and Save do not show.
+  - **Set Up** opens the form, and the button goes.
+  - A connector that is deleted stays open, with its inputs empty.
+
 #### Virtual connector
 
 - Only on development, test or staging servers (`MODE`). In production: not offered, save or enable refused, and one
@@ -2396,6 +2404,12 @@ harder:
   - Step 1: User, Read-only user, Clinician or Admin, each with a line in plain words. User is picked to start with.
   - Step 2: the name. Its hint says to use who they are, such as mum or nurse, and not an email address.
   - The whole modal shows with no scrolling, on a phone too.
+- Under a new device's credentials and setup steps, a line says that Nighttroop waits for the device to connect.
+  - When the device's app first uses its token, the line turns green and says that the device connected. No reload
+    is necessary.
+  - The device's Last Seen in the table changes at the same time.
+  - The page checks every 3 seconds, for at most 10 minutes, and only while the credentials show.
+  - A new user's credentials do not have the line.
 - If the server refuses the person or the device, such as for a name the site has, the modal stays open to fix it.
 - The server refuses an identity with no role.
 - Identity creation is rate limited.
