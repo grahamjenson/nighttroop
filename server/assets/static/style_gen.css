@@ -2147,6 +2147,11 @@
       line-height: var(--tw-leading, var(--text-3xl--line-height));
     }
   }
+  .group-has-\[input\[name\=enabled\]\:not\(\:checked\)\]\:hidden {
+    &:is(:where(.group):has(*:is(input[name=enabled]:not(:checked))) *) {
+      display: none;
+    }
+  }
   .group-data-\[tui-selectbox-selected\=true\]\:opacity-100 {
     &:is(:where(.group)[data-tui-selectbox-selected="true"] *) {
       opacity: 100%;
