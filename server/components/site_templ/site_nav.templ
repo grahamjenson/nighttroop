@@ -151,10 +151,10 @@ templ InHub(path string, content templ.Component, oob bool) {
 		@HeaderLinks(path, true)
 		@MenuLinks(path, true)
 	}
-	if page := sitenav.At(path); page != nil && len(sitenav.Visible(signedIn(ctx), page.Hub)) > 1 {
-		{{ pages := sitenav.Visible(signedIn(ctx), page.Hub) }}
+	if page := sitenav.At(path); page != nil && len(sitenav.Tabs(signedIn(ctx), sitenav.TabsHub(page.Hub))) > 1 {
+		{{ pages := sitenav.Tabs(signedIn(ctx), sitenav.TabsHub(page.Hub)) }}
 		if page.Group != "" {
-			@sideTabs(page, pages) {
+			@sideTabs(sitenav.TabsHub(page.Hub), page, pages) {
 				@content
 			}
 		} else {
@@ -192,9 +192,9 @@ templ topTabs(current *sitenav.Page, pages []sitenav.Page) {
 
 // sideTabs are a hub's pages in their groups beside the page, or above it on a phone, where they are one row that
 // scrolls sideways on its own, without their groups' names, so thirteen tabs do not push the page half way down
-templ sideTabs(current *sitenav.Page, pages []sitenav.Page) {
-	<div id={ "site--hub--" + current.Hub.Slug() } class="md:flex md:gap-6">
-		<nav aria-label={ hubPages(ctx, current.Hub) } class="-mx-4 mb-4 flex gap-1 overflow-x-auto px-4 pb-2 pt-2 md:mx-0 md:mb-0 md:block md:w-52 md:shrink-0 md:space-y-4 md:overflow-visible md:border-r md:border-gray-200 md:pb-0 md:pl-0 md:pr-4 md:pt-4">
+templ sideTabs(hub sitenav.Hub, current *sitenav.Page, pages []sitenav.Page) {
+	<div id={ "site--hub--" + hub.Slug() } class="md:flex md:gap-6">
+		<nav aria-label={ hubPages(ctx, hub) } class="-mx-4 mb-4 flex gap-1 overflow-x-auto px-4 pb-2 pt-2 md:mx-0 md:mb-0 md:block md:w-52 md:shrink-0 md:space-y-4 md:overflow-visible md:border-r md:border-gray-200 md:pb-0 md:pl-0 md:pr-4 md:pt-4">
 			for _, group := range sitenav.Groups(pages, false) {
 				<div class="contents md:block">
 					<p class="mb-1 hidden px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 md:block">{ i18n.T(ctx, group.Name) }</p>
