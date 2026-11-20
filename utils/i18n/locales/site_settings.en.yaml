@@ -18,6 +18,9 @@ site:
       save_yours: "Save Your Settings"
       site_setting: "Site setting ({{.Value}})"
       save_other: "Save {{.Name}}'s Settings"
+      site_scope: "For everyone on this site"
+      yours_scope: "For you only"
+      no_changes: "Change a setting in this column to save it"
     sections:
       lows: "Lows"
       highs: "Highs"
@@ -62,7 +65,7 @@ site:
     language_help: "A language code, such as en or en-NZ. The pages are in English only for now."
     saved: "Settings Saved"
     credentials:
-      title: "Password & TOTP"
+      title: "Your Password & TOTP"
       warning: "Resetting your password or TOTP signs you out. The new one is shown once; sign in again with it."
       reset_password_title: "Reset your password"
       reset_password_confirm: "Reset your password? You will be signed out and must sign in with the new one."

@@ -1274,6 +1274,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - The language is typed. Under its box, the page says to type a language code, such as en or en-NZ, and that the
   pages are in English only for now.
 - Admins set site settings. Identities can override them.
+- An admin sees two columns, on General and on Alarms. Under its title, **Site** says "For everyone on this site"
+  and **Yours** says "For you only".
+- Each column has its own Save button:
+  - It is off until a setting in its column changes, and says so on hover. This includes **Use this browser's
+    timezone**.
+  - A change in one column does not turn on the Save of the other column.
+  - After a save that works, it is off again.
+- The card to reset the password and TOTP of the identity signed in is **Your Password & TOTP**.
 - Identity value, then site value, then fallback:
 
   | Setting | Fallback | Notes |
