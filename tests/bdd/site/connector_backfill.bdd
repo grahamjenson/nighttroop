@@ -69,4 +69,7 @@ ASSERT_VISIBLE #site--settings--virtual-connector--status--backfilled-to >> text
 ASSERT_TEXT_VISIBLE records in
 CLICK #site--settings--virtual-connector--history summary
 ASSERT_TEXT_VISIBLE Connector backfilled
+// Its state beside its title says it is working, and when it last synced, with no reload
+ASSERT_VISIBLE #site--settings--virtual-connector--state[data-state="working"] >> text=Working
+ASSERT_VISIBLE #site--settings--virtual-connector--state-synced >> text=synced
 SCREENSHOT connector_status

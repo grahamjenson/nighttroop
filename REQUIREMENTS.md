@@ -1124,6 +1124,15 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Nightscout: the site's address, and its API secret or a token that can read it.
   - Dexcom Share: the username and password of the account that wears the sensor, with Share on and one follower.
   - FreeStyle Libre: the email and password of a LibreLinkUp account that the person with the sensor invited.
+- Each connector has a badge beside its title that says its state:
+  - **Not set up** (grey): it is not saved.
+  - **Off** (grey): it is saved and turned off.
+  - **Stopped** (red): its first sync failed, so it was turned off.
+  - **Waiting for first sync** (amber): it is on and has not synced yet.
+  - **Failing** (red): its last sync failed.
+  - **Working** (green): its last sync worked.
+  - Working and Failing also say when it last synced, for example "synced 2 min ago".
+  - The badge changes with no reload when a sync finishes.
 
 #### Virtual connector
 
