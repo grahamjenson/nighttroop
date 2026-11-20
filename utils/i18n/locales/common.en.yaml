@@ -54,6 +54,9 @@ common:
     not_measured: "Not measured yet"
     limit: "of its {{.Limit}} MB limit"
     other_tables: "Other"
+    records:
+      one: "{{.Records}} record"
+      other: "{{.Records}} records"
     used: "{{.Percent}}% of its limit used"
     measured_by: "It is measured in the background, so check back soon."
   log_view:
@@ -68,6 +71,18 @@ common:
     error: "Error"
     when: "When"
     no_errors: "No errors here."
+    from: "From"
+    from_connector: "{{.Type}} connector"
+    what_it_means: "What it means:"
+    meaning:
+      connector: "A connector's sync failed. The Connectors page says its state and what to do."
+      backup: "A backup of the site failed. Nighttroop tries again by itself."
+      unauthorized: "The app's token or password is wrong, or its identity is turned off. Check it in Users & Devices."
+      forbidden: "The identity's role does not allow this. Give the app an identity with a role that does, in Users & Devices."
+      not_found: "The app asked for something that does not exist. Check the address set in the app."
+      too_many: "The identity sent too many requests in a short time. An app that repeats too fast, or more than one app with one identity, causes this."
+      server: "Nighttroop failed, not the app. It is recorded for the people who run the server."
+      refused: "The site did not accept what was sent. The error says which value and why."
     level: "Level"
     message: "Message"
     no_logs: "No logs here."

@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/replica"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -234,7 +235,9 @@ func TestMakeRoom(t *testing.T) {
 			cfg.DataDir = t.TempDir()
 			backup := filepath.Join(cfg.BackupDir(), "site", "a", "abcdefgh.sqlite.lz4")
 			control, logs := controldb.GetPath(&cfg), logsdb.GetPath(&cfg)
-			for _, file := range []string{backup, control, logs} {
+			// An archived site has no DB, so its backup is its archive
+			archive := sitedb.GetBackupPath("archived", &cfg)
+			for _, file := range []string{backup, sitedb.GetPath("abcdefgh", &cfg), archive, control, logs} {
 				require.NoError(t, os.MkdirAll(filepath.Dir(file), 0o700))
 				require.NoError(t, os.WriteFile(file, []byte("data"), 0o600))
 			}
@@ -254,6 +257,7 @@ func TestMakeRoom(t *testing.T) {
 			require.Equal(t, test.pages, pages)
 			require.Equal(t, test.backups, utils.FileExists(backup))
 			require.Equal(t, test.logsDB, utils.FileExists(logs))
+			require.FileExists(t, archive, "an archived site's archive is never removed")
 			require.FileExists(t, control, "a DB with data is never removed")
 		})
 	}

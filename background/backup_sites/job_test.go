@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -98,6 +100,20 @@ func TestBackupWrittenSitesBacksUpOnlyDirtySites(t *testing.T) {
 	// An interval later only the site written since is backed up: the old one's last write was long before its backup
 	require.NoError(t, jobs.BackupWrittenSites(ctx, time.Now().Add(time.Hour)))
 	require.Equal(t, [][]string{upload(dirty)}, uploads[2:])
+}
+
+// As the server stops every written site is backed up, not only the most a tick backs up: no later tick has the rest
+func TestBackupToS3BacksUpEverySitePastATicksLimit(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	uploads, fail := [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	jobs.MaxSitesEachTick = 1
+	first, second := fileSite(t, controlDB, "qaaaaaaa"), fileSite(t, controlDB, "qbbbbbbb")
+	written(t, controlDB, first, time.Now())
+	written(t, controlDB, second, time.Now())
+
+	jobs.BackupToS3(t.Context())
+	require.ElementsMatch(t, [][]string{upload(first), upload(second)}, uploads)
 }
 
 // A site whose upload failed is uploaded again at the next tick, though it is not written since: by the sites not
@@ -273,4 +289,21 @@ func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "site_deleted", events[0].Name)
 	require.Equal(t, `{"reason":"unused"}`, *events[0].Attributes)
+}
+
+// A copy that fails leaves the site's last backup: a site archived after the round listed it has its DB closed, and
+// its backup is then its archive, the only one with S3 off
+func TestBackupWrittenSitesKeepsTheLastBackupWhenACopyFails(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	uploads, fail := [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	site := fileSite(t, controlDB, "qaaaaaaa")
+	written(t, controlDB, site, time.Now())
+	require.NoError(t, os.MkdirAll(filepath.Dir(site.BackupPath), 0o700))
+	require.NoError(t, os.WriteFile(site.BackupPath, []byte("the archive"), 0o600))
+	require.NoError(t, site.Close())
+
+	require.Error(t, jobs.BackupWrittenSites(t.Context(), time.Now()))
+	require.FileExists(t, site.BackupPath)
+	require.Empty(t, uploads)
 }

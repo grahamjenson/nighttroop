@@ -263,7 +263,7 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 
 // IdentityRow has the identity's name on it, for the add modal to name a new device apart from it
 templ IdentityRow(identity *sitemodels.UserIdentity) {
-	@table.Row(table.RowProps{Attributes: templ.Attributes{"data-identity-name": identity.Name}}) {
+	@table.Row(table.RowProps{Class: "group", Attributes: templ.Attributes{"data-identity-name": identity.Name}}) {
 		@table.Cell() {
 			{ identity.Name }
 			if identity.CurrentIdentity {
@@ -271,6 +271,7 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 					{ i18n.T(ctx, "site.settings.identities.you") }
 				}
 			}
+			@identityState(identity)
 		}
 		@table.Cell() {
 			{ RoleLabel(ctx, identity.Role) }
@@ -287,8 +288,46 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 		@table.Cell() {
 			@recentClients(identity)
 		}
-		@table.Cell() {
+		// Its switch and Manage menu stay at the card's right edge while a phone scrolls the table's other columns
+		// sideways under them, so they are in reach with no scrolling
+		@table.Cell(table.CellProps{ID: "site--identities--" + identity.Name + "--actions", Class: "max-sm:sticky max-sm:right-0 max-sm:bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]"}) {
 			@identityActions(identity)
+		}
+	}
+}
+
+// A device is active when it was seen in activeFor, as when one was seen is kept at most every 10 minutes, and quiet
+// when it was not seen for quietAfter, as a loop's phone or a follower's app that stopped is what to look into
+const (
+	activeFor  = 30 * time.Minute
+	quietAfter = 24 * time.Hour
+)
+
+// identityStateOf is how an identity is used, its name in words, and the badge's colour for it: never used, active,
+// or, for a device only, quiet. "" when there is nothing to say, as for a person who signed in days ago.
+func identityStateOf(ctx context.Context, identity *sitemodels.UserIdentity, now time.Time) (string, string, badge.Variant) {
+	device := consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice
+	switch {
+	case identity.LastSeenAt == nil && device:
+		return "unused", i18n.T(ctx, "site.settings.identities.state.not_connected"), badge.VariantWarning
+	case identity.LastSeenAt == nil:
+		return "unused", i18n.T(ctx, "site.settings.identities.state.not_signed_in"), badge.VariantWarning
+	case now.Sub(time.UnixMilli(*identity.LastSeenAt)) <= activeFor:
+		return "active", i18n.T(ctx, "site.settings.identities.state.active"), badge.VariantSuccess
+	case device && now.Sub(time.UnixMilli(*identity.LastSeenAt)) > quietAfter:
+		return "quiet", i18n.T(ctx, "site.settings.identities.state.quiet"), badge.VariantWarning
+	}
+	return "", "", badge.VariantNeutral
+}
+
+// identityState is a badge after an identity's name saying how it is used, so an admin sees at a glance which were
+// never set up, which are in use now, and which device went quiet. An identity turned off has none: its switch, in
+// the same row, says so, and hides the badge as it is turned off.
+templ identityState(identity *sitemodels.UserIdentity) {
+	{{ state, label, variant := identityStateOf(ctx, identity, time.Now()) }}
+	if state != "" {
+		@badge.Badge(badge.Props{ID: "site--identities--" + identity.Name + "--state", Variant: variant, Class: "ml-2 group-has-[input[name=enabled]:not(:checked)]:hidden", Attributes: templ.Attributes{"data-state": state}}) {
+			{ label }
 		}
 	}
 }

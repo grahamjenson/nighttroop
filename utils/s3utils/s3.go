@@ -127,14 +127,15 @@ func (c *S3Client) Start(ctx context.Context) error {
 var workingEvery, workingPasses = 20 * time.Second, 3
 
 // LockWhenWorking is for a server that started without S3, as S3 was not working: it waits until S3 has worked for
-// workingPasses tests in a row, then takes the lock, waiting while another server holds it. It is true once this
-// server holds the lock, so a restart finds S3 working and the lock free, and false if ctx ends first.
+// workingPasses tests in a row, then takes the lock, waiting while another server holds it. If S3 refuses the lock, it
+// waits for S3 to work again, as nothing else tries it later. It is true once this server holds the lock, so a restart
+// finds S3 working and the lock free, and false if ctx ends first.
 func (c *S3Client) LockWhenWorking(ctx context.Context) bool {
-	return c.lockWhenWorking(ctx, c.TestS3Client)
+	return c.lockWhenWorking(ctx, c.TestS3Client, c.Lock)
 }
 
-func (c *S3Client) lockWhenWorking(ctx context.Context, test func(context.Context) error) bool {
-	for passes := 0; passes < workingPasses; {
+func (c *S3Client) lockWhenWorking(ctx context.Context, test, lock func(context.Context) error) bool {
+	for passes := 0; ; {
 		select {
 		case <-ctx.Done():
 			return false
@@ -142,11 +143,20 @@ func (c *S3Client) lockWhenWorking(ctx context.Context, test func(context.Contex
 		}
 		if err := test(ctx); err != nil {
 			passes = 0
-		} else {
-			passes++
+			continue
 		}
+		if passes++; passes < workingPasses {
+			continue
+		}
+		err := lock(ctx)
+		if err == nil {
+			return true
+		}
+		if ctx.Err() == nil {
+			slog.Warn("S3 works again, but its lock cannot be taken, so the server waits for S3 to work again", "error", err)
+		}
+		passes = 0
 	}
-	return c.Lock(ctx) == nil
 }
 
 func (c *S3Client) start(ctx context.Context, test func(context.Context) error, waits []time.Duration) error {

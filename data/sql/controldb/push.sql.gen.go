@@ -296,7 +296,7 @@ func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrati
 const newestPushRegistrationForApp = `-- name: NewestPushRegistrationForApp :one
 SELECT push_registrations.id, push_registrations.site_id, push_registrations.identity_id, push_registrations.app, push_registrations.provider, push_registrations.bundle_id, push_registrations.production, push_registrations.token_enc, push_registrations.token_hash, push_registrations.created_at, push_registrations.updated_at, push_registrations.last_pushed_at, push_registrations.last_error FROM push_registrations
 JOIN site_identities ON site_identities.id = push_registrations.identity_id
-WHERE push_registrations.site_id = ?1 AND push_registrations.app = ?2
+WHERE push_registrations.site_id = CAST(?1 AS TEXT) AND push_registrations.app = CAST(?2 AS TEXT)
   AND site_identities.enabled AND site_identities.role IN (/*SLICE:Roles*/?)
 ORDER BY push_registrations.updated_at DESC, push_registrations.id DESC
 LIMIT 1
@@ -304,7 +304,7 @@ LIMIT 1
 
 type NewestPushRegistrationForAppParams struct {
 	SiteID string
-	App    consts.PushApp
+	App    string
 	Roles  []consts.IdentityRole
 }
 
@@ -345,7 +345,7 @@ func (q *Queries) NewestPushRegistrationForApp(ctx context.Context, arg NewestPu
 
 const pushCredentialFor = `-- name: PushCredentialFor :one
 SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials
-WHERE (site_id = ?1 OR site_id IS NULL) AND provider = ?2
+WHERE (site_id = CAST(?1 AS TEXT) OR site_id IS NULL) AND provider = CAST(?2 AS TEXT)
   AND instr(apps_json, '"' || CAST(?3 AS TEXT) || '"') > 0
   AND (bundle_ids_json IS NULL OR instr(bundle_ids_json, '"' || CAST(?4 AS TEXT) || '"') > 0)
 ORDER BY site_id IS NULL, id DESC
@@ -353,8 +353,8 @@ LIMIT 1
 `
 
 type PushCredentialForParams struct {
-	SiteID   *string
-	Provider consts.PushProvider
+	SiteID   string
+	Provider string
 	App      string
 	BundleID string
 }
@@ -519,7 +519,7 @@ func (q *Queries) SearchAllPushRegistrations(ctx context.Context, arg SearchAllP
 
 const searchPushCredentials = `-- name: SearchPushCredentials :many
 SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials
-WHERE site_id IS ?1
+WHERE site_id IS CAST(?1 AS TEXT)
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
@@ -569,7 +569,7 @@ func (q *Queries) SearchPushCredentials(ctx context.Context, arg SearchPushCrede
 
 const searchPushRegistrations = `-- name: SearchPushRegistrations :many
 SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations
-WHERE site_id = ?1 AND identity_id = COALESCE(?2, identity_id)
+WHERE site_id = CAST(?1 AS TEXT) AND identity_id = COALESCE(CAST(?2 AS INTEGER), identity_id)
 ORDER BY id DESC
 LIMIT CAST(?4 AS INTEGER) OFFSET CAST(?3 AS INTEGER)
 `
@@ -627,8 +627,8 @@ func (q *Queries) SearchPushRegistrations(ctx context.Context, arg SearchPushReg
 const searchPushRegistrationsWithIdentity = `-- name: SearchPushRegistrationsWithIdentity :many
 SELECT push_registrations.id, push_registrations.site_id, push_registrations.identity_id, push_registrations.app, push_registrations.provider, push_registrations.bundle_id, push_registrations.production, push_registrations.token_enc, push_registrations.token_hash, push_registrations.created_at, push_registrations.updated_at, push_registrations.last_pushed_at, push_registrations.last_error, site_identities.name AS identity_name
 FROM push_registrations JOIN site_identities ON site_identities.id = push_registrations.identity_id
-WHERE push_registrations.site_id = ?1
-  AND push_registrations.identity_id = COALESCE(?2, push_registrations.identity_id)
+WHERE push_registrations.site_id = CAST(?1 AS TEXT)
+  AND push_registrations.identity_id = COALESCE(CAST(?2 AS INTEGER), push_registrations.identity_id)
 ORDER BY push_registrations.id DESC
 LIMIT CAST(?3 AS INTEGER)
 `

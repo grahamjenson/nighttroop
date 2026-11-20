@@ -140,6 +140,8 @@ site:
     glucose:
       title: "Glucose"
       stale: "No reading for {{.Duration}}"
+      stale_help: "Readings stopped. See why on:"
+      stale_ask: "Readings stopped. Tell an admin of this site."
       low: "Low"
       high: "High"
       all_readings: "All readings"

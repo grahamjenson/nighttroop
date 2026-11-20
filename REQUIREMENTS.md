@@ -25,6 +25,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - It removes its local copies of the backups. If the disk is still short, it removes the logs DB.
   - It pages the admin with an SMS, with the space free before and after.
   - It never removes the control DB, a site's DB or the jobs DB.
+  - It keeps the backup of a site with no DB on the server: that backup is the archive of an archived site.
   - If the disk still has less than 100 MB free, the server does not start, and says how much is free.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
 - Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`. A button or form on a page (an htmx request) gets an error toast instead: "The server is starting. Try again in a few seconds."
@@ -186,8 +187,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - not on disk: from its tables. Neither: not measured yet.
 - DB size bar:
   - the five largest tables (with their indexes), darkest first, then Other;
-  - a key: name, records in thousands, MB and share (for example, `7.9k · 6.11 MB · 54%`). Other sums its tables'
-    records. Hover names a part;
+  - a key: name, records in the number format, MB and share (for example, `7,912 records · 6.11 MB · 54%`). Other
+    sums its tables' records. Hover names a part;
+  - a site table has the name of the page that shows it (for example, Device Status for `device_reports`), with its
+    table name on hover. A table with no page keeps its table name;
   - table sizes as last measured (at creation, by the 5-minute site measurement after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
@@ -438,6 +441,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A site's reads and writes have 4 times an identity's limit. Test: one identity spends all its own (for example, a
   day's backlog upload). A carer's carbs and AAPSClient's commands still go through.
 - Over a site's or identity's limit: 429, with `Retry-After` the seconds until one is accepted, at least 1.
+- If an identity is over its own limit, its request does not use the site's limit. The site's other apps get no 429.
 - A site flagged for abuse also spends its flagged writes limit (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT`). See
   [Abuse flag](#abuse-flag).
 
@@ -722,6 +726,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Latest glucose older than the no data alarm's minutes (default 20) is grey, with an amber badge ("No reading for 45
   min"). An open summary changes when it becomes old, with no data change or reload, reading the summary one time then,
   not every few seconds.
+  - Under the old reading, an admin sees "Readings stopped. See why on:" with links to Connectors, Users & Devices
+    and Errors.
+  - An identity that is not an admin sees "Readings stopped. Tell an admin of this site." with no links.
 - Ages in words, nearest hour after one hour: "45 minutes ago", "2 days 1 hour ago".
 - In Insulin and carbs, an intake more than 10 minutes ahead, as carbs Trio expects from fat and protein, says how
   long until it: "in 58 minutes". One less ahead, as from a phone's clock running fast, is "just now".
@@ -1120,6 +1127,15 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Nightscout: the site's address, and its API secret or a token that can read it.
   - Dexcom Share: the username and password of the account that wears the sensor, with Share on and one follower.
   - FreeStyle Libre: the email and password of a LibreLinkUp account that the person with the sensor invited.
+- Each connector has a badge beside its title that says its state:
+  - **Not set up** (grey): it is not saved.
+  - **Off** (grey): it is saved and turned off.
+  - **Stopped** (red): its first sync failed, so it was turned off.
+  - **Waiting for first sync** (amber): it is on and has not synced yet.
+  - **Failing** (red): its last sync failed.
+  - **Working** (green): its last sync worked.
+  - Working and Failing also say when it last synced, for example "synced 2 min ago".
+  - The badge changes with no reload when a sync finishes.
 
 #### Virtual connector
 
@@ -1272,6 +1288,18 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   ("by admin") when that is another identity, the connector, the count of records, the reason, and the city and
   country of a sign in. For example "mum · Wellington, NZ" or "dexcom · 12 records". Text too long for the column
   is cut short, and shows whole on hover. A phone does not show the column; the event's details have the same.
+- The errors table has a **From** column: the identity, what it asked for, and its app (for example
+  "watch · GET /api/v1/entries · Nightguard"), or the connector. It is empty if the error does not say. Text too
+  long for the column is cut short, and shows whole on hover.
+- An error's details say **What it means:** in plain words, above the details to debug it by:
+  - a connector's sync failed: the Connectors page says what to do;
+  - a backup failed: Nighttroop tries again;
+  - 401: the app's token or password is wrong, or its identity is off;
+  - 403: the identity's role does not allow it;
+  - 404: the app asked for something that does not exist;
+  - 429: the identity sent too many requests;
+  - 500 and above: Nighttroop failed, not the app;
+  - other refusals: the site did not accept what was sent.
 - Each event, error and log shows its request or background job run.
 - A search, or a filter by error kind, reads only the newest 10,000 of each. Paging without one reaches all rows.
 
@@ -1981,6 +2009,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - the admin is paged with an SMS;
     - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
       error, for Docker to start it again with S3.
+    - if S3 refuses the lock, it logs a warning and tests S3 again until 3 tests in a row work.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
@@ -2038,10 +2067,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
+- When the server stops, it backs up every site written since its last backup, with no such limit.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
-  - A copy cut short does not replace the last copy.
+  - A copy cut short, or one that fails, does not replace or remove the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
   and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
@@ -2270,6 +2300,8 @@ harder:
   - its permissions on the Nightscout API, as the server gives them (for example `api:*:read`), or None.
   - On a phone, each role is a block, not a row: its name, what it can do, then the other two with their headings
     before them. Nothing is cut off.
+- On a phone, each identity's switch and Manage menu stay at the right edge of its table's card, in reach, while
+  the table's other columns scroll sideways under them.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
@@ -2357,6 +2389,17 @@ harder:
 - The server refuses an identity with no role.
 - Identity creation is rate limited.
 
+#### How each identity is used
+
+- A badge after each identity's name says how it is used:
+  - **Not connected yet** (amber): a device that no app has used.
+  - **Not signed in yet** (amber): a person who has not signed in.
+  - **Active** (green): it was seen in the last 30 minutes.
+  - **Quiet for over a day** (amber): a device that was not seen for more than 24 hours.
+  - No badge: a person or a device seen between 30 minutes and 24 hours ago, or a person seen before that.
+- An identity that is turned off has no badge. The badge goes as its switch is turned off, and comes back as it is
+  turned on.
+
 #### Device clients
 
 - Add Device, at the right of the Devices card, opens a modal with three steps: the app, what it can do, and its name.
@@ -2415,6 +2458,8 @@ harder:
 - Usage (`/usage`) is in the user menu, for an admin only. My Account and the General settings do not show it.
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
+- The key names each table by the page that shows it, such as Glucose Readings or Device Status, not by its table name.
+- On a phone the key fits the window, with no sideways scroll.
 - "Truncate", after a confirmation, does as control's Truncate:
   - Removes the predictions from loop statuses over 1 day old.
   - Clears the pump as sent from all but each device's newest status.
