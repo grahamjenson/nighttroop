@@ -120,6 +120,14 @@ site:
       fetching_again: ", and again from {{.From}} UTC to fill any gaps"
       updated: "Connector Updated"
       deleted: "Connector Deleted"
+    connector_state:
+      not_set_up: "Not set up"
+      off: "Off"
+      stopped: "Stopped"
+      waiting: "Waiting for first sync"
+      failing: "Failing"
+      working: "Working"
+      synced: "synced {{.Ago}}"
     connector_status:
       last_worked: "Last worked"
       last_failed: "Last failed"

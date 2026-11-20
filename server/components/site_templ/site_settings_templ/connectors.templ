@@ -126,6 +126,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 					<div>
 						<h2 class="text-lg font-semibold">
 							{ i18n.T(ctx, "site.settings.connectors.dexcom.title") }
+							@ConnectorState(dexcomConnectorSettings, "dexcom")
 						</h2>
 						<div class="text-sm text-gray-500">
 							{ i18n.T(ctx, "site.settings.connectors.dexcom.about") }
@@ -239,6 +240,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 					<div>
 						<h2 class="text-lg font-semibold">
 							{ i18n.T(ctx, "site.settings.connectors.libre.title") }
+							@ConnectorState(libreConnectorSettings, "libre")
 						</h2>
 						<div class="text-sm text-gray-500">
 							{ i18n.T(ctx, "site.settings.connectors.libre.about") }
@@ -351,6 +353,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 					<div>
 						<h2 class="text-lg font-semibold">
 							{ i18n.T(ctx, "site.settings.connectors.nightscout.title") }
+							@ConnectorState(nightscoutConnectorSettings, "nightscout")
 						</h2>
 						<div class="text-sm text-gray-500">
 							{ i18n.T(ctx, "site.settings.connectors.nightscout.about") }
@@ -478,6 +481,7 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 					<div>
 						<h2 class="text-lg font-semibold">
 							{ i18n.T(ctx, "site.settings.connectors.virtual.title") }
+							@ConnectorState(synSource, "virtual")
 						</h2>
 						<div class="text-sm text-gray-500">
 							{ i18n.T(ctx, "site.settings.connectors.virtual.about") }

@@ -239,13 +239,13 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 
 const recentConnectorErrors = `-- name: RecentConnectorErrors :many
 SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
-WHERE site_id = ?1 AND json_extract(attributes, '$.kind') = 'connector' AND json_extract(attributes, '$.connector_type') = ?2
+WHERE site_id = CAST(?1 AS TEXT) AND json_extract(attributes, '$.kind') = 'connector' AND json_extract(attributes, '$.connector_type') = ?2
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER)
 `
 
 type RecentConnectorErrorsParams struct {
-	SiteID        *string
+	SiteID        string
 	ConnectorType *string
 	Limit         int64
 }
@@ -284,13 +284,13 @@ func (q *Queries) RecentConnectorErrors(ctx context.Context, arg RecentConnector
 
 const recentConnectorEvents = `-- name: RecentConnectorEvents :many
 SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events
-WHERE site_id = ?1 AND json_extract(attributes, '$.connector_type') = ?2
+WHERE site_id = CAST(?1 AS TEXT) AND json_extract(attributes, '$.connector_type') = ?2
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER)
 `
 
 type RecentConnectorEventsParams struct {
-	SiteID        *string
+	SiteID        string
 	ConnectorType *string
 	Limit         int64
 }
@@ -517,9 +517,9 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 
 const searchSiteErrors = `-- name: SearchSiteErrors :many
 SELECT own.id, own.site_id, own.message, own.attributes, own.request_id, own.job_id, own.created_at FROM errors own
-WHERE own.site_id = ?1
+WHERE own.site_id = CAST(?1 AS TEXT)
 AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL AND CAST(?3 AS TEXT) IS NULL THEN 0
-  ELSE COALESCE((SELECT newest.id FROM errors newest WHERE newest.site_id = ?1 ORDER BY newest.id DESC
+  ELSE COALESCE((SELECT newest.id FROM errors newest WHERE newest.site_id = CAST(?1 AS TEXT) ORDER BY newest.id DESC
   LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(?3 AS TEXT) IS NULL OR json_extract(own.attributes, '$.kind') = ?3)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
@@ -528,7 +528,7 @@ LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type SearchSiteErrorsParams struct {
-	SiteID *string
+	SiteID string
 	Search *string
 	Type   *string
 	Skip   int64
@@ -575,9 +575,9 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 
 const searchSiteEvents = `-- name: SearchSiteEvents :many
 SELECT own.id, own.site_id, own.name, own.attributes, own.started_at, own.finished_at, own.request_id, own.job_id FROM events own
-WHERE own.site_id = ?1
+WHERE own.site_id = CAST(?1 AS TEXT)
 AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
-  WHERE newest.site_id = ?1 ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+  WHERE newest.site_id = CAST(?1 AS TEXT) ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(?3 AS TEXT) IS NULL OR own.name = ?3)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.name), lower(?2)) > 0
   OR instr(lower(own.attributes), lower(?2)) > 0)
@@ -586,7 +586,7 @@ LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type SearchSiteEventsParams struct {
-	SiteID *string
+	SiteID string
 	Search *string
 	Type   *string
 	Skip   int64
@@ -635,16 +635,16 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 const searchSiteLogs = `-- name: SearchSiteLogs :many
 
 SELECT own.id, own.site_id, own.level, own.message, own.attributes, own.request_id, own.job_id, own.created_at FROM logs own
-WHERE own.site_id = ?1
+WHERE own.site_id = CAST(?1 AS TEXT)
 AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM logs newest
-  WHERE newest.site_id = ?1 ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+  WHERE newest.site_id = CAST(?1 AS TEXT) ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
 ORDER BY own.id DESC
 LIMIT CAST(?4 AS INTEGER) OFFSET CAST(?3 AS INTEGER)
 `
 
 type SearchSiteLogsParams struct {
-	SiteID *string
+	SiteID string
 	Search *string
 	Skip   int64
 	Limit  int64
