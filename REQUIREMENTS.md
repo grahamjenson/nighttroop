@@ -2431,6 +2431,7 @@ harder:
   - The page checks every 3 seconds, for at most 10 minutes, and only while the credentials show.
   - A new user's credentials do not have the line.
 - If the server refuses the person or the device, such as for a name the site has, the modal stays open to fix it.
+- `/settings/identities/events` sends a new identity as `{}`, so another admin or tab does not get its credentials.
 - The server refuses an identity with no role.
 - Identity creation is rate limited.
 
