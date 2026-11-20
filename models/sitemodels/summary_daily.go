@@ -85,27 +85,68 @@ func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
 }
 
 // NewSummaryDaily is the day named date from start until end, as it is at until, built from readings, doses, food,
-// loop reports and minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, and its times very
-// low, low, high and very high of those outside it, with their mean and standard deviation. Its total daily dose is
-// the doses' insulin in it given by until, so an extended dose counts as it is given, and the basal in force each minute
-// from minutesSince, its glucose is the newest reading in each 5 minutes,
-// and its loop IOB and COB the newest report's, newest first, in each 5 minutes, or else in the 5 minutes before,
-// rounded to 2 decimals.
+// loop reports and minutes that may run outside it: its glucose, then its insulin and carbs, then its loop IOB and COB.
 func NewSummaryDaily(date, timezone string, start, end, until int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
-	day := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end}
-	within := func(at int64) bool { return at >= start && at < end }
-	slots := make([]*int64, (end-start+SummaryDailySlotMs-1)/SummaryDailySlotMs)
+	day := summaryDay{row: &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end},
+		start: start, end: end, slots: (end - start + SummaryDailySlotMs - 1) / SummaryDailySlotMs}
+	day.addGlucoseStats(readings, low, high)
+	day.addGlucoseSlots(readings)
+	day.addInsulin(doses, until, minutesSince, minutes)
+	day.addCarbs(food)
+	if day.row.GlucoseReadings > 0 || day.row.TotalDailyDose > 0 || day.row.TotalDailyCarbs > 0 {
+		day.row.Days = 1
+	}
+	day.addLoop(reports)
+	return day.row
+}
+
+// summaryDay builds the row of a summary day from start until end, in its slots of SummaryDailySlotMs
+type summaryDay struct {
+	row        *sitedb.SummaryPeriod
+	start, end int64
+	slots      int64
+}
+
+func (d summaryDay) within(at int64) bool { return at >= d.start && at < d.end }
+
+func (d summaryDay) slot(at int64) int64 { return (at - d.start) / SummaryDailySlotMs }
+
+// addGlucoseStats sets the day's count of readings, its times very low, low, in range, high and very high, the range
+// being from low to high mg/dL, and their mean and standard deviation
+func (d summaryDay) addGlucoseStats(readings []*glucose.Clean, low, high float64) {
 	// bands count the readings very low, low, in range, high and very high
-	bands, sum, squares, cgm := [5]int{}, 0.0, 0.0, make([]bool, len(slots))
+	bands, sum, squares := [5]int{}, 0.0, 0.0
 	for _, r := range readings {
-		if !within(r.Row.OccurredAt) {
+		if d.within(r.Row.OccurredAt) {
+			bands[rangeBand(r.Row.Mgdl, low, high)]++
+			sum, squares = sum+r.Row.Mgdl, squares+r.Row.Mgdl*r.Row.Mgdl
+		}
+	}
+	for _, r := range bands {
+		d.row.GlucoseReadings += int64(r)
+	}
+	count := float64(d.row.GlucoseReadings)
+	if count == 0 {
+		return
+	}
+	for i, column := range timeColumns(d.row) {
+		*column = new(consts.Round(100*float64(bands[i])/count, 1))
+	}
+	mean := sum / count
+	d.row.GlucoseMeanMgdl, d.row.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
+}
+
+// addGlucoseSlots sets the day's meter readings, how many slots have a CGM reading, and its glucose: the newest
+// reading in each slot, rounded, null where there is none
+func (d summaryDay) addGlucoseSlots(readings []*glucose.Clean) {
+	slots, cgm := make([]*int64, d.slots), make([]bool, d.slots)
+	for _, r := range readings {
+		if !d.within(r.Row.OccurredAt) {
 			continue
 		}
-		bands[rangeBand(r.Row.Mgdl, low, high)]++
-		sum, squares = sum+r.Row.Mgdl, squares+r.Row.Mgdl*r.Row.Mgdl
-		slot := (r.Row.OccurredAt - start) / SummaryDailySlotMs
+		slot := d.slot(r.Row.OccurredAt)
 		if r.Row.ReadingType == "mbg" {
-			day.MeterReadings++
+			d.row.MeterReadings++
 		} else {
 			cgm[slot] = true
 		}
@@ -114,47 +155,46 @@ func NewSummaryDaily(date, timezone string, start, end, until int64, low, high f
 			slots[slot] = new(int64(math.Round(r.Row.Mgdl)))
 		}
 	}
-	for _, r := range bands {
-		day.GlucoseReadings += int64(r)
-	}
-	day.CgmSlots = int64(len(slices.DeleteFunc(cgm, func(read bool) bool { return !read })))
-	if count := float64(day.GlucoseReadings); count > 0 {
-		percents := [5]*float64{}
-		for i, r := range bands {
-			percents[i] = new(consts.Round(100*float64(r)/count, 1))
-		}
-		day.TimeVeryLow, day.TimeLow, day.TimeInRange, day.TimeHigh, day.TimeVeryHigh = percents[0], percents[1], percents[2], percents[3], percents[4]
-		mean := sum / count
-		day.GlucoseMeanMgdl, day.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
-	}
-	for _, d := range doses {
-		day.TotalDailyDose += insulinWithin(d, start, min(end, until))
+	d.row.CgmSlots = int64(len(slices.DeleteFunc(cgm, func(read bool) bool { return !read })))
+	glucoseJSON, _ := json.Marshal(slots)
+	d.row.GlucoseMgdlJson = string(glucoseJSON)
+}
+
+// addInsulin sets the day's total daily dose: the doses' insulin in it given by until, so an extended dose counts as
+// it is given, and its basal, the basal in force each minute of minutes from minutesSince
+func (d summaryDay) addInsulin(doses []*sitedb.InsulinDose, until, minutesSince int64, minutes []SummaryMinute) {
+	for _, dose := range doses {
+		d.row.TotalDailyDose += insulinWithin(dose, d.start, min(d.end, until))
 	}
 	for i, m := range minutes {
-		if within(minutesSince+int64(i)*60_000) && m.Basal != nil {
-			day.TotalDailyBasal += *m.Basal / 60
+		if d.within(minutesSince+int64(i)*60_000) && m.Basal != nil {
+			d.row.TotalDailyBasal += *m.Basal / 60
 		}
 	}
-	day.TotalDailyDose = consts.Round(day.TotalDailyDose+day.TotalDailyBasal, 2)
-	day.TotalDailyBasal = consts.Round(day.TotalDailyBasal, 2)
+	d.row.TotalDailyDose = consts.Round(d.row.TotalDailyDose+d.row.TotalDailyBasal, 2)
+	d.row.TotalDailyBasal = consts.Round(d.row.TotalDailyBasal, 2)
+}
+
+// addCarbs sets the day's total carbs, of the food in it
+func (d summaryDay) addCarbs(food []*sitedb.FoodIntake) {
 	for _, f := range food {
-		if within(f.OccurredAt) && f.Carbs != nil {
-			day.TotalDailyCarbs += *f.Carbs
+		if d.within(f.OccurredAt) && f.Carbs != nil {
+			d.row.TotalDailyCarbs += *f.Carbs
 		}
 	}
-	day.TotalDailyCarbs = consts.Round(day.TotalDailyCarbs, 1)
-	if day.GlucoseReadings > 0 || day.TotalDailyDose > 0 || day.TotalDailyCarbs > 0 {
-		day.Days = 1
-	}
-	glucoseJSON, _ := json.Marshal(slots)
-	day.GlucoseMgdlJson = string(glucoseJSON)
-	loop, taken := [4][]*float64{}, make([]bool, len(slots))
+	d.row.TotalDailyCarbs = consts.Round(d.row.TotalDailyCarbs, 1)
+}
+
+// addLoop sets the day's loop IOB, basal IOB, treatment IOB and COB: the newest report's, newest first, in each slot,
+// or else in the slot before, rounded to 2 decimals, null where there is none
+func (d summaryDay) addLoop(reports []*sitedb.DeviceReportsLoopBetweenRow) {
+	loop, taken := [4][]*float64{}, make([]bool, d.slots)
 	for i := range loop {
-		loop[i] = make([]*float64, len(slots))
+		loop[i] = make([]*float64, d.slots)
 	}
 	for _, r := range reports {
-		slot := (r.OccurredAt - start) / SummaryDailySlotMs
-		if !within(r.OccurredAt) || taken[slot] {
+		slot := d.slot(r.OccurredAt)
+		if !d.within(r.OccurredAt) || taken[slot] {
 			continue
 		}
 		taken[slot] = true
@@ -166,18 +206,17 @@ func NewSummaryDaily(date, timezone string, start, end, until int64, low, high f
 	}
 	// Before the last hour a device keeps a report only every 10 minutes, so a report also stands for the 5 minutes
 	// after its own when they have none
-	for slot := len(slots) - 1; slot > 0; slot-- {
+	for slot := len(taken) - 1; slot > 0; slot-- {
 		for i := range loop {
 			if !taken[slot] && taken[slot-1] {
 				loop[i][slot] = loop[i][slot-1]
 			}
 		}
 	}
-	for i, column := range loopColumns(day) {
+	for i, column := range loopColumns(d.row) {
 		loopJSON, _ := json.Marshal(loop[i])
 		*column = string(loopJSON)
 	}
-	return day
 }
 
 // rangeBand is which of very low, low, in range, high and very high mg/dL is in, the range being from low to high
