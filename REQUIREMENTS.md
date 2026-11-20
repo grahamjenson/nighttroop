@@ -1281,6 +1281,18 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
   only, filtered by type and searched. They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
+- The errors table has a **From** column: the identity, what it asked for, and its app (for example
+  "watch · GET /api/v1/entries · Nightguard"), or the connector. It is empty if the error does not say. Text too
+  long for the column is cut short, and shows whole on hover.
+- An error's details say **What it means:** in plain words, above the details to debug it by:
+  - a connector's sync failed: the Connectors page says what to do;
+  - a backup failed: Nighttroop tries again;
+  - 401: the app's token or password is wrong, or its identity is off;
+  - 403: the identity's role does not allow it;
+  - 404: the app asked for something that does not exist;
+  - 429: the identity sent too many requests;
+  - 500 and above: Nighttroop failed, not the app;
+  - other refusals: the site did not accept what was sent.
 - Each event, error and log shows its request or background job run.
 - A search, or a filter by error kind, reads only the newest 10,000 of each. Paging without one reaches all rows.
 
