@@ -1147,6 +1147,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - LibreLinkUp needs an invite or its terms accepted: open the LibreLinkUp app, then save again.
   - The Nightscout address is on a private network: use its public address.
 - If the error does not say why the sync failed, there is no **What to do:** line.
+
 #### Connectors not set up
 
 - A site with no connector shows each connector's form, to choose from.
