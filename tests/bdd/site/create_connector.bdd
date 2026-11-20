@@ -111,6 +111,8 @@ ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-connector--region)
 // Its state says it stopped, and the others are still not set up
 ASSERT_VISIBLE #site--settings--nightscout-connector--state[data-state="stopped"] >> text=Stopped
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--state-synced
+// Under the error, plain words say what to do about it: the address cannot be reached
+ASSERT_VISIBLE #site--settings--nightscout-connector--advice >> text=Nighttroop cannot reach that address
 SCREENSHOT connector_first_sync_failed
 
 // Deleting a source leaves the page in place, with the source's form rendered unset again

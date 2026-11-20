@@ -102,6 +102,11 @@ templ ConnectorErrors(source *sitemodels.Connector, name string) {
 				for _, syncError := range source.PreviousSyncErrors {
 					<p>{ syncError }</p>
 				}
+				if advice := connectorAdvice(ctx, source.PreviousSyncErrors); advice != "" {
+					<p id={ "site--settings--" + name + "-connector--advice" } class="mt-2 font-medium">
+						{ i18n.T(ctx, "site.settings.connector_advice.what_to_do") } { advice }
+					</p>
+				}
 			}
 		}
 	</div>
