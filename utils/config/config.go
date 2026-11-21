@@ -320,6 +320,11 @@ func NewServerConfig() (*ServerConfig, error) {
 		return nil, err
 	}
 
+	// Before the keys are made from it, which panics
+	if err := security.CheckKeySets(serverConfig.RawKeySets, serverConfig.Mode); err != nil {
+		return nil, fmt.Errorf("KEY_SETS cannot be read: %w", err)
+	}
+
 	serverConfig.setHostURLs()
 	serverConfig.startServices()
 
