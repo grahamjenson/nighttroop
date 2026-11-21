@@ -116,6 +116,19 @@ func TestBackupToS3BacksUpEverySitePastATicksLimit(t *testing.T) {
 	require.ElementsMatch(t, [][]string{upload(first), upload(second)}, uploads)
 }
 
+// A site made just before the server stops, not written and not uploaded by a tick yet, is uploaded as it stops: a VPS
+// restored from S3 has the site in its control DB, so cannot start it without its backup
+func TestBackupToS3UploadsASiteNotUploadedYet(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	uploads, fail := [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	site := fileSite(t, controlDB, "qaaaaaaa")
+
+	jobs.BackupToS3(t.Context())
+	require.Equal(t, [][]string{upload(site)}, uploads)
+	require.NotNil(t, stored(t, controlDB, site).BackupUploadedAt)
+}
+
 // A site whose upload failed is uploaded again at the next tick, though it is not written since: by the sites not
 // uploaded yet, or by the backup of written sites once it was uploaded before
 func TestBackupWrittenSitesUploadsAgainAfterAFailedUpload(t *testing.T) {

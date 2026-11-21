@@ -2111,7 +2111,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
-- When the server stops, it backs up every site written since its last backup, with no such limit.
+- When the server stops, it backs up every site written since its last backup, and every live site not uploaded yet,
+  with no such limit.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
