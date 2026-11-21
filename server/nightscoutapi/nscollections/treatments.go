@@ -179,6 +179,16 @@ func (c TreatmentCollection) GetModel(q *sitedb.Queries, ctx context.Context, id
 	return &egb, nil
 }
 
+func (c TreatmentCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*sitedb.EventGroupsBundle, error) {
+	idIn, _ := json.Marshal(ids)
+	rows, err := q.GetEventGroupsByIDs(ctx, sitedb.GetEventGroupsByIDsParams{IDs: new(string(idIn)), IncludeDeleted: includeDeleted})
+	bundles := make([]*sitedb.EventGroupsBundle, len(rows))
+	for i, row := range rows {
+		bundles[i] = new(sitedb.GetEventGroupToEventGroupsBundle(sitedb.EventGroupsByIDsToGetEventGroup(*row)))
+	}
+	return bundles, err
+}
+
 // RewriteModel rewrites the group and its events: an event the treatment still has keeps its identifier and what of it
 // a treatment does not have, one it no longer has is deleted once the group no longer refers to it, and one it now has
 // is created. The hash it keeps is of the fields sent, as a create's is of the treatment sent.

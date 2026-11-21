@@ -340,6 +340,65 @@ func (q *Queries) GetFoodPreset(ctx context.Context, arg GetFoodPresetParams) (*
 	return &i, err
 }
 
+const getFoodPresetsByIDs = `-- name: GetFoodPresetsByIDs :many
+SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, unit, gi, hidden, hide_after_use, position, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id IN (SELECT value FROM json_each(CAST(?1 AS TEXT)))
+`
+
+type GetFoodPresetsByIDsParams struct {
+	IDs *string
+}
+
+// The presets with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+func (q *Queries) GetFoodPresetsByIDs(ctx context.Context, arg GetFoodPresetsByIDsParams) ([]*FoodPreset, error) {
+	rows, err := q.query(ctx, q.getFoodPresetsByIDsStmt, getFoodPresetsByIDs, arg.IDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*FoodPreset
+	for rows.Next() {
+		var i FoodPreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.FoodType,
+			&i.AbsorptionTimeMinutes,
+			&i.Carbs,
+			&i.Category,
+			&i.Subcategory,
+			&i.Fat,
+			&i.Protein,
+			&i.Fibre,
+			&i.Energy,
+			&i.Portions,
+			&i.PreBolus,
+			&i.Unit,
+			&i.Gi,
+			&i.Hidden,
+			&i.HideAfterUse,
+			&i.Position,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const hardDeleteFoodPreset = `-- name: HardDeleteFoodPreset :execresult
 
 

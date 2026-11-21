@@ -27,10 +27,28 @@ func siteWithPages(t testing.TB, count int64) *httputils.SiteContext {
 		require.NoError(t, err)
 		_, err = q.CreateDeviceReport(t.Context(), sitedb.CreateDeviceReportParams{ID: id, OccurredAt: at, CreatedByIdentityName: "test"})
 		require.NoError(t, err)
+		_, err = q.CreateInsulinDose(t.Context(), sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, OccurredAt: at, CreatedByIdentityName: "test"})
+		require.NoError(t, err)
+		_, err = q.CreateEventGroup(t.Context(), sitedb.CreateEventGroupParams{ID: id, GroupType: "Correction Bolus", InsulinDoseID: &id, OccurredAt: at, CreatedByIdentityName: "test"})
+		require.NoError(t, err)
+		_, err = q.CreateFoodPreset(t.Context(), sitedb.CreateFoodPresetParams{ID: id, Name: "food", CreatedByIdentityName: "test"})
+		require.NoError(t, err)
 	}
 	require.NoError(t, tx.Commit())
 	return &httputils.SiteContext{SiteID: model.ID, ControlDB: controlDB, SiteDB: siteDB, SiteModel: model,
 		IdentityModel: &controldb.SiteIdentity{ID: 1, Name: "pwd_phone"}}
+}
+
+// keys are the identifiers of the models, in their order, or the error reading them
+func keys[DM interface{ GetID() string }](models []*DM, err error) []string {
+	if err != nil {
+		return []string{err.Error()}
+	}
+	ids := []string{}
+	for _, model := range models {
+		ids = append(ids, (*model).GetID())
+	}
+	return ids
 }
 
 // byKey reads the models in the order of their identifiers, leaving out one there is not, and a deleted one unless
@@ -38,32 +56,35 @@ func siteWithPages(t testing.TB, count int64) *httputils.SiteContext {
 func TestByKey(t *testing.T) {
 	siteContext := siteWithPages(t, 4)
 	q := siteContext.SiteDB.Queries()
-	_, err := q.SoftDeleteGlucoseReading(t.Context(), sitedb.SoftDeleteGlucoseReadingParams{ID: fmt.Sprintf("%024d", 1)})
+	deleted := fmt.Sprintf("%024d", 1)
+	_, err := q.SoftDeleteGlucoseReading(t.Context(), sitedb.SoftDeleteGlucoseReadingParams{ID: deleted})
 	require.NoError(t, err)
-	_, err = q.SoftDeleteDeviceReport(t.Context(), sitedb.SoftDeleteDeviceReportParams{ID: fmt.Sprintf("%024d", 1)})
+	_, err = q.SoftDeleteDeviceReport(t.Context(), sitedb.SoftDeleteDeviceReportParams{ID: deleted})
 	require.NoError(t, err)
-	ids := []string{fmt.Sprintf("%024d", 2), "missing", fmt.Sprintf("%024d", 0), fmt.Sprintf("%024d", 1), fmt.Sprintf("%024d", 3)}
+	_, err = q.SoftDeleteEventGroup(t.Context(), sitedb.SoftDeleteEventGroupParams{ID: deleted})
+	require.NoError(t, err)
+	ids := []string{fmt.Sprintf("%024d", 2), "missing", fmt.Sprintf("%024d", 0), deleted, fmt.Sprintf("%024d", 3)}
 	entries := NewEntriesCollection().(Collection[nightscoutmodels.Entry, sitedb.GlucoseReading])
 	statuses := NewDeviceStatusCollection().(Collection[nightscoutmodels.DeviceStatus, sitedb.DeviceReport])
+	treatments := NewTreatmentCollection().(Collection[nightscoutmodels.Treatment, sitedb.EventGroupsBundle])
+	foods := NewFoodCollection().(Collection[nightscoutmodels.Food, sitedb.FoodPreset])
 	profiles := NewProfileCollection().(Collection[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle])
+	all := []string{ids[0], ids[2], ids[3], ids[4]}
 	for _, includeDeleted := range []bool{false, true} {
 		want := []string{ids[0], ids[2], ids[4]}
 		if includeDeleted {
-			want = []string{ids[0], ids[2], ids[3], ids[4]}
+			want = all
 		}
-		readings, err := entries.byKey(q, t.Context(), ids, includeDeleted)
-		require.NoError(t, err)
-		reports, err := statuses.byKey(q, t.Context(), ids, includeDeleted)
-		require.NoError(t, err)
-		var readingIDs, reportIDs []string
-		for i := range readings {
-			readingIDs = append(readingIDs, readings[i].ID)
+		require.Equal(t, want, keys(entries.byKey(q, t.Context(), ids, includeDeleted)))
+		require.Equal(t, want, keys(statuses.byKey(q, t.Context(), ids, includeDeleted)))
+		bundles, err := treatments.byKey(q, t.Context(), ids, includeDeleted)
+		require.Equal(t, want, keys(bundles, err))
+		for _, bundle := range bundles {
+			require.NotNil(t, bundle.InsulinDose, "a treatment's events are read with it")
+			require.Equal(t, bundle.EventGroup.ID, bundle.InsulinDose.ID)
 		}
-		for i := range reports {
-			reportIDs = append(reportIDs, reports[i].ID)
-		}
-		require.Equal(t, want, readingIDs)
-		require.Equal(t, want, reportIDs)
+		// Foods are not soft deleted
+		require.Equal(t, all, keys(foods.byKey(q, t.Context(), ids, includeDeleted)))
 	}
 	// A collection that does not read many in one query reads each by itself
 	stores, err := profiles.byKey(q, t.Context(), []string{"missing"}, true)
@@ -71,12 +92,13 @@ func TestByKey(t *testing.T) {
 	require.Empty(t, stores)
 }
 
-// A page of 1000 entries and device statuses AAPS reads, sorted by date and from API v3 history, each read by its
+// A page of 1000 entries, device statuses and treatments AAPS reads, sorted by date and from API v3 history, each read by its
 // identifier. Run with go test -run XXX -bench PagesByKey ./server/nightscoutapi/nscollections
 func BenchmarkPagesByKey(b *testing.B) {
 	siteContext := siteWithPages(b, 2000)
 	since, ascending := int64(1_700_000_000_000), nsquery.SortOccurredAtAsc
-	for name, collection := range map[string]CollectionStore{"entries": NewEntriesCollection(), "devicestatus": NewDeviceStatusCollection()} {
+	for name, collection := range map[string]CollectionStore{"entries": NewEntriesCollection(), "devicestatus": NewDeviceStatusCollection(),
+		"treatments": NewTreatmentCollection()} {
 		b.Run(name+"/ascending", func(b *testing.B) {
 			for b.Loop() {
 				docs, err := collection.Search(b.Context(), siteContext, nsquery.Query{Limit: 1000, DateGT: &since, HasFilters: true, SortOrder: &ascending})
@@ -93,3 +115,9 @@ func BenchmarkPagesByKey(b *testing.B) {
 		})
 	}
 }
+
+// Treatments and foods read a page in one query
+var (
+	_ CollectionKeysReader[sitedb.EventGroupsBundle] = TreatmentCollection{}
+	_ CollectionKeysReader[sitedb.FoodPreset]        = FoodCollection{}
+)
