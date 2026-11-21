@@ -125,12 +125,13 @@ func (b *BackupSiteJobManager) findSitesToDelete(ctx context.Context) ([]string,
 	return deleteSites, nil
 }
 
-// BackupToS3 backs up every site written since its last backup, as the server stops: all of them, not a tick's
-// MaxSitesEachTick, as no later tick backs up the rest
+// BackupToS3 backs up every site not uploaded yet or written since its last backup, as the server stops: all of them,
+// not a tick's MaxSitesEachTick, as no later tick backs up the rest
 func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
 	if err := b.backupWrittenSites(ctx, time.Now(), -1); err != nil {
 		slog.ErrorContext(ctx, "Error backing up the sites", "error", err)
 	}
+	b.BackupSitesNotUploaded(ctx)
 }
 
 // BackupWrittenSites backs up the sites written since their last backup, copied before backedUpBefore, and, while S3
