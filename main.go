@@ -349,6 +349,11 @@ func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Cli
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
+	// Told to stop while every site was opened: it stops here, not once it serves. Its replication would not start, and
+	// that would turn S3 off, page the admin and leave the last backup out.
+	if ctx.Err() != nil {
+		return nil, errors.Join(ctx.Err(), controlDB.Close())
+	}
 	if err := controlDB.Replicate(ctx, control); err != nil {
 		// The control DB is open, so the sites are served from it, without S3
 		turnS3Off(serverConfig, admin, config.S3OffReplication, "The control DB's replication could not start, so S3 is off: nothing is replicated or backed up", err)

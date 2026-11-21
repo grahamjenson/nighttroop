@@ -105,3 +105,19 @@ func TestRestoreUnopenedControlDB(t *testing.T) {
 	_, err = restored.Queries.GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: "replicat"})
 	require.NoError(t, err)
 }
+
+// A server told to stop while it opens its sites stops there: it does not turn S3 off and page the admin because its
+// replication, which a stopped server does not start, could not start
+func TestOpenControlDBStopsWhenToldToStop(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	cfg.Status.S3Working = true
+	ctx, stop := context.WithCancel(t.Context())
+	stop()
+	noPage := func(_ context.Context, _ page.Level, message string, _ ...any) { t.Fatalf("paged: %s", message) }
+
+	_, err := openControlDB(ctx, cfg, s3, replica.New(cfg, s3), noPage)
+	require.ErrorIs(t, err, context.Canceled)
+	require.True(t, cfg.Status.S3Working)
+	require.Empty(t, cfg.Status.S3Off)
+	pageFailure(noPage, false, err)
+}
