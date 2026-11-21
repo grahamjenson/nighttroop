@@ -89,6 +89,13 @@ func IdentityUseNightscoutToken(role consts.IdentityRole, hasTotpSecret bool) bo
 	return !hasTotpSecret && role != consts.IdentityRoleAdmin
 }
 
+// IdentityAddSensorGlucose is whether the glucose of a treatment the role sends is kept as a CGM reading (sgv): not a
+// Caregiver device's, which cannot add readings (CaregiverNightscoutPermissions), so its careportal BG Check is kept as
+// a meter reading (mbg), which a loop that reads its CGM from Nightscout, and the alarms, do not take for the PWD's
+func IdentityAddSensorGlucose(role consts.IdentityRole) bool {
+	return role != consts.IdentityRoleDeviceReadWrite
+}
+
 // IdentityAuthorizeDevices is whether the role adds, lists and deletes the Nightscout subjects that AAPS pairs its
 // clients with: only the PWD phone, the AAPS that pairs them
 func IdentityAuthorizeDevices(role consts.IdentityRole) bool {

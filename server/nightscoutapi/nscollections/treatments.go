@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
@@ -315,6 +316,12 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.T
 	bundle := sitedb.EventGroupsBundle{EventGroup: nightscoutmodels.TreatmentToEventGroup(treatment)}
 	for _, event := range treatmentTypeEvents[*treatment.EventType] {
 		event.fromTreatment(treatment, &bundle)
+	}
+	// The glucose of a treatment from an identity that cannot add CGM readings is a meter reading
+	siteContext := httputils.GetSiteContext(ctx)
+	if bundle.GlucoseReading != nil && siteContext != nil && siteContext.IdentityModel != nil &&
+		!can.IdentityAddSensorGlucose(siteContext.IdentityModel.Role) {
+		bundle.GlucoseReading.ReadingType = "mbg"
 	}
 	return bundle
 }
