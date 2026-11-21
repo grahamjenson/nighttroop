@@ -124,6 +124,8 @@ site:
       subcategory: "Subcategory"
       subcategory_help: "A group within its category, e.g. apples."
       reason_help: "Why it was eaten, e.g. lunch or a low."
+      preset: "Food Preset"
+      preset_help: "Pick a food preset to fill in its values. Then change the values that are different."
       delete_confirm: "Delete this food intake?"
       updated: "Food Intake Updated"
       deleted: "Food Intake Deleted"
