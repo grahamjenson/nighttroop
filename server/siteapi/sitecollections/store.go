@@ -116,6 +116,9 @@ func (store *SiteStore) registerCollection[R, M any](section string, collection 
 	if val, ok := collection.(CollectionNew[R, M]); ok {
 		routes.New = NewHandler(val)
 	}
+	if val, ok := collection.(CollectionNewFrom[R, M]); ok {
+		routes.New = NewFromHandler(val)
+	}
 	if val, ok := collection.(CollectionUpdate[R, M]); ok {
 		routes.Update = UpdateHandler(val)
 		added = true

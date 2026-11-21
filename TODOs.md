@@ -148,3 +148,7 @@
 1. Code:
     1. P5: Make the decimal settings in `utils/settings/definitions.go` with `numberSetting`, as the whole number
        settings are, and the on or off settings with a helper of their own
+
+1. Site pages:
+    1. P4: The Add Food Intake modal offers only the newest 100 food presets, in the order they were added; search them
+       by name, or sort them by name, if a site keeps more
