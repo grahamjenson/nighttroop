@@ -216,10 +216,21 @@ func (r *Replica) Abandon() {
 var restoreTimeout = 15 * time.Minute
 
 // Restore restores the control DB from its replica to path, which must not be there, and is false when it has no
-// replica
+// replica. A write-ahead log left at path, by a DB moved away without it, is kept beside it as path.replaced-<time>-wal.
 func (r *Replica) Restore(ctx context.Context, path string) (bool, error) {
 	if r == nil {
 		return false, nil
+	}
+	// The log of a DB that was at path, and Litestream's files of it, are not the restored one's: SQLite would write
+	// the log over the restored DB when it opens
+	aside := fmt.Sprintf("%s.replaced-%d", path, time.Now().UnixMilli())
+	for _, suffix := range []string{"-wal", "-shm"} {
+		if err := os.Rename(path+suffix, aside+suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return false, err
+		}
+	}
+	if err := os.RemoveAll(litestream.NewDB(path).MetaPath()); err != nil {
+		return false, err
 	}
 	// A replica that S3 stops sending would otherwise hold the start for ever
 	ctx, cancel := context.WithTimeout(ctx, restoreTimeout)
