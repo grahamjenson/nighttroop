@@ -144,3 +144,7 @@
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
     1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
        settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out
+
+1. Code:
+    1. P5: Make the decimal settings in `utils/settings/definitions.go` with `numberSetting`, as the whole number
+       settings are, and the on or off settings with a helper of their own
