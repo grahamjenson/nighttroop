@@ -1100,6 +1100,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - In the Data hub under Presets, with the data they help to enter.
 - **Food presets**: add (in a modal of all fields, as for data), view, edit, delete.
+  - Add Food Intake: a **Food Preset** dropdown above the fields, newest 100, by name and carbs. Not shown with none.
+  - Pick one: its values fill in the fields, and the time stays blank. Change them, then add.
 - **Profiles**: profile stores a loop uploaded. Read their schedules, rename, delete.
 
 #### Loop Settings

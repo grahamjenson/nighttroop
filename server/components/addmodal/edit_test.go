@@ -45,6 +45,13 @@ func TestEdit(t *testing.T) {
 	require.Len(t, edit, 5)
 	// The add modal's fields are left as they were
 	require.Equal(t, "", fields[0].Value)
+
+	// Filled from a record, such as a preset, an add modal keeps every field, but its time starts blank, as now
+	fill := Fill(fields, r, nil)
+	require.Len(t, fill, len(fields))
+	require.Equal(t, []string{"4.5", "", "70", "100", "Lunch", "normal", "5.5494"},
+		[]string{fill[0].Value, fill[1].Value, fill[2].Value, fill[3].Value, fill[4].Value, fill[5].Value, fill[6].Value})
+	require.Equal(t, "", fields[0].Value)
 }
 
 func TestDetail(t *testing.T) {
