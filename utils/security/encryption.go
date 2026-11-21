@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"nighttroop.t1d.nz/utils/consts"
 
 	"strings"
 
@@ -89,6 +90,15 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 
 	return nil
 
+}
+
+// CheckKeySets is why NewSecurityConfig cannot read the comma separated key sets, as none, too few or one cut short, so
+// a server's start gives it as a config error. Test mode has its own keys, so any are read.
+func CheckKeySets(keySetsRaw string, mode consts.ServerMode) error {
+	if mode == consts.Test {
+		return nil
+	}
+	return (&SecurityConfig{}).ConfigCreateEncryptionKeys(keySetsRaw)
 }
 
 // UsesDevKeySets is whether any key in the comma separated key sets is one of DevKeySets', even in a key set of its own

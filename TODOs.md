@@ -13,6 +13,10 @@
        written to, so its tiles can be checked after a backup, not only before one
     1. P2: Test the S3 lock (`utils/s3utils/lock.go`) against the production S3: it is tested against MinIO, and
        a provider can treat `If-None-Match`, `If-Match` or a deleted lock in a versioned bucket differently
+    1. P2: A site a control admin archives while S3 is off is never uploaded once S3 works, so its archive is only
+       on the disk: refuse the archive while S3 is off, as the site admin's delete does, or upload it at a tick
+    1. P4: `restoreUnopened` restores the control DB for each open error that is not a failed migration, also a query
+       the schema does not have: restore only a file that fails a quick integrity check
     1. P3: Page the admin when the server's settings stop it starting (`config.NewServerConfig`): the pager's key
        is one of those settings, so that failure is only printed
 1. e2e bakup_key testing. Control

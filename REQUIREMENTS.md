@@ -18,6 +18,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - The server does not start, and says what to set, when `MODE` is not set, unknown, or `test` outside `go test`.
 - `development`: all passwords `password`, all TOTP codes `123123`. Does not start over `https`.
+- Not test mode: does not start if `KEY_SETS` is empty, does not have four key sets, or has one that cannot be read.
+  Prints `cannot create server config` with why, and does not panic.
 - Production or staging: does not start if `KEY_SETS` holds a public key from `.env.dev` or `.env.test`. Says to make
   new keys with `cmd/keysets/create_keysets.go`.
 - If the jobs DB or the logs DB does not open, the server removes it, makes an empty one, logs an error, and starts.
