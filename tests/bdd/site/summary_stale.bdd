@@ -1,5 +1,8 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
+// The summary's stream of events is connected, as its Live badge shows, before the reading comes in: a reading that
+// comes in before then sends no event to the page, which would stay as it is
+ASSERT_VISIBLE #site--summary--live
 
 // A reading 15 seconds short of the no data alarm's minutes (20 by default) comes in to the open summary, which shows
 // it coloured, and schedules its content to reload once it turns stale. The reload is unit tested to come a second
