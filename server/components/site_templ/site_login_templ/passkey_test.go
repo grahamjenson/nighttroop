@@ -13,7 +13,7 @@ import (
 func TestPasskeyScriptFailsInThePagesWords(t *testing.T) {
 	var html bytes.Buffer
 	require.NoError(t, PasskeyScript().Render(context.Background(), &html))
-	require.Contains(t, html.String(), `<script data-passkey-failed="The passkey did not work.">`)
+	require.Contains(t, html.String(), `<script data-passkey-failed="The passkey did not work." data-passkey-unreachable="The server could not be reached. Try again in a few seconds.">`)
 	require.Contains(t, html.String(), "fail(e.message || failed)")
 	require.Equal(t, 1, bytes.Count(html.Bytes(), []byte("The passkey did not work.")))
 }

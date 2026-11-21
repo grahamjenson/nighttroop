@@ -24,6 +24,14 @@ SCREENSHOT welcome_code_checked
 // The browser has a passkey authenticator, as a phone has, that verifies the person itself. The passkey is made on the
 // site's own address, for its admin, and signs the admin in with no password or code
 VIRTUAL_AUTHENTICATOR
+
+// With no answer from the server, as while it restarts, it says to try again in the page's words, not the browser's
+// own, such as Safari's "Load failed"
+OFFLINE
+CLICK #public--passkey-login-button
+ASSERT_TEXT_EQUALS #public--passkey-error The server could not be reached. Try again in a few seconds.
+SCREENSHOT welcome_passkey_unreachable
+ONLINE
 CLICK #public--passkey-login-button
 ASSERT_NEW_URL
 ASSERT_PATH /

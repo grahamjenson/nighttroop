@@ -4,7 +4,7 @@
 // button would give it.
 HTTP
 NAME create_new_site
-POST {{ server_url }}/site?timezone=UTC&language=en
+POST {{ server_url }}/site?timezone={{ site_timezone }}&language=en
 ASSERT_STATUS 200
 SET site_url {{ .scheme }}://{{ .create_new_site.site_subdomain }}.{{ .host }}
 

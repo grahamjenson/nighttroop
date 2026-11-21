@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // ParseBrowserLines is the actions of a file's lines, each starting one, with the asserts after it
@@ -201,16 +200,17 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 			flush()
 			// Asserts after it check the page once the jobs have run, e.g. that it updated itself live
 			current = &RunBackgroundJobs{TestPath: path, TestLine: lineNumber}
-		case "AVOID_MIDNIGHT":
-			// AVOID_MIDNIGHT <minutes> waits, from 2 minutes before midnight UTC to that many minutes after, until then,
-			// so a test of today's data has that much of today, not the virtual connector's last 30 minutes split over
-			// two days
+		case "OFFLINE", "ONLINE":
+			// OFFLINE takes the browser off the network, so the page's requests fail with no answer, as when the
+			// connection is lost or the server restarts, until ONLINE
 			flush()
-			minutes, err := strconv.Atoi(second)
-			if err != nil || minutes < 1 || minutes > 30 {
-				return nil, fmt.Errorf("%s:%d: AVOID_MIDNIGHT needs 1 to 30 minutes", path, lineNumber)
-			}
-			current = &AvoidMidnight{TestPath: path, TestLine: lineNumber, After: time.Duration(minutes) * time.Minute}
+			current = &Offline{TestPath: path, TestLine: lineNumber, Offline: first == "OFFLINE"}
+		case "MIDDAY_TIMEZONE":
+			// MIDDAY_TIMEZONE gives the site new_site_admin.steps creates after it a time zone where it is midday-ish
+			// now, UTC or Pacific/Auckland, and date, daytime and dayms its days, so a test of today's data is never
+			// split over two days, and never waits for midnight to pass
+			flush()
+			current = &MiddayTimezone{TestPath: path, TestLine: lineNumber}
 		case "WAIT_VISIBLE":
 			// WAIT_VISIBLE <seconds> <locator> waits up to that many seconds, longer than an assert's 5, for what a timer
 			// on the page shows, e.g. a reload when a reading turns stale; asserts after it check the page then

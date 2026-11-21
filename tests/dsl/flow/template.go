@@ -110,9 +110,20 @@ func Render(input string, ctx map[string]any) (string, error) {
 				sum := sha1.Sum([]byte(s))
 				return hex.EncodeToString(sum[:])
 			},
-			"date":    func(days int) string { return templateDayTime(days, 0).Format(time.DateOnly) },
-			"daytime": func(days, minutes int) string { return templateDayTime(days, minutes).Format(time.RFC3339) },
-			"dayms":   func(days, minutes int) int64 { return templateDayTime(days, minutes).UnixMilli() },
+			// site_timezone is the time zone of the site new_site_admin.steps creates: UTC, or MIDDAY_TIMEZONE's
+			"site_timezone": func() string { return siteTimezone(ctx) },
+			"date": func(days int) (string, error) {
+				day, err := templateDayTime(ctx, days, 0)
+				return day.Format(time.DateOnly), err
+			},
+			"daytime": func(days, minutes int) (string, error) {
+				day, err := templateDayTime(ctx, days, minutes)
+				return day.Format(time.RFC3339), err
+			},
+			"dayms": func(days, minutes int) (int64, error) {
+				day, err := templateDayTime(ctx, days, minutes)
+				return day.UnixMilli(), err
+			},
 			// addms is a dug time in milliseconds plus ms, e.g. addms (dig "last.result.collections.entries") 1
 			"addms": func(dug any, ms int64) (int64, error) {
 				n, err := strconv.ParseInt(fmt.Sprint(dug), 10, 64)
@@ -147,10 +158,23 @@ func templateTime(offset int) string {
 	return t.Format(time.RFC3339)
 }
 
-// templateDayTime is minutes after midnight, in UTC, the day days from today, e.g. daytime -1 720 for noon yesterday
-func templateDayTime(days, minutes int) time.Time {
-	now := time.Now().UTC()
-	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, days).Add(time.Duration(minutes) * time.Minute)
+// siteTimezone is MIDDAY_TIMEZONE's time zone, else UTC, as the sites the tests create are
+func siteTimezone(ctx map[string]any) string {
+	if zone, ok := ctx["site_timezone"].(string); ok {
+		return zone
+	}
+	return "UTC"
+}
+
+// templateDayTime is minutes after midnight, in the site's time zone, the day days from today, e.g. daytime -1 720 for
+// noon yesterday
+func templateDayTime(ctx map[string]any, days, minutes int) (time.Time, error) {
+	location, err := time.LoadLocation(siteTimezone(ctx))
+	if err != nil {
+		return time.Time{}, err
+	}
+	now := time.Now().In(location)
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location).AddDate(0, 0, days).Add(time.Duration(minutes) * time.Minute), nil
 }
 
 func templateITime(offset int) int64 {

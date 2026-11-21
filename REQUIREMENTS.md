@@ -527,6 +527,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Only for the browser shown the credentials, for 15 minutes, one time. Its cookie sent again adds nothing once the
     admin has a passkey.
   - Later passkeys are added on My Account.
+  - With no answer from the server, as while it restarts, it says "The server could not be reached. Try again in a few
+    seconds." (every passkey button does), not the browser's own words, such as Safari's "Load failed".
 
 #### Recover page
 
