@@ -131,10 +131,10 @@ func body(b *cappedBuffer, contentType string) map[string]any {
 }
 
 // secret is whether a header, query, form or JSON key names a credential or a connector's identity, such as a Dexcom
-// username or a Nightscout URL in url_or_username, a backup or API key or a TOTP code
+// username or a Nightscout URL in url_or_username, a backup or API key, a TOTP code or a Loop remote command's otp
 func secret(key string) bool {
 	key = strings.ToLower(key)
-	for _, word := range []string{"auth", "cookie", "secret", "token", "pass", "pwd", "jwt", "key", "totp", "username",
+	for _, word := range []string{"auth", "cookie", "secret", "token", "pass", "pwd", "jwt", "key", "otp", "username",
 		"email", "url", "referer", "session", "credential"} {
 		if strings.Contains(key, word) {
 			return true
