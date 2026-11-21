@@ -1,0 +1,54 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A site with no food presets has no food preset to pick when food is added
+GOTO /data/food
+ASSERT_STATUS 200
+CLICK #site--food--add
+ASSERT_VISIBLE #site--food--create--modal
+ASSERT_VISIBLE #site--food--create--carbs
+ASSERT_NOT_VISIBLE #site--food--create--preset
+CLICK #site--food--create--modal--close
+ASSERT_NOT_VISIBLE #site--food--create--modal
+
+// A food preset is added
+GOTO /presets/food
+ASSERT_STATUS 200
+CLICK #presets--food--add
+INPUT #presets--food--create--name Toast
+INPUT #presets--food--create--carbs 20
+INPUT #presets--food--create--fat 2
+INPUT #presets--food--create--food-type snack
+CLICK #presets--food--create--submit
+ASSERT_STATUS 201
+
+// Adding food offers the food presets, by name and carbs, above the fields
+GOTO /data/food
+ASSERT_STATUS 200
+CLICK #site--food--add
+ASSERT_VISIBLE #site--food--create--preset
+ASSERT_TEXT_VISIBLE Pick a food preset to fill in its values.
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:nth-child(2) Toast (20 g carbs)
+
+// Picking one fills in its values, and keeps it picked
+INPUT #site--food--create--preset Toast (20 g carbs)
+WAIT_VISIBLE 5 #site--food--create--name[value=Toast]
+ASSERT_TEXT_EQUALS #site--food--create--name Toast
+ASSERT_TEXT_EQUALS #site--food--create--carbs 20
+ASSERT_TEXT_EQUALS #site--food--create--fat 2
+ASSERT_TEXT_EQUALS #site--food--create--food-type snack
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:checked Toast (20 g carbs)
+SCREENSHOT food_intake_preset_picked
+
+// The values can be changed before the food is added, and the food intake keeps them
+INPUT #site--food--create--carbs 40
+INPUT #site--food--create--notes Two slices
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--food--create--modal
+ASSERT_TEXT_VISIBLE Two slices
+CLICK #foodIntakesTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--food--details
+ASSERT_TEXT_VISIBLE 40 g carbs
+ASSERT_TEXT_EQUALS #site--food--edit--name Toast
+ASSERT_TEXT_EQUALS #site--food--edit--fat 2
