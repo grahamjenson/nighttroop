@@ -171,6 +171,8 @@ Only if `data/db/controldb.sqlite` is not there, the server restores it from its
 (`go run cmd/keysets/restore_replica.go <path>` does the same by hand, also while the server runs).
 
 - **Failure:** The restore fails. The start stops.
+- If `controldb.sqlite-wal` or `controldb.sqlite-shm` is there without the file, the server moves it to
+  `controldb.sqlite.replaced-<time>-wal` or `-shm` before the restore. SQLite does not write it into the restored DB.
 - If the file is there, but was made while S3 was off or was another bucket or host, the server does not replicate it
   over the replica in S3. `controldb.sqlite.replica` next to the file has the address of the replica it belongs to.
   - With no replica in S3, the server replicates the file.

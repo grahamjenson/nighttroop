@@ -67,79 +67,108 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		if siteContext == nil {
 			return
 		}
-		// Each open stream is a connection in the live DB, so a site can hold only so many open
-		live := siteContext.ControlDB.Live.Queries
-		connection, err := live.OpenConnection(r.Context(), livedb.OpenConnectionParams{SiteID: siteContext.SiteID,
-			IdentityID: siteContext.IdentityModel.ID, Kind: "event_stream", Collection: collection.GetName(), Max: maxEventStreamsPerSite})
-		if errors.Is(err, sql.ErrNoRows) {
-			writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(60))
+		closeConnection, herr := openEventStreamConnection(r.Context(), siteContext, collection.GetName())
+		if herr != nil {
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
-		if err != nil {
-			writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
-			return
-		}
-		// The request's context is done as the stream ends, so it is not the one closing it
-		defer live.CloseConnection(context.Background(), livedb.CloseConnectionParams{ID: connection})
-
-		// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
-		changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
-		// Only the events the collection watches are streamed: the site's others, such as a control identity disabling
-		// it, are not its users'
-		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
-			// A row an identity owns, as its alarms, is streamed to it alone
-			owned, isOwned := event.Model.(interface{ GetIdentityID() int64 })
-			if !watches(event, siteContext) || (isOwned && owned.GetIdentityID() != siteContext.IdentityModel.ID) {
-				return
-			}
-			select {
-			case changes <- event:
-			default:
-				overflow.Do(func() { close(overflowed) })
-			}
-		})
+		defer closeConnection()
+		changes, overflowed, unsubscribe := subscribeToChanges(siteContext, watches)
 		defer unsubscribe()
-
-		// The server's write timeout would end the stream
-		stream := http.NewResponseController(w)
-		_ = stream.SetWriteDeadline(time.Time{})
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.WriteHeader(http.StatusOK)
-		if stream.Flush() != nil {
+		stream, started := startEventStream(w)
+		if !started {
 			return
 		}
+		// eventData is a change's data: an own row's model as JSON, or {} for any other change or a row it hides
+		eventData := func(event events.Event) ([]byte, error) {
+			row, own := event.Model.(*R)
+			if !own || hides(event, siteContext) {
+				return []byte("{}"), nil
+			}
+			return json.Marshal(collection.ToModel(row, siteContext))
+		}
+		sendEvents(w, r, siteContext, stream, changes, overflowed, eventData)
+	}
+}
 
-		ping := time.NewTicker(eventStreamPing)
-		defer ping.Stop()
-		end := time.After(maxEventStreamTime)
-		for {
-			var err error
-			select {
-			case <-r.Context().Done():
+// openEventStreamConnection records the stream as a connection in the live DB, so a site can hold only so many open,
+// and returns the function that closes it
+func openEventStreamConnection(ctx context.Context, siteContext *httputils.SiteContext, collection string) (func(), *apiutils.HTTPError) {
+	live := siteContext.ControlDB.Live.Queries
+	connection, err := live.OpenConnection(ctx, livedb.OpenConnectionParams{SiteID: siteContext.SiteID,
+		IdentityID: siteContext.IdentityModel.ID, Kind: "event_stream", Collection: collection, Max: maxEventStreamsPerSite})
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, apiutils.ErrRateLimitExceeded(60)
+	}
+	if err != nil {
+		return nil, apiutils.ErrInternalServerError
+	}
+	// The request's context is done as the stream ends, so it is not the one closing it
+	return func() { live.CloseConnection(context.Background(), livedb.CloseConnectionParams{ID: connection}) }, nil
+}
+
+// subscribeToChanges sends the site's changes the collection watches to changes. Only those are streamed: the site's
+// others, such as a control identity disabling it, are not its users'. If changes is full, overflowed is closed.
+func subscribeToChanges(siteContext *httputils.SiteContext, watches func(events.Event, *httputils.SiteContext) bool) (changes <-chan events.Event, overflowed <-chan struct{}, unsubscribe func()) {
+	// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
+	buffer, full, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
+	unsubscribe = siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
+		// A row an identity owns, as its alarms, is streamed to it alone
+		owned, isOwned := event.Model.(interface{ GetIdentityID() int64 })
+		if !watches(event, siteContext) || (isOwned && owned.GetIdentityID() != siteContext.IdentityModel.ID) {
+			return
+		}
+		select {
+		case buffer <- event:
+		default:
+			overflow.Do(func() { close(full) })
+		}
+	})
+	return buffer, full, unsubscribe
+}
+
+// startEventStream writes the stream's headers, and is false if the client has gone
+func startEventStream(w http.ResponseWriter) (*http.ResponseController, bool) {
+	// The server's write timeout would end the stream
+	stream := http.NewResponseController(w)
+	_ = stream.SetWriteDeadline(time.Time{})
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+	return stream, stream.Flush() == nil
+}
+
+// sendEvents writes each change, and a ping every eventStreamPing, until the client goes or falls behind, its identity
+// is revoked, or the stream has been open for maxEventStreamTime
+func sendEvents(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext, stream *http.ResponseController,
+	changes <-chan events.Event, overflowed <-chan struct{}, eventData func(events.Event) ([]byte, error)) {
+	ping := time.NewTicker(eventStreamPing)
+	defer ping.Stop()
+	end := time.After(maxEventStreamTime)
+	for {
+		var err error
+		select {
+		case <-r.Context().Done():
+			return
+		case <-overflowed:
+			return
+		case <-end:
+			return
+		case <-ping.C:
+			// A stream is only authenticated as it opens, so it ends once its identity is revoked
+			if httputils.IdentityRevoked(r.Context(), siteContext.ControlDB, siteContext.IdentityModel) {
 				return
-			case <-overflowed:
-				return
-			case <-end:
-				return
-			case <-ping.C:
-				// A stream is only authenticated as it opens, so it ends once its identity is revoked
-				if httputils.IdentityRevoked(r.Context(), siteContext.ControlDB, siteContext.IdentityModel) {
-					return
-				}
-				_, err = io.WriteString(w, ": ping\n\n")
-			case event := <-changes:
-				data := []byte("{}")
-				if row, own := event.Model.(*R); own && !hides(event, siteContext) {
-					if data, err = json.Marshal(collection.ToModel(row, siteContext)); err != nil {
-						return
-					}
-				}
-				_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Action, data)
 			}
-			if err != nil || stream.Flush() != nil {
+			_, err = io.WriteString(w, ": ping\n\n")
+		case event := <-changes:
+			data, dataErr := eventData(event)
+			if dataErr != nil {
 				return
 			}
+			_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Action, data)
+		}
+		if err != nil || stream.Flush() != nil {
+			return
 		}
 	}
 }

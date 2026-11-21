@@ -1102,6 +1102,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - In the Data hub under Presets, with the data they help to enter.
 - **Food presets**: add (in a modal of all fields, as for data), view, edit, delete.
+  - Add Food Intake: a **Food Preset** dropdown above the fields, newest 100, by name and carbs. Not shown with none.
+  - Pick one: its values fill in the fields, and the time stays blank. Change them, then add.
 - **Profiles**: profile stores a loop uploaded. Read their schedules, rename, delete.
 
 #### Loop Settings
@@ -2100,6 +2102,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
       one of the two.
     - If S3 gives an error to that check, the server starts with S3 off.
+  - If the control DB is missing and its write-ahead log is still there, the server moves the log to
+    `controldb.sqlite.replaced-<time>-wal` before the restore. The restored control DB has only the replica's data.
   - If the control DB's replication cannot start, the server starts with S3 off.
   - If the control DB does not open at start, as a file a disk damaged, the server restores it from its replica:
     - The one that does not open is kept as `controldb.sqlite.unopened-<time>`, with its write-ahead log.

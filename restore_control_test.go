@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 	"testing"
@@ -120,4 +121,45 @@ func TestOpenControlDBStopsWhenToldToStop(t *testing.T) {
 	require.True(t, cfg.Status.S3Working)
 	require.Empty(t, cfg.Status.S3Off)
 	pageFailure(noPage, false, err)
+}
+
+// A write-ahead log left where the control DB was, as when only the DB's file is moved away after the server was
+// killed, is not written over the control DB restored from its replica
+func TestRestoreControlDBLeavesOutALeftoverLog(t *testing.T) {
+	cfg, s3 := testutils.ReplicatedConfig(t)
+	control, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err)
+	r := replica.New(cfg, s3)
+	require.NoError(t, r.Start(t.Context(), control.Path))
+	_, err = control.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "replicat", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	require.NoError(t, r.Close(context.Background()))
+	require.NoError(t, control.Close())
+	path := controldb.GetPath(cfg)
+	require.NoError(t, os.Remove(path))
+
+	// Another control DB, not replicated, whose site is only in its log, as it is still open
+	other := *cfg
+	other.DataDir = t.TempDir()
+	conflict, err := controldb.NewDB(t.Context(), &other)
+	require.NoError(t, err)
+	defer conflict.Close()
+	_, err = conflict.Queries.CreateSite(t.Context(), controldb.CreateSiteParams{ID: "conflict", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+	for _, suffix := range []string{"-wal", "-shm"} {
+		left, err := os.ReadFile(conflict.Path + suffix)
+		require.NoError(t, err)
+		require.NotEmpty(t, left)
+		require.NoError(t, os.WriteFile(path+suffix, left, 0o600))
+	}
+
+	_, here := logged(t, cfg, replica.New(cfg, s3))
+	require.True(t, here)
+	restored, err := controldb.NewDB(t.Context(), cfg)
+	require.NoError(t, err)
+	defer restored.Close()
+	_, err = restored.Queries.GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: "replicat"})
+	require.NoError(t, err, "the replica's site is in the restored control DB")
+	_, err = restored.Queries.GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: "conflict"})
+	require.ErrorIs(t, err, sql.ErrNoRows, "the leftover log's site is not")
 }
