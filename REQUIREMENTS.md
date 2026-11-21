@@ -2098,6 +2098,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
       one of the two.
     - If S3 gives an error to that check, the server starts with S3 off.
+  - If the control DB is missing and its write-ahead log is still there, the server moves the log to
+    `controldb.sqlite.replaced-<time>-wal` before the restore. The restored control DB has only the replica's data.
   - If the control DB's replication cannot start, the server starts with S3 off.
   - If the control DB does not open at start, as a file a disk damaged, the server restores it from its replica:
     - The one that does not open is kept as `controldb.sqlite.unopened-<time>`, with its write-ahead log.
