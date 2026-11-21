@@ -1,6 +1,6 @@
-// The readings are all of today, so the last days card has yesterday, which the background jobs keep, and today: a run
-// near midnight UTC (the site's timezone) would put them in three days, so it waits until half past
-AVOID_MIDNIGHT 30
+// The readings are all of today, so the last days card has yesterday, which the background jobs keep, and today: the
+// site is in a time zone where it is midday-ish, as readings across its midnight would put them in three days
+MIDDAY_TIMEZONE
 INCLUDE steps/new_site_admin.steps
 
 // Virtual connector writes the last 30 minutes of glucose readings, 6 of them, on its first run
