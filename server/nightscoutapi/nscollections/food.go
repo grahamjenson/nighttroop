@@ -3,6 +3,7 @@ package nscollections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -49,6 +50,11 @@ func (c FoodCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsMo
 
 func (c FoodCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.FoodPreset, error) {
 	return q.GetFoodPreset(ctx, sitedb.GetFoodPresetParams{ID: identifier})
+}
+
+func (c FoodCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, _ bool) ([]*sitedb.FoodPreset, error) {
+	idIn, _ := json.Marshal(ids)
+	return q.GetFoodPresetsByIDs(ctx, sitedb.GetFoodPresetsByIDsParams{IDs: new(string(idIn))})
 }
 
 // Delete always deletes a preset for good, as presets are not soft deleted
