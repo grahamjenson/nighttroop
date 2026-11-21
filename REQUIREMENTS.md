@@ -2547,13 +2547,15 @@ harder:
 #### Push registrations
 
 - Each identity, of any role, registers the apps on its devices for pushes at `/settings/push-registrations` (JSON
-  API). If it is read only or a clinician, it cannot register `loop` or `trio` (403). Each registration has:
+  API). Only an admin, a user or a PWD phone registers `loop` or `trio`. Another role gets 403. Each registration has:
   - App: `loop`, `trio`, `loopfollow` or `t1dcarer`.
   - Provider: `apns` or `fcm`.
   - Bundle ID, and if it is a production build.
   - Token: kept encrypted, never returned.
 - A token registered again is updated, or moved from another identity of the site. Another site gets its own, and
   cannot take or change this one.
+- If another identity registered a token as `loop` or `trio`, the token moves only as `loop` or `trio`. Another app is
+  refused (400), so a Caregiver device cannot stop the remote commands.
 - An APNs token has 64 to 256 hex characters, in upper or lower case.
 - At most 10 an identity, also from profiles uploaded at once. Registering one of them again always works.
 - An identity sees, streams (`/settings/push-registrations/events`) and deletes only its own. An admin also gets and
@@ -2588,7 +2590,7 @@ harder:
 - Only an identity that can write treatments sends one. Its sender is that identity, not its IP address.
 - Pushed as Nightscout does, to the Loop that last uploaded its profile, with the site's push credential for its
   bundle ID, expiring in 5 minutes. Answer: 200 `OK`.
-- Only a Loop registered by an enabled identity that can change the site's data gets the command.
+- Only a Loop registered by an enabled admin, user or PWD phone gets the command.
 - Remote carbs with a `foodType` (e.g. 🍕) are pushed with it as Loop's `food-type`.
 - Refused (400), saying which:
   - A bolus over 30 U.
