@@ -24,7 +24,7 @@ type RecoveredAdmin struct {
 
 // RecoverSiteAdmin proves ownership of a site with its backup key, the one secret only its creator was shown. The
 // key works once: it is replaced by a new one, and the site's admin gets a new password and TOTP, or is made again
-// if it is gone, and the site's other admins are turned off, so whoever had the old credentials or key is shut out,
+// if it is gone, in place of an identity that took its name, and the site's other admins are turned off, so whoever had the old credentials or key is shut out,
 // even through an admin they added.
 func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backupKey string) (*RecoveredAdmin, error) {
 	site, err := db.Queries.GetSite(ctx, controldb.GetSiteParams{ID: siteID})
@@ -74,7 +74,11 @@ func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backup
 		return nil, err
 	}
 	if n, err := reset.RowsAffected(); err != nil || n == 0 {
-		// The admin was deleted, so it is made again, with credentials of its own
+		// The admin was deleted, so it is made again, with credentials of its own, in place of any identity that has
+		// its name since: whoever deleted it could add one, and the name is unique, so the recovery would fail
+		if err := q.DeleteSiteIdentityNamedNotAdmin(ctx, controldb.DeleteSiteIdentityNamedNotAdminParams{SiteID: siteID, Name: name}); err != nil {
+			return nil, fmt.Errorf("cannot remove the identity with the admin's name: %w", err)
+		}
 		created, err := db.CreateSiteIdentity(ctx, q, siteID, name, consts.IdentityRoleAdmin, nil)
 		if err != nil {
 			return nil, fmt.Errorf("cannot make the admin again: %w", err)

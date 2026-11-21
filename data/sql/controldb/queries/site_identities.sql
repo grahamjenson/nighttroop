@@ -117,6 +117,12 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 DELETE FROM site_identities
 WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 
+-- A recovery makes the site's admin again under its name, so an identity that is not an admin and took the name of a
+-- deleted admin goes, with its credentials, and cannot block the recovery
+-- name: DeleteSiteIdentityNamedNotAdmin :exec
+DELETE FROM site_identities
+WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') AND role != 'admin';
+
 -- name: DeleteAllSiteIdentities :exec
 -- Hard deletes all a site's identities, with their credentials and push registrations, as when it is deleted for good
 DELETE FROM site_identities WHERE site_id = sqlc.arg('SiteID');
