@@ -232,6 +232,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - If an unavailable site has no DB here, or its DB is being restored at that moment, the download is 404.
 - Permanent delete (for example, of a site never used) deletes its identities (with passwords, TOTP secrets and push
   tokens) and push credentials. Archive keeps them for restore.
+- Permanent delete of an unavailable site also stops its restore and deletes its DB files.
 
 ### A site's identities
 

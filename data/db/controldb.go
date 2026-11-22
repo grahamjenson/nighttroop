@@ -340,9 +340,8 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 // Delete USER methods
 ////
 
-// DeleteSites marks the sites deleted, then closes and removes each one's DB files. A site missing from the map stops
-// the rest being closed, and a file that cannot be removed is only logged, so a failure part way leaves the sites
-// marked deleted with some files left behind.
+// DeleteSites marks the sites deleted, then closes and removes each one's DB files. A file that cannot be removed is
+// only logged, so a failure part way leaves the sites marked deleted with some files left behind.
 func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
 	if len(subdomains) == 0 {
@@ -370,15 +369,16 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 		}
 	}
 
-	// Close the DB and remove from the map
+	// Close the DB and remove from the map. An unavailable site has no open DB: it is not restored any more, and
+	// the DB files it has go too
 	for _, subdomain := range deletedSubdomains {
-		site := db.sites.remove(subdomain)
-		if site == nil {
-			return fmt.Errorf("site not found")
+		files := append(dbFiles(sitedb.GetPath(subdomain, db.ServerConfig)), sitedb.GetBackupPath(subdomain, db.ServerConfig))
+		if site := db.sites.remove(subdomain); site != nil {
+			site.Close()
 		}
-		site.Close()
+		db.unavailable.remove(subdomain)
 
-		err := utils.DeleteFiles([]string{site.Path, site.BackupPath})
+		err := utils.DeleteFiles(files)
 		if err != nil {
 			slog.Error("Failed to delete site db files", "subdomain", subdomain, "error", err)
 		} else {
