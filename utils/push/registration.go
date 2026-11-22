@@ -3,6 +3,7 @@ package push
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -72,9 +73,13 @@ func TokenHash(token string) string {
 	return hex.EncodeToString(sum[:])
 }
 
+// ErrTokenOfLoop is a registration of a token that another identity of the site registered as Loop or Trio, for an app
+// that is neither
+var ErrTokenOfLoop = errors.New("this token is registered as Loop or Trio by another identity")
+
 // Register checks the registration and keeps it for the site's identity, its token encrypted, moving the token there if
 // another of the site's identities had it. It is refused with ErrTooManyRegistrations when the identity has
-// MaxRegistrations other than this token, counted in q's transaction, if it has one.
+// MaxRegistrations other than this token, counted in q's transaction, if it has one, and with ErrTokenOfLoop.
 func Register(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfig, siteID string, identityID int64, r Registration) (*controldb.PushRegistration, error) {
 	if err := CheckRegistration(r); err != nil {
 		return nil, err
@@ -95,9 +100,13 @@ func Register(ctx context.Context, q *controldb.Queries, sec *security.SecurityC
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("cannot encrypt a push token"), err)
 	}
-	return q.UpsertPushRegistration(ctx, controldb.UpsertPushRegistrationParams{SiteID: siteID, IdentityID: identityID,
+	registered, err := q.UpsertPushRegistration(ctx, controldb.UpsertPushRegistrationParams{SiteID: siteID, IdentityID: identityID,
 		App: consts.PushApp(r.App), Provider: r.Provider, BundleID: r.BundleID, Production: r.Production, TokenEnc: tokenEnc,
 		TokenHash: tokenHash})
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrTokenOfLoop
+	}
+	return registered, err
 }
 
 // RegisterAlone is Register in a write transaction of its own, so the identity's registrations are counted and the new

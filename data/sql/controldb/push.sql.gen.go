@@ -701,6 +701,8 @@ ON CONFLICT (site_id, token_hash) DO UPDATE SET
         AND push_registrations.provider = excluded.provider AND push_registrations.bundle_id = excluded.bundle_id
         AND push_registrations.production = excluded.production THEN push_registrations.last_error END,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE push_registrations.identity_id = excluded.identity_id OR push_registrations.app NOT IN ('loop', 'trio')
+    OR excluded.app IN ('loop', 'trio')
 RETURNING id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error
 `
 
@@ -719,7 +721,9 @@ type UpsertPushRegistrationParams struct {
 // PUSH REGISTRATIONS
 // --------------------
 // Registers a token, moving it to this identity if another of the site's had it, as the app was signed in again. The
-// same registration again, as each upload of a Loop or Trio profile is, keeps its last push's error.
+// same registration again, as each upload of a Loop or Trio profile is, keeps its last push's error. Another
+// identity's Loop or Trio token only moves as Loop or Trio, else no row is returned, so an identity that may register
+// neither cannot take the token remote commands go to.
 func (q *Queries) UpsertPushRegistration(ctx context.Context, arg UpsertPushRegistrationParams) (*PushRegistration, error) {
 	row := q.queryRow(ctx, q.upsertPushRegistrationStmt, upsertPushRegistration,
 		arg.SiteID,
