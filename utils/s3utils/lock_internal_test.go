@@ -23,8 +23,9 @@ type lockS3 struct {
 	sync.Mutex
 	etags, bodies map[string]string
 	unconditional bool
-	// unanswered is how many writes it takes and then answers 500, and busy how many it refuses with 409
-	unanswered, busy int
+	// unanswered is how many writes it takes and then answers 500, busy how many it refuses with 409, and unread
+	// how many reads it answers 500
+	unanswered, busy, unread int
 }
 
 func (f *lockS3) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +55,11 @@ func (f *lockS3) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("ETag", f.etags[r.URL.Path])
 	case http.MethodHead, http.MethodGet:
+		if f.unread > 0 {
+			f.unread--
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		if !found {
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -237,6 +243,8 @@ func TestLockIsKeptThroughS3Faults(t *testing.T) {
 		// The SDK tries the write again, which S3 refuses, as the first try changed the lock
 		"a write S3 never answers":   func(f *lockS3) { f.unanswered = 1 },
 		"a write S3 refuses as busy": func(f *lockS3) { f.busy = 2 },
+		// Whose lock it is after the write is not known until S3 can be read again
+		"a write S3 never answers, then a lock it cannot read": func(f *lockS3) { f.unanswered, f.unread = 1, 8 },
 	} {
 		t.Run(name, func(t *testing.T) {
 			fake, servers := lockServers(t, 1)
@@ -254,7 +262,7 @@ func TestLockIsKeptThroughS3Faults(t *testing.T) {
 				before := written()
 				require.Eventually(t, func() bool {
 					fake.Lock()
-					faults := fake.unanswered + fake.busy
+					faults := fake.unanswered + fake.busy + fake.unread
 					fake.Unlock()
 					return faults == 0 && written() != before
 				}, 30*time.Second, 5*time.Millisecond, "it writes its lock again")
