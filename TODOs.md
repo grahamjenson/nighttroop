@@ -31,11 +31,10 @@
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 
 1. Security
-    1. P1: A Caregiver device changes glucose readings through Nightscout treatments, which it may write. Decide to
-       refuse or to limit each, as a careportal BG Check from LoopFollow or T1D Carer must still work:
-        1. A treatment it adds with a `glucose` and no `glucoseType`, or `Sensor`, is stored as an `sgv` reading
-        1. A treatment of the PWD phone with a `glucose` that it changes or deletes rewrites or deletes that reading,
-           and so does the delete of that event group on the site API
+    1. P1: A Caregiver device changes glucose readings through Nightscout treatments, which it may write: a treatment
+       of the PWD phone with a `glucose` that it changes or deletes rewrites or deletes that reading, and so does the
+       delete of that event group on the site API. Decide to refuse or to limit each, as a careportal BG Check from
+       LoopFollow or T1D Carer must still work. A treatment it adds is a meter reading (`mbg`) already
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
