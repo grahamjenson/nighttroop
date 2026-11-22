@@ -1459,7 +1459,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Roles: a fixed list, `admin`, `readable`, `aaps-client` and `careportal` (a Caregiver device). A role sent is
     given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
-  - Add a subject: a device for AAPSClient, with mg/dL units written `mg/dl`. It reads everything and writes only
+  - Add a subject: a device for AAPSClient, with mg/dL units. It reads everything and writes only
     `settings` (client control). It cannot add treatments, entries, device statuses, profiles or food: 403.
   - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
   - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
@@ -1575,19 +1575,12 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Each, a default too, has `srvCreated` and `date` in ms.
 - Replace or patch: answers with the setting as stored.
 - An identifier that is not a Nighttroop setting: 404 for read, replace, patch and delete; 400 for create.
-- Units labels (set only through the settings endpoint) choose how the API writes `units`:
-
-  | Setting            | Values             |
-  | ------------------ | ------------------ |
-  | `units_mgdl_label` | `mg/dL` or `mg/dl` |
-  | `units_mmol_label` | `mmol/L` or `mmol` |
-
-  - Default: Nighttroop's label. The API writes only mg/dL.
-  - If an identity without its own labels sends a document with `units`, its labels become that spelling's pair. The
-    response to that request uses them too.
-    - `mg/dl` or `mmol` (AAPS, Trio, xDrip4iOS): `mg/dl` and `mmol`.
-    - `mg/dL` or `mmol/L` (Loop): `mg/dL` and `mmol/L`.
-  - Units are stored Nighttroop's way. All labels are read.
+- A document's `units` are spelt for the identity's device (its client), as apps read only their own spelling:
+  - A device added for Loop: as Nighttroop does, `mg/dL` and `mmol/L`.
+  - Every other identity, a device for another app, Other, or none (the site's phone token, an admin): as Nightscout
+    does, `mg/dl` and `mmol`.
+  - The spelling a device sends does not change it. Units are stored Nighttroop's way, and every spelling is read.
+  - A profile's store keeps its `units` as stored.
 - AAPS documents, kept as sent and shared by all identities of the site:
   - `aaps`, `aaps-state`: the running config.
   - `aaps_clientcontrol_...`: AAPS and AAPSClient pairing and control messages.
@@ -2474,8 +2467,8 @@ harder:
   Other starts as `device`. A name that is typed is kept when another app is picked.
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
-- Any client but Nightguard and Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout
-  API also writes mg/dL as `mg/dl`.
+- Any client but Nightguard and Other sets the device's own units to mg/dL. The Nightscout API writes them `mg/dl`
+  for every client but Loop, which reads `mg/dL`.
 - Nightguard and Other follow the site's units. Nightguard reads `sgv` as mg/dL and shows the status's
   `settings.units`.
 - A device keeps its client (e.g. `loop`, `other`), returned as `client`. Users and a site's first devices have none.

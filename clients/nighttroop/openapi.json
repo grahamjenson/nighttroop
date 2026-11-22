@@ -983,7 +983,7 @@
           "created_at": { "type": "string" },
           "sgv": { "type": "number", "format": "double", "description": "In units" },
           "mbg": { "type": "number", "format": "double", "description": "In units" },
-          "units": { "type": "string", "description": "The units of sgv and mbg, always mg/dL" },
+          "units": { "type": "string", "description": "The units of sgv and mbg, always mg/dL: spelt mg/dl, as Nightscout does, or mg/dL for a device added for Loop" },
           "direction": { "type": "string" },
           "insulin": { "type": "number", "format": "double" },
           "carbs": { "type": "number", "format": "double" },

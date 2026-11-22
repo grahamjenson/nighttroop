@@ -1,14 +1,23 @@
 INCLUDE steps/new_site_admin.steps
 
-// A BG check, as xDrip4iOS uploads one: in mg/dL, written mg/dl
+// The Nightscout API spells units for the identity's device: Nightscout's mg/dl and mmol for every device but Loop,
+// which reads only Nighttroop's mg/dL and mmol/L. Apps read only their own spelling: xDrip4iOS reads a BG check's
+// glucose as mg/dL only when its units are exactly mg/dl, and AAPS knows only mg/dl and mmol.
+
+// A BG check, as xDrip4iOS uploads one: in mg/dL, written mg/dl, kept as Nighttroop writes it
 NAME upload_bg_check
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 H Accept: application/json
 B {"enteredBy": "xDrip4iOS", "eventTime": "{{ time 5 }}", "eventType": "BG Check", "glucose": 120, "glucoseType": "Finger", "units": "mg/dl"}
 ASSERT_STATUS 200
 
-// A device added for xDrip4iOS is in mg/dL, written mg/dl, as it reads a BG check's glucose as mg/dL only when its
-// units are exactly mg/dl, and matches its own upload by its value
+// The admin's token, with no device, reads it as Nightscout spells it
+NAME admin_reads_mg_dl
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
 NAME create_xdrip4ios
 POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
@@ -24,7 +33,7 @@ ASSERT_EQUALS "BG Check" "@0.eventType"
 ASSERT_EQUALS 120 "@0.glucose"
 ASSERT_EQUALS "mg/dl" "@0.units"
 
-// Another device reads mg/dL too, whatever the site's mmol/L, written as Nighttroop does
+// Another device reads Nightscout's spelling too, whatever the site's mmol/L
 NAME create_other
 POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
@@ -37,43 +46,52 @@ NAME other_reads_mg_dl
 GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 120 "@0.glucose"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 
-// The site can still set how mmol/L is written, which no glucose is in now the API gives it in mg/dL
-NAME site_writes_mmol
-POST http://{{ site }}/settings/site
+// A device added for Loop reads Nighttroop's spelling, whatever it uploads in
+NAME create_loop
+POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"units_mmol_label": "mmol"}
-ASSERT_STATUS 200
-ASSERT_EQUALS "mmol" "@result.units_mmol_label"
+B {"name": "loop", "role": "device_pwd_phone", "client": "loop"}
+ASSERT_STATUS 201
+SET loop_token {{ .create_loop.result.ns_token }}
 
-NAME other_still_reads_mg_dl
-GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
+NAME loop_uploads_mg_dl
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .loop_token }}
+H Accept: application/json
+B [{"enteredBy": "test", "created_at": "{{ time 3 }}", "eventType": "BG Check", "glucose": 100, "glucoseType": "Finger", "units": "mg/dl"}]
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dL" "@0.units"
 
-// The labels are set only through the settings endpoint, so saving the settings page, which sends only its own
-// settings, leaves them as they are
-NAME site_saves_page_settings
-POST http://{{ site }}/settings/site
+NAME loop_reads_mg_dL
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .loop_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dL" "@1.units"
+
+// The other device's spelling is its device's, not learned from what it uploads
+NAME other_uploads_mg_dL
+POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"units": "mmol/L", "timezone": "Pacific/Auckland"}
-ASSERT_STATUS 200
-ASSERT_EQUALS "mmol" "@result.units_mmol_label"
+B {"name": "follower", "role": "device_read_write", "client": "other"}
+ASSERT_STATUS 201
+SET follower_token {{ .other_uploads_mg_dL.result.ns_token }}
 
-// The xDrip4iOS device is still mg/dl, its own setting
-NAME xdrip4ios_still_reads_mg_dl
-GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .xdrip4ios_token }}
+NAME follower_uploads_mg_dL
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .follower_token }}
+H Accept: application/json
+B [{"enteredBy": "Loop", "created_at": "{{ time 2 }}", "eventType": "BG Check", "glucose": 110, "glucoseType": "Finger", "units": "mg/dL"}]
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dl" "@0.units"
 
-// Only the spellings offered can be set
-NAME bad_mgdl_label
-POST http://{{ site }}/settings/identity
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"units_mgdl_label": "milligrams"}
-ASSERT_STATUS 400
-ASSERT_CONTAINS "invalid mg/dL label" "@message"
+// The spellings are no longer settings
+NAME admin_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+NAME no_mgdl_label_setting
+GET http://{{ .ns_site }}/api/v3/settings/units_mgdl_label
+H Authorization: Bearer {{ .admin_jwt.token }}
+ASSERT_STATUS 404

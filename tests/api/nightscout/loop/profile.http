@@ -181,7 +181,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS ".loop_upload_settings.0._id" "@_id"
 ASSERT_EQUALS ".loop_upload_settings.0.startDate" "@startDate"
-ASSERT_EQUALS "mg/dL" "@units"
+ASSERT_EQUALS "mg/dl" "@units"
 ASSERT_EQUALS "Default" "@defaultProfile"
 ASSERT_EQUALS "Loop" "@enteredBy"
 ASSERT_EQUALS true "@loopSettings.dosingEnabled"
@@ -233,7 +233,7 @@ GET http://{{ site }}/api/v1/profile/current
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS ".loop_upload_settings_mmol.0._id" "@_id"
-ASSERT_EQUALS "mmol/L" "@units"
+ASSERT_EQUALS "mmol" "@units"
 ASSERT_EQUALS "mmol/L" "@store.Default.units"
 ASSERT_EQUALS 2.8 "@store.Default.sens.0.value"
 ASSERT_EQUALS 5.6 "@store.Default.target_low.0.value"

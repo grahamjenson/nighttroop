@@ -3,8 +3,6 @@
 UPDATE site_identities SET
     -- IDENTITY SETTINGS
     units = sqlc.narg('Units'),
-    units_mgdl_label = sqlc.narg('UnitsMgdlLabel'),
-    units_mmol_label = sqlc.narg('UnitsMmolLabel'),
 
     -- DATE
     timezone = sqlc.narg('Timezone'),
@@ -76,8 +74,6 @@ WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
 UPDATE sites SET
     -- IDENTITY SETTINGS
     units = sqlc.narg('Units'),
-    units_mgdl_label = sqlc.narg('UnitsMgdlLabel'),
-    units_mmol_label = sqlc.narg('UnitsMmolLabel'),
 
     -- DATE
     timezone = sqlc.narg('Timezone'),
@@ -143,10 +139,3 @@ UPDATE sites SET
     -- NOTIFICATIONS
     notifications_enabled = sqlc.narg('NotificationsEnabled')
 WHERE id = sqlc.arg('ID');
-
--- name: LearnSiteIdentityUnitsLabels :exec
--- A device is given units back spelt as it first sends them, unless its spelling is set
-UPDATE site_identities SET
-    units_mgdl_label = COALESCE(units_mgdl_label, sqlc.narg('UnitsMgdlLabel')),
-    units_mmol_label = COALESCE(units_mmol_label, sqlc.narg('UnitsMmolLabel'))
-WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');

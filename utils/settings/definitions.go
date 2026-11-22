@@ -50,10 +50,6 @@ var (
 	WeekStartDays = []string{"monday", "sunday"}
 	// NumberFormats write a thousand and a half with each thousands separator and decimal mark
 	NumberFormats = []string{"1,234.5", "1.234,5", "1 234,5"}
-	// The ways the Nightscout API can write each units, as a client may read only one: xDrip4iOS reads a BG check's
-	// glucose as mg/dL only when its units are exactly mg/dl
-	UnitsMgdlLabels = []string{"mg/dL", "mg/dl"}
-	UnitsMmolLabels = []string{"mmol/L", "mmol"}
 )
 
 var Units = &SettingDefinition[consts.Units]{
@@ -101,22 +97,6 @@ var Language = &SettingDefinition[string]{
 		}
 		return nil
 	},
-}
-
-var UnitsMgdlLabel = &SettingDefinition[string]{
-	Identifier:   "units_mgdl_label",
-	TypeString:   "string",
-	Default:      string(consts.UnitsMGDL),
-	ParseFunc:    ParseString,
-	ValidateFunc: oneOf("mg/dL label", UnitsMgdlLabels),
-}
-
-var UnitsMmolLabel = &SettingDefinition[string]{
-	Identifier:   "units_mmol_label",
-	TypeString:   "string",
-	Default:      string(consts.UnitsMMOLL),
-	ParseFunc:    ParseString,
-	ValidateFunc: oneOf("mmol/L label", UnitsMmolLabels),
 }
 
 // oneOf validates a setting that must be one of options
