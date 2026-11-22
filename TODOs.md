@@ -40,6 +40,13 @@
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
+    1. P2: A connector backfill has no wait between runs and skips the host limiter, so a few sites that start one
+       again and again against a slow host hold every connector worker: add a wait after the last backfill, or spend
+       the site's download limit
+    1. P3: One identity can open all 20 of a site's event streams, so the others get 429: cap the streams of one
+       identity too
+    1. P4: A site JWT sent to `/api/v2/authorization/request` or `/api/v1/status.json` gets a new JWT, so a TOTP
+       user's session never has to end: decide if a JWT may renew itself, or cap its total life
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
        are right on real sites first, then act on them, each item its own PR:
         1. P2: Score a site's rate-limit refusals too: a count for each site that halves every hour, of refusals by the
