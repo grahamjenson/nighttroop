@@ -17,8 +17,8 @@
        is one of those settings, so that failure is only printed
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
-    1. P4: Read a page of treatments, profiles and foods by their identifiers in one query (`CollectionKeysReader`), as
-       entries and device statuses are: a date-sorted search or API v3 history reads each by itself
+    1. P5: Read a page of profiles by their identifiers in one query (`CollectionKeysReader`), as the other collections
+       do: a date-sorted search or API v3 history reads each profile store by itself, but a site has few of them
 
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
