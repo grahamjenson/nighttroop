@@ -22,9 +22,12 @@ import (
 const (
 	generalAAPS          = "aaps"
 	generalClientControl = "aaps_clientcontrol"
-	// maxGeneralSettings is the most a site keeps, and maxGeneralSettingBytes the largest one's JSON
-	maxGeneralSettings     = 100
-	maxGeneralSettingBytes = 256 * 1024
+	// maxGeneralSettings is the most a site keeps, maxGeneralSettingBytes the largest one's JSON, and
+	// maxGeneralSettingsBytes the most JSON of them all: the most documents at their largest would fill a site's DB
+	// past its size limit, whose truncate deletes old readings and treatments but never these
+	maxGeneralSettings      = 100
+	maxGeneralSettingBytes  = 256 * 1024
+	maxGeneralSettingsBytes = 2 * 1024 * 1024
 	// staleClientControl is how long a client control message is kept unchanged before a new one may take its place
 	staleClientControl = 7 * 24 * time.Hour
 )
@@ -59,7 +62,8 @@ func generalSettingDocument(row *sitedb.GeneralSetting) nsutils.Document {
 
 // saveGeneralSetting keeps the document under its key, replacing the one there, or with patch adding its fields to
 // it. A new key is refused once the site has its most, after making room by deleting client control messages left
-// unchanged a week. It says whether the key is new.
+// unchanged a week, and a document that takes the site's documents past their most JSON is refused. It says whether
+// the key is new.
 func saveGeneralSetting(ctx context.Context, siteContext *httputils.SiteContext, key string, doc map[string]any, patch bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	q := siteContext.SiteDB.Queries()
 	existing, err := q.GetGeneralSetting(ctx, sitedb.GetGeneralSettingParams{Key: key})
@@ -93,6 +97,10 @@ func saveGeneralSetting(ctx context.Context, siteContext *httputils.SiteContext,
 	if err != nil || len(value) > maxGeneralSettingBytes {
 		slog.WarnContext(ctx, "general setting too large", "key", key, "bytes", len(value))
 		return nil, false, nsutils.BadDataBodyErrorWithHint("settings document too large")
+	}
+	if others, err := q.GeneralSettingsBytes(ctx, sitedb.GeneralSettingsBytesParams{Key: key}); err != nil || others+int64(len(value)) > maxGeneralSettingsBytes {
+		slog.WarnContext(ctx, "general settings too large", "error", err, "key", key, "bytes", others+int64(len(value)))
+		return nil, false, nsutils.BadDataBodyErrorWithHint("settings documents too large")
 	}
 	row, err := q.UpsertGeneralSetting(ctx, sitedb.UpsertGeneralSettingParams{Key: key, Type: generalSettingType(key),
 		ValueJson: string(value), CreatedByIdentityName: siteContext.IdentityModel.Name})

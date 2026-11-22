@@ -5172,6 +5172,11 @@ func (m *DeleteGeneralSettingsBeforeParams) SetUpdatedAt(v int64) {
 }
 
 // GetKey returns the Key value.
+func (m GeneralSettingsBytesParams) GetKey() string {
+	return m.Key
+}
+
+// GetKey returns the Key value.
 func (m GetGeneralSettingParams) GetKey() string {
 	return m.Key
 }

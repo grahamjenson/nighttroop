@@ -1588,6 +1588,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
     change.
 - Limits:
   - Document over 256 KiB: refused.
+  - Document that takes the settings documents of the site over 2 MiB in total: refused.
   - New document when the site has 100: refused.
   - Client control messages with no change for a week: deleted to make space.
   - Settings key: up to 128 characters, as its column (AAPS client control keys include the client UUID). Other
