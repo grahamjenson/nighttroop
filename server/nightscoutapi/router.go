@@ -63,12 +63,12 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		r.Get("/pebble", nsutils.Require("api:*:read", true, nsv2.Pebble()))
 
 		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-			slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", r.URL.Path)
+			slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", httputils.RedactPath(r.URL.Path))
 			http.Error(w, "Not Found", http.StatusNotFound)
 		})
 	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		aslog.Refuse(r.Context(), http.StatusNotFound, "", "Nightscout router 404 for path", "path", r.URL.Path)
+		aslog.Refuse(r.Context(), http.StatusNotFound, "", "Nightscout router 404 for path", "path", httputils.RedactPath(r.URL.Path))
 		http.Error(w, "Not Found", http.StatusNotFound)
 	})
 	return r

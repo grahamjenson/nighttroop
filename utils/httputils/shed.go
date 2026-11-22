@@ -32,7 +32,7 @@ func ShedLoad(inFlight int, backlog int, wait time.Duration, exempt func(*http.R
 				next.ServeHTTP(w, r)
 			})).ServeHTTP(w, r)
 			if !served && r.Context().Err() == nil {
-				slog.InfoContext(r.Context(), "Server busy, request refused", "path", r.URL.Path)
+				slog.InfoContext(r.Context(), "Server busy, request refused", "path", RedactPath(r.URL.Path))
 			}
 		})
 	}
@@ -43,7 +43,7 @@ const retryAfter = 5 * time.Second
 
 // RefuseBusy answers 503, to try again in a few seconds, as when the server cannot answer the request in time
 func RefuseBusy(w http.ResponseWriter, r *http.Request, why string) {
-	slog.InfoContext(r.Context(), "Server busy, request refused", "why", why, "path", r.URL.Path)
+	slog.InfoContext(r.Context(), "Server busy, request refused", "why", why, "path", RedactPath(r.URL.Path))
 	w.Header().Set("Retry-After", strconv.Itoa(int(retryAfter.Seconds())))
 	http.Error(w, "Server busy, try again shortly", http.StatusServiceUnavailable)
 }

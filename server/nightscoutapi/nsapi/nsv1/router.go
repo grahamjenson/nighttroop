@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv2"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // NewNightscoutV1Router constructs a router that serves the supported
@@ -19,7 +20,7 @@ func NewNightscoutV1Router(store nsutils.Store) *chi.Mux {
 	registerCollectionRoutes(r, store)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", r.URL.Path)
+		slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", httputils.RedactPath(r.URL.Path))
 		http.Error(w, "Not Found", http.StatusNotFound)
 	})
 	return r
