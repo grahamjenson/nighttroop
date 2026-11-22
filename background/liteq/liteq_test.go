@@ -109,6 +109,29 @@ func TestFailedQueuedJobKeepsItsRunID(t *testing.T) {
 	require.Contains(t, logs.String(), `msg="upstream is down" job_id=`+*job.RunID)
 }
 
+// A job runs in a goroutine of its own, where a panic would stop the whole server: it fails the job instead
+func TestPanickingQueuedJobFails(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, queue := t.Context(), liteq.New(controlDB)
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
+	require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: "panicking", Job: "fetch"}))
+
+	var queuedID int64
+	worker := func(ctx context.Context, job *jobsdb.Job) error {
+		queuedID = job.ID
+		var reading *int
+		return fmt.Errorf("reading %d", *reading)
+	}
+	require.NoError(t, liteq.NewConsumerSupervisor(queue, "panicking", 1, worker).RunQueued(ctx))
+	job, err := controlDB.Jobs.Queries.FindJob(ctx, jobsdb.FindJobParams{ID: queuedID})
+	require.NoError(t, err)
+	require.Equal(t, "failed", job.JobStatus)
+	require.Contains(t, strings.Join(job.Errors, " "), "job panicked: runtime error: invalid memory address")
+	require.Contains(t, logs.String(), `msg="Liteq: Job panicked"`)
+	require.Contains(t, logs.String(), "job_id="+*job.RunID)
+}
+
 // A job is only fetched when a worker is free to run it. Its visibility timeout counts from when it is fetched, so a
 // job fetched to wait behind others would time out, and be queued again, before it ran.
 func TestConsumeOnlyFetchesJobsAWorkerIsFreeFor(t *testing.T) {
