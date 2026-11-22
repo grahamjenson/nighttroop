@@ -20,3 +20,7 @@ DELETE FROM general_settings WHERE key = ? RETURNING *;
 
 -- name: DeleteGeneralSettingsBefore :exec
 DELETE FROM general_settings WHERE type = ? AND updated_at < ?;
+
+-- name: GeneralSettingsBytes :one
+-- The size of every document's JSON but the one at the key, which a save replaces
+SELECT CAST(COALESCE(SUM(LENGTH(value_json)), 0) AS INTEGER) FROM general_settings WHERE key != ?;

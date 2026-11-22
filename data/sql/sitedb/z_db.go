@@ -216,6 +216,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.foodPresetHistoryIDsStmt, err = db.PrepareContext(ctx, foodPresetHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query FoodPresetHistoryIDs: %w", err)
 	}
+	if q.generalSettingsBytesStmt, err = db.PrepareContext(ctx, generalSettingsBytes); err != nil {
+		return nil, fmt.Errorf("error preparing query GeneralSettingsBytes: %w", err)
+	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
@@ -890,6 +893,11 @@ func (q *Queries) Close() error {
 	if q.foodPresetHistoryIDsStmt != nil {
 		if cerr := q.foodPresetHistoryIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing foodPresetHistoryIDsStmt: %w", cerr)
+		}
+	}
+	if q.generalSettingsBytesStmt != nil {
+		if cerr := q.generalSettingsBytesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing generalSettingsBytesStmt: %w", cerr)
 		}
 	}
 	if q.getActivityStmt != nil {
@@ -1580,6 +1588,7 @@ type Queries struct {
 	foodIntakeTotalsStmt                        *sql.Stmt
 	foodPresetAscendingIDsStmt                  *sql.Stmt
 	foodPresetHistoryIDsStmt                    *sql.Stmt
+	generalSettingsBytesStmt                    *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getDeviceReportStmt                         *sql.Stmt
 	getDeviceReportsByIDsStmt                   *sql.Stmt
@@ -1767,6 +1776,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		foodIntakeTotalsStmt:                        q.foodIntakeTotalsStmt,
 		foodPresetAscendingIDsStmt:                  q.foodPresetAscendingIDsStmt,
 		foodPresetHistoryIDsStmt:                    q.foodPresetHistoryIDsStmt,
+		generalSettingsBytesStmt:                    q.generalSettingsBytesStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getDeviceReportStmt:                         q.getDeviceReportStmt,
 		getDeviceReportsByIDsStmt:                   q.getDeviceReportsByIDsStmt,
