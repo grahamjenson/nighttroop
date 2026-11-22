@@ -216,9 +216,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
-	if q.learnSiteIdentityUnitsLabelsStmt, err = db.PrepareContext(ctx, learnSiteIdentityUnitsLabels); err != nil {
-		return nil, fmt.Errorf("error preparing query LearnSiteIdentityUnitsLabels: %w", err)
-	}
 	if q.listControlPasskeysStmt, err = db.PrepareContext(ctx, listControlPasskeys); err != nil {
 		return nil, fmt.Errorf("error preparing query ListControlPasskeys: %w", err)
 	}
@@ -679,11 +676,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
 		}
 	}
-	if q.learnSiteIdentityUnitsLabelsStmt != nil {
-		if cerr := q.learnSiteIdentityUnitsLabelsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing learnSiteIdentityUnitsLabelsStmt: %w", cerr)
-		}
-	}
 	if q.listControlPasskeysStmt != nil {
 		if cerr := q.listControlPasskeysStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listControlPasskeysStmt: %w", cerr)
@@ -1012,7 +1004,6 @@ type Queries struct {
 	getSitesToBackUpStmt                    *sql.Stmt
 	getSitesToDeleteStmt                    *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
-	learnSiteIdentityUnitsLabelsStmt        *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
 	newestPushRegistrationForAppStmt        *sql.Stmt
@@ -1128,7 +1119,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSitesToBackUpStmt:                    q.getSitesToBackUpStmt,
 		getSitesToDeleteStmt:                    q.getSitesToDeleteStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
-		learnSiteIdentityUnitsLabelsStmt:        q.learnSiteIdentityUnitsLabelsStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,
 		newestPushRegistrationForAppStmt:        q.newestPushRegistrationForAppStmt,

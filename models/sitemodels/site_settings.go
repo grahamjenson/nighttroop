@@ -6,8 +6,6 @@ package sitemodels
 type Settings struct {
 	Units *string `json:"units"`
 	// How the Nightscout API writes each units, e.g. mg/dl for xDrip4iOS
-	UnitsMgdlLabel *string `json:"units_mgdl_label"`
-	UnitsMmolLabel *string `json:"units_mmol_label"`
 	Timezone       *string `json:"timezone"`
 	Language       *string `json:"language"`
 	DateFormat     *string `json:"date_format"`
@@ -57,7 +55,7 @@ type Settings struct {
 // Fields are the settings by name, to read or set
 func (s *Settings) Fields() map[string]**string {
 	return map[string]**string{
-		"units": &s.Units, "units_mgdl_label": &s.UnitsMgdlLabel, "units_mmol_label": &s.UnitsMmolLabel,
+		"units": &s.Units,
 		"timezone": &s.Timezone, "language": &s.Language,
 		"date_format": &s.DateFormat, "time_format": &s.TimeFormat, "week_start_day": &s.WeekStartDay,
 		"number_format": &s.NumberFormat, "alarm_urgent_low_enabled": &s.AlarmUrgentLowEnabled, "range_urgent_low": &s.RangeUrgentLow,

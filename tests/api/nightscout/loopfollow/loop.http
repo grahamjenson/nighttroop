@@ -276,7 +276,7 @@ GET http://{{ site }}/api/v1/profiles.json?token={{ token }}&count=1&find[startD
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "Default" "@0.defaultProfile"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 ASSERT_EXISTS "@0.startDate"
 # Profile.swift only reads a store called Default or default
 ASSERT_EQUALS "Pacific/Auckland" "@0.store.Default.timezone"

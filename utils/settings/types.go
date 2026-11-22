@@ -255,8 +255,6 @@ func quoted(values []string) string {
 
 type SettingsGetter interface {
 	GetUnits() *consts.Units
-	GetUnitsMgdlLabel() *string
-	GetUnitsMmolLabel() *string
 	GetTimezone() *string
 	GetLanguage() *string
 	GetDateFormat() *string
@@ -307,10 +305,6 @@ func GetSettingByName(name string, in SettingsGetter) any {
 	switch name {
 	case "units":
 		return in.GetUnits()
-	case "units_mgdl_label":
-		return in.GetUnitsMgdlLabel()
-	case "units_mmol_label":
-		return in.GetUnitsMmolLabel()
 	case "timezone":
 		return in.GetTimezone()
 	case "language":
@@ -406,8 +400,6 @@ func GetSettingByName(name string, in SettingsGetter) any {
 
 type SettingsSetter interface {
 	SetUnits(v *consts.Units)
-	SetUnitsMgdlLabel(v *string)
-	SetUnitsMmolLabel(v *string)
 	SetTimezone(v *string)
 	SetLanguage(v *string)
 	SetDateFormat(v *string)
@@ -456,8 +448,6 @@ type SettingsSetter interface {
 
 func SetSettings(s SettingsSetter, g SettingsGetter) {
 	s.SetUnits(g.GetUnits())
-	s.SetUnitsMgdlLabel(g.GetUnitsMgdlLabel())
-	s.SetUnitsMmolLabel(g.GetUnitsMmolLabel())
 	s.SetTimezone(g.GetTimezone())
 	s.SetLanguage(g.GetLanguage())
 	s.SetDateFormat(g.GetDateFormat())

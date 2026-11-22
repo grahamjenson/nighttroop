@@ -187,17 +187,19 @@ func quote(s string) []byte {
 	return out
 }
 
-// unitsLabels are how the identity's settings write each units in the Nightscout API, where it is not as Nighttroop
-// writes them, as xDrip4iOS reads a BG check's glucose as mg/dL only when its units are mg/dl
+// nightscoutUnits are how Nightscout writes each units, by Nighttroop's, as apps read only their own spelling: AAPS
+// knows only mg/dl and mmol, and xDrip4iOS reads a BG check's glucose as mg/dL only when its units are exactly mg/dl, so
+// it saw 110 come back as 1982 and uploaded it again every 15 seconds
+var nightscoutUnits = map[string]string{string(consts.UnitsMGDL): "mg/dl", string(consts.UnitsMMOLL): "mmol"}
+
+// unitsLabels are how the Nightscout API writes each units for the identity's device, where it is not as Nighttroop
+// writes them: Nightscout's spelling for every device but Loop, which reads only Nighttroop's, mg/dL and mmol/L
 func unitsLabels(siteContext *httputils.SiteContext) map[string]string {
 	if siteContext == nil {
 		return nil
 	}
-	labels := map[string]string{}
-	for _, units := range []consts.Units{consts.UnitsMGDL, consts.UnitsMMOLL} {
-		if label := siteContext.GetSettings().GetUnitsLabel(units); label != string(units) {
-			labels[string(units)] = label
-		}
+	if identity := siteContext.IdentityModel; identity != nil && identity.Client != nil && *identity.Client == "loop" {
+		return nil
 	}
-	return labels
+	return nightscoutUnits
 }
