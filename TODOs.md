@@ -21,17 +21,12 @@
        is one of those settings, so that failure is only printed
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
-    1. P5: Read a page of profiles by their identifiers in one query (`CollectionKeysReader`), as the other collections
-       do: a date-sorted search or API v3 history reads each profile store by itself, but a site has few of them
 
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
        of Custom Type One: its tile in the Add Device modal shows its first letter
     1. P4: Add the icons of Dexcom and FreeStyle Libre to `server/assets/static/logos`, with their makers' leave, as
        they are trade marks of Dexcom and Abbott: their tiles under Add a connector show their first letter
-    1. P4: Open the Add Device modal from a shared identity with the app of one of its clients picked, read from
-       the client's user agent
-    1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 
 1. Security
@@ -48,8 +43,6 @@
     1. P2: A connector backfill has no wait between runs and skips the host limiter, so a few sites that start one
        again and again against a slow host hold every connector worker: add a wait after the last backfill, or spend
        the site's download limit
-    1. P3: One identity can open all 20 of a site's event streams, so the others get 429: cap the streams of one
-       identity too
     1. P4: A site JWT sent to `/api/v2/authorization/request` or `/api/v1/status.json` gets a new JWT, so a TOTP
        user's session never has to end: decide if a JWT may renew itself, or cap its total life
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
@@ -88,7 +81,6 @@
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
        fixes it, starting with an unavailable site (seeing why, trying a fix on a copy, and restoring, forcing back,
        disabling or deleting it) and a missing control DB starting a new server in setup
-    1. P1: Set up paging the admin (`utils/page`), which only logs a page as an error
 
 
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
@@ -103,22 +95,11 @@
 
 
 1. Nightscout API:
-    1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
-       basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
-       the temp basal in NSStatus (`nsv2/assistants.go`)
     1. P3: Add the v2 `basal` property watch faces read: the profile's basal now (`sitemodels.BasalAt`) and the temp
        basal running, as `display` and `current` (`basal`, `tempbasal`, `totalbasal`, `treatment`)
     1. P4: The v2 `pump`, `openaps` and `loop` properties read only the newest loop device status of the last 20
        minutes. Nightscout reads 6 hours (2 for the pump), so it also has a pump with no loop, and an earlier
        enacted when the newest status has none
-    1. P3: A profile switch the careportal or T1DCarer sent before its `timeshift` was read in hours has its hours
-       kept as minutes (3 hours as 3 minutes), so API v1 gives it as 0. Multiply those by 60, if any site has them
-    1. P5: Temp targets, temp basals, profile switches and activities keep their duration in whole minutes, so the
-       site's summaries end a temp target AAPS ended at 5.99 minutes at 5; only its event group keeps the
-       milliseconds, for the Nightscout API's `durationInMilliseconds`
-    1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
-       it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
-       search yet; filtering in the oldest first query would need each search's filters there too
     1. P4: A suspended pump (`PUMP_SUSPEND`) of 0 minutes is a basal of 0 in the summaries until the next temp basal;
        also end it at a `Resume Pump` event, kept as an event group, for a Loop that does not send the suspend again
        with its duration
@@ -157,10 +138,6 @@
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
     1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
        settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out
-
-1. Code:
-    1. P5: Make the decimal settings in `utils/settings/definitions.go` with `numberSetting`, as the whole number
-       settings are, and the on or off settings with a helper of their own
 
 1. Site pages:
     1. P4: The Add Food Intake modal offers only the newest 100 food presets, in the order they were added; search them
