@@ -325,6 +325,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Logs, events and errors keep their `request_id` or `job_id`.
 - Logs waiting to be written are capped at 1 MB. Past that, they are dropped and the logs say how many.
 - Request logs and Sentry show `REDACTED` for the query's `token`, `secret` and Socket.IO `sid`.
+- The log of a request refused before its router (server busy, site unavailable, country not allowed) or of a
+  Nightscout 404 shows `REDACTED` for the token at the end of a `/authorization/request/` path.
 
 #### Client errors
 

@@ -1,13 +1,17 @@
 package httputils_test
 
 import (
+	"bytes"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/testutils"
 )
 
 // A busy server works on as many requests as it can, has a few more wait, and refuses the rest at once, though never
@@ -63,6 +67,31 @@ func TestShedLoad(t *testing.T) {
 	require.GreaterOrEqual(t, time.Since(start), 300*time.Millisecond)
 	close(release)
 	require.Equal(t, http.StatusOK, (<-slow).Code)
+}
+
+// A request refused as the server is busy never reaches a router, so its path is logged as sent: the token a
+// Nightscout authorization request's path ends in is left out
+func TestRefusedRequestLogsNoToken(t *testing.T) {
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
+	const path = "/api/v2/authorization/request/phone-0123456789abcdef"
+
+	httputils.RefuseBusy(httptest.NewRecorder(), httptest.NewRequest("GET", path, nil), "restoring")
+	// One request is worked on, so the next is refused
+	started, release := make(chan struct{}), make(chan struct{})
+	shed := httputils.ShedLoad(1, 0, time.Millisecond, httputils.LongLived)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		close(started)
+		<-release
+	}))
+	go shed.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/slow", nil))
+	<-started
+	defer close(release)
+	w := httptest.NewRecorder()
+	shed.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+	require.Equal(t, http.StatusServiceUnavailable, w.Code)
+
+	require.Equal(t, 2, strings.Count(logs.String(), "path=/api/v2/authorization/request/REDACTED"))
+	require.NotContains(t, logs.String(), "phone-0123456789abcdef")
 }
 
 // A request is long lived by its route alone: one asking for an event stream from any other route is not, so it cannot
