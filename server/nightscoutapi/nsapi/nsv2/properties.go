@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"math"
 	"net/http"
 	"strings"
@@ -349,12 +350,19 @@ func GetPump(ctx context.Context, dr *sitedb.DeviceReport, now time.Time) Pump {
 	return Pump{Pump: &pump, Data: data}
 }
 
-// loopRun is the device status's openaps or loop as sent, or an object in it, with its moment, or nil without a time
-func loopRun(dr *sitedb.DeviceReport, loopName string, keys ...string) (map[string]any, *time.Time) {
-	run := map[string]any{}
-	if dr == nil || dr.LoopName == nil || *dr.LoopName != loopName || json.Unmarshal([]byte(*cmp.Or(dr.LoopStatusJson, new(""))), &run) != nil {
-		return nil, nil
+// loopStatus is the device status's openaps or loop as sent, read once for each of its runs, nil for another loop's
+func loopStatus(dr *sitedb.DeviceReport, loopName string) map[string]any {
+	status := map[string]any{}
+	if dr == nil || dr.LoopName == nil || *dr.LoopName != loopName || json.Unmarshal([]byte(*cmp.Or(dr.LoopStatusJson, new(""))), &status) != nil {
+		return nil
 	}
+	return status
+}
+
+// loopRun is a loop status, or an object in it, with its moment, or nil without a time. The moment is set on a copy,
+// so the status and its other runs are as sent.
+func loopRun(status map[string]any, keys ...string) (map[string]any, *time.Time) {
+	run := status
 	for _, key := range keys {
 		run, _ = run[key].(map[string]any)
 	}
@@ -362,6 +370,7 @@ func loopRun(dr *sitedb.DeviceReport, loopName string, keys ...string) (map[stri
 	if err != nil {
 		return nil, nil
 	}
+	run = maps.Clone(run)
 	run["moment"] = types.ISOString(at)
 	return run, &at
 }
@@ -369,9 +378,10 @@ func loopRun(dr *sitedb.DeviceReport, loopName string, keys ...string) (map[stri
 // GetOpenAPS has the last run, the newer of the enacted and suggested, with its eventual glucose and predictions.
 // Its status is not enacted, enacted or looping in the last 15 minutes, or else a warning.
 func GetOpenAPS(dr *sitedb.DeviceReport, now time.Time) map[string]any {
-	enacted, enactedAt := loopRun(dr, "openaps", "enacted")
-	suggested, suggestedAt := loopRun(dr, "openaps", "suggested")
-	iob, _ := loopRun(dr, "openaps", "iob")
+	status := loopStatus(dr, "openaps")
+	enacted, enactedAt := loopRun(status, "enacted")
+	suggested, suggestedAt := loopRun(status, "suggested")
+	iob, _ := loopRun(status, "iob")
 	result, recent, last := map[string]any{"lastEnacted": nil, "lastNotEnacted": nil, "lastSuggested": suggested,
 		"lastIOB": iob, "lastPredBGs": nil, "status": LoopState{"⚠", "warning", "Warning"}}, now.Add(-loopRecent), suggested
 	if suggestedAt != nil && suggestedAt.After(recent) {
@@ -398,8 +408,9 @@ func GetOpenAPS(dr *sitedb.DeviceReport, now time.Time) map[string]any {
 // GetLoop has Loop's last status, with its enacted and predicted. Its display is an error, else enacted or looping
 // in the last 15 minutes, else a warning.
 func GetLoop(dr *sitedb.DeviceReport, now time.Time) map[string]any {
-	status, at := loopRun(dr, "loop")
-	enacted, _ := loopRun(dr, "loop", "enacted")
+	sent := loopStatus(dr, "loop")
+	status, at := loopRun(sent)
+	enacted, _ := loopRun(sent, "enacted")
 	result := map[string]any{"lastLoop": status, "lastEnacted": enacted, "lastPredicted": status["predicted"],
 		"lastOkMoment": status["moment"], "display": LoopState{"⚠", "warning", "Warning"}}
 	switch {
