@@ -39,6 +39,8 @@
        of the PWD phone with a `glucose` that it changes or deletes rewrites or deletes that reading, and so does the
        delete of that event group on the site API. Decide to refuse or to limit each, as a careportal BG Check from
        LoopFollow or T1D Carer must still work. A treatment it adds is a meter reading (`mbg`) already
+    1. P3: Limit the event streams (20 a site) and Socket.IO sessions (`MaxSessions` a site) one identity holds, as one
+       read only identity can take them all and the other identities then get 429 or "Too many sessions"
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and

@@ -347,7 +347,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A client error or 5xx keeps the first 8 KB of its request body, sent to Sentry as `request_body` with any error
   reported during the request.
 - JSON or form only, with credentials, also connectors', `REDACTED` (tokens, secrets, passwords, keys, TOTP codes,
-  usernames, emails, URLs).
+  the `otp` of a Loop remote command, usernames, emails, URLs).
 - Other bodies, or one cut at 8 KB (for example, JSON that did not parse): size and content type only.
 
 #### Sentry error reports
@@ -398,7 +398,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   not.
 - Each: site, identity, IP address, status, time, headers, and bodies up to 64 KB.
 - `REDACTED` in headers, query, path and JSON or form bodies: authorization, cookies, API secrets, tokens, Socket.IO
-  session IDs, passwords, keys, TOTP codes, usernames, emails, URLs.
+  session IDs, passwords, keys, TOTP codes, the `otp` of a Loop remote command, usernames, emails, URLs.
 - Other bodies (a page, text, past 64 KB): size and content type only (so no new site credentials).
 - Not kept: page styles, scripts, images and fonts; bodies of event streams, Socket.IO connections and logs DB
   downloads.
