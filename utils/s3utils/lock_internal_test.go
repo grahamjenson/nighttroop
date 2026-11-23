@@ -129,7 +129,22 @@ func TestLockWaitsForTheServerThatHoldsIt(t *testing.T) {
 	require.False(t, fake.held(), "a released lock is deleted")
 }
 
-// A lock whose server stopped without releasing it, as in a crash, is taken over once it is stale, and not before
+// A server that stops after another took its lock over, and before its next write of the lock tells it so, leaves the
+// lock to that server
+func TestUnlockLeavesAnotherServersLock(t *testing.T) {
+	fake, servers := lockServers(t, 1)
+	lockHeartbeat = time.Hour
+	require.NoError(t, servers[0].Lock(t.Context()))
+
+	key := "/bucket/" + servers[0].lockKey()
+	fake.Lock()
+	fake.etags[key], fake.bodies[key] = `"another"`, "another-server now"
+	fake.Unlock()
+
+	servers[0].Unlock()
+	require.True(t, fake.held(), "the lock of the server that took it over is deleted")
+}
+
 func TestLockTakesOverAStaleLock(t *testing.T) {
 	fake, servers := lockServers(t, 1)
 	fake.etags["/bucket/"+servers[0].lockKey()] = `"crashed"`
