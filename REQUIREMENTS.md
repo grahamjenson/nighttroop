@@ -1374,6 +1374,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Each sign in, and each refused one, is an event with the IP address's estimated country, and city if the server has
   DB-IP's City Lite.
 - A refused one does not keep the name it tried.
+- A sign in that the server refuses before the sign in rate limit is not an event: a body that is not a sign in, a
+  username longer than an identity's, or a code with no password step before it.
 
 ### Nightscout API
 
