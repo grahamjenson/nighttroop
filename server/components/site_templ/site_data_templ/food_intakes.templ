@@ -40,10 +40,50 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 	}
 }
 
-// FoodIntakeNew adds a food intake with all its fields, putting its row at the top of the table
-templ FoodIntakeNew() {
+// FoodIntakeNew adds a food intake with all its fields, putting its row at the top of the table. Its fields start at
+// the picked food preset's, if there is one.
+templ FoodIntakeNew(presets []*sitemodels.SiteFoodPreset, picked *sitemodels.SiteFoodPreset) {
+	{{ fields := foodIntakeFields(ctx) }}
+	if picked != nil {
+		{{ fields = addmodal.Fill(fields, picked, nil) }}
+	}
 	@addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: i18n.T(ctx, "site.data.food_intakes.add"), Path: "/data/food", Target: "#foodIntakesTable tbody",
-		Submit: i18n.T(ctx, "site.data.food_intakes.add"), Fields: foodIntakeFields(ctx)})
+		Submit: i18n.T(ctx, "site.data.food_intakes.add"), Fields: fields, Above: foodPresetPicker(presets, picked)})
+}
+
+// foodPresetPicker loads the add modal's form again with a food preset's values once one is picked. It is left out
+// when the site has no food presets.
+templ foodPresetPicker(presets []*sitemodels.SiteFoodPreset, picked *sitemodels.SiteFoodPreset) {
+	if len(presets) > 0 {
+		<div class="pt-4">
+			<label for="site--food--create--preset" class="mb-1 block text-sm font-medium text-gray-700">{ i18n.T(ctx, "site.data.food_intakes.preset") }</label>
+			<select
+				id="site--food--create--preset"
+				name="preset"
+				class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+				hx-get="/data/food/new"
+				hx-target="#site--food--create"
+				hx-select="#site--food--create"
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				<option value="">{ i18n.T(ctx, "common.add_modal.none") }</option>
+				for _, preset := range presets {
+					<option value={ preset.ID } selected?={ picked != nil && picked.ID == preset.ID }>{ presetOption(ctx, preset) }</option>
+				}
+			</select>
+			<p class="mt-1 text-xs text-gray-500">{ i18n.T(ctx, "site.data.food_intakes.preset_help") }</p>
+		</div>
+	}
+}
+
+// presetOption is a food preset as the picker shows it, its name and, if it has them, its carbs
+func presetOption(ctx context.Context, preset *sitemodels.SiteFoodPreset) string {
+	if preset.Carbs == nil {
+		return orDash(preset.Name)
+	}
+	return orDash(preset.Name) + " (" + i18n.T(ctx, "site.data.common.carbs", i18n.Data{"Carbs": orDash(preset.Carbs)}) + ")"
 }
 
 // foodIntakeFields are what a food intake has that a person can type in

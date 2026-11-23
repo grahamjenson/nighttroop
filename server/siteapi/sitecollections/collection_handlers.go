@@ -47,6 +47,13 @@ type CollectionNew[R, M any] interface {
 	NewHTMXResponse() templ.Component
 }
 
+// CollectionNewFrom is a collection added to in a modal that reads the site's data first, such as presets to start
+// its fields at, which the request can pick
+type CollectionNewFrom[R, M any] interface {
+	CollectionCreate[R, M]
+	NewFromHTMXResponse(ctx context.Context, collectionTx *siteapiutils.CollectionTx, r *http.Request, siteContext *httputils.SiteContext) (templ.Component, error)
+}
+
 type CollectionUpdate[R, M any] interface {
 	CollectionBase[R, M]
 
@@ -122,6 +129,24 @@ func NewHandler[R, M any](collection CollectionNew[R, M]) http.HandlerFunc {
 			return
 		}
 		WriteResponse(w, r, siteContext, http.StatusOK, nil, collection.NewHTMXResponse(), true)
+	}
+}
+
+// NewFromHandler is the modal to add a record in, read from the site's data, for whoever can add one
+func NewFromHandler[R, M any](collection CollectionNewFrom[R, M]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		siteContext := SiteContextFor(w, r, collection.GetName(), can.ActionCreate)
+		if siteContext == nil {
+			return
+		}
+		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
+		defer tx.Rollback()
+		component, err := collection.NewFromHTMXResponse(r.Context(), tx, r, siteContext)
+		if herr := tx.Finish(apiutils.ErrorFor(err, collection.GetName())); herr != nil {
+			writeError(w, r, siteContext.AcceptType, herr)
+			return
+		}
+		WriteResponse(w, r, siteContext, http.StatusOK, nil, component, true)
 	}
 }
 

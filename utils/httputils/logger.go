@@ -95,10 +95,17 @@ func RedactSentryEvent(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
 			delete(event.Request.Headers, k)
 		}
 	}
-	if before, _, found := strings.Cut(event.Request.URL, authorizationRequestPath); found {
-		event.Request.URL = before + authorizationRequestPath + "REDACTED"
-	}
+	event.Request.URL = RedactPath(event.Request.URL)
 	return event
+}
+
+// RedactPath is the path, or URL, without the token a Nightscout authorization request's ends in. It is for a path
+// logged where no router matched it, so the route's params are not known: a request refused before its router, or a 404.
+func RedactPath(path string) string {
+	if before, _, found := strings.Cut(path, authorizationRequestPath); found {
+		return before + authorizationRequestPath + "REDACTED"
+	}
+	return path
 }
 
 // New returns a `func(http.Handler) http.Handler` (middleware) that logs requests using slog.

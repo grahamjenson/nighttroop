@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
@@ -179,6 +180,16 @@ func (c TreatmentCollection) GetModel(q *sitedb.Queries, ctx context.Context, id
 	return &egb, nil
 }
 
+func (c TreatmentCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*sitedb.EventGroupsBundle, error) {
+	idIn, _ := json.Marshal(ids)
+	rows, err := q.GetEventGroupsByIDs(ctx, sitedb.GetEventGroupsByIDsParams{IDs: new(string(idIn)), IncludeDeleted: includeDeleted})
+	bundles := make([]*sitedb.EventGroupsBundle, len(rows))
+	for i, row := range rows {
+		bundles[i] = new(sitedb.GetEventGroupToEventGroupsBundle(sitedb.EventGroupsByIDsToGetEventGroup(*row)))
+	}
+	return bundles, err
+}
+
 // RewriteModel rewrites the group and its events: an event the treatment still has keeps its identifier and what of it
 // a treatment does not have, one it no longer has is deleted once the group no longer refers to it, and one it now has
 // is created. The hash it keeps is of the fields sent, as a create's is of the treatment sent.
@@ -315,6 +326,12 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.T
 	bundle := sitedb.EventGroupsBundle{EventGroup: nightscoutmodels.TreatmentToEventGroup(treatment)}
 	for _, event := range treatmentTypeEvents[*treatment.EventType] {
 		event.fromTreatment(treatment, &bundle)
+	}
+	// The glucose of a treatment from an identity that cannot add CGM readings is a meter reading
+	siteContext := httputils.GetSiteContext(ctx)
+	if bundle.GlucoseReading != nil && siteContext != nil && siteContext.IdentityModel != nil &&
+		!can.IdentityAddSensorGlucose(siteContext.IdentityModel.Role) {
+		bundle.GlucoseReading.ReadingType = "mbg"
 	}
 	return bundle
 }

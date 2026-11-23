@@ -17,8 +17,8 @@
        is one of those settings, so that failure is only printed
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
-    1. P4: Read a page of treatments, profiles and foods by their identifiers in one query (`CollectionKeysReader`), as
-       entries and device statuses are: a date-sorted search or API v3 history reads each by itself
+    1. P5: Read a page of profiles by their identifiers in one query (`CollectionKeysReader`), as the other collections
+       do: a date-sorted search or API v3 history reads each profile store by itself, but a site has few of them
 
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
@@ -31,17 +31,23 @@
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 
 1. Security
-    1. P1: A Caregiver device changes glucose readings through Nightscout treatments, which it may write. Decide to
-       refuse or to limit each, as a careportal BG Check from LoopFollow or T1D Carer must still work:
-        1. A treatment it adds with a `glucose` and no `glucoseType`, or `Sensor`, is stored as an `sgv` reading
-        1. A treatment of the PWD phone with a `glucose` that it changes or deletes rewrites or deletes that reading,
-           and so does the delete of that event group on the site API
+    1. P1: A Caregiver device changes glucose readings through Nightscout treatments, which it may write: a treatment
+       of the PWD phone with a `glucose` that it changes or deletes rewrites or deletes that reading, and so does the
+       delete of that event group on the site API. Decide to refuse or to limit each, as a careportal BG Check from
+       LoopFollow or T1D Carer must still work. A treatment it adds is a meter reading (`mbg`) already
     1. P3: Limit the event streams (20 a site) and Socket.IO sessions (`MaxSessions` a site) one identity holds, as one
        read only identity can take them all and the other identities then get 429 or "Too many sessions"
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
+    1. P2: A connector backfill has no wait between runs and skips the host limiter, so a few sites that start one
+       again and again against a slow host hold every connector worker: add a wait after the last backfill, or spend
+       the site's download limit
+    1. P3: One identity can open all 20 of a site's event streams, so the others get 429: cap the streams of one
+       identity too
+    1. P4: A site JWT sent to `/api/v2/authorization/request` or `/api/v1/status.json` gets a new JWT, so a TOTP
+       user's session never has to end: decide if a JWT may renew itself, or cap its total life
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
        are right on real sites first, then act on them, each item its own PR:
         1. P2: Score a site's rate-limit refusals too: a count for each site that halves every hour, of refusals by the
@@ -106,8 +112,6 @@
     1. P5: Temp targets, temp basals, profile switches and activities keep their duration in whole minutes, so the
        site's summaries end a temp target AAPS ended at 5.99 minutes at 5; only its event group keeps the
        milliseconds, for the Nightscout API's `durationInMilliseconds`
-    1. P4: The Nightscout API gives glucose only in mg/dL, so the `units_mmol_label` setting no longer changes what it
-       writes. Drop it from the settings, the `sites` and `site_identities` columns and their queries
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
@@ -138,6 +142,11 @@
        Then upload each old archive again as `.tar.enc`, or keep the fallback for archives.
     1. P5: A backup killed while it writes leaves its temp file (`.<site>.sqlite.lz4-*`) in `data/backup`; remove
        these on start, as the restore staging folders are
+    1. P3: Restoring an archived site reads only its copy here if there is one, so a damaged copy fails each time
+       though S3 has a good one: download it when the copy does not decompress. Also refuse a restore of a site that
+       is unavailable, as a second restore can delete the DB kept for it
+    1. P4: Refuse a config whose `DELETE_AFTER_INACTIVITY_MINS`, `SITE_BACKUP_INTERVAL_IN_SECONDS` or backup retention
+       days are under 1, and a production `S3_URL` with no `S3_BUCKET`: 0 minutes deletes each new site at once
 
 1. Database:
     1. P4: Make `go generate` fail for a bare value that an indexed column equals in a query with an `ORDER BY`, as
@@ -146,3 +155,11 @@
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
     1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
        settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out
+
+1. Code:
+    1. P5: Make the decimal settings in `utils/settings/definitions.go` with `numberSetting`, as the whole number
+       settings are, and the on or off settings with a helper of their own
+
+1. Site pages:
+    1. P4: The Add Food Intake modal offers only the newest 100 food presets, in the order they were added; search them
+       by name, or sort them by name, if a site keeps more

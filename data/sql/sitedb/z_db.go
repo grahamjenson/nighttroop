@@ -216,6 +216,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.foodPresetHistoryIDsStmt, err = db.PrepareContext(ctx, foodPresetHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query FoodPresetHistoryIDs: %w", err)
 	}
+	if q.generalSettingsBytesStmt, err = db.PrepareContext(ctx, generalSettingsBytes); err != nil {
+		return nil, fmt.Errorf("error preparing query GeneralSettingsBytes: %w", err)
+	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
@@ -234,11 +237,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getEventGroupWithoutJoinsStmt, err = db.PrepareContext(ctx, getEventGroupWithoutJoins); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEventGroupWithoutJoins: %w", err)
 	}
+	if q.getEventGroupsByIDsStmt, err = db.PrepareContext(ctx, getEventGroupsByIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query GetEventGroupsByIDs: %w", err)
+	}
 	if q.getFoodIntakeStmt, err = db.PrepareContext(ctx, getFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query GetFoodIntake: %w", err)
 	}
 	if q.getFoodPresetStmt, err = db.PrepareContext(ctx, getFoodPreset); err != nil {
 		return nil, fmt.Errorf("error preparing query GetFoodPreset: %w", err)
+	}
+	if q.getFoodPresetsByIDsStmt, err = db.PrepareContext(ctx, getFoodPresetsByIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query GetFoodPresetsByIDs: %w", err)
 	}
 	if q.getGeneralSettingStmt, err = db.PrepareContext(ctx, getGeneralSetting); err != nil {
 		return nil, fmt.Errorf("error preparing query GetGeneralSetting: %w", err)
@@ -892,6 +901,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing foodPresetHistoryIDsStmt: %w", cerr)
 		}
 	}
+	if q.generalSettingsBytesStmt != nil {
+		if cerr := q.generalSettingsBytesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing generalSettingsBytesStmt: %w", cerr)
+		}
+	}
 	if q.getActivityStmt != nil {
 		if cerr := q.getActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
@@ -922,6 +936,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getEventGroupWithoutJoinsStmt: %w", cerr)
 		}
 	}
+	if q.getEventGroupsByIDsStmt != nil {
+		if cerr := q.getEventGroupsByIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getEventGroupsByIDsStmt: %w", cerr)
+		}
+	}
 	if q.getFoodIntakeStmt != nil {
 		if cerr := q.getFoodIntakeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getFoodIntakeStmt: %w", cerr)
@@ -930,6 +949,11 @@ func (q *Queries) Close() error {
 	if q.getFoodPresetStmt != nil {
 		if cerr := q.getFoodPresetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getFoodPresetStmt: %w", cerr)
+		}
+	}
+	if q.getFoodPresetsByIDsStmt != nil {
+		if cerr := q.getFoodPresetsByIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getFoodPresetsByIDsStmt: %w", cerr)
 		}
 	}
 	if q.getGeneralSettingStmt != nil {
@@ -1580,14 +1604,17 @@ type Queries struct {
 	foodIntakeTotalsStmt                        *sql.Stmt
 	foodPresetAscendingIDsStmt                  *sql.Stmt
 	foodPresetHistoryIDsStmt                    *sql.Stmt
+	generalSettingsBytesStmt                    *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getDeviceReportStmt                         *sql.Stmt
 	getDeviceReportsByIDsStmt                   *sql.Stmt
 	getEventGroupStmt                           *sql.Stmt
 	getEventGroupOfTypeWithoutJoinsStmt         *sql.Stmt
 	getEventGroupWithoutJoinsStmt               *sql.Stmt
+	getEventGroupsByIDsStmt                     *sql.Stmt
 	getFoodIntakeStmt                           *sql.Stmt
 	getFoodPresetStmt                           *sql.Stmt
+	getFoodPresetsByIDsStmt                     *sql.Stmt
 	getGeneralSettingStmt                       *sql.Stmt
 	getGlucoseReadingStmt                       *sql.Stmt
 	getGlucoseReadingsByIDsStmt                 *sql.Stmt
@@ -1767,14 +1794,17 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		foodIntakeTotalsStmt:                        q.foodIntakeTotalsStmt,
 		foodPresetAscendingIDsStmt:                  q.foodPresetAscendingIDsStmt,
 		foodPresetHistoryIDsStmt:                    q.foodPresetHistoryIDsStmt,
+		generalSettingsBytesStmt:                    q.generalSettingsBytesStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getDeviceReportStmt:                         q.getDeviceReportStmt,
 		getDeviceReportsByIDsStmt:                   q.getDeviceReportsByIDsStmt,
 		getEventGroupStmt:                           q.getEventGroupStmt,
 		getEventGroupOfTypeWithoutJoinsStmt:         q.getEventGroupOfTypeWithoutJoinsStmt,
 		getEventGroupWithoutJoinsStmt:               q.getEventGroupWithoutJoinsStmt,
+		getEventGroupsByIDsStmt:                     q.getEventGroupsByIDsStmt,
 		getFoodIntakeStmt:                           q.getFoodIntakeStmt,
 		getFoodPresetStmt:                           q.getFoodPresetStmt,
+		getFoodPresetsByIDsStmt:                     q.getFoodPresetsByIDsStmt,
 		getGeneralSettingStmt:                       q.getGeneralSettingStmt,
 		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
 		getGlucoseReadingsByIDsStmt:                 q.getGlucoseReadingsByIDsStmt,

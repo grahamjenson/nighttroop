@@ -45,6 +45,7 @@ type ToCreateParams interface {
 
 	SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow
 	AllEventGroupToGetEventGroup(source AllEventGroupsRow) GetEventGroupRow
+	EventGroupsByIDsToGetEventGroup(source GetEventGroupsByIDsRow) GetEventGroupRow
 
 	//goverter:map . EventGroup
 	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch Activity NotificationEvent

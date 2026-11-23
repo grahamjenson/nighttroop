@@ -73,6 +73,8 @@ type Props struct {
 	Swap string
 	// Extra is more of the form after its fields, such as inputs loaded for what is typed in them
 	Extra templ.Component
+	// Above is in the add modal above its form, such as a preset to start its fields at
+	Above templ.Component
 }
 
 // Open is the button opening the add modal at path in #modal-container, beside its page's title
@@ -87,6 +89,9 @@ templ Open(id string, path string, label string) {
 // is added, and an error goes to the toaster, leaving it open to fix.
 templ Modal(p Props) {
 	@modal.Modal(modal.Props{ID: p.ID + "--modal", Title: p.Title, Subtitle: i18n.T(ctx, "common.add_modal.subtitle"), Actions: SubmitButton(p)}) {
+		if p.Above != nil {
+			@p.Above
+		}
 		@Form(p)
 	}
 }

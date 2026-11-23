@@ -96,8 +96,6 @@ type Site struct {
 	ArchivedAt                       *int64
 	DeletedAt                        *int64
 	Units                            *consts.Units
-	UnitsMgdlLabel                   *string
-	UnitsMmolLabel                   *string
 	Timezone                         *string
 	Language                         *string
 	DateFormat                       *string
@@ -201,8 +199,6 @@ type SiteIdentity struct {
 	CredentialsChangedAt             int64
 	NightscoutTokenDigest            *string
 	Units                            *consts.Units
-	UnitsMgdlLabel                   *string
-	UnitsMmolLabel                   *string
 	Timezone                         *string
 	Language                         *string
 	DateFormat                       *string

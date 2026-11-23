@@ -67,6 +67,10 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- name: GetFoodPreset :one
 SELECT * FROM food_presets WHERE id = ?;
 
+-- name: GetFoodPresetsByIDs :many
+-- The presets with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+SELECT * FROM food_presets WHERE id IN (SELECT value FROM json_each(CAST(sqlc.narg('IDs') AS TEXT)));
+
 
 
 -- name: FoodPresetAscendingIDs :many

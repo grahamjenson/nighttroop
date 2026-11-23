@@ -108,13 +108,13 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 110 "@result.glucose"
 ASSERT_EQUALS null "@result.bolusCalculatorResult"
 
-// Another device reads its units as Nighttroop writes them
+// The site's phone token, with no device, reads them as Nightscout spells them too
 NAME pwd_jwt
 GET http://{{ .ns_site }}/api/v2/authorization/request/{{ token }}
 ASSERT_STATUS 200
 
-NAME other_device_reads_mg_dL
+NAME phone_reads_mg_dl
 GET http://{{ .ns_site }}/api/v3/treatments/{{ .wizard_id }}
 H Authorization: Bearer {{ .pwd_jwt.token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS "mg/dl" "@result.units"

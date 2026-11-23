@@ -67,8 +67,8 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 	if err := push.CheckRegistration(registration); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err)
 	}
-	// Loop and Trio take remote commands from their registration, so one that cannot change the site's data registers neither
-	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) && !can.IdentitySeeDeviceTokens(siteContext.IdentityModel) {
+	// Loop and Trio take remote commands from their registration, so one that cannot write the site's profiles registers neither
+	if (model.App == consts.PushAppLoop || model.App == consts.PushAppTrio) && !can.IdentityRegisterLoop(siteContext.IdentityModel) {
 		return nil, apiutils.ErrForbidden
 	}
 	q, err := collectionTx.Control()
@@ -76,7 +76,7 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 		return nil, err
 	}
 	registered, err := push.Register(ctx, q, siteContext.Config.Security, siteContext.SiteID, siteContext.IdentityModel.ID, registration)
-	if errors.Is(err, push.ErrTooManyRegistrations) {
+	if errors.Is(err, push.ErrTooManyRegistrations) || errors.Is(err, push.ErrTokenOfLoop) {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(err)
 	}
 	if err != nil {

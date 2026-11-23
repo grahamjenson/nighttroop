@@ -232,6 +232,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - If an unavailable site has no DB here, or its DB is being restored at that moment, the download is 404.
 - Permanent delete (for example, of a site never used) deletes its identities (with passwords, TOTP secrets and push
   tokens) and push credentials. Archive keeps them for restore.
+- Permanent delete of an unavailable site also stops its restore and deletes its DB files.
 
 ### A site's identities
 
@@ -252,6 +253,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Job stats page: each day, newest first, with totals, errors, and mean and spread of durations in suitable units.
 - A failed job, and each day's stats, link to the logs of failed runs (the day's last 16), filtered by `job_id`.
 - Each cron or queued run logs its name and own `job_id`, plus `queued_job_id` if queued and `site_id` for site work.
+- If a cron or queued run panics, the run fails with the panic as its error, and the server continues.
 
 ### Connectors
 
@@ -323,6 +325,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Logs, events and errors keep their `request_id` or `job_id`.
 - Logs waiting to be written are capped at 1 MB. Past that, they are dropped and the logs say how many.
 - Request logs and Sentry show `REDACTED` for the query's `token`, `secret` and Socket.IO `sid`.
+- The log of a request refused before its router (server busy, site unavailable, country not allowed) or of a
+  Nightscout 404 shows `REDACTED` for the token at the end of a `/authorization/request/` path.
 
 #### Client errors
 
@@ -365,6 +369,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   message, so a server that fails each time Docker starts it again is one incident.
   - A server whose S3 lock another server took stops with an error, so it pages.
   - A server told to stop, or one that restarts to use S3 again, does not page.
+  - If a server is told to stop while it opens its DBs, it stops when the DBs are open. It does not serve, turn S3
+    off or page.
   - A server whose settings stop it starting does not page: it prints the error.
 - On the admins page, an admin selects a level and clicks **Test Admin Page** to page through PagerDuty.
   - Each test is a new incident. Its message names the admin and the time.
@@ -1100,6 +1106,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - In the Data hub under Presets, with the data they help to enter.
 - **Food presets**: add (in a modal of all fields, as for data), view, edit, delete.
+  - Add Food Intake: a **Food Preset** dropdown above the fields, newest 100, by name and carbs. Not shown with none.
+  - Pick one: its values fill in the fields, and the time stays blank. Change them, then add.
 - **Profiles**: profile stores a loop uploaded. Read their schedules, rename, delete.
 
 #### Loop Settings
@@ -1457,7 +1465,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Roles: a fixed list, `admin`, `readable`, `aaps-client` and `careportal` (a Caregiver device). A role sent is
     given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
-  - Add a subject: a device for AAPSClient, with mg/dL units written `mg/dl`. It reads everything and writes only
+  - Add a subject: a device for AAPSClient, with mg/dL units. It reads everything and writes only
     `settings` (client control). It cannot add treatments, entries, device statuses, profiles or food: 403.
   - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
   - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
@@ -1573,19 +1581,12 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Each, a default too, has `srvCreated` and `date` in ms.
 - Replace or patch: answers with the setting as stored.
 - An identifier that is not a Nighttroop setting: 404 for read, replace, patch and delete; 400 for create.
-- Units labels (set only through the settings endpoint) choose how the API writes `units`:
-
-  | Setting            | Values             |
-  | ------------------ | ------------------ |
-  | `units_mgdl_label` | `mg/dL` or `mg/dl` |
-  | `units_mmol_label` | `mmol/L` or `mmol` |
-
-  - Default: Nighttroop's label. The API writes only mg/dL.
-  - If an identity without its own labels sends a document with `units`, its labels become that spelling's pair. The
-    response to that request uses them too.
-    - `mg/dl` or `mmol` (AAPS, Trio, xDrip4iOS): `mg/dl` and `mmol`.
-    - `mg/dL` or `mmol/L` (Loop): `mg/dL` and `mmol/L`.
-  - Units are stored Nighttroop's way. All labels are read.
+- A document's `units` are spelt for the identity's device (its client), as apps read only their own spelling:
+  - A device added for Loop: as Nighttroop does, `mg/dL` and `mmol/L`.
+  - Every other identity, a device for another app, Other, or none (the site's phone token, an admin): as Nightscout
+    does, `mg/dl` and `mmol`.
+  - The spelling a device sends does not change it. Units are stored Nighttroop's way, and every spelling is read.
+  - A profile's store keeps its `units` as stored.
 - AAPS documents, kept as sent and shared by all identities of the site:
   - `aaps`, `aaps-state`: the running config.
   - `aaps_clientcontrol_...`: AAPS and AAPSClient pairing and control messages.
@@ -1593,6 +1594,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
     change.
 - Limits:
   - Document over 256 KiB: refused.
+  - Document that takes the settings documents of the site over 2 MiB in total: refused.
   - New document when the site has 100: refused.
   - Client control messages with no change for a week: deleted to make space.
   - Settings key: up to 128 characters, as its column (AAPS client control keys include the client UUID). Other
@@ -2070,6 +2072,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     and it waits for the lock.
   - If S3 takes a write of the lock and does not answer, or refuses it because another write is in progress, the
     server keeps its lock: the lock holds the ID of the server that wrote it.
+  - If S3 refuses a write of the lock and the server cannot read the lock, the server keeps its lock and tries again.
   - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
   - The server restarts by an exit with an error, when S3 works again and when its lock is taken. Its supervisor must
     start it again: the compose files set `restart: unless-stopped`.
@@ -2098,6 +2101,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
       one of the two.
     - If S3 gives an error to that check, the server starts with S3 off.
+  - If the control DB is missing and its write-ahead log is still there, the server moves the log to
+    `controldb.sqlite.replaced-<time>-wal` before the restore. The restored control DB has only the replica's data.
   - If the control DB's replication cannot start, the server starts with S3 off.
   - If the control DB does not open at start, as a file a disk damaged, the server restores it from its replica:
     - The one that does not open is kept as `controldb.sqlite.unopened-<time>`, with its write-ahead log.
@@ -2111,7 +2116,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
-- When the server stops, it backs up every site written since its last backup, with no such limit.
+- When the server stops, it backs up every site written since its last backup, and every live site not uploaded yet,
+  with no such limit.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
@@ -2326,6 +2332,8 @@ harder:
   - It reads everything.
   - It adds, changes and deletes treatments, adds a device status, and reads and writes settings.
   - It cannot add readings or profiles, or change or delete readings, profiles or device statuses: 403.
+  - If its treatment has a `glucose`, the reading is a meter reading (`mbg`), also with `glucoseType` `Sensor` or with
+    no `glucoseType`. The treatment is returned as sent. Alarms and loops do not use it as a CGM reading.
   - If it sends a device status with the `_id` of a stored one to API v1 `POST`, the stored one does not change and is
     the answer.
   - On the socket, `authorize` gives it `write` false and `write_treatment` true. Its `dbAdd`, `dbUpdate`,
@@ -2469,8 +2477,8 @@ harder:
   Other starts as `device`. A name that is typed is kept when another app is picked.
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
-- Any client but Nightguard and Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout
-  API also writes mg/dL as `mg/dl`.
+- Any client but Nightguard and Other sets the device's own units to mg/dL. The Nightscout API writes them `mg/dl`
+  for every client but Loop, which reads `mg/dL`.
 - Nightguard and Other follow the site's units. Nightguard reads `sgv` as mg/dL and shows the status's
   `settings.units`.
 - A device keeps its client (e.g. `loop`, `other`), returned as `client`. Users and a site's first devices have none.
@@ -2547,13 +2555,15 @@ harder:
 #### Push registrations
 
 - Each identity, of any role, registers the apps on its devices for pushes at `/settings/push-registrations` (JSON
-  API). If it is read only or a clinician, it cannot register `loop` or `trio` (403). Each registration has:
+  API). Only an admin, a user or a PWD phone registers `loop` or `trio`. Another role gets 403. Each registration has:
   - App: `loop`, `trio`, `loopfollow` or `t1dcarer`.
   - Provider: `apns` or `fcm`.
   - Bundle ID, and if it is a production build.
   - Token: kept encrypted, never returned.
 - A token registered again is updated, or moved from another identity of the site. Another site gets its own, and
   cannot take or change this one.
+- If another identity registered a token as `loop` or `trio`, the token moves only as `loop` or `trio`. Another app is
+  refused (400), so a Caregiver device cannot stop the remote commands.
 - An APNs token has 64 to 256 hex characters, in upper or lower case.
 - At most 10 an identity, also from profiles uploaded at once. Registering one of them again always works.
 - An identity sees, streams (`/settings/push-registrations/events`) and deletes only its own. An admin also gets and
@@ -2588,7 +2598,7 @@ harder:
 - Only an identity that can write treatments sends one. Its sender is that identity, not its IP address.
 - Pushed as Nightscout does, to the Loop that last uploaded its profile, with the site's push credential for its
   bundle ID, expiring in 5 minutes. Answer: 200 `OK`.
-- Only a Loop registered by an enabled identity that can change the site's data gets the command.
+- Only a Loop registered by an enabled admin, user or PWD phone gets the command.
 - Remote carbs with a `foodType` (e.g. 🍕) are pushed with it as Loop's `food-type`.
 - Refused (400), saying which:
   - A bolus over 30 U.

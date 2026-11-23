@@ -417,7 +417,7 @@ type NsDocument struct {
 	SrvModified *int64   `json:"srvModified,omitempty"`
 	Type        *string  `json:"type,omitempty"`
 
-	// Units The units of sgv and mbg, always mg/dL
+	// Units The units of sgv and mbg, always mg/dL: spelt mg/dl, as Nightscout does, or mg/dL for a device added for Loop
 	Units                *string                `json:"units,omitempty"`
 	UtcOffset            *int64                 `json:"utcOffset,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`

@@ -107,7 +107,7 @@ ASSERT_EQUALS "sgv" "@doc.type"
 ASSERT_EQUALS ".post_entry.0._id" "@doc.identifier"
 # In mg/dL, as the API gives it, though the site is in mmol/L
 ASSERT_EQUALS 120 "@doc.sgv"
-ASSERT_EQUALS "mg/dL" "@doc.units"
+ASSERT_EQUALS "mg/dl" "@doc.units"
 
 NAME bye_v2
 DISCONNECT

@@ -29,15 +29,16 @@ func identity(role consts.IdentityRole) *controldb.SiteIdentity {
 //   - useToken, useToken+secret: IdentityUseNightscoutToken, without and with a TOTP secret
 //   - pairAAPS: IdentityAuthorizeDevices
 //   - deviceTokens: IdentitySeeDeviceTokens
+//   - sensorGlucose: IdentityAddSensorGlucose
 const signInMatrix = `
-role               login  totp  totp+secret  nsToken  useToken  useToken+secret  pairAAPS  deviceTokens
-admin              yes    yes   yes          no       no        no               no        yes
-user               yes    no    yes          yes      yes       no               no        yes
-user_readonly      no     no    yes          yes      yes       no               no        no
-clinician          yes    no    yes          no       yes       no               no        no
-device_pwd_phone   no     no    yes          yes      yes       no               yes       yes
-device_read        no     no    yes          yes      yes       no               no        no
-device_read_write  no     no    yes          yes      yes       no               no        yes
+role               login  totp  totp+secret  nsToken  useToken  useToken+secret  pairAAPS  deviceTokens  sensorGlucose
+admin              yes    yes   yes          no       no        no               no        yes           yes
+user               yes    no    yes          yes      yes       no               no        yes           yes
+user_readonly      no     no    yes          yes      yes       no               no        no            yes
+clinician          yes    no    yes          no       yes       no               no        no            yes
+device_pwd_phone   no     no    yes          yes      yes       no               yes       yes           yes
+device_read        no     no    yes          yes      yes       no               no        no            yes
+device_read_write  no     no    yes          yes      yes       no               no        yes           no
 `
 
 var signInChecks = map[string]func(consts.IdentityRole) bool{
@@ -49,6 +50,7 @@ var signInChecks = map[string]func(consts.IdentityRole) bool{
 	"useToken+secret": func(role consts.IdentityRole) bool { return IdentityUseNightscoutToken(role, true) },
 	"pairAAPS":        IdentityAuthorizeDevices,
 	"deviceTokens":    func(role consts.IdentityRole) bool { return IdentitySeeDeviceTokens(identity(role)) },
+	"sensorGlucose":   IdentityAddSensorGlucose,
 }
 
 // Columns: site_admin.go and site_report.go

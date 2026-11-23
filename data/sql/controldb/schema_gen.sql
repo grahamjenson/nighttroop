@@ -196,9 +196,6 @@ CREATE TABLE site_identities (
     -- IDENTITY SETTINGS
     ---------------
     units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
-    -- how the Nightscout API writes each units, as some clients read only one spelling
-    units_mgdl_label TEXT CHECK (units_mgdl_label IN ('mg/dL', 'mg/dl')),
-    units_mmol_label TEXT CHECK (units_mmol_label IN ('mmol/L', 'mmol')),
 
     -- DATE
     timezone TEXT CHECK(length(timezone) <= 64),
@@ -307,9 +304,6 @@ CREATE TABLE sites (
     -- SITE SETTINGS
     ---------------
     units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
-    -- how the Nightscout API writes each units, as some clients read only one spelling
-    units_mgdl_label TEXT CHECK (units_mgdl_label IN ('mg/dL', 'mg/dl')),
-    units_mmol_label TEXT CHECK (units_mmol_label IN ('mmol/L', 'mmol')),
 
     -- DATE
     timezone TEXT CHECK(length(timezone) <= 64),

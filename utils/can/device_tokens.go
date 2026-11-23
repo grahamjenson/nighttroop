@@ -10,7 +10,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-// DeviceTokenRoles can change the site's data, so are given Loop's and Trio's device tokens and may register them
+// DeviceTokenRoles can change the site's data, so are given Loop's and Trio's device tokens
 var DeviceTokenRoles = []consts.IdentityRole{consts.IdentityRoleAdmin, consts.IdentityRoleUser,
 	consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceReadWrite}
 
@@ -19,4 +19,14 @@ var DeviceTokenRoles = []consts.IdentityRole{consts.IdentityRoleAdmin, consts.Id
 // remote commands must, not a read only follower, a clinician, or no identity, as a broadcast to every socket has
 func IdentitySeeDeviceTokens(identity *controldb.SiteIdentity) bool {
 	return identity != nil && slices.Contains(DeviceTokenRoles, identity.Role)
+}
+
+// LoopRegistrationRoles can write the site's profiles, as Loop and Trio do, so may register either for its remote
+// commands: not a Caregiver device, which could take the commands sent to the PWD phone or stop them
+var LoopRegistrationRoles = []consts.IdentityRole{consts.IdentityRoleAdmin, consts.IdentityRoleUser,
+	consts.IdentityRoleDevicePWDPhone}
+
+// IdentityRegisterLoop is whether the identity may register Loop or Trio for its remote commands
+func IdentityRegisterLoop(identity *controldb.SiteIdentity) bool {
+	return identity != nil && slices.Contains(LoopRegistrationRoles, identity.Role)
 }
