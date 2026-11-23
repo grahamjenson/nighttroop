@@ -57,6 +57,8 @@ ASSERT_TEXT_EQUALS #site--food--create--preset>option:nth-child(2) Toast (20 g c
 INPUT #site--food--create--preset Toast (20 g carbs)
 WAIT_VISIBLE 5 #site--food--create--name[value=Toast]
 ASSERT_TEXT_EQUALS #site--food--create--name Toast
+ASSERT_TEXT_EQUALS #site--food--create--preset-search toa
+ASSERT_VISIBLE #site--food--create--preset:not(:has(option:nth-child(3)))
 ASSERT_TEXT_EQUALS #site--food--create--carbs 20
 ASSERT_TEXT_EQUALS #site--food--create--fat 2
 ASSERT_TEXT_EQUALS #site--food--create--food-type snack
