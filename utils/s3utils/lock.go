@@ -109,8 +109,8 @@ func (c *S3Client) Lock(ctx context.Context) error {
 	}
 }
 
-// keepLock writes the lock every lockHeartbeat until ctx ends, then deletes it. If another server took it, it stops
-// this server's uploads, and leaves the lock to that server.
+// keepLock writes the lock every lockHeartbeat until ctx ends, then deletes it if it is still this server's. If another
+// server took it, it stops this server's uploads, and leaves the lock to that server.
 func (c *S3Client) keepLock(ctx context.Context, etag string) {
 	defer close(c.lockDone)
 	for {
@@ -118,6 +118,11 @@ func (c *S3Client) keepLock(ctx context.Context, etag string) {
 		case <-ctx.Done():
 			released, cancel := c.short(context.Background())
 			defer cancel()
+			// Another server takes the lock over while this one cannot write it, and learns of it only at its next write
+			if own, err := c.ownLockETag(released); err != nil || own == "" {
+				slog.Error("Cannot release the S3 lock, as it is not known to be this server's", "error", err)
+				return
+			}
 			if _, err := c.s3.DeleteObject(released, &s3.DeleteObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())}); err != nil {
 				slog.Error("Cannot release the S3 lock, so the next start waits for it", "error", err)
 			}
