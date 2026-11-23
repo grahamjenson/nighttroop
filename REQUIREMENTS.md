@@ -369,6 +369,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   message, so a server that fails each time Docker starts it again is one incident.
   - A server whose S3 lock another server took stops with an error, so it pages.
   - A server told to stop, or one that restarts to use S3 again, does not page.
+  - If a server is told to stop while it opens its DBs, it stops when the DBs are open. It does not serve, turn S3
+    off or page.
   - A server whose settings stop it starting does not page: it prints the error.
 - On the admins page, an admin selects a level and clicks **Test Admin Page** to page through PagerDuty.
   - Each test is a new incident. Its message names the admin and the time.
