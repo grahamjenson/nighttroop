@@ -204,6 +204,21 @@ func TestRebuildStaleBuildsAfterTheLongestWait(t *testing.T) {
 	require.True(t, r.built(day.Format(time.DateOnly)))
 }
 
+// A site whose written days cannot be built is kept, so a later run builds them
+func TestRebuildStaleTriesASiteAgainAfterAnError(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	day := now.AddDate(0, 0, -3)
+	r.reading("reading", day, now)
+	r.fail = errors.New("site cannot open")
+	require.Error(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.False(t, r.built(day.Format(time.DateOnly)))
+
+	r.fail = nil
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.True(t, r.built(day.Format(time.DateOnly)))
+}
+
 // Only today's data, which is built as it is read, and data not of a day's summary, open no site
 func TestRebuildStaleLeavesToday(t *testing.T) {
 	r := newRig(t)
