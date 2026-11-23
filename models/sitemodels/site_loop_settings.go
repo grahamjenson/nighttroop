@@ -7,9 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -49,12 +47,10 @@ func LoopSettingsFromDB(row *sitedb.LoopSetting) *SiteLoopSettings {
 		FirstSeenAt: row.FirstSeenAt, LastSeenAt: row.LastSeenAt, CreatedByDeviceName: row.CreatedByDeviceName, CreatedAt: row.CreatedAt}
 }
 
-// LoopSettingsFor are the settings as the identity may see them: without their deviceToken, at the top of Loop's and
-// Trio's, unless can.IdentitySeeDeviceTokens, and none when they cannot be read without it
-func LoopSettingsFor(identity *controldb.SiteIdentity, settings json.RawMessage) json.RawMessage {
-	if can.IdentitySeeDeviceTokens(identity) {
-		return settings
-	}
+// WithoutDeviceToken are an app's settings without their deviceToken, at the top of Loop's and Trio's, which with the
+// app's push credentials pushes to the phone. It is not kept in loop_settings, only encrypted in the app's push
+// registration, so settings kept before that lose it here. Settings that cannot be read are none.
+func WithoutDeviceToken(settings json.RawMessage) json.RawMessage {
 	var fields map[string]json.RawMessage
 	if err := json.Unmarshal(settings, &fields); err != nil {
 		return nil
@@ -63,8 +59,8 @@ func LoopSettingsFor(identity *controldb.SiteIdentity, settings json.RawMessage)
 		return settings
 	}
 	delete(fields, "deviceToken")
-	hidden, _ := json.Marshal(fields)
-	return hidden
+	redacted, _ := json.Marshal(fields)
+	return redacted
 }
 
 // loopGlucoseSettings are the settings Loop and Trio send glucose in, Loop's in its profile's units, kept in mg/dL,

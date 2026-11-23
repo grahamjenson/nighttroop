@@ -65,6 +65,53 @@ func TestRecordLoopSettings(t *testing.T) {
 	require.Len(t, rows, 3)
 }
 
+// Loop's and Trio's device tokens, which push to the phone, are not kept in loop_settings: settings are kept without
+// theirs, so a new token is not a new set, and a row kept with one before loses it
+func TestLoopSettingsAreKeptWithoutDeviceTokens(t *testing.T) {
+	_, _, site := testutils.NewControlDBWithSite(t)
+	q, ctx := site.SiteDB.Queries(), t.Context()
+	tokens := func() []string {
+		rows, err := q.SearchLoopSettings(ctx, sitedb.SearchLoopSettingsParams{Limit: 10})
+		require.NoError(t, err)
+		kept := []string{}
+		for _, row := range rows {
+			kept = append(kept, row.SettingsJson)
+		}
+		return kept
+	}
+	loop := func(token string) *nightscoutmodels.LoopSettings {
+		return &nightscoutmodels.LoopSettings{MaximumBolus: ptr(types.FlexibleFloat64(5)), DeviceToken: ptr(types.ShortString(token)),
+			BundleIdentifier: ptr(types.ShortString("com.X.loopkit.Loop"))}
+	}
+	first, err := recordLoopSettings(q, ctx, loopApp, fromProfile, loop("aaaa"), 1000, nil)
+	require.NoError(t, err)
+	again, err := recordLoopSettings(q, ctx, loopApp, fromProfile, loop("bbbb"), 2000, nil)
+	require.NoError(t, err)
+	require.Equal(t, first, again, "a new token is not a new set of settings")
+	trio, err := recordLoopSettings(q, ctx, trioApp, fromProfile, &nightscoutmodels.RemoteSettings{DeviceToken: ptr(types.ShortString("cccc")),
+		BundleIdentifier: ptr(types.ShortString("org.nightscout.X.trio"))}, 1000, nil)
+	require.NoError(t, err)
+	require.NotNil(t, trio)
+	for _, kept := range tokens() {
+		require.NotContains(t, kept, "deviceToken")
+		require.Contains(t, kept, "bundleIdentifier")
+	}
+	// Settings of only a token are none
+	none, err := recordLoopSettings(q, ctx, trioApp, fromProfile, map[string]string{"deviceToken": "dddd"}, 1000, nil)
+	require.NoError(t, err)
+	require.Nil(t, none)
+
+	// A row kept with its token, as before they were left out, loses it and keeps the rest
+	require.NoError(t, q.UpsertLoopSettings(ctx, sitedb.UpsertLoopSettingsParams{ID: loopSettingsID(loopApp, "old"), App: loopApp, Source: fromProfile,
+		SettingsJson: `{"deviceToken":"eeee","maximumBolus":7}`, SeenAt: 500}))
+	require.Contains(t, tokens()[2], "eeee")
+	require.NoError(t, q.RedactLoopSettingsDeviceTokens(ctx))
+	for _, kept := range tokens() {
+		require.NotContains(t, kept, "deviceToken")
+	}
+	require.JSONEq(t, `{"maximumBolus":7}`, tokens()[2])
+}
+
 // A device status is read back with the configuration it refers to, and without it once that is deleted, as the
 // report is kept
 func TestDeviceStatusConfigurationFromLoopSettings(t *testing.T) {

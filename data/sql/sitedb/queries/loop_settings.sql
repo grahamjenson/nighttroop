@@ -6,6 +6,12 @@ ON CONFLICT(id) DO UPDATE SET
     first_seen_at = MIN(first_seen_at, excluded.first_seen_at),
     last_seen_at = MAX(last_seen_at, excluded.last_seen_at);
 
+-- name: RedactLoopSettingsDeviceTokens :exec
+-- Takes the device token out of the settings kept with one, as they were before it was left out of them: it is kept
+-- only in the app's push registration, encrypted. The table has few rows, at most each app's changed sets
+UPDATE loop_settings SET settings_json = json_remove(settings_json, '$.deviceToken')
+WHERE json_type(settings_json, '$.deviceToken') IS NOT NULL;
+
 -- name: GetLoopSettings :one
 SELECT * FROM loop_settings WHERE id = ?;
 

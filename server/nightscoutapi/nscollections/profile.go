@@ -60,6 +60,10 @@ func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 	// Loop's and Trio's settings are kept once in loop_settings, and each profile refers to them. Loop's glucose is
 	// kept in mg/dL, as it sends it in its profile's units; Trio's is in mg/dL.
 	sent := nightscoutmodels.PartialProfileStoreToCreate(nsModel, cc)
+	// Settings kept before device tokens were left out of them lose theirs when the app next sends a profile
+	if err := q.RedactLoopSettingsDeviceTokens(ctx); err != nil {
+		return nil, err
+	}
 	loopSettings := nsModel.LoopSettings.WithGlucose(nsModel.Units.ToMGDL)
 	loopID, err := recordLoopSettings(q, ctx, loopApp, fromProfile, loopSettings, sent.OccurredAt, sent.CreatedByDeviceName)
 	if err != nil {

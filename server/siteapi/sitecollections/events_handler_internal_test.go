@@ -259,16 +259,17 @@ func TestEventsHandlerStreamsSettingsToWhoseTheyAre(t *testing.T) {
 	}
 }
 
-// Loop settings are read as the identity that changed them, so one deleted by an identity that may see Loop's and
-// Trio's device tokens has them; they are streamed without them to an identity that may not see them
-func TestEventsHandlerStreamsLoopSettingsWithoutDeviceTokensToReadOnly(t *testing.T) {
+// Loop settings are kept without Loop's and Trio's device tokens. A row published with one, as one kept before they
+// were left out could be, is streamed without it to every identity, as the site's pages give no one a device token
+func TestEventsHandlerStreamsLoopSettingsWithoutDeviceTokens(t *testing.T) {
 	tests := []struct {
 		role  consts.IdentityRole
 		shown bool
 	}{
 		{consts.IdentityRoleUserReadOnly, false},
 		{consts.IdentityRoleDeviceRead, false},
-		{consts.IdentityRoleUser, true},
+		{consts.IdentityRoleUser, false},
+		{consts.IdentityRoleAdmin, false},
 	}
 	for _, test := range tests {
 		t.Run(string(test.role), func(t *testing.T) {
