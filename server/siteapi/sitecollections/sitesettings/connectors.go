@@ -111,6 +111,8 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 	}
 
 	model.Type = params.Type // so its response shows the buttons of that connector
+	// The saved one is never shown again: the model is also sent to each admin streaming the connectors' changes
+	model.Password = sitemodels.SetPasswordGarbage()
 	return model, nil
 }
 
@@ -179,6 +181,8 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 	}
 
 	model.Type = params.Type // so its response shows the buttons of that connector
+	// The saved one is never shown again: the model is also sent to each admin streaming the connectors' changes
+	model.Password = sitemodels.SetPasswordGarbage()
 	return model, nil
 }
 

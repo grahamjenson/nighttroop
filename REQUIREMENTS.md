@@ -1213,6 +1213,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   the path or query of the request.
 - A change of a Nightscout connector's URL needs its token again, or the API returns 400 with "Enter the Nightscout
   token again to change the Nightscout URL.": the saved token is never sent to another URL.
+- The reply to a connector save, and `/settings/connectors/events`, have `********` for the password or token, so
+  another admin or tab does not get it.
 - Password, API secret, token, username, email and URL are not offered to browsers or password managers. The password
   is a masked text box (not a password box) with an eye to show it.
 
