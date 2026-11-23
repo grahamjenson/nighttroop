@@ -64,6 +64,14 @@ ORDER BY created_at DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
+-- name: FoodPresetsNamed :many
+-- The food presets whose name has Name in it, ignoring the case of ASCII letters, by name, for the Add Food Intake modal
+-- to pick from. An empty Name has every food preset.
+SELECT * FROM food_presets
+WHERE instr(lower(name), lower(CAST(sqlc.arg('Name') AS TEXT))) > 0
+ORDER BY name COLLATE NOCASE, id
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: GetFoodPreset :one
 SELECT * FROM food_presets WHERE id = ?;
 

@@ -5341,6 +5341,16 @@ func (m *FoodPresetHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetName returns the Name value.
+func (m FoodPresetsNamedParams) GetName() string {
+	return m.Name
+}
+
+// SetLimit sets the Limit value and returns the updated FoodPresetsNamedParams.
+func (m *FoodPresetsNamedParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetFoodPresetParams) GetID() string {
 	return m.ID

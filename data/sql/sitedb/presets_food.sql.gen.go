@@ -298,6 +298,70 @@ func (q *Queries) FoodPresetHistoryIDs(ctx context.Context, arg FoodPresetHistor
 	return items, nil
 }
 
+const foodPresetsNamed = `-- name: FoodPresetsNamed :many
+SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, unit, gi, hidden, hide_after_use, position, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
+WHERE instr(lower(name), lower(CAST(?1 AS TEXT))) > 0
+ORDER BY name COLLATE NOCASE, id
+LIMIT CAST(?2 AS INTEGER)
+`
+
+type FoodPresetsNamedParams struct {
+	Name  string
+	Limit int64
+}
+
+// The food presets whose name has Name in it, ignoring the case of ASCII letters, by name, for the Add Food Intake modal
+// to pick from. An empty Name has every food preset.
+func (q *Queries) FoodPresetsNamed(ctx context.Context, arg FoodPresetsNamedParams) ([]*FoodPreset, error) {
+	rows, err := q.query(ctx, q.foodPresetsNamedStmt, foodPresetsNamed, arg.Name, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*FoodPreset
+	for rows.Next() {
+		var i FoodPreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.FoodType,
+			&i.AbsorptionTimeMinutes,
+			&i.Carbs,
+			&i.Category,
+			&i.Subcategory,
+			&i.Fat,
+			&i.Protein,
+			&i.Fibre,
+			&i.Energy,
+			&i.Portions,
+			&i.PreBolus,
+			&i.Unit,
+			&i.Gi,
+			&i.Hidden,
+			&i.HideAfterUse,
+			&i.Position,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFoodPreset = `-- name: GetFoodPreset :one
 SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, unit, gi, hidden, hide_after_use, position, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id = ?
 `
