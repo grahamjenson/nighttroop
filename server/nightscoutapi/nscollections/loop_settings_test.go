@@ -66,7 +66,7 @@ func TestRecordLoopSettings(t *testing.T) {
 }
 
 // Loop's and Trio's device tokens, which push to the phone, are not kept in loop_settings: settings are kept without
-// theirs, so a new token is not a new set, and a row kept with one before loses it
+// theirs, so a new token is not a new set
 func TestLoopSettingsAreKeptWithoutDeviceTokens(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
 	q, ctx := site.SiteDB.Queries(), t.Context()
@@ -101,15 +101,6 @@ func TestLoopSettingsAreKeptWithoutDeviceTokens(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, none)
 
-	// A row kept with its token, as before they were left out, loses it and keeps the rest
-	require.NoError(t, q.UpsertLoopSettings(ctx, sitedb.UpsertLoopSettingsParams{ID: loopSettingsID(loopApp, "old"), App: loopApp, Source: fromProfile,
-		SettingsJson: `{"deviceToken":"eeee","maximumBolus":7}`, SeenAt: 500}))
-	require.Contains(t, tokens()[2], "eeee")
-	require.NoError(t, q.RedactLoopSettingsDeviceTokens(ctx))
-	for _, kept := range tokens() {
-		require.NotContains(t, kept, "deviceToken")
-	}
-	require.JSONEq(t, `{"maximumBolus":7}`, tokens()[2])
 }
 
 // A device status is read back with the configuration it refers to, and without it once that is deleted, as the

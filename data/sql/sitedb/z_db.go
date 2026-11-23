@@ -390,9 +390,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.recentDeviceNamesStmt, err = db.PrepareContext(ctx, recentDeviceNames); err != nil {
 		return nil, fmt.Errorf("error preparing query RecentDeviceNames: %w", err)
 	}
-	if q.redactLoopSettingsDeviceTokensStmt, err = db.PrepareContext(ctx, redactLoopSettingsDeviceTokens); err != nil {
-		return nil, fmt.Errorf("error preparing query RedactLoopSettingsDeviceTokens: %w", err)
-	}
 	if q.regroupEventGroupStmt, err = db.PrepareContext(ctx, regroupEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query RegroupEventGroup: %w", err)
 	}
@@ -1194,11 +1191,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing recentDeviceNamesStmt: %w", cerr)
 		}
 	}
-	if q.redactLoopSettingsDeviceTokensStmt != nil {
-		if cerr := q.redactLoopSettingsDeviceTokensStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing redactLoopSettingsDeviceTokensStmt: %w", cerr)
-		}
-	}
 	if q.regroupEventGroupStmt != nil {
 		if cerr := q.regroupEventGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing regroupEventGroupStmt: %w", cerr)
@@ -1670,7 +1662,6 @@ type Queries struct {
 	profileStoreHistoryIDsStmt                  *sql.Stmt
 	profileSwitchTotalsStmt                     *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
-	redactLoopSettingsDeviceTokensStmt          *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
 	rewriteActivityStmt                         *sql.Stmt
 	rewriteDeviceReportStmt                     *sql.Stmt
@@ -1861,7 +1852,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		profileStoreHistoryIDsStmt:                  q.profileStoreHistoryIDsStmt,
 		profileSwitchTotalsStmt:                     q.profileSwitchTotalsStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
-		redactLoopSettingsDeviceTokensStmt:          q.redactLoopSettingsDeviceTokensStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
 		rewriteActivityStmt:                         q.rewriteActivityStmt,
 		rewriteDeviceReportStmt:                     q.rewriteDeviceReportStmt,

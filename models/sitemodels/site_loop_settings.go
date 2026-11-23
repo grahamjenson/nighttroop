@@ -49,7 +49,8 @@ func LoopSettingsFromDB(row *sitedb.LoopSetting) *SiteLoopSettings {
 
 // WithoutDeviceToken are an app's settings without their deviceToken, at the top of Loop's and Trio's, which with the
 // app's push credentials pushes to the phone. It is not kept in loop_settings, only encrypted in the app's push
-// registration, so settings kept before that lose it here. Settings that cannot be read are none.
+// registration: settings are saved without it, and settings kept with one before that are read without it. Settings
+// that cannot be read are none.
 func WithoutDeviceToken(settings json.RawMessage) json.RawMessage {
 	var fields map[string]json.RawMessage
 	if err := json.Unmarshal(settings, &fields); err != nil {

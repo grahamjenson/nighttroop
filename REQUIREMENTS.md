@@ -1965,7 +1965,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - `deviceToken`: registered whole, up to 256 characters (Trio's are 160 hex). Longer: not registered.
 - A device token is kept in one place only: its app's push registration, encrypted. The site DB does not keep it,
   with the profile or with the loop settings.
-  - A site DB that kept one before loses it when Loop or Trio next sends a profile.
+  - Loop settings kept with one before this are not changed. They come back without it, as below.
   - What is sent as a `deviceToken` and is not a token is not kept, and does not come back.
 - Device tokens come back (v1, v3, socket storage) only to an identity that can change the site's data (e.g.
   LoopFollow remote commands). Read only users and devices, and the socket's `dataUpdate` to all readers, get none.

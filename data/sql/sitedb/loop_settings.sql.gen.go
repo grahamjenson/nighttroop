@@ -96,18 +96,6 @@ func (q *Queries) GetPreviousLoopSettings(ctx context.Context, arg GetPreviousLo
 	return &i, err
 }
 
-const redactLoopSettingsDeviceTokens = `-- name: RedactLoopSettingsDeviceTokens :exec
-UPDATE loop_settings SET settings_json = json_remove(settings_json, '$.deviceToken')
-WHERE json_type(settings_json, '$.deviceToken') IS NOT NULL
-`
-
-// Takes the device token out of the settings kept with one, as they were before it was left out of them: it is kept
-// only in the app's push registration, encrypted. The table has few rows, at most each app's changed sets
-func (q *Queries) RedactLoopSettingsDeviceTokens(ctx context.Context) error {
-	_, err := q.exec(ctx, q.redactLoopSettingsDeviceTokensStmt, redactLoopSettingsDeviceTokens)
-	return err
-}
-
 const searchLoopSettings = `-- name: SearchLoopSettings :many
 SELECT id, app, source, settings_json, first_seen_at, last_seen_at, created_by_device_name, created_at FROM loop_settings
 WHERE CAST(?1 AS TEXT) IS NULL OR app = ?1
