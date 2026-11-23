@@ -35,6 +35,9 @@ type CollectionEventsHidden interface {
 const (
 	// maxEventStreamsPerSite stops one site holding open as many connections as it likes
 	maxEventStreamsPerSite = 20
+	// maxEventStreamsPerIdentity stops one identity, as a read only one whose token is out, holding all of its site's,
+	// so the site's other identities can still open theirs. A page streams its alarms and often its own collection
+	maxEventStreamsPerIdentity = maxEventStreamsPerSite / 2
 	// eventStreamBuffer is how many changes can wait to be sent; a client too slow to read them is dropped, and
 	// reconnects to read the collection again
 	eventStreamBuffer = 100
@@ -96,7 +99,8 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 func openEventStreamConnection(ctx context.Context, siteContext *httputils.SiteContext, collection string) (func(), *apiutils.HTTPError) {
 	live := siteContext.ControlDB.Live.Queries
 	connection, err := live.OpenConnection(ctx, livedb.OpenConnectionParams{SiteID: siteContext.SiteID,
-		IdentityID: siteContext.IdentityModel.ID, Kind: "event_stream", Collection: collection, Max: maxEventStreamsPerSite})
+		IdentityID: siteContext.IdentityModel.ID, Kind: "event_stream", Collection: collection, Max: maxEventStreamsPerSite,
+		IdentityMax: maxEventStreamsPerIdentity})
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, apiutils.ErrRateLimitExceeded(60)
 	}

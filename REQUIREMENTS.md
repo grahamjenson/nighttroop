@@ -2309,6 +2309,8 @@ harder:
 - A v1 upload holds at most 5000 records. Each 100 past the first costs a write against the site's and identity's
   limits.
 - A live update upload holds at most 100.
+- A site holds at most 20 live update streams (`/<section>/<collection>/events`) open, and one identity at most 10.
+  Past either: 429.
 - A Nightscout API delete of a treatment or entry type deletes at most 1000, newest first, and says how many.
 - A body over `MAX_REQUEST_BODY_BYTES`: 413. With no length given, reading stops at the limit and it is a bad body.
 - A site DB uploaded to the control site (`POST /sites/{id}/db`) can be up to 512 MB.

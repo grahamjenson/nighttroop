@@ -31,21 +31,24 @@ const openConnection = `-- name: OpenConnection :one
 INSERT INTO connections (site_id, identity_id, kind, collection)
 SELECT ?1, ?2, ?3, ?4
 WHERE (SELECT COUNT(*) FROM connections c WHERE c.site_id = ?1 AND c.kind = ?3) < CAST(?5 AS INTEGER)
+AND (SELECT COUNT(*) FROM connections c WHERE c.site_id = ?1 AND c.kind = ?3
+    AND c.identity_id = ?2) < CAST(?6 AS INTEGER)
 RETURNING id
 `
 
 type OpenConnectionParams struct {
-	SiteID     string
-	IdentityID int64
-	Kind       string
-	Collection string
-	Max        int64
+	SiteID      string
+	IdentityID  int64
+	Kind        string
+	Collection  string
+	Max         int64
+	IdentityMax int64
 }
 
 // -----
 // CREATE
 // ------
-// Opens a connection, unless its site already has Max of its kind open, when there is no row
+// Opens a connection, unless its site already has Max of its kind open, or its identity IdentityMax, when there is no row
 func (q *Queries) OpenConnection(ctx context.Context, arg OpenConnectionParams) (int64, error) {
 	row := q.queryRow(ctx, q.openConnectionStmt, openConnection,
 		arg.SiteID,
@@ -53,6 +56,7 @@ func (q *Queries) OpenConnection(ctx context.Context, arg OpenConnectionParams) 
 		arg.Kind,
 		arg.Collection,
 		arg.Max,
+		arg.IdentityMax,
 	)
 	var id int64
 	err := row.Scan(&id)
