@@ -3,6 +3,8 @@ package sitedata
 import (
 	"context"
 	"net/http"
+	"strings"
+	"unicode/utf8"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -39,16 +41,21 @@ func (s *FoodIntakesCollection) CreateRow(ctx context.Context, collectionTx *sit
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateFoodIntake, sitemodels.FoodIntakeToCreate(model, siteContext))
 }
 
-// pickedPresets is how many of the newest food presets the add modal offers to start at
+// pickedPresets is how many food presets, by name, the add modal offers to start at
 const pickedPresets = 100
 
 // NewFromHTMXResponse is the modal to add a food intake in, with the food presets to start it at, if the identity can
-// read them, and its fields at the one the request picks
+// read them, by name and with the name searched for in them, and its fields at the one the request picks
 func (s *FoodIntakesCollection) NewFromHTMXResponse(ctx context.Context, collectionTx *siteapiutils.CollectionTx, r *http.Request, siteContext *httputils.SiteContext) (templ.Component, error) {
 	if !can.IdentityAccessStore(siteContext.IdentityModel, "food_presets", can.ActionSearch) {
-		return site_data_templ.FoodIntakeNew(nil, nil), nil
+		return site_data_templ.FoodIntakeNew(nil, nil, ""), nil
 	}
-	rows, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllFoodPresets, sitedb.AllFoodPresetsParams{Limit: pickedPresets})
+	// A name is at most 64 characters, so a longer search finds none
+	search := strings.TrimSpace(r.URL.Query().Get("preset_search"))
+	if utf8.RuneCountInString(search) > 64 {
+		search = string([]rune(search)[:64])
+	}
+	rows, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).FoodPresetsNamed, sitedb.FoodPresetsNamedParams{Name: search, Limit: pickedPresets})
 	presets, herr := apiutils.Searched(rows, err, "food_presets", sitemodels.FoodPresetFromDB)
 	if herr != nil {
 		return nil, herr
@@ -61,7 +68,7 @@ func (s *FoodIntakesCollection) NewFromHTMXResponse(ctx context.Context, collect
 		}
 		picked = sitemodels.FoodPresetFromDB(row)
 	}
-	return site_data_templ.FoodIntakeNew(presets, picked), nil
+	return site_data_templ.FoodIntakeNew(presets, picked, search), nil
 }
 
 func (s *FoodIntakesCollection) CreateHTMXResponse(model *sitemodels.SiteFoodIntake) templ.Component {
