@@ -87,6 +87,15 @@ func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 // "1.2 U + 1.8 U over 2 h", or "2 U over 2 h" when none is given at once, each followed by unit, as " U" in a table or
 // "U" on the graph. An extended dose with no time is given at once, as the daily dose counts it.
 func doseText(ctx context.Context, d *sitemodels.SiteInsulinDose, unit string) string {
+	if d.IsBasalInsulin != nil && *d.IsBasalInsulin {
+		// Basal insulin, as long acting insulin injected, says so, as it counts as basal, not as a bolus
+		return i18n.T(ctx, "site.summary.intake.basal_insulin", i18n.Data{"Dose": doseAmount(ctx, d, unit)})
+	}
+	return doseAmount(ctx, d, unit)
+}
+
+// doseAmount is a dose's units, with its extended dose and how long that is given over
+func doseAmount(ctx context.Context, d *sitemodels.SiteInsulinDose, unit string) string {
 	dose := display.Value(ctx, &d.Dose, unit)
 	if d.ExtendedDose == nil || *d.ExtendedDose <= 0 {
 		return dose

@@ -317,7 +317,10 @@ type InsulinDose struct {
 	// ExtendedDurationMinutes How long the extended dose is given over
 	ExtendedDurationMinutes *int64  `json:"extended_duration_minutes,omitempty"`
 	Id                      *string `json:"id,omitempty"`
-	Notes                   *string `json:"notes,omitempty"`
+
+	// IsBasalInsulin Whether it is basal insulin, as long acting insulin injected, which counts as basal in the daily dose, not as a bolus; set only by an upload through the Nightscout API, not the site
+	IsBasalInsulin *bool   `json:"is_basal_insulin"`
+	Notes          *string `json:"notes,omitempty"`
 
 	// OccurredAt Now, if not sent when creating
 	OccurredAt            *int64  `json:"occurred_at,omitempty"`

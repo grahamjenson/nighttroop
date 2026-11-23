@@ -750,7 +750,8 @@
               "dose_type": { "type": "string" },
               "extended_dose": { "type": "number", "format": "double", "description": "A combo or extended bolus's units given evenly over extended_duration_minutes after the dose" },
               "extended_duration_minutes": { "type": "integer", "format": "int64", "description": "How long the extended dose is given over" },
-              "automatic": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site" }
+              "automatic": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site" },
+              "is_basal_insulin": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether it is basal insulin, as long acting insulin injected, which counts as basal in the daily dose, not as a bolus; set only by an upload through the Nightscout API, not the site" }
             }
           }
         ]

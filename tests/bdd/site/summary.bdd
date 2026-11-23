@@ -43,6 +43,11 @@ NAME loop_automatic_bolus
 POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
 B [{"created_at": "{{ time 1 }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 0.45, "automatic": true}]
 ASSERT_STATUS 200
+// And long acting insulin injected, as Juggluco sends it, which is basal insulin and not a bolus
+NAME long_acting_insulin
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"created_at": "{{ time 2 }}", "enteredBy": "Juggluco", "eventType": "<none>", "notes": "Long-Acting", "insulin": 14, "insulinType": "Levemir"}]
+ASSERT_STATUS 200
 BROWSE
 
 // A sensor started now, added as an event group
@@ -73,6 +78,9 @@ ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
 ASSERT_VISIBLE #site--summary--time-in-range >> text=/^(\d+%|<1%)$/
 ASSERT_VISIBLE #site--summary--total-daily-dose >> text=/^\d+(\.\d+)? U$/
 ASSERT_NOT_VISIBLE #site--summary--total-daily-dose >> text="0 U"
+// The long acting insulin says it is basal, where the boluses are only their units
+ASSERT_VISIBLE #site--summary--insulin-carbs td:has-text("U basal") >> text=14
+ASSERT_COUNT #site--summary--insulin-carbs td:has-text("basal") 1
 // The weeks and months before a new site's have no data, so they have no line under today's: not a 0 U that reads
 // as no insulin, nor a row of dashes
 ASSERT_NOT_VISIBLE #site--summary--total-daily-dose--last-week

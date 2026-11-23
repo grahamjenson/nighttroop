@@ -694,6 +694,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A suspended pump (`PUMP_SUSPEND`) shows in **Other treatments** as **Suspended**, "Pump suspended until it
   resumes". After the pump resumes, it shows "Pump suspended for" its minutes.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
+- A dose of basal insulin, as long acting insulin injected, says "basal" after its units ("14 U basal"), in the table
+  and on the graph.
 - A combo bolus shows its dose given at once, then its extended dose and its time ("1.2 U + 1.8 U over 2 h").
   - If no dose is given at once, it shows only the extended dose and its time ("2 U over 2 h").
   - If the extended dose has no time, it shows the total dose, as it is given at once.
@@ -733,6 +735,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - No data: "–" for time in range and daily dose, not 0. No insulin: 0 U.
   - Total daily dose: a combo bolus adds its dose given at once immediately. Its extended dose adds as it is given,
     by the share of its minutes that are complete.
+  - A dose of basal insulin (long acting insulin injected, `is_basal_insulin`) is in the total daily dose as basal,
+    not as a bolus.
 - Time in range, on the summary, Summaries page, overviews, AGP reports and readings' glucose days: whole percent,
   "<1%" above 0 that rounds to 0, "–" for none.
 
@@ -888,7 +892,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Table under the bars: every day, newest first, basal, boluses and total in U, or "–" with no insulin. Today marked
   "so far", with or without insulin.
 - Note under the bars: basal is estimated from the basal rate in force each minute (scheduled or temp basal); the rest
-  is boluses. With today in it: today (paler, so far) is left out of the days with insulin and their daily dose, lowest
+  is boluses. A dose of basal insulin is basal too. With today in it: today (paler, so far) is left out of the days with insulin and their daily dose, lowest
   and highest.
 
 #### Printable report
@@ -997,6 +1001,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     over. A dose of 0 is refused, except when it has an extended dose.
   - `automatic`: if a loop gave it. `true`/`false` as Loop uploaded, `null` if the app does not tell. Site API
     returns it, ignores it on create or update.
+  - `is_basal_insulin`: if it is basal insulin, as long acting insulin injected. `true`/`false` as AAPS uploaded,
+    `true` for Juggluco's Long-Acting, `null` if the app does not tell. Site API returns it, ignores it on create or
+    update.
 - **Food intakes**
 - **Temp basals**: rate in U/hr, and a multiplier of the scheduled basal (0 for a zero temp).
 - **Temp targets**: in the settings' units.
@@ -2046,7 +2053,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Percent of readings, total 100: `time_very_low` (below 54 mg/dL), `time_low`, in range, `time_high` and
     `time_very_high` (above 250 mg/dL).
   - `cgm_active`: percent of its 5 minutes, up to now, with a CGM reading.
-  - `total_daily_basal`: the basal in force through a day. The rest of the daily dose is boluses.
+  - `total_daily_basal`: the basal in force through a day, plus its doses of basal insulin (`is_basal_insulin`). The
+    rest of the daily dose is boluses.
   - `loop_iob`, `loop_iob_basal`, `loop_iob_treatment` and `loop_cob` every 5 minutes from midnight.
 - A week, fortnight or month:
   - Readings and times: all readings of its days.
