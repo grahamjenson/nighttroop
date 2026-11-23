@@ -9,9 +9,12 @@ import (
 	"errors"
 	"log/slog"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 // The loop apps whose settings are kept in loop_settings, and the record each sends them in
@@ -37,7 +40,12 @@ func loopSettingsID(app, settingsJSON string) string {
 // out; neither has an ID, and the record they came in is still kept.
 func recordLoopSettings(q *sitedb.Queries, ctx context.Context, app, source string, settings any, at int64, device *string) (*string, error) {
 	settingsJSON := TryValueToJSON(settings)
-	if settingsJSON == nil || *settingsJSON == "{}" || *settingsJSON == "null" || len(*settingsJSON) > loopSettingsLimit {
+	if settingsJSON == nil || len(*settingsJSON) > loopSettingsLimit {
+		return nil, nil
+	}
+	// The deviceToken is not kept here: ProfileCollection.Stored keeps it encrypted in the app's push registration
+	settingsJSON = ptr(string(sitemodels.WithoutDeviceToken(json.RawMessage(*settingsJSON))))
+	if *settingsJSON == "" || *settingsJSON == "{}" || *settingsJSON == "null" {
 		return nil, nil
 	}
 	id := loopSettingsID(app, *settingsJSON)
@@ -61,7 +69,7 @@ func loopSettingsJSON(ctx context.Context, siteContext *httputils.SiteContext, i
 		}
 		return nil
 	}
-	return sitemodels.LoopSettingsFor(siteContext.IdentityModel, json.RawMessage(row.SettingsJson))
+	return withDeviceToken(ctx, siteContext, row.App, json.RawMessage(row.SettingsJson))
 }
 
 // newestLoopSettingsJSON are Loop's last seen settings, as the request's identity may see them, for a record made at
@@ -80,5 +88,37 @@ func newestLoopSettingsJSON(ctx context.Context, siteContext *httputils.SiteCont
 	if len(rows) == 0 || rows[0].LastSeenAt > date {
 		return nil
 	}
-	return sitemodels.LoopSettingsFor(siteContext.IdentityModel, json.RawMessage(rows[0].SettingsJson))
+	return withDeviceToken(ctx, siteContext, loopApp, json.RawMessage(rows[0].SettingsJson))
+}
+
+// withDeviceToken are Loop's or Trio's settings with the app's deviceToken put back, for an identity that is given
+// device tokens, as LoopFollow sending remote commands must be. The token is the one of the app's newest push
+// registration, the only place it is kept, encrypted, and only when its bundle is the settings'. Any other identity,
+// and AAPS's settings, get the settings as kept, with no token.
+func withDeviceToken(ctx context.Context, siteContext *httputils.SiteContext, app string, settings json.RawMessage) json.RawMessage {
+	settings = sitemodels.WithoutDeviceToken(settings)
+	if settings == nil || app == aapsApp || !can.IdentitySeeDeviceTokens(siteContext.IdentityModel) {
+		return settings
+	}
+	registration, err := siteContext.ControlDB.Queries.NewestPushRegistrationForApp(ctx, controldb.NewestPushRegistrationForAppParams{
+		SiteID: siteContext.SiteID, App: app, Roles: can.LoopRegistrationRoles})
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			slog.WarnContext(ctx, "Cannot read an app's push registration for its device token", "app", app, "error", err)
+		}
+		return settings
+	}
+	var fields map[string]json.RawMessage
+	bundle, _ := json.Marshal(registration.BundleID)
+	if json.Unmarshal(settings, &fields) != nil || string(fields["bundleIdentifier"]) != string(bundle) {
+		return settings
+	}
+	token, err := siteContext.Config.Security.DecryptFor(security.PurposePushToken, siteContext.SiteID, registration.TokenEnc)
+	if err != nil {
+		slog.WarnContext(ctx, "Cannot decrypt an app's device token", "app", app, "error", err)
+		return settings
+	}
+	fields["deviceToken"], _ = json.Marshal(token)
+	with, _ := json.Marshal(fields)
+	return with
 }

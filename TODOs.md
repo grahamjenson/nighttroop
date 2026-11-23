@@ -90,8 +90,6 @@
        require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token. Then
        let the control site's Push Credentials (`POST /push-credentials`) add one with no `site_id`, which it refuses
        until then
-    1. P3: Encrypt Loop's and Trio's device tokens at rest: they are in plaintext in `loop_settings`, though only
-       identities that can change the site's data are given them back, and push registrations keep them encrypted
 
 
 1. Nightscout API:

@@ -1128,7 +1128,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     `overridePresets.Running.targetRange`). Old, then new ("not sent" if absent). Glucose in the site's units.
   - An app's first set tells there is no set before it.
   - API: `changes`, `previous_id` (the set before), `units`.
-- Read only identities (site API): no Loop or Trio `deviceToken`, in settings or `changes`.
+- The site API gives no identity a Loop or Trio `deviceToken`, in settings or `changes`: loop settings are kept
+  without it. Two profiles that differ only in their `deviceToken` are one set of settings.
 - The Nightscout API reads each profile and device status back with its settings. Deleting a set keeps them; they
   read back without it.
 
@@ -1947,8 +1948,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A profile set with no profile in its `store`: refused (400).
 - Loop's `loopSettings.scheduleOverride` (override running when sent): kept as an override preset (its `duration` in
   seconds). Loop reads it back.
-- Trio's remote control settings (bundle, device token, APNS environment, team, expiry) and override presets: kept, for
-  LoopFollow's Trio Remote Control.
+- Trio's remote control settings (bundle, APNS environment, team, expiry) and override presets: kept, for
+  LoopFollow's Trio Remote Control. Its device token is kept as below.
 - A profile sent with no `loopSettings` and no Trio remote settings (e.g. AAPS, careportal), if it is not older than
   Loop's last `loopSettings`: comes back (v1, v3, socket) with Loop's last `loopSettings`. LoopFollow can then
   control Loop.
@@ -1961,9 +1962,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   token for pushes to the uploading identity.
   - Production, unless `isAPNSProduction` is false.
   - Not a token: not registered. The profile is still kept.
-- `deviceToken`: kept whole. Registered up to 256 characters (Trio's are 160 hex). Longer: not registered.
+- `deviceToken`: registered whole, up to 256 characters (Trio's are 160 hex). Longer: not registered.
+- A device token is kept in one place only: its app's push registration, encrypted. The site DB does not keep it,
+  with the profile or with the loop settings.
+  - Loop settings kept with one before this are not changed. They come back without it, as below.
+  - What is sent as a `deviceToken` and is not a token is not kept, and does not come back.
 - Device tokens come back (v1, v3, socket storage) only to an identity that can change the site's data (e.g.
   LoopFollow remote commands). Read only users and devices, and the socket's `dataUpdate` to all readers, get none.
+  - Each of an app's profiles comes back with the token of the app's newest registration, by an identity that may
+    register Loop or Trio, if its bundle ID is the profile's. An older profile thus has the app's token now.
 
 ### Nightscout API: food and activities
 

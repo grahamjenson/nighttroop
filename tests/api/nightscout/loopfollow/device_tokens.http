@@ -1,6 +1,8 @@
 # Loop's and Trio's device tokens, which with the app's push credentials push to the phone, are only given to the
 # identities that can change the site's data, as LoopFollow sending remote commands must. Read only followers get the
-# profile and the loop settings without them. See docs/clients/loopfollow.md.
+# profile without them. They are not kept with the site's loop settings, which give them to no one: each app's token
+# is kept only in its push registration, encrypted, and put back in a profile from there.
+# See docs/clients/loopfollow.md.
 
 INCLUDE steps/new_site_admin.steps
 
@@ -94,7 +96,8 @@ ASSERT_EQUALS null "@result.2.deviceToken"
 ASSERT_EQUALS null "@result.2.loopSettings.deviceToken"
 
 ######
-# LoopFollow sending remote commands, with a token that can write, and the loop's own phone get them
+# LoopFollow sending remote commands, with a token that can write, and the loop's own phone get them. Each of an
+# app's profiles has the app's token now, as only that is kept: Loop's older profile has its new token
 ######
 
 NAME carer_profiles
@@ -102,7 +105,8 @@ GET http://{{ .ns_site }}/api/v1/profiles.json?token={{ .carer_token }}&count=3
 ASSERT_STATUS 200
 ASSERT_EQUALS "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809" "@0.deviceToken"
 ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@1.loopSettings.deviceToken"
-ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0" "@2.loopSettings.deviceToken"
+ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@2.loopSettings.deviceToken"
+ASSERT_EQUALS 10 "@2.loopSettings.maximumBolus"
 
 NAME pwd_phone_profiles
 GET http://{{ .ns_site }}/api/v1/profiles.json?token={{ token }}&count=3
@@ -110,8 +114,14 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809" "@0.deviceToken"
 ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@1.loopSettings.deviceToken"
 
+NAME carer_v3_profile
+GET http://{{ .ns_site }}/api/v3/profile?token={{ .carer_token }}&limit=1
+ASSERT_STATUS 200
+ASSERT_EQUALS "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809" "@result.0.deviceToken"
+
 ######
-# The site's loop settings are the same: without the device tokens, or a change to one, for a read only identity
+# The site's loop settings are kept without the device tokens, so no identity gets one from them, an admin neither.
+# Loop's two profiles differ only in their token, so they are one set of settings, with no change to show
 ######
 
 NAME viewer_loop_settings
@@ -119,29 +129,30 @@ GET http://{{ site }}/presets/loop-settings
 H Authorization: Bearer {{ .viewer_jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 3 "@result.items"
+ASSERT_LENGTH 2 "@result.items"
 ASSERT_EQUALS "trio" "@result.items.0.app"
 ASSERT_EQUALS null "@result.items.0.settings.deviceToken"
 ASSERT_EQUALS "org.nightscout.ABCDE12345.trio" "@result.items.0.settings.bundleIdentifier"
 ASSERT_EQUALS "loop" "@result.items.1.app"
 ASSERT_EQUALS null "@result.items.1.settings.deviceToken"
 ASSERT_EQUALS 10 "@result.items.1.settings.maximumBolus"
-SET new_token_settings_id {{ dig "viewer_loop_settings.result.items.1.id" }}
+SET loop_settings_id {{ dig "viewer_loop_settings.result.items.1.id" }}
 
-NAME viewer_loop_settings_changes
-GET http://{{ site }}/presets/loop-settings/{{ .new_token_settings_id }}
-H Authorization: Bearer {{ .viewer_jwt }}
-H Accept: application/json
-ASSERT_STATUS 200
-ASSERT_EQUALS null "@result.settings.deviceToken"
-ASSERT_EXISTS "@result.previous_id"
-ASSERT_LENGTH 0 "@result.changes"
-
-NAME admin_loop_settings_changes
-GET http://{{ site }}/presets/loop-settings/{{ .new_token_settings_id }}
+NAME admin_loop_settings
+GET http://{{ site }}/presets/loop-settings
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" "@result.settings.deviceToken"
-ASSERT_LENGTH 1 "@result.changes"
-ASSERT_EQUALS "deviceToken" "@result.changes.0.field"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS null "@result.items.0.settings.deviceToken"
+ASSERT_EQUALS "ABCDE12345" "@result.items.0.settings.teamID"
+ASSERT_EQUALS null "@result.items.1.settings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@result.items.1.settings.bundleIdentifier"
+
+NAME admin_loop_settings_one
+GET http://{{ site }}/presets/loop-settings/{{ .loop_settings_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.settings.deviceToken"
+ASSERT_EQUALS null "@result.previous_id"
