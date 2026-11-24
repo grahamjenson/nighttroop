@@ -83,7 +83,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 
 templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 	{{ edit := addmodal.Props{ID: "site--insulin--edit", Path: "/data/insulin/" + insulinDose.ID, Target: "#site--insulin--" + insulinDose.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(insulinDoseFields(ctx), insulinDose, nil)} }}
+		Fields: addmodal.Edit(insulinDoseFields(ctx), insulinDose, nil), Delete: i18n.T(ctx, "site.data.insulin_doses.delete_confirm")} }}
 	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: i18n.T(ctx, "site.data.insulin_doses.details_title", i18n.Data{"Dose": fmt.Sprint(insulinDose.Dose)}), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

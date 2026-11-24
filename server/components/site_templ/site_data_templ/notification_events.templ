@@ -83,7 +83,7 @@ templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
 
 templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
 	{{ edit := addmodal.Props{ID: "site--notification--edit", Path: "/data/notifications/" + event.ID, Target: "#site--notification--" + event.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(notificationEventFields(ctx), event, nil)} }}
+		Fields: addmodal.Edit(notificationEventFields(ctx), event, nil), Delete: i18n.T(ctx, "site.data.notification_events.delete_confirm")} }}
 	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

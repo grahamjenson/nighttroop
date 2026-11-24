@@ -969,7 +969,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Each delete asks first. All confirmations (site and control) are dialogs in the site's style, not the browser's.
 - Question, Cancel, and red Delete (also for the site), red Remove (a passkey) or Continue (others).
-- Cancel, Escape, or a click outside does nothing.
+- Cancel, Escape, or a click outside does nothing. Details that are open under the dialog stay open.
 
 #### Paging and record counts
 
@@ -1112,6 +1112,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   reading's type and method, a temp target's insulin needs).
 - Emptied notes or reason: cleared. A blank number: not changed.
 - Save (Rename for a profile): at the foot by Close, as Add is. Enter also saves.
+- Delete: at the foot, on the side opposite Save and Close, red, with an icon. A profile, a device status and a
+  loop's settings have none.
+  - It asks the same question as the row's delete icon. Confirm deletes the record, closes the details, removes the
+    row, shows the toast and updates the "Showing" count.
+  - On a phone, the row's delete icon is past the side of the window. Delete, Save and Close are in the window.
 - Each field shows once. Below the form: only what it does not edit (a reading's type, a profile switch's DIA), not
   what it edits (a dose's split, type, notes, reason; a reading's trend).
 - Then the same Record section on all pages: ID, UTC offset, app, device, who created and last updated it, and

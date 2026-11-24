@@ -25,6 +25,22 @@ SCREENSHOT glucose_readings_phone
 // A reading's delete button, past the side of the window, is scrolled to and works
 CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Glucose Reading Deleted
+ASSERT_TEXT_VISIBLE Showing 1 to 5
+
+// A reading's details, which a tap on its row opens, have Delete in the window with Save and Close, so it is deleted
+// with no scroll of the table to its delete button. The page is loaded again first, so the toast is this delete's.
+GOTO /data/glucose
+ASSERT_STATUS 200
+CLICK #glucoseReadingsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--glucose--details
+ASSERT_CONTAINED #site--glucose--edit--delete
+ASSERT_CONTAINED #site--glucose--edit--submit
+ASSERT_CONTAINED #site--glucose--details--close
+SCREENSHOT glucose_reading_details_phone
+CLICK #site--glucose--edit--delete
+ASSERT_TEXT_VISIBLE Glucose Reading Deleted
+ASSERT_NOT_VISIBLE #site--glucose--details
+ASSERT_TEXT_VISIBLE Showing 1 to 4
 
 GOTO /data/device-status
 ASSERT_STATUS 200

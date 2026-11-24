@@ -26,24 +26,30 @@ templ DeleteCell(id, path, confirm string) {
 // DeleteButton is a button, with the given id, deleting path once confirmed. On success it removes its row, and the
 // toast in the response, or an error, goes to #toaster. Its click stops at the button, never opening a ModalRow.
 templ DeleteButton(id, path, confirm string) {
+	{{ attributes := DeleteAttributes(path, confirm, "this.closest('tr').remove()") }}
+	{{ attributes["title"], attributes["onclick"] = i18n.T(ctx, "common.table.delete"), templ.JSUnsafeFuncCall("event.stopPropagation()") }}
 	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantGhost,
-		Size:    button.SizeIcon,
-		Class:   "size-7",
-		Attributes: templ.Attributes{
-			"title":                i18n.T(ctx, "common.table.delete"),
-			"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-			"hx-delete":            path,
-			"hx-confirm":           confirm,
-			"hx-target":            "#toaster",
-			"hx-swap":              "beforeend",
-			"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-			"hx-status:4xx":        "target:#toaster swap:beforeend",
-			"hx-status:5xx":        "target:#toaster swap:beforeend",
-		},
+		ID:         id,
+		Variant:    button.VariantGhost,
+		Size:       button.SizeIcon,
+		Class:      "size-7",
+		Attributes: attributes,
 	}) {
 		@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
+	}
+}
+
+// DeleteAttributes are those of a button deleting path once confirmed, then running the JavaScript done. The toast in
+// the response, or an error, goes to #toaster.
+func DeleteAttributes(path, confirm, done string) templ.Attributes {
+	return templ.Attributes{
+		"hx-delete":            path,
+		"hx-confirm":           confirm,
+		"hx-target":            "#toaster",
+		"hx-swap":              "beforeend",
+		"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) { " + done + " }"),
+		"hx-status:4xx":        "target:#toaster swap:beforeend",
+		"hx-status:5xx":        "target:#toaster swap:beforeend",
 	}
 }
 
