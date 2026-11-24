@@ -166,7 +166,7 @@ func TestSocketLimitsComeFromConfig(t *testing.T) {
 	ipv6 := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, "site", "2001:db8::1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
 	require.Equal(t, "2001:db8::/64", engineConfig.ClientKey(httptest.NewRequestWithContext(ipv6, http.MethodGet, "/", nil)))
 	engineConfig.ClientKey = nil
-	require.Equal(t, engineio.Config{PingInterval: 25 * time.Second, PingTimeout: 20 * time.Second, MaxPayload: 100000, MaxSessions: 4, MaxBuffered: 1000, MaxBufferedBytes: 2000000, MaxPacketRate: 20, MaxUnauthorized: 2}, engineConfig)
+	require.Equal(t, engineio.Config{PingInterval: 25 * time.Second, PingTimeout: 20 * time.Second, MaxPayload: 100000, MaxSessions: 4, MaxBuffered: 1000, MaxBufferedBytes: 2000000, MaxPacketRate: 20, MaxUnauthorized: 2, MaxPerHolder: 2}, engineConfig)
 
 	run := runs.Add(1)
 	siteCtx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
@@ -298,6 +298,89 @@ func TestSocketOneIPCannotTakeEverySession(t *testing.T) {
 	require.NoError(t, err)
 	_, err = dial("10.0.0.2")
 	require.ErrorContains(t, err, "429", "the site's own cap of 4 still holds")
+}
+
+// A site's sessions are shared by its identities, so one identity, as a read only one whose token is out, may hold
+// only half of them, and cannot keep the site's other identities out by taking every one
+func TestSocketOneIdentityCannotTakeEverySession(t *testing.T) {
+	closeAfter := refusedCloseAfter
+	refusedCloseAfter = 20 * time.Millisecond
+	t.Cleanup(func() { refusedCloseAfter = closeAfter })
+	controlDB, reader := siteIdentity(t)
+	phone, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: reader.SiteID, Name: consts.FIRST_PWD_NAME})
+	require.NoError(t, err)
+	identities := map[string]*controldb.SiteIdentity{"reader": reader, "phone": phone}
+	found := func(_ *config.ServerConfig, _ context.Context, token string) (*controldb.SiteIdentity, error) {
+		if identity := identities[token]; identity != nil {
+			return identity, nil
+		}
+		return nil, errors.New("no identity")
+	}
+	ts := ipSocketServer(t, controlDB, reader.SiteID, found)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	// dial opens a session, each from its own IP, which the site refuses with 429 when it has none left
+	dialed := 0
+	dial := func() (*socketio.Client, error) {
+		dialed++
+		client, err := socketio.Dial(ctx, fmt.Sprintf("%s/socket.io/?ip=10.0.0.%d", ts.URL, dialed), engineio.V4, nil)
+		if err == nil {
+			t.Cleanup(func() { client.Close() })
+		}
+		return client, err
+	}
+	// access asks for access on a namespace with the token; it is false when the socket is disconnected unanswered and
+	// its session closed
+	access := func(client *socketio.Client, token, namespace string) bool {
+		event := "subscribe"
+		if namespace == socketio.DefaultNamespace {
+			event = "authorize"
+		}
+		if client.Connect(ctx, namespace, nil) != nil {
+			return false
+		}
+		_, err := client.EmitWithAck(ctx, namespace, event, map[string]any{"accessToken": token, "token": token})
+		return err == nil
+	}
+
+	// The read only identity tries to take each of the site's 4 sessions, and holds 2
+	var held []*socketio.Client
+	for _, namespace := range []string{"/alarm", "/storage", "/alarm", "/storage"} {
+		client, err := dial()
+		require.NoError(t, err)
+		if access(client, "reader", namespace) {
+			held = append(held, client)
+		} else {
+			<-client.Done()
+		}
+	}
+	// So the site's other identities have the rest
+	var others []*socketio.Client
+	for range 2 {
+		client, err := dial()
+		require.NoError(t, err, "the site has a session left for another identity")
+		require.True(t, access(client, "phone", "/alarm"))
+		others = append(others, client)
+	}
+	require.Len(t, held, 2, "the read only identity holds only its share of the site's sessions")
+	_, err = dial()
+	require.ErrorContains(t, err, "429", "the site's own cap of 4 still holds")
+
+	// A session that is the identity's already is given access on another namespace
+	require.True(t, access(held[0], "reader", "/storage"))
+	// Once another session closes the site has one left, which the identity cannot take on the default namespace
+	// either, as it still holds 2
+	require.NoError(t, others[1].Close())
+	var client *socketio.Client
+	require.Eventually(t, func() bool { client, err = dial(); return err == nil }, 2*time.Second, 20*time.Millisecond)
+	require.False(t, access(client, "reader", socketio.DefaultNamespace))
+	<-client.Done()
+	// Once one of its own closes, its next is given access
+	require.NoError(t, held[1].Close())
+	require.Eventually(t, func() bool {
+		client, err := dial()
+		return err == nil && access(client, "reader", "/alarm")
+	}, 2*time.Second, 20*time.Millisecond)
 }
 
 // A site has SocketMaxSessionsPerSite sessions, so a socket not given access within authorizeWithin is closed, rather

@@ -2027,8 +2027,13 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - No namespace joined in 45 seconds: closed.
 - No access in 30 seconds: the socket and its connection close. Access comes from an `authorize` that can read or
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
-- One IP (an IPv6 /64): maximum 10 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
+- One IP (an IPv6 /64): maximum 30 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
   next gets 429.
+- One identity: maximum half of a site's live sessions (`SOCKET_MAX_SESSIONS_PER_SITE`), 150 by default. On the
+  next, its `authorize` or `subscribe` is disconnected with no answer, and the connection closes a second later.
+  - The site's other identities can connect to the other half.
+  - A session counts for the identity that last got access on it, until it closes. A second namespace on the same
+    session does not count again.
 - When the server stops, every socket closes before the last backup. No socket write gets to a site DB after it.
 
 #### Authorize
@@ -2273,7 +2278,7 @@ harder:
 
 #### Rate limits
 
-- Reads and writes are rate limited for each site, identity and IP. Live sessions are capped for each site.
+- Reads and writes are rate limited for each site, identity and IP. Live sessions are capped for each site and identity.
 - A Nightscout request that fails auth, or needs none, uses its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`). One with a valid token does not.
   - An IP with no budget left is refused before its token is checked.
