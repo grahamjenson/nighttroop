@@ -66,6 +66,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allProfileSwitchesStmt, err = db.PrepareContext(ctx, allProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query AllProfileSwitches: %w", err)
 	}
+	if q.allSettingsStmt, err = db.PrepareContext(ctx, allSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query AllSettings: %w", err)
+	}
 	if q.allTempBasalsStmt, err = db.PrepareContext(ctx, allTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempBasals: %w", err)
 	}
@@ -664,6 +667,11 @@ func (q *Queries) Close() error {
 	if q.allProfileSwitchesStmt != nil {
 		if cerr := q.allProfileSwitchesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allProfileSwitchesStmt: %w", cerr)
+		}
+	}
+	if q.allSettingsStmt != nil {
+		if cerr := q.allSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allSettingsStmt: %w", cerr)
 		}
 	}
 	if q.allTempBasalsStmt != nil {
@@ -1594,6 +1602,7 @@ type Queries struct {
 	allNotificationEventsStmt                   *sql.Stmt
 	allProfilePresetsStmt                       *sql.Stmt
 	allProfileSwitchesStmt                      *sql.Stmt
+	allSettingsStmt                             *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
 	clearDeviceReportStatusesStmt               *sql.Stmt
@@ -1789,6 +1798,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allNotificationEventsStmt:                   q.allNotificationEventsStmt,
 		allProfilePresetsStmt:                       q.allProfilePresetsStmt,
 		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
+		allSettingsStmt:                             q.allSettingsStmt,
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,

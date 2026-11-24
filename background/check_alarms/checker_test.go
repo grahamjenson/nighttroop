@@ -7,13 +7,15 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/alarms"
+	"nighttroop.t1d.nz/utils/settings"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -62,6 +64,11 @@ func (r *rig) check(all bool) map[int64]alarms.Checked {
 	return sent
 }
 
+// set saves the site's settings, or an identity's when identityID is not 0, as the values and nothing else
+func (r *rig) set(identityID int64, values map[string]any) error {
+	return db.SaveSiteSettings(context.Background(), r.db, r.control, r.site, identityID, settings.Of(values), "test")
+}
+
 func (r *rig) identities() []*controldb.SiteIdentity {
 	identities, err := r.control.AllSiteIdentities(context.Background(), controldb.AllSiteIdentitiesParams{SiteID: r.site})
 	require.NoError(r.t, err)
@@ -74,13 +81,13 @@ func notified(kind alarms.Kind, alarm alarms.Type, at time.Time) []alarms.Notifi
 
 func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
 	r := newRig(t)
-	ctx := t.Context()
+
 	// The site turns on the urgent low, and one of its identities turns it off for itself
-	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.set(0, map[string]any{"alarm_urgent_low_enabled": true}))
 	identities := r.identities()
 	require.Len(t, identities, 3, "a site starts with three identities")
 	off := identities[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: off.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(false)}))
+	require.NoError(t, r.set(off.ID, map[string]any{"alarm_urgent_low_enabled": false}))
 	on := []int64{identities[1].ID, identities[2].ID}
 
 	// Nothing is sent before there is a reading under it
@@ -125,9 +132,7 @@ func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
 func TestNoDataStartsOnThePeriodicCheck(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
-		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
-	}))
+	require.NoError(t, r.set(identity.ID, map[string]any{"alarm_no_data_enabled": true, "alarm_no_data_minutes": 20}))
 	r.reading(100)
 	require.Empty(t, r.check(false))
 
@@ -142,12 +147,12 @@ func TestTurningAlarmsOffClearsThem(t *testing.T) {
 	r := newRig(t)
 	ctx := t.Context()
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.set(identity.ID, map[string]any{"alarm_urgent_low_enabled": true}))
 	r.reading(50)
 	require.Len(t, r.check(false), 1)
 
 	// With every alarm off the site is no longer one with alarms, but its kept state has it checked once more
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site}))
+	require.NoError(t, r.set(identity.ID, map[string]any{}))
 	sites, err := r.control.GetSiteIDsWithAlarms(ctx)
 	require.NoError(t, err)
 	require.NotContains(t, sites, r.site)
@@ -169,8 +174,8 @@ func TestSitesWithoutAlarmsAreNotChecked(t *testing.T) {
 
 func TestALowLastsOverEarlierReadings(t *testing.T) {
 	r := newRig(t)
-	ctx := t.Context()
-	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmLowEnabled: new(true), RangeLowMgdl: new(int64(72)), AlarmLowMinutes: new(int64(5))}))
+
+	require.NoError(t, r.set(0, map[string]any{"alarm_low_enabled": true, "range_low_mgdl": 72, "alarm_low_minutes": 5}))
 	r.reading(70)
 	require.Empty(t, r.check(false), "one reading under it is not enough")
 	r.now = r.now.Add(5 * time.Minute)
@@ -183,7 +188,7 @@ func TestALowLastsOverEarlierReadings(t *testing.T) {
 func TestDisabledIdentitiesAreNotChecked(t *testing.T) {
 	r := newRig(t)
 	ctx := t.Context()
-	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.set(0, map[string]any{"alarm_urgent_low_enabled": true}))
 	disabled := r.identities()[0]
 	require.NoError(t, r.control.UpdateSiteIdentityEnabled(ctx, controldb.UpdateSiteIdentityEnabledParams{SiteID: r.site, ID: disabled.ID, Enabled: false}))
 	r.reading(50)
@@ -194,7 +199,7 @@ func TestDisabledIdentitiesAreNotChecked(t *testing.T) {
 
 func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
 	r := newRig(t)
-	require.NoError(t, r.control.UpdateSitesSettings(t.Context(), controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.set(0, map[string]any{"alarm_urgent_low_enabled": true}))
 	identities := r.identities()
 	snoozer, other := identities[0].ID, identities[1].ID
 	r.reading(50)
@@ -233,7 +238,7 @@ func (r *rig) kept() []*livedb.Alarm {
 func TestEachChangeToAnActiveAlarmIsPublished(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.set(identity.ID, map[string]any{"alarm_urgent_low_enabled": true}))
 	var changes []string
 	r.checker.events.Subscribe(r.site, func(event events.Event) {
 		if row, ok := event.Model.(*livedb.Alarm); ok {
@@ -269,7 +274,7 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 	r := newRig(t)
 	live := r.checker.controlDB.Live.Queries
 	identity := r.identities()[0].ID
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{ID: identity, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.set(identity, map[string]any{"alarm_urgent_low_enabled": true}))
 	r.reading(50)
 	require.Len(t, r.check(false), 1)
 	started := r.kept()[0]
@@ -294,9 +299,7 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 func TestNoDataLastsOverALongGap(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
-		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
-	}))
+	require.NoError(t, r.set(identity.ID, map[string]any{"alarm_no_data_enabled": true, "alarm_no_data_minutes": 20}))
 	r.reading(100)
 	r.check(false)
 	r.now = r.now.Add(20 * time.Minute)
@@ -313,9 +316,7 @@ func TestNoDataLastsOverALongGap(t *testing.T) {
 func TestNoDataIsMeasuredFromTheNewestCGMReading(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
-		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
-	}))
+	require.NoError(t, r.set(identity.ID, map[string]any{"alarm_no_data_enabled": true, "alarm_no_data_minutes": 20}))
 	r.reading(100)
 	r.now = r.now.Add(3 * time.Hour)
 	_, err := r.db.CreateGlucoseReading(t.Context(), sitedb.CreateGlucoseReadingParams{
@@ -329,9 +330,7 @@ func TestNoDataIsMeasuredFromTheNewestCGMReading(t *testing.T) {
 func TestALongHighAtManyReadingsAMinute(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
-		ID: identity.ID, SiteID: r.site, AlarmHighEnabled: new(true), RangeHighMgdl: new(int64(180)), AlarmHighMinutes: new(int64(120)),
-	}))
+	require.NoError(t, r.set(identity.ID, map[string]any{"alarm_high_enabled": true, "range_high_mgdl": 180, "alarm_high_minutes": 120}))
 	// Ten readings a minute for 120 minutes, each more than 10 mg/dL from the others within a minute, so none is the
 	// same glucose as another
 	for i := range 120*10 + 1 {
@@ -357,9 +356,7 @@ func (r *rig) status(device string, battery float64, charging bool) {
 func TestDeviceBatteryAlarm(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
-		ID: identity.ID, SiteID: r.site, AlarmDeviceBatteryLowEnabled: new(true), AlarmDeviceBatteryLowDevicesJson: &datatypes.DeviceNames{"phone"},
-	}))
+	require.NoError(t, r.set(identity.ID, map[string]any{"alarm_device_battery_low_enabled": true, "alarm_device_battery_low_devices": []any{"phone"}}))
 
 	r.status("other", 5, false)
 	require.Empty(t, r.check(false), "only listed devices are checked")

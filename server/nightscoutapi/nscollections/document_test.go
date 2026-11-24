@@ -11,13 +11,14 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -43,7 +44,7 @@ func (d fieldsDocument) JSON(_ bool, only []string) json.RawMessage {
 
 // mmolSite is a site whose settings write glucose in mmol/L
 func mmolSite() *httputils.SiteContext {
-	return &httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", Units: new(consts.UnitsMMOLL)}}
+	return (&httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh"}}).UseSettings(settings.Of(map[string]any{"units": "mmol/L"}), nil)
 }
 
 // dayOfEntries are a day of CGM readings, five minutes apart, as documents

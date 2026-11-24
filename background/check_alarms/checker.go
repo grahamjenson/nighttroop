@@ -118,7 +118,7 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 	if err != nil || site == nil || siteDB == nil {
 		return errors.Join(err, c.forget(ctx, kept, nil))
 	}
-	turnedOn, err := c.alarmsToCheck(ctx, siteID, site, kept)
+	turnedOn, err := c.alarmsToCheck(ctx, siteID, siteDB.Queries(), kept)
 	if err != nil {
 		return err
 	}
@@ -164,14 +164,18 @@ func (c *Checker) loadKept(ctx context.Context, siteID string) (map[int64]keptAl
 
 // alarmsToCheck are the alarms of each of a site's enabled identities, by identity: those its settings turn on,
 // and none for one that turned them all off but still has some kept, so they are cleared
-func (c *Checker) alarmsToCheck(ctx context.Context, siteID string, site *controldb.Site, kept map[int64]keptAlarms) (map[int64][]alarms.Alarm, error) {
+func (c *Checker) alarmsToCheck(ctx context.Context, siteID string, q *sitedb.Queries, kept map[int64]keptAlarms) (map[int64][]alarms.Alarm, error) {
 	identities, err := c.controlDB.Queries.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteID})
 	if err != nil {
 		return nil, err
 	}
 	turnedOn := map[int64][]alarms.Alarm{}
 	for _, identity := range identities {
-		on := alarms.FromSettings(settings.NewCombinedSettingsMap(site, identity))
+		ofSite, ofIdentity, err := db.LoadSettings(ctx, q, identity.ID)
+		if err != nil {
+			return nil, err
+		}
+		on := alarms.FromSettings(settings.NewCombinedSettingsMap(ofSite, ofIdentity))
 		if identity.Enabled && (len(on) > 0 || kept[identity.ID] != nil) {
 			turnedOn[identity.ID] = on
 		}

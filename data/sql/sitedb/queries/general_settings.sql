@@ -46,3 +46,7 @@ DELETE FROM general_settings WHERE key = ? AND type = 'settings';
 
 -- name: CountSettings :one
 SELECT COUNT(*) FROM general_settings WHERE type = 'settings';
+
+-- name: AllSettings :many
+-- The site's settings and every identity's
+SELECT key, value_json, updated_at FROM general_settings WHERE type = 'settings';

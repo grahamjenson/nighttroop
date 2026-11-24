@@ -29,11 +29,20 @@ func (m *SettingMap) JSON() ([]byte, error) {
 // that is not a setting, a value of the wrong type or out of its range, or a row too long or not JSON, is left out:
 // a row is never trusted because it was stored, as a site's DB can be uploaded.
 func FromJSON(raw []byte, createdAt *int64, subject *string) *SettingMap {
-	m := &SettingMap{}
 	var values map[string]any
 	if len(raw) > MaxJSONBytes || json.Unmarshal(raw, &values) != nil {
-		return m
+		return &SettingMap{}
 	}
+	return of(values, createdAt, subject)
+}
+
+// Of are the settings with the values, each by its identifier and parsed and validated as FromJSON does
+func Of(values map[string]any) *SettingMap {
+	return of(values, nil, nil)
+}
+
+func of(values map[string]any, createdAt *int64, subject *string) *SettingMap {
+	m := &SettingMap{}
 	for _, s := range m.slots() {
 		if value, ok := values[s.identifier()]; ok {
 			_ = s.parseValidate(value, createdAt, subject)

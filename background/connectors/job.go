@@ -96,7 +96,7 @@ func (s *ConnectorSite) published(row any) {
 
 // siteContext is what a sync writes to the site through the Nightscout collections as, the identity naming the sync
 func (s *ConnectorSite) siteContext(identityName string) *httputils.SiteContext {
-	return &httputils.SiteContext{
+	return (&httputils.SiteContext{
 		SiteID:        s.SiteModel.ID,
 		IdentityModel: &controldb.SiteIdentity{Name: identityName},
 		ControlDB:     s.ControlDB,
@@ -104,7 +104,7 @@ func (s *ConnectorSite) siteContext(identityName string) *httputils.SiteContext 
 		SiteModel:     s.SiteModel,
 		HTTPAction:    httputils.HTTPActionWrite,
 		Config:        s.Config,
-	}
+	}).LoadSettings()
 }
 
 func SetupConnectorJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *ConnectorJobManager {

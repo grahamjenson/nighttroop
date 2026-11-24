@@ -2,8 +2,10 @@ package db
 
 import (
 	"context"
+	"slices"
 	"strconv"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/settings"
 )
@@ -54,6 +56,29 @@ func SaveSettings(ctx context.Context, q *sitedb.Queries, identityID int64, m *s
 		key = identitySettingsKey(identityID)
 	}
 	return q.UpsertSettings(ctx, sitedb.UpsertSettingsParams{Key: key, ValueJson: string(raw), By: by})
+}
+
+// SaveSiteSettings saves a level as SaveSettings does, then keeps the control DB's alarms_on for the site: whether
+// any level of the site now turns an alarm on
+func SaveSiteSettings(ctx context.Context, q *sitedb.Queries, control *controldb.Queries, siteID string, identityID int64, m *settings.SettingMap, by string) error {
+	if err := SaveSettings(ctx, q, identityID, m, by); err != nil {
+		return err
+	}
+	rows, err := q.AllSettings(ctx)
+	if err != nil {
+		return err
+	}
+	isOn := func(enabled *bool) bool { return enabled != nil && *enabled }
+	alarmsOn := slices.ContainsFunc(rows, func(row *sitedb.AllSettingsRow) bool {
+		level := settings.FromJSON([]byte(row.ValueJson), nil, nil)
+		return isOn(level.GetAlarmUrgentLowEnabled()) || isOn(level.GetAlarmLowEnabled()) || isOn(level.GetAlarmUrgentHighEnabled()) ||
+			isOn(level.GetAlarmHighEnabled()) || isOn(level.GetAlarmNoDataEnabled()) || isOn(level.GetAlarmDeviceBatteryLowEnabled())
+	})
+	on := int64(0)
+	if alarmsOn {
+		on = 1
+	}
+	return control.SetSiteAlarmsOn(ctx, controldb.SetSiteAlarmsOnParams{ID: siteID, AlarmsOn: on})
 }
 
 // DeleteIdentitySettings deletes an identity's settings, when the identity is deleted

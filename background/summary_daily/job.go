@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // Builder builds each live site's yesterday, remembering what it last built for each, so a site's DB is only opened
@@ -67,7 +68,7 @@ func NewBuilder(bus *events.SiteBus, controlDB *db.ControlDB) *Builder {
 		if err != nil {
 			return nil, err
 		}
-		return &httputils.SiteContext{SiteID: siteID, ControlDB: controlDB, SiteDB: siteDB, SiteModel: model}, nil
+		return (&httputils.SiteContext{SiteID: siteID, ControlDB: controlDB, SiteDB: siteDB, SiteModel: model}).LoadSettings(), nil
 	}}
 	bus.SubscribeAll(func(event events.Event) {
 		if _, ok := event.Model.(*sitedb.SummaryPeriod); ok {
@@ -145,11 +146,10 @@ func (b *Builder) Build(ctx context.Context, now time.Time) error {
 			continue
 		}
 		live[site.ID] = true
-		yesterday := yesterdayOf(site, now)
-		if b.isBuilt(site.ID, yesterday) {
+		if b.isBuilt(site.ID, now) {
 			continue
 		}
-		err := b.buildYesterday(aslog.WithSite(ctx, site.ID), site.ID, now)
+		yesterday, err := b.buildYesterday(aslog.WithSite(ctx, site.ID), site.ID, now)
 		if err == nil {
 			b.remember(site.ID, &yesterday)
 		}
@@ -162,18 +162,24 @@ func (b *Builder) Build(ctx context.Context, now time.Time) error {
 	return errors.Join(errs...)
 }
 
-// yesterdayOf is the site's yesterday from its own settings, which are in the control DB, so its DB is not opened
-func yesterdayOf(site *controldb.Site, now time.Time) built {
-	settings := &httputils.SiteContext{SiteID: site.ID, SiteModel: site}
-	location := settings.GetSiteTimezone()
-	return built{date: sitedata.LocalDate(now, location, -1), timezone: location.String(), weekStart: settings.GetSiteWeekStartDay()}
+// yesterdayOf is the site's yesterday from its own settings
+func yesterdayOf(siteContext *httputils.SiteContext, now time.Time) built {
+	location := siteContext.GetSiteTimezone()
+	return built{date: sitedata.LocalDate(now, location, -1), timezone: location.String(), weekStart: siteContext.GetSiteWeekStartDay()}
 }
 
-func (b *Builder) isBuilt(siteID string, yesterday built) bool {
+// isBuilt is whether the site's yesterday is the one last built, in the timezone it was built in. The site's settings
+// are in its DB, which is not opened for this: a new timezone or week start forgets the site through its event
+// (RebuildOnSettingsChange), so what is remembered is the site's.
+func (b *Builder) isBuilt(siteID string, now time.Time) bool {
 	b.builtLock.Lock()
 	defer b.builtLock.Unlock()
 	last, ok := b.built[siteID]
-	return ok && last == yesterday
+	if !ok {
+		return false
+	}
+	location, err := time.LoadLocation(last.timezone)
+	return err == nil && last.date == sitedata.LocalDate(now, location, -1)
 }
 
 // remember keeps what was built for the site, or forgets it when nil
@@ -187,22 +193,23 @@ func (b *Builder) remember(siteID string, yesterday *built) {
 	}
 }
 
-func (b *Builder) buildYesterday(ctx context.Context, siteID string, now time.Time) error {
+// buildYesterday builds the site's yesterday, and is what was built, in the site's timezone
+func (b *Builder) buildYesterday(ctx context.Context, siteID string, now time.Time) (built, error) {
 	siteContext, err := b.site(ctx, siteID)
 	if err != nil {
-		return err
+		return built{}, err
 	}
 	q := siteContext.SiteDB.Queries()
-	yesterday := sitedata.LocalDate(now, siteContext.GetSiteTimezone(), -1)
-	if _, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday}); errors.Is(err, sql.ErrNoRows) {
-		if _, err := sitedata.RebuildSummaryDaily(ctx, q, siteContext, yesterday, now); err != nil {
-			return err
+	yesterday := yesterdayOf(siteContext, now)
+	if _, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday.date}); errors.Is(err, sql.ErrNoRows) {
+		if _, err := sitedata.RebuildSummaryDaily(ctx, q, siteContext, yesterday.date, now); err != nil {
+			return built{}, err
 		}
 	} else if err != nil {
-		return err
+		return built{}, err
 	}
 	// Yesterday is built first, as it may be the last day of the week or month
-	return sitedata.BuildLastSummaryPeriods(ctx, q, siteContext, now)
+	return yesterday, sitedata.BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
 // markStale keeps when a site's data a day's summary is built from was written, for when to build its days again. It
@@ -308,7 +315,12 @@ func (b *Builder) rebuildStaleSite(ctx context.Context, site *controldb.Site, no
 // staleDays are the times, before today, of the site's days marked stale in its DB, and of its data written since it
 // was last checked, or, if never checked, since restartSince before began
 func staleDays(ctx context.Context, q *sitedb.Queries, site *controldb.Site, now, began time.Time) ([]time.Time, error) {
-	today := sitedata.PeriodStart("day", now, (&httputils.SiteContext{SiteID: site.ID, SiteModel: site}).GetSiteTimezone(), "monday")
+	ofSite, _, err := db.LoadSettings(ctx, q, 0)
+	if err != nil {
+		return nil, err
+	}
+	location := settings.NewCombinedSettingsMap(ofSite, &settings.SettingMap{}).Location()
+	today := sitedata.PeriodStart("day", now, location, "monday")
 	since := began.Add(-restartSince).UnixMilli()
 	if site.SummariesCheckedAt != nil {
 		since = *site.SummariesCheckedAt - sitedata.SummariesCheckedOverlap.Milliseconds()

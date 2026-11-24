@@ -267,6 +267,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchSitesByLastWriteStmt, err = db.PrepareContext(ctx, searchSitesByLastWrite); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSitesByLastWrite: %w", err)
 	}
+	if q.setSiteAlarmsOnStmt, err = db.PrepareContext(ctx, setSiteAlarmsOn); err != nil {
+		return nil, fmt.Errorf("error preparing query SetSiteAlarmsOn: %w", err)
+	}
 	if q.sharedNightscoutHostsStmt, err = db.PrepareContext(ctx, sharedNightscoutHosts); err != nil {
 		return nil, fmt.Errorf("error preparing query SharedNightscoutHosts: %w", err)
 	}
@@ -330,9 +333,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteIdentityPasswordStmt, err = db.PrepareContext(ctx, updateSiteIdentityPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityPassword: %w", err)
 	}
-	if q.updateSiteIdentitySettingsStmt, err = db.PrepareContext(ctx, updateSiteIdentitySettings); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSiteIdentitySettings: %w", err)
-	}
 	if q.updateSiteIdentityTOTPStmt, err = db.PrepareContext(ctx, updateSiteIdentityTOTP); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityTOTP: %w", err)
 	}
@@ -344,9 +344,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateSitesBackupUploadedStmt, err = db.PrepareContext(ctx, updateSitesBackupUploaded); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSitesBackupUploaded: %w", err)
-	}
-	if q.updateSitesSettingsStmt, err = db.PrepareContext(ctx, updateSitesSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSitesSettings: %w", err)
 	}
 	if q.upsertPushRegistrationStmt, err = db.PrepareContext(ctx, upsertPushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertPushRegistration: %w", err)
@@ -761,6 +758,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchSitesByLastWriteStmt: %w", cerr)
 		}
 	}
+	if q.setSiteAlarmsOnStmt != nil {
+		if cerr := q.setSiteAlarmsOnStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setSiteAlarmsOnStmt: %w", cerr)
+		}
+	}
 	if q.sharedNightscoutHostsStmt != nil {
 		if cerr := q.sharedNightscoutHostsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing sharedNightscoutHostsStmt: %w", cerr)
@@ -866,11 +868,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteIdentityPasswordStmt: %w", cerr)
 		}
 	}
-	if q.updateSiteIdentitySettingsStmt != nil {
-		if cerr := q.updateSiteIdentitySettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSiteIdentitySettingsStmt: %w", cerr)
-		}
-	}
 	if q.updateSiteIdentityTOTPStmt != nil {
 		if cerr := q.updateSiteIdentityTOTPStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteIdentityTOTPStmt: %w", cerr)
@@ -889,11 +886,6 @@ func (q *Queries) Close() error {
 	if q.updateSitesBackupUploadedStmt != nil {
 		if cerr := q.updateSitesBackupUploadedStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSitesBackupUploadedStmt: %w", cerr)
-		}
-	}
-	if q.updateSitesSettingsStmt != nil {
-		if cerr := q.updateSitesSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSitesSettingsStmt: %w", cerr)
 		}
 	}
 	if q.upsertPushRegistrationStmt != nil {
@@ -1021,6 +1013,7 @@ type Queries struct {
 	searchSitesStmt                         *sql.Stmt
 	searchSitesByDBSizeStmt                 *sql.Stmt
 	searchSitesByLastWriteStmt              *sql.Stmt
+	setSiteAlarmsOnStmt                     *sql.Stmt
 	sharedNightscoutHostsStmt               *sql.Stmt
 	siteExistsStmt                          *sql.Stmt
 	startConnectorBackfillStmt              *sql.Stmt
@@ -1042,12 +1035,10 @@ type Queries struct {
 	updateSiteIdentityEnabledStmt           *sql.Stmt
 	updateSiteIdentityPasskeyUsedStmt       *sql.Stmt
 	updateSiteIdentityPasswordStmt          *sql.Stmt
-	updateSiteIdentitySettingsStmt          *sql.Stmt
 	updateSiteIdentityTOTPStmt              *sql.Stmt
 	updateSiteSummariesCheckedAtStmt        *sql.Stmt
 	updateSiteTableSizesStmt                *sql.Stmt
 	updateSitesBackupUploadedStmt           *sql.Stmt
-	updateSitesSettingsStmt                 *sql.Stmt
 	upsertPushRegistrationStmt              *sql.Stmt
 }
 
@@ -1136,6 +1127,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchSitesStmt:                         q.searchSitesStmt,
 		searchSitesByDBSizeStmt:                 q.searchSitesByDBSizeStmt,
 		searchSitesByLastWriteStmt:              q.searchSitesByLastWriteStmt,
+		setSiteAlarmsOnStmt:                     q.setSiteAlarmsOnStmt,
 		sharedNightscoutHostsStmt:               q.sharedNightscoutHostsStmt,
 		siteExistsStmt:                          q.siteExistsStmt,
 		startConnectorBackfillStmt:              q.startConnectorBackfillStmt,
@@ -1157,12 +1149,10 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteIdentityEnabledStmt:           q.updateSiteIdentityEnabledStmt,
 		updateSiteIdentityPasskeyUsedStmt:       q.updateSiteIdentityPasskeyUsedStmt,
 		updateSiteIdentityPasswordStmt:          q.updateSiteIdentityPasswordStmt,
-		updateSiteIdentitySettingsStmt:          q.updateSiteIdentitySettingsStmt,
 		updateSiteIdentityTOTPStmt:              q.updateSiteIdentityTOTPStmt,
 		updateSiteSummariesCheckedAtStmt:        q.updateSiteSummariesCheckedAtStmt,
 		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
 		updateSitesBackupUploadedStmt:           q.updateSitesBackupUploadedStmt,
-		updateSitesSettingsStmt:                 q.updateSitesSettingsStmt,
 		upsertPushRegistrationStmt:              q.upsertPushRegistrationStmt,
 	}
 }

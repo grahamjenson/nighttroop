@@ -1,6 +1,7 @@
 package httputils
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log/slog"
@@ -36,6 +37,9 @@ type SiteContext struct {
 	ContentType ContentType
 
 	settings *settings.CombinedSettingsMap
+	// siteLevel and identityLevel are the site's settings and the identity's, as their rows of the site DB have
+	// them, read once a request
+	siteLevel, identityLevel *settings.SettingMap
 	// siteSettings are the site's own settings over the defaults, without the identity's
 	siteSettings *settings.CombinedSettingsMap
 	// mgdl is whether glucose is always in mg/dL, whatever the identity's or site's units, and mgdlSettings the
@@ -107,7 +111,9 @@ func (s *SiteContext) PublishModelChange(action events.Action, model any) {
 func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb.SiteIdentity) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
-	siteContext.settings, siteContext.mgdlSettings = nil, nil
+	siteContext.settings, siteContext.mgdlSettings, siteContext.siteSettings = nil, nil, nil
+	siteContext.siteLevel, siteContext.identityLevel = nil, nil
+	siteContext.LoadSettings()
 	if identityModel != nil {
 		aslog.AddAttrs(ctx, slog.Int64("identity_id", identityModel.ID), slog.String("identity_name", identityModel.Name), slog.String("role", string(identityModel.Role)))
 	}
@@ -152,7 +158,7 @@ func (sc *SiteContext) settingsInEffect() *settings.CombinedSettingsMap {
 	}
 
 	if sc.settings == nil {
-		sc.settings = settings.NewCombinedSettingsMap(sc.SiteModel, sc.IdentityModel)
+		sc.settings = settings.NewCombinedSettingsMap(sc.levels())
 	}
 
 	return sc.settings
@@ -165,10 +171,48 @@ func (sc *SiteContext) getSiteSettings() *settings.CombinedSettingsMap {
 		sc.siteSettings = &settings.CombinedSettingsMap{SiteSettingsMap: &settings.SettingMap{}, IdentitySettingsMap: &settings.SettingMap{},
 			DefaultSettingsMap: settings.DefaultSettingsMap}
 		if sc.SiteModel != nil {
-			sc.siteSettings.SiteSettingsMap = settings.NewSettingsMap(sc.SiteModel, &sc.SiteModel.CreatedAt, new("site"))
+			// A copy, as read: a request changing the site's settings changes its level, and compares it with these
+			site, _ := sc.levels()
+			asRead := *site
+			sc.siteSettings.SiteSettingsMap = &asRead
 		}
 	}
 	return sc.siteSettings
+}
+
+// UseSettings gives the context the site's settings and the identity's, nil for none, rather than have them read from
+// the site DB: for a context with no site DB
+func (sc *SiteContext) UseSettings(site, identity *settings.SettingMap) *SiteContext {
+	sc.siteLevel, sc.identityLevel = cmp.Or(site, &settings.SettingMap{}), cmp.Or(identity, &settings.SettingMap{})
+	sc.settings, sc.siteSettings, sc.mgdlSettings = nil, nil, nil
+	return sc
+}
+
+// LoadSettings reads the context's settings now, not when they are first asked for. A context whose site DB is
+// written in a transaction must have them first: the read takes the DB's connection, which the transaction holds.
+func (sc *SiteContext) LoadSettings() *SiteContext {
+	sc.levels()
+	sc.getSiteSettings()
+	return sc
+}
+
+// levels are the site's settings and the identity's, read from their rows of the site DB in one query, once. A site
+// DB that cannot be read gives neither, so the defaults are in effect.
+func (sc *SiteContext) levels() (site, identity *settings.SettingMap) {
+	if sc.siteLevel == nil {
+		sc.siteLevel, sc.identityLevel = &settings.SettingMap{}, &settings.SettingMap{}
+		if sc.SiteDB != nil && sc.SiteDB.DB != nil && sc.SiteDB.DB.SQLiteDB != nil {
+			var identityID int64
+			if sc.IdentityModel != nil {
+				identityID = sc.IdentityModel.ID
+			}
+			var err error
+			if sc.siteLevel, sc.identityLevel, err = db.LoadSettings(context.Background(), sc.SiteDB.Queries(), identityID); err != nil {
+				slog.Error("cannot read settings", "site_id", sc.SiteID, "error", err)
+			}
+		}
+	}
+	return sc.siteLevel, sc.identityLevel
 }
 
 // GetSiteTimezone is the site's own timezone, or UTC, whatever the identity's

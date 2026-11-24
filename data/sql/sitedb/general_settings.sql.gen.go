@@ -9,6 +9,40 @@ import (
 	"context"
 )
 
+const allSettings = `-- name: AllSettings :many
+SELECT key, value_json, updated_at FROM general_settings WHERE type = 'settings'
+`
+
+type AllSettingsRow struct {
+	Key       string
+	ValueJson string
+	UpdatedAt int64
+}
+
+// The site's settings and every identity's
+func (q *Queries) AllSettings(ctx context.Context) ([]*AllSettingsRow, error) {
+	rows, err := q.query(ctx, q.allSettingsStmt, allSettings)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*AllSettingsRow
+	for rows.Next() {
+		var i AllSettingsRow
+		if err := rows.Scan(&i.Key, &i.ValueJson, &i.UpdatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countGeneralSettings = `-- name: CountGeneralSettings :one
 SELECT COUNT(*) FROM general_settings WHERE type != 'settings'
 `

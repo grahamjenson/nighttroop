@@ -53,75 +53,10 @@ CREATE TABLE sites (
     archived_at INTEGER,
     deleted_at INTEGER,
 
-    ---------------
-    -- SITE SETTINGS
-    ---------------
-    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
-
-    -- DATE
-    timezone TEXT CHECK(length(timezone) <= 64),
-    language TEXT CHECK(length(language) <= 12),
-    date_format TEXT CHECK(length(date_format) <= 24),
-    time_format TEXT CHECK(length(time_format) <= 24),
-    week_start_day TEXT CHECK (length(week_start_day) <= 16),
-    number_format TEXT CHECK (length(number_format) <= 16),
-
-    -- INSULIN
-    bolus_dia_hours REAL,
-    bolus_onset_minutes REAL,
-    bolus_peak_minutes REAL,
-
-    basal_dia_hours REAL,
-    basal_onset_minutes REAL,
-    basal_peak_minutes REAL,
-
-    default_insulin_sensitivity REAL,
-    default_carb_ratio REAL,
-    default_basal_rate REAL,
-
-    -- CARBS
-    carb_max_absorption_hours REAL,
-    carb_min_5m_impact REAL,
-
-
-    -- ALERTS
-    alarm_urgent_low_enabled INTEGER,
-    range_urgent_low_mgdl INTEGER,
-
-    alarm_low_enabled INTEGER,
-    range_low_mgdl INTEGER,
-    alarm_low_minutes INTEGER,
-    alarm_low_prediction_enabled INTEGER,
-    alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
-
-    alarm_high_enabled INTEGER,
-    range_high_mgdl INTEGER,
-    alarm_high_minutes INTEGER,
-    
-    alarm_urgent_high_enabled INTEGER,
-    range_urgent_high_mgdl INTEGER,
-
-    alarm_fast_rise_enabled INTEGER,
-    alarm_fast_rise_mgdl INTEGER,
-    alarm_fast_rise_minutes INTEGER,
-
-    alarm_fast_drop_enabled INTEGER,
-    alarm_fast_drop_mgdl INTEGER,
-    alarm_fast_drop_minutes INTEGER,
-
-    alarm_no_data_enabled INTEGER,
-    alarm_no_data_minutes INTEGER,
-
-    alarm_device_battery_low_enabled INTEGER,
-    alarm_device_battery_low_percent INTEGER,
-    alarm_device_battery_low_minutes INTEGER,
-    alarm_device_battery_low_devices_json TEXT CHECK(length(alarm_device_battery_low_devices_json) <= 1024 AND json_valid(alarm_device_battery_low_devices_json)), -- the devices whose batteries and statuses are checked
-
-    alarm_low_reservoir_enabled INTEGER,
-    alarm_low_reservoir_units  INTEGER,
-
-    -- NOTIFICATIONS
-    notifications_enabled INTEGER
+    -- The site's settings are a row of its site DB's general_settings (data/db/site_settings.go). alarms_on is kept
+    -- from them when they are saved: whether the site or one of its identities has an alarm turned on, so the alarm
+    -- check finds the sites to check without opening every site's DB.
+    alarms_on INTEGER NOT NULL DEFAULT 0 CHECK(alarms_on IN (0, 1))
 
 ) STRICT;
 
@@ -185,75 +120,7 @@ CREATE TABLE site_identities (
     -- api-secret. It is the SHA256 of that SHA1, so it is not what is sent.
     nightscout_token_digest TEXT CHECK(length(nightscout_token_digest) = 64),
 
-    ---------------
-    -- IDENTITY SETTINGS
-    ---------------
-    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
-
-    -- DATE
-    timezone TEXT CHECK(length(timezone) <= 64),
-    language TEXT CHECK(length(language) <= 12),
-    date_format TEXT CHECK(length(date_format) <= 24),
-    time_format TEXT CHECK(length(time_format) <= 24),
-    week_start_day TEXT CHECK (length(week_start_day) <= 16),
-    number_format TEXT CHECK (length(number_format) <= 16),
-
-    -- INSULIN
-    bolus_dia_hours REAL,
-    bolus_onset_minutes REAL,
-    bolus_peak_minutes REAL,
-
-    basal_dia_hours REAL,
-    basal_onset_minutes REAL,
-    basal_peak_minutes REAL,
-
-    default_insulin_sensitivity REAL,
-    default_carb_ratio REAL,
-    default_basal_rate REAL,
-
-    -- CARBS
-    carb_max_absorption_hours REAL,
-    carb_min_5m_impact REAL,
-
-
-    -- ALERTS
-    alarm_urgent_low_enabled INTEGER,
-    range_urgent_low_mgdl INTEGER,
-
-    alarm_low_enabled INTEGER,
-    range_low_mgdl INTEGER,
-    alarm_low_minutes INTEGER,
-    alarm_low_prediction_enabled INTEGER,
-    alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
-
-    alarm_high_enabled INTEGER,
-    range_high_mgdl INTEGER,
-    alarm_high_minutes INTEGER,
-    
-    alarm_urgent_high_enabled INTEGER,
-    range_urgent_high_mgdl INTEGER,
-
-    alarm_fast_rise_enabled INTEGER,
-    alarm_fast_rise_mgdl INTEGER,
-    alarm_fast_rise_minutes INTEGER,
-
-    alarm_fast_drop_enabled INTEGER,
-    alarm_fast_drop_mgdl INTEGER,
-    alarm_fast_drop_minutes INTEGER,
-
-    alarm_no_data_enabled INTEGER,
-    alarm_no_data_minutes INTEGER,
-
-    alarm_device_battery_low_enabled INTEGER,
-    alarm_device_battery_low_percent INTEGER,
-    alarm_device_battery_low_minutes INTEGER,
-    alarm_device_battery_low_devices_json TEXT CHECK(length(alarm_device_battery_low_devices_json) <= 1024 AND json_valid(alarm_device_battery_low_devices_json)), -- the devices whose batteries and statuses are checked
-
-    alarm_low_reservoir_enabled INTEGER,
-    alarm_low_reservoir_units  INTEGER,
-
-    -- NOTIFICATIONS
-    notifications_enabled INTEGER,
+    -- The identity's settings are a row of its site DB's general_settings (data/db/site_settings.go)
 
     -- Constraints
     UNIQUE(site_id, name)

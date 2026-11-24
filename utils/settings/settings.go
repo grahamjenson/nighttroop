@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -24,12 +23,9 @@ func DefaultCombinedSettingsMap() *CombinedSettingsMap {
 	}
 }
 
-func NewCombinedSettingsMap(site *controldb.Site, identity *controldb.SiteIdentity) *CombinedSettingsMap {
-	return &CombinedSettingsMap{
-		SiteSettingsMap:     NewSettingsMap(site, &site.CreatedAt, ptr("site")),
-		IdentitySettingsMap: NewSettingsMap(identity, &identity.CreatedAt, ptr("identity")),
-		DefaultSettingsMap:  DefaultSettingsMap,
-	}
+// NewCombinedSettingsMap are the identity's settings over the site's over the defaults
+func NewCombinedSettingsMap(site *SettingMap, identity *SettingMap) *CombinedSettingsMap {
+	return &CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: DefaultSettingsMap}
 }
 
 func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (*SettingAnyType, error) {
