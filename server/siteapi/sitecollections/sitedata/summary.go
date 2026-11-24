@@ -213,8 +213,9 @@ func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summ
 
 // summaryMinutes are the targets and basal in force each minute from since until until, in location's time, from the
 // profiles, profile switches, temp targets and temp basals in force through it. The temp targets and basals from since
-// are given, and those that started before it are looked up; without a site context only the basal is wanted, so
-// earlier temp targets are not.
+// are given. Of those that started before it only the newest of each is looked up, as it replaced the ones before it,
+// so a loop's week of temp basals is not read for one of them; without a site context only the basal is wanted, so an
+// earlier temp target is not.
 func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, units *consts.Units, location *time.Location, siteContext *httputils.SiteContext, targets []*sitemodels.SiteTempTarget, basals []*sitemodels.SiteTempBasal) ([]sitemodels.SummaryMinute, *apiutils.HTTPError) {
 	excludeDeleted := false
 	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: since, Until: until, Limit: maxRows})
@@ -230,13 +231,13 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 	targetsSince, basalsSince, before := since-maxTempTargetMinutes*60_000, since-maxTempBasalMinutes*60_000, since-1
 	var earlier []*sitemodels.SiteTempTarget
 	if siteContext != nil {
-		earlierTargets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &targetsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+		earlierTargets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &targetsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: 1})
 		var herr *apiutils.HTTPError
 		if earlier, herr = apiutils.Searched(earlierTargets, err, "summary temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext)); herr != nil {
 			return nil, herr
 		}
 	}
-	earlierBasals, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &basalsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+	earlierBasals, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &basalsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: 1})
 	earlierBasal, herr := apiutils.Searched(earlierBasals, err, "summary temp basals", sitemodels.TempBasalFromDB)
 	if herr != nil {
 		return nil, herr
