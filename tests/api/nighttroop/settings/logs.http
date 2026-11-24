@@ -69,19 +69,26 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result.items"
 
-// Another site's event cannot be read
+// Another site's event cannot be read by its ID, which its own site reads it by
 NAME list_other_events
 GET http://{{ .other_site }}/logs/events
 H Authorization: Bearer {{ .other_jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-SET other_event_id {{ dig "list_other_events.result.0.id" }}
+SET other_event_id {{ dig "list_other_events.result.items.0.id" }}
 
 NAME get_other_sites_event
 GET http://{{ site }}/logs/events/{{ .other_event_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+NAME other_site_gets_its_event
+GET http://{{ .other_site }}/logs/events/{{ .other_event_id }}
+H Authorization: Bearer {{ .other_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "signed_in" "@result.name"
 
 NAME get_event_not_a_number
 GET http://{{ site }}/logs/events/not-an-event
@@ -101,6 +108,33 @@ GET http://{{ site }}/logs/errors/999999999
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+// Nor can another site's error, here of a request that site refused, be read by its ID. A log is written a second
+// later, so TestAnotherSitesLogIsNotRead checks a log.
+NAME other_site_bad_request
+GET http://{{ .create_other_site.site_subdomain }}.ns.localhost/api/v1/notacollection?token={{ .create_other_site.pwd_nstoken }}
+ASSERT_STATUS 400
+
+NAME list_other_errors
+GET http://{{ .other_site }}/logs/errors
+H Authorization: Bearer {{ .other_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+SET other_error_id {{ dig "list_other_errors.result.items.0.id" }}
+
+NAME get_other_sites_error
+GET http://{{ site }}/logs/errors/{{ .other_error_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME other_site_gets_its_error
+GET http://{{ .other_site }}/logs/errors/{{ .other_error_id }}
+H Authorization: Bearer {{ .other_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "400 Bad Request: invalid collection" "@result.message"
 
 NAME list_logs
 GET http://{{ site }}/logs/logs

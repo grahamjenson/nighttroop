@@ -39,15 +39,15 @@ func TestRender(t *testing.T) {
 		"scheme":       "https",
 		"host":         "staging.example.com",
 		"default_site": "abcdefgh.ns.localhost",
-		"created":      map[string]any{"entries": []any{map[string]any{"sgv": 120.0}}},
+		"created":      map[string]any{"entries": []any{map[string]any{"sgv": 120.0, "direction": "Flat", "note": nil}}},
 	}
 	for input, want := range map[string]string{
-		"{{ server_url }}/login":            "http://127.0.0.1:1234/login",
-		"http://{{ site }}/api":             "http://abcdefgh.ns.localhost/api",
-		`{{ dig "created.entries.0.sgv" }}`: "120",
-		`{{ dig "created.entries.1.sgv" }}`: "no_value",
-		`{{ replace ".ns." "." site }}`:     "abcdefgh.localhost",
-		`{{ sha1 "token" }}`:                "ee977806d7286510da8b9a7492ba58e2484c0ecc",
+		"{{ server_url }}/login":                  "http://127.0.0.1:1234/login",
+		"http://{{ site }}/api":                   "http://abcdefgh.ns.localhost/api",
+		`{{ dig "created.entries.0.sgv" }}`:       "120",
+		`{{ dig "created.entries.0.direction" }}`: "Flat",
+		`{{ replace ".ns." "." site }}`:           "abcdefgh.localhost",
+		`{{ sha1 "token" }}`:                      "ee977806d7286510da8b9a7492ba58e2484c0ecc",
 	} {
 		got, err := Render(input, ctx)
 		require.NoError(t, err, input)
@@ -55,6 +55,15 @@ func TestRender(t *testing.T) {
 	}
 	_, err := Render("{{ .missing }}", ctx)
 	require.Error(t, err)
+	// A value that is null is refused as a missing one is, rather than written as <no value>
+	_, err = Render("{{ (index .created.entries 0).note }}", ctx)
+	require.ErrorContains(t, err, "has a value that is null")
+	// A dig of what no step got is refused too, past a list's end, at a key that is not there or is null, or in a step
+	// that did not run, rather than filled in with a word a server answers 404 to, as a step checking for 404 expects
+	for _, path := range []string{"created.entries.1.sgv", "created.entry", "created.entries.0.note", "missing.0.id"} {
+		_, err = Render(`http://localhost/api/v1/entries/{{ dig "`+path+`" }}`, ctx)
+		require.ErrorContains(t, err, "nothing at "+path, path)
+	}
 	_, err = Render(`{{ env "SCRIPT_TEST_UNSET" }}`, ctx)
 	require.ErrorContains(t, err, "SCRIPT_TEST_UNSET is not set")
 	// A TOTP code is six digits that the secret validates now
