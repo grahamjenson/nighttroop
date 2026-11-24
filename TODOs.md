@@ -7,7 +7,7 @@
        truncate of a site far over its size limit deleted: keep a day's summary when its records are gone
     1. P3: A site far over its size limit that keeps writing changes records on each truncate, so its DB is vacuumed
        every 10 minutes: vacuum only when its free pages are a large part of it
-1. Push Notification testing. Alarms testing.
+1. P1: Push Notification testing. Alarms testing.
 1. e2e restore/archiving/hydration testing
     1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up each site
        written to, so its tiles can be checked after a backup, not only before one
@@ -19,7 +19,7 @@
        the schema does not have: restore only a file that fails a quick integrity check
     1. P3: Page the admin when the server's settings stop it starting (`config.NewServerConfig`): the pager's key
        is one of those settings, so that failure is only printed
-1. e2e bakup_key testing. Control
+1. P2: e2e backup_key testing. Control
 1. Performance testing (cost estimate for running full node)
 
 1. Accounts
@@ -27,7 +27,7 @@
        of Custom Type One: its tile in the Add Device modal shows its first letter
     1. P4: Add the icons of Dexcom and FreeStyle Libre to `server/assets/static/logos`, with their makers' leave, as
        they are trade marks of Dexcom and Abbott: their tiles under Add a connector show their first letter
-    1. Recovering a lost control admin login, as setup only runs on a server with no control admin
+    1. P2: Recovering a lost control admin login, as setup only runs on a server with no control admin
 
 1. Security
     1. P1: A Caregiver device changes glucose readings through Nightscout treatments, which it may write: a treatment
@@ -45,6 +45,8 @@
        the site's download limit
     1. P4: A site JWT sent to `/api/v2/authorization/request` or `/api/v1/status.json` gets a new JWT, so a TOTP
        user's session never has to end: decide if a JWT may renew itself, or cap its total life
+    1. P3: The Socket.IO sessions with no access are limited for each IP only (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`, 30),
+       so 10 IPs or IPv6 /64s can hold all 300 sessions of a site with no token: limit them for the site in total
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
        are right on real sites first, then act on them, each item its own PR:
         1. P2: Score a site's rate-limit refusals too: a count for each site that halves every hour, of refusals by the
@@ -65,19 +67,26 @@
 
 ## Before Prod Deployment
 
-1. Refresh the built in DB-IP country database
-1. Test rolling a new keyset, moving to a new encrypted keyset.
-1. Define maintenance tasks.
-1. Define data processes
-1. Define DR recovery processes
-1. Freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
+1. P4: Refresh the built in DB-IP country database
+1. P1: Test rolling a new keyset, moving to a new encrypted keyset.
+1. P3: Define maintenance tasks.
+1. P3: Define data processes
+1. P2: Define DR recovery processes
+1. P1: Freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema, comparing each DB's `Schema` with a new one's as
        `cmd/try_migrate_or_delete` does
 
 ## Build these things
 
-1. Control Page to verify backup_key, and regenerate a backup_key
+1. P3: Control Page to verify backup_key, and regenerate a backup_key
+
+1. Site usability:
+    1. P4: An address outside a section, as `/data` or `/account`, gives a signed in person the bare text
+       `404 page not found`: show the site's Not found page there too, as it shows for `/data/nope`
+    1. P4: The number boxes of the add and details forms have no `inputmode`, so a phone opens its full keyboard for
+       a dose or carbs: open the number keys, but for a box that takes a negative value
+    1. P4: The banner of a snoozed alarm says "Snoozed: Urgent high" and not until when: say the time it ends
 
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
