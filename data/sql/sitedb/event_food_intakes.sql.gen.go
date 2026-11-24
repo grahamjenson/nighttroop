@@ -229,6 +229,46 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 	return &i, err
 }
 
+const foodIntakeDurations = `-- name: FoodIntakeDurations :many
+SELECT CAST(food_intake_id AS TEXT) AS food_intake_id, CAST(duration_minutes AS INTEGER) AS duration_minutes FROM event_groups
+WHERE occurred_at >= ?1 AND deleted_at IS NULL AND food_intake_id IS NOT NULL AND duration_minutes > 0
+LIMIT CAST(?2 AS INTEGER)
+`
+
+type FoodIntakeDurationsParams struct {
+	Since int64
+	Limit int64
+}
+
+type FoodIntakeDurationsRow struct {
+	FoodIntakeID    string
+	DurationMinutes int64
+}
+
+// The minutes each food since Since is given over, as AAPS's extended carbs are, from its treatment's duration
+func (q *Queries) FoodIntakeDurations(ctx context.Context, arg FoodIntakeDurationsParams) ([]*FoodIntakeDurationsRow, error) {
+	rows, err := q.query(ctx, q.foodIntakeDurationsStmt, foodIntakeDurations, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*FoodIntakeDurationsRow
+	for rows.Next() {
+		var i FoodIntakeDurationsRow
+		if err := rows.Scan(&i.FoodIntakeID, &i.DurationMinutes); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const foodIntakeTotals = `-- name: FoodIntakeTotals :one
 SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
     CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at

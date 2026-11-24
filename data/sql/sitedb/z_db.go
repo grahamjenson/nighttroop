@@ -207,6 +207,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.eventsToGroupStmt, err = db.PrepareContext(ctx, eventsToGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query EventsToGroup: %w", err)
 	}
+	if q.foodIntakeDurationsStmt, err = db.PrepareContext(ctx, foodIntakeDurations); err != nil {
+		return nil, fmt.Errorf("error preparing query FoodIntakeDurations: %w", err)
+	}
 	if q.foodIntakeTotalsStmt, err = db.PrepareContext(ctx, foodIntakeTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query FoodIntakeTotals: %w", err)
 	}
@@ -887,6 +890,11 @@ func (q *Queries) Close() error {
 	if q.eventsToGroupStmt != nil {
 		if cerr := q.eventsToGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing eventsToGroupStmt: %w", cerr)
+		}
+	}
+	if q.foodIntakeDurationsStmt != nil {
+		if cerr := q.foodIntakeDurationsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing foodIntakeDurationsStmt: %w", cerr)
 		}
 	}
 	if q.foodIntakeTotalsStmt != nil {
@@ -1609,6 +1617,7 @@ type Queries struct {
 	eventGroupHistoryIDsStmt                    *sql.Stmt
 	eventGroupTotalsStmt                        *sql.Stmt
 	eventsToGroupStmt                           *sql.Stmt
+	foodIntakeDurationsStmt                     *sql.Stmt
 	foodIntakeTotalsStmt                        *sql.Stmt
 	foodPresetAscendingIDsStmt                  *sql.Stmt
 	foodPresetHistoryIDsStmt                    *sql.Stmt
@@ -1800,6 +1809,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		eventGroupHistoryIDsStmt:                    q.eventGroupHistoryIDsStmt,
 		eventGroupTotalsStmt:                        q.eventGroupTotalsStmt,
 		eventsToGroupStmt:                           q.eventsToGroupStmt,
+		foodIntakeDurationsStmt:                     q.foodIntakeDurationsStmt,
 		foodIntakeTotalsStmt:                        q.foodIntakeTotalsStmt,
 		foodPresetAscendingIDsStmt:                  q.foodPresetAscendingIDsStmt,
 		foodPresetHistoryIDsStmt:                    q.foodPresetHistoryIDsStmt,

@@ -328,6 +328,7 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// goverter:ignore DurationMinutes
 	FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake
 
 	// goverter:context siteContext

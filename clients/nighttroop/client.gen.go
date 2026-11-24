@@ -246,13 +246,16 @@ type FoodIntake struct {
 	CreatedByAppName      *string  `json:"created_by_app_name,omitempty"`
 	CreatedByDeviceName   *string  `json:"created_by_device_name,omitempty"`
 	CreatedByIdentityName *string  `json:"created_by_identity_name,omitempty"`
-	Energy                *float64 `json:"energy,omitempty"`
-	Fat                   *float64 `json:"fat,omitempty"`
-	Fibre                 *float64 `json:"fibre,omitempty"`
-	FoodType              *string  `json:"food_type,omitempty"`
-	Id                    *string  `json:"id,omitempty"`
-	Name                  *string  `json:"name,omitempty"`
-	Notes                 *string  `json:"notes,omitempty"`
+
+	// DurationMinutes In the summary only: how long the food is given over, as AAPS's extended carbs are, from its treatment's duration
+	DurationMinutes *int64   `json:"duration_minutes,omitempty"`
+	Energy          *float64 `json:"energy,omitempty"`
+	Fat             *float64 `json:"fat,omitempty"`
+	Fibre           *float64 `json:"fibre,omitempty"`
+	FoodType        *string  `json:"food_type,omitempty"`
+	Id              *string  `json:"id,omitempty"`
+	Name            *string  `json:"name,omitempty"`
+	Notes           *string  `json:"notes,omitempty"`
 
 	// OccurredAt Now, if not sent when creating
 	OccurredAt            *int64   `json:"occurred_at,omitempty"`
