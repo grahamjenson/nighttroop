@@ -202,3 +202,9 @@ WHERE food_type = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteFoodIntakesByType :execresult
 DELETE FROM food_intakes WHERE food_type = ?;
+
+-- name: FoodIntakeDurations :many
+-- The minutes each food since Since is given over, as AAPS's extended carbs are, from its treatment's duration
+SELECT CAST(food_intake_id AS TEXT) AS food_intake_id, CAST(duration_minutes AS INTEGER) AS duration_minutes FROM event_groups
+WHERE occurred_at >= sqlc.arg('Since') AND deleted_at IS NULL AND food_intake_id IS NOT NULL AND duration_minutes > 0
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);

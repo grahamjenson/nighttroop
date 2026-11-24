@@ -81,7 +81,12 @@ func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
-			list = append(list, intake{At: f.OccurredAt, Carbs: display.Value(ctx, f.Carbs, " g")})
+			carbs := display.Value(ctx, f.Carbs, " g")
+			// Carbs given over a time, as AAPS's extended carbs are, say how long, as an extended dose does
+			if f.DurationMinutes != nil {
+				carbs = i18n.T(ctx, "site.summary.intake.extended_only", i18n.Data{"Extended": carbs, "Duration": display.Duration(ctx, *f.DurationMinutes*60_000)})
+			}
+			list = append(list, intake{At: f.OccurredAt, Carbs: carbs})
 		}
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })

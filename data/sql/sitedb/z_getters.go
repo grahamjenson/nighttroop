@@ -3071,6 +3071,11 @@ func (m *CreateFoodIntakeParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
+// SetLimit sets the Limit value and returns the updated FoodIntakeDurationsParams.
+func (m *FoodIntakeDurationsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetFoodIntakeParams) GetID() string {
 	return m.ID

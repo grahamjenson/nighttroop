@@ -139,6 +139,17 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	if summary.FoodIntakes, herr = apiutils.Searched(food, err, "summary food intakes", sitemodels.FoodIntakeFromDB); herr != nil {
 		return nil, herr
 	}
+	// Each food is given over its treatment's duration, as AAPS's extended carbs are
+	durations, err := q.FoodIntakeDurations(ctx, sitedb.FoodIntakeDurationsParams{Since: since, Limit: maxRows})
+	if err != nil {
+		slog.ErrorContext(ctx, "Error finding summary food durations", "error", err)
+		return nil, apiutils.ErrInternalServerError
+	}
+	for _, f := range summary.FoodIntakes {
+		if i := slices.IndexFunc(durations, func(d *sitedb.FoodIntakeDurationsRow) bool { return d.FoodIntakeID == f.ID }); i >= 0 {
+			f.DurationMinutes = &durations[i].DurationMinutes
+		}
+	}
 	targets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &since, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if summary.TempTargets, herr = apiutils.Searched(targets, err, "summary temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext)); herr != nil {
 		return nil, herr

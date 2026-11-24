@@ -795,6 +795,7 @@
               "category": { "type": "string" },
               "subcategory": { "type": "string" },
               "absorption_time_minutes": { "type": "integer", "format": "int64" },
+              "duration_minutes": { "type": "integer", "format": "int64", "readOnly": true, "description": "In the summary only: how long the food is given over, as AAPS's extended carbs are, from its treatment's duration" },
               "pre_bolus": { "type": "number", "format": "double" },
               "carbs": { "type": "number", "format": "double", "description": "Grams" },
               "fat": { "type": "number", "format": "double" },
