@@ -48,6 +48,8 @@ templ Dialog() {
 			dialog.querySelector("#confirm--cancel").onclick = () => answer(false);
 			dialog.onclose = () => answer(false);
 			dialog.onclick = (click) => { if (click.target === dialog) answer(false); };
+			// Escape closes the dialog alone: its key up, which comes after, is not passed on to close a modal under it
+			dialog.onkeydown = (key) => { if (key.key === "Escape") document.addEventListener("keyup", (up) => up.stopPropagation(), { capture: true, once: true }); };
 			dialog.showModal();
 		});
 	</script>

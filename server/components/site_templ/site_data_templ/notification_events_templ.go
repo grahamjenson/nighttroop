@@ -318,7 +318,7 @@ func NotificationEventModal(event *sitemodels.SiteNotificationEvent) templ.Compo
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		edit := addmodal.Props{ID: "site--notification--edit", Path: "/data/notifications/" + event.ID, Target: "#site--notification--" + event.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-			Fields: addmodal.Edit(notificationEventFields(ctx), event, nil)}
+			Fields: addmodal.Edit(notificationEventFields(ctx), event, nil), Delete: i18n.T(ctx, "site.data.notification_events.delete_confirm")}
 		templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

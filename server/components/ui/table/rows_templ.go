@@ -131,6 +131,8 @@ func DeleteButton(id, path, confirm string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
+		attributes := DeleteAttributes(path, confirm, "this.closest('tr').remove()")
+		attributes["title"], attributes["onclick"] = i18n.T(ctx, "common.table.delete"), templ.JSUnsafeFuncCall("event.stopPropagation()")
 		templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -150,27 +152,31 @@ func DeleteButton(id, path, confirm string) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
-			ID:      id,
-			Variant: button.VariantGhost,
-			Size:    button.SizeIcon,
-			Class:   "size-7",
-			Attributes: templ.Attributes{
-				"title":                i18n.T(ctx, "common.table.delete"),
-				"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-				"hx-delete":            path,
-				"hx-confirm":           confirm,
-				"hx-target":            "#toaster",
-				"hx-swap":              "beforeend",
-				"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-				"hx-status:4xx":        "target:#toaster swap:beforeend",
-				"hx-status:5xx":        "target:#toaster swap:beforeend",
-			},
+			ID:         id,
+			Variant:    button.VariantGhost,
+			Size:       button.SizeIcon,
+			Class:      "size-7",
+			Attributes: attributes,
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return nil
 	})
+}
+
+// DeleteAttributes are those of a button deleting path once confirmed, then running the JavaScript done. The toast in
+// the response, or an error, goes to #toaster.
+func DeleteAttributes(path, confirm, done string) templ.Attributes {
+	return templ.Attributes{
+		"hx-delete":            path,
+		"hx-confirm":           confirm,
+		"hx-target":            "#toaster",
+		"hx-swap":              "beforeend",
+		"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) { " + done + " }"),
+		"hx-status:4xx":        "target:#toaster swap:beforeend",
+		"hx-status:5xx":        "target:#toaster swap:beforeend",
+	}
 }
 
 // DataRow is a ModalRow opening path, with its children then a DeleteCell, id + "--delete", deleting path.

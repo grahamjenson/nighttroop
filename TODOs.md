@@ -171,3 +171,7 @@
        column, so `controldb`'s limits have a `"UNIQUE(siteId,"` field
     1. P5: Check the limits of the columns only an update writes (who updated a record, a site's and an identity's
        settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out
+
+1. Site pages:
+    1. P4: The details of a profile, a device status and a loop's settings have no Delete button, as they have no
+       `addmodal` edit form: add one, so they too are deleted on a phone with no scroll of the table to the row's icon
