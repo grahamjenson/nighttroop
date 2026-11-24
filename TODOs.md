@@ -20,7 +20,7 @@
     1. P3: Page the admin when the server's settings stop it starting (`config.NewServerConfig`): the pager's key
        is one of those settings, so that failure is only printed
 1. P2: e2e backup_key testing. Control
-1. P3: Performance testing (cost estimate for running full node)
+1. Performance testing (cost estimate for running full node)
 
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
@@ -78,6 +78,13 @@
 ## Build these things
 
 1. P3: Control Page to verify backup_key, and regenerate a backup_key
+
+1. Site usability:
+    1. P4: An address outside a section, as `/data` or `/account`, gives a signed in person the bare text
+       `404 page not found`: show the site's Not found page there too, as it shows for `/data/nope`
+    1. P4: The number boxes of the add and details forms have no `inputmode`, so a phone opens its full keyboard for
+       a dose or carbs: open the number keys, but for a box that takes a negative value
+    1. P4: The banner of a snoozed alarm says "Snoozed: Urgent high" and not until when: say the time it ends
 
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
